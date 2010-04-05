@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
 
-<!-- This plugin was originally made by Garrion and then Kerberus using all the code and ideas at http://www.gammon.com.au/forum/?id=9385 -->
-<!-- Modifications made by the Aardwolf Community -->
+<!-- Bits of this plugin were borrowed and remixed from the MUSHclient community. http://www.gammon.com.au/forum/?id=9385 -->
+<!-- Modifications for Aardwolf and extra awesome sauce added by the Aardwolf Community -->
 
 <muclient>
     <plugin
-    name="ChatWindow"
+    name="Chat_Capture_Miniwindow"
     author="Aardwolf Community"
     id="b555825a4a5700c35fa80780"
     language="Lua"
     purpose="Move chats to a miniwindow"
     date_written="2010-04-04"
     requires="4.40"
-    version="1.0"
+    version="1.1"
     save_state="y"
     >
 
@@ -93,10 +93,10 @@ TEXT_INSET = 5
 
 -- where to store the chat line
 lines = {}  -- table of recent chat lines
+rawlines = {}
 
-
-lineStart = 1
-lineEnd = 1
+lineStart = ""
+lineEnd = ""
 
 -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID (), 20) .. "telnet_options.lua")
@@ -104,6 +104,29 @@ SBWin = GetPluginID()
 WINDOW_WIDTH = ""
 WINDOW_HEIGHT = ""
 font_height = ""
+windowinfo = ""
+startx = ""
+starty = ""
+
+function InstallResizeTag(win, width)
+    WindowAddHotspot(win, "resize", WINDOW_WIDTH-width, WINDOW_HEIGHT-width, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Drag to resize", 1, 0)
+    WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+end
+
+function ResizeMoveCallback()
+    posx, posy = WindowInfo (SBWin, 17), WindowInfo (SBWin, 18)
+    WINDOW_WIDTH = WINDOW_WIDTH+posx-startx
+    WINDOW_HEIGHT = WINDOW_HEIGHT+posy-starty
+    WINDOW_LINES = math.floor((WINDOW_HEIGHT/font_height)-2)
+    WINDOW_COLUMNS = math.ceil(WINDOW_WIDTH/font_width)
+    refresh()
+    startx = posx
+    starty = posy
+end
+
+function ResizeReleaseCallback()
+    init()
+end
 
 function OnPluginInstall()
    -- install the window movement handler, get back the window position
@@ -118,18 +141,12 @@ function OnPluginInstall()
     -- window size in pixels
     WINDOW_WIDTH = font_width*WINDOW_COLUMNS
     WINDOW_HEIGHT = font_height*(WINDOW_LINES+1.5)
-    wrap_column = ((WINDOW_WIDTH-SCROLL_BAR_WIDTH)-(RIGHT_MARGIN+LEFT_MARGIN))/font_width
 
     init()
     OnPluginEnable ()  -- do initialization stuff
 end
 
-function init()
-    WindowCreate(SBWin, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
-    WindowAddHotspot(SBWin, "upHotspot", WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, 0, 20, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Scroll up", 1, 0)
-    WindowAddHotspot(SBWin, "downHotspot", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-20, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Scroll down", 1, 0)
-    WindowShow(SBWin, true)
-
+function drawStuff()
     -- draw drag bar rectangle
     -- show border so we can see what we are doing
     WindowRectOp (SBWin, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
@@ -141,21 +158,39 @@ function init()
     -- Title
     WindowText(SBWin, "font"..SBWin, "COMMUNICATION", ((WINDOW_WIDTH-SCROLL_BAR_WIDTH)-(7.5*font_height))/2, 1, WINDOW_WIDTH-(RIGHT_MARGIN+SCROLL_BAR_WIDTH), 0, ColourNameToRGB("white"), false)
     
-    -- scroll bar
-    WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, 0, 0, SCROLL_BACKGROUND_COLOUR)
-    WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, 15, WINDOW_WIDTH-1, WINDOW_HEIGHT-15, SCROLL_BAR_COLOUR)
+    WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, SCROLL_BACKGROUND_COLOUR)
+    WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, 15, WINDOW_WIDTH-1, WINDOW_HEIGHT-15-SCROLL_BAR_WIDTH, SCROLL_BAR_COLOUR)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, 9, ColourNameToRGB ("black"), 0, 1)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, 9, ColourNameToRGB ("black"), 0, 1)
-
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-9, ColourNameToRGB ("black"), 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, WINDOW_HEIGHT-9, ColourNameToRGB ("black"), 0, 1)
-
-    -- add the drag handler so they can move the window around
-    movewindow.add_drag_handler (SBWin, 0, 0, 0, font_height)    
-
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
+    
     if #lines >= 1 then
         writeLines()
     end -- if
+    Redraw()
+end
+
+function init()
+    lineStart = 1 -- math.max(1, #lines-WINDOW_LINES+1)
+    lineEnd = 1 -- math.max(1, #lines)
+    WindowCreate(SBWin, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
+    WindowShow(SBWin, true)
+
+    -- scroll bar
+    WindowAddHotspot(SBWin, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, 0, 20, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Scroll up", 1, 0)
+    WindowAddHotspot(SBWin, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-20, 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Scroll down", 1, 0)
+
+    InstallResizeTag(SBWin, SCROLL_BAR_WIDTH)
+
+    -- add the drag handler so they can move the window around
+    movewindow.add_drag_handler (SBWin, 0, 0, 0, font_height)
+
+    lines = {}
+    for _,styles in ipairs(rawlines) do
+        fillBuffer(styles)
+    end    
+    refresh()
 end
 
 function OnPluginConnect ()
@@ -213,33 +248,14 @@ end
 -- clear and redraw
 function refresh()
     WindowRectOp(SBWin, 2, 0, 0, 0, 0, WINDOW_BACKGROUND_COLOUR)
-    init()
+    drawStuff()
 end
 
--- Main capture routine
-function chats (name, line, wildcards, styles)
+function fillBuffer(rawstyles)
     local avail = 0
     local line_styles
-    
-    -- strip out the tag
-    tag_length = string.find(styles[1].text,"}")
-    styles[1].text = string.sub(styles[1].text, tag_length+1)
-    styles[1].length = styles[1].length-tag_length
-    
-    -- echo in this world as well if the user wants
-    if echo then
-        for _, v in ipairs (styles) do
-            ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
-        end -- for each style run
-        Note ("")  -- wrap up line
-    end -- echo wanted
-
-    -- inject timestamp
-    tstamp = os.date (date_format)
-    styles[1].text = tstamp..styles[1].text
-    styles[1].length = styles[1].length+string.len(tstamp)
-    
     -- keep pulling out styles and trying to fit them on the current line
+    local styles = copytable.deep (rawstyles)
     while #styles > 0 do
         if avail <= 0 then -- no room available? start new line
             -- remove first line if filled up
@@ -294,9 +310,37 @@ function chats (name, line, wildcards, styles)
                 table.insert (styles, 1, style)
             end -- if    
             avail = 0  -- now we need to wrap     
-            
         end -- if could not fit whole thing in
     end -- while we still have styles over
+end
+
+-- Main capture routine
+function chats (name, line, wildcards, styles)
+    -- strip out the tag
+    tag_length = string.find(styles[1].text,"}")
+    styles[1].text = string.sub(styles[1].text, tag_length+1)
+    styles[1].length = styles[1].length-tag_length
+    
+    -- echo in this world as well if the user wants
+    if echo then
+        for _, v in ipairs (styles) do
+            ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
+        end -- for each style run
+        Note ("")  -- wrap up line
+    end -- echo wanted
+
+    -- inject timestamp
+    tstamp = os.date (date_format)
+    styles[1].text = tstamp..styles[1].text
+    styles[1].length = styles[1].length+string.len(tstamp)
+    
+     -- store the raw lines for use during resizing
+    if #rawlines >= MAX_LINES then
+        table.remove(rawlines, 1)
+    end
+    table.insert(rawlines, styles)
+    
+    fillBuffer(styles)
     refresh( )
 end -- chats
 
@@ -317,18 +361,24 @@ end -- add_line
 keepscrolling = false
 require "wait"
 
+
+
 function scrollbar(calledBy)
     wait.make (function()
         while keepscrolling == true do
-            if calledBy == "upHotspot" then
+            if calledBy == "up" then
                 if (lineStart > 1) then
                     lineStart = lineStart - 1
                     lineEnd = lineEnd - 1
+                else
+                    keepscrolling = false
                 end
-            elseif calledBy == "downHotspot" then
+            elseif calledBy == "down" then
                 if (lineEnd < #lines) then
                     lineStart = lineStart + 1
                     lineEnd = lineEnd + 1
+                else
+                    keepscrolling = false
                 end
             end
             refresh()
@@ -346,8 +396,12 @@ keepscrolling = false
 end
 
 function MouseDown(flags, hotspot_id)
-    keepscrolling = true
-    scrollbar(hotspot_id)
+    if (hotspot_id == "resize") then
+        startx, starty = WindowInfo (SBWin, 17), WindowInfo (SBWin, 18)
+    else    
+        keepscrolling = true
+        scrollbar(hotspot_id)
+    end
 end
 
 function CancelMouseDown(flags, hotspot_id)
