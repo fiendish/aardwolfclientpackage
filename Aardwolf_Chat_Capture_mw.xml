@@ -101,6 +101,7 @@ lineEnd = ""
 -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID (), 20) .. "telnet_options.lua")
 SBWin = GetPluginID()
+SBWinResizer = SBWin.."resize"
 WINDOW_WIDTH = ""
 WINDOW_HEIGHT = ""
 font_height = ""
@@ -108,29 +109,31 @@ windowinfo = ""
 startx = ""
 starty = ""
 
-function InstallResizeTag(win, width)
-    WindowAddHotspot(win, "resize", WINDOW_WIDTH-width, WINDOW_HEIGHT-width, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Drag to resize", 1, 0)
-    WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+function InstallResizeTag()
+    movewindow.add_drag_handler (SBWinResizer, 0, 0, 0, 0)
+    WindowAddHotspot(SBWinResizer, "resize", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Drag to resize", 6, 0)
+    WindowDragHandler(SBWinResizer, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
 end
 
 function ResizeMoveCallback()
-    posx, posy = WindowInfo (SBWin, 17), WindowInfo (SBWin, 18)
-    WINDOW_WIDTH = WINDOW_WIDTH+posx-startx
-    WINDOW_HEIGHT = WINDOW_HEIGHT+posy-starty
+    posx, posy = WindowInfo (SBWinResizer, 17), WindowInfo (SBWinResizer, 18)
+    WINDOW_WIDTH = math.max(WindowTextWidth(SBWin, "font"..SBWin, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH,WINDOW_WIDTH+posx-startx)
+    WINDOW_HEIGHT = math.max(50,WINDOW_HEIGHT+posy-starty)
     WINDOW_LINES = math.floor((WINDOW_HEIGHT/font_height)-2)
     WINDOW_COLUMNS = math.ceil((WINDOW_WIDTH-SCROLL_BAR_WIDTH)/font_width)
-    refresh()
+    init(false)
     startx = posx
     starty = posy
 end
 
 function ResizeReleaseCallback()
-    init()
+    init(true)
 end
 
 function OnPluginInstall()
    -- install the window movement handler, get back the window position
-    windowinfo = movewindow.install (SBWin, 6)  
+    resizerinfo = movewindow.install (SBWinResizer, 6, 6, true)
+    windowinfo = movewindow.install (SBWin, 6, 2, true, {SBWinResizer})
     
     -- Dummy window to get font characteristics
     check (WindowCreate (SBWin, windowinfo.window_left, windowinfo.window_top, 1, 1, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR) )
@@ -142,61 +145,31 @@ function OnPluginInstall()
     WINDOW_WIDTH = font_width*WINDOW_COLUMNS+SCROLL_BAR_WIDTH
     WINDOW_HEIGHT = font_height*(WINDOW_LINES+1.5)
 
-    init()
+    init(true)
     OnPluginEnable ()  -- do initialization stuff
 end
 
-function drawStuff()
-    -- draw drag bar rectangle
-    -- show border so we can see what we are doing
-    WindowRectOp (SBWin, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
-    -- top half
-    WindowGradient (SBWin, 0, 0, 0, font_height/2, 0x000000, ColourNameToRGB("darkblue"), 2) 
-    -- bottom half
-    WindowGradient (SBWin, 0, font_height/2, 0, font_height, ColourNameToRGB("darkblue"), 0x000000, 2)   
-
-    -- Title
-    WindowText(SBWin, "font"..SBWin, "COMMUNICATION", ((WINDOW_WIDTH-SCROLL_BAR_WIDTH)-(7.5*font_height))/2, 1, WINDOW_WIDTH-(RIGHT_MARGIN+SCROLL_BAR_WIDTH), 0, ColourNameToRGB("white"), false)
-    
-    -- Scrollbar
-    WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR)
-    WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, 15, WINDOW_WIDTH-1, WINDOW_HEIGHT-15-SCROLL_BAR_WIDTH, SCROLL_BAR_COLOUR)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, 9, ColourNameToRGB ("black"), 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, 9, ColourNameToRGB ("black"), 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
-    
-    -- resize tag
-    -- WindowRectOp (SBWin, 5, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, WINDOW_WIDTH, WINDOW_HEIGHT, 6, 15 + 0x800)
-    
-    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+2, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+4, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+5, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+7, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, ColourNameToRGB ("dimgray"), 0, 1)
-    if #lines >= 1 then
-        writeLines()
-    end -- if
-    Redraw()
-end
-
-function init()
-    lineStart = 1 -- math.max(1, #lines-WINDOW_LINES+1)
-    lineEnd = 1 -- math.max(1, #lines)
+function init(firstTime)
+    lineStart = math.max(1, #lines-WINDOW_LINES+1)
+    lineEnd = math.max(1, #lines)
     WindowCreate(SBWin, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
     WindowShow(SBWin, true)
+    
+    -- add the drag handler so they can move the window around
+    movewindow.add_drag_handler (SBWin, 0, 0, 0, font_height)
 
     -- scroll bar
     WindowAddHotspot(SBWin, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, 0, 20, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Scroll up", 1, 0)
     WindowAddHotspot(SBWin, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-20, 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Scroll down", 1, 0)
 
-    InstallResizeTag(SBWin, SCROLL_BAR_WIDTH)
-
-    -- add the drag handler so they can move the window around
-    movewindow.add_drag_handler (SBWin, 0, 0, 0, font_height)
+    -- put the resizer in place
+    if (firstTime == true) then
+        WindowCreate(SBWinResizer, windowinfo.window_left+WINDOW_WIDTH-SCROLL_BAR_WIDTH, windowinfo.window_top+WINDOW_HEIGHT-SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH, 0, 6, ColourNameToRGB("pink"))
+        WindowShow(SBWinResizer, true)
+        InstallResizeTag(SBWinResizer, SCROLL_BAR_WIDTH)
+    else
+        WindowPosition(SBWinResizer, windowinfo.window_left+WINDOW_WIDTH-SCROLL_BAR_WIDTH, windowinfo.window_top+WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 0, 6)
+    end
 
     lines = {}
     for _,styles in ipairs(rawlines) do
@@ -220,7 +193,8 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginEnable ()
-    WindowShow (SBWin, true)  
+    WindowShow (SBWin, true)
+    WindowShow (SBWinResizer, true)
     -- if we are connected when the plugin loads, it must have been reloaded whilst playing
     if IsConnected () then
         OnPluginConnect ()
@@ -231,6 +205,7 @@ function OnPluginSaveState ()
     -- save window current location for next time  
     SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
     movewindow.save_state (SBWin)
+    movewindow.save_state (SBWinResizer)
 end -- function OnPluginSaveState
 
 function OnPluginDisable ()
@@ -238,6 +213,7 @@ function OnPluginDisable ()
     TelnetOptionOff (TELOPT_TELLS)
     TelnetOptionOff (TELOPT_SAYS)
     WindowShow( SBWin, false )
+    WindowShow( SBWinResizer, false)
 end -- function OnPluginSaveState
 
 -- display one line
@@ -259,8 +235,43 @@ end
 
 -- clear and redraw
 function refresh()
-    WindowRectOp(SBWin, 2, 0, 0, 0, 0, WINDOW_BACKGROUND_COLOUR)
+    WindowRectOp(SBWin, 2, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND_COLOUR)
     drawStuff()
+end
+
+function drawStuff()
+    -- draw drag bar rectangle
+    -- show border so we can see what we are doing
+    WindowRectOp (SBWin, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
+    -- top half
+    WindowGradient (SBWin, 0, 0, 0, font_height/2, 0x000000, ColourNameToRGB("darkblue"), 2) 
+    -- bottom half
+    WindowGradient (SBWin, 0, font_height/2, 0, font_height, ColourNameToRGB("darkblue"), 0x000000, 2)   
+
+    -- Title
+    WindowText(SBWin, "font"..SBWin, "COMMUNICATION", ((WINDOW_WIDTH-SCROLL_BAR_WIDTH)-(7.5*font_height))/2, 1, WINDOW_WIDTH-(RIGHT_MARGIN+SCROLL_BAR_WIDTH), 0, ColourNameToRGB("white"), false)
+    
+    -- Scrollbar
+    WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR)
+    WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, 15, WINDOW_WIDTH-1, WINDOW_HEIGHT-15-SCROLL_BAR_WIDTH, SCROLL_BAR_COLOUR)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, 9, ColourNameToRGB ("black"), 0, 1)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, 9, ColourNameToRGB ("black"), 0, 1)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
+    
+    -- resize tag    
+    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
+    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+2, ColourNameToRGB ("dimgray"), 0, 1)
+    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+4, ColourNameToRGB ("white"), 0, 2)
+    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+5, ColourNameToRGB ("dimgray"), 0, 1)
+    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+7, ColourNameToRGB ("white"), 0, 2)
+    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, ColourNameToRGB ("dimgray"), 0, 1)
+    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, ColourNameToRGB ("white"), 0, 2)
+    WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, ColourNameToRGB ("dimgray"), 0, 1)
+    if #lines >= 1 then
+        writeLines()
+    end -- if
+    Redraw()
 end
 
 function fillBuffer(rawstyles)
@@ -376,52 +387,54 @@ require "wait"
 
 
 function scrollbar(calledBy)
-    wait.make (function()
-        while keepscrolling == true do
-            if calledBy == "up" then
-                if (lineStart > 1) then
-                    lineStart = lineStart - 1
-                    lineEnd = lineEnd - 1
-                else
-                    keepscrolling = false
+    if IsConnected() then 
+        wait.make (function()
+            while keepscrolling == true do
+                if calledBy == "up" then
+                    if (lineStart > 1) then
+                        lineStart = lineStart - 1
+                        lineEnd = lineEnd - 1
+                    else
+                        keepscrolling = false
+                    end
+                elseif calledBy == "down" then
+                    if (lineEnd < #lines) then
+                        lineStart = lineStart + 1
+                        lineEnd = lineEnd + 1
+                    else
+                        keepscrolling = false
+                    end
                 end
-            elseif calledBy == "down" then
-                if (lineEnd < #lines) then
-                    lineStart = lineStart + 1
-                    lineEnd = lineEnd + 1
-                else
-                    keepscrolling = false
-                end
+                refresh()
+                wait.time(0.1)
             end
-            refresh()
-            wait.time(0.1)
-        end
-    end)
+        end)
+    end
 end
 
 function MouseOver(flags, hotspot_id)
-keepscrolling = false
+    keepscrolling = false
 end
 
 function CancelMouseOver(flags, hotspot_id)
-keepscrolling = false
+    keepscrolling = false
 end
 
 function MouseDown(flags, hotspot_id)
     if (hotspot_id == "resize") then
-        startx, starty = WindowInfo (SBWin, 17), WindowInfo (SBWin, 18)
-    else    
+        startx, starty = WindowInfo (SBWinResizer, 17), WindowInfo (SBWinResizer, 18)
+    else
         keepscrolling = true
         scrollbar(hotspot_id)
     end
 end
 
 function CancelMouseDown(flags, hotspot_id)
-keepscrolling = false
+    keepscrolling = false
 end
 
 function MouseUp(flags, hotspot_id)
-keepscrolling = false
+    keepscrolling = false
 end
 
 function chat_echo (name, line, wildcards)
