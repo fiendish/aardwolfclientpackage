@@ -85,7 +85,8 @@ echo = true
 WINDOW_BACKGROUND_COLOUR = ColourNameToRGB ("black")
 WINDOW_TEXT_COLOUR = ColourNameToRGB ("white")
 SCROLL_BACKGROUND_COLOUR = ColourNameToRGB ("#E8E8E8")
-SCROLL_BAR_COLOUR = ColourNameToRGB ("black")
+SCROLL_BAR_COLOUR = ColourNameToRGB ("#111111")
+SCROLL_DETAIL_COLOUR = ColourNameToRGB ("black")
 WINDOW_BORDER_COLOUR = ColourNameToRGB ("blue")
 
 -- offset of text from edge
@@ -119,7 +120,7 @@ function ResizeMoveCallback()
     posx, posy = WindowInfo (SBWinResizer, 17), WindowInfo (SBWinResizer, 18)
     WINDOW_WIDTH = math.max(WindowTextWidth(SBWin, "font"..SBWin, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH,WINDOW_WIDTH+posx-startx)
     WINDOW_HEIGHT = math.max(50,WINDOW_HEIGHT+posy-starty)
-    WINDOW_LINES = math.floor((WINDOW_HEIGHT/font_height)-2)
+    WINDOW_LINES = math.ceil((WINDOW_HEIGHT-font_height)/font_height)
     WINDOW_COLUMNS = math.ceil((WINDOW_WIDTH-SCROLL_BAR_WIDTH)/font_width)
     init(false)
     startx = posx
@@ -142,16 +143,13 @@ function OnPluginInstall()
     font_width = WindowTextWidth (SBWin, "font"..SBWin, "W")
 
     -- window size in pixels
-    WINDOW_WIDTH = font_width*WINDOW_COLUMNS+SCROLL_BAR_WIDTH
-    WINDOW_HEIGHT = font_height*(WINDOW_LINES+1.5)
-
+    WINDOW_WIDTH = (font_width*WINDOW_COLUMNS)+SCROLL_BAR_WIDTH
+    WINDOW_HEIGHT = (font_height*WINDOW_LINES)+font_height
     init(true)
     OnPluginEnable ()  -- do initialization stuff
 end
 
 function init(firstTime)
-    lineStart = math.max(1, #lines-WINDOW_LINES+1)
-    lineEnd = math.max(1, #lines)
     WindowCreate(SBWin, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
     WindowShow(SBWin, true)
     
@@ -174,7 +172,9 @@ function init(firstTime)
     lines = {}
     for _,styles in ipairs(rawlines) do
         fillBuffer(styles)
-    end    
+    end
+    lineStart = math.max(1, #lines-WINDOW_LINES+3)
+    lineEnd = math.max(1, #lines)
     refresh()
 end
 
@@ -219,9 +219,11 @@ end -- function OnPluginSaveState
 -- display one line
 function Display_Line (line, styles)
     local left = TEXT_INSET
-    for _, v in ipairs (styles) do
-        left = left + WindowText (SBWin, "font"..SBWin, v.text, left, SPACING, 0, 0, v.textcolour)
-    end -- for each style run
+    if (styles) then
+        for _, v in ipairs (styles) do
+            left = left + WindowText (SBWin, "font"..SBWin, v.text, left, SPACING, 0, 0, v.textcolour)
+        end -- for each style run
+    end
 end -- Display_Line
 
 -- display all visible lines
@@ -253,7 +255,7 @@ function drawStuff()
     
     -- Scrollbar
     WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR)
-    WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, 15, WINDOW_WIDTH-1, WINDOW_HEIGHT-15-SCROLL_BAR_WIDTH, SCROLL_BAR_COLOUR)
+    WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, 15, WINDOW_WIDTH-1, WINDOW_HEIGHT-15-SCROLL_BAR_WIDTH, SCROLL_DETAIL_COLOUR)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, 9, ColourNameToRGB ("black"), 0, 1)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, 9, ColourNameToRGB ("black"), 0, 1)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
