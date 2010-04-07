@@ -387,29 +387,27 @@ require "wait"
 
 
 function scrollbar(calledBy)
-    if IsConnected() then 
-        wait.make (function()
-            while keepscrolling == true do
-                if calledBy == "up" then
-                    if (lineStart > 1) then
-                        lineStart = lineStart - 1
-                        lineEnd = lineEnd - 1
-                    else
-                        keepscrolling = false
-                    end
-                elseif calledBy == "down" then
-                    if (lineEnd < #lines) then
-                        lineStart = lineStart + 1
-                        lineEnd = lineEnd + 1
-                    else
-                        keepscrolling = false
-                    end
+    wait.make (function()
+        while keepscrolling == true do
+            if calledBy == "up" then
+                if (lineStart > 1) then
+                    lineStart = lineStart - 1
+                    lineEnd = lineEnd - 1
+                else
+                    keepscrolling = false
                 end
-                refresh()
-                wait.time(0.1)
+            elseif calledBy == "down" then
+                if (lineEnd < #lines) then
+                    lineStart = lineStart + 1
+                    lineEnd = lineEnd + 1
+                else
+                    keepscrolling = false
+                end
             end
-        end)
-    end
+            refresh()
+            wait.time(0.1)
+        end
+    end)
 end
 
 function MouseOver(flags, hotspot_id)
