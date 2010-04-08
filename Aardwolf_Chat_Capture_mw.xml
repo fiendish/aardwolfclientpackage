@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
 
-<!-- Bits of this plugin were borrowed and remixed from the MUSHclient community. http://www.gammon.com.au/forum/?id=9385 -->
+<!-- Bits of this plugin and ideas were borrowed and remixed from the MUSHclient community. http://www.gammon.com.au/forum/?id=9385 and others. -->
 <!-- Modifications for Aardwolf and extra awesome sauce added by Fiendish -->
 
 <muclient>
@@ -147,7 +147,7 @@ function OnPluginInstall()
 
     -- window size in pixels
     WINDOW_WIDTH = (font_width*WINDOW_COLUMNS)+SCROLL_BAR_WIDTH
-    WINDOW_HEIGHT = (line_height*WINDOW_LINES)+line_height
+    WINDOW_HEIGHT = (line_height*WINDOW_LINES)+2
     init(true)
     OnPluginEnable ()  -- do initialization stuff
 end
@@ -256,20 +256,30 @@ function drawStuff()
     -- Title
     WindowText(SBWin, "font"..SBWin, "COMMUNICATION", ((WINDOW_WIDTH-SCROLL_BAR_WIDTH)-(7.5*line_height))/2, -1, WINDOW_WIDTH-(RIGHT_MARGIN+SCROLL_BAR_WIDTH), line_height, ColourNameToRGB("white"), false)
     
-    -- Scrollbar
+    -- Scrollbar base
     WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR)
     WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH), SCROLL_DETAIL_COLOUR)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, 9, ColourNameToRGB ("black"), 0, 1)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, 9, ColourNameToRGB ("black"), 0, 1)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
     WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
+    
+    -- The scrollbar position indicator
     totalSteps = #lines
     if (totalSteps <= WINDOW_LINES-1) then totalSteps = 1 end
     stepNum = lineStart
     SCROLL_BAR_HEIGHT = (WINDOW_HEIGHT-(3*SCROLL_BAR_WIDTH))
     barPos = SCROLL_BAR_WIDTH + ((SCROLL_BAR_HEIGHT/totalSteps) * (stepNum-1))
-    barSize = (SCROLL_BAR_HEIGHT/totalSteps) * (WINDOW_LINES-1)
-    WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, math.min(barPos+barSize, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH)), 5, 15 + 0x800)
+    barSize = (SCROLL_BAR_HEIGHT/math.max(WINDOW_LINES-1,totalSteps)) * (WINDOW_LINES-1)
+    if barSize < 10 then
+        barPos = barPos - (10-barSize)
+        barSize = 10
+    end
+    WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800)
+    if (not keepscrolling) then
+        WindowAddHotspot(SBWin, "scroller", (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Drag to scroll", 1, 0)
+        WindowDragHandler(SBWin, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
+    end
     
     -- resize tag    
     WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
@@ -284,6 +294,15 @@ function drawStuff()
         writeLines()
     end -- if
     Redraw()
+end
+
+function ScrollerMoveCallback(flags, hotspot_id)
+    
+end
+
+function ScrollerReleaseCallback(flags, hotspot_id)
+    keepscrolling = false
+    refresh()
 end
 
 function fillBuffer(rawstyles)
@@ -422,14 +441,19 @@ end
 
 function MouseOver(flags, hotspot_id)
     keepscrolling = false
+    refresh()
 end
 
 function CancelMouseOver(flags, hotspot_id)
     keepscrolling = false
+    refresh()
 end
 
 function MouseDown(flags, hotspot_id)
-    if (hotspot_id == "resize") then
+    if (hotspot_id == "scroller") then
+        starty = WindowInfo(SBWin, 15)
+        keepscrolling = true
+    elseif (hotspot_id == "resize") then
         startx, starty = WindowInfo (SBWinResizer, 17), WindowInfo (SBWinResizer, 18)
     else
         keepscrolling = true
@@ -439,10 +463,12 @@ end
 
 function CancelMouseDown(flags, hotspot_id)
     keepscrolling = false
+    refresh()
 end
 
 function MouseUp(flags, hotspot_id)
     keepscrolling = false
+    refresh()
 end
 
 function chat_echo (name, line, wildcards)
