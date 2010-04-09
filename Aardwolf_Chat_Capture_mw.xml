@@ -244,6 +244,9 @@ function refresh()
     drawStuff()
 end
 
+barPos = ""
+barSize = ""
+totalSteps = ""
 function drawStuff()
     -- draw drag bar rectangle
     -- show border so we can see what we are doing
@@ -259,27 +262,27 @@ function drawStuff()
     -- Scrollbar base
     WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR)
     WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH), SCROLL_DETAIL_COLOUR)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, 9, ColourNameToRGB ("black"), 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, 9, ColourNameToRGB ("black"), 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, ColourNameToRGB ("black"), 0, 1)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, 9, SCROLL_DETAIL_COLOUR, 0, 1)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, 9, SCROLL_DETAIL_COLOUR, 0, 1)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, SCROLL_DETAIL_COLOUR, 0, 1)
+    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, SCROLL_DETAIL_COLOUR, 0, 1)
     
     -- The scrollbar position indicator
     totalSteps = #lines
     if (totalSteps <= WINDOW_LINES-1) then totalSteps = 1 end
-    stepNum = lineStart
     SCROLL_BAR_HEIGHT = (WINDOW_HEIGHT-(3*SCROLL_BAR_WIDTH))
-    barPos = SCROLL_BAR_WIDTH + ((SCROLL_BAR_HEIGHT/totalSteps) * (stepNum-1))
-    barSize = (SCROLL_BAR_HEIGHT/math.max(WINDOW_LINES-1,totalSteps)) * (WINDOW_LINES-1)
-    if barSize < 10 then
-        barPos = barPos - (10-barSize)
-        barSize = 10
-    end
-    WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800)
-    if (not keepscrolling) then
+    if (not dragscrolling) then
+        stepNum = lineStart-1
+        barPos = SCROLL_BAR_WIDTH + ((SCROLL_BAR_HEIGHT/totalSteps) * stepNum)
+        barSize = (SCROLL_BAR_HEIGHT/math.max(WINDOW_LINES-1,totalSteps)) * (WINDOW_LINES-1)
+        if barSize < 10 then
+            barPos = barPos - (10-barSize)
+            barSize = 10
+        end
         WindowAddHotspot(SBWin, "scroller", (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Drag to scroll", 1, 0)
         WindowDragHandler(SBWin, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
     end
+    WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800)
     
     -- resize tag    
     WindowLine(SBWin, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
@@ -297,11 +300,17 @@ function drawStuff()
 end
 
 function ScrollerMoveCallback(flags, hotspot_id)
-    
+    mouseposy = WindowInfo(SBWin, 18)
+    windowtop = WindowInfo(SBWin, 2)
+    barPos = mouseposy-windowtop+clickdelta
+    barPos = math.min(WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize, math.max(barPos, SCROLL_BAR_WIDTH))
+    lineStart = math.floor((barPos-SCROLL_BAR_WIDTH)/(SCROLL_BAR_HEIGHT/totalSteps)+1)
+    lineEnd = lineStart + WINDOW_LINES-2
+    refresh()
 end
 
 function ScrollerReleaseCallback(flags, hotspot_id)
-    keepscrolling = false
+    dragscrolling = false
     refresh()
 end
 
@@ -450,11 +459,11 @@ function CancelMouseOver(flags, hotspot_id)
 end
 
 function MouseDown(flags, hotspot_id)
-    if (hotspot_id == "scroller") then
-        starty = WindowInfo(SBWin, 15)
-        keepscrolling = true
-    elseif (hotspot_id == "resize") then
+    if (hotspot_id == "resize") then
         startx, starty = WindowInfo (SBWinResizer, 17), WindowInfo (SBWinResizer, 18)
+    elseif (hotspot_id == "scroller") then
+        clickdelta = WindowHotspotInfo(SBWin, "scroller", 2)-WindowInfo (SBWin, 15)
+        dragscrolling = true
     else
         keepscrolling = true
         scrollbar(hotspot_id)
