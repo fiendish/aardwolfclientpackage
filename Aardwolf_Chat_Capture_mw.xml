@@ -101,6 +101,7 @@ lineEnd = ""
 
 -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID (), 20) .. "telnet_options.lua")
+dofile (GetPluginInfo (GetPluginID (), 20) .. "aardwolf_colors.lua")
 SBWin = GetPluginID()
 SBWinResizer = SBWin.."resize"
 WINDOW_WIDTH = ""
@@ -160,6 +161,9 @@ function init(firstTime)
     WindowCreate(SBWin, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
     WindowShow(SBWin, true)
     
+	-- catch for right-click menu and line selection
+	WindowAddHotspot(SBWin, "textarea", 0, line_height, WINDOW_WIDTH-SCROLL_BAR_WIDTH,0, "", "", "MouseDown", "", "MouseUp", "", 2, 0)
+	
     -- add the drag handler so they can move the window around
     movewindow.add_drag_handler (SBWin, 0, 0, 0, line_height)
 
@@ -237,7 +241,7 @@ end -- Display_Line
 function writeLines()
     SPACING = line_height
     for count = lineStart, lineEnd do
-        Display_Line( count, lines[count] )
+        Display_Line( count, lines[count][1] )
         SPACING = SPACING + line_height
     end
 end
@@ -321,6 +325,7 @@ end
 function fillBuffer(rawstyles)
     local avail = 0
     local line_styles
+    local beginning = true
     -- keep pulling out styles and trying to fit them on the current line
     local styles = copytable.deep (rawstyles)
     while #styles > 0 do
@@ -331,7 +336,8 @@ function fillBuffer(rawstyles)
             end -- if 
             avail = WINDOW_WIDTH - (TEXT_INSET * 2) - 9
             line_styles = {}
-            add_line( line_styles )
+            add_line( line_styles, beginning )
+            beginning = false
         end -- line full
 
         -- get next style, work out how long it is
@@ -411,9 +417,10 @@ function chats (name, line, wildcards, styles)
     refresh( )
 end -- chats
 
-function add_line ( line )
+function add_line ( line, is_beginning_of_message )
     -- add new line
-    table.insert (lines, line )
+    table.insert (lines, {line} )
+    lines[#lines][2] = is_beginning_of_message
 
     -- advance the count
     if #lines >= WINDOW_LINES then
@@ -452,6 +459,29 @@ function scrollbar(calledBy)
     end)
 end
 
+function GetBufferText(xpos, ypos)
+    windowline = math.floor(((ypos-line_height)/line_height)+1)-1
+    text = ""
+    if (#lines >= windowline) then
+        local line = windowline+lineStart
+        -- go to beginning of message
+        while lines[line][2] ~= true and line > 1 do
+            line = line - 1
+        end -- while
+        -- first line
+        local styles = copytable.deep(lines[line][1])
+        text = text..ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
+        -- remaining lines
+        line = line + 1
+        while line <= #lines and lines[line][2] ~= true do
+            local styles = copytable.deep(lines[line][1])
+            text = text..ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
+            line = line + 1
+        end -- while
+        SetClipboard(text)
+    end
+end
+
 function MouseOver(flags, hotspot_id)
     keepscrolling = false
     refresh()
@@ -468,6 +498,8 @@ function MouseDown(flags, hotspot_id)
     elseif (hotspot_id == "scroller") then
         clickdelta = WindowHotspotInfo(SBWin, "scroller", 2)-WindowInfo (SBWin, 15)
         dragscrolling = true
+    elseif (hotspot_id == "textarea" and flags == 0x10) then
+        GetBufferText(WindowInfo(SBWin, 14), WindowInfo(SBWin,15))
     else
         keepscrolling = true
         scrollbar(hotspot_id)
@@ -480,8 +512,28 @@ function CancelMouseDown(flags, hotspot_id)
 end
 
 function MouseUp(flags, hotspot_id)
-    keepscrolling = false
-    refresh()
+    if (hotspot_id == "textarea" and flags == 0x20) then
+        result = WindowMenu (SBWin, 
+        WindowInfo (SBWin, 14),  -- x
+        WindowInfo (SBWin, 15),   -- y
+        "Copy All To Clipboard|Change Font")
+        if result == "Copy All To Clipboard" then
+            print("Not yet implemented")
+        end
+        if result == "Change Font" then
+            wanted_font = utils.fontpicker (FONT_NAME, FONT_SIZE) --font dialog
+            if wanted_font then
+                FONT_NAME = wanted_font.name
+                FONT_SIZE = wanted_font.size
+                SetVariable ("font", FONT_NAME)
+                SetVariable ("font_size", FONT_SIZE)
+                OnPluginInstall()
+            end
+        end -- if
+    else
+        keepscrolling = false
+        refresh()
+    end
 end
 
 function chat_echo (name, line, wildcards)
