@@ -78,8 +78,8 @@ date_format = "[%d %b %H:%M:%S] "        -- [30 Aug 13:29:49]   date and time 24
 --date_format = "[%d %b %I:%M:%S%p] "  -- [30 Aug 01:20:12PM]     date and time 12 hour
 --date_format = "[%H:%M:%S] "          -- [13:29:08]          time 24 hour
 --date_format = "[%X] "                  -- [1:22:06 PM]            time 12 hour
-
-echo = true
+timestamp = GetVariable("timestamp")
+echo = GetVariable("echo")
 
 -- colours
 WINDOW_BACKGROUND_COLOUR = ColourNameToRGB ("black")
@@ -87,7 +87,7 @@ WINDOW_TEXT_COLOUR = ColourNameToRGB ("white")
 SCROLL_BACKGROUND_COLOUR = ColourNameToRGB ("#E8E8E8")
 SCROLL_BAR_COLOUR = ColourNameToRGB ("#111111")
 SCROLL_DETAIL_COLOUR = ColourNameToRGB ("black")
-WINDOW_BORDER_COLOUR = ColourNameToRGB ("blue")
+WINDOW_BORDER_COLOUR = ColourNameToRGB("#E8E8E8")
 
 -- offset of text from edge
 TEXT_INSET = 5
@@ -139,10 +139,20 @@ function ResizeReleaseCallback()
 end
 
 function OnPluginInstall()
+    -- check for Echo/Timestamp variables, if not there, set them
+    if GetVariable("echo") == nil then
+        echo = "1"
+        SetVariable("echo", echo)
+    end
+    if GetVariable("timestamp") == nil then
+        timestamp = "1"
+        SetVariable("timestamp", timestamp)
+    end
+
    -- install the window movement handler, get back the window position
     resizerinfo = movewindow.install (SBWinResizer, 6, 6, true)
     windowinfo = movewindow.install (SBWin, 6, 2, true, {SBWinResizer})
-    
+
     -- Dummy window to get font characteristics
     check (WindowCreate (SBWin, windowinfo.window_left, windowinfo.window_top, 1, 1, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR) )
     check (WindowFont(SBWin, "font"..SBWin, FONT_NAME, FONT_SIZE))
@@ -217,6 +227,9 @@ function OnPluginSaveState ()
     SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
     movewindow.save_state (SBWin)
     movewindow.save_state (SBWinResizer)
+    -- save echo/timestamp status
+    SetVariable ("echo", echo)
+    SetVariable ("timestamp", timestamp)
 end -- function OnPluginSaveState
 
 function OnPluginDisable ()
@@ -258,14 +271,16 @@ totalSteps = ""
 function drawStuff()
     -- draw drag bar rectangle
     -- show border so we can see what we are doing
+    --WindowCircleOp (SBWin, 3, 0, 0, 0, 0,  -- round rectangle
+    --    ColourNameToRGB("#E8E8E8"), 0, 2,ColourNameToRGB("black"), 0, 0,)
     WindowRectOp (SBWin, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
     -- top half
-    WindowGradient (SBWin, 0, 0, 0, line_height/2, 0x000000, ColourNameToRGB("darkblue"), 2)
+    WindowGradient (SBWin, 0, 0, 0, line_height/2, 0x000000, WINDOW_BORDER_COLOUR, 2)
     -- bottom half
-    WindowGradient (SBWin, 0, line_height/2, 0, line_height, ColourNameToRGB("darkblue"), 0x000000, 2)
+    WindowGradient (SBWin, 0, line_height/2, 0, line_height, WINDOW_BORDER_COLOUR, 0x000000, 2)
 
     -- Title
-    WindowText(SBWin, "font"..SBWin, "COMMUNICATION", ((WINDOW_WIDTH-SCROLL_BAR_WIDTH)-(7.5*line_height))/2, -1, WINDOW_WIDTH-(RIGHT_MARGIN+SCROLL_BAR_WIDTH), line_height, ColourNameToRGB("white"), false)
+    WindowText(SBWin, "font"..SBWin, "COMMUNICATION", ((WINDOW_WIDTH-SCROLL_BAR_WIDTH)-(7.5*line_height))/2, -1, WINDOW_WIDTH-(RIGHT_MARGIN+SCROLL_BAR_WIDTH), line_height, ColourNameToRGB("black"), false)
     
     -- Scrollbar base
     WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR)
@@ -405,18 +420,19 @@ function chats (name, line, wildcards, styles)
     styles[1].length = styles[1].length-tag_length
     
     -- echo in this world as well if the user wants
-    if echo then
+    if echo == "1" then
         for _, v in ipairs (styles) do
             ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
         end -- for each style run
         Note ("")  -- wrap up line
     end -- echo wanted
 
-    -- inject timestamp
-    tstamp = os.date (date_format)
-    styles[1].text = tstamp..styles[1].text
-    styles[1].length = styles[1].length+string.len(tstamp)
-    
+    -- inject timestamp if wanted
+    if timestamp == "1" then
+        tstamp = os.date (date_format)
+        styles[1].text = tstamp..styles[1].text
+        styles[1].length = styles[1].length+string.len(tstamp)
+    end -- if
      -- store the raw lines for use during resizing
     if #rawlines >= MAX_LINES then
         table.remove(rawlines, 1)
@@ -477,13 +493,21 @@ function scrollbar(calledBy)
                     keepscrolling = false
                 end
             end
-            refresh()
             wait.time(0.1)
+            refresh()
         end
     end)
 end
 
-function GetBufferText(xpos, ypos)
+function GetAllBufferedMessages()
+    local t = {}
+    for _,styles in ipairs(rawlines) do
+        table.insert(t, ColourConvertOneLine(copytable.deep(styles), 1, 99999)) -- 99999 basically means don't truncate lines
+    end
+    SetClipboard(table.concat(t,"\r\n"))
+end
+
+function GetBufferedMessage(xpos, ypos)
     windowline = math.floor(((ypos-line_height)/line_height)+1)-1
     text = ""
     if (#lines >= windowline) then
@@ -523,7 +547,7 @@ function MouseDown(flags, hotspot_id)
         clickdelta = WindowHotspotInfo(SBWin, "scroller", 2)-WindowInfo (SBWin, 15)
         dragscrolling = true
     elseif (hotspot_id == "textarea" and flags == 0x10) then
-        GetBufferText(WindowInfo(SBWin, 14), WindowInfo(SBWin,15))
+        GetBufferedMessage(WindowInfo(SBWin, 14), WindowInfo(SBWin,15))
     else
         keepscrolling = true
         scrollbar(hotspot_id)
@@ -537,13 +561,27 @@ end
 
 function MouseUp(flags, hotspot_id)
     if (hotspot_id == "textarea" and flags == 0x20) then
+        -- build menu for current state
+        menustring ="Copy All To Clipboard|Change Font"
+        if echo == "1" then
+            menustring = (menustring .."|Turn Echo Off")
+        else
+            menustring = (menustring.."|Turn Echo On")
+        end --if
+        if timestamp == "1" then
+            menustring = (menustring.."|Turn Timestamp Off")
+        else
+            menustring = (menustring.."|Turn Timestamp On")
+        end -- if
         result = WindowMenu (SBWin, 
-        WindowInfo (SBWin, 14),  -- x
-        WindowInfo (SBWin, 15),   -- y
-        "Copy All To Clipboard|Change Font")
+            WindowInfo (SBWin, 14),  -- x position
+            WindowInfo (SBWin, 15),   -- y position
+            menustring) -- content
+
         if result == "Copy All To Clipboard" then
-            print("Not yet implemented")
+            GetAllBufferedMessages()
         end
+
         if result == "Change Font" then
             wanted_font = utils.fontpicker (FONT_NAME, FONT_SIZE) --font dialog
             if wanted_font then
@@ -554,6 +592,23 @@ function MouseUp(flags, hotspot_id)
                 OnPluginInstall()
             end
         end -- if
+
+        if result == "Turn Echo Off" then
+            echo = "0"
+            ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
+        end
+        if result == "Turn Echo On" then
+            echo = "1"
+            ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
+        end
+        if result == "Turn Timestamp Off" then
+            timestamp = "0"
+            ColourNote ("yellow", "", "Timestamp in communication window DISABLED.")
+        end
+        if result == "Turn Timestamp On" then
+            timestamp = "1"
+            ColourNote ("yellow", "", "Timestamp in communication window ENABLED.")
+        end
     else
         keepscrolling = false
         refresh()
@@ -564,13 +619,13 @@ function chat_echo (name, line, wildcards)
     if wildcards [1] == false then
         echo = not echo
     elseif wildcards [1]:lower () == " on" then
-        echo = true
+        echo = "1"
     elseif wildcards [1]:lower () == " off" then
-        echo = false
+        echo = "0"
     end -- if
 
-    if echo then
-        ColourNote ("yellow", "", "Echoing chats in main window enabled.")
+    if echo == "1" then
+        ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
     else
         ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
     end -- if
