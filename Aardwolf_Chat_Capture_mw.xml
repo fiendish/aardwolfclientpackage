@@ -2,7 +2,7 @@
 <!DOCTYPE muclient>
 
 <!-- Bits of this plugin and ideas were borrowed and remixed from the MUSHclient community. http://www.gammon.com.au/forum/?id=9385 and others. -->
-<!-- Modifications for Aardwolf and extra awesome sauce added by Fiendish -->
+<!-- Modifications for Aardwolf and extra awesome sauce added by Fiendish with help from Orogan -->
 
 <muclient>
     <plugin
@@ -12,7 +12,7 @@
     language="Lua"
     purpose="Move chats to a miniwindow"
     date_written="2010-04-04"
-    requires="4.40"
+    requires="4.51"
     version="1.0"
     save_state="y"
     >
@@ -270,10 +270,20 @@ function drawStuff()
     -- Scrollbar base
     WindowRectOp(SBWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR)
     WindowRectOp (SBWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH), SCROLL_DETAIL_COLOUR)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, 9, SCROLL_DETAIL_COLOUR, 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, 9, SCROLL_DETAIL_COLOUR, 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+1, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, SCROLL_DETAIL_COLOUR, 0, 1)
-    WindowLine (SBWin, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-3, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+13, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-9, SCROLL_DETAIL_COLOUR, 0, 1)
+	WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), 1, WINDOW_WIDTH, 15, 5,  15 + 0x800) -- top scroll button 
+	WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-SCROLL_BAR_WIDTH-15, WINDOW_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-1, 5,  15 + 0x800) -- bottom scroll button
+    points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, 9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, 9) -- draw triangle in up button
+	WindowPolygon (SBWin, points,
+					ColourNameToRGB("black"), 0, 1,   -- pen (solid, width 1)
+					ColourNameToRGB("black"), 0, --brush (solid)
+					true,	--close				
+					false)  --alt fill
+    points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-7, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11,(WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11) -- draw triangle in down button
+	WindowPolygon (SBWin, points,
+					ColourNameToRGB("black"), 0, 1,   -- pen (solid, width 1)
+					ColourNameToRGB("black"), 0, --brush (solid)
+					true,	--close				
+					false)  --alt fill
     
     -- The scrollbar position indicator
     totalSteps = #lines
@@ -442,13 +452,27 @@ function scrollbar(calledBy)
                 if (lineStart > 1) then
                     lineStart = lineStart - 1
                     lineEnd = lineEnd - 1
-                else
+					WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), 1, WINDOW_WIDTH, 15, 10,  15 + 0x800) -- up arrow pushed
+					points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, 9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, 5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, 9)
+					WindowPolygon (SBWin, points,
+									ColourNameToRGB("black"), 0, 1,   -- pen (solid, width 1)
+									ColourNameToRGB("black"), 0, -- brush (solid)
+									true,	-- close				
+									false)  -- alt fill
+				else
                     keepscrolling = false
                 end
             elseif calledBy == "down" then
                 if (lineEnd < #lines) then
                     lineStart = lineStart + 1
                     lineEnd = lineEnd + 1
+					WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-SCROLL_BAR_WIDTH-15, WINDOW_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-1, 10,  15 + 0x800) -- down arrow pushed
+				    points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-7, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11,(WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11) -- draw triangle in up button
+					WindowPolygon (SBWin, points,
+									ColourNameToRGB("black"), 0, 1,   -- pen (solid, width 1)
+									ColourNameToRGB("black"), 0, -- brush (solid)
+									true,	-- close				
+									false)  -- alt fill
                 else
                     keepscrolling = false
                 end
