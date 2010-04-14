@@ -245,6 +245,7 @@ function Display_Line (line, styles, backfill)
     local left = TEXT_INSET
     if (backfill) then
         WindowRectOp(SBWin, 2, 1, line*line_height+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, (line+1)*line_height+1, ColourNameToRGB("#222222"))
+        Redraw()
     end -- backfill
     if (styles) then
         for _, v in ipairs (styles) do
