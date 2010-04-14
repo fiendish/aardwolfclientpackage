@@ -114,7 +114,7 @@ starty = ""
 
 function InstallResizeTag()
     movewindow.add_drag_handler (SBWinResizer, 0, 0, 0, 0)
-    WindowAddHotspot(SBWinResizer, "resize", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Drag to resize", 6, 0)
+    WindowAddHotspot(SBWinResizer, "resize", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
     WindowDragHandler(SBWinResizer, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
 end
 
@@ -178,8 +178,8 @@ function init(firstTime)
     movewindow.add_drag_handler (SBWin, 0, 0, 0, line_height)
 
     -- scroll bar
-    WindowAddHotspot(SBWin, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, 0, 20, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Scroll up", 1, 0)
-    WindowAddHotspot(SBWin, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-20, 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Scroll down", 1, 0)
+    WindowAddHotspot(SBWin, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, 0, 20, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
+    WindowAddHotspot(SBWin, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-20, 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
 
     -- put the resizer in place
     if (firstTime == true) then
@@ -314,7 +314,7 @@ function drawStuff()
             barPos = barPos - (10-barSize)
             barSize = 10
         end
-        WindowAddHotspot(SBWin, "scroller", (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "Drag to scroll", 1, 0)
+        WindowAddHotspot(SBWin, "scroller", (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
         WindowDragHandler(SBWin, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
     end
     WindowRectOp(SBWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800)
@@ -523,7 +523,7 @@ function GetBufferedMessage(xpos, ypos)
         if (line-lineStart+1 > 0) then
             Display_Line (line-lineStart+1, styles, true)
         end
-        text = ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
+        text = ColourConvertOneLine(styles, 1, 99999) -- 99999 fixes a potential bug with WINE
         -- remaining lines
         line = line + 1
         while line <= #lines and lines[line][2] ~= true do
@@ -531,7 +531,7 @@ function GetBufferedMessage(xpos, ypos)
             if (line-lineStart+1 > 0 and line-lineStart < WINDOW_LINES) then
                 Display_Line (line-lineStart+1, styles, true)
             end
-            text = text..ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
+            text = text..ColourConvertOneLine(styles, 1, 99999) -- 99999 fixes a potential bug with WINE
             line = line + 1
         end -- while
         SetClipboard(text)
