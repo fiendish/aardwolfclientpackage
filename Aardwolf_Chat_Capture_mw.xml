@@ -241,21 +241,22 @@ function OnPluginDisable ()
 end -- function OnPluginSaveState
 
 -- display one line
-function Display_Line (line, styles)
+function Display_Line (line, styles, backfill)
     local left = TEXT_INSET
+    if (backfill) then
+        WindowRectOp(SBWin, 2, 1, line*line_height+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, (line+1)*line_height+1, ColourNameToRGB("#222222"))
+    end -- backfill
     if (styles) then
         for _, v in ipairs (styles) do
-            left = left + WindowText (SBWin, "font"..SBWin, v.text, left, SPACING, 0, 0, v.textcolour)
+            left = left + WindowText (SBWin, "font"..SBWin, v.text, left, line*line_height, 0, 0, v.textcolour)
         end -- for each style run
     end
 end -- Display_Line
 
 -- display all visible lines
 function writeLines()
-    SPACING = line_height
     for count = lineStart, lineEnd do
-        Display_Line( count, lines[count][1] )
-        SPACING = SPACING + line_height
+        Display_Line( count-lineStart+1, lines[count][1], false )
     end
 end
 
@@ -510,7 +511,7 @@ end
 function GetBufferedMessage(xpos, ypos)
     windowline = math.floor(((ypos-line_height)/line_height)+1)-1
     text = ""
-    if (#lines >= windowline) then
+    if (#lines > windowline) then
         local line = windowline+lineStart
         -- go to beginning of message
         while lines[line][2] ~= true and line > 1 do
@@ -518,12 +519,18 @@ function GetBufferedMessage(xpos, ypos)
         end -- while
         -- first line
         local styles = copytable.deep(lines[line][1])
-        text = text..ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
+        text = ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
+        if (line-lineStart+1 > 0) then
+            Display_Line (line-lineStart+1, styles, true)
+        end
         -- remaining lines
         line = line + 1
         while line <= #lines and lines[line][2] ~= true do
             local styles = copytable.deep(lines[line][1])
             text = text..ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
+            if (line-lineStart+1 > 0 and line-lineStart < WINDOW_LINES) then
+                Display_Line (line-lineStart+1, styles, true)
+            end
             line = line + 1
         end -- while
         SetClipboard(text)
