@@ -245,13 +245,13 @@ function Display_Line (line, styles, backfill)
     local left = TEXT_INSET
     if (backfill) then
         WindowRectOp(SBWin, 2, 1, line*line_height+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, (line+1)*line_height+1, ColourNameToRGB("#222222"))
-        Redraw()
     end -- backfill
     if (styles) then
         for _, v in ipairs (styles) do
             left = left + WindowText (SBWin, "font"..SBWin, v.text, left, line*line_height, 0, 0, v.textcolour)
         end -- for each style run
     end
+    Redraw()
 end -- Display_Line
 
 -- display all visible lines
@@ -520,18 +520,18 @@ function GetBufferedMessage(xpos, ypos)
         end -- while
         -- first line
         local styles = copytable.deep(lines[line][1])
-        text = ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
         if (line-lineStart+1 > 0) then
             Display_Line (line-lineStart+1, styles, true)
         end
+        text = ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
         -- remaining lines
         line = line + 1
         while line <= #lines and lines[line][2] ~= true do
             local styles = copytable.deep(lines[line][1])
-            text = text..ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
             if (line-lineStart+1 > 0 and line-lineStart < WINDOW_LINES) then
                 Display_Line (line-lineStart+1, styles, true)
             end
+            text = text..ColourConvertOneLine(styles, 1, WINDOW_COLUMNS)
             line = line + 1
         end -- while
         SetClipboard(text)
