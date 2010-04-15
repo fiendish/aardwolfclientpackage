@@ -350,10 +350,15 @@ end
 function ScrollerMoveCallback(flags, hotspot_id)
     mouseposy = WindowInfo(CWin, 18)
     windowtop = WindowInfo(CWin, 2)
-    barPos = mouseposy-windowtop+clickdelta
-    barPos = math.min(WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize, math.max(barPos, SCROLL_BAR_WIDTH+line_height))
-    lineStart = math.floor((barPos-SCROLL_BAR_WIDTH-line_height)/(SCROLL_BAR_HEIGHT/totalSteps)+1)
-    lineEnd = math.min(lineStart + WINDOW_LINES-2, #lines)
+    barPos = math.max(mouseposy-windowtop+clickdelta, SCROLL_BAR_WIDTH+line_height)
+    if barPos > WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize then
+        barPos = WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize
+        lineStart = #lines-WINDOW_LINES+2
+        lineEnd = #lines
+    else
+        lineStart = math.floor((barPos-SCROLL_BAR_WIDTH-line_height)/(SCROLL_BAR_HEIGHT/totalSteps)+1)
+        lineEnd = math.min(lineStart + WINDOW_LINES-2, #lines)
+    end
     refresh()
 end
 
