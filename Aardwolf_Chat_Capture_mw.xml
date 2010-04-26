@@ -71,6 +71,7 @@ SCROLL_BAR_WIDTH = 15
 LEFT_MARGIN = 5
 RIGHT_MARGIN = 5
 MAX_LINES = 10000 -- how many lines to store in scrollback
+TITLE_HEIGHT = 17
 
 -- date_format = "[%d %b %H:%M:%S] "        -- [30 Aug 13:29:49]   date and time 24 hour
 -- date_format = "[%d %b %I:%M:%S%p] "  -- [30 Aug 01:20:12PM]     date and time 12 hour
@@ -126,7 +127,7 @@ function ResizeMoveCallback()
         WINDOW_WIDTH = WINDOW_WIDTH+posx-startx
         startx = posx
     end
-    if (line_height*5+1 <= WINDOW_HEIGHT+posy-starty) then
+    if (3*SCROLL_BAR_WIDTH+10+line_height+TITLE_HEIGHT <= WINDOW_HEIGHT+posy-starty) then
         WINDOW_HEIGHT = WINDOW_HEIGHT+posy-starty
         starty = posy
     end
@@ -134,7 +135,7 @@ function ResizeMoveCallback()
 end
 
 function ResizeReleaseCallback()
-    WINDOW_HEIGHT = (line_height*(WINDOW_LINES))+3
+    WINDOW_HEIGHT = TITLE_HEIGHT+(line_height*(WINDOW_LINES-1))+3
     init(true)
 end
 
@@ -146,7 +147,7 @@ function OnPluginInstall()
     line_height = font_height+1
     font_width = WindowTextWidth (CWin, "font"..CWin, "W")
     
-   -- install the window movement handler, get back the window position
+    -- install the window movement handler, get back the window position
     resizerinfo = movewindow.install (CWinResizer, 6, 6, true)
     windowinfo = movewindow.install (CWin, 6, 2, true, {CWinResizer})
 
@@ -164,29 +165,28 @@ function OnPluginInstall()
         WINDOW_WIDTH = (font_width*80)+SCROLL_BAR_WIDTH -- 80 columns
     end
     if WINDOW_HEIGHT == nil then
-        WINDOW_HEIGHT = (line_height*10)+2 -- 10 lines
+        WINDOW_HEIGHT = TITLE_HEIGHT+(line_height*6)+2 -- 6 lines
     end
-    
     init(true)
     OnPluginEnable ()  -- do initialization stuff
 end
 
 function init(firstTime)
     -- how many lines and columns will fit?
-    WINDOW_LINES = math.ceil((WINDOW_HEIGHT-line_height)/line_height)
+    WINDOW_LINES = math.ceil((WINDOW_HEIGHT-TITLE_HEIGHT)/line_height)
     WINDOW_COLUMNS = math.ceil((WINDOW_WIDTH-SCROLL_BAR_WIDTH)/font_width)
 
     WindowCreate(CWin, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
     WindowShow(CWin, true)
     
     -- catch for right-click menu and line selection
-    WindowAddHotspot(CWin, "textarea", 0, line_height, WINDOW_WIDTH-SCROLL_BAR_WIDTH,0, "", "", "MouseDown", "", "MouseUp", "", 2, 0)
+    WindowAddHotspot(CWin, "textarea", 0, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH,0, "", "", "MouseDown", "", "MouseUp", "", 2, 0)
 
     -- add the drag handler so they can move the window around
-    movewindow.add_drag_handler (CWin, 0, 0, 0, line_height)
+    movewindow.add_drag_handler (CWin, 0, 0, 0, TITLE_HEIGHT)
 
     -- scroll bar up/down buttons
-    WindowAddHotspot(CWin, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, line_height, 0, line_height+SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
+    WindowAddHotspot(CWin, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
     WindowAddHotspot(CWin, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH), 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
 
     -- put the resizer in place
@@ -249,17 +249,17 @@ function OnPluginDisable ()
     TelnetOptionOff (TELOPT_SAYS)
     WindowShow( CWin, false )
     WindowShow( CWinResizer, false)
-end --  OnPluginSaveState
+end --  OnPluginDisable
 
 -- display one line
 function Display_Line (line, styles, backfill)
     local left = TEXT_INSET
     if (backfill) then
-        WindowRectOp(CWin, 2, 1, line*line_height+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, (line+1)*line_height+1, ColourNameToRGB("#333333"))
+        WindowRectOp(CWin, 2, 1, TITLE_HEIGHT+(line*line_height)+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT+(line*line_height)+line_height+1, ColourNameToRGB("#333333"))
     end -- backfill
     if (styles) then
         for _, v in ipairs (styles) do
-            left = left + WindowText (CWin, "font"..CWin, v.text, left, line*line_height, 0, 0, v.textcolour)
+            left = left + WindowText (CWin, "font"..CWin, v.text, left, TITLE_HEIGHT+(line*line_height), 0, 0, v.textcolour)
         end -- for each style run
     end
     Redraw()
@@ -268,7 +268,7 @@ end -- Display_Line
 -- display all visible lines
 function writeLines()
     for count = lineStart, lineEnd do
-        Display_Line( count-lineStart+1, lines[count][1], false )
+        Display_Line( count-lineStart, lines[count][1], false )
     end
 end
 
@@ -285,22 +285,20 @@ function drawStuff()
     -- draw drag bar rectangle
     WindowRectOp (CWin, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
     
-    -- top half of title bar
-    WindowGradient (CWin, 0, 0, 0, line_height/2, 0x000000, WINDOW_BORDER_COLOUR, 2)
-    -- bottom half of title bar
-    WindowGradient (CWin, 0, line_height/2, 0, line_height, WINDOW_BORDER_COLOUR, 0x000000, 2)
+    -- Title bar
+    WindowRectOp(CWin, 5, 0, 0, 0, TITLE_HEIGHT, 5,  15 + 0x800)
 
     -- Title
-    WindowText(CWin, "font"..CWin, "COMMUNICATION", ((WINDOW_WIDTH)-(7.5*line_height))/2, 0, WINDOW_WIDTH, line_height, ColourNameToRGB("black"), false)
+    WindowText(CWin, "font"..CWin, "COMMUNICATION", ((WINDOW_WIDTH)-(7.5*line_height))/2, (TITLE_HEIGHT-line_height)/2, WINDOW_WIDTH, TITLE_HEIGHT, ColourNameToRGB("black"), false)
     
     -- Scrollbar base
-    WindowRectOp(CWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, line_height, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
-    WindowRectOp(CWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH+line_height+1, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH)-1, SCROLL_DETAIL_COLOUR) -- scroll bar background inset rectangle
-    WindowRectOp(CWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), line_height, WINDOW_WIDTH, line_height+SCROLL_BAR_WIDTH, 5, 15 + 0x800) -- top scroll button 
+    WindowRectOp(CWin, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
+    WindowRectOp(CWin, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH+TITLE_HEIGHT+1, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH)-1, SCROLL_DETAIL_COLOUR) -- scroll bar background inset rectangle
+    WindowRectOp(CWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), TITLE_HEIGHT, WINDOW_WIDTH, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 5, 15 + 0x800) -- top scroll button
     WindowRectOp(CWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2), WINDOW_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 5,  15 + 0x800) -- bottom scroll button
 
     -- draw triangle in up button
-    points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, line_height+9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, line_height+5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, line_height+9)
+    points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, TITLE_HEIGHT+9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, TITLE_HEIGHT+5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, TITLE_HEIGHT+9)
     WindowPolygon (CWin, points,
         ColourNameToRGB("black"), 0, 1,   -- pen (solid, width 1)
         ColourNameToRGB("black"), 0, --brush (solid)
@@ -318,10 +316,10 @@ function drawStuff()
     -- The scrollbar position indicator
     totalSteps = #lines
     if (totalSteps <= WINDOW_LINES-1) then totalSteps = 1 end
-    SCROLL_BAR_HEIGHT = (WINDOW_HEIGHT-(3*SCROLL_BAR_WIDTH)-line_height)
+    SCROLL_BAR_HEIGHT = (WINDOW_HEIGHT-(3*SCROLL_BAR_WIDTH)-TITLE_HEIGHT)
     if (not dragscrolling) then
         stepNum = lineStart-1
-        barPos = SCROLL_BAR_WIDTH +line_height+ ((SCROLL_BAR_HEIGHT/totalSteps) * stepNum)
+        barPos = SCROLL_BAR_WIDTH +TITLE_HEIGHT+ ((SCROLL_BAR_HEIGHT/totalSteps) * stepNum)
         barSize = (SCROLL_BAR_HEIGHT/math.max(WINDOW_LINES-1,totalSteps)) * (WINDOW_LINES-1)
         if barSize < 10 then
             barPos = barPos - (10-barSize)
@@ -350,13 +348,13 @@ end
 function ScrollerMoveCallback(flags, hotspot_id)
     mouseposy = WindowInfo(CWin, 18)
     windowtop = WindowInfo(CWin, 2)
-    barPos = math.max(mouseposy-windowtop+clickdelta, SCROLL_BAR_WIDTH+line_height)
+    barPos = math.max(mouseposy-windowtop+clickdelta, SCROLL_BAR_WIDTH+TITLE_HEIGHT)
     if barPos > WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize then
         barPos = WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize
         lineStart = math.max(1,#lines-WINDOW_LINES+2)
         lineEnd = #lines
     else
-        lineStart = math.floor((barPos-SCROLL_BAR_WIDTH-line_height)/(SCROLL_BAR_HEIGHT/totalSteps)+1)
+        lineStart = math.floor((barPos-SCROLL_BAR_WIDTH-TITLE_HEIGHT)/(SCROLL_BAR_HEIGHT/totalSteps)+1)
         lineEnd = math.min(lineStart + WINDOW_LINES-2, #lines)
     end
     refresh()
@@ -488,8 +486,8 @@ function scrollbar(calledBy)
                 if (lineStart > 1) then
                     lineStart = lineStart - 1
                     lineEnd = lineEnd - 1
-                    WindowRectOp(CWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), line_height, 0, line_height+SCROLL_BAR_WIDTH, 10,  15 + 0x800) -- up arrow pushed
-                    points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, line_height+9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, line_height+5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, line_height+9)
+                    WindowRectOp(CWin, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 10,  15 + 0x800) -- up arrow pushed
+                    points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, TITLE_HEIGHT+9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, TITLE_HEIGHT+5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, TITLE_HEIGHT+9)
                     WindowPolygon (CWin, points,
                         ColourNameToRGB("black"), 0, 1, -- pen (solid, width 1)
                         ColourNameToRGB("black"), 0, -- brush (solid)
@@ -539,7 +537,7 @@ function GetBufferedMessage(xpos, ypos)
         -- first line
         local styles = copytable.deep(lines[line][1])
         if (line-lineStart+1 > 0) then
-            Display_Line (line-lineStart+1, styles, true)
+            Display_Line (line-lineStart, styles, true)
         end
         text = ColourConvertOneLine(styles, 1, 99999) -- 99999 fixes a potential bug with WINE
         -- remaining lines
@@ -547,7 +545,7 @@ function GetBufferedMessage(xpos, ypos)
         while line <= #lines and lines[line][2] ~= true do
             local styles = copytable.deep(lines[line][1])
             if (line-lineStart+1 > 0 and line-lineStart < WINDOW_LINES) then
-                Display_Line (line-lineStart+1, styles, true)
+                Display_Line (line-lineStart, styles, true)
             end
             text = text..ColourConvertOneLine(styles, 1, 99999) -- 99999 fixes a potential bug with WINE
             line = line + 1
