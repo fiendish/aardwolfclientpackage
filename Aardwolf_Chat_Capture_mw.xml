@@ -353,7 +353,7 @@ function ScrollerMoveCallback(flags, hotspot_id)
     barPos = math.max(mouseposy-windowtop+clickdelta, SCROLL_BAR_WIDTH+line_height)
     if barPos > WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize then
         barPos = WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize
-        lineStart = #lines-WINDOW_LINES+2
+        lineStart = math.max(1,#lines-WINDOW_LINES+2)
         lineEnd = #lines
     else
         lineStart = math.floor((barPos-SCROLL_BAR_WIDTH-line_height)/(SCROLL_BAR_HEIGHT/totalSteps)+1)
