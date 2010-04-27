@@ -322,8 +322,10 @@ function drawStuff()
         barPos = SCROLL_BAR_WIDTH +TITLE_HEIGHT+ ((SCROLL_BAR_HEIGHT/totalSteps) * stepNum)
         barSize = (SCROLL_BAR_HEIGHT/math.max(WINDOW_LINES-1,totalSteps)) * (WINDOW_LINES-1)
         if barSize < 10 then
-            barPos = barPos - (10-barSize)
             barSize = 10
+        end
+        if barPos+barSize > SCROLL_BAR_WIDTH+TITLE_HEIGHT+SCROLL_BAR_HEIGHT then
+            barPos = SCROLL_BAR_WIDTH+TITLE_HEIGHT+SCROLL_BAR_HEIGHT - barSize
         end
         WindowAddHotspot(CWin, "scroller", (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
         WindowDragHandler(CWin, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
