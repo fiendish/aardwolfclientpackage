@@ -107,6 +107,7 @@ WINDOW_LINES = ""
 -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
 Win = GetPluginID()
 WinResizer = Win.."resize"
 font_height = ""
@@ -180,7 +181,7 @@ function init(firstTime)
     WindowShow(Win, true)
     
     -- catch for right-click menu and line selection
-    WindowAddHotspot(Win, "textarea", 0, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH,0, "", "", "MouseDown", "", "MouseUp", "", 2, 0)
+    WindowAddHotspot(Win, "textarea", 0, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH,0, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 2, 0)
 
     -- add the drag handler so they can move the window around
     movewindow.add_drag_handler (Win, 0, 0, 0, TITLE_HEIGHT)
@@ -277,12 +278,11 @@ function refresh()
     WindowRectOp(Win, 2, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND_COLOUR)
     drawStuff()
 end
-
 barPos = ""
 barSize = ""
 totalSteps = ""
 function drawStuff()
-    -- draw drag bar rectangle
+    -- draw border
     WindowRectOp (Win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
     
     -- Title bar
