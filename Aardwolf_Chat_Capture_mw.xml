@@ -78,11 +78,11 @@ TITLE_HEIGHT = 17
 -- date_format = "[%H:%M:%S] "          -- [13:29:08]          time 24 hour
 -- date_format = "[%X] "                  -- [1:22:06 PM]            time 12 hour
 
-timestamp = GetVariable("timestamp")
-echo = GetVariable("echo")
-date_format = GetVariable("date_format")
-WINDOW_WIDTH = tonumber(GetVariable("WINDOW_WIDTH"))
-WINDOW_HEIGHT = tonumber(GetVariable("WINDOW_HEIGHT"))
+timestamp = GetVariable(GetPluginID().."timestamp")
+echo = GetVariable(GetPluginID().."echo")
+date_format = GetVariable(GetPluginID().."date_format")
+WINDOW_WIDTH = tonumber(GetVariable(GetPluginID().."WINDOW_WIDTH"))
+WINDOW_HEIGHT = tonumber(GetVariable(GetPluginID().."WINDOW_HEIGHT"))
 
 -- colours
 WINDOW_BACKGROUND_COLOUR = ColourNameToRGB ("black")
@@ -105,8 +105,8 @@ WINDOW_COLUMNS = ""
 WINDOW_LINES = ""
 
 -- pull in telnet option handling
-dofile (GetPluginInfo (GetPluginID (), 20) .. "telnet_options.lua")
-dofile (GetPluginInfo (GetPluginID (), 20) .. "aardwolf_colors.lua")
+dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
+dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 CWin = GetPluginID()
 CWinResizer = CWin.."resize"
 font_height = ""
@@ -216,7 +216,7 @@ end --  OnPluginConnect
 
 function OnPluginClose ()
     -- if enabled
-    if GetPluginInfo (GetPluginID (), 17) then
+    if GetPluginInfo (GetPluginID(), 17) then
         OnPluginDisable()
     end -- if enabled
 end -- OnPluginClose
@@ -232,15 +232,15 @@ end -- OnPluginEnable
 
 function OnPluginSaveState ()
     -- save window current location for next time  
-    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+    SetVariable (GetPluginID().."enabled", tostring (GetPluginInfo (GetPluginID(), 17)))
     movewindow.save_state (CWin)
     movewindow.save_state (CWinResizer)
     -- save echo/timestamp status
-    SetVariable ("echo", echo)
-    SetVariable ("timestamp", timestamp)
-    SetVariable("date_format", date_format)
-    SetVariable("WINDOW_WIDTH", WINDOW_WIDTH)
-    SetVariable("WINDOW_HEIGHT", WINDOW_HEIGHT)
+    SetVariable (GetPluginID().."echo", echo)
+    SetVariable (GetPluginID().."timestamp", timestamp)
+    SetVariable(GetPluginID().."date_format", date_format)
+    SetVariable(GetPluginID().."WINDOW_WIDTH", WINDOW_WIDTH)
+    SetVariable(GetPluginID().."WINDOW_HEIGHT", WINDOW_HEIGHT)
 end --  OnPluginSaveState
 
 function OnPluginDisable ()
@@ -638,8 +638,8 @@ function right_click_menu ()
         if wanted_font then
             FONT_NAME = wanted_font.name
             FONT_SIZE = wanted_font.size
-            SetVariable ("font", FONT_NAME)
-            SetVariable ("font_size", FONT_SIZE)
+            SetVariable (GetPluginID().."font", FONT_NAME)
+            SetVariable (GetPluginID().."font_size", FONT_SIZE)
             OnPluginInstall()
         end
     end -- if
