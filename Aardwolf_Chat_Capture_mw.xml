@@ -195,14 +195,14 @@ function init(firstTime)
         WindowCreate(WinResizer, windowinfo.window_left+WINDOW_WIDTH-SCROLL_BAR_WIDTH, windowinfo.window_top+WINDOW_HEIGHT-SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH, 0, 6, ColourNameToRGB("pink"))
         WindowShow(WinResizer, true)
         InstallResizeTag(WinResizer, SCROLL_BAR_WIDTH)
+        lines = {}
+        for _,styles in ipairs(rawlines) do 
+            fillBuffer(styles)
+        end
     else
         WindowPosition(WinResizer, windowinfo.window_left+WINDOW_WIDTH-SCROLL_BAR_WIDTH, windowinfo.window_top+WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 0, 6)
     end
 
-    lines = {}
-    for _,styles in ipairs(rawlines) do
-        fillBuffer(styles)
-    end
     lineStart = math.max(1, #lines-WINDOW_LINES+2)
     lineEnd = math.max(1, #lines)
     refresh()
@@ -290,7 +290,11 @@ function drawStuff()
 
     -- Title
     WindowText(Win, "font"..Win, "COMMUNICATION", ((WINDOW_WIDTH)-(7.5*line_height))/2, (TITLE_HEIGHT-line_height)/2, WINDOW_WIDTH, TITLE_HEIGHT, ColourNameToRGB("black"), false)
-    
+
+    if #lines >= 1 then
+        writeLines()
+    end -- if
+        
     -- Scrollbar base
     WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
     WindowRectOp(Win, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH+TITLE_HEIGHT+1, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH)-1, SCROLL_DETAIL_COLOUR) -- scroll bar background inset rectangle
@@ -341,9 +345,7 @@ function drawStuff()
     WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, ColourNameToRGB ("dimgray"), 0, 1)
     WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, ColourNameToRGB ("white"), 0, 2)
     WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, ColourNameToRGB ("dimgray"), 0, 1)
-    if #lines >= 1 then
-        writeLines()
-    end -- if
+
     Redraw()
 end
 
@@ -373,11 +375,13 @@ function fillBuffer(rawstyles)
     local beginning = true
     -- keep pulling out styles and trying to fit them on the current line
     local styles = copytable.deep (rawstyles)
+    local remove = table.remove
+    local insert = table.insert
     while #styles > 0 do
         if avail <= 0 then -- no room available? start new line
             -- remove first line if filled up
             if #lines >= MAX_LINES then
-                table.remove (lines, 1)
+                remove (lines, 1)
             end -- if 
             avail = WINDOW_WIDTH - (TEXT_INSET * 2) - 9
             line_styles = {}
@@ -386,12 +390,12 @@ function fillBuffer(rawstyles)
         end -- line full
 
         -- get next style, work out how long it is
-        local style = table.remove (styles, 1)
+        local style = remove (styles, 1)
         local width = WindowTextWidth (Win, "font"..Win, style.text)
 
         -- if it fits, copy whole style in
         if width <= avail then
-            table.insert (line_styles, style)
+            insert (line_styles, style)
             avail = avail - width
         else -- otherwise, have to split style   
             -- look for trailing space (work backwards). remember where space is
@@ -415,17 +419,17 @@ function fillBuffer(rawstyles)
           
             -- if we found a place to split, use old style, and make it shorter. Also make a copy and put the rest in that
             if split_col then
-                table.insert (line_styles, style)
+                insert (line_styles, style)
                 local style_copy = copytable.shallow (style)
                 style.text = style.text:sub (1, split_col)
                 style.length = split_col 
                 style_copy.text = style_copy.text:sub (split_col + 1)
                 style_copy.length = #style_copy.text
-                table.insert (styles, 1, style_copy)
+                insert (styles, 1, style_copy)
             elseif next (line_styles) == nil then
-                table.insert (line_styles, style)
+                insert (line_styles, style)
             else
-                table.insert (styles, 1, style)
+                insert (styles, 1, style)
             end -- if    
             avail = 0  -- now we need to wrap     
         end -- if could not fit whole thing in
@@ -465,7 +469,7 @@ end -- chats
 
 function add_line ( line, is_beginning_of_message )
     -- add new line
-    table.insert (lines, {line} )
+    table.insert (lines, {line, false} )
     lines[#lines][2] = is_beginning_of_message
 
     -- advance the count
@@ -528,7 +532,7 @@ function GetAllBufferedMessages()
 end
 
 function GetBufferedMessage(xpos, ypos)
-    windowline = math.floor(((ypos-line_height)/line_height)+1)-1
+    windowline = math.floor(((ypos-TITLE_HEIGHT)/line_height)+1)-1
     text = ""
     if (#lines > windowline) then
         local line = windowline+lineStart
@@ -558,12 +562,10 @@ end
 
 function MouseOver(flags, hotspot_id)
     keepscrolling = false
-    refresh()
 end
 
 function CancelMouseOver(flags, hotspot_id)
     keepscrolling = false
-    refresh()
 end
 
 function MouseDown(flags, hotspot_id)
@@ -590,9 +592,9 @@ function MouseUp(flags, hotspot_id)
         -- build menu for current state
         right_click_menu()
     else
-        keepscrolling = false
         refresh()
     end
+    keepscrolling = false
 end
 
 function chat_echo (name, line, wildcards)
