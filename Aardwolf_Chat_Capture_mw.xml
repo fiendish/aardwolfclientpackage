@@ -621,12 +621,12 @@ function right_click_menu ()
         GetAllBufferedMessages()
         ColourNote ("yellow", "", "All buffered messages copied to clipboard.")
     elseif result == "Change Font" then
-        wanted_font = utils.fontpicker (FONT_NAME, FONT_SIZE) --font dialog
+        wanted_font = utils.fontpicker (BODY_FONT_NAME, BODY_FONT_SIZE) --font dialog
         if wanted_font then
-            FONT_NAME = wanted_font.name
-            FONT_SIZE = wanted_font.size
-            SetVariable (GetPluginID().."bodyfont", FONT_NAME)
-            SetVariable (GetPluginID().."font_size", FONT_SIZE)
+            BODY_FONT_NAME = wanted_font.name
+            BODY_FONT_SIZE = wanted_font.size
+            SetVariable (GetPluginID().."bodyfont", BODY_FONT_NAME)
+            SetVariable (GetPluginID().."font_size", BODY_FONT_SIZE)
             OnPluginInstall()
         end
     elseif result == "Turn Echo Off" then
