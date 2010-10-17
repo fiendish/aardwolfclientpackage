@@ -82,13 +82,27 @@ end
 
 -- replacement for WindowRectOp action 5, which allows for a 3D look while maintaining color theme
 -- Requires global theme.HIGHLIGHT, theme.FACE, theme.INNERSHADOW, and theme.OUTERSHADOW rgb colors to be set.
-function DrawThemed3DRect(WindowName, left, top, right, bottom)
-    WindowRectOp(WindowName, 2, left, top, right, bottom, theme.FACE)
-    WindowLine(WindowName, left, top, right, top, theme.HIGHLIGHT, 0 + 0x0200, 1)
-    WindowLine(WindowName, left, top, left, bottom, theme.HIGHLIGHT, 0 + 0x0200, 1)
-    WindowLine(WindowName, left, bottom-2, right, bottom-2, theme.INNERSHADOW, 0 + 0x0200, 1)
-    WindowLine(WindowName, right-2, top, right-2, bottom-2, theme.INNERSHADOW, 0 + 0x0200, 1)
-    WindowLine(WindowName, left, bottom-1, right, bottom-1, theme.OUTERSHADOW, 0 + 0x0200, 1)
-    WindowLine(WindowName, right-1, top, right-1, bottom-1, theme.OUTERSHADOW, 0 + 0x0200, 1)    
+function DrawThemed3DRect(Window, left, top, right, bottom)
+    WindowRectOp(Window, 2, left, top, right, bottom, theme.FACE)
+    WindowLine(Window, left, top, right, top, theme.HIGHLIGHT, 0 + 0x0200, 1)
+    WindowLine(Window, left, top, left, bottom, theme.HIGHLIGHT, 0 + 0x0200, 1)
+    WindowLine(Window, left, bottom-2, right, bottom-2, theme.INNERSHADOW, 0 + 0x0200, 1)
+    WindowLine(Window, right-2, top, right-2, bottom-2, theme.INNERSHADOW, 0 + 0x0200, 1)
+    WindowLine(Window, left, bottom-1, right, bottom-1, theme.OUTERSHADOW, 0 + 0x0200, 1)
+    WindowLine(Window, right-1, top, right-1, bottom-1, theme.OUTERSHADOW, 0 + 0x0200, 1)    
+end
+
+function DrawThemedResizeTag(Window, ResizerSize)
+    local x2, y2 = WindowInfo(Window, 3), WindowInfo(Window, 4)
+    local x1, y1 = x2-ResizerSize, y2-ResizerSize
+    DrawThemed3DRect(Window, x1, y1, x2, y2)
+    local m = 2
+    local n = 2
+    while (x1+m+2 <= x2-3 and y1+n+1 <= y2-4) do
+        WindowLine(Window, x1+m+1, y2-4, x2-3, y1+n, theme.HIGHLIGHT, 0, 1)
+        WindowLine(Window, x1+m+2, y2-4, x2-3, y1+n+1, theme.INNERSHADOW, 0, 1)
+        m = m+3
+        n = n+3
+    end
 end
 
