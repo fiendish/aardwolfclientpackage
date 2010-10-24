@@ -327,7 +327,7 @@ function drawStuff()
     DrawThemed3DRect(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH, barPos, WINDOW_WIDTH, barPos+barSize)
     
     -- resizer tag
-    DrawThemedResizeTag(Win, SCROLL_BAR_WIDTH)
+    DrawThemedResizeTag(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH)
     
     Redraw()
 end

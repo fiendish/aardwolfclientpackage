@@ -92,9 +92,8 @@ function DrawThemed3DRect(Window, left, top, right, bottom)
     WindowLine(Window, right-1, top, right-1, bottom-1, theme.OUTERSHADOW, 0 + 0x0200, 1)    
 end
 
-function DrawThemedResizeTag(Window, ResizerSize)
-    local x2, y2 = WindowInfo(Window, 3), WindowInfo(Window, 4)
-    local x1, y1 = x2-ResizerSize, y2-ResizerSize
+function DrawThemedResizeTag(Window, x1, y1, size)
+    local x2, y2 = x1+size, y1+size
     DrawThemed3DRect(Window, x1, y1, x2, y2)
     local m = 2
     local n = 2
