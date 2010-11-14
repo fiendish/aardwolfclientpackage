@@ -153,17 +153,19 @@ function DisplayStatsPage()
    -- title rectangle
    WindowGradient (win, 1, 0, width, TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
    WindowLine(win, 0, TITLE_HEIGHT, width, TITLE_HEIGHT, 0xeeeeee, 0 + 0x0200, 1)
-   WindowText (win, font_id_header, "Stats", width/2-20, (TITLE_HEIGHT/2)-(font_height/2), 0, 0, 0xeeeeee, utf8)
-      
+   title_width = WindowTextWidth(win, font_id_header, "Stats")
+   if (header_font_height < TITLE_HEIGHT) then
+      WindowText (win, font_id_header, "Stats", (width/2)-(title_width/2), (TITLE_HEIGHT/2)-(header_font_height/2), 0, 0, 0xeeeeee, utf8)
+   end
    if not page_built then
       txt = "Stats will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, TITLE_HEIGHT+(height-TITLE_HEIGHT)/2-line_height, 0, 0, 0xeeeeee, utf8)
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line_height, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, TITLE_HEIGHT+(height-TITLE_HEIGHT)/2, 0, 0, 0xeeeeee, utf8)
       max_height = default_height
-      max_width = default_width
+      max_width = default_width    
    else
       -- display each line    
       local left = LEFT_MARGIN
@@ -454,6 +456,7 @@ function OnPluginInstall()
 
    --- Grab font size settings.
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
+   header_font_height = WindowFontInfo (win, font_id_header, 1) - WindowFontInfo (win, font_id_header, 4) + 1
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
    line_height = font_height + 1
 
