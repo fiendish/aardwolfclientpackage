@@ -50,7 +50,7 @@ title_colour          = 0x292929
 border_color          = 0xcccccc
 title_gradient_col1   = 0x050505
 title_gradient_col2   = 0x333333
-default_width         = 400
+default_width         = 398
 
 --title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10
@@ -395,7 +395,9 @@ function OnPluginInstall()
    --- install the window movement handler, get back the window position.
    windowinfo  = movewindow.install (win, 6, 2, true)
 
+   MIN_SIZE = (WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN)*2
    height = TITLE_HEIGHT+(TOP_MARGIN*2)+(5*line_height)
+   width = math.max(width, MIN_SIZE)
    
    --- Setup the window.
    SetUpHotspotsAndDraw(true)
