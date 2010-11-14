@@ -95,7 +95,12 @@ movewindow = {}  -- table to hold functions like movewindow.install
 local function make_mousedown_handler (mwi)
 
   return function (flags, hotspot_id)
-
+    if (mwi.left_click_drag_only and bit.band(flags, 0x20) ~= 0) then
+        mwi.left_click = false
+        return
+    end
+    mwi.left_click = true
+    
     local win = mwi.win
     
     -- find where mouse is so we can adjust window relative to mouse
@@ -122,7 +127,9 @@ end -- make_mousedown_handler
 local function make_dragmove_handler (mwi)
 
   return function (flags, hotspot_id)
-  
+    if (mwi.left_click_drag_only and not mwi.left_click) then
+        return
+    end
     local win = mwi.win
   
     -- find where it is now
@@ -163,7 +170,9 @@ end -- make_dragmove_handler
 local function make_dragrelease_handler (mwi)
 
   return function (flags, hotspot_id)
-  
+    if (mwi.left_click_drag_only and not mwi.left_click) then
+        return
+    end
     local win = mwi.win
   
     Repaint ()  -- update window location
@@ -229,7 +238,7 @@ end -- make_check_map_position_handler
 --  - it also creates the handler functions ready for use later
 external_mouseup_handler = function() end -- do nothing
 
-function movewindow.install (win, default_position, default_flags, nocheck, default_friends, mouseup_handler)
+function movewindow.install (win, default_position, default_flags, nocheck, default_friends, only_drag_on_left_click, mouseup_handler)
 
   win = win or GetPluginID ()  -- default to current plugin ID
   
@@ -252,7 +261,9 @@ function movewindow.install (win, default_position, default_flags, nocheck, defa
      window_flags = tonumber (GetVariable ("mw_" .. win .. "_windowflags")) or default_flags,
      window_friends = default_friends,
      window_friend_deltas = {},
-     margin = 20  -- how close we can put to the edge of the window
+     margin = 20,  -- how close we can put to the edge of the window
+     left_click = false,
+     left_click_drag_only = only_drag_on_left_click
     }
 
     -- handler to reposition window
