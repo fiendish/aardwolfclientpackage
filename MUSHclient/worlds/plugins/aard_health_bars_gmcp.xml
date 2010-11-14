@@ -9,7 +9,7 @@
 <plugin
    name="Aardwolf_Health_Bars"
    author="Lasher and Fiendish"
-   id="ef4a86dbc9cd4dd6f4c69387"
+   id="ef4a86dbc9cd4dd6f4c69385"
    language="Lua"
    purpose="GMCP Version of health bars"
    date_written="2010-08-15 21:25:03"
