@@ -13,7 +13,7 @@
    language="Lua"
    purpose="GMCP Version of statmon"
    date_written="2010-08-15 21:25:03"
-   requires="4.56"
+   requires="4.69"
    version="1.0"
    save_state="y"
    >
