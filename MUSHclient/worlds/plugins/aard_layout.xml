@@ -145,25 +145,25 @@ end
 
 
 function ResizeMainCallback()
-
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
-
-   if ( textrect_right -textrect_left + posx - startx >= MIN_SIZE) then
-      textrect_right = textrect_right + posx - startx
-      startx = posx
-      if (textrect_right > GetInfo(281)-10) then
-         textrect_right = GetInfo(281)-10
+   textrect_right = textrect_right + posx - startx
+   startx = posx
+   if ( textrect_right-textrect_left < MIN_SIZE) then
+         textrect_right = textrect_left+MIN_SIZE
          startx = textrect_right
-      end
+   elseif (textrect_right > GetInfo(281)-7) then
+         textrect_right = GetInfo(281)-7
+         startx = textrect_right
    end
-
-   if ( textrect_bottom + posy - starty >= MIN_SIZE) then
-      textrect_bottom = textrect_bottom + posy - starty
-      starty = posy
-      if (textrect_bottom > GetInfo(280)-10) then
-         textrect_bottom = GetInfo(280)-10
-         starty = textrect_bottom
-      end
+   
+   textrect_bottom = textrect_bottom + posy - starty
+   starty = posy
+   if ( textrect_bottom-textrect_top < MIN_SIZE) then
+      textrect_bottom = textrect_top+MIN_SIZE
+      starty = textrect_bottom
+   elseif (textrect_bottom > GetInfo(280)-7) then
+      textrect_bottom = GetInfo(280)-7
+      starty = textrect_bottom
    end
 
    default_textrect = 0 -- we moved something, no longer on autopilot.
@@ -184,25 +184,25 @@ function DragMainCallback()
    
    textrect_left = textrect_left + posx - startx
    textrect_right = textrect_left + width
-   if (textrect_left < 7) then
+   if (textrect_left <= 7) then
       textrect_left = 7
       textrect_right = textrect_left + width
-   elseif (textrect_right > GetInfo(281)-10) then
-      textrect_right = GetInfo(281)-10
+   elseif (textrect_right >= GetInfo(281)-7) then
+      textrect_right = GetInfo(281)-7
       textrect_left = textrect_right - width
    else
       startx = posx
    end
   
    textrect_top = textrect_top + posy - starty
-   starty = posy
    textrect_bottom = textrect_top+height
+   starty = posy
    if (textrect_top < 7) then
-      starty = 7
-      textrect_top = starty
+      textrect_top = 7
+      starty = textrect_top
       textrect_bottom = textrect_top+height
-   elseif (textrect_bottom > GetInfo(280)-10) then
-      textrect_bottom = GetInfo(280)-10
+   elseif (textrect_bottom > GetInfo(280)-7) then
+      textrect_bottom = GetInfo(280)-7
       textrect_top = textrect_bottom-height
       starty = textrect_top
    end
