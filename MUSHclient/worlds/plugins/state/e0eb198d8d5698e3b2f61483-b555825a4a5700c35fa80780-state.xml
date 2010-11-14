@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Sunday, November 14, 2010, 2:36 AM -->
+<!-- MuClient version 4.69 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Chat_Capture_Miniwindow". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.69"
+   world_file_version="15"
+   date_saved="2010-11-14 02:36:28"
+  >
+  <variable name="WINDOW_HEIGHT">177</variable>
+  <variable name="WINDOW_WIDTH">498</variable>
+  <variable name="b555825a4a5700c35fa80780WINDOW_HEIGHT">192</variable>
+  <variable name="b555825a4a5700c35fa80780WINDOW_WIDTH">423</variable>
+  <variable name="b555825a4a5700c35fa80780bodyfont">Arial</variable>
+  <variable name="b555825a4a5700c35fa80780bodyfont_name">Arial</variable>
+  <variable name="b555825a4a5700c35fa80780bodyfont_size">12</variable>
+  <variable name="b555825a4a5700c35fa80780date_format">[%d %b %H:%M:%S] </variable>
+  <variable name="b555825a4a5700c35fa80780echo">1</variable>
+  <variable name="b555825a4a5700c35fa80780enabled">true</variable>
+  <variable name="b555825a4a5700c35fa80780font_name">Arial</variable>
+  <variable name="b555825a4a5700c35fa80780font_size">8</variable>
+  <variable name="b555825a4a5700c35fa80780timestamp">1</variable>
+  <variable name="date_format">[%d %b %H:%M:%S] </variable>
+  <variable name="echo">1</variable>
+  <variable name="enabled">true</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowflags">2</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowmode">0</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowx">749</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowy">321</variable>
+  <variable name="mw_b555825a4a5700c35fa80780resize_windowflags">6</variable>
+  <variable name="mw_b555825a4a5700c35fa80780resize_windowmode">6</variable>
+  <variable name="mw_b555825a4a5700c35fa80780resize_windowx">0</variable>
+  <variable name="mw_b555825a4a5700c35fa80780resize_windowy">0</variable>
+  <variable name="timestamp">1</variable>
+</variables>
+</muclient>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Friday, October 29, 2010, 12:27 PM -->
+<!-- MuClient version 4.65 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Aardwolf_Map_v3". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.65"
+   world_file_version="15"
+   date_saved="2010-10-29 12:27:33"
+  >
+  <variable name="background_colour">8718</variable>
+  <variable name="enabled">true</variable>
+  <variable name="title_colour">6908265</variable>
+  <variable name="windowflags">2</variable>
+  <variable name="windowmode">0</variable>
+  <variable name="windowx">947</variable>
+  <variable name="windowy">136</variable>
+</variables>
+</muclient>

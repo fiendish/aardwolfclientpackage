@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Wednesday, October 27, 2010, 5:34 PM -->
+<!-- MuClient version 4.65 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "bbChat_Capture_Miniwindow". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.65"
+   world_file_version="15"
+   date_saved="2010-10-27 17:34:12"
+  >
+  <variable name="b555825a4a5700c35fa80781WINDOW_HEIGHT">189</variable>
+  <variable name="b555825a4a5700c35fa80781WINDOW_WIDTH">476</variable>
+  <variable name="b555825a4a5700c35fa80781bodyfont_name">Andale Mono</variable>
+  <variable name="b555825a4a5700c35fa80781bodyfont_size">8</variable>
+  <variable name="b555825a4a5700c35fa80781date_format">[%d %b %H:%M:%S] </variable>
+  <variable name="b555825a4a5700c35fa80781echo">1</variable>
+  <variable name="b555825a4a5700c35fa80781enabled">true</variable>
+  <variable name="b555825a4a5700c35fa80781timestamp">1</variable>
+  <variable name="mw_b555825a4a5700c35fa80781_windowflags">2</variable>
+  <variable name="mw_b555825a4a5700c35fa80781_windowmode">0</variable>
+  <variable name="mw_b555825a4a5700c35fa80781_windowx">699</variable>
+  <variable name="mw_b555825a4a5700c35fa80781_windowy">117</variable>
+</variables>
+</muclient>
