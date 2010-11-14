@@ -46,19 +46,13 @@ require "gauge"
 require "gmcphelper"
 
 background_colour     = 0x000000
-title_colour          = 0x292929
 border_color          = 0xcccccc
-title_gradient_col1   = 0x050505
-title_gradient_col2   = 0x333333
 default_width         = 398
 
---title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 20
-TITLE_HEIGHT    = 10
 LEFT_MARGIN     = 10
 TOP_MARGIN      = 5
-HEALTH_BARS     =  1
 
 -- Variables not saved.
 startx           = ""  
@@ -95,23 +89,16 @@ function DisplayStatsPage()
    styles = cstyles
    WindowRectOp(win, 2, 0,0,0,0,background_colour) -- blank 
      
-   -- title rectangle
-   WindowGradient (win, 1, 0, width, TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
-   WindowLine(win, 0, TITLE_HEIGHT, width, TITLE_HEIGHT, 0xeeeeee, 0 + 0x0200, 1)
-   title_width = WindowTextWidth(win, font_id_header, "Status Bars")
-   if (header_font_height < TITLE_HEIGHT) then
-      WindowText (win, font_id_header, "Status Bars", (width/2)-(title_width/2), (TITLE_HEIGHT/2)-(header_font_height/2), 0, 0, 0xeeeeee, utf8)
-   end
    if not page_built then
       txt = "Status bars will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, TITLE_HEIGHT+(height-TITLE_HEIGHT)/2-line_height, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, 0, 0, 0xeeeeee, utf8)
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, TITLE_HEIGHT+(height-TITLE_HEIGHT)/2, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
    -- Only draw bars if we have data.
    else 
-      local ypos = TITLE_HEIGHT + TOP_MARGIN
+      local ypos = TOP_MARGIN
       local xpos = LEFT_MARGIN
       line_height = line_height
       bar_start = xpos+WindowTextWidth(win,font_id,"WWWWWW:")
@@ -304,7 +291,7 @@ end
 ---------------------------------------------------------------------------------
 function MouseUp(flags, hotspot_id)
     --debugp("MouseUp",hotspot_id)
-    if (hotspot_id == "textarea" and flags == 0x20) then
+    if (flags == 0x20) then
        -- build menu for current state
        right_click_menu()
     end
@@ -320,7 +307,6 @@ function OnPluginSaveState ()
   
   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
   SetVariable ("background_colour", background_colour)
-  SetVariable ("title_colour", title_colour)  
   SetVariable ("width", width)
   SetVariable ("height", height)
   SetVariable ("font_name", font_name)
@@ -352,7 +338,6 @@ function OnPluginInstall()
 
    --- Pull some state variables.
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-   title_colour      = tonumber (GetVariable ("title_colour")) or title_colour
    height            = tonumber (GetVariable ("height")) or default_height
    orig_height = height
    width             = tonumber (GetVariable ("width")) or default_width
@@ -361,7 +346,6 @@ function OnPluginInstall()
    WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
 
    font_id        = "statmon_font"
-   font_id_header = "header_font"
 
    local fonts = utils.getfontfamilies ()
 
@@ -376,27 +360,22 @@ function OnPluginInstall()
       default_font_name = "Courier New"
    end -- if
 
-   header_font_name = "Lucida Console"
-   header_font_size = 9
-
    font_name        = GetVariable("font_name") or default_font_name
    font_size        = tonumber(GetVariable("font_size")) or default_font_size
 
    --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
-   WindowFont (win, font_id_header, header_font_name,header_font_size,false,false,false,false) 
 
    --- Grab font size settings.
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-   header_font_height = WindowFontInfo (win, font_id_header, 1) -  WindowFontInfo (win, font_id_header, 4) + 1 -- height
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
    line_height = font_height + 1
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, 6, 2, true)
+   windowinfo  = movewindow.install (win, 6, 2, true,nil,MouseUp)
 
    MIN_SIZE = (WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN)*2
-   height = TITLE_HEIGHT+(TOP_MARGIN*2)+(5*line_height)
+   height = (TOP_MARGIN*2)+(5*line_height)
    width = math.max(width, MIN_SIZE)
    
    --- Setup the window.
@@ -419,9 +398,7 @@ function SetUpHotspotsAndDraw(firstTime)
                  windowinfo.window_flags,  -- flags
                  background_colour) )                
        -- Add the drag handler so they can move the window around
-       movewindow.add_drag_handler (win, 0, 0, 0, TITLE_HEIGHT)
-       -- Add right click handler
-       WindowAddHotspot(win, "textarea", 0, TITLE_HEIGHT, width,height, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 0, 0)
+       movewindow.add_drag_handler (win, 0, 0, 0, 0)
        -- Add handler for resizing
        WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
        WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
@@ -429,7 +406,6 @@ function SetUpHotspotsAndDraw(firstTime)
        -- everything has already been made
        -- just move them back into place
        WindowResize(win, width, height, background_colour)
-       WindowMoveHotspot(win, "textarea", 0, TITLE_HEIGHT, width, height)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
    DisplayStatsPage()
