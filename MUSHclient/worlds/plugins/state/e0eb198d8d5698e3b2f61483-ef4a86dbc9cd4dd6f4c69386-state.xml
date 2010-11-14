@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Sunday, November 14, 2010, 2:36 AM -->
+<!-- MuClient version 4.69 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Aardwolf_Statmon". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.69"
+   world_file_version="15"
+   date_saved="2010-11-14 02:36:28"
+  >
+  <variable name="background_colour">0</variable>
+  <variable name="enabled">true</variable>
+  <variable name="font_name">Courier New</variable>
+  <variable name="font_size">9</variable>
+  <variable name="height">185</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowflags">2</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowmode">0</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowx">859</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowy">3</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386resize_windowflags">6</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386resize_windowmode">6</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386resize_windowx">0</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386resize_windowy">0</variable>
+  <variable name="title_colour">2697513</variable>
+  <variable name="usebars">1</variable>
+  <variable name="width">398</variable>
+</variables>
+</muclient>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Tuesday, October 12, 2010, 12:00 PM -->
+<!-- MuClient version 4.64 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Chat_Capture_Miniwindow". World: "asdf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.64"
+   world_file_version="15"
+   date_saved="2010-10-12 12:00:46"
+  >
+  <variable name="b555825a4a5700c35fa80780WINDOW_HEIGHT">97</variable>
+  <variable name="b555825a4a5700c35fa80780WINDOW_WIDTH">815</variable>
+  <variable name="b555825a4a5700c35fa80780date_format">[%d %b %H:%M:%S] </variable>
+  <variable name="b555825a4a5700c35fa80780echo">1</variable>
+  <variable name="b555825a4a5700c35fa80780enabled">true</variable>
+  <variable name="b555825a4a5700c35fa80780timestamp">1</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowflags">2</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowmode">6</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowx">0</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowy">0</variable>
+  <variable name="mw_b555825a4a5700c35fa80780resize_windowflags">6</variable>
+  <variable name="mw_b555825a4a5700c35fa80780resize_windowmode">6</variable>
+  <variable name="mw_b555825a4a5700c35fa80780resize_windowx">0</variable>
+  <variable name="mw_b555825a4a5700c35fa80780resize_windowy">0</variable>
+</variables>
+</muclient>

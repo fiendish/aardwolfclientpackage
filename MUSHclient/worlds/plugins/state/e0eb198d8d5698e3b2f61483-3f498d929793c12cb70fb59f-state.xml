@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Friday, October 29, 2010, 10:42 AM -->
+<!-- MuClient version 4.65 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Aardwolf_Ascii_Mapper2". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.65"
+   world_file_version="15"
+   date_saved="2010-10-29 10:42:40"
+  >
+  <variable name="background_colour">0</variable>
+  <variable name="enabled">true</variable>
+  <variable name="title_colour">2697513</variable>
+  <variable name="windowflags">0</variable>
+  <variable name="windowmode">7</variable>
+  <variable name="windowx">0</variable>
+  <variable name="windowy">0</variable>
+</variables>
+</muclient>
