@@ -210,6 +210,10 @@ function init(firstTime)
 
         -- catch for right-click menu and line selection
         WindowAddHotspot(Win, "textarea", 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1,WINDOW_HEIGHT-3, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 2, 0)
+        
+        -- mouse wheel handler for scrolling up/down
+        WindowScrollwheelHandler(Win, "textarea", "wheel_move")
+
         -- add the drag handler so they can move the window around
         movewindow.add_drag_handler (Win, 0, 0, 0, TITLE_HEIGHT)
         
@@ -398,8 +402,24 @@ function drawStuff()
     WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, ColourNameToRGB ("white"), 0, 2)
     WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, ColourNameToRGB ("dimgray"), 0, 1)
 
-    Repaint()
+    Redraw()
 end
+
+function wheel_move (flags, hotspot_id)
+ if bit.band (flags, 0x100) ~= 0 then
+    if lineStart < #lines-WINDOW_LINES+2 then
+        -- print("Down")
+        lineStart = math.max(1, math.min(#lines-WINDOW_LINES+2, lineStart+3))
+        lineEnd = math.min(#lines, lineStart+WINDOW_LINES-2)    
+        refresh()
+    end
+  elseif lineStart > 1 then
+    -- print("Up")
+    lineStart = math.max(1, lineStart-3)
+    lineEnd = math.min(#lines, lineStart+WINDOW_LINES-2)
+    refresh()
+  end -- if
+end -- wheel_move
 
 function ScrollerMoveCallback(flags, hotspot_id)
     mouseposy = WindowInfo(Win, 18)
@@ -505,7 +525,6 @@ function chats (name, line, wildcards, styles)
         Note ("")  -- wrap up line
     end -- echo wanted
 
-
     -- inject timestamp if wanted (reuse the first style from the tag we stripped)
     if timestamp == "1" then
         tstamp = os.date (date_format)
@@ -523,7 +542,7 @@ function chats (name, line, wildcards, styles)
     refresh( )
 end -- chats
 
--- EXPERIMENTAL GMCP VERSION. GMCP CHANNEL OUTPUT HAS BUGS, SO WE WON'T USE THIS.
+-- EXPERIMENTAL GMCP VERSION. AARDWOLF GMCP CHANNEL OUTPUT CURRENTLY HAS BUGS, SO WE WON'T USE THIS.
 --[[
 function chats (name, line, wildcards, styles)
     -- echo in this world as well if the user wants
