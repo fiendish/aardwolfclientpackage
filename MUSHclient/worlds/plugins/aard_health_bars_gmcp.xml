@@ -372,7 +372,7 @@ function OnPluginInstall()
    line_height = font_height + 1
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, 6, 2, true,nil,MouseUp)
+   windowinfo  = movewindow.install (win, 6, 2, true,nil,true,MouseUp)
 
    MIN_SIZE = (WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN)*2
    height = (TOP_MARGIN*2)+(5*line_height)
