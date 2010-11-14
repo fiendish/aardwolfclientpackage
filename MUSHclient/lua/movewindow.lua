@@ -227,8 +227,9 @@ end -- make_check_map_position_handler
 
 -- call movewindow.install in OnPluginInstall to find the position of the window, before creating it
 --  - it also creates the handler functions ready for use later
+external_mouseup_handler = function() end -- do nothing
 
-function movewindow.install (win, default_position, default_flags, nocheck, default_friends)
+function movewindow.install (win, default_position, default_flags, nocheck, default_friends, mouseup_handler)
 
   win = win or GetPluginID ()  -- default to current plugin ID
   
@@ -258,6 +259,10 @@ function movewindow.install (win, default_position, default_flags, nocheck, defa
     movewindow_info.check_map_position = make_check_map_position_handler (movewindow_info)  -- for startup
      
     -- mouse handlers
+    if mouseup_handler ~= nil then
+        external_mouseup_handler = mouseup_handler
+    end
+    movewindow_info.mouseup =  external_mouseup_handler
     movewindow_info.mousedown   = make_mousedown_handler   (movewindow_info)  
     movewindow_info.dragmove    = make_dragmove_handler    (movewindow_info)
     movewindow_info.dragrelease = make_dragrelease_handler (movewindow_info)
@@ -298,7 +303,7 @@ function movewindow.add_drag_handler (win, left, top, right, bottom, cursor)
                    "",   -- CancelMouseOver
                    "mw_" .. win .. "_movewindow_info.mousedown",  -- MouseDown
                    "",   -- CancelMouseDown
-                   "",   -- MouseUp
+                   "mw_" .. win .. "_movewindow_info.mouseup",   -- MouseUp
                    "Drag to move window",  -- tooltip text
                    cursor or 1, -- cursor
                    0)  -- flags
