@@ -17,7 +17,7 @@
 <muclient>
 <plugin
    name="Aardwolf_GMCP_Mapper"
-   author="Nick Gammom"
+   author="Nick Gammon"
    id="b6eae87ccedd84f510b74714"
    language="Lua"
    purpose="Draws maps for GMCP MUDs"
