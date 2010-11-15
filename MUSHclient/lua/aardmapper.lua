@@ -1065,9 +1065,6 @@ function init (t)
   show_area_exits = t.show_area_exits  -- true to show area exits
   speedwalk_prefix = t.speedwalk_prefix  -- how to speedwalk (prefix)
 
-  ROOM_SIZE = t.room_size 
-  DISTANCE_TO_NEXT_ROOM = t.room_distance
-
   -- force some config defaults if not supplied
   for k, v in pairs (default_config) do
     config [k] = config [k] or v
