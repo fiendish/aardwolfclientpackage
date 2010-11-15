@@ -123,6 +123,8 @@ function DisplayStatsPage()
             Display_ColourText_Line(win,font_id,"@REnemy :@w",xpos, ypos)
             gauge(win,"Enemy:",enemypct,100,bar_start,ypos,bar_width,line_height,0x2222bb,0x000000,4,0x000000,0x000000,nil) 
          end
+      else
+            Display_Styled_Line (win, font_id, {{text="Enemy :",textcolour=0x444444}}, xpos, ypos)
       end
       
       ypos = ypos + line_height + TOP_MARGIN

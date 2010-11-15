@@ -173,7 +173,10 @@ function DisplayStatsPage()
       for i, v in ipairs (styles) do
          top = TITLE_HEIGHT + TOP_MARGIN + (i - 1) * line_height
          max_width = math.max(max_width, Display_ColourText_Line (win, font_id, v, left, top))
-      end -- for           
+      end -- for
+      if styles[#styles].text == "" then
+         Display_Styled_Line (win, font_id, {{text="Fighting :",textcolour=0x444444}}, left, top)           
+      end
       max_height = top + line_height + TOP_MARGIN + 1
    end
 
