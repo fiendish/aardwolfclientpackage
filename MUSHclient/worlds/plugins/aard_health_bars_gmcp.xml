@@ -182,6 +182,8 @@ function right_click_menu ()
        if wanted_font then
           font_name = wanted_font.name
           font_size = wanted_font.size
+          SetVariable("width",width)
+          SetVariable("height",height)
           SetVariable("font_name", font_name)
           SetVariable("font_size", font_size)
           OnPluginInstall()
