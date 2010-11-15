@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Sunday, November 14, 2010, 3:19 AM -->
+<!-- Saved on Sunday, November 14, 2010, 8:13 PM -->
 <!-- MuClient version 4.69 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
@@ -8,14 +8,14 @@
 <world
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
 
    auto_say_override_prefix="-"
    auto_say_string="say "
    chat_name="Name-not-set"
    command_stack_character=";"
    id="e0eb198d8d5698e3b2f61483"
-   input_font_name="Rachana"
+   input_font_name="Courier"
    mapping_failure="Alas, you cannot go that way."
    name="Aardwolf"
    new_activity_sound="(No sound)"
@@ -97,7 +97,7 @@
    use_custom_link_colour="y"
    use_default_input_font="y"
    warn_if_scripting_inactive="y"
-   wrap_column="103"
+   wrap_column="94"
    write_world_name_to_log="y"
    > <!-- end of general world attributes -->
 
@@ -108,7 +108,7 @@
 <triggers
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
   >
 </triggers>
 
@@ -117,7 +117,7 @@
 <aliases
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
   >
 </aliases>
 
@@ -126,7 +126,7 @@
 <timers
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
   >
 </timers>
 
@@ -135,7 +135,7 @@
 <macros
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
   >
 
   <macro name="up" type="send_now" >
@@ -229,7 +229,7 @@
 <variables
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
   >
 </variables>
 
@@ -238,7 +238,7 @@
 <colours
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
   >
 
 <ansi>
@@ -295,7 +295,7 @@
 <keypad
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
   >
 
   <key name="0" >
@@ -409,7 +409,7 @@
 <printing
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-14 03:19:49"
+   date_saved="2010-11-14 20:13:02"
   >
 
 <ansi>
@@ -439,4 +439,5 @@
 <include name="$PROGRAMDIR\worlds\plugins\channels_fiendish.xml" plugin="y" />
 <include name="$PROGRAMDIR\worlds\plugins\aard_mapper.xml" plugin="y" />
 <include name="$PROGRAMDIR\worlds\plugins\aard_layout.xml" plugin="y" />
+<include name="$PROGRAMDIR\worlds\plugins\aard_health_bars_gmcp.xml" plugin="y" />
 </muclient>
