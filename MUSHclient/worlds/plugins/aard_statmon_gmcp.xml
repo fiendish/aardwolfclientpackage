@@ -47,17 +47,12 @@ require "commas"
 require "gmcphelper"
 
 background_colour     = 0x000000
-title_colour          = 0x292929
-border_color          = 0xcccccc
-title_gradient_col1   = 0x050505
-title_gradient_col2   = 0x333333
+border_colour          = 0xcccccc
 default_width         = 398
 default_height        = 200
 
---title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
-TITLE_HEIGHT    = 20
 LEFT_MARGIN     = 10
 TOP_MARGIN      = 5
 
@@ -131,12 +126,8 @@ function BuildStatsPage()
       fstr = "@RFighting     : @C\[@W%s@C\] @R(@W%s%%@R)@w"
       s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
       table.insert(cstyles,s)
-      title_gradient_col1   = 0x050555
-      title_gradient_col2   = 0x3333cc
    else
       table.insert(cstyles,"")
-      title_gradient_col1   = 0x050505
-      title_gradient_col2   = 0x333333
    end
 
 end -- BuildStatsPage
@@ -150,20 +141,13 @@ function DisplayStatsPage()
 
    WindowRectOp(win, 2, 0,0,0,0,background_colour) -- blank 
      
-   -- title rectangle
-   WindowGradient (win, 1, 0, width, TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
-   WindowLine(win, 0, TITLE_HEIGHT, width, TITLE_HEIGHT, 0xeeeeee, 0 + 0x0200, 1)
-   title_width = WindowTextWidth(win, font_id_header, "Stats")
-   if (header_font_height < TITLE_HEIGHT) then
-      WindowText (win, font_id_header, "Stats", (width/2)-(title_width/2), (TITLE_HEIGHT/2)-(header_font_height/2), 0, 0, 0xeeeeee, utf8)
-   end
    if not page_built then
       txt = "Stats will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, TITLE_HEIGHT+(height-TITLE_HEIGHT)/2-line_height, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, 0, 0, 0xeeeeee, utf8)
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, TITLE_HEIGHT+(height-TITLE_HEIGHT)/2, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
       max_height = default_height
       max_width = default_width    
    else
@@ -171,7 +155,7 @@ function DisplayStatsPage()
       local left = LEFT_MARGIN
       local top = 0
       for i, v in ipairs (styles) do
-         top = TITLE_HEIGHT + TOP_MARGIN + (i - 1) * line_height
+         top = TOP_MARGIN + (i - 1) * line_height
          max_width = math.max(max_width, Display_ColourText_Line (win, font_id, v, left, top))
       end -- for
       if styles[#styles].text == "" then
@@ -181,7 +165,7 @@ function DisplayStatsPage()
    end
 
    -- draw edge frame.
-   check (WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15))
+   check (WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15))
    check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
 
    -- draw the resize widget bottom right corner.
@@ -371,7 +355,7 @@ end
 ---------------------------------------------------------------------------------
 function MouseUp(flags, hotspot_id)
     --debugp("MouseUp",hotspot_id)
-    if (hotspot_id == "textarea" and flags == 0x20) then
+    if (flags == 0x20) then
        -- build menu for current state
        right_click_menu()
     end
@@ -387,7 +371,6 @@ function OnPluginSaveState ()
   
   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
   SetVariable ("background_colour", background_colour)
-  SetVariable ("title_colour", title_colour)  
   SetVariable ("width", width)
   SetVariable ("height", height)
   SetVariable ("font_name", font_name)
@@ -423,7 +406,6 @@ function OnPluginInstall()
 
    --- Pull some state variables.
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-   title_colour      = tonumber (GetVariable ("title_colour")) or title_colour
    height            = tonumber (GetVariable ("height")) or default_height
    orig_height = height
    width             = tonumber (GetVariable ("width")) or default_width
@@ -464,7 +446,7 @@ function OnPluginInstall()
    line_height = font_height + 1
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, 6, 2, true)
+   windowinfo  = movewindow.install (win, 6, 2, true, nil, true, MouseUp)
 
    --- Setup the window.
    SetUpHotspotsAndDraw(true)
@@ -486,9 +468,8 @@ function SetUpHotspotsAndDraw(firstTime)
                  windowinfo.window_flags,  -- flags
                  background_colour) )                
        -- Add the drag handler so they can move the window around
-       movewindow.add_drag_handler (win, 0, 0, 0, TITLE_HEIGHT)
-       -- Add right click handler
-       WindowAddHotspot(win, "textarea", 0, TITLE_HEIGHT, width,height, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 0, 0)
+       movewindow.add_drag_handler (win, 0, 0, 0, 0)
+       
        -- Add handler for resizing
        WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
        WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
@@ -496,7 +477,6 @@ function SetUpHotspotsAndDraw(firstTime)
        -- everything has already been made
        -- just move them back into place
        WindowResize(win, width, height, background_colour)
-       WindowMoveHotspot(win, "textarea", 0, TITLE_HEIGHT, width, height)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
    DisplayStatsPage()
