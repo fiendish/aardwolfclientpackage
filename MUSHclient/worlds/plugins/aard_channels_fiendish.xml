@@ -613,6 +613,7 @@ function OnPluginBroadcast (msg, id, name, text)
             timestyle.length = #timestyle.text
             timestyle.textcolour = 0xeeeeee
             table.insert(styles,1,timestyle)
+
          end -- if
 
          -- store the raw lines for use during resizing
@@ -679,9 +680,10 @@ function GetAllBufferedMessages()
 end
 
 function GetBufferedMessage(xpos, ypos)
+    max_height_allowed = TITLE_HEIGHT+(line_height*(WINDOW_LINES-1)) -- snap height down to not have dead space after last line
     windowline = math.floor((ypos-TITLE_HEIGHT)/line_height)
     text = ""
-    if (#lines > windowline) then
+    if (ypos < max_height_allowed and #lines > windowline) then
         local line = windowline+lineStart
         -- go to beginning of message
         while lines[line][2] ~= true and line > 1 do
