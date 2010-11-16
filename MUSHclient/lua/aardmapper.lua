@@ -5,6 +5,9 @@
 Author: Nick Gammon
 Date:   11th March 2010
 Amended: 15th August 2010
+Amended: 2nd October 2010
+Amended: 18th October 2010 to added find callback
+Amended: 16th November 2010 to add symbolic constants (miniwin.xxxx)
 
 Generic MUD mapper.
 
@@ -62,7 +65,7 @@ Room info should include:
 
 module (..., package.seeall)
 
-VERSION = 2.0   -- for querying by plugins
+VERSION = 2.3   -- for querying by plugins
 
 require "movewindow"
 require "copytable"
@@ -74,10 +77,10 @@ local FONT_ID     = "fn"  -- internal font identifier
 local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
 
 -- size of room box
-ROOM_SIZE = 14
+local ROOM_SIZE = 10
 
 -- how far away to draw rooms from each other
-DISTANCE_TO_NEXT_ROOM = 14
+local DISTANCE_TO_NEXT_ROOM = 15
 
 -- supplied in init
 local config  -- configuration table 
@@ -254,25 +257,54 @@ local function check_connected ()
   return true
 end -- check_connected
 
-local function get_number_from_user (msg, title, current, min, max)
-  local n =  utils.inputbox (msg, title, current)
-      
+local function make_number_checker (title, min, max, decimals)
+  return function (s)
+    local n = tonumber (s)
   if not n then
-    return nil
-  end -- if dismissed
-  
-  n = tonumber (n)
-  if not n then
-    utils.msgbox ("You must enter a number", "Incorrect input", "ok", "!", 1)
-    return nil
+      utils.msgbox (title .. " must be a number", "Incorrect input", "ok", "!", 1)
+      return false  -- bad input
   end -- if
   
   if n < min or n > max then
     utils.msgbox (title .. " must be in range " .. min .. " to " .. max, "Incorrect input", "ok", "!", 1)
-    return nil
+      return false  -- bad input
   end -- if
 
-  return n
+    if not decimals then
+      if string.match (s, "%.") then
+        utils.msgbox (title .. " cannot have decimal places", "Incorrect input", "ok", "!", 1)
+        return false  -- bad input
+      end -- if
+    end -- no decimals
+    
+    return true  -- good input
+  end -- generated function
+  
+end -- make_number_checker
+
+ 
+local function get_number_from_user (msg, title, current, min, max, decimals)
+  local max_length = math.ceil (math.log10 (max) + 1)
+  
+  -- if decimals allowed, allow room for them
+  if decimals then
+    max_length = max_length + 2  -- allow for 0.x
+  end -- if
+  
+  -- if can be negative, allow for minus sign
+  if min < 0 then
+    max_length = max_length + 1
+  end -- if can be negative
+  
+  return tonumber (utils.inputbox (msg, title, current, nil, nil, 
+                      { validate = make_number_checker (title, min, max, decimals), 
+                        prompt_height = 14,
+                        box_height = 130,
+                        box_width = 300,
+                        reply_width = 150,
+                        max_length = max_length,
+                      }  -- end extra stuff
+                   ))
 end -- get_number_from_user
 
 local function draw_configuration ()
@@ -305,7 +337,7 @@ local function draw_configuration ()
   local frame_width = GAP + width + GAP + rh_size + GAP  -- gap / text / gap / box / gap
 
   -- fill entire box with grey
-  WindowRectOp (win, 2, x, y, x + frame_width, y + font_height * lines + 10, 0xDCDCDC)
+  WindowRectOp (win, miniwin.rect_fill, x, y, x + frame_width, y + font_height * lines + 10, 0xDCDCDC)
   -- frame it
   draw_3d_box (win, x, y, frame_width, font_height * lines + 10)
   
@@ -316,19 +348,37 @@ local function draw_configuration ()
   WindowText   (win, FONT_ID, "Configuration", x, y, 0, 0, 0x808080, true)
   
   -- close box
-  WindowRectOp (win, 1, x + frame_width - box_size - GAP * 2, y + 1, 
-                        x + frame_width - GAP * 2, y + 1 + box_size, 0x808080)
-  WindowLine (win, x + frame_width - box_size - GAP * 2 + 3, y + 4, 
-                   x + frame_width - GAP * 2 - 3, y - 2 + box_size, 0x808080, 0, 1)
-  WindowLine (win, x - 4 + frame_width - GAP * 2, y + 4, 
-                   x - 1 + frame_width - box_size - GAP * 2 + 3, y - 2 + box_size, 0x808080, 0, 1)
+  WindowRectOp (win, 
+                miniwin.rect_frame, 
+                x + frame_width - box_size - GAP * 2, 
+                y + 1, 
+                x + frame_width - GAP * 2, 
+                y + 1 + box_size, 
+                0x808080)
+  WindowLine (win, 
+              x + frame_width - box_size - GAP * 2 + 3, 
+              y + 4, 
+              x + frame_width - GAP * 2 - 3, 
+              y - 2 + box_size, 
+              0x808080, 
+              miniwin.pen_solid, 1)
+  WindowLine (win, 
+              x - 4 + frame_width - GAP * 2, 
+              y + 4, 
+              x - 1 + frame_width - box_size - GAP * 2 + 3, 
+              y - 2 + box_size, 
+              0x808080, 
+              miniwin.pen_solid, 1)
   
   -- close configuration hotspot               
   WindowAddHotspot(win, "$<close_configure>",  
-                   x + frame_width - box_size - GAP * 2, y + 1, x + frame_width - GAP * 2, y + 1 + box_size,   -- rectangle
+                   x + frame_width - box_size - GAP * 2, 
+                   y + 1, 
+                   x + frame_width - GAP * 2, 
+                   y + 1 + box_size,   -- rectangle
                    "", "", "", "", "mapper.mouseup_close_configure",  -- mouseup
                    "Click to close",
-                   1, 0)  -- hand cursor
+                   miniwin.cursor_hand, 0)  -- hand cursor
     
   y = y + font_height
   
@@ -337,15 +387,31 @@ local function draw_configuration ()
     for k, v in pairsByKeys (config) do
       if v.colour then
         WindowText   (win, FONT_ID, v.name, x, y, 0, 0, 0x000000, true)
-        WindowRectOp (win, 2, x + width + rh_size / 2, y + 1, x + width + rh_size / 2 + box_size, y + 1 + box_size, v.colour)
-        WindowRectOp (win, 1, x + width + rh_size / 2, y + 1, x + width + rh_size / 2 + box_size, y + 1 + box_size, 0x000000)
+        WindowRectOp (win, 
+                      miniwin.rect_fill, 
+                      x + width + rh_size / 2, 
+                      y + 1, 
+                      x + width + rh_size / 2 + box_size, 
+                      y + 1 + box_size, 
+                      v.colour)
+        WindowRectOp (win, 
+                      miniwin.rect_frame, 
+                      x + width + rh_size / 2, 
+                      y + 1, 
+                      x + width + rh_size / 2 + box_size, 
+                      y + 1 + box_size, 
+                      0x000000)
         
         -- colour change hotspot               
-        WindowAddHotspot(win, "$colour:" .. k,  
-                         x + GAP, y + 1, x + width + rh_size / 2 + box_size, y + 1 + box_size,   -- rectangle
+        WindowAddHotspot(win, 
+                         "$colour:" .. k,  
+                         x + GAP, 
+                         y + 1, 
+                         x + width + rh_size / 2 + box_size, 
+                         y + 1 + box_size,   -- rectangle
                          "", "", "", "", "mapper.mouseup_change_colour",  -- mouseup
                          "Click to change colour",
-                         1, 0)  -- hand cursor
+                         miniwin.cursor_hand, 0)  -- hand cursor
                            
         y = y + font_height
       end -- a colour item
@@ -357,11 +423,15 @@ local function draw_configuration ()
   WindowText   (win, FONT_ID_UL,   tostring (config.SCAN.depth), x + width + GAP, y, 0, 0, 0x808080, true)
                                  
   -- depth hotspot               
-  WindowAddHotspot(win, "$<depth>",  
-                   x + GAP, y, x + frame_width, y + font_height,   -- rectangle
+  WindowAddHotspot(win, 
+                   "$<depth>",  
+                   x + GAP, 
+                   y, 
+                   x + frame_width, 
+                   y + font_height,   -- rectangle
                    "", "", "", "", "mapper.mouseup_change_depth",  -- mouseup
                    "Click to change scan depth",
-                   1, 0)  -- hand cursor
+                   miniwin.cursor_hand, 0)  -- hand cursor
   y = y + font_height
     
   -- font
@@ -369,13 +439,17 @@ local function draw_configuration ()
   WindowText   (win, FONT_ID_UL,  config.FONT.name .. " " .. config.FONT.size, x + width + GAP, y, 0, 0, 0x808080, true)
                                  
   -- colour font hotspot               
-  WindowAddHotspot(win, "$<font>",  
-                   x + GAP, y, x + frame_width, y + font_height,   -- rectangle
+  WindowAddHotspot(win, 
+                   "$<font>",  
+                   x + GAP, 
+                   y, 
+                   x + frame_width, 
+                   y + font_height,   -- rectangle
                    "", "", "", "", "mapper.mouseup_change_font",  -- mouseup
                    "Click to change font",
-                   1, 0)  -- hand cursor
+                   miniwin.cursor_hand, 0)  -- hand cursor
   y = y + font_height
-                                                         
+
 end -- draw_configuration
 
 -- for calculating one-way paths
@@ -405,6 +479,8 @@ local function draw_room (uid, path, x, y)
 
   -- need this for the *current* room !!!
   drawn_coords [coords] = uid
+  
+  -- print ("drawing", uid, "at", coords)
   
   if drawn [uid] then
     return
@@ -473,7 +549,7 @@ local function draw_room (uid, path, x, y)
     end -- if down
         
     if exit_info then
-      local linetype = 0 -- unbroken
+      local linetype = miniwin.pen_solid -- unbroken
       local linewidth = 1 -- not recent
  
       -- try to cache room
@@ -482,7 +558,7 @@ local function draw_room (uid, path, x, y)
       end -- if
             
       if rooms [exit_uid].unknown then
-        linetype = 2 -- dots
+        linetype = miniwin.pen_dot -- dots
       end -- if
       
       local next_x = x + exit_info.at [1] * (ROOM_SIZE + DISTANCE_TO_NEXT_ROOM)
@@ -503,7 +579,7 @@ local function draw_room (uid, path, x, y)
       
         -- here if room leads back to itself
         exit_info = stub_exit_info
-        linetype = 1 -- dash
+        linetype = miniwin.pen_dash -- dash
       
       else
         --if (not show_other_areas and rooms [exit_uid].area ~= current_area) or
@@ -515,7 +591,7 @@ local function draw_room (uid, path, x, y)
           if plan_to_draw [exit_uid] and plan_to_draw [exit_uid] ~= next_coords then
             -- here if room already going to be drawn
             exit_info = stub_exit_info
-            linetype = 1 -- dash
+            linetype = miniwin.pen_dash -- dash
           else            
             -- remember to draw room next iteration
             local new_path = copytable.deep (path)
@@ -535,7 +611,7 @@ local function draw_room (uid, path, x, y)
               end -- if
             end -- if
           end -- if
-        end -- f
+        end -- if
       end -- if drawn on this spot
 
       WindowLine (win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype, linewidth)
@@ -557,7 +633,10 @@ local function draw_room (uid, path, x, y)
               y + arrow [6])
               
           -- draw arrow
-          WindowPolygon(win, points, exit_line_colour, 0, 1, exit_line_colour, 0, true, true)
+          WindowPolygon(win, points, 
+                        exit_line_colour, miniwin.pen_solid, 1, 
+                        exit_line_colour, miniwin.brush_solid, 
+                        true, true)
         
         end -- one way
       
@@ -568,33 +647,33 @@ local function draw_room (uid, path, x, y)
 
   
   if room.unknown then
-    WindowCircleOp (win, 2, left, top, right, bottom, 
-                    config.UNKNOWN_ROOM_COLOUR.colour, 2, 1,  --  dotted single pixel pen
-                    -1, 1)  -- no brush
+    WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
+                    config.UNKNOWN_ROOM_COLOUR.colour, miniwin.pen_dot, 1,  --  dotted single pixel pen
+                    -1, miniwin.brush_null)  -- opaque, no brush
   else
-    WindowCircleOp (win, 2, left, top, right, bottom, 
-                    0, 5, 0,  -- no pen
+    WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
+                    0, miniwin.pen_null, 0,  -- no pen
                     room.fillcolour, room.fillbrush)  -- brush
   
-    WindowCircleOp (win, 2, left, top, right, bottom, 
+    WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
                     room.bordercolour, room.borderpen, room.borderpenwidth,  -- pen
-                    -1, 1)  -- no brush
+                    -1, miniwin.brush_null)  -- opaque, no brush
   end -- if 
                
           
   -- show up and down in case we can't get a line in
   
   if room.exits.u then  -- line at top
-    WindowLine (win, left, top, left + ROOM_SIZE, top, config.EXIT_COLOUR_UP_DOWN.colour, 0, 1)
+    WindowLine (win, left, top, left + ROOM_SIZE, top, config.EXIT_COLOUR_UP_DOWN.colour, miniwin.pen_solid, 1)
   end -- if
   if room.exits.d then  -- line at bottom
-    WindowLine (win, left, bottom, left + ROOM_SIZE, bottom, config.EXIT_COLOUR_UP_DOWN.colour, 0, 1)
+    WindowLine (win, left, bottom, left + ROOM_SIZE, bottom, config.EXIT_COLOUR_UP_DOWN.colour, miniwin.pen_solid, 1)
   end -- if
   if room.exits ['in'] then  -- line at right
-    WindowLine (win, left + ROOM_SIZE, top, left + ROOM_SIZE, bottom, config.EXIT_COLOUR_IN_OUT.colour, 0, 1)
+    WindowLine (win, left + ROOM_SIZE, top, left + ROOM_SIZE, bottom, config.EXIT_COLOUR_IN_OUT.colour, miniwin.pen_solid, 1)
   end -- if
   if room.exits.out then  -- line at left
-    WindowLine (win, left, top, left, bottom, config.EXIT_COLOUR_IN_OUT.colour, 0, 1)
+    WindowLine (win, left, top, left, bottom, config.EXIT_COLOUR_IN_OUT.colour, miniwin.pen_solid , 1)
   end -- if
   
   speedwalks [uid] = path  -- so we know how to get here
@@ -607,7 +686,7 @@ local function draw_room (uid, path, x, y)
                  "",  -- cancelmousedown
                  "mapper.mouseup_room",  -- mouseup
                  room.hovermessage,
-                 1, 0)  -- hand cursor
+                 miniwin.cursor_hand, 0)  -- hand cursor
                    
 end -- draw_room
 
@@ -659,26 +738,26 @@ end -- changed_room
 local function draw_zone_exit (exit)
 
   local x, y = exit.x, exit.y
-  local offset = ROOM_SIZE-5
+  local offset = ROOM_SIZE
   
   -- draw circle around us
-  WindowCircleOp (win, 1, 
+  WindowCircleOp (win, miniwin.circle_ellipse, 
                   x - offset, y - offset,
                   x + offset, y + offset,
                   ColourNameToRGB "yellow",  -- pen colour
-                  0, -- solid pen
+                  miniwin.pen_solid, -- solid pen
                   3, -- pen width
                   0, -- brush colour
-                  1 ) -- null brush
+                  miniwin.brush_null ) -- null brush
                   
-  WindowCircleOp (win, 1, 
+  WindowCircleOp (win, miniwin.circle_ellipse, 
                   x - offset, y - offset,
                   x + offset, y + offset,
                   ColourNameToRGB "green",  -- pen colour
-                  0, -- solid pen
+                  miniwin.pen_solid, -- solid pen
                   1, -- pen width
                   0, -- brush colour
-                  1 ) -- null brush
+                  miniwin.brush_null) -- null brush
 
 end --  draw_zone_exit 
 
@@ -804,7 +883,7 @@ end -- function find_paths
 function draw (uid)
 
   if not uid then
-    --maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
+    maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
     return
   end -- if
   
@@ -915,7 +994,6 @@ function draw (uid)
                    (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname, true)) / 2,   -- left
                    config.WINDOW.height - 3 - font_height,    -- top
                    areaname:gsub("^%l", string.upper), true, 
---areaname, true,              -- what to draw, utf8
                    config.AREA_NAME_TEXT.colour,   -- text colour
                    config.AREA_NAME_FILL.colour,   -- fill colour   
                    config.AREA_NAME_BORDER.colour)     -- border colour
@@ -945,7 +1023,7 @@ function draw (uid)
                    "",  -- cancelmousedown
                    "mapper.mouseup_configure",  -- mouseup
                    "Click to configure map",
-                   1, 0)  -- hand cursor
+                   miniwin.cursor_hand, 0)  -- hand cursor
   end -- if
                
   if type (show_help) == "function" then
@@ -969,7 +1047,7 @@ function draw (uid)
                    "",  -- cancelmousedown
                    "mapper.show_help",  -- mouseup
                    "Click for help",
-                   1, 0)  -- hand cursor
+                   miniwin.cursor_hand, 0)  -- hand cursor
   end -- if
 
 
@@ -1045,7 +1123,7 @@ function init (t)
   font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
 
   -- find where window was last time
-  windowinfo = movewindow.install (win, 4)
+  windowinfo = movewindow.install (win, miniwin.pos_center_right)
 
   -- calculate box sizes, arrows, connecting lines etc.
   build_room_info ()
@@ -1060,6 +1138,7 @@ function init (t)
                  config.BACKGROUND_COLOUR.colour) 
 
   -- let them move it around                 
+--  movewindow.add_drag_handler (win, 0, 0, 0, font_height)
   movewindow.add_drag_handler (win, 0, 0, 0, 0)
     
   local top = (config.WINDOW.height - #credits * font_height) /2
@@ -1071,41 +1150,13 @@ function init (t)
     top = top + font_height 
   end -- for
 
+-- draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
   draw_edge()
-
   add_resize_tag()
   
   WindowShow (win, true)
   
-end -- init
-
-function add_resize_tag()
-   -- draw the resize widget bottom right corner.
-   local width  = config.WINDOW.width
-   local height = config.WINDOW.height
-
-   WindowLine(win, width-4, height-2, width-2, height-4, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-5, height-2, width-2, height-5, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-7, height-2, width-2, height-7, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-8, height-2, width-2, height-8, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-10, height-2, width-2, height-10, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-11, height-2, width-2, height-11, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-13, height-2, width-2, height-13, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-14, height-2, width-2, height-14, ColourNameToRGB ("dimgray"), 0, 1)
- 
-  -- Hotspot for resizer.                                                              
-  local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?", true) - 5
-  local y = config.WINDOW.height - 2 - font_height  
-  WindowAddHotspot(win, "resize",  
-                   x, y, 0, 0,   -- rectangle
-                   "", "", "mapper.resize_mouse_down", "", "",
-                   "Drag to resize",
-                   6, 0)  -- hand cursor
-  WindowDragHandler(win, "resize", "mapper.resize_move_callback", "mapper.resize_release_callback", 0)
- 
-end -- draw resize tag. 
-
-  
+end -- init  
 
 function zoom_in ()
   if last_drawn and ROOM_SIZE < 40 then
@@ -1168,10 +1219,16 @@ end -- save_state
 
 -- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
 
-function find (f, show_uid, expected_count, walk)
+-- if fcb is a function, it is called back after displaying each line
+
+function find (f, show_uid, expected_count, walk, fcb)
  
   if not check_we_can_find () then
     return
+  end -- if
+
+  if fcb then
+    assert (type (fcb) == "function")
   end -- if
 
   local start_time = GetInfo (232)
@@ -1239,6 +1296,11 @@ function find (f, show_uid, expected_count, walk)
         info = " [" .. paths [uid].reason .. "]"
       end -- if
       mapprint (" - " .. distance .. info) -- new line
+      
+      -- callback to display extra stuff (like find context, room description)
+      if fcb then
+        fcb (uid)
+      end -- if callback
       hyperlink_paths [hash] = paths [uid].path
     end -- if
   end -- for each room
@@ -1382,7 +1444,7 @@ end -- cancel_speedwalk
 function mouseup_room (flags, hotspot_id)
   local uid = hotspot_id
 
-  if bit.band (flags, 0x20) ~= 0 then
+  if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
     
     -- RH click
     
@@ -1396,7 +1458,7 @@ function mouseup_room (flags, hotspot_id)
   -- here for LH click
     
    -- Control key down?
-  if bit.band (flags, 0x02) ~= 0 then
+  if bit.band (flags, miniwin.hotspot_got_control) ~= 0 then
     cancel_speedwalk ()
     return
   end -- if ctrl-LH click
@@ -1473,16 +1535,17 @@ function mouseup_change_depth (flags, hotspot_id)
   draw (current_room)
 end -- mouseup_change_depth
 
+
 function resize_mouse_down(flags, hotspot_id)
    if (hotspot_id == "resize") then
       startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
    end
 end
+function resize_release_callback()
+   draw(current_room)
+   --sendnoecho("look")
+end
 
----------------------------------------------------------------------------------
--- Called as the window is dragged around. This function and those below are
--- only 'handlers' because they are set in WindowAddHotSpot
----------------------------------------------------------------------------------
 function resize_move_callback()
 
    local posx, posy = WindowInfo (win , 17), WindowInfo (win , 18)
@@ -1508,10 +1571,32 @@ function resize_move_callback()
 --  draw() 
 end
 
-function resize_release_callback()
-   draw(current_room)
-   --sendnoecho("look")
-end
+
+function add_resize_tag()
+   -- draw the resize widget bottom right corner.
+   local width  = config.WINDOW.width
+   local height = config.WINDOW.height
+
+   WindowLine(win, width-4, height-2, width-2, height-4, 0xffffff, 0, 2)
+   WindowLine(win, width-5, height-2, width-2, height-5, 0x696969, 0, 1)
+   WindowLine(win, width-7, height-2, width-2, height-7, 0xffffff, 0, 2)
+   WindowLine(win, width-8, height-2, width-2, height-8, 0x696969, 0, 1)
+   WindowLine(win, width-10, height-2, width-2, height-10, 0xffffff, 0, 2)
+   WindowLine(win, width-11, height-2, width-2, height-11, 0x696969, 0, 1)
+   WindowLine(win, width-13, height-2, width-2, height-13, 0xffffff, 0, 2)
+   WindowLine(win, width-14, height-2, width-2, height-14, 0x696969, 0, 1)
+ 
+  -- Hotspot for resizer.                                                              
+  local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?", true) - 5
+  local y = config.WINDOW.height - 2 - font_height  
+  WindowAddHotspot(win, "resize",  
+                   x, y, 0, 0,   -- rectangle
+                   "", "", "mapper.resize_mouse_down", "", "",
+                   "Drag to resize",
+                   6, 0)  -- hand cursor
+  WindowDragHandler(win, "resize", "mapper.resize_move_callback", "mapper.resize_release_callback", 0)
+ 
+end -- draw resize tag. 
 
 function draw_edge()
    -- draw edge frame.
