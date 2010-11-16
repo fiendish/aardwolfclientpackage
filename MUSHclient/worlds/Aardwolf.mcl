@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Monday, November 15, 2010, 7:34 PM -->
-<!-- MuClient version 4.69 -->
+<!-- Saved on Tuesday, November 16, 2010, 2:25 AM -->
+<!-- MuClient version 4.70 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
 
    auto_say_override_prefix="-"
    auto_say_string="say "
@@ -106,36 +106,36 @@
 <!-- triggers -->
 
 <triggers
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
   >
 </triggers>
 
 <!-- aliases -->
 
 <aliases
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
   >
 </aliases>
 
 <!-- timers -->
 
 <timers
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
   >
 </timers>
 
 <!-- macros -->
 
 <macros
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
   >
 
   <macro name="up" type="send_now" >
@@ -227,18 +227,18 @@
 <!-- variables -->
 
 <variables
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
   >
 </variables>
 
 <!-- colours -->
 
 <colours
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
   >
 
 <ansi>
@@ -293,9 +293,9 @@
 <!-- keypad -->
 
 <keypad
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
   >
 
   <key name="0" >
@@ -407,9 +407,9 @@
 <!-- printing -->
 
 <printing
-   muclient_version="4.69"
+   muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-15 19:34:09"
+   date_saved="2010-11-16 02:25:23"
   >
 
 <ansi>
