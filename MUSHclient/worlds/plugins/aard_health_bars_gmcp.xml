@@ -60,11 +60,7 @@ starty           = ""
 posx             = "" 
 posy             = ""
 hotspot_id       = ""
-cstyles          = { }
-tstyles          = { }
 page_built       = false
-collapsed        = 0
-orig_height      = 400  -- saves old height when we collapse window.
 
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
@@ -86,7 +82,6 @@ end -- Display_ColourText_Line
 
 function DisplayStatsPage()
 
-   styles = cstyles
    WindowRectOp(win, 2, 0,0,0,0,background_colour) -- blank 
      
    if not page_built then
