@@ -85,12 +85,12 @@ WINDOW_WIDTH = tonumber(GetVariable("WINDOW_WIDTH"))
 WINDOW_HEIGHT = tonumber(GetVariable("WINDOW_HEIGHT"))
 
 -- colours
-WINDOW_BACKGROUND_COLOUR = ColourNameToRGB ("black")
-WINDOW_TEXT_COLOUR = ColourNameToRGB ("white")
-SCROLL_BACKGROUND_COLOUR = ColourNameToRGB ("#E8E8E8")
-SCROLL_BAR_COLOUR = ColourNameToRGB ("#111111")
-SCROLL_DETAIL_COLOUR = ColourNameToRGB ("black")
-WINDOW_BORDER_COLOUR = ColourNameToRGB("#E8E8E8")
+WINDOW_BACKGROUND_COLOUR = 0x000000
+WINDOW_TEXT_COLOUR = 0xffffff
+SCROLL_BACKGROUND_COLOUR = 0xE8E8E8
+SCROLL_BAR_COLOUR = 0x111111
+SCROLL_DETAIL_COLOUR = 0x000000
+WINDOW_BORDER_COLOUR = 0xE8E8E8
 
 -- offset of text from edge
 TEXT_INSET = 5
@@ -249,14 +249,14 @@ function init(firstTime)
      
     -- resize tag    
     WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR) -- resizer background
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+2, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+4, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+5, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+7, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, ColourNameToRGB ("dimgray"), 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, 0xffffff, 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+2, 0x696969, 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+4, 0xffffff, 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+5, 0x696969, 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+7, 0xffffff, 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, 0x696969, 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, 0xffffff, 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, 0x696969, 0, 1)
     
     -- draw border
     WindowRectOp (Win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
@@ -311,7 +311,7 @@ end --  OnPluginDisable
 function Display_Line (line, styles, backfill)
     local left = TEXT_INSET
     if (backfill) then
-        WindowRectOp(Win, 2, 1, TITLE_HEIGHT+(line*line_height)+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT+(line*line_height)+line_height+1, ColourNameToRGB("#333333"))
+        WindowRectOp(Win, 2, 1, TITLE_HEIGHT+(line*line_height)+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT+(line*line_height)+line_height+1, 0x333333)
     end -- backfill
     if (styles) then
         for _, v in ipairs (styles) do
@@ -352,8 +352,8 @@ function drawStuff()
         WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 10,  15 + 0x800) -- up arrow pushed
         points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, TITLE_HEIGHT+9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, TITLE_HEIGHT+5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, TITLE_HEIGHT+9)
         WindowPolygon (Win, points,
-            ColourNameToRGB("black"), 0, 1, -- pen (solid, width 1)
-            ColourNameToRGB("black"), 0, -- brush (solid)
+            0x000000, 0, 1, -- pen (solid, width 1)
+            0x000000, 0, -- brush (solid)
             true, -- close
             false) -- alt fill
     else
@@ -361,8 +361,8 @@ function drawStuff()
         WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), TITLE_HEIGHT, WINDOW_WIDTH, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 5, 15 + 0x800)
         points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, TITLE_HEIGHT+9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, TITLE_HEIGHT+5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, TITLE_HEIGHT+9)
         WindowPolygon (Win, points,
-            ColourNameToRGB("black"), 0, 1,   -- pen (solid, width 1)
-            ColourNameToRGB("black"), 0, --brush (solid)
+            0x000000, 0, 1,   -- pen (solid, width 1)
+            0x000000, 0, --brush (solid)
             true, --close
             false)  --alt fill
     end
@@ -372,8 +372,8 @@ function drawStuff()
         WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2), 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-1, 10,  15 + 0x800) 
         points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-7, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11,(WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11)
         WindowPolygon (Win, points,
-            ColourNameToRGB("black"), 0, 1, -- pen (solid, width 1)
-            ColourNameToRGB("black"), 0, -- brush (solid)
+            0x000000, 0, 1, -- pen (solid, width 1)
+            0x000000, 0, -- brush (solid)
             true, -- close
             false) -- alt fill
     else
@@ -381,8 +381,8 @@ function drawStuff()
         WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2), WINDOW_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 5,  15 + 0x800)
         points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-7, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11,(WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11)
         WindowPolygon (Win, points,
-            ColourNameToRGB("black"), 0, 1,   -- pen (solid, width 1)
-            ColourNameToRGB("black"), 0, --brush (solid)
+            0x000000, 0, 1,   -- pen (solid, width 1)
+            0x000000, 0, --brush (solid)
             true, --close
             false) --alt fill
     end
