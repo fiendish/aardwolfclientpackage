@@ -316,9 +316,9 @@ end
 function check_main_background()
 
    if (default_textrect == 1) then
-      textrect_left   = 200
+      textrect_left   = 1
       textrect_top    = 22
-      textrect_right  = 200 + GetInfo(213) * 90 -- Sized for 90 chars
+      textrect_right  = textrect_left + GetInfo(213) * 90 -- Sized for 90 chars
       textrect_bottom = GetInfo(280) - 90 -- Client window height - 90
   end -- assume if textrec isn't default, it is set.
 
@@ -336,16 +336,16 @@ function add_main_resizer()
                 12  , 2, 0x000000))
 
    -- draw the resize widget bottom right corner.
-   WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(textResizer, rstagsize-2, rstagsize-0, rstagsize-0, rstagsize-2, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(textResizer, rstagsize-4, rstagsize-0, rstagsize-0, rstagsize-4, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(textResizer, rstagsize-5, rstagsize-0, rstagsize-0, rstagsize-5, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(textResizer, rstagsize-7, rstagsize-0, rstagsize-0, rstagsize-7, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(textResizer, rstagsize-8, rstagsize-0, rstagsize-0, rstagsize-8, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(textResizer, rstagsize-10, rstagsize-0, rstagsize-0, rstagsize-10, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(textResizer, rstagsize-11, rstagsize-0, rstagsize-0, rstagsize-11, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(textResizer, rstagsize-12, rstagsize-0, rstagsize-0, rstagsize-12, ColourNameToRGB ("white"), 0, 1)
-   WindowLine(textResizer, rstagsize-13, rstagsize-0, rstagsize-0, rstagsize-13, ColourNameToRGB ("white"), 0, 1)
+   WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, 0xffffff, 0, 2)
+   WindowLine(textResizer, rstagsize-2, rstagsize-0, rstagsize-0, rstagsize-2, 0x696969, 0, 1)
+   WindowLine(textResizer, rstagsize-4, rstagsize-0, rstagsize-0, rstagsize-4, 0xffffff, 0, 2)
+   WindowLine(textResizer, rstagsize-5, rstagsize-0, rstagsize-0, rstagsize-5, 0x696969, 0, 1)
+   WindowLine(textResizer, rstagsize-7, rstagsize-0, rstagsize-0, rstagsize-7, 0xffffff, 0, 2)
+   WindowLine(textResizer, rstagsize-8, rstagsize-0, rstagsize-0, rstagsize-8, 0x696969, 0, 1)
+   WindowLine(textResizer, rstagsize-10, rstagsize-0, rstagsize-0, rstagsize-10, 0xffffff, 0, 2)
+   WindowLine(textResizer, rstagsize-11, rstagsize-0, rstagsize-0, rstagsize-11, 0x696969, 0, 1)
+   WindowLine(textResizer, rstagsize-12, rstagsize-0, rstagsize-0, rstagsize-12, 0xffffff, 0, 1)
+   WindowLine(textResizer, rstagsize-13, rstagsize-0, rstagsize-0, rstagsize-13, 0xffffff, 0, 1)
 
    -- Add a drag handler to this window, effectively allows textrectangle to be resized.
    WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
@@ -383,7 +383,7 @@ function draw_main_window()
    WindowShow(bgwin)
 
    local dir = GetInfo(66)
-   imgpath = dir .. "worlds\\plugins\\images\\aardbg18.png"
+   imgpath = dir .. "worlds\\plugins\\images\\aardbg13.png"
    WindowLoadImage(bgwin, "wolf_logo", imgpath)
 
    trwidth = GetInfo(274) - GetInfo(272)
@@ -398,8 +398,7 @@ function draw_main_window()
    if trheight > 500 then
       ypos = (trheight - 500) / 2
    end
-
-   WindowDrawImage (bgwin, "wolf_logo", xpos, ypos, 0, 0, 1)  -- straight copy
+   WindowDrawImage (bgwin, "wolf_logo", xpos, ypos, 0, 0, miniwin.image_copy)  -- straight copy
 
 end
 
