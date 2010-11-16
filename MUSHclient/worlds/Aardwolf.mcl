@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Monday, November 15, 2010, 7:09 PM -->
+<!-- Saved on Monday, November 15, 2010, 7:34 PM -->
 <!-- MuClient version 4.69 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
@@ -8,7 +8,7 @@
 <world
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
 
    auto_say_override_prefix="-"
    auto_say_string="say "
@@ -108,7 +108,7 @@
 <triggers
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
   >
 </triggers>
 
@@ -117,7 +117,7 @@
 <aliases
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
   >
 </aliases>
 
@@ -126,7 +126,7 @@
 <timers
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
   >
 </timers>
 
@@ -135,7 +135,7 @@
 <macros
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
   >
 
   <macro name="up" type="send_now" >
@@ -229,7 +229,7 @@
 <variables
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
   >
 </variables>
 
@@ -238,7 +238,7 @@
 <colours
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
   >
 
 <ansi>
@@ -295,7 +295,7 @@
 <keypad
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
   >
 
   <key name="0" >
@@ -409,7 +409,7 @@
 <printing
    muclient_version="4.69"
    world_file_version="15"
-   date_saved="2010-11-15 19:09:13"
+   date_saved="2010-11-15 19:34:09"
   >
 
 <ansi>
@@ -434,12 +434,12 @@
 </printing>
 
 <!-- plugins -->
-<include name="$PROGRAMDIR\worlds\plugins\aard_GMCP_handler.xml" plugin="y" />
-<include name="$PROGRAMDIR\worlds\plugins\aard_channels_fiendish.xml" plugin="y" />
-<include name="$PROGRAMDIR\worlds\plugins\aard_ASCII_map.xml" plugin="y" />
-<include name="$PROGRAMDIR\worlds\plugins\aard_layout.xml" plugin="y" />
-<include name="$PROGRAMDIR\worlds\plugins\aard_helper_aliases.xml" plugin="y" />
-<include name="$PROGRAMDIR\worlds\plugins\aard_GMCP_mapper.xml" plugin="y" />
-<include name="$PROGRAMDIR\worlds\plugins\aard_statmon_gmcp.xml" plugin="y" />
-<include name="$PROGRAMDIR\worlds\plugins\aard_health_bars_gmcp.xml" plugin="y" />
+<include name="aard_GMCP_handler.xml" plugin="y" />
+<include name="aard_channels_fiendish.xml" plugin="y" />
+<include name="aard_ASCII_map.xml" plugin="y" />
+<include name="aard_layout.xml" plugin="y" />
+<include name="aard_helper_aliases.xml" plugin="y" />
+<include name="aard_statmon_gmcp.xml" plugin="y" />
+<include name="aard_health_bars_gmcp.xml" plugin="y" />
+<include name="aard_GMCP_mapper.xml" plugin="y" />
 </muclient>
