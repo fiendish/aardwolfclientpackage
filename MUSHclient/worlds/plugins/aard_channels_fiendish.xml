@@ -12,11 +12,24 @@
     language="Lua"
     purpose="Move chats to a miniwindow"
     date_written="2010-10-25"
-    requires="4.65"
+    requires="4.70"
     version="1.1"
     save_state="y"
     >
 
+<description trim="y">
+USAGE:
+
+  chats echo on    : echo chats in main window
+  chats echo off   : do not echo chats
+  chats show       : show chats window
+  chats hide       : hide chats window
+  
+  Left-click a line to copy it to the clipboard
+  Left-click-and-drag title bar to move window
+  Right-click window to see menu of options
+</description>
+  
 </plugin>
 
 
@@ -58,6 +71,23 @@
     sequence="100"
     ignore_case="y"
     ></alias>
+
+    <alias
+    script="chat_show"
+    match="chats show"
+    enabled="y"
+    sequence="100"
+    ignore_case="y"
+    ></alias>
+
+    <alias
+    script="chat_hide"
+    match="chats hide"
+    enabled="y"
+    sequence="100"
+    ignore_case="y"
+    ></alias>
+
 </aliases>
 
 <script>
@@ -116,7 +146,6 @@ line_height = ""
 windowinfo = ""
 startx = ""
 starty = ""
-
 
 function ResizeMoveCallback()
     posx, posy = WindowInfo (Win, 17), WindowInfo (Win, 18)
@@ -178,7 +207,7 @@ function OnPluginInstall()
     font_width = WindowTextWidth (Win, "font"..Win, "W")
    
     -- install the window movement handler, get back the window position
-    windowinfo = movewindow.install (Win, 6, 2, true)
+    windowinfo = movewindow.install (Win, miniwin.pos_top_right, 0, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
     -- check for Echo/Timestamp/date_format/window size (in pixels) variables, if not there, set them
     if echo == nil then
@@ -715,14 +744,22 @@ print("-------------------------------------------------------------------------
 end
 
 function MouseUp(flags, hotspot_id)
-    if (hotspot_id == "textarea" and flags == 0x20) then
-        -- build menu for current state
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
         right_click_menu()
     else
         refresh()
     end
     keepscrolling = ""
+    return true
 end
+
+function LeftClickOnly(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+        return true
+    end
+    return false
+end
+
 
 function chat_echo (name, line, wildcards)
     if wildcards [1] == false then
@@ -739,6 +776,16 @@ function chat_echo (name, line, wildcards)
         ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
     end -- if
 end -- chat_echo
+
+function chat_show (name, line, wildcards)
+   WindowShow( Win, true )
+   ColourNote ("yellow", "", "Chats window now shown. Type 'chats hide' to hide it.")
+end -- function chat_show
+
+function chat_hide (name, line, wildcards)
+   WindowShow( Win, false )
+   ColourNote ("yellow", "", "Chats window now hidden. Type 'chats show' to see it again.")
+end -- function chat_hide
 
 -- right click menu
 function right_click_menu ()
