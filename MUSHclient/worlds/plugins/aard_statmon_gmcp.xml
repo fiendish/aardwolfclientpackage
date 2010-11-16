@@ -169,14 +169,14 @@ function DisplayStatsPage()
    check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
 
    -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, ColourNameToRGB ("dimgray"), 0, 1)
+   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
 
    -- show it now (or refresh)
    WindowShow (win, true)
@@ -353,12 +353,18 @@ end
 ---------------------------------------------------------------------------------
 -- Called when mouse button released on hotspot.
 ---------------------------------------------------------------------------------
-function MouseUp(flags, hotspot_id)
-    --debugp("MouseUp",hotspot_id)
-    if (flags == 0x20) then
-       -- build menu for current state
+function MouseUp(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
        right_click_menu()
     end
+    return true
+end
+
+function LeftClickOnly(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+        return true
+    end
+    return false
 end
 
 ---------------------------------------------------------------------------------
@@ -446,7 +452,7 @@ function OnPluginInstall()
    line_height = font_height + 1
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, 6, 2, true, nil, true, MouseUp)
+   windowinfo  = movewindow.install (win, 6, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
    --- Setup the window.
    SetUpHotspotsAndDraw(true)

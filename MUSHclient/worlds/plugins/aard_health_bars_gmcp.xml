@@ -288,12 +288,18 @@ end
 ---------------------------------------------------------------------------------
 -- Called when mouse button released on hotspot.
 ---------------------------------------------------------------------------------
-function MouseUp(flags, hotspot_id)
-    --debugp("MouseUp",hotspot_id)
-    if (flags == 0x20) then
-       -- build menu for current state
+function MouseUp(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
        right_click_menu()
     end
+    return true
+end
+
+function LeftClickOnly(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+        return true
+    end
+    return false
 end
 
 ---------------------------------------------------------------------------------
@@ -371,7 +377,7 @@ function OnPluginInstall()
    line_height = font_height + 1
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, 6, 2, true,nil,true,MouseUp)
+   windowinfo  = movewindow.install (win, 6, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
    MIN_SIZE = (WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN)*2
    height = (TOP_MARGIN*2)+(5*line_height)
