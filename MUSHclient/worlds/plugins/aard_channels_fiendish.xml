@@ -241,6 +241,26 @@ function init(firstTime)
 
     lineStart = math.max(1, #lines-WINDOW_LINES+2)
     lineEnd = math.max(1, #lines)
+    
+    -- title rectangle
+    WindowGradient (Win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, 0x111111, 0x333333, 2)
+    WindowLine(Win, 0, TITLE_HEIGHT-1, WINDOW_WIDTH, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
+    WindowText(Win, "fonthead"..Win, "Communication", ((WINDOW_WIDTH)-(6.5*header_font_height))/2, (TITLE_HEIGHT/2)-(header_font_height/2), WINDOW_WIDTH, (TITLE_HEIGHT/2)+(header_font_height/2), 0xEEEEEE, false)
+     
+    -- resize tag    
+    WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR) -- resizer background
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+2, ColourNameToRGB ("dimgray"), 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+4, ColourNameToRGB ("white"), 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+5, ColourNameToRGB ("dimgray"), 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+7, ColourNameToRGB ("white"), 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, ColourNameToRGB ("dimgray"), 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, ColourNameToRGB ("white"), 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, ColourNameToRGB ("dimgray"), 0, 1)
+    
+    -- draw border
+    WindowRectOp (Win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
+
     refresh()
 end
 
@@ -310,27 +330,21 @@ end
 
 -- clear and redraw
 function refresh()
-    WindowRectOp(Win, 2, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND_COLOUR)
+    WindowRectOp(Win, 2, 1, TITLE_HEIGHT+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1, -1, WINDOW_BACKGROUND_COLOUR)
     drawStuff()
 end
+
 barPos = ""
 barSize = ""
 totalSteps = ""
 function drawStuff()
-    -- title rectangle
-    WindowGradient (Win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, 0x111111, 0x333333, 2)
-    WindowLine(Win, 0, TITLE_HEIGHT-1, WINDOW_WIDTH, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
-    WindowText(Win, "fonthead"..Win, "Communication", ((WINDOW_WIDTH)-(6.5*header_font_height))/2, (TITLE_HEIGHT/2)-(header_font_height/2), WINDOW_WIDTH, (TITLE_HEIGHT/2)+(header_font_height/2), 0xEEEEEE, false)
-
-    -- draw border
-    WindowRectOp (Win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
    
     if #lines >= 1 then
         writeLines()
     end -- if
        
     -- Scrollbar base
-    WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
+    WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, WINDOW_WIDTH, -SCROLL_BAR_WIDTH, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
     WindowRectOp(Win, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH+TITLE_HEIGHT+1, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH)-1, SCROLL_DETAIL_COLOUR) -- scroll bar background inset rectangle
 
     if (keepscrolling == "up") then
@@ -391,16 +405,6 @@ function drawStuff()
         WindowDragHandler(Win, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
     end
     WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800) -- scrollbar position indicator
-   
-    -- resize tag    
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+2, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+4, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+5, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+7, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, ColourNameToRGB ("dimgray"), 0, 1)
 
     Redraw()
 end
