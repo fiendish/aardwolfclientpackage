@@ -375,44 +375,7 @@ local function draw_configuration ()
                    "Click to change font",
                    1, 0)  -- hand cursor
   y = y + font_height
-                   
-                     
-  -- width
-  -- WindowText   (win, FONT_ID, "Width", x, y, 0, 0, 0x000000, true)
-  -- WindowText   (win, FONT_ID_UL,   tostring (config.WINDOW.width), x + width + GAP, y, 0, 0, 0x808080, true)
-                                 
-  -- width hotspot               
-  -- WindowAddHotspot(win, "$<width>",  
-  --                x + GAP, y, x + frame_width, y + font_height,   -- rectangle
-  --                 "", "", "", "", "mapper.mouseup_change_width",  -- mouseup
-  --                 "Click to change window width",
-  --                 1, 0)  -- hand cursor
-  -- y = y + font_height
-  --                   
-  -- height
-  -- WindowText   (win, FONT_ID, "Height", x, y, 0, 0, 0x000000, true)
-  -- WindowText   (win, FONT_ID_UL,   tostring (config.WINDOW.height), x + width + GAP, y, 0, 0, 0x808080, true)
-                                 
-  -- height hotspot               
-  -- WindowAddHotspot(win, "$<height>",  
-  --                 x + GAP, y, x + frame_width, y + font_height,   -- rectangle
-  --                 "", "", "", "", "mapper.mouseup_change_height",  -- mouseup
-  --                 "Click to change window height",
-  --                 1, 0)  -- hand cursor
-  --y = y + font_height
-                                      
-  -- delay
-  -- WindowText   (win, FONT_ID, "Walk delay", x, y, 0, 0, 0x000000, true)
-  -- WindowText   (win, FONT_ID_UL,   tostring (config.DELAY.time), x + width + GAP, y, 0, 0, 0x808080, true)
-                                 
-  -- height hotspot               
-  -- WindowAddHotspot(win, "$<delay>",  
-  --                 x + GAP, y, x + frame_width, y + font_height,   -- rectangle
-  --                 "", "", "", "", "mapper.mouseup_change_delay",  -- mouseup
-  --                 "Click to change speedwalk delay",
-  --                 1, 0)  -- hand cursor
-  y = y + font_height
-                                      
+                                                         
 end -- draw_configuration
 
 -- for calculating one-way paths
@@ -1041,7 +1004,7 @@ end -- draw
 local credits = {
   "MUSHclient mapper",
   string.format ("Version %0.1f", VERSION),
-  "Written by Nick Gammon",
+  "Written by Nick Gammon and customized for Aardwolf.",
   WorldName (),
   GetInfo (3),
   }
@@ -1097,7 +1060,7 @@ function init (t)
                  config.BACKGROUND_COLOUR.colour) 
 
   -- let them move it around                 
-  movewindow.add_drag_handler (win, 0, 0, 0, font_height)
+  movewindow.add_drag_handler (win, 0, 0, 0, 0)
     
   local top = (config.WINDOW.height - #credits * font_height) /2
   
@@ -1108,7 +1071,7 @@ function init (t)
     top = top + font_height 
   end -- for
 
-  draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
+  draw_edge()
 
   add_resize_tag()
   
@@ -1132,18 +1095,9 @@ function add_resize_tag()
  
   -- Hotspot for resizer.                                                              
   local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?", true) - 5
-  local y = config.WINDOW.height - 2 - font_height
-  local width = draw_text_box (win, FONT_ID, 
-                   x,   -- left
-                   2,
-                   --config.WINDOW.height - 2 - font_height,    -- top (ie. at bottom)
-                   "?", true,                   -- what to draw, utf8
-                   config.AREA_NAME_TEXT.colour,   -- text colour
-                   config.AREA_NAME_FILL.colour,   -- fill colour   
-                   config.AREA_NAME_BORDER.colour)     -- border colour
-    
+  local y = config.WINDOW.height - 2 - font_height  
   WindowAddHotspot(win, "resize",  
-                   x, y, x + width, y + font_height,   -- rectangle
+                   x, y, 0, 0,   -- rectangle
                    "", "", "mapper.resize_mouse_down", "", "",
                    "Drag to resize",
                    6, 0)  -- hand cursor
@@ -1507,31 +1461,6 @@ function mouseup_change_font (flags, hotspot_id)
   draw (current_room)
 end -- mouseup_change_font
 
-
-function mouseup_change_width (flags, hotspot_id)
-  
-  local width = get_number_from_user ("Choose window width (200 to 1000 pixels)", "Width", config.WINDOW.width, 200, 1000)
-      
-  if not width then
-    return
-  end -- if dismissed
-    
-  config.WINDOW.width = width
-  draw (current_room)
-end -- mouseup_change_width
-
-function mouseup_change_height (flags, hotspot_id)
-  
-  local height = get_number_from_user ("Choose window height (200 to 1000 pixels)", "Width", config.WINDOW.height, 200, 1000)
-      
-  if not height then
-    return
-  end -- if dismissed
-    
-  config.WINDOW.height = height
-  draw (current_room)
-end -- mouseup_change_height
-
 function mouseup_change_depth (flags, hotspot_id)
   
   local depth = get_number_from_user ("Choose scan depth (3 to 100 rooms)", "Depth", config.SCAN.depth, 3, 100)
@@ -1543,18 +1472,6 @@ function mouseup_change_depth (flags, hotspot_id)
   config.SCAN.depth = depth
   draw (current_room)
 end -- mouseup_change_depth
-
-function mouseup_change_delay (flags, hotspot_id)
-  
-  local delay = get_number_from_user ("Choose speedwalk delay time (0 to 10 seconds)", "Delay in seconds", config.DELAY.time, 0, 10)
-      
-  if not delay then
-    return
-  end -- if dismissed
-    
-  config.DELAY.time = delay
-  draw (current_room)
-end -- mouseup_change_delay
 
 function resize_mouse_down(flags, hotspot_id)
    if (hotspot_id == "resize") then
@@ -1583,8 +1500,7 @@ function resize_move_callback()
    end
 
   WindowResize(win,config.WINDOW.width,config.WINDOW.height,config.BACKGROUND_COLOUR.colour)
-   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0xcccccc, 15))
-   check (WindowRectOp (win, 1, 2, 2, -2, -2, 0x777777, 15))
+  draw_edge()
 
  WindowShow(win,false)
  WindowShow(win,true)
@@ -1599,6 +1515,6 @@ end
 
 function draw_edge()
    -- draw edge frame.
-   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0xcccccc, 15))
-   check (WindowRectOp (win, 1, 2, 2, -2, -2, 0x777777, 15))
+   check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
+   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
 end
