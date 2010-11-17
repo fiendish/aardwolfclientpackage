@@ -389,11 +389,7 @@ function OnPluginDisable ()
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-    WindowShow (win, true)
-    -- if we are connected when the plugin loads, it must have been reloaded whilst playing
-    if IsConnected () then
-        OnPluginConnect ()
-    end -- if already connected
+    WindowShow( win, true)
 end -- OnPluginEnable
 
 
@@ -406,10 +402,6 @@ function OnPluginInstall()
    --- Get a unique name for main window
    win = GetPluginID ()  -- get a unique name
 
---   local dir = GetInfo(66)
---   imgpath = dir .. "worlds\\plugins\\assets\\aardbg8.png"
---   WindowLoadImage(win, "wolf_logo", imgpath)
-
    --- Pull some state variables.
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
    height            = tonumber (GetVariable ("height")) or default_height
@@ -420,7 +412,6 @@ function OnPluginInstall()
    WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
 
    font_id        = "statmon_font"
-   font_id_header = "header_font"
 
    local fonts = utils.getfontfamilies ()
 
@@ -435,19 +426,14 @@ function OnPluginInstall()
       default_font_name = "Courier New"
    end -- if
 
-   header_font_name = "Lucida Console"
-   header_font_size = 9
-
    font_name        = GetVariable("font_name") or default_font_name
    font_size        = tonumber(GetVariable("font_size")) or default_font_size
 
    --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
-   WindowFont (win, font_id_header, header_font_name,header_font_size,false,false,false,false) 
 
    --- Grab font size settings.
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-   header_font_height = WindowFontInfo (win, font_id_header, 1) - WindowFontInfo (win, font_id_header, 4) + 1
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
    line_height = font_height + 1
 
