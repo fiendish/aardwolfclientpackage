@@ -167,7 +167,6 @@ function DisplayMapPage()
    styles = { }
    
    WindowRectOp(win, 2, 0,0,0,0,background_colour) -- blank
-   WindowDrawImage (win, "wolf_logo", 0, font_height*2+TITLE_HEIGHT, 0, 0, 2)  -- straight copy
 
    -- show the widget for the legend popup
    WindowRectOp(win, 2, 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5,0x303030,0x0000ff) -- fill
@@ -533,7 +532,10 @@ function OnPluginEnable ()
     WindowShow (win, true)
     -- if we are connected when the plugin loads, it must have been reloaded whilst playing
     if IsConnected () then
-        OnPluginConnect ()
+       SendNoEcho ("map")
+    else
+       page_built = false
+       DisplayMapPage()
     end -- if already connected
 end -- OnPluginEnable
 
