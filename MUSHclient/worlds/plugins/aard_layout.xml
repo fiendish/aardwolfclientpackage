@@ -277,9 +277,15 @@ function resetaard()
 end
 
 function OnPluginDisable ()
+    WindowShow( textDragger, false )
+    WindowShow( textResizer, false )
+    WindowShow( bgwin, false)
 end --  OnPluginDisable
 
 function OnPluginEnable ()
+    WindowShow( textDragger, true )
+    WindowShow( textResizer, true )
+    WindowShow( bgwin, true)
 end -- OnPluginEnable
 
 
