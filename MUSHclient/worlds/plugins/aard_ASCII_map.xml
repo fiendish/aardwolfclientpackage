@@ -530,13 +530,6 @@ end --  OnPluginDisable
 
 function OnPluginEnable ()
     WindowShow (win, true)
-    -- if we are connected when the plugin loads, it must have been reloaded whilst playing
-    if IsConnected () then
-       SendNoEcho ("map")
-    else
-       page_built = false
-       DisplayMapPage()
-    end -- if already connected
 end -- OnPluginEnable
 
 --=================================================================================
