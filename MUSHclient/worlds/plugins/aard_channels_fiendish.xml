@@ -6,7 +6,7 @@
 
 <muclient>
     <plugin
-    name="Chat_Capture_Miniwindow"
+    name="Aardwolf_Chat_Capture_Miniwindow"
     author="Fiendish"
     id="b555825a4a5700c35fa80780"
     language="Lua"
@@ -545,6 +545,7 @@ end
 --
 -- Main capture routine
 function chats (name, line, wildcards, styles)
+
     -- strip out the tag
     tag_length = string.find(styles[1].text,"}")
     styles[1].text = string.sub(styles[1].text, tag_length+1)
