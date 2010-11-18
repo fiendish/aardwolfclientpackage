@@ -121,7 +121,7 @@ USAGE:
 
 require "movewindow"  -- load the movewindow.lua module
 require "copytable"
--- require "gmcphelper"
+require "gmcphelper"
 
 FONT_NAME = "Dina"
 FONT_SIZE = 8
@@ -327,7 +327,7 @@ end
 
 function OnPluginConnect ()
     -- first time after connect, get tags right
---    Send_GMCP_Packet("rawcolor on")
+    Send_GMCP_Packet("rawcolor on")
     TelnetOptionOff(TELOPT_QUIET)
     TelnetOptionOn (TELOPT_CHANNELS)
     TelnetOptionOn (TELOPT_TELLS)
@@ -574,7 +574,8 @@ function fillBuffer(rawstyles)
 end
 
 
---
+--[[
+-- OLD PRE-GMCP VERSION. KEEPING AROUND FOR REFERENCE ONLY
 -- Main capture routine
 function chats (name, line, wildcards, styles)
     
@@ -611,10 +612,13 @@ function chats (name, line, wildcards, styles)
     fillBuffer(styles)
     refresh( )
 end -- chats
+--]]
 
--- EXPERIMENTAL GMCP VERSION. AARDWOLF GMCP CHANNEL OUTPUT CURRENTLY HAS BUGS, SO WE WON'T USE THIS.
---[[
 function chats (name, line, wildcards, styles)
+    if (echo == "0") then
+        EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
+    end
+    
     -- echo in this world as well if the user wants
     if echo == "1" then
         -- strip out the tag
@@ -664,7 +668,6 @@ function OnPluginBroadcast (msg, id, name, text)
       end
    end
 end
---]]
 
 function add_line ( line, is_beginning_of_message )
     -- add new line
