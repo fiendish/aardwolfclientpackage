@@ -42,7 +42,7 @@ Your current room is always in the center with a bolder border.
 
 LH-click on a room to speed-walk to it. RH-click on a room for options. 
 
-LH-click on the "*" button on the bottom-left corner to configure it.
+LH-click on the "*" button on the upper-left corner to configure it.
 
 ** WHY DOES THE MAP CHANGE? **
 
@@ -506,13 +506,13 @@ default_config = {
          } ,
          
   -- size of map window
-  WINDOW = { width = 250, height = 450 },
+  WINDOW = { width = 250, height = 400 },
   
   -- how far from where we are standing to draw (rooms)
-  SCAN = { depth = 30 },
+  SCAN = { depth = 15 },
   
   -- speedwalk delay
-  DELAY = { time = 0.2 },
+  DELAY = { time = 0.0 },
   
   -- how many seconds to show "recent visit" lines (default 3 minutes)
   LAST_VISIT_TIME = { time = 60 * 3 },  
