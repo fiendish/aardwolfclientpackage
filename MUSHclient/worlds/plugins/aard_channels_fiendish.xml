@@ -207,18 +207,23 @@ function OnPluginInstall()
 
    local fonts = utils.getfontfamilies ()
 
+   -- if not there already, add it
+   if not fonts.Dina then
+     AddFont (GetInfo (66) .. "\\Dina.fon")
+   end -- if Dina not installed
+  
    header_font_name = "Lucida Console"
    header_font_size = 9
 
-   if fonts["Dina"] then
-      default_font_size = 9
-      default_font_name = "Dina"
-   elseif fonts ["Lucida Console"] then
-      default_font_size = 9
-      default_font_name = "Lucida Console"    -- the actual font
-   else
+   if fonts["Courier New"] then
       default_font_size = 9
       default_font_name = "Courier New"
+   elseif fonts ["Dina"] then
+      default_font_size = 8
+      default_font_name = "Dina"    -- the actual font
+   else
+      default_font_size = 9
+      default_font_name = "Lucida Console"
    end -- if
 
    FONT_NAME        = GetVariable("font_name") or default_font_name
