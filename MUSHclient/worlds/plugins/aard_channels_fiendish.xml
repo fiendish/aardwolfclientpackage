@@ -390,7 +390,7 @@ end
 
 -- clear and redraw
 function refresh()
-    WindowRectOp(Win, 2, 1, TITLE_HEIGHT+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1, -1, WINDOW_BACKGROUND_COLOUR)
+    WindowRectOp(Win, 2, 1, TITLE_HEIGHT+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, -1, WINDOW_BACKGROUND_COLOUR)
     drawStuff()
 end
 
