@@ -82,7 +82,7 @@ end -- Display_ColourText_Line
 
 function DisplayStatsPage()
 
-   WindowRectOp(win, 2, 0,0,0,0,background_colour) -- blank 
+   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
      
    if not page_built then
       txt = "Status bars will appear here"
@@ -99,16 +99,16 @@ function DisplayStatsPage()
       bar_start = xpos+WindowTextWidth(win,font_id,"WWWWWW:")
       bar_width = math.max(1, width-bar_start-LEFT_MARGIN)
       Display_ColourText_Line(win,font_id,"@GHealth:@w",xpos,ypos)
-      gauge(win,"Health:",tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),bar_start,ypos,bar_width,line_height,0x0dcc49,0x000000,4,0x002200,0x000000,nil)
+      gauge(win,"Health:",tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),bar_start,ypos,bar_width,line_height,0x0dcc49,0x000000,3,0x002200,0x000000,nil)
       ypos = ypos + line_height
       Display_ColourText_Line(win,font_id,"@CMana  :@w",xpos,ypos)
-      gauge(win,"Mana:",tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),bar_start,ypos,bar_width,line_height,0xcccc22,0x000000,4,0x004400,0x000000,nil) 
+      gauge(win,"Mana:",tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),bar_start,ypos,bar_width,line_height,0xcccc22,0x000000,3,0x004400,0x000000,nil) 
       ypos = ypos + line_height
       Display_ColourText_Line(win,font_id,"@YMoves :@w",xpos,ypos)
-      gauge(win,"Moves:",tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),bar_start,ypos,bar_width,line_height,0x00dddd,0x000000,4,0x004400,0x000000,nil) 
+      gauge(win,"Moves:",tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),bar_start,ypos,bar_width,line_height,0x00dddd,0x000000,3,0x004400,0x000000,nil) 
       ypos = ypos + line_height
       Display_ColourText_Line(win,font_id,"@WTNL   :@w",xpos,ypos)
-      gauge(win,"TNL:",tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),bar_start,ypos,bar_width,line_height,0xdfdfdf,0x000000,4,0x004400,0x000000,nil) 
+      gauge(win,"TNL:",tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),bar_start,ypos,bar_width,line_height,0xdfdfdf,0x000000,3,0x004400,0x000000,nil) 
       ypos = ypos + line_height
 
       fighting = gmcpval("status.enemy")
@@ -116,7 +116,7 @@ function DisplayStatsPage()
          enemypct = gmcpval("status.enemypct")
          if enemypct ~= "" then
             Display_ColourText_Line(win,font_id,"@REnemy :@w",xpos, ypos)
-            gauge(win,"Enemy:",enemypct,100,bar_start,ypos,bar_width,line_height,0x2222bb,0x000000,4,0x000000,0x000000,nil) 
+            gauge(win,"Enemy:",enemypct,100,bar_start,ypos,bar_width,line_height,0x2222bb,0x000000,3,0x000000,0x000000,nil) 
          end
       else
             Display_Styled_Line (win, font_id, {{text="Enemy :",textcolour=0x444444}}, xpos, ypos)
@@ -125,19 +125,15 @@ function DisplayStatsPage()
       ypos = ypos + line_height + TOP_MARGIN
    end
 
-   -- draw edge frame.
-   check (WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15))
-   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
-
    -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, ColourNameToRGB ("dimgray"), 0, 1)
+   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
 
    -- show it now (or refresh)
    WindowShow (win, true)
@@ -145,7 +141,7 @@ function DisplayStatsPage()
 end -- DisplayStatsPage
 
 function RefreshPage()
-   SetUpHotspotsAndDraw()
+   DisplayStatsPage()
 end
 
 -- returns the end of the line
@@ -409,6 +405,11 @@ function SetUpHotspotsAndDraw(firstTime)
        WindowResize(win, width, height, background_colour)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
+   
+      -- draw edge frame.
+   check (WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15))
+   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
+
    DisplayStatsPage()
 end
 
