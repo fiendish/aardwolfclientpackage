@@ -51,7 +51,33 @@ USAGE:
     omit_from_output="y"
     sequence="100"
     ></trigger>
-
+    
+    <trigger
+    enabled="n"
+    match="^$"
+    regexp="y"
+    name="end_gag_omit"
+    group="end_gag"
+    omit_from_output="y"
+    sequence="100"
+    send_to="12"
+    ><send>
+    EnableTriggerGroup("end_gag", false)
+    </send></trigger>
+    
+    <trigger
+    enabled="n"
+    match=".*"
+    regexp="y"
+    name="end_gag_keep"
+    group="end_gag"
+    omit_from_output="n"
+    sequence="101"
+    send_to="12"
+    ><send>
+    EnableTriggerGroup("end_gag", false)
+    </send></trigger>
+    
     <trigger
     enabled="y"
     match="^{tell}(?<msg>.*)"
@@ -545,7 +571,11 @@ end
 --
 -- Main capture routine
 function chats (name, line, wildcards, styles)
-
+    
+    if (echo == "0") then
+        EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
+    end
+    
     -- strip out the tag
     tag_length = string.find(styles[1].text,"}")
     styles[1].text = string.sub(styles[1].text, tag_length+1)
