@@ -139,7 +139,7 @@ function DisplayStatsPage()
    max_height = 0
    max_width = 0
 
-   WindowRectOp(win, 2, 0,0,0,0,background_colour) -- blank 
+   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
      
    if not page_built then
       txt = "Stats will appear here"
@@ -163,10 +163,6 @@ function DisplayStatsPage()
       end
       max_height = top + line_height + TOP_MARGIN + 1
    end
-
-   -- draw edge frame.
-   check (WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15))
-   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
 
    -- draw the resize widget bottom right corner.
    WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
@@ -471,6 +467,11 @@ function SetUpHotspotsAndDraw(firstTime)
        WindowResize(win, width, height, background_colour)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
+
+   -- draw edge frame.
+   check (WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15))
+   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
+
    DisplayStatsPage()
 end
 
