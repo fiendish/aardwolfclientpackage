@@ -121,6 +121,7 @@ USAGE:
 
 require "movewindow"  -- load the movewindow.lua module
 require "copytable"
+-- require "gmcphelper"
 
 FONT_NAME = "Dina"
 FONT_SIZE = 8
