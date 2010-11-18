@@ -1878,6 +1878,7 @@ function OnPluginSent (sText)
 end -- function
 
 function OnPluginConnect ()
+  Send_GMCP_Packet("rawcolor on")
   mapper.cancel_speedwalk ()
   -- DoAfter (3, "look")  -- force mapper update
 end -- OnPluginConnect
