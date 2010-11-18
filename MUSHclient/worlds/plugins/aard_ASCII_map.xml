@@ -120,7 +120,7 @@ function map_redirect (name, line, wildcards, styles)
 	elseif name == "map_end" then
 	   EnableTrigger ("multi_line_map", false)  -- no more lines to go
        page_built = true
-	   DisplayMapPage () --end of map from MUD, display the window
+	   -- DisplayMapPage () --end of map from MUD, display the window
 	else
 		table.insert (map_lines, styles)
 	end
@@ -138,12 +138,12 @@ function SetUpHotspotsAndDraw(firstTime)
        -- Add the drag handler so they can move the window around
        movewindow.add_drag_handler (win, 0, 0, 0, font_height*2 + TITLE_HEIGHT)
        -- Add right click handler
-       WindowAddHotspot(win, "textarea", 0, font_height*2 + TITLE_HEIGHT, width,height, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 0, 0)
+       WindowAddHotspot(win, "textarea", 0, font_height*2 + TITLE_HEIGHT, width,height, "", "", "MouseDown", "", "MouseUp", "", 0, 0)
        -- Add legend-popup handler
-       WindowAddHotspot(win, "legend", 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 12, 0)
+       WindowAddHotspot(win, "legend", 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
 
        -- Add handler for resizing
-       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
        WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
    else
        -- everything has already been made
@@ -153,6 +153,11 @@ function SetUpHotspotsAndDraw(firstTime)
        WindowMoveHotspot(win, "legend", 5, height-font_height-2, 3*font_width, height)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
+
+   -- draw edge frame.
+   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
+   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+
    DisplayMapPage()
 end
 
@@ -166,7 +171,7 @@ function DisplayMapPage()
     
    styles = { }
    
-   WindowRectOp(win, 2, 0,0,0,0,background_colour) -- blank
+   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
 
    -- show the widget for the legend popup
    WindowRectOp(win, 2, 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5,0x303030,0x0000ff) -- fill
@@ -174,7 +179,7 @@ function DisplayMapPage()
    WindowText (win, font_id, "?", font_width+1, font_height*2+TITLE_HEIGHT+1, 0, 0, 0xffffff)
    
    -- title rectangle
-   WindowGradient (win, 0, 0, width, font_height*2+TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
+   WindowGradient (win, 2, 2, -2, font_height*2+TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
    WindowLine(win,0,font_height*2 + TITLE_HEIGHT,width,font_height*2+TITLE_HEIGHT,0xeeeeee,0,1)
 
    if not page_built then
@@ -197,10 +202,6 @@ function DisplayMapPage()
          Display_Line (#map_lines+1, coords)
       end
    end
-
-   -- draw edge frame.
-   check (WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15))
-   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
 
    -- draw the resize widget bottom right corner.
    WindowLine(win, width-3, height-2, width-2, height-3, ColourNameToRGB ("white"), 0, 2)
@@ -340,12 +341,14 @@ function OnPluginBroadcast (msg, id, name, text)
          return
       end
 
-      if (text == "room.info" and show_coords == 1) then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info.coord")         
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
-         coord_data = gmcpdata
-         process_coords()
+      if (text == "room.info") then
+         if (show_coords == 1) then
+             res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info.coord")         
+             luastmt = "gmcpdata = " .. gmcparg
+             assert (loadstring (luastmt or "")) ()
+             coord_data = gmcpdata
+             process_coords()
+         end
          DisplayMapPage()
       end
    end
@@ -480,7 +483,6 @@ function MouseOver (flags, hotspotid)
 end -- mouseover
 
 function CancelMouseOver (flags, hotspotid)
-
   WindowShow (infowin, false)
 end -- cancelmouseover
 
@@ -488,8 +490,6 @@ end -- cancelmouseover
 -- Called when mouse moved away from hotspot. Doesn't really apply for draggables.
 ---------------------------------------------------------------------------------
 function CancelMouseDown(flags, hotspot_id)
-   -- debugp("CancelMouseDown")
-   -- DisplayMapPage()
 end
 
 ---------------------------------------------------------------------------------
