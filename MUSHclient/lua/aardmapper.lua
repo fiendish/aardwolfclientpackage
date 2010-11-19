@@ -932,7 +932,19 @@ function draw (uid)
 
    -- Handle background texture.
    if room.textimage ~= nil then
-      WindowImageOp(win, miniwin.image_fill_rectangle, 0,0,0,0, 0x000000, miniwin.pen_null, 1, 0x000000, room.textimage)
+      local iwidth = WindowImageInfo(win,room.textimage,2)
+      local iheight= WindowImageInfo(win,room.textimage,3)
+      local x = 0
+      local y = 0
+
+      while y < config.WINDOW.height do
+        x = 0
+        while x < config.WINDOW.width do
+           WindowDrawImage (win, room.textimage, x, y, 0, 0, 1)  -- straight copy
+           x = x + iwidth
+        end
+        y = y + iheight
+      end
    end
 
   -- let them move it around                 
