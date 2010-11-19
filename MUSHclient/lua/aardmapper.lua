@@ -341,7 +341,7 @@ local function draw_configuration ()
   x = x + GAP
   
   -- title
-  WindowText   (config_win, CONFIG_FONT_ID, "Configuration", ((frame_width-WindowTextWidth(win,FONT_ID,"Configuration", true))/2), y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID, "Configuration", ((frame_width-WindowTextWidth(config_win,CONFIG_FONT_ID,"Configuration", true))/2), y, 0, 0, 0x808080, true)
   
   -- close box
   WindowRectOp (config_win, 
@@ -1071,7 +1071,7 @@ function draw (uid)
   --draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
   draw_edge()
 
-  add_resize_tag()
+  add_resize_tag(true)
      
 
   -- make sure window visible
@@ -1170,7 +1170,7 @@ function init (t)
 
 -- draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
   draw_edge()
-  add_resize_tag()
+  add_resize_tag(true)
   
   WindowShow (win, true)
   WindowShow (config_win, false)
@@ -1347,6 +1347,7 @@ function do_hyperlink (hash)
 
   if not hyperlink_paths or not hyperlink_paths [hash] then
     mapprint ("Hyperlink is no longer valid, as you have moved.")
+
     return
   end -- if
   
@@ -1577,32 +1578,37 @@ function resize_release_callback()
 end
 
 function resize_move_callback()
-
-   local posx, posy = WindowInfo (win , 17), WindowInfo (win , 18)
-   local width = config.WINDOW.width
-   local height = config.WINDOW.height
-
-   if ( (width + posx - startx) >= 200 ) then
-      config.WINDOW.width = width + posx - startx
-      startx = posx
-   end
-
-   if ( height + posy - starty >= 200) then
-      config.WINDOW.height = height + posy - starty
-      starty = posy
+    local posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
+    config.WINDOW.width = config.WINDOW.width+posx-startx
+    startx = posx
+    if (50 > config.WINDOW.width) then
+        config.WINDOW.width = 50
+        startx = windowinfo.window_left+config.WINDOW.width
+    elseif (windowinfo.window_left+config.WINDOW.width > GetInfo(281)) then
+        config.WINDOW.width = GetInfo(281)-windowinfo.window_left
+        startx = GetInfo(281)
+    end 
+    config.WINDOW.height = config.WINDOW.height+posy-starty
+    starty=posy
+    if (50 > config.WINDOW.height) then
+        config.WINDOW.height = 50
+        starty = windowinfo.window_top+config.WINDOW.height
+    elseif (windowinfo.window_top+config.WINDOW.height > GetInfo(280)) then
+        config.WINDOW.height = GetInfo(280)-windowinfo.window_top
+        starty = GetInfo(280)
    end
 
   WindowResize(win,config.WINDOW.width,config.WINDOW.height,config.BACKGROUND_COLOUR.colour)
   draw_edge()
+  add_resize_tag(false)
 
- WindowShow(win,false)
- WindowShow(win,true)
+  WindowShow(win,true)
 
 --  draw() 
 end
 
 
-function add_resize_tag()
+function add_resize_tag(firstTime)
    -- draw the resize widget bottom right corner.
    local width  = config.WINDOW.width
    local height = config.WINDOW.height
@@ -1618,14 +1624,17 @@ function add_resize_tag()
  
   -- Hotspot for resizer.                                                              
   local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?", true) - 5
-  local y = config.WINDOW.height - 2 - font_height  
-  WindowAddHotspot(win, "resize",  
+  local y = config.WINDOW.height - 2 - font_height
+  if (firstTime == true) then  
+    WindowAddHotspot(win, "resize",  
                    x, y, 0, 0,   -- rectangle
                    "", "", "mapper.resize_mouse_down", "", "",
                    "Drag to resize",
                    6, 0)  -- hand cursor
-  WindowDragHandler(win, "resize", "mapper.resize_move_callback", "mapper.resize_release_callback", 0)
- 
+    WindowDragHandler(win, "resize", "mapper.resize_move_callback", "mapper.resize_release_callback", 0)
+  else
+    WindowMoveHotspot(win, "resize", x, y,  0,  0)
+  end
 end -- draw resize tag. 
 
 function draw_edge()
