@@ -331,7 +331,9 @@ local function draw_configuration ()
   local y = 0
   local box_size = font_height - 2
   local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID, 
-    {config.FONT.name .. " " .. config.FONT.size, 
+    {config.FONT.name .. " " .. config.FONT.size,
+     tostring (config.DELAY.time),
+     tostring ("- +"), 
      tostring (config.SCAN.depth)}, 
     true))
   local frame_width = GAP + width + GAP + rh_size + GAP  -- gap / text / gap / box / gap
@@ -1045,7 +1047,6 @@ function draw (uid)
   local areaname = room.area
   
   if areaname then
-
     draw_text_box (win, FONT_ID, 
                    (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname, true)) / 2,   -- left
                    config.WINDOW.height - 3 - font_height,    -- top
@@ -1060,6 +1061,7 @@ function draw (uid)
   if draw_configure_box then
     draw_configuration ()
   else
+
     WindowShow(config_win, false)
     local x = 5
     local y = 2
@@ -1395,7 +1397,6 @@ function do_hyperlink (hash)
 
   if not hyperlink_paths or not hyperlink_paths [hash] then
     mapprint ("Hyperlink is no longer valid, as you have moved.")
-
     return
   end -- if
   
@@ -1584,7 +1585,9 @@ function mouseup_change_font (flags, hotspot_id)
   -- reload new font  
   WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
   WindowFont (win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
-  
+  WindowFont (config_win, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
+  WindowFont (config_win, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
+
   -- see how high it is
   font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
   
