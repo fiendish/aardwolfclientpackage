@@ -8,6 +8,8 @@ Amended: 15th August 2010
 Amended: 2nd October 2010
 Amended: 18th October 2010 to added find callback
 Amended: 16th November 2010 to add symbolic constants (miniwin.xxxx)
+Amended: 18th November 2010 to add more timing and count of times called
+         Also added zooming with the mouse wheel.
 
 Generic MUD mapper.
 
@@ -65,7 +67,7 @@ Room info should include:
 
 module (..., package.seeall)
 
-VERSION = 2.3   -- for querying by plugins
+VERSION = 2.4   -- for querying by plugins
 
 require "movewindow"
 require "copytable"
@@ -107,6 +109,8 @@ local HALF_ROOM, connectors, half_connectors, arrows
 local plan_to_draw, speedwalks, drawn, drawn_coords
 local last_drawn, depth, windowinfo, font_height 
 local walk_to_room_name
+local total_times_drawn = 0
+local total_time_taken = 0
 
 local function build_room_info ()
   
@@ -311,8 +315,8 @@ end -- get_number_from_user
 
 local function draw_configuration ()
 
-  local width =  max_text_width (config_win, CONFIG_FONT_ID, {"Configuration", "Font", "Depth"}, true)
-  local lines = 3  -- Configuration, font, depth
+  local width =  max_text_width (config_win, CONFIG_FONT_ID, {"Configuration", "Font", "Depth", "Delay", "Room size"}, true)
+  local lines = 5  -- Configuration, font, depth, delay, room size
   local GAP = 5
   local suppress_colours = false
   
@@ -416,7 +420,7 @@ local function draw_configuration ()
   
   -- depth
   WindowText   (config_win, CONFIG_FONT_ID, "Depth", x, y, 0, 0, 0x000000, true)
-  WindowText   (config_win, CONFIG_FONT_ID_UL,   tostring (config.SCAN.depth), x + width + GAP, y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL,   tostring (config.SCAN.depth), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.SCAN.depth, true)/2, y, 0, 0, 0x808080, true)
                                  
   -- depth hotspot               
   WindowAddHotspot(config_win, 
@@ -446,12 +450,11 @@ local function draw_configuration ()
                    miniwin.cursor_hand, 0)  -- hand cursor
   y = y + font_height
   
-  --[[
   -- delay
-  WindowText   (config_win, CONFIG_FONT_ID, "Delay", x, y, 0, 0, 0x000000, true)
-  WindowText   (config_win, CONFIG_FONT_ID_UL,   tostring (config.DELAY.time), x + width + GAP, y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID, "Walk delay", x, y, 0, 0, 0x000000, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL, tostring (config.DELAY.time), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.DELAY.time, true)/2, y, 0, 0, 0x808080, true)
                                   
-  -- colour font hotspot               
+  -- delay hotspot               
   WindowAddHotspot(config_win, 
                    "$<delay>",  
                    x + GAP, 
@@ -462,7 +465,34 @@ local function draw_configuration ()
                    "Click to change speedwalk delay",
                    miniwin.cursor_hand, 0)  -- hand cursor
   y = y + font_height
-  --]]
+  
+  -- room size
+  WindowText   (config_win, CONFIG_FONT_ID, "Room size", x, y, 0, 0, 0x000000, true)
+  WindowText   (config_win, CONFIG_FONT_ID, "("..tostring (ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Room size ", true), y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080, true)
+                                  
+  -- room size hotspots
+  WindowAddHotspot(config_win, 
+                   "$<room_size_down>",  
+                   width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), 
+                   y, 
+                   width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), 
+                   y + font_height,   -- rectangle
+                   "", "", "", "", "mapper.zoom_out",  -- mouseup
+                   "Click to zoom out",
+                   miniwin.cursor_hand, 0)  -- hand cursor
+   WindowAddHotspot(config_win, 
+                   "$<room_size_up>",  
+                   width + rh_size / 2 + box_size + GAP, 
+                   y, 
+                   width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+", true), 
+                   y + font_height,   -- rectangle
+                   "", "", "", "", "mapper.zoom_in",  -- mouseup
+                   "Click to zoom in",
+                   miniwin.cursor_hand, 0)  -- hand cursor
+  y = y + font_height
+  
   WindowShow(config_win, true)
 end -- draw_configuration
 
@@ -702,6 +732,8 @@ local function draw_room (uid, path, x, y)
                  room.hovermessage,
                  miniwin.cursor_hand, 0)  -- hand cursor
                    
+  WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
+                 
 end -- draw_room
 
 local function changed_room (uid)
@@ -908,7 +940,7 @@ function draw (uid)
   current_room = uid -- remember where we are
   
   -- timing
-  local start_time = GetInfo (232)
+  local start_time = utils.timer ()
 
   -- start with initial room
   rooms = { [uid] = get_room (uid) }
@@ -949,6 +981,16 @@ function draw (uid)
 
   -- let them move it around                 
   movewindow.add_drag_handler (win, 0, 0, 0, font_height)
+   
+  -- for zooming
+  WindowAddHotspot(win, 
+                   "zzz_zoom",  
+                   0, 0, 0, 0, 
+                   "", "", "", "", "",
+                   "",  -- hint
+                   miniwin.cursor_arrow, 0)  
+        
+  WindowScrollwheelHandler (win, "zzz_zoom", "mapper.zoom_map")
    
   -- set up for initial room, in middle
   drawn, drawn_coords, rooms_to_be_drawn, speedwalks, plan_to_draw, area_exits = {}, {}, {}, {}, {}, {}
@@ -1080,7 +1122,7 @@ function draw (uid)
 
   last_drawn = uid  -- last room number we drew (for zooming)
   
-  local end_time = GetInfo (232)
+  local end_time = utils.timer ()
 
   -- timing stuff
   if timing then
@@ -1089,6 +1131,13 @@ function draw (uid)
       count = count + 1 
     end
     print (string.format ("Time to draw %i rooms = %0.3f seconds, search depth = %i", count, end_time - start_time, depth))
+    
+    total_times_drawn = total_times_drawn + 1
+    total_time_taken = total_time_taken + end_time - start_time
+    
+    print (string.format ("Total times map drawn = %i, average time to draw = %0.3f seconds",
+                          total_times_drawn,
+                          total_time_taken / total_times_drawn))
   end -- if
   
 end -- draw
@@ -1168,7 +1217,6 @@ function init (t)
     top = top + font_height 
   end -- for
 
--- draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
   draw_edge()
   add_resize_tag(true)
   
@@ -1250,9 +1298,9 @@ function find (f, show_uid, expected_count, walk, fcb)
     assert (type (fcb) == "function")
   end -- if
 
-  local start_time = GetInfo (232)
+  local start_time = utils.timer ()
   local paths, count, depth = find_paths (current_room, f)
-  local end_time = GetInfo (232)
+  local end_time = utils.timer ()
   
   local t = {}
   local found_count = 0
@@ -1557,7 +1605,7 @@ end -- mouseup_change_depth
 
 function mouseup_change_delay (flags, hotspot_id)
   
-  local delay = get_number_from_user ("Choose speedwalk delay (0.0 to 1.0 seconds)", "Delay", config.DELAY.time, 0, 1, true)
+  local delay = get_number_from_user ("Choose speedwalk delay time (0 to 10 seconds)", "Delay in seconds", config.DELAY.time, 0, 10, true)
       
   if not delay then
     return
@@ -1565,7 +1613,16 @@ function mouseup_change_delay (flags, hotspot_id)
     
   config.DELAY.time = delay
   draw (current_room)
-end -- mouseup_change_depth
+end -- mouseup_change_delay
+
+function zoom_map (flags, hotspot_id)
+
+  if bit.band (flags, 0x100) ~= 0 then
+    zoom_out ()
+  else
+    zoom_in ()
+  end -- if
+end -- zoom_map
 
 function resize_mouse_down(flags, hotspot_id)
    if (hotspot_id == "resize") then
