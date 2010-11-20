@@ -76,6 +76,8 @@ require "mw"
 
 local FONT_ID     = "fn"  -- internal font identifier
 local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
+local CONFIG_FONT_ID = "cfn"
+local CONFIG_FONT_ID_UL = "cfnu"
 
 -- size of room box
 local ROOM_SIZE = 10
@@ -288,73 +290,68 @@ local function get_number_from_user (msg, title, current, min, max, decimals)
 end -- get_number_from_user
 
 local function draw_configuration ()
-  local width =  max_text_width (win, FONT_ID, {"Configuration", "Font", "Width", "Height", "Depth"}, true)
-  local lines = 6  -- "Configuration", font, width, height, depth, delay
+  local width =  max_text_width (config_win, CONFIG_FONT_ID, {"Configuration", "Font", "Depth", "Delay", "Room size"}, true)
+  local lines = 5  -- Configuration, font, depth, delay, room size
   local GAP = 5
   local suppress_colours = false
   
   for k, v in pairs (config) do
     if v.colour then
-      width = math.max (width, WindowTextWidth (win, FONT_ID, v.name, true))
+      width = math.max (width, WindowTextWidth (config_win, CONFIG_FONT_ID, v.name, true))
       lines = lines + 1
     end -- a colour item
   end -- for each config item
  
-  if (config.WINDOW.height - 13 - font_height * lines) < 10 then
-    suppress_colours = true
-    lines = 6  -- forget all the colours
-  end -- if
-  
-  local x = 3
-  local y = config.WINDOW.height - 13 - font_height * lines
+  local x = 0
+  local y = 0
   local box_size = font_height - 2
-  local rh_size = math.max (box_size, max_text_width (win, FONT_ID, 
+  local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID, 
     {config.FONT.name .. " " .. config.FONT.size, 
-     tostring (config.WINDOW.width), 
-     tostring (config.WINDOW.height), 
+     tostring (config.DELAY.time),
+     tostring ("- +"), 
      tostring (config.SCAN.depth)}, 
     true))
   local frame_width = GAP + width + GAP + rh_size + GAP  -- gap / text / gap / box / gap
 
-  -- fill entire box with grey
-  WindowRectOp (win, miniwin.rect_fill, x, y, x + frame_width, y + font_height * lines + 10, 0xDCDCDC)
+  WindowCreate(config_win, windowinfo.window_left, windowinfo.window_top, frame_width, font_height * lines + 10, windowinfo.window_mode, windowinfo.window_flags, 0xDCDCDC)
+  
   -- frame it
-  draw_3d_box (win, x, y, frame_width, font_height * lines + 10)
+  draw_3d_box (config_win, 0, 0, frame_width, font_height * lines + 10)
   
   y = y + GAP
   x = x + GAP
   
   -- title
-  WindowText   (win, FONT_ID, "Configuration", x, y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID, "Configuration", ((frame_width-WindowTextWidth(config_win,CONFIG_FONT_ID,"Configuration", true))/2), y, 0, 0, 0x808080, true)
   
   -- close box
-  WindowRectOp (win, 
+  WindowRectOp (config_win, 
                 miniwin.rect_frame, 
-                x + frame_width - box_size - GAP * 2, 
+                x, 
                 y + 1, 
-                x + frame_width - GAP * 2, 
+                x + box_size, 
                 y + 1 + box_size, 
                 0x808080)
-  WindowLine (win, 
-              x + frame_width - box_size - GAP * 2 + 3, 
+  WindowLine (config_win, 
+              x + 3, 
               y + 4, 
-              x + frame_width - GAP * 2 - 3, 
+              x + box_size - 3, 
               y - 2 + box_size, 
               0x808080, 
               miniwin.pen_solid, 1)
-  WindowLine (win, 
-              x - 4 + frame_width - GAP * 2, 
+  WindowLine (config_win, 
+              x + box_size - 4, 
               y + 4, 
-              x - 1 + frame_width - box_size - GAP * 2 + 3, 
+              x + 2, 
               y - 2 + box_size, 
               0x808080, 
               miniwin.pen_solid, 1)
   
   -- close configuration hotspot               
-  WindowAddHotspot(win, "$<close_configure>",  
-                   x + frame_width - box_size - GAP * 2, 
+  WindowAddHotspot(config_win, "$<close_configure>",  
+                   x, 
                    y + 1, 
-                   x + frame_width - GAP * 2, 
+                   x + box_size, 
                    y + 1 + box_size,   -- rectangle
                    "", "", "", "", "mapper.mouseup_close_configure",  -- mouseup
                    "Click to close",
@@ -366,15 +363,15 @@ local function draw_configuration ()
    
     for k, v in pairsByKeys (config) do
       if v.colour then
-        WindowText   (win, FONT_ID, v.name, x, y, 0, 0, 0x000000, true)
-        WindowRectOp (win, 
+        WindowText   (config_win, CONFIG_FONT_ID, v.name, x, y, 0, 0, 0x000000, true)
+        WindowRectOp (config_win, 
                       miniwin.rect_fill, 
                       x + width + rh_size / 2, 
                       y + 1, 
                       x + width + rh_size / 2 + box_size, 
                       y + 1 + box_size, 
                       v.colour)
-        WindowRectOp (win, 
+        WindowRectOp (config_win, 
                       miniwin.rect_frame, 
                       x + width + rh_size / 2, 
                       y + 1, 
@@ -383,7 +380,7 @@ local function draw_configuration ()
                       0x000000)
         
         -- colour change hotspot               
-        WindowAddHotspot(win, 
+        WindowAddHotspot(config_win, 
                          "$colour:" .. k,  
                          x + GAP, 
                          y + 1, 
@@ -399,11 +396,11 @@ local function draw_configuration ()
   end -- if
   
   -- depth
-  WindowText   (win, FONT_ID, "Depth", x, y, 0, 0, 0x000000, true)
-  WindowText   (win, FONT_ID_UL, tostring (config.SCAN.depth), x + width + GAP, y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID, "Depth", x, y, 0, 0, 0x000000, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL,   tostring (config.SCAN.depth), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.SCAN.depth, true)/2, y, 0, 0, 0x808080, true)
                                  
   -- depth hotspot               
-  WindowAddHotspot(win, 
+  WindowAddHotspot(config_win, 
                    "$<depth>",  
                    x + GAP, 
                    y, 
@@ -415,11 +412,11 @@ local function draw_configuration ()
   y = y + font_height
     
   -- font
-  WindowText   (win, FONT_ID, "Font", x, y, 0, 0, 0x000000, true)
-  WindowText   (win, FONT_ID_UL, config.FONT.name .. " " .. config.FONT.size, x + width + GAP, y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID, "Font", x, y, 0, 0, 0x000000, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL,  config.FONT.name .. " " .. config.FONT.size, x + width + GAP, y, 0, 0, 0x808080, true)
                                  
   -- colour font hotspot               
-  WindowAddHotspot(win, 
+  WindowAddHotspot(config_win, 
                    "$<font>",  
                    x + GAP, 
                    y, 
@@ -430,45 +427,12 @@ local function draw_configuration ()
                    miniwin.cursor_hand, 0)  -- hand cursor
   y = y + font_height
                    
-                     
-  -- width
-  WindowText   (win, FONT_ID, "Width", x, y, 0, 0, 0x000000, true)
-  WindowText   (win, FONT_ID_UL, tostring (config.WINDOW.width), x + width + GAP, y, 0, 0, 0x808080, true)
-                                 
-  -- width hotspot               
-  WindowAddHotspot(win, 
-                   "$<width>",  
-                   x + GAP, 
-                   y, 
-                   x + frame_width, 
-                   y + font_height,   -- rectangle
-                   "", "", "", "", "mapper.mouseup_change_width",  -- mouseup
-                   "Click to change window width",
-                   miniwin.cursor_hand, 0)  -- hand cursor
-  y = y + font_height
-                      
-  -- height
-  WindowText   (win, FONT_ID, "Height", x, y, 0, 0, 0x000000, true)
-  WindowText   (win, FONT_ID_UL, tostring (config.WINDOW.height), x + width + GAP, y, 0, 0, 0x808080, true)
-                                 
-  -- height hotspot               
-  WindowAddHotspot(win, 
-                   "$<height>",  
-                   x + GAP, 
-                   y, 
-                   x + frame_width, 
-                   y + font_height,   -- rectangle
-                   "", "", "", "", "mapper.mouseup_change_height",  -- mouseup
-                   "Click to change window height",
-                   miniwin.cursor_hand, 0)  -- hand cursor
-  y = y + font_height
-                                      
   -- delay
-  WindowText   (win, FONT_ID, "Walk delay", x, y, 0, 0, 0x000000, true)
-  WindowText   (win, FONT_ID_UL, tostring (config.DELAY.time), x + width + GAP, y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID, "Walk delay", x, y, 0, 0, 0x000000, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL, tostring (config.DELAY.time), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.DELAY.time, true)/2, y, 0, 0, 0x808080, true)
                                  
-  -- height hotspot               
-  WindowAddHotspot(win, 
+  -- delay hotspot               
+  WindowAddHotspot(config_win, 
                    "$<delay>",  
                    x + GAP, 
                    y, 
@@ -479,6 +443,34 @@ local function draw_configuration ()
                    miniwin.cursor_hand, 0)  -- hand cursor
   y = y + font_height
                                   
+  -- room size
+  WindowText   (config_win, CONFIG_FONT_ID, "Room size", x, y, 0, 0, 0x000000, true)
+  WindowText   (config_win, CONFIG_FONT_ID, "("..tostring (ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Room size ", true), y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), y, 0, 0, 0x808080, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080, true)
+                                  
+  -- room size hotspots
+  WindowAddHotspot(config_win, 
+                   "$<room_size_down>",  
+                   width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), 
+                   y, 
+                   width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), 
+                   y + font_height,   -- rectangle
+                   "", "", "", "", "mapper.zoom_out",  -- mouseup
+                   "Click to zoom out",
+                   miniwin.cursor_hand, 0)  -- hand cursor
+   WindowAddHotspot(config_win, 
+                   "$<room_size_up>",  
+                   width + rh_size / 2 + box_size + GAP, 
+                   y, 
+                   width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+", true), 
+                   y + font_height,   -- rectangle
+                   "", "", "", "", "mapper.zoom_in",  -- mouseup
+                   "Click to zoom in",
+                   miniwin.cursor_hand, 0)  -- hand cursor
+  y = y + font_height
+  
+  WindowShow(config_win, true)
 end -- draw_configuration
 
 -- for calculating one-way paths
@@ -1025,12 +1017,13 @@ function draw (uid)
   if draw_configure_box then
     draw_configuration ()
   else
-    
+
+    WindowShow(config_win, false)
     local x = 5
-    local y = config.WINDOW.height - 2 - font_height
+    local y = 2
     local width = draw_text_box (win, FONT_ID, 
                    x,   -- left
-                   config.WINDOW.height - 2 - font_height,    -- top (ie. at bottom)
+                   y,    -- top
                    "*", true,                   -- what to draw, utf8
                    config.AREA_NAME_TEXT.colour,   -- text colour
                    config.AREA_NAME_FILL.colour,   -- fill colour   
@@ -1049,10 +1042,10 @@ function draw (uid)
                
   if type (show_help) == "function" then
     local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?", true) - 5
-    local y = config.WINDOW.height - 2 - font_height
+    local y = 0
     local width = draw_text_box (win, FONT_ID, 
                    x,   -- left
-                   config.WINDOW.height - 2 - font_height,    -- top (ie. at bottom)
+                   2,
                    "?", true,                   -- what to draw, utf8
                    config.AREA_NAME_TEXT.colour,   -- text colour
                    config.AREA_NAME_FILL.colour,   -- fill colour   
@@ -1071,7 +1064,11 @@ function draw (uid)
                                                               
   -- 3D box around whole thing
   
-  draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
+  
+  --draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
+  draw_edge()
+
+  add_resize_tag(true)
       
   -- make sure window visible
   WindowShow (win, not hidden)
@@ -1131,12 +1128,16 @@ function init (t)
   end -- for
   
   win = GetPluginID () .. "_mapper"
+  config_win = GetPluginID () .. "_z_config_win"
 
   WindowCreate (win, 0, 0, 0, 0, 0, 0, 0)
+  WindowCreate(config_win, 0, 0, 0, 0, 0, 0, 0) 
                  
   -- add the fonts
   WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
   WindowFont (win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
+  WindowFont (config_win, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
+  WindowFont (config_win, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
   
   -- see how high it is
   font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
@@ -1168,9 +1169,11 @@ function init (t)
     top = top + font_height 
   end -- for
 
-  draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
+  draw_edge()
+  add_resize_tag(true)
   
   WindowShow (win, true)
+  WindowShow (config_win, false)
   
 end -- init
 
@@ -1529,37 +1532,14 @@ function mouseup_change_font (flags, hotspot_id)
   -- reload new font  
   WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
   WindowFont (win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
-  
+  WindowFont (config_win, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
+  WindowFont (config_win, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
+
   -- see how high it is
   font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
   
   draw (current_room)
 end -- mouseup_change_font
-
-
-function mouseup_change_width (flags, hotspot_id)
-  
-  local width = get_number_from_user ("Choose window width (200 to 1000 pixels)", "Width", config.WINDOW.width, 200, 1000)
-      
-  if not width then
-    return
-  end -- if dismissed
-    
-  config.WINDOW.width = width
-  draw (current_room)
-end -- mouseup_change_width
-
-function mouseup_change_height (flags, hotspot_id)
-  
-  local height = get_number_from_user ("Choose window height (200 to 1000 pixels)", "Width", config.WINDOW.height, 200, 1000)
-      
-  if not height then
-    return
-  end -- if dismissed
-    
-  config.WINDOW.height = height
-  draw (current_room)
-end -- mouseup_change_height
 
 function mouseup_change_depth (flags, hotspot_id)
   
@@ -1594,5 +1574,78 @@ function zoom_map (flags, hotspot_id)
   end -- if
 end -- zoom_map
 
+function resize_mouse_down(flags, hotspot_id)
+   if (hotspot_id == "resize") then
+      startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
+   end
+end
+function resize_release_callback()
+   draw(current_room)
+   --sendnoecho("look")
+end
+
+function resize_move_callback()
+    local posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
+    config.WINDOW.width = config.WINDOW.width+posx-startx
+    startx = posx
+    if (50 > config.WINDOW.width) then
+        config.WINDOW.width = 50
+        startx = windowinfo.window_left+config.WINDOW.width
+    elseif (windowinfo.window_left+config.WINDOW.width > GetInfo(281)) then
+        config.WINDOW.width = GetInfo(281)-windowinfo.window_left
+        startx = GetInfo(281)
+    end 
+    config.WINDOW.height = config.WINDOW.height+posy-starty
+    starty=posy
+    if (50 > config.WINDOW.height) then
+        config.WINDOW.height = 50
+        starty = windowinfo.window_top+config.WINDOW.height
+    elseif (windowinfo.window_top+config.WINDOW.height > GetInfo(280)) then
+        config.WINDOW.height = GetInfo(280)-windowinfo.window_top
+        starty = GetInfo(280)
+   end
+
+  WindowResize(win,config.WINDOW.width,config.WINDOW.height,config.BACKGROUND_COLOUR.colour)
+  draw_edge()
+  add_resize_tag(false)
+
+  WindowShow(win,true)
+
+--  draw() 
+end
 
 
+function add_resize_tag(firstTime)
+   -- draw the resize widget bottom right corner.
+   local width  = config.WINDOW.width
+   local height = config.WINDOW.height
+
+   WindowLine(win, width-4, height-2, width-2, height-4, 0xffffff, 0, 2)
+   WindowLine(win, width-5, height-2, width-2, height-5, 0x696969, 0, 1)
+   WindowLine(win, width-7, height-2, width-2, height-7, 0xffffff, 0, 2)
+   WindowLine(win, width-8, height-2, width-2, height-8, 0x696969, 0, 1)
+   WindowLine(win, width-10, height-2, width-2, height-10, 0xffffff, 0, 2)
+   WindowLine(win, width-11, height-2, width-2, height-11, 0x696969, 0, 1)
+   WindowLine(win, width-13, height-2, width-2, height-13, 0xffffff, 0, 2)
+   WindowLine(win, width-14, height-2, width-2, height-14, 0x696969, 0, 1)
+ 
+  -- Hotspot for resizer.                                                              
+  local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?", true) - 5
+  local y = config.WINDOW.height - 2 - font_height
+  if (firstTime == true) then  
+    WindowAddHotspot(win, "resize",  
+                   x, y, 0, 0,   -- rectangle
+                   "", "", "mapper.resize_mouse_down", "", "",
+                   "Drag to resize",
+                   6, 0)  -- hand cursor
+    WindowDragHandler(win, "resize", "mapper.resize_move_callback", "mapper.resize_release_callback", 0)
+  else
+    WindowMoveHotspot(win, "resize", x, y,  0,  0)
+  end
+end -- draw resize tag. 
+
+function draw_edge()
+   -- draw edge frame.
+   check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
+   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
+end
