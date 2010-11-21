@@ -63,7 +63,7 @@ function gauge (win,                        -- miniwindow ID to draw in
   if math.floor (gauge_width) > 0 then
     
     -- top half
-    WindowGradient (win, left, top, 
+    WindowGradient (win, left, top-1, 
                     left + gauge_width, top + height / 2, 
                     0x000000, -- black
                     fg_colour, 2)  -- vertical top to bottom
