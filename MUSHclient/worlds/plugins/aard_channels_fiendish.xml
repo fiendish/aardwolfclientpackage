@@ -65,7 +65,7 @@ USAGE:
     EnableTriggerGroup("end_gag", false)
     </send></trigger>
     
-    <trigger
+ <trigger
     enabled="n"
     match=".*"
     regexp="y"
@@ -519,6 +519,8 @@ function fillBuffer(rawstyles)
             -- remove first line if filled up
             if #lines >= MAX_LINES then
                 remove (lines, 1)
+                lineStart = lineStart - 1
+                lineEnd = lineEnd - 1
             end -- if
             avail = WINDOW_WIDTH - (TEXT_INSET * 2) - 9
             line_styles = {}
@@ -572,6 +574,7 @@ function fillBuffer(rawstyles)
         end -- if could not fit whole thing in
     end -- while we still have styles over
 end
+
 
 
 --[[
@@ -631,7 +634,6 @@ function chats (name, line, wildcards, styles)
         Note ("")  -- wrap up line
     end -- echo wanted
 end -- chats
-
 
 
 function OnPluginBroadcast (msg, id, name, text)
@@ -869,6 +871,7 @@ function right_click_menu ()
         date_format = "[%d %b %H:%M:%S] "
         ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
     elseif result == "30 Aug 01:20:12PM" then
+
         timestamp = "1"
         date_format = "[%d %b %I:%M:%S%p] "
         ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
