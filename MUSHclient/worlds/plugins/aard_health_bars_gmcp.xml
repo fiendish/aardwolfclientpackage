@@ -478,8 +478,6 @@ end -- OnPluginEnable
 -- This is the place to initialize stuff you need in the main plugin.
 --=================================================================================
 function OnPluginInstall() 
-
-   Send_GMCP_Packet("request char")
    
    --- Get a unique name for main window
    win = GetPluginID ()  -- get a unique name
@@ -543,9 +541,11 @@ function OnPluginInstall()
    width = math.max(width, MIN_WIDTH)
 
    OnPluginSaveState()
-
+   
    --- Setup the window.
    SetUpHotspotsAndDraw(true)
+      
+   Send_GMCP_Packet("request char")
 end
 
 --=================================================================================
