@@ -443,4 +443,5 @@
 <include name="aard_statmon_gmcp.xml" plugin="y" />
 <include name="aard_health_bars_gmcp.xml" plugin="y" />
 <include name="aard_GMCP_mapper.xml" plugin="y" />
+<include name="aard_Copy_Colour_Codes.xml" plugin="y" />
 </muclient>
