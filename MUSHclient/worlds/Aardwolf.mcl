@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Tuesday, November 16, 2010, 2:25 AM -->
+<!-- Saved on Monday, November 22, 2010, 2:52 AM -->
 <!-- MuClient version 4.70 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
@@ -8,7 +8,7 @@
 <world
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
 
    auto_say_override_prefix="-"
    auto_say_string="say "
@@ -37,7 +37,6 @@
    chat_foreground_colour="red"
    chat_background_colour="black"
    chat_port="4050"
-   confirm_before_replacing_typing="y"
    confirm_on_paste="y"
    confirm_on_send="y"
    default_trigger_sequence="100"
@@ -109,7 +108,7 @@
 <triggers
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
   >
 </triggers>
 
@@ -118,8 +117,15 @@
 <aliases
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
   >
+  <alias
+   match="k *"
+   enabled="y"
+   sequence="100"
+  >
+  <send>backstab %1</send>
+  </alias>
 </aliases>
 
 <!-- timers -->
@@ -127,7 +133,7 @@
 <timers
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
   >
 </timers>
 
@@ -136,7 +142,7 @@
 <macros
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
   >
 
   <macro name="up" type="send_now" >
@@ -230,7 +236,7 @@
 <variables
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
   >
 </variables>
 
@@ -239,7 +245,7 @@
 <colours
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
   >
 
 <ansi>
@@ -296,7 +302,7 @@
 <keypad
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
   >
 
   <key name="0" >
@@ -410,7 +416,7 @@
 <printing
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-16 02:25:23"
+   date_saved="2010-11-22 02:52:45"
   >
 
 <ansi>
@@ -436,7 +442,6 @@
 
 <!-- plugins -->
 <include name="aard_GMCP_handler.xml" plugin="y" />
-<include name="aard_channels_fiendish.xml" plugin="y" />
 <include name="aard_ASCII_map.xml" plugin="y" />
 <include name="aard_layout.xml" plugin="y" />
 <include name="aard_helper_aliases.xml" plugin="y" />
@@ -444,4 +449,5 @@
 <include name="aard_health_bars_gmcp.xml" plugin="y" />
 <include name="aard_GMCP_mapper.xml" plugin="y" />
 <include name="aard_Copy_Colour_Codes.xml" plugin="y" />
+<include name="aard_channels_fiendish.xml" plugin="y" />
 </muclient>
