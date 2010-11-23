@@ -119,13 +119,6 @@
    world_file_version="15"
    date_saved="2010-11-22 02:52:45"
   >
-  <alias
-   match="k *"
-   enabled="y"
-   sequence="100"
-  >
-  <send>backstab %1</send>
-  </alias>
 </aliases>
 
 <!-- timers -->
