@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+
+<plugin
+   name="Aardwolf_New_Connection"
+   author="Fiendish"
+   id="9f796334ab9ed476ef44f1dc"
+   language="Lua"
+   purpose="Welcome players to the new client package"
+   date_written="2010-11-22 18:32:06"
+   requires="4.70"
+   version="1.0"
+   save_state="y"
+   >
+</plugin>
+<script>
+<![CDATA[
+
+require "movewindow"
+
+local showGreeting = 1
+
+-- font
+FONT_NAME = "Microsoft Sans Serif"
+FONT_SIZE = 10
+font_id = "f"
+font_id_bold = "fb"
+font_id_underline = "fu"
+
+MAX_WIDTH = 500
+GAP = 5
+window_height = 400
+window_width = 600
+
+-- colours
+WINDOW_BACKGROUND_COLOUR = ColourNameToRGB ("black")
+WINDOW_TEXT_COLOUR = ColourNameToRGB ("white")
+
+win = "greeting_" .. GetPluginID ()  -- get a unique name
+
+function OnPluginSaveState ()
+    SetVariable("showGreeting", showGreeting)
+end -- OnPluginSaveState
+
+function OnPluginInstall()
+    showGreeting = tonumber(GetVariable("showGreeting")) or showGreeting
+    if (showGreeting == 1) then
+        ShowGreeting(true)
+    else
+        Connect()
+    end
+end
+
+function hyperlink_close ()
+   WindowShow (win, false)
+   Connect()
+end -- hyperlink_close 
+
+function hyperlink_dont_show()
+   if showGreeting == 1 then
+      showGreeting = 0
+   else
+      showGreeting = 1
+   end
+   ShowGreeting(false)
+end
+
+function MouseUp(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+       right_click_menu()
+    end
+    return true
+end
+
+function LeftClickOnly(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+        return true
+    end
+    return false
+end
+
+-- right click menu
+function right_click_menu ()
+
+    menustring ="Hi there! Thanks for right-clicking!|-|This menu doesn't have anything important|>But OTHER plugins might let you do things like...|Change fonts|Customize colors|Or whatever else makes sense|-|>Or maybe the author just wants to send you a message|Like, \"Hi, I'm Avi.\"|<|<"
+
+    result = WindowMenu (win,
+        WindowInfo (win, 14),  -- x position
+        WindowInfo (win, 15),   -- y position
+        menustring) -- content
+    
+end -- right_click_menu
+
+function ShowGreeting(firstTime)
+  
+  require "getlines"
+  require "movewindow"
+  
+  -- left margin
+  x = GAP
+  -- top margin
+  y = GAP
+  
+  if (firstTime) then
+      -- make the window to get font info
+      WindowCreate (win, 0, 0, 0, 0, -- very small
+                    miniwin.pos_center_all, 0, 
+                    WINDOW_BACKGROUND_COLOUR)  -- create window
+                     
+      local Charset = miniwin.font_charset_default
+      local PitchAndFamily = miniwin.font_family_swiss + miniwin.font_pitch_variable
+      
+      -- grab fonts
+      WindowFont (win, font_id,           FONT_NAME, FONT_SIZE, false, false, false, false, Charset, PitchAndFamily) 
+      WindowFont (win, font_id_bold,      FONT_NAME, FONT_SIZE, true,  false, false, false, Charset, PitchAndFamily )
+      WindowFont (win, font_id_underline, FONT_NAME, FONT_SIZE, false, false, true,  false, Charset, PitchAndFamily) 
+      
+      -- work out how high a font line is
+      font_height = WindowFontInfo (win, font_id, 1)   -- height of the font  
+      line_height = font_height+1  
+      
+      -- install the window movement handler, get back the window position
+         windowinfo  = movewindow.install (win, miniwin.pos_center_all, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+      
+      -- make the "real" window
+      WindowCreate (win, 0, 0, window_width, window_height, miniwin.pos_center_all, 0, 
+                               WINDOW_BACKGROUND_COLOUR)  -- create window
+      
+      -- title box
+      WindowRectOp (win, miniwin.rect_fill, 0, 0, 0, line_height + GAP+2, 0x333333)
+      WindowLine (win, 0, line_height+GAP+2, window_width, line_height+GAP+2, 0xffffff, 0, 1)
+      
+      -- frame it                           
+      WindowRectOp (win, miniwin.rect_frame, 0, 0, 0, 0, 0xffffff )
+      WindowRectOp (win, miniwin.rect_frame, 1, 1, -1, -1, 0x696969 )
+      
+      -- add the drag handler so they can move the window around
+      movewindow.add_drag_handler (win, 0, 0, 0, 0)
+      
+      title = "Getting Started"
+      title_width = WindowTextWidth(win, font_id_bold, title)
+      WindowText (win, font_id_bold, title, (window_width-title_width)/2, y, 0, 0, WINDOW_TEXT_COLOUR )
+      y = y + line_height*2
+      
+      WindowText (win, font_id, "Welcome to the new Aardwolf MUSHclient package!", x, y, 0, 0, WINDOW_TEXT_COLOUR )
+      y = y + line_height
+      WindowText (win, font_id, "Here are a few helpful tips for navigating this software...", x, y, 0, 0, WINDOW_TEXT_COLOUR )
+      y = y + line_height*2
+      WindowText (win, font_id, "We use miniwindows (this is a miniwindow) for display to enhance your experience.", x, y, 0, 0, WINDOW_TEXT_COLOUR )
+      y = y + line_height
+      WindowText (win, font_id, "(You probably see other miniwindows behind this one. Say \"hello miniwindows!\" LOL JK.)", x, y, 0, 0, WINDOW_TEXT_COLOUR )
+      y = y + line_height*3
+      WindowText (win, font_id, "Most miniwindows in this package let you do the following:", x, y, 0, 0, WINDOW_TEXT_COLOUR)
+      y = y + line_height*2
+      x = x+50
+      local mx = WindowText (win, font_id, "* Drag the bottom-right corner to resize. (where you see this) -->", x, y, 0, 0, WINDOW_TEXT_COLOUR) + x + 20
+      my = y + line_height
+      
+      -- draw the resize widget bottom right corner.
+      WindowLine(win, mx-3, my-2, mx-2, my-3, 0xffffff, 0, 2)
+      WindowLine(win, mx-4, my-2, mx-2, my-4, 0x696969, 0, 1)
+      WindowLine(win, mx-6, my-2, mx-2, my-6, 0xffffff, 0, 2)
+      WindowLine(win, mx-7, my-2, mx-2, my-7, 0x696969, 0, 1)
+      WindowLine(win, mx-9, my-2, mx-2, my-9, 0xffffff, 0, 2)
+      WindowLine(win, mx-10, my-2, mx-2, my-10, 0x696969, 0, 1)
+      WindowLine(win, mx-12, my-2, mx-2, my-12, 0xffffff, 0, 2)
+      WindowLine(win, mx-13, my-2, mx-2, my-13, 0x696969, 0, 1)
+      
+      y = y + line_height*2
+      WindowText (win, font_id, "* Drag anywhere else in the miniwindow to move it around (try it here).", x, y, 0, 0, WINDOW_TEXT_COLOUR)
+      y = y + line_height
+      WindowText (win, font_id, "There are exceptions to this. When you can't drag everywhere (e.g. the main output),", x+20, y, 0, 0, WINDOW_TEXT_COLOUR)
+      y = y + line_height
+      WindowText (win, font_id, "you can at least drag along the top.", x+20, y, 0, 0, WINDOW_TEXT_COLOUR)
+         
+      y = y + line_height*2
+       WindowText (win, font_id, "* Right-click in the miniwindow to bring up a menu of options (try it here).", x, y, 0, 0, WINDOW_TEXT_COLOUR)
+      
+      y = y + line_height*2
+      mx = WindowText (win, font_id, "* You might also see things like ", x, y, 0, 0, WINDOW_TEXT_COLOUR) + x
+      
+      qwidth = WindowTextWidth(win, font_id, "?")
+      -- show the widget for the legend popup
+      WindowRectOp(win, 2, mx, y, mx+3*qwidth,y+line_height,0x303030,0x0000ff) -- fill
+      WindowRectOp(win, 1,mx, y, mx+3*qwidth,y+line_height,0x777777,0x0000ff) -- border
+      WindowText (win, font_id, "?", mx+qwidth, y, 0, 0, 0xffffff)
+      
+      mx = WindowText (win, font_id, " or ", mx+3*qwidth, y, 0, 0, WINDOW_TEXT_COLOUR) + mx + 3*qwidth
+      
+      WindowRectOp(win, 2, mx, y, mx+3*qwidth,y+line_height,0x303030,0x0000ff) -- fill
+      WindowRectOp(win, 1,mx, y, mx+3*qwidth,y+line_height,0x777777,0x0000ff) -- border
+      WindowText (win, font_id, "*", mx+qwidth, y, 0, 0, 0xffffff)
+      mx = mx+3*qwidth
+      y = y + line_height
+      WindowText(win, font_id, "You can usually interact with them by clicking or just moving the mouse over them.", x + 20, y, 0, 0, WINDOW_TEXT_COLOUR)
+      
+      y = y + line_height*3
+      WindowText (win, font_id, "OK? Well, that's all for now. Have fun playing Aardwolf!", 20, y, 0, 0, WINDOW_TEXT_COLOUR)
+  end
+      
+  -- work out how high a font line is
+  font_height = WindowFontInfo (win, font_id, 1)   -- height of the font  
+  line_height = font_height+1  
+
+  local box_size = line_height - 2
+  local box_colour = 0xffffff
+-- left margin
+  x = GAP
+  -- top margin
+  y = GAP
+  
+  -- close box
+  WindowRectOp (win, miniwin.rect_frame, 
+                x + window_width - box_size - GAP * 2, 
+                y, 
+                x + window_width - GAP * 2, 
+                y + box_size, 
+                box_colour)
+  WindowLine (win, x + window_width - box_size - GAP * 2 + 3, 
+                   y + 3, 
+                   x + window_width - GAP * 2 - 3, 
+                   y - 3 + box_size, 
+                   box_colour, 
+                   miniwin.pen_solid, 1)
+  WindowLine (win, x - 4 + window_width - GAP * 2, 
+                   y + 3, 
+                   x - 1 + window_width - box_size - GAP * 2 + 3, 
+                   y - 3 + box_size, 
+                   box_colour, 
+                   miniwin.pen_solid, 1)
+  
+  -- close configuration hotspot               
+  WindowAddHotspot(win, "close_box",  
+                   x + window_width - box_size - GAP * 2, 
+                   y, 
+                   x + window_width - GAP * 2, 
+                   y + box_size,   
+                   "", "", "", "", 
+                   "hyperlink_close",  -- mouseup
+                   "Click to close",
+                   miniwin.cursor_hand, 0)  -- hand cursor
+  local never_show_text = "Check (click) here before closing (top-right) to never show this dialog again --> "
+  local text_width = WindowTextWidth(win, font_id, never_show_text)
+  WindowText(win, font_id, never_show_text, window_width-text_width - box_size - GAP, window_height-box_size - GAP, 0, 0, 0xffffff)
+  WindowRectOp (win, miniwin.rect_fill, 
+                x + window_width - box_size - GAP * 2, 
+                window_height - box_size - GAP, 
+                x + window_width - GAP * 2, 
+                window_height - GAP, 
+                0x000000)      
+  WindowRectOp (win, miniwin.rect_frame, 
+                x + window_width - box_size - GAP * 2, 
+                window_height - box_size - GAP, 
+                x + window_width - GAP * 2, 
+                window_height - GAP, 
+                0xffffff)
+
+  if showGreeting == 0 then
+      WindowLine (win, x + window_width - box_size - GAP * 2 + 3, 
+                       window_height - box_size - GAP + 7, 
+                       x + window_width - (box_size/2) - GAP * 2 , 
+                       window_height - GAP - 3, 
+                       0xffffff, 
+                       miniwin.pen_solid, 1)
+      WindowLine (win, x + window_width - (box_size/2) - GAP * 2 , 
+                       window_height - GAP - 3,
+                       x + window_width - GAP * 2 - 3, 
+                       window_height - GAP - box_size, 
+                       0xffffff, 
+                       miniwin.pen_solid, 1)
+  end
+  
+  -- don't show again hotspot               
+  WindowAddHotspot(win, "dont_show_again_box",  
+                   x + window_width - box_size - GAP * 2, 
+                   window_height - box_size - GAP, 
+                   x + window_width - GAP * 2, 
+                   window_height - GAP, 
+                   "", "", "", "", 
+                   "hyperlink_dont_show",  -- mouseup
+                   "",
+                   miniwin.cursor_hand, 0)  -- hand cursor
+
+  -- show the window
+  WindowShow (win, true)
+
+end -- ShowGreeting
+
+]]>
+</script>
+</muclient>
