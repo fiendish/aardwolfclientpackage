@@ -654,7 +654,7 @@ function OnPluginBroadcast (msg, id, name, text)
             timestyle = {}
             timestyle.text = tstamp
             timestyle.length = #timestyle.text
-            timestyle.textcolour = 0xeeeeee
+            timestyle.textcolour = 0xc0c0c0
             table.insert(styles,1,timestyle)
 
          end -- if
