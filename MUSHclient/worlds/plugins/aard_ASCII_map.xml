@@ -136,9 +136,7 @@ function SetUpHotspotsAndDraw(firstTime)
              windowinfo.window_flags,  -- flags
              background_colour) )
        -- Add the drag handler so they can move the window around
-       movewindow.add_drag_handler (win, 0, 0, 0, font_height*2 + TITLE_HEIGHT)
-       -- Add right click handler
-       WindowAddHotspot(win, "textarea", 0, font_height*2 + TITLE_HEIGHT, width,height, "", "", "MouseDown", "", "MouseUp", "", 0, 0)
+       movewindow.add_drag_handler (win, 0, 0, 0, 0)
        -- Add legend-popup handler
        WindowAddHotspot(win, "legend", 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
 
@@ -149,7 +147,6 @@ function SetUpHotspotsAndDraw(firstTime)
        -- everything has already been made
        -- just move them back into place
        WindowResize(win, width, height, background_colour)
-       WindowMoveHotspot(win, "textarea", 0, font_height*2 + TITLE_HEIGHT, width, height)
        WindowMoveHotspot(win, "legend", 5, height-font_height-2, 3*font_width, height)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
@@ -495,14 +492,18 @@ end
 ---------------------------------------------------------------------------------
 -- Called when mouse button released on hotspot.
 ---------------------------------------------------------------------------------
-function MouseUp(flags, hotspot_id)
-    -- debugp("MouseUp",hotspot_id)
-    if (hotspot_id == "textarea" and flags == 0x20) then
-       -- build menu for current state
+function MouseUp(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
        right_click_menu()
-    elseif (hotspot_id == "resize") then
-       SetUpHotspotsAndDraw()
     end
+    return true
+end
+
+function LeftClickOnly(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+        return true
+    end
+    return false
 end
 
 ---------------------------------------------------------------------------------
@@ -585,7 +586,7 @@ function OnPluginInstall()
    line_height = font_height + 1
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, 6, 2, true)
+   windowinfo  = movewindow.install (win, 6, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
    -- Draw the initial map window
    SetUpHotspotsAndDraw(true)
