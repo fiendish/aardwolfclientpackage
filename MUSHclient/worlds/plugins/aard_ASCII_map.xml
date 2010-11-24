@@ -151,10 +151,6 @@ function SetUpHotspotsAndDraw(firstTime)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
 
-   -- draw edge frame.
-   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
-
    DisplayMapPage()
 end
 
@@ -200,15 +196,19 @@ function DisplayMapPage()
       end
    end
 
+   -- draw edge frame.
+   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
+   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+
    -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, ColourNameToRGB ("dimgray"), 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, ColourNameToRGB ("white"), 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, ColourNameToRGB ("dimgray"), 0, 1)
+   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
 
    -- show it now (or refresh)
    WindowShow (win, true)
