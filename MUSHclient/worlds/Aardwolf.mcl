@@ -26,7 +26,7 @@
    site="aardmud.org"
    spam_message="look"
    speed_walk_prefix="#"
-   terminal_identification="AardwolfMUSHPackage"
+   terminal_identification="MUSHclient-Aard"
 
    arrows_change_history="y"
    auto_pause="y"
