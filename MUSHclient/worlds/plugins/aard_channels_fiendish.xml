@@ -239,7 +239,7 @@ function OnPluginInstall()
     font_width = WindowTextWidth (Win, "font"..Win, "W")
    
     -- install the window movement handler, get back the window position
-    windowinfo = movewindow.install (Win, miniwin.pos_tile, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+    windowinfo = movewindow.install (Win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
     -- check for Echo/Timestamp/date_format/window size (in pixels) variables, if not there, set them
     if echo == nil then
