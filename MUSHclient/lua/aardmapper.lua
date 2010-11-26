@@ -1192,7 +1192,7 @@ function init (t)
   font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
 
   -- find where window was last time
-  windowinfo = movewindow.install (win, miniwin.pos_center_right)
+  windowinfo = movewindow.install (win, miniwin.pos_bottom_right)
 
   -- calculate box sizes, arrows, connecting lines etc.
   build_room_info ()
@@ -1208,7 +1208,7 @@ function init (t)
 
   -- let them move it around                 
 --  movewindow.add_drag_handler (win, 0, 0, 0, font_height)
-  movewindow.add_drag_handler (win, 0, 0, 0, 0)
+  movewindow.add_drag_handler (win, 0, 0, 0, 0)s
     
   local top = (config.WINDOW.height - #credits * font_height) /2
   
