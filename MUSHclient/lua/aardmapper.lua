@@ -1208,7 +1208,7 @@ function init (t)
 
   -- let them move it around                 
 --  movewindow.add_drag_handler (win, 0, 0, 0, font_height)
-  movewindow.add_drag_handler (win, 0, 0, 0, 0)s
+  movewindow.add_drag_handler (win, 0, 0, 0, 0)
     
   local top = (config.WINDOW.height - #credits * font_height) /2
   
