@@ -518,7 +518,7 @@ function OnPluginInstall()
    line_height = font_height + 1
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, 6, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+   windowinfo  = movewindow.install (win, miniwin.pos_tile, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
    MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN*2)
 
