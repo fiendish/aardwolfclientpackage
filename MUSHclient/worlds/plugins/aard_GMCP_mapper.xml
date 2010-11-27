@@ -293,6 +293,7 @@ mapper goto <room>  --> walk to a room by its room number
  <trigger
  enabled="y"
  regexp="y"
+ omit_from_output="y"
  match="^\{rname\}(.*)$"
  sequence="101"
  script="running_room_name">
@@ -1463,8 +1464,6 @@ colour_lookup = {
 local running_room = ""
 
 function running_room_name (name, line, wildcards, styles)
-    
-    if #wildcards == 3 then
        -- strip out tag
        tag_length = string.find(styles[1].text,"}")
        styles[1].text = string.sub(styles[1].text, tag_length+1)
@@ -1473,6 +1472,8 @@ function running_room_name (name, line, wildcards, styles)
            ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
        end -- for each style run
        Note ("")  -- wrap up line
+    
+    if #wildcards == 3 then
        running_room = wildcards[2]
     else
        running_room = ""
