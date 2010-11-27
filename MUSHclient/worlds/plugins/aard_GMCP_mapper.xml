@@ -9,7 +9,7 @@
   <!ENTITY show_completed "true" > 
   <!ENTITY show_database_mods "false" > 
   <!ENTITY show_other_areas "false" > 
-  <!ENTITY show_area_exits "true" > 
+  <!ENTITY show_area_exits "false" > 
   <!ENTITY show_up_down "false" > 
   <!ENTITY speedwalk_prefix "run" > 
 ]>
@@ -282,7 +282,21 @@ mapper goto <room>  --> walk to a room by its room number
 </aliases>
 
 <triggers>
-
+ <trigger
+ enabled="y"
+ regexp="y"
+ match="^\{rname\}((.*) (\(\d+\)))$"
+ sequence="100"
+ omit_from_output="y"
+ script="running_room_name">
+ </trigger>
+ <trigger
+ enabled="y"
+ regexp="y"
+ match="^\{rname\}(.*)$"
+ sequence="101"
+ script="running_room_name">
+ </trigger>
   <!--  auto-swim -->
  
  <trigger
@@ -1446,12 +1460,29 @@ colour_lookup = {
     [15] =  ColourNameToRGB  "white",  
   } -- end of colour_lookup
 
+local running_room = ""
 
+function running_room_name (name, line, wildcards, styles)
+    
+    if #wildcards == 3 then
+       -- strip out tag
+       tag_length = string.find(styles[1].text,"}")
+       styles[1].text = string.sub(styles[1].text, tag_length+1)
+       styles[1].length = styles[1].length-tag_length
+       for _, v in ipairs (styles) do
+           ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
+       end -- for each style run
+       Note ("")  -- wrap up line
+       running_room = wildcards[2]
+    else
+       running_room = ""
+    end
+end
 
 function got_gmcp_room()
 
   local room_number = gmcpval("num")
-  if not(room_number) then return end -- no room number.
+  if not(room_number) then return end -- no room number.got_gmcp_room
   current_room = room_number
 
   gmcproom = {
@@ -1466,6 +1497,12 @@ function got_gmcp_room()
        z = 0,
        exits = {} }
 
+  if mapper.running == false and gmcproom.name == running_room then
+     mapper.activate_running(true)
+  elseif mapper.running == true and gmcproom.name ~= running_room then
+     mapper.activate_running(false)
+  end
+  
   local  exits      = gmcpval("exits")
   local room = rooms [room_number]
  

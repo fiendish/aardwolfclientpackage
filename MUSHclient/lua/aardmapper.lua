@@ -1594,9 +1594,24 @@ function mouseup_change_font (flags, hotspot_id)
   draw (current_room)
 end -- mouseup_change_font
 
+running = false
+local temp_scan_depth = 4
+
+function activate_running(run)
+    running = run
+    if running then
+        temp_scan_depth = config.SCAN.depth
+        config.SCAN.depth = 4  -- or whatever
+    else
+        config.SCAN.depth = temp_scan_depth
+    end
+    draw (room_number)  -- draw from this room
+    Repaint ()
+end
+
 function mouseup_change_depth (flags, hotspot_id)
   
-  local depth = get_number_from_user ("Choose scan depth (3 to 100 rooms)", "Depth", config.SCAN.depth, 3, 100)
+  local depth = get_number_from_user ("Choose scan depth (3 to 300 rooms)", "Depth", config.SCAN.depth, 3, 300)
       
   if not depth then
     return
