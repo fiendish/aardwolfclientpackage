@@ -287,7 +287,7 @@ mapper goto <room>      --> walk to a room by its room number
  <trigger
  enabled="y"
  regexp="y"
- match="^\{rname\}((.*) (\(\d+\)))$"
+ match="^\{rname\}((.*?)( \(G\))? (\(\d+\)))$"
  sequence="100"
  omit_from_output="y"
  script="running_room_name">
@@ -1516,7 +1516,7 @@ function running_room_name (name, line, wildcards, styles)
     end -- for each style run
     Note ("")  -- wrap up line
     
-    if #wildcards == 3 then
+    if #wildcards == 4 then
        running_room = wildcards[2]
     else
        running_room = ""
@@ -1847,6 +1847,7 @@ function map_resume (name, line, wildcards)
   mapper.find (
     function (uid) 
       return uid == wanted, uid == wanted  
+
     end,  -- function
     show_vnums,  -- show vnum?
     1,      -- how many to expect
