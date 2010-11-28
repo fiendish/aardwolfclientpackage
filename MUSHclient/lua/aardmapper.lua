@@ -1147,8 +1147,9 @@ end -- draw
 local credits = {
   "MUSHclient mapper",
   string.format ("Version %0.1f", VERSION),
-  "Written by Nick Gammon and customized for Aardwolf.",
-  WorldName (),
+  "Written by Nick Gammon",
+  "Customized for Aardwolf",
+  "World: "..WorldName (),
   GetInfo (3),
   }
   
