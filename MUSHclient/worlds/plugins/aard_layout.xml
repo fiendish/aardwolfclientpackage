@@ -125,14 +125,6 @@ orig_height      = 400  -- saves old height when we collapse window.
 default_textrect = 1    -- start with default textrec.
 MIN_SIZE         = 50
 
-function RefreshPage()
-
-   BuildStatsPage()
-   DisplayStatsPage()
-
-end
-
-
 function debugp(source,hsid)
 print("------------------------------------------------------------------------------")
 print("Called FROM : " .. source .. "     HOTSPOT ID: " .. hsid)
