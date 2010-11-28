@@ -98,7 +98,7 @@ function BuildStatsPage()
    table.insert(cstyles,s)
    
    fstr = "@GConstitution : @C\[@W%3d@C/@W%-3d@C\]     @GHitroll : @C\[@W%5d@C\]@w"
-   s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"),gmcpval("stats.hr"))
+   s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"),gmcpval("stats.hr"))
    table.insert(cstyles,s)
    
    fstr = "@GLuck         : @C\[@W%3d@C/@W%-3d@C\]     @GDamroll : @C\[@W%5d@C\]@w"
