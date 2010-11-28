@@ -1595,7 +1595,7 @@ function mouseup_change_font (flags, hotspot_id)
 end -- mouseup_change_font
 
 running = false
-local temp_scan_depth = 4
+temp_scan_depth = 4
 
 function activate_running(run)
     running = run
@@ -1605,7 +1605,7 @@ function activate_running(run)
     else
         config.SCAN.depth = temp_scan_depth
     end
-    draw (room_number)  -- draw from this room
+    draw (current_room)  -- draw from this room
     Repaint ()
 end
 
