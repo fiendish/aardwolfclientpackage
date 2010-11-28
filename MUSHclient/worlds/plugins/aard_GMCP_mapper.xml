@@ -126,7 +126,7 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>  
     
  <alias
-   match="^mapper shops?$"
+   match="^mapper shops?"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -136,8 +136,7 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>  
 
  <alias
-   match="^mapper train\w*$"
-   regexp="y"
+   match="mapper train"
    enabled="y"
    sequence="100"
    script="map_trainers"
@@ -146,8 +145,7 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>  
 
  <alias
-   match="^mapper quest\w*$"
-   regexp="y"
+   match="mapper quest"
    enabled="y"
    sequence="100"
    script="map_quests"
@@ -156,8 +154,7 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>  
         
 <alias
-   match="^mapper heal\w*$"
-   regexp="y"
+   match="mapper heal"
    enabled="y"
    sequence="100"
    script="map_healers"
@@ -184,8 +181,7 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>  
     
   <alias
-   match="^mapper book\w*$"
-   regexp="y"
+   match="mapper bookmarks"
    enabled="y"
    sequence="100"
    script="map_bookmarks"
@@ -203,8 +199,7 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>
 
   <alias
-   match="^mapper purgeall\w*$"
-   regexp="y"
+   match="mapper purgeall"
    enabled="y"
    sequence="100"
    script="map_purgeall"
@@ -222,8 +217,7 @@ mapper goto <room>      --> walk to a room by its room number
 
 
   <alias
-   match="^mapper savenew\w*$"
-   regexp="y"
+   match="mapper savenew"
    enabled="y"
    sequence="100"
    script="map_savedirty"
@@ -232,8 +226,7 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>  
 
   <alias
-   match="^mapper clearcache\w*$"
-   regexp="y"
+   match="mapper clearcache"
    enabled="y"
    sequence="100"
    script="map_clearcache"
@@ -243,8 +236,7 @@ mapper goto <room>      --> walk to a room by its room number
 
 
   <alias
-   match="^mapper printrooms\w*$"
-   regexp="y"
+   match="mapper printrooms"
    enabled="y"
    sequence="100"
    script="map_printrooms"
@@ -300,6 +292,7 @@ mapper goto <room>      --> walk to a room by its room number
  omit_from_output="y"
  script="running_room_name">
  </trigger>
+ 
  <trigger
  enabled="y"
  regexp="y"
@@ -308,6 +301,21 @@ mapper goto <room>      --> walk to a room by its room number
  sequence="101"
  script="running_room_name">
  </trigger>
+ 
+ <trigger
+ enabled="y"
+ match="Alas, you cannot go that way."
+ sequence="100"
+ script="running_room_error">
+ </trigger>
+ 
+ <trigger
+ enabled="y"
+ match="Too many run errors. Aborting speedwalk."
+ sequence="100"
+ script="running_room_error">
+ </trigger>
+ 
   <!--  auto-swim -->
  
  <trigger
@@ -1461,6 +1469,9 @@ end -- OnPluginClose
 
 function OnPluginSaveState ()
   mapper.save_state ()
+  if config.SCAN.depth < mapper.temp_scan_depth then
+    config.SCAN.depth = mapper.temp_scan_depth
+  end
   SetVariable ("config", "config = " .. serialize.save_simple (config))
 end -- OnPluginSaveState
  
@@ -1490,15 +1501,20 @@ colour_lookup = {
 
 local running_room = ""
 
+function running_room_error()
+    running_room = ""
+    Send_GMCP_Packet("request room")
+end
+
 function running_room_name (name, line, wildcards, styles)
-       -- strip out tag
-       tag_length = string.find(styles[1].text,"}")
-       styles[1].text = string.sub(styles[1].text, tag_length+1)
-       styles[1].length = styles[1].length-tag_length
-       for _, v in ipairs (styles) do
-           ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
-       end -- for each style run
-       Note ("")  -- wrap up line
+    -- strip out tag
+    tag_length = string.find(styles[1].text,"}")
+    styles[1].text = string.sub(styles[1].text, tag_length+1)
+    styles[1].length = styles[1].length-tag_length
+    for _, v in ipairs (styles) do
+        ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
+    end -- for each style run
+    Note ("")  -- wrap up line
     
     if #wildcards == 3 then
        running_room = wildcards[2]
