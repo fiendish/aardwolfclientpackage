@@ -55,25 +55,26 @@ room the stub will disappear and the room(s) in question will be drawn.
 
 ACTIONS
 
-mapper help         --> this help  (or click the "?" button on the bottom right)
-mapper zoom out     --> zoom out
-mapper zoom in      --> zoom in
-mapper hide         --> hide map
-mapper show         --> show map
+mapper help             --> this help  (or click the "?" button on the bottom right)
+mapper zoom out         --> zoom out
+mapper zoom in          --> zoom in
+mapper hide             --> hide map
+mapper show             --> show map
+mapper purgezone <area> --> remove an area from the map database
 
 FINDING THINGS
 
-mapper bookmarks    --> show nearby rooms that you bookmarked
-mapper find <text>  --> full-text search  (eg. shop OR baker)
-mapper areas        --> show path to nearby areas (zones)
-mapper shop         --> show nearby shops/banks etc.
-mapper train        --> show nearby trainers
-mapper quest        --> show nearby quest-givers
-mapper where <room> --> show directions to a room
+mapper bookmarks        --> show nearby rooms that you bookmarked
+mapper find <text>      --> full-text search  (eg. shop OR baker)
+mapper areas            --> show path to nearby areas (zones)
+mapper shop             --> show nearby shops/banks etc.
+mapper train            --> show nearby trainers
+mapper quest            --> show nearby quest-givers
+mapper where <room>     --> show directions to a room
 
 MOVING  
 
-mapper goto <room>  --> walk to a room by its room number
+mapper goto <room>      --> walk to a room by its room number
 
 
 ]]>
@@ -210,6 +211,15 @@ mapper goto <room>  --> walk to a room by its room number
   >
   
   </alias>  
+  
+   <alias
+   match="mapper purgezone *"
+   enabled="y"
+   sequence="100"
+   script="map_purgezone"
+  >
+  </alias>  
+
 
   <alias
    match="^mapper savenew\w*$"
@@ -676,6 +686,23 @@ function fix_up_exit ()
   from_room = nil
   
 end -- fix_up_exit
+
+function map_purgezone (name, line, wildcards)
+  local zonename = string.gsub(wildcards[1], "^%s*(.-)%s*$", "%1")
+  if zonename == nil or zonename == "" then
+     mapper.mapprint("Syntax: mapper purgezone [zone key]")
+     return
+  end
+
+  -- Delete the exit links or we get foreign key constraint errors.
+  dbcheck (db:execute (string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zonename))))
+  dbcheck (db:execute (string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zonename))))        
+  dbcheck (db:execute (string.format ("DELETE from rooms where area = %s;", fixsql(zonename))))
+
+  rooms = {}
+  mapper.mapprint ("Purged all rooms from " .. zonename .. " and local cache.")
+   return
+end 
 
 function map_purgeall() 
    dbcheck (db:execute [[
@@ -2153,6 +2180,7 @@ function create_map_database (name, line, wildcards)
   CREATE TABLE environments (
       environmentid INTEGER PRIMARY KEY AUTOINCREMENT,
       uid           TEXT    NOT NULL,   -- code for the environment
+
       name          TEXT,               -- name of environment
       color         INTEGER,            -- ANSI colour code
       date_added    DATE,               -- date added to database
