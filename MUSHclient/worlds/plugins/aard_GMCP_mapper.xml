@@ -419,6 +419,7 @@ mapper goto <room>      --> walk to a room by its room number
    match="You are asleep and can do nothing. WAKE will attempt to wake you."
    script="mapper.cancel_speedwalk"
 
+
    sequence="100"
   >
   </trigger>
@@ -1469,9 +1470,9 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginSaveState ()
-  if config.SCAN.depth < mapper.temp_scan_depth then
+  if config.SCAN.depth < temp_scan_depth then
     -- then we probably caught ourselves in a botched run or something
-    config.SCAN.depth = mapper.temp_scan_depth
+    config.SCAN.depth = temp_scan_depth
   end
   mapper.save_state ()
   SetVariable ("config", "config = " .. serialize.save_simple (config))
@@ -1525,6 +1526,19 @@ function running_room_name (name, line, wildcards, styles)
     end
 end
 
+running = false
+temp_scan_depth = 4
+
+function activate_running(run)
+    running = run
+    if running then
+        temp_scan_depth = mapper.config.SCAN.depth
+        mapper.config.SCAN.depth = 4  -- or whatever
+    else
+        mapper.config.SCAN.depth = temp_scan_depth
+    end
+end
+
 function got_gmcp_room()
 
   local room_number = gmcpval("num")
@@ -1543,10 +1557,10 @@ function got_gmcp_room()
        z = 0,
        exits = {} }
 
-  if mapper.running == false and gmcproom.name == running_room then
-     mapper.activate_running(true)
-  elseif mapper.running == true and gmcproom.name ~= running_room then
-     mapper.activate_running(false)
+  if running == false and gmcproom.name == running_room then
+     activate_running(true)
+  elseif running == true and gmcproom.name ~= running_room then
+     activate_running(false)
   end
   
   local  exits      = gmcpval("exits")
@@ -1580,6 +1594,7 @@ function got_gmcp_room()
   end -- if room not there
   
   mapper.draw(room_number)
+  Repaint()
 
   if expected_exit == "0" and from_room then
     fix_up_exit ()
