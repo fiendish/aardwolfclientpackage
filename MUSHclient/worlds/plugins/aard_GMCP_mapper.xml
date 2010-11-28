@@ -418,6 +418,7 @@ mapper goto <room>      --> walk to a room by its room number
    enabled="y"
    match="You are asleep and can do nothing. WAKE will attempt to wake you."
    script="mapper.cancel_speedwalk"
+
    sequence="100"
   >
   </trigger>
@@ -1468,10 +1469,10 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginSaveState ()
-  mapper.save_state ()
   if config.SCAN.depth < mapper.temp_scan_depth then
     config.SCAN.depth = mapper.temp_scan_depth
   end
+  mapper.save_state ()
   SetVariable ("config", "config = " .. serialize.save_simple (config))
 end -- OnPluginSaveState
  
