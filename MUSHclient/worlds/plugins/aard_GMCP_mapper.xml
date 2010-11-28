@@ -1470,6 +1470,7 @@ end -- OnPluginClose
 
 function OnPluginSaveState ()
   if config.SCAN.depth < mapper.temp_scan_depth then
+    -- then we probably caught ourselves in a botched run or something
     config.SCAN.depth = mapper.temp_scan_depth
   end
   mapper.save_state ()
