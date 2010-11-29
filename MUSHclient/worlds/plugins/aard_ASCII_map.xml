@@ -68,7 +68,43 @@ something -- wolf@aardwolf.com
    sequence="5"
   >
   </trigger>
-    
+
+  <trigger
+   enabled="y"
+   match="You open *."
+   sequence="100"
+   send_to="12"
+  >
+  <send>SendNoEcho ("map")</send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   match="You close *."
+   sequence="100"
+   send_to="12"
+  >
+  <send>SendNoEcho ("map")</send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   match="* opens*."
+   sequence="100"
+   send_to="12"
+  >
+  <send>SendNoEcho ("map")</send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   match="* closes*."
+   sequence="100"
+   send_to="12"
+  >
+  <send>SendNoEcho ("map")</send>
+  </trigger>
+  
   <trigger
    enabled="y"
    match="You can now sense anger in your immediate area."
@@ -120,7 +156,7 @@ function map_redirect (name, line, wildcards, styles)
 	elseif name == "map_end" then
 	   EnableTrigger ("multi_line_map", false)  -- no more lines to go
        page_built = true
-	   -- DisplayMapPage () --end of map from MUD, display the window
+	   DisplayMapPage () --end of map from MUD, display the window
 	else
 		table.insert (map_lines, styles)
 	end
