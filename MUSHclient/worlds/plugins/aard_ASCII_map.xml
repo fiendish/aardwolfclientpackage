@@ -248,7 +248,7 @@ function DisplayMapPage()
 
    -- show it now (or refresh)
    WindowShow (win, true)
-   Repaint()
+   Redraw()
                  
 end -- Display_Map
 
