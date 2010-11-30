@@ -248,7 +248,8 @@ function DisplayMapPage()
 
    -- show it now (or refresh)
    WindowShow (win, true)
-   Redraw()
+   --Redraw()
+   BroadcastPlugin (999, "repaint")
                  
 end -- Display_Map
 

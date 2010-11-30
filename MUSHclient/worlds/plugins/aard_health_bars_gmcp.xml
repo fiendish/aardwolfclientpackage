@@ -228,7 +228,8 @@ function DisplayStatsPage()
 
    -- show it now (or refresh)
    WindowShow (win, true)
-   Repaint()                 
+   --Repaint()                 
+   BroadcastPlugin (999, "repaint")
 end -- DisplayStatsPage
 
 function RefreshPage()
