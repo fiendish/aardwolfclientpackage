@@ -135,6 +135,26 @@ print("posx:  " .. posx.. "   posy: " .. posy)
 print("------------------------------------------------------------------------------")
 end
 
+local repaint_on_tick = false
+local last_repaint_time = utils.timer()
+function OnPluginBroadcast (msg, id, name, text)
+    if (msg == 999 and text == "repaint") then
+        repaint_on_tick = true
+        if (utils.timer() - last_repaint_time > .1) then
+            repaint_on_tick = false        
+            Repaint()
+            last_repaint_time = utils.timer()
+        end
+    end
+end
+
+function OnPluginTick()
+    if repaint_on_tick == true then
+        repaint_on_tick = false        
+        Repaint()
+        last_repaint_time = utils.timer()
+    end
+end
 
 function ResizeMainCallback()
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)

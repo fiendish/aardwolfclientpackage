@@ -284,37 +284,6 @@ mapper goto <room>      --> walk to a room by its room number
 </aliases>
 
 <triggers>
- <trigger
- enabled="y"
- regexp="y"
- match="^\{rname\}((.*?)( \(G\))? (\(\d+\)))$"
- sequence="100"
- omit_from_output="y"
- script="running_room_name">
- </trigger>
- 
- <trigger
- enabled="y"
- regexp="y"
- omit_from_output="y"
- match="^\{rname\}(.*)$"
- sequence="101"
- script="running_room_name">
- </trigger>
- 
- <trigger
- enabled="y"
- match="Alas, you cannot go that way."
- sequence="100"
- script="running_room_error">
- </trigger>
- 
- <trigger
- enabled="y"
- match="Too many run errors. Aborting speedwalk."
- sequence="100"
- script="running_room_error">
- </trigger>
  
   <!--  auto-swim -->
  
@@ -418,6 +387,7 @@ mapper goto <room>      --> walk to a room by its room number
    enabled="y"
    match="You are asleep and can do nothing. WAKE will attempt to wake you."
    script="mapper.cancel_speedwalk"
+
 
 
    sequence="100"
@@ -1502,30 +1472,6 @@ colour_lookup = {
     [15] =  ColourNameToRGB  "white",  
   } -- end of colour_lookup
 
-local running_room = ""
-
-function running_room_error()
-    running_room = ""
-    Send_GMCP_Packet("request room")
-end
-
-function running_room_name (name, line, wildcards, styles)
-    -- strip out tag
-    tag_length = string.find(styles[1].text,"}")
-    styles[1].text = string.sub(styles[1].text, tag_length+1)
-    styles[1].length = styles[1].length-tag_length
-    for _, v in ipairs (styles) do
-        ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
-    end -- for each style run
-    Note ("")  -- wrap up line
-    
-    if #wildcards == 4 then
-       running_room = wildcards[2]
-    else
-       running_room = ""
-    end
-end
-
 running = false
 temp_scan_depth = 4
 
@@ -1537,6 +1483,7 @@ function activate_running(run)
     else
         mapper.config.SCAN.depth = temp_scan_depth
     end
+    mapper.draw(current_room)
 end
 
 function got_gmcp_room()
@@ -1556,12 +1503,6 @@ function got_gmcp_room()
        y = gmcpval("coord.y"),
        z = 0,
        exits = {} }
-
-  if running == false and gmcproom.name == running_room then
-     activate_running(true)
-  elseif running == true and gmcproom.name ~= running_room then
-     activate_running(false)
-  end
   
   local  exits      = gmcpval("exits")
   local room = rooms [room_number]
@@ -1594,7 +1535,8 @@ function got_gmcp_room()
   end -- if room not there
   
   mapper.draw(room_number)
-  Repaint()
+  --Redraw()
+  BroadcastPlugin (999, "repaint")
 
   if expected_exit == "0" and from_room then
     fix_up_exit ()
@@ -1687,6 +1629,17 @@ function OnPluginBroadcast (msg, id, name, text)
        mapper.cancel_speedwalk()
     end -- wrongdir
 
+    if (text == "char.status") then
+       res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status")
+       luastmt = "gmcpdata = " .. gmcparg
+       assert (loadstring (luastmt or "")) ()
+       if running == false and gmcpdata.state == "12" then
+           activate_running(true)
+       elseif running == true and gmcpdata.state ~= "12" then
+           activate_running(false)
+       end
+    end -- running
+    
     if (text == "room.area") then
        res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.area")
        luastmt = "gmcpdata = " .. gmcparg
