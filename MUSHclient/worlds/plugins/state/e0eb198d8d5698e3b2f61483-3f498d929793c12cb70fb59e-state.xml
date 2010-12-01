@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Wednesday, December 01, 2010, 1:51 PM -->
+<!-- MuClient version 4.70 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Aardwolf_Ascii_Mapper". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.70"
+   world_file_version="15"
+   date_saved="2010-12-01 13:51:01"
+  >
+  <variable name="background_colour">0</variable>
+  <variable name="enabled">true</variable>
+  <variable name="font_name">Lucida Console</variable>
+  <variable name="font_size">9</variable>
+  <variable name="height">271</variable>
+  <variable name="mw_3f498d929793c12cb70fb59e_windowflags">2</variable>
+  <variable name="mw_3f498d929793c12cb70fb59e_windowmode">0</variable>
+  <variable name="mw_3f498d929793c12cb70fb59e_windowx">0</variable>
+  <variable name="mw_3f498d929793c12cb70fb59e_windowy">1</variable>
+  <variable name="showcoords">0</variable>
+  <variable name="title_colour">2697513</variable>
+  <variable name="width">254</variable>
+</variables>
+</muclient>
