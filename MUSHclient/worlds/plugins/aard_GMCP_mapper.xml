@@ -65,6 +65,7 @@ mapper purgezone <area> --> remove an area from the map database
 FINDING THINGS
 
 mapper bookmarks        --> show nearby rooms that you bookmarked
+mapper area <text>      --> full-text search limited to the current zone
 mapper find <text>      --> full-text search  (eg. shop OR baker)
 mapper areas            --> show path to nearby areas (zones)
 mapper shop             --> show nearby shops/banks etc.
@@ -280,7 +281,16 @@ mapper goto <room>      --> walk to a room by its room number
    script="mapper.show"
   >
   </alias>  
-  
+
+  <alias
+   match="^mapper area ([\w* %d/&quot;]+)$"
+   enabled="y"
+   sequence="100"
+   script="map_area"
+   regexp="y"
+  >
+  </alias>
+
 </aliases>
 
 <triggers>
@@ -1650,6 +1660,57 @@ function OnPluginBroadcast (msg, id, name, text)
   end -- if gmcp msg.
 
 end
+
+function map_area (name, line, wildcards)
+
+  uid = mapper.current_room
+
+  -- check we got room at all
+  if not uid then
+    print "I do not know your room!"
+  end -- if
+
+  -- look it up
+  local ourroom = rooms [uid]
+
+  -- not cached - see if in database
+  if not ourroom then
+    ourroom = load_room_from_database (uid)
+    rooms [uid] = ourroom -- cache for later
+  end -- not in cache
+
+  if not ourroom then
+     print "I could not lookup your room!"
+  end -- if
+
+  local area = rooms[uid].area
+
+  local rooms = {}
+  local count = 0
+
+  local SQLst = string.format ("SELECT uid, name, area FROM rooms WHERE name LIKE '%s' and area = '%s'",
+                "%" .. wildcards [1] .. "%", area)
+
+  for row in db:nrows(SQLst) do
+     rooms [row.uid] = true
+     count = count + 1
+  end   -- finding room
+
+  -- see if nearby
+  mapper.find (
+    function (uid)
+      local room = rooms [uid]
+      if room then
+        rooms [uid] = nil
+      end -- if
+      return room, next (rooms) == nil
+    end,  -- function
+    show_vnums,  -- show vnum?
+    count,      -- how many to expect
+    false       -- don't auto-walk
+    )
+
+end -- map_area
 
 
 function map_find (name, line, wildcards)
