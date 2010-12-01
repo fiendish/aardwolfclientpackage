@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Tuesday, November 23, 2010, 11:59 PM -->
+<!-- Saved on Wednesday, December 01, 2010, 1:08 PM -->
 <!-- MuClient version 4.70 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
@@ -8,7 +8,7 @@
 <world
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
 
    auto_say_override_prefix="-"
    auto_say_string="say "
@@ -19,7 +19,7 @@
    mapping_failure="Alas, you cannot go that way."
    name="Aardwolf"
    new_activity_sound="(No sound)"
-   output_font_name="Courier"
+   output_font_name="Lucida Console"
    script_editor="notepad"
    script_editor_argument="%file"
    script_language="Lua"
@@ -30,7 +30,6 @@
 
    arrows_change_history="y"
    auto_pause="y"
-   auto_repeat="y"
    auto_resize_minimum_lines="1"
    auto_resize_maximum_lines="20"
    auto_wrap_window_width="y"
@@ -68,7 +67,7 @@
    mud_can_change_link_colour="y"
    mud_can_change_options="y"
    note_text_colour="#040000"
-   output_font_height="10"
+   output_font_height="9"
    output_font_weight="400"
    output_font_charset="1"
    paste_delay_per_lines="1"
@@ -79,10 +78,7 @@
    script_errors_to_output_window="y"
    send_file_delay_per_lines="1"
    send_mxp_afk_response="y"
-   show_bold="n"
    show_connect_disconnect="y"
-   show_italic="n"
-   show_underline="n"
    spam_line_count="20"
    tab_completion_lines="200"
    timestamp_input_text_colour="maroon"
@@ -97,7 +93,7 @@
    use_default_input_font="y"
    warn_if_scripting_inactive="y"
    wrap="y"
-   wrap_column="94"
+   wrap_column="79"
    write_world_name_to_log="y"
    > <!-- end of general world attributes -->
 
@@ -108,7 +104,7 @@
 <triggers
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
   >
 </triggers>
 
@@ -117,7 +113,7 @@
 <aliases
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
   >
 </aliases>
 
@@ -126,7 +122,7 @@
 <timers
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
   >
 </timers>
 
@@ -135,7 +131,7 @@
 <macros
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
   >
 
   <macro name="up" type="send_now" >
@@ -229,7 +225,7 @@
 <variables
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
   >
 </variables>
 
@@ -238,7 +234,7 @@
 <colours
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
   >
 
 <ansi>
@@ -295,7 +291,7 @@
 <keypad
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
   >
 
   <key name="0" >
@@ -409,7 +405,7 @@
 <printing
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-11-23 23:59:28"
+   date_saved="2010-12-01 13:08:06"
   >
 
 <ansi>
