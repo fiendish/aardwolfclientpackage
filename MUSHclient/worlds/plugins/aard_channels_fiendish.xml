@@ -306,7 +306,7 @@ function init(firstTime)
     -- title rectangle
     WindowGradient (Win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, 0x111111, 0x333333, 2)
     WindowLine(Win, 0, TITLE_HEIGHT-1, WINDOW_WIDTH, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
-    WindowText(Win, "fonthead"..Win, "Communication", ((WINDOW_WIDTH)-(6.5*header_font_height))/2, (TITLE_HEIGHT/2)-(header_font_height/2), WINDOW_WIDTH, (TITLE_HEIGHT/2)+(header_font_height/2), 0xEEEEEE, false)
+    WindowText(Win, "fonthead"..Win, "Communication Log", ((WINDOW_WIDTH)-(6.5*header_font_height))/2, (TITLE_HEIGHT/2)-(header_font_height/2), WINDOW_WIDTH, (TITLE_HEIGHT/2)+(header_font_height/2), 0xEEEEEE, false)
      
     -- resize tag    
     WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR) -- resizer background
