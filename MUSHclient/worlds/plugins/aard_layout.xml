@@ -107,6 +107,10 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 
 </aliases>
 
+<!--  Get our standard constants -->
+
+<include name="constants.lua"/>
+
 <!--  Script  -->
 
 <script>
@@ -133,27 +137,6 @@ print("Textrect_bot: " .. textrect_bottom .. " Textrect_right: " .. textrect_rig
 print("startx:  " .. startx .. "   starty:  " .. starty)
 print("posx:  " .. posx.. "   posy: " .. posy)
 print("------------------------------------------------------------------------------")
-end
-
-local repaint_on_tick = false
-local last_repaint_time = utils.timer()
-function OnPluginBroadcast (msg, id, name, text)
-    if (msg == 999 and text == "repaint") then
-        repaint_on_tick = true
-        if (utils.timer() - last_repaint_time > .1) then
-            repaint_on_tick = false        
-            Repaint()
-            last_repaint_time = utils.timer()
-        end
-    end
-end
-
-function OnPluginTick()
-    if repaint_on_tick == true then
-        repaint_on_tick = false        
-        Repaint()
-        last_repaint_time = utils.timer()
-    end
 end
 
 function ResizeMainCallback()
