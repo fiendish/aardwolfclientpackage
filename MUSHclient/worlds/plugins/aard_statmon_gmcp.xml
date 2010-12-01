@@ -67,6 +67,9 @@ tstyles          = { }
 page_built       = false
 max_width         = 0
 
+-- pull in telnet option handling
+dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
+
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
@@ -395,7 +398,8 @@ end -- OnPluginEnable
 -- This is the place to initialize stuff you need in the main plugin.
 --=================================================================================
 function OnPluginInstall() 
-    
+   TelnetOptionOff(TELOPT_STATMON)
+   
    --- Get a unique name for main window
    win = GetPluginID ()  -- get a unique name
 
