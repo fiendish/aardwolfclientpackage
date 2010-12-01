@@ -38,7 +38,7 @@ window_width = 600
 WINDOW_BACKGROUND_COLOUR = ColourNameToRGB ("black")
 WINDOW_TEXT_COLOUR = ColourNameToRGB ("white")
 
-win = "greeting_" .. GetPluginID ()  -- get a unique name
+win = "zzzzz_" .. GetPluginID ()  -- get a unique name
 
 function OnPluginSaveState ()
     SetVariable("showGreeting", showGreeting)
