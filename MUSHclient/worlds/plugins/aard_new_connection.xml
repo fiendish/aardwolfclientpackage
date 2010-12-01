@@ -124,7 +124,7 @@ function ShowGreeting(firstTime)
       -- install the window movement handler, get back the window position
          windowinfo  = movewindow.install (win, miniwin.pos_center_all, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
       
-      baselines = {"Welcome to the new Aardwolf MUSHclient package!", "Here are a few helpful tips for navigating this software...","We use miniwindow dialogs (this is a miniwindow) to enhance your experience.", "(You probably see other miniwindows behind this one. Say \"hello miniwindows!\" LOL JK.)", "Most miniwindows in this package let you do the following:"}
+      baselines = {"Welcome to the new Aardwolf MUSHclient package!", "Here are a few helpful tips for navigating this software...","We use miniwindow dialogs (this is a miniwindow) to enhance your experience.", "(If the main window is off the edge of your screen, type \"resetaard\" in the input bar below)", "Most miniwindows in this package let you do the following:"}
       tablines = {"* Drag the bottom-right corner to resize. (where you see this) -->","* Drag anywhere else in the miniwindow to move it around (try it here).","   There are exceptions to this. When you can't drag everywhere (e.g. the main output),","   you can at least drag along the top where the mouse cursor changes.","* Right-click in the miniwindow to bring up a menu of options (try it here).","   You can usually interact with them by clicking or just moving the mouse over them."}
       
       local max_width = 0      
