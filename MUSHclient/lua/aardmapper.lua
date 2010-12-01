@@ -81,10 +81,10 @@ local CONFIG_FONT_ID = "cfn"
 local CONFIG_FONT_ID_UL = "cfnu"
 
 -- size of room box
-local ROOM_SIZE = 10
+local ROOM_SIZE = 12
 
 -- how far away to draw rooms from each other
-local DISTANCE_TO_NEXT_ROOM = 5
+local DISTANCE_TO_NEXT_ROOM = 8
 
 -- supplied in init
 local config  -- configuration table 
