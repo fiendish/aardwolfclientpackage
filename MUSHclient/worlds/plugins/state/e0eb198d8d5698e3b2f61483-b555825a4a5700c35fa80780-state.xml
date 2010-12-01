@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Wednesday, December 01, 2010, 1:51 PM -->
+<!-- MuClient version 4.70 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Aardwolf_Chat_Capture_Miniwindow". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.70"
+   world_file_version="15"
+   date_saved="2010-12-01 13:51:01"
+  >
+  <variable name="WINDOW_HEIGHT">135</variable>
+  <variable name="WINDOW_WIDTH">973</variable>
+  <variable name="date_format">[%d %b %H:%M:%S] </variable>
+  <variable name="echo">1</variable>
+  <variable name="enabled">true</variable>
+  <variable name="font_name">Lucida Console</variable>
+  <variable name="font_size">9</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowflags">2</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowmode">0</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowx">257</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowy">2</variable>
+  <variable name="timestamp">0</variable>
+</variables>
+</muclient>

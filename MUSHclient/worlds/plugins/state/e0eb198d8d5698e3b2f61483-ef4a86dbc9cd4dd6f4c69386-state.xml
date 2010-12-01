@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Wednesday, December 01, 2010, 1:51 PM -->
+<!-- MuClient version 4.70 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Aardwolf_Statmon". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.70"
+   world_file_version="15"
+   date_saved="2010-12-01 13:51:01"
+  >
+  <variable name="background_colour">0</variable>
+  <variable name="enabled">true</variable>
+  <variable name="font_name">Lucida Console</variable>
+  <variable name="font_size">9</variable>
+  <variable name="height">188</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowflags">2</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowmode">0</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowx">835</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowy">139</variable>
+  <variable name="width">395</variable>
+</variables>
+</muclient>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- Saved on Wednesday, December 01, 2010, 1:51 PM -->
+<!-- MuClient version 4.70 -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "Aardwolf_GMCP_Mapper". World: "Aardwolf". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="4.70"
+   world_file_version="15"
+   date_saved="2010-12-01 13:51:01"
+  >
+  <variable name="config">config = {
+  ROOM_NAME_TEXT = {
+    name = "Room name text",
+    colour = 15856574,
+    },
+  EXIT_COLOUR = {
+    name = "Exit",
+    colour = 16777184,
+    },
+  ROOM_COLOUR = {
+    name = "Room",
+    colour = 14474460,
+    },
+  LAST_VISIT_TIME = {
+    time = 180,
+    },
+  POSTOFFICE_FILL_COLOUR = {
+    name = "Post Office",
+    colour = 3329434,
+    },
+  ROOM_NAME_BORDER = {
+    name = "Room name box",
+    colour = 0,
+    },
+  SCAN = {
+    depth = 15,
+    },
+  FONT = {
+    size = 8,
+    name = "Dina",
+    },
+  ROOM_NAME_FILL = {
+    name = "Room name fill",
+    colour = 5461520,
+    },
+  UNKNOWN_ROOM_COLOUR = {
+    name = "Unknown room",
+    colour = 139,
+    },
+  DELAY = {
+    time = 0,
+    },
+  BACKGROUND_COLOUR = {
+    name = "Background",
+    colour = 2367522,
+    },
+  WINDOW = {
+    height = 332,
+    width = 255,
+    },
+  MAPPER_NOTE_COLOUR = {
+    name = "Messages",
+    colour = 9498256,
+    },
+  OUR_ROOM_COLOUR = {
+    name = "Our room",
+    colour = 9639167,
+    },
+  AREA_NAME_TEXT = {
+    name = "Area name text",
+    colour = 15856574,
+    },
+  EXIT_COLOUR_UP_DOWN = {
+    name = "Exit up/down",
+    colour = 12695295,
+    },
+  AREA_NAME_FILL = {
+    name = "Area name fill",
+    colour = 5461520,
+    },
+  SHOP_FILL_COLOUR = {
+    name = "Shop",
+    colour = 3124735,
+    },
+  NEWSROOM_FILL_COLOUR = {
+    name = "Newsroom",
+    colour = 15128749,
+    },
+  DIFFERENT_AREA_COLOUR = {
+    name = "Another area",
+    colour = 255,
+    },
+  EXIT_COLOUR_IN_OUT = {
+    name = "Exit in/out",
+    colour = 3634664,
+    },
+  BANK_FILL_COLOUR = {
+    name = "Bank",
+    colour = 55295,
+    },
+  AREA_NAME_BORDER = {
+    name = "Area name box",
+    colour = 0,
+    },
+  }</variable>
+  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowflags">2</variable>
+  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowmode">0</variable>
+  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowx">0</variable>
+  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowy">275</variable>
+</variables>
+</muclient>
