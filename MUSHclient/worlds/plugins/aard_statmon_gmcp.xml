@@ -389,13 +389,16 @@ function OnPluginEnable ()
     WindowShow( win, true)
 end -- OnPluginEnable
 
+function OnPluginConnect()
+   TelnetOptionOff(TELOPT_STATMON)
+end
+
 
 --=================================================================================
 -- Called when plugin is first installed, including when Mush first starts.
 -- This is the place to initialize stuff you need in the main plugin.
 --=================================================================================
 function OnPluginInstall() 
-   TelnetOptionOff(TELOPT_STATMON)
    
    --- Get a unique name for main window
    win = GetPluginID ()  -- get a unique name
