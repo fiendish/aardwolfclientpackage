@@ -149,6 +149,9 @@ page_built       = false
 
 continents = { [0]="Mesolar", [1]="Southern Ocean", [2]="Gelidus", [3]="Abend", [4]="Alagh", [5]="Uncharted Ocean", [6]="Vidblain" }
 
+-- pull in telnet option handling
+dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
+
 function map_redirect (name, line, wildcards, styles)
 	EnableTrigger ("multi_line_map", true)  -- capture subsequent lines
 	if name == "map_start" then   --- Setup the window.
@@ -541,6 +544,12 @@ function LeftClickOnly(flags, hotspot_id, win)
         return true
     end
     return false
+end
+
+function OnPluginConnect()
+   TelnetOptionOn(TELOPT_MAP)
+   TelnetOptionOff(TELOPT_SHORTMAP)
+   TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
 end
 
 ---------------------------------------------------------------------------------
