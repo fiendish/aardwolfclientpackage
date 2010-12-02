@@ -113,8 +113,9 @@ function ColoursToStyles (Text)
     if Text:match ("@") then
         astyles = {}
 
-        Text = Text:gsub ("@%-", "~")    -- fix tildes
-        Text = Text:gsub ("@@", "\0")  -- change @@ to 0x00
+        Text = Text:gsub ("@%-", "~") -- fix tildes
+        Text = Text:gsub ("@@", "\0") -- change @@ to 0x00
+        Text = Text:gsub ("@ ", "")  -- rip out hidden garbage
 
         -- make sure we start with @ or gsub doesn't work properly
         if Text:sub (1, 1) ~= "@" then
