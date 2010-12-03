@@ -170,9 +170,9 @@ TITLE_HEIGHT = 20
 -- date_format = "[%H:%M:%S] "          -- [13:29:08]          time 24 hour
 -- date_format = "[%X] "                  -- [1:22:06 PM]            time 12 hour
 
-timestamp = GetVariable("timestamp")
-echo = GetVariable("echo")
-date_format = GetVariable("date_format")
+timestamp = GetVariable("timestamp") or "1"
+echo = GetVariable("echo") or "1"
+date_format = GetVariable("date_format") or "[%d %b %H:%M:%S] "
 WINDOW_WIDTH = tonumber(GetVariable("WINDOW_WIDTH"))
 WINDOW_HEIGHT = tonumber(GetVariable("WINDOW_HEIGHT"))
 
@@ -284,22 +284,13 @@ function OnPluginInstall()
     -- install the window movement handler, get back the window position
     windowinfo = movewindow.install (Win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
-    -- check for Echo/Timestamp/date_format/window size (in pixels) variables, if not there, set them
-    if echo == nil then
-        echo = "1"
-    end
-    if timestamp == nil then
-        timestamp = "1"
-    end
-    if date_format == nil then
-        date_format = "[%d %b %H:%M:%S] "
-    end
     if WINDOW_WIDTH == nil then
         WINDOW_WIDTH = (font_width*80)+SCROLL_BAR_WIDTH -- 80 columns
     end
     if WINDOW_HEIGHT == nil then
         WINDOW_HEIGHT = TITLE_HEIGHT+(line_height*6)+2 -- 6 lines
     end
+    
     init(true)
     OnPluginEnable ()  -- do initialization stuff
 end
