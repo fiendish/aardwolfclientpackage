@@ -53,6 +53,49 @@ USAGE:
     ></trigger>
     
     <trigger
+    enabled="y"
+    match="^{tell}(?<msg>.*)"
+    script="chats"
+    omit_from_output="y"
+    regexp="y"
+    sequence="100"
+    ></trigger>
+
+   <trigger
+   enabled="n"
+   name="remort_auction"
+   match="^Remort Auction:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+   >
+   </trigger>
+
+   <trigger
+   enabled="n"
+   name="global_quest"
+   match="^Global Quest:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+   >
+   </trigger>
+
+   <trigger
+   enabled="n"
+   name="info"
+   match="^INFO:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+   >
+   </trigger>    
+
+
+    <trigger
     enabled="n"
     match="^$"
     regexp="y"
@@ -65,7 +108,7 @@ USAGE:
     EnableTriggerGroup("end_gag", false)
     </send></trigger>
     
- <trigger
+    <trigger
     enabled="n"
     match=".*"
     regexp="y"
@@ -77,15 +120,7 @@ USAGE:
     ><send>
     EnableTriggerGroup("end_gag", false)
     </send></trigger>
-    
-    <trigger
-    enabled="y"
-    match="^{tell}(?<msg>.*)"
-    script="chats"
-    omit_from_output="y"
-    regexp="y"
-    sequence="100"
-    ></trigger>
+
 </triggers>
 
 <aliases>
@@ -174,6 +209,13 @@ windowinfo = ""
 startx = ""
 starty = ""
 
+info_on = tonumber(GetVariable("info_on")) or 0
+global_quest_on = tonumber(GetVariable("global_quest_on")) or 0
+remort_auction_on = tonumber(GetVariable("remort_auction_on")) or 0
+SetTriggerOption("info", "enabled", info_on)
+SetTriggerOption("global_quest", "enabled", global_quest_on)
+SetTriggerOption("remort_auction", "enabled", remort_auction_on)
+
 function ResizeMoveCallback()
     posx, posy = WindowInfo (Win, 17), WindowInfo (Win, 18)
     WINDOW_WIDTH = WINDOW_WIDTH+posx-startx
@@ -203,8 +245,9 @@ function ResizeReleaseCallback()
 end
 
 function OnPluginInstall()
-    -- Dummy window to get font characteristics
-    check (WindowCreate (Win, 0, 0, 1, 1, 0, 0, WINDOW_BACKGROUND_COLOUR) )
+
+   -- Dummy window to get font characteristics
+   check (WindowCreate (Win, 0, 0, 1, 1, 0, 0, WINDOW_BACKGROUND_COLOUR) )
 
    local fonts = utils.getfontfamilies ()
 
@@ -360,6 +403,9 @@ function OnPluginSaveState ()
     SetVariable("date_format", date_format)
     SetVariable("WINDOW_WIDTH", WINDOW_WIDTH)
     SetVariable("WINDOW_HEIGHT", WINDOW_HEIGHT)
+    SetVariable("info_on", info_on)
+    SetVariable("global_quest_on", global_quest_on)
+    SetVariable("remort_auction_on", remort_auction_on)
 end --  OnPluginSaveState
 
 function OnPluginDisable ()
@@ -577,36 +623,17 @@ function fillBuffer(rawstyles)
     end -- while we still have styles over
 end
 
+function stampAndStore(styles)
 
-
---[[
--- OLD PRE-GMCP VERSION. KEEPING AROUND FOR REFERENCE ONLY
--- Main capture routine
-function chats (name, line, wildcards, styles)
-    
-    if (echo == "0") then
-        EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
-    end
-    
-    -- strip out the tag
-    tag_length = string.find(styles[1].text,"}")
-    styles[1].text = string.sub(styles[1].text, tag_length+1)
-    styles[1].length = styles[1].length-tag_length
-    
-    -- echo in this world as well if the user wants
-    if echo == "1" then
-        for _, v in ipairs (styles) do
-            ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
-        end -- for each style run
-        Note ("")  -- wrap up line
-    end -- echo wanted
-
-    -- inject timestamp if wanted (reuse the first style from the tag we stripped)
-    if timestamp == "1" then
+     -- inject timestamp if wanted
+     if timestamp == "1" then
         tstamp = os.date (date_format)
-        styles[1].text = tstamp..styles[1].text
-        styles[1].length = styles[1].length+string.len(tstamp)
-    end -- if
+        timestyle = {}
+        timestyle.text = tstamp
+        timestyle.length = #timestyle.text
+        timestyle.textcolour = 0xc0c0c0
+        table.insert(styles,1,timestyle)
+     end -- if
 
     -- store the raw lines for use during resizing
     if #rawlines >= MAX_LINES then
@@ -616,8 +643,8 @@ function chats (name, line, wildcards, styles)
     
     fillBuffer(styles)
     refresh( )
-end -- chats
---]]
+
+end
 
 function chats (name, line, wildcards, styles)
     if (echo == "0") then
@@ -625,11 +652,16 @@ function chats (name, line, wildcards, styles)
     end
     
     -- echo in this world as well if the user wants
+    -- Note: as tempting as it might seem to move this block down to OnPluginBroadcast,
+    -- eliminating the need for stripping out the tag,
+    -- keep in mind that gmcp broadcasts through notes and this doesn't.
     if echo == "1" then
         -- strip out the tag
         tag_length = string.find(styles[1].text,"}")
         styles[1].text = string.sub(styles[1].text, tag_length+1)
         styles[1].length = styles[1].length-tag_length
+        
+        -- display
         for _, v in ipairs (styles) do
             ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
         end -- for each style run
@@ -637,6 +669,22 @@ function chats (name, line, wildcards, styles)
     end -- echo wanted
 end -- chats
 
+function untagged_info (name, line, wildcards, styles)
+    
+    if (echo == "0") then
+        EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
+    end
+    
+    -- echo in this world as well if the user wants
+    if echo == "1" then
+        for _, v in ipairs (styles) do
+            ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
+        end -- for each style run
+        Note ("")  -- wrap up line
+    end -- echo wanted
+    
+    stampAndStore(styles)
+end -- chats
 
 function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
@@ -648,27 +696,8 @@ function OnPluginBroadcast (msg, id, name, text)
 
          msg = gmcpval("msg") or ""
 
-         styles = ColoursToStyles(msg)
-
-         -- inject timestamp if wanted
-         if timestamp == "1" then
-            tstamp = os.date (date_format)
-            timestyle = {}
-            timestyle.text = tstamp
-            timestyle.length = #timestyle.text
-            timestyle.textcolour = 0xc0c0c0
-            table.insert(styles,1,timestyle)
-
-         end -- if
-
-         -- store the raw lines for use during resizing
-         if #rawlines >= MAX_LINES then
-            table.remove(rawlines, 1)
-         end
-         table.insert(rawlines, styles)
-
-         fillBuffer(styles)
-         refresh( )
+         stampAndStore(ColoursToStyles(msg))
+         
       end
    end
 end
@@ -835,56 +864,82 @@ end -- function chat_hide
 
 -- right click menu
 function right_click_menu ()
-    menustring ="Copy All To Clipboard|Change Font"
+    menustring ="!Copy All To Clipboard|-|Change Font"
     if echo == "1" then
         menustring = (menustring .."|Turn Echo Off")
     else
         menustring = (menustring.."|Turn Echo On")
     end --if
-    menustring = menustring.."|>Timestamp|No Timestamps|30 Aug 13:29:49|30 Aug 01:20:12PM|13:29:08|1:22:06 PM"
+    menustring = menustring.."|>Timestamp|No Timestamps|30 Aug 13:29:49|30 Aug 01:20:12PM|13:29:08|1:22:06 PM|<|>Capture Other Info|INFO:|Global Quest:|Remort Auction:"
     result = WindowMenu (Win,
         WindowInfo (Win, 14),  -- x position
         WindowInfo (Win, 15),   -- y position
         menustring) -- content
-
-    if result == "Copy All To Clipboard" then
-        GetAllBufferedMessages()
-        ColourNote ("yellow", "", "All chat messages copied to clipboard.")
-    elseif result == "Change Font" then
-        wanted_font = utils.fontpicker (FONT_NAME, FONT_SIZE) --font dialog
-        if wanted_font then
-            FONT_NAME = wanted_font.name
-            FONT_SIZE = wanted_font.size
-            SetVariable ("font_name", FONT_NAME)
-            SetVariable ("font_size", FONT_SIZE)
-            OnPluginInstall()
+    if result ~= "" then
+        numResult = tonumber(result)
+        
+        if numResult == 1 then
+            GetAllBufferedMessages()
+            ColourNote ("yellow", "", "All chat messages copied to clipboard.")
+        elseif numResult == 2 then
+            wanted_font = utils.fontpicker (FONT_NAME, FONT_SIZE) --font dialog
+            if wanted_font then
+                FONT_NAME = wanted_font.name
+                FONT_SIZE = wanted_font.size
+                SetVariable ("font_name", FONT_NAME)
+                SetVariable ("font_size", FONT_SIZE)
+                OnPluginInstall()
+            end
+        elseif numResult == 3 and echo == "1" then
+            echo = "0"
+            ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
+        elseif numResult == 3 and echo == "0" then
+            echo = "1"
+            ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
+        elseif numResult == 4 then
+            timestamp = "0"
+            ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
+        elseif numResult == 5 then
+            timestamp = "1"
+            date_format = "[%d %b %H:%M:%S] "
+            ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
+        elseif numResult == 6 then
+            timestamp = "1"
+            date_format = "[%d %b %I:%M:%S%p] "
+            ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
+        elseif numResult == 7 then
+            timestamp = "1"
+            date_format = "[%H:%M:%S] "
+            ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
+        elseif numResult == 8 then
+            timestamp = "1"
+            date_format = "[%I:%M:%S%p] "
+            ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
+        elseif numResult == 9 then
+            if info_on == 0 then
+                ColourNote ("yellow", "", "INFO capturing is now ENABLED.")
+            else
+                ColourNote ("yellow", "", "INFO capturing is now DISABLED.")
+            end
+            EnableTrigger("info", 0 == info_on)
+            info_on = GetTriggerOption("info","enabled")
+        elseif numResult == 10 then
+            if global_quest_on == 0 then
+                ColourNote ("yellow", "", "Global Quest capturing is now ENABLED.")
+            else
+                ColourNote ("yellow", "", "Global Quest capturing is now DISABLED.")
+            end
+            EnableTrigger("global_quest", 0 == global_quest_on)
+            global_quest_on = GetTriggerOption("global_quest","enabled")
+        elseif numResult == 11 then
+            if remort_auction_on == 0 then
+                ColourNote ("yellow", "", "Remort Auction capturing is now ENABLED.")
+            else
+                ColourNote ("yellow", "", "Remort Auction capturing is now DISABLED.")
+            end
+            EnableTrigger("remort_auction", 0 == remort_auction_on)
+            remort_auction_on = GetTriggerOption("remort_auction","enabled")
         end
-    elseif result == "Turn Echo Off" then
-        echo = "0"
-        ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
-    elseif result == "Turn Echo On" then
-        echo = "1"
-        ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
-    elseif result == "No Timestamps" then
-        timestamp = "0"
-        ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
-    elseif result == "30 Aug 13:29:49" then
-        timestamp = "1"
-        date_format = "[%d %b %H:%M:%S] "
-        ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
-    elseif result == "30 Aug 01:20:12PM" then
-
-        timestamp = "1"
-        date_format = "[%d %b %I:%M:%S%p] "
-        ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
-    elseif result == "13:29:08" then
-        timestamp = "1"
-        date_format = "[%H:%M:%S] "
-        ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
-    elseif result == "1:22:06 PM" then
-        timestamp = "1"
-        date_format = "[%I:%M:%S%p] "
-        ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
     end
 end -- right_click_menu
 
