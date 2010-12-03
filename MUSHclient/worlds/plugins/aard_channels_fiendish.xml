@@ -304,10 +304,11 @@ function init(firstTime)
     lineEnd = math.max(1, #lines)
     
     -- title rectangle
+    header_width = WindowTextWidth(Win, "fonthead"..Win, "Communication Log")
     WindowGradient (Win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, 0x111111, 0x333333, 2)
+    WindowText(Win, "fonthead"..Win, "Communication Log", (WINDOW_WIDTH-header_width)/2, (TITLE_HEIGHT-header_font_height)/2, WINDOW_WIDTH, math.ceil((TITLE_HEIGHT+header_font_height)/2), 0xEEEEEE, false)     
     WindowLine(Win, 0, TITLE_HEIGHT-1, WINDOW_WIDTH, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
-    WindowText(Win, "fonthead"..Win, "Communication Log", ((WINDOW_WIDTH)-(6.5*header_font_height))/2, (TITLE_HEIGHT/2)-(header_font_height/2), WINDOW_WIDTH, (TITLE_HEIGHT/2)+(header_font_height/2), 0xEEEEEE, false)
-     
+    
     -- resize tag    
     WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR) -- resizer background
     WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, 0xffffff, 0, 2)
