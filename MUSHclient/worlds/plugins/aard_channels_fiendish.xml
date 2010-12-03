@@ -870,7 +870,7 @@ function right_click_menu ()
     else
         menustring = (menustring.."|Turn Echo On")
     end --if
-    menustring = menustring.."|>Timestamp|No Timestamps|30 Aug 13:29:49|30 Aug 01:20:12PM|13:29:08|1:22:06 PM|<|>Capture Other Info|INFO:|Global Quest:|Remort Auction:"
+    menustring = menustring.."|>Timestamp|"..((date_format=="" and "*  ") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "*  ") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "*  ") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "*  ") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "*  ") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "*  ") or "").."INFO:|"..((global_quest_on==1 and "*  ") or "").."Global Quest:|"..((remort_auction_on==1 and "*  ") or "").."Remort Auction:"
     result = WindowMenu (Win,
         WindowInfo (Win, 14),  -- x position
         WindowInfo (Win, 15),   -- y position
@@ -898,6 +898,7 @@ function right_click_menu ()
             ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
         elseif numResult == 4 then
             timestamp = "0"
+            date_format = ""
             ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
         elseif numResult == 5 then
             timestamp = "1"
