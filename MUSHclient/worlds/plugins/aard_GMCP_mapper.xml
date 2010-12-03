@@ -1296,28 +1296,6 @@ local available =  {
    
 end -- room_change_exit
 
-function change_room_area (room, uid)
-   
-  if next (areas) == nil then
-    mapper.maperror("There are no available areas to choose from.")
-    return
-  end -- if
-  
-  local chosen_area = utils.listbox ("Choose the area this room belongs to:", "Areas ...", areas)
-   
-  if not chosen_area then
-    return
-  end -- if
-  
-  rooms[uid].area = chosen_area
-  mapper.draw (current_room)
-  
-  dbcheck (db:execute (string.format ([[
-    UPDATE rooms SET area = %s WHERE uid = %s;
-  ]], fixsql  (chosen_area),  -- area (e.g. "1" for "western ithmia")
-      fixsql  (uid)  -- from current room
-      )))
-end -- change_room_area
 
 function room_click (uid, flags)
 
@@ -1340,14 +1318,13 @@ function room_click (uid, flags)
   end -- if still not there
   
   local handlers = {
-      { name = "Edit bookmark", func = room_edit_bookmark} ,
-      { name = "Edit terrain colour", func = room_edit_terrain_colour} ,
+      { name = "Edit Bookmark", func = room_edit_bookmark} ,
+      { name = "Edit Terrain Colour", func = room_edit_terrain_colour} ,
       { name = "-", } ,
---      { name = "^Exits", } ,
       { name = "Add Exit", func = room_add_exit} ,
       { name = "Change Exit", func = room_change_exit} ,
       { name = "Delete Exit", func = room_delete_exit} ,
-      { name = "Set area", func = change_room_area} ,
+--      { name = "-", } ,
       } -- handlers
       
   local t, tf = {}, {}
