@@ -96,8 +96,8 @@ function BuildStatsPage()
    s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"),gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
    table.insert(cstyles,s)
    
-   fstr = "@GDexterity    : @C\[@W%3d@C/@W%-3d@C\]@w"
-   s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"))
+   fstr = "@GDexterity    : @C\[@W%3d@C/@W%-3d@C\]     @GSaves   : @C\[@W%5d@C\]@W"
+   s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"),gmcpval("stats.saves"))
    table.insert(cstyles,s)
    
    fstr = "@GConstitution : @C\[@W%3d@C/@W%-3d@C\]     @GHitroll : @C\[@W%5d@C\]@w"
