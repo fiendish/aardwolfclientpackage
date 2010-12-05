@@ -951,7 +951,7 @@ end -- function recoveries_affected_redirect
 function show_spells (t, colour)
  
   for _, v in ipairs (t) do
-      miniColourTell (colour, "",capitalize (v.name))
+      miniColourTell (colour, "black",capitalize (v.name))
           
      if tonumber (v.duration) then
      
@@ -965,7 +965,7 @@ function show_spells (t, colour)
          time_colour = "deeppink"
        end -- if
        
-       miniColourNote (time_colour, "", 
+       miniColourNote (time_colour, "black", 
                     string.format ("%s %4s", string.rep (" ", 25 - #v.name), 
                                    convert_time (time_to_go)))
      else
@@ -978,23 +978,23 @@ end -- show_spells
 function show_status ()
   -- show our status
     
-  miniColourTell ("silver", "", "Position: " .. capitalize (stats.position_str or "unknown"))
+  miniColourTell ("silver", "black", "Position: " .. capitalize (stats.position_str or "unknown"))
   if AFK then
-    miniColourTell ("cyan", "", " (AFK)")
+    miniColourTell ("cyan", "black", " (AFK)")
   end -- AFK
   if low_mana then
-    miniColourTell ("yellow", "", " (Mana low)")
+    miniColourTell ("yellow", "black", " (Mana low)")
   end -- low_mana
   if low_moves then
-    miniColourTell ("yellow", "", " (Moves low)")
+    miniColourTell ("yellow", "black", " (Moves low)")
   end -- low_moves
   
   if not playing then
-    miniColourTell ("cyan", "", " (Not playing)")
+    miniColourTell ("cyan", "black", " (Not playing)")
   end -- not playing
   
   if paused then
-    miniColourTell ("orangered", "", " (Paused)")
+    miniColourTell ("orangered", "black", " (Paused)")
   end -- paused
   
   miniNote("")
@@ -1014,7 +1014,7 @@ function show_brief_version ()
   miniTell("Spellups: " .. count)
   
   if badcount > 0 then
-    miniColourTell ("red", "", " Debuffs: " .. badcount)
+    miniColourTell ("red", "black", " Debuffs: " .. badcount)
   end -- if
   
   count = 0
@@ -1025,7 +1025,7 @@ function show_brief_version ()
   miniNote(" Recoveries: " .. count)
 
   
-  miniColourTell ("olive", "", "Requested: ".. #wanted_buffs)
+  miniColourTell ("olive", "black", "Requested: ".. #wanted_buffs)
   
   local pending, oncooldown = 0, 0
   
@@ -1039,8 +1039,8 @@ function show_brief_version ()
     end -- not cast yet
   end -- for
 
-  miniColourTell ("gray", "", " Pending: " .. pending)
-  miniColourNote ("darkslateblue", "", " Cooldown: " .. oncooldown)
+  miniColourTell ("gray", "black", " Pending: " .. pending)
+  miniColourNote ("darkslateblue", "black", " Cooldown: " .. oncooldown)
   
   show_status ()
   
@@ -1058,11 +1058,10 @@ function show_current_buffs (name, line, wildcards, styles)
   end -- no spells known
   
   blank()
-  drawStuff()
-
+  
   if not IsConnected () then
     miniNote("Spellups will appear here.")
-    miniColourNote ("silver", "", "Not connected to Aardwolf.")
+    miniColourNote ("silver", "black", "Not connected to Aardwolf.")
     miniNote("")
     show_wanted ()
     return
@@ -1095,7 +1094,7 @@ function show_current_buffs (name, line, wildcards, styles)
     end -- for
     miniTell("Spellups affecting you: (" .. count .. ")")
     if badcount > 0 then
-      miniColourTell("red", "", " / (" .. badcount .. ")")
+      miniColourTell("red", "black", " / (" .. badcount .. ")")
     end -- if
     miniNote(":")
     
@@ -1180,16 +1179,17 @@ function show_current_buffs (name, line, wildcards, styles)
   end -- for
  
   if #pending > 0 then
-    miniColourNote ("gray", "", "Pending (" .. #pending .. 
+    miniColourNote ("gray", "black", "Pending (" .. #pending .. 
                   "): " .. table.concat (pending, ", "))
   end -- some pending
   if #awaiting_cooldown > 0 then
-    miniColourNote ("darkslateblue", "", "On cooldown (" .. #awaiting_cooldown .. 
+    miniColourNote ("darkslateblue", "black", "On cooldown (" .. #awaiting_cooldown .. 
                   "): " .. table.concat (awaiting_cooldown, ", "))
   end -- some pending
 
   show_status ()
-  
+  drawStuff()
+
 end -- function show_current_buffs 
 
 ]]>
@@ -1211,13 +1211,13 @@ function show_wanted ()
   end -- no spells known
  
  if #wanted_buffs == 0 then
-    miniColourNote ("olive", "", "You have not requested any spellups.")
+    miniColourNote ("olive", "black", "You have not requested any spellups.")
   else
     local buf_names = {}
     for _, sn in ipairs (wanted_buffs) do
       table.insert (buf_names, capitalize (spells [sn].name))
     end -- for
-    miniColourNote ("olive", "", "Requested (" .. #buf_names .. 
+    miniColourNote ("olive", "black", "Requested (" .. #buf_names .. 
                   "): " .. table.concat (buf_names, ", "))
   end -- if
 end -- show_wanted
