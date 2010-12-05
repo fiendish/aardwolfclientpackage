@@ -63,12 +63,13 @@ require "checkplugin"
 require "serialize"  
 
 MAX_RETRIES = 10  -- max tries we will allow them to fail to cast
-FONT_NAME = "Dina"
-FONT_SIZE = 8
+FONT_NAME = GetVariable("font") or "Dina"
+FONT_SIZE = GetVariable("font_size") or 8
 RESIZER_WIDTH = 15
 TITLE_HEIGHT = 17
-WINDOW_WIDTH = tonumber(GetVariable(GetPluginID().."WINDOW_WIDTH"))
-WINDOW_HEIGHT = tonumber(GetVariable(GetPluginID().."WINDOW_HEIGHT"))
+WINDOW_WIDTH = tonumber(GetVariable("WINDOW_WIDTH"))
+WINDOW_HEIGHT = tonumber(GetVariable("WINDOW_HEIGHT"))
+MIN_SIZE = 40
 
 WINDOW_BACKGROUND_COLOUR = ColourNameToRGB ("black")
 WINDOW_BORDER_COLOUR = ColourNameToRGB("#E8E8E8")
@@ -84,7 +85,6 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
 Win = GetPluginID()
-WinResizer = Win.."resize"
 font_height = ""
 line_height = ""
 windowinfo = ""
@@ -113,7 +113,7 @@ recoveries_xref = {}
 
 function MouseDown(flags, hotspot_id)
     if (hotspot_id == "resize") then
-        startx, starty = WindowInfo (WinResizer, 17), WindowInfo (WinResizer, 18)
+        startx, starty = WindowInfo (Win, 17), WindowInfo (Win, 18)
     end
 end
 
@@ -121,13 +121,18 @@ function CancelMouseDown(flags, hotspot_id)
     drawStuff()
 end
 
-function MouseUp(flags, hotspot_id)
-    if (hotspot_id == "textarea" and flags == 0x20) then
-        -- build menu for current state
-        right_click_menu()
-    else
-        drawStuff()
+function MouseUp(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+       right_click_menu()
     end
+    return true
+end
+
+function LeftClickOnly(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+        return true
+    end
+    return false
 end
 
 -- right click menu
@@ -143,30 +148,37 @@ function right_click_menu ()
         if wanted_font then
             FONT_NAME = wanted_font.name
             FONT_SIZE = wanted_font.size
-            SetVariable (GetPluginID().."font", FONT_NAME)
-            SetVariable (GetPluginID().."font_size", FONT_SIZE)
+            SetVariable ("font", FONT_NAME)
+            SetVariable ("font_size", FONT_SIZE)
             OnPluginInstall()
         end
     end -- if
 end -- right_click_menu
 
-function InstallResizeTag()
-    movewindow.add_drag_handler (WinResizer, 0, 0, 0, 0)
-    WindowAddHotspot(WinResizer, "resize", 0, 0, 0, 0, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-    WindowDragHandler(WinResizer, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-end
-
 function ResizeMoveCallback()
-    posx, posy = WindowInfo (WinResizer, 17), WindowInfo (WinResizer, 18)
-    if (WindowTextWidth(Win, "font"..Win, "WWWSPELLUPS")+2*RESIZER_WIDTH <= WINDOW_WIDTH+posx-startx) then
-        WINDOW_WIDTH = WINDOW_WIDTH+posx-startx
-        startx = posx
-    end
-    if (3*RESIZER_WIDTH+10+line_height+TITLE_HEIGHT <= WINDOW_HEIGHT+posy-starty) then
-        WINDOW_HEIGHT = WINDOW_HEIGHT+posy-starty
-        starty = posy
-    end
-    init(false)
+   --debugp("ResizeMoveCallback()","")
+
+   posx, posy = WindowInfo (Win, 17), WindowInfo (Win, 18)
+   WINDOW_WIDTH = WINDOW_WIDTH + posx - startx
+   startx = posx
+   if (WINDOW_WIDTH < MIN_SIZE) then
+      WINDOW_WIDTH = MIN_SIZE
+      startx = windowinfo.window_left+WINDOW_WIDTH
+   elseif (windowinfo.window_left+WINDOW_WIDTH > GetInfo(281)) then
+      WINDOW_WIDTH = GetInfo(281)-windowinfo.window_left
+      startx = GetInfo(281)
+   end 
+
+   WINDOW_HEIGHT = WINDOW_HEIGHT + posy - starty
+   starty = posy
+   if (WINDOW_HEIGHT < MIN_SIZE) then
+      WINDOW_HEIGHT = MIN_SIZE
+      starty = windowinfo.window_top+WINDOW_HEIGHT
+   elseif (windowinfo.window_top+WINDOW_HEIGHT > GetInfo(280)) then
+      WINDOW_HEIGHT = GetInfo(280)-windowinfo.window_top
+      starty = GetInfo(280)
+   end
+   init(false)
 end
 
 function ResizeReleaseCallback()
@@ -223,8 +235,7 @@ function OnPluginInstall ()
   font_width = WindowTextWidth (Win, "font"..Win, "W")
   
   -- install the window movement handler, get back the window position
-  resizerinfo = movewindow.install (WinResizer, 6, 6, true)
-  windowinfo = movewindow.install (Win, 6, 2, true, {WinResizer})
+  windowinfo  = movewindow.install (Win, miniwin.pos_top_right, 0, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
   
   if WINDOW_WIDTH == nil then
     WINDOW_WIDTH = (font_width*30)+RESIZER_WIDTH -- 30 columns
@@ -234,13 +245,13 @@ function OnPluginInstall ()
   end
 
  -- on plugin install, convert variable into Lua table
-  assert (loadstring (GetVariable (GetPluginID().."wanted_buffs") or "")) ()
-  assert (loadstring (GetVariable (GetPluginID().."spells") or "")) ()
-  assert (loadstring (GetVariable (GetPluginID().."recoveries") or "")) ()
+  assert (loadstring (GetVariable ("wanted_buffs") or "")) ()
+  assert (loadstring (GetVariable ("spells") or "")) ()
+  assert (loadstring (GetVariable ("recoveries") or "")) ()
   
   make_xrefs ()
 
-  if GetVariable (GetPluginID().."enabled") == "false" then
+  if GetVariable ("enabled") == "false" then
     ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
     check (EnablePlugin(GetPluginID (), false))
     return
@@ -256,26 +267,20 @@ function init(firstTime)
     WINDOW_LINES = math.ceil((WINDOW_HEIGHT-TITLE_HEIGHT)/line_height)
     WINDOW_COLUMNS = math.ceil((WINDOW_WIDTH-RESIZER_WIDTH)/font_width)
 
-    WindowCreate(Win, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
-    WindowShow(Win, true)
-
-    -- catch for right-click menu and line selection
-    WindowAddHotspot(Win, "textarea", 0, TITLE_HEIGHT, WINDOW_WIDTH-RESIZER_WIDTH,0, "", "", "MouseDown", "", "MouseUp", "", 2, 0)
-
-    -- add the drag handler so they can move the window around
-    movewindow.add_drag_handler (Win, 0, 0, 0, TITLE_HEIGHT)
-
-    -- put the resizer in place
     if (firstTime == true) then
-        WindowCreate(WinResizer, windowinfo.window_left+WINDOW_WIDTH-RESIZER_WIDTH, windowinfo.window_top+WINDOW_HEIGHT-RESIZER_WIDTH, RESIZER_WIDTH, RESIZER_WIDTH, 0, 6, ColourNameToRGB("pink"))
-        WindowShow(WinResizer, true)
-        InstallResizeTag(WinResizer, RESIZER_WIDTH)
+        WindowCreate(Win, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
+
+        -- add the drag handler so they can move the window around
+        movewindow.add_drag_handler (Win, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
+
+        WindowAddHotspot(Win, "resize", WINDOW_WIDTH-RESIZER_WIDTH, WINDOW_HEIGHT-RESIZER_WIDTH, WINDOW_WIDTH, WINDOW_HEIGHT, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+        WindowDragHandler(Win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
     else
-        WindowPosition(WinResizer, windowinfo.window_left+WINDOW_WIDTH-RESIZER_WIDTH, windowinfo.window_top+WINDOW_HEIGHT-RESIZER_WIDTH, 0, 6)
+        WindowResize(Win, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND_COLOUR)
+        WindowMoveHotspot(Win, "resize", WINDOW_WIDTH-RESIZER_WIDTH, WINDOW_HEIGHT-RESIZER_WIDTH, WINDOW_WIDTH, WINDOW_HEIGHT)
     end
     
-    -- erase everything
-    blank()
+    WindowShow(Win, true)
     
     drawStuff()
 end
@@ -283,12 +288,6 @@ end
 function drawStuff()
     -- draw border
     WindowRectOp (Win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
-
-    -- Title bar
-    WindowRectOp(Win, 5, 0, 0, 0, TITLE_HEIGHT, 5,  15 + 0x800)
-
-    -- Title
-    WindowText(Win, "font"..Win, "SPELLUPS", ((WINDOW_WIDTH)-(5*line_height))/2, (TITLE_HEIGHT-line_height)/2, WINDOW_WIDTH, TITLE_HEIGHT, ColourNameToRGB("black"), false)
     
     -- resize tag    
     WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
@@ -307,9 +306,10 @@ left = TEXT_INSET
 
 -- erase everything
 function blank()
-    WindowRectOp(Win, 2, 0, TITLE_HEIGHT, 0, 0, WINDOW_BACKGROUND_COLOUR)
+    WindowRectOp(Win, 2, 1, 1, -1, -1, WINDOW_BACKGROUND_COLOUR)
     left = TEXT_INSET
     line = 0
+    drawStuff()
 end -- blank
 
 function miniTell(text)
@@ -362,7 +362,6 @@ end -- OnPluginClose
 
 function OnPluginEnable ()
   WindowShow (Win, true)
-  WindowShow (WinResizer, true)
  
   checkplugin ("0e191dc7829ff2ac2433c2d8", "AFK_Detector.xml")
   checkplugin ("8a710e0783b431c06d61a54c", "Stats_Detector.xml")
@@ -392,7 +391,6 @@ function OnPluginDisable ()
   TelnetOptionOff (TELOPT_SKILLGAINS)
 
   WindowShow( Win, false ) 
-  WindowShow( WinResizer, false)
 end -- OnPluginDisable
 
 
@@ -417,18 +415,15 @@ end -- resume_buff_loop
 --   SAVE STATE ---
 
 function OnPluginSaveState ()
-  SetVariable (GetPluginID().."wanted_buffs", 
-               "wanted_buffs = " .. serialize.save_simple (wanted_buffs))
-  SetVariable (GetPluginID().."spells", 
-               "spells = " .. serialize.save_simple (spells))
-  SetVariable (GetPluginID().."recoveries", 
-               "recoveries = " .. serialize.save_simple (recoveries))
-               
-  SetVariable (GetPluginID().."enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+  SetVariable ("wanted_buffs", "wanted_buffs = " .. serialize.save_simple (wanted_buffs))
+  SetVariable ("spells", "spells = " .. serialize.save_simple (spells))
+  SetVariable("recoveries", "recoveries = " .. serialize.save_simple (recoveries))
+  SetVariable("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
   movewindow.save_state (Win)
-  movewindow.save_state (WinResizer)
-  SetVariable(GetPluginID().."WINDOW_WIDTH", WINDOW_WIDTH)
-  SetVariable(GetPluginID().."WINDOW_HEIGHT", WINDOW_HEIGHT)
+  SetVariable("WINDOW_WIDTH", WINDOW_WIDTH)
+  SetVariable("WINDOW_HEIGHT", WINDOW_HEIGHT)
+  SetVariable ("font", FONT_NAME)
+  SetVariable ("font_size", FONT_SIZE)
 end -- function OnPluginSaveState
 
 --[[
