@@ -56,10 +56,10 @@ local LEFT_MARGIN     = 10
 local TOP_MARGIN      = 5
 local stacked = 1
 local showLabels = 1
-local numBars = 5
-local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Mana={"Mana  :",true,"Mana:",0xff5500,0x442200}, Moves={"Moves :",true,"Moves:",0x00ffff,0x004444}, TNL={"TNL   :",true,"TNL:",0xffffff,0x444444}, Enemy={"Enemy :",true,"Enemy:",0x0000ff,0x000044}}
+local numBars = 6
+local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Mana={"Mana  :",true,"Mana:",0xff5500,0x442200}, Moves={"Moves :",true,"Moves:",0x00ffff,0x004444}, TNL={"TNL   :",true,"TNL:",0xffffff,0x444444}, Enemy={"Enemy :",true,"Enemy:",0x0000ff,0x000044}, Align={"Align :",true, "Alignment:",0x0000ff,0x00ffff}}
 showBar = defaultShowBar
-local barIndex = {"Health", "Mana", "Moves", "TNL", "Enemy"}
+local barIndex = {"Health", "Mana", "Moves", "TNL", "Enemy", "Align"}
 -- Variables not saved.
 startx           = ""  
 starty           = ""
@@ -213,6 +213,34 @@ function DisplayStatsPage()
              end
              gauge(win,"Enemy:",tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,3,0x000000,0x222222,nil) 
           end
+          if stacked == 1 then
+              ypos = ypos + line_height + 1
+          else
+              xpos = xpos+bar_width+LEFT_MARGIN
+          end
+      end
+      bar = "Align"
+      if (showBar[bar][2] == true) then
+          alignment = tonumber(gmcpval("status.align"))
+          if alignment ~= nil then
+              zeroed_alignment = alignment+2500
+              bar_colour = ((zeroed_alignment<1775 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
+              if showLabels == 1 then
+                  if stacked == 1 then
+                      Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=bar_colour}}, xpos, ypos)
+                  else
+                      xpos = Display_Styled_Line (win, font_id, {{text=showBar[bar][3],textcolour=bar_colour}}, xpos, ypos)
+                  end
+              end
+
+              WindowLine (win, xpos+label_width+line_height/2, math.ceil(ypos+line_height/2), xpos+label_width+bar_width-line_height/2, math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
+              WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, bar_colour/2, 0, 2, bar_colour, 0)
+              if stacked == 1 then
+                  ypos = ypos + line_height + 1
+              else
+                  xpos = xpos+bar_width+LEFT_MARGIN
+              end
+          end
       end
    end
 
@@ -275,7 +303,7 @@ function right_click_menu ()
         end
     end
     menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
-    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|<|Reset Defaults"
+    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Good|Evil|<|<|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -303,18 +331,18 @@ function right_click_menu ()
                 stacked = 1   
                 height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
             end
-        elseif numResult >= 4 and numResult <= 8 then
+        elseif numResult >= 4 and numResult <= 9 then
            showBar[barIndex[numResult-3]][2] = not showBar[barIndex[numResult-3]][2]
-        elseif numResult >= 9 and numResult <= 18 then
+        elseif numResult >= 10 and numResult <= 21 then
            local colourIndex = 5
            if (numResult % 2 == 1) then
               colourIndex = 4
            end
-           local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-8)/2)]][colourIndex])
+           local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex])
            if newcolour ~= -1 then
-              showBar[barIndex[math.ceil((numResult-8)/2)]][colourIndex] = newcolour
+              showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex] = newcolour
            end
-        elseif numResult == 19 then
+        elseif numResult == 22 then
            font_name = default_font_name
            font_size = default_font_size
            numBars = 5
