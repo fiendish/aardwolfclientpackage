@@ -224,7 +224,7 @@ function DisplayStatsPage()
           alignment = tonumber(gmcpval("status.align"))
           if alignment ~= nil then
               zeroed_alignment = alignment+2500
-              bar_colour = ((zeroed_alignment<1775 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
+              bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
               if showLabels == 1 then
                   if stacked == 1 then
                       Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=bar_colour}}, xpos, ypos)
