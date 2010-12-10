@@ -3,34 +3,31 @@
 
 <muclient>
 <plugin
-   name="Aardwolf_Spellups"
-   author="Nick Gammon"
-   id="b0a9cef2629fae2eacf97699"
+   name="Aardwolf_Spellups_miniwin"
+   author="Nick Gammon/Bast/Fiendish"
+   id="b0a9cef2629fae2eacf97603"
    language="Lua"
    purpose="Does Aardwolf spellups"
    date_written="2008-07-05"
    requires="4.30"
-   version="1.02"
+   version="1.1"
    save_state="y"
    >
 <description trim="y">
-
 spellups            --> display current spellups in output window
 
 spellup all         --> cast all possible spellups
 spellup none        --> remove all spellups
 
-spellup a,b,c       --> add spells a, b, c in that order 
+spellup a,b,c       --> add spells a, b, c in that order
                       (eg. spellup shield, blur, detect magic)
                       (or: spellup 72, 171, 35)
-
 (or)
-
-Spellups: a, b, c   --> add spells a, b, c 
+Spellups: a, b, c   --> add spells a, b, c
                       (you can copy and paste output from current list)
 
-
-spellup + blur, avoid    --> add more to the current list
+spellup + blur, avoid:3    --> add more to the current list
+  to add a spell in a certain place add a : then the place number
 spellup - night vision, detect magic   --> remove those from the list
 
 spellup fast    --> cast all spellups immediately, as fast as you can
@@ -44,23 +41,55 @@ spellup full    --> show full details
 spellup other (name) --> try to spellup another player with all spellups
                           (eg. spellup other johnsmith)
 
+spellup block   --> block a spell with another spell
+                           (eg. spellup block + 68 121)
+spellup disable --> disable a spell without taking it out of the list
+
 spellup help    --> this message
+
 </description>
+
 
 </plugin>
 
+<triggers>
+
+  <trigger
+   enabled="y"
+   match="Welcome to Aardwolf. May your adventures be mystical, challenging and rewarding."
+   sequence="100"
+   send_to="12"
+  >
+  <send>
+  spellup_refresh()
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   match="############# Reconnecting to Game #############"
+   sequence="100"
+   send_to="12"
+  >
+  <send>
+  spellup_refresh()
+  </send>
+  </trigger>
+</triggers>
 
 <!--  Shared script stuff  -->
+
 
 <script>
 <![CDATA[
 
+MAX_RETRIES = 10  -- max tries we will allow them to fail to cast
+
 require "movewindow"  -- load the movewindow.lua module
-require "tprint"
-require "commas"
-require "addxml"
 require "checkplugin"
-require "serialize"  
+require "serialize"
+require "utils"
+require "commas"
 
 MAX_RETRIES = 10  -- max tries we will allow them to fail to cast
 FONT_NAME = GetVariable("font") or "Dina"
@@ -79,10 +108,10 @@ TEXT_COLOUR = ColourNameToRGB("#E8E8E8")
 TEXT_INSET = 5
 
 lines = {}  -- table of display content
-
--- pull in telnet option handling
+  -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
 
 Win = GetPluginID()
 font_height = ""
@@ -94,18 +123,28 @@ cooldowns = {}       -- what is on cooldown
 cast_attempt_count = {}  -- what we tried to cast
 failed_attempt_count = {}  -- what we failed to cast
 skip = {}            -- ones we have decided to ignore for now
-stats = { position = "0", mana = "0", moves = "0" }           -- table will be replaced by Stats_Detector plugin
+stats = {}           -- table will be replaced by Stats_Detector plugin
+fdebug = false
+
+status = {
+  state = 1,
+  statestring = 'login',
+}
 
 fighting = false
 playing = false
 last_buff = os.time ()
+disablednum = -1
+waiting = -1
 
 -- the next 3 items are saved to the plugin state file
 
--- known spells and recoveroes indexed by number
+
+-- known spells and recoveries indexed by number
 spells = {}      -- spells that exist
 recoveries = {}  -- recoveries that exist
 wanted_buffs = {}  -- what spellups they want
+blockers = {}
 
 -- cross-reference for spells - given a name, returns a number
 spells_xref = {}
@@ -117,6 +156,11 @@ function MouseDown(flags, hotspot_id)
     end
 end
 
+function justWords(str)
+  local t = {}
+  local function helper(word) table.insert(t, word) return "" end
+  if not str:gsub("%w+", helper):find"%S" then return t end
+end  
 function CancelMouseDown(flags, hotspot_id)
     drawStuff()
 end
@@ -133,6 +177,10 @@ function LeftClickOnly(flags, hotspot_id, win)
         return true
     end
     return false
+end
+
+function trim(s)
+    return(string.gsub(s, "^%s*(.-)%s*$", "%1"))
 end
 
 -- right click menu
@@ -188,26 +236,91 @@ end
 
 function capitalize (s)
   return string.sub (s, 1, 1):upper () .. string.sub (s, 2):lower ()
-end -- capitalize 
+end -- capitalize
+
+function pdebug(...)
+  if fdebug then
+    print(...)
+  end
+end -- pdebug
 
 function PrefixCheck (t, s)
-   for name, item in pairs (t) do
-      if string.match (name, "^" .. s) then -- prefix match, so "avoid" matches "avoidance"
-        return name, item
-      end -- if name matches
-    end -- checking table
-
-   return nil  -- not found
+  for name, item in pairs (t) do
+    if string.match (name, "^" .. s) then -- prefix match, so "avoid" matches "avoidance"
+      return name, item
+    end -- if name matches
+  end -- checking table
+  return nil  -- not found
 end -- PrefixCheck
 
 function remove_spellup (sn)
   for i, buff in ipairs (wanted_buffs) do
-     if sn == buff then
-        table.remove (wanted_buffs, i)
-        return true
-     end -- if
+    if sn == buff then
+      table.remove (wanted_buffs, i)
+      return true
+    end -- if
   end -- for
 end -- remove_spellup
+
+function isblocked(sn)
+  if blockers[sn] then
+    for _, blocker in ipairs(blockers[sn]) do
+      if current_buffs[blocker] then
+        return true
+      end
+    end
+  end
+  return false
+end
+
+function add_blocker(sn, blk)
+  if not blockers[sn] then
+    table.insert(blockers, sn, {})
+  end
+  for i, blocker in ipairs(blockers[sn]) do
+    if blocker == blk then
+      return true
+    end
+  end
+  table.insert(blockers[sn], blk)
+  return true
+end -- add_disabled
+
+function remove_blocker(sn, blk)
+  if not blockers[sn] then
+    return
+  end
+  for i, blocker in ipairs(blockers[sn]) do
+    if blocker == blk then
+      table.remove(blockers[sn], i)
+      if #blockers[sn] == 0 then
+        blockers[sn] = nil
+      end
+      return true
+    end
+  end
+  ColourNote ("yellow", "", "spell " .. sn .. " is not blocked by " .. blk)
+  return false
+end
+
+function isdisabled(sn)
+  if blockers[sn] then
+    for _, blocker in ipairs(blockers[sn]) do
+      if blocker == disablednum then
+        return true
+      end
+    end
+  end
+  return false
+end
+
+function add_disabled(sn)
+  return add_blocker(sn, disablednum)
+end -- add_disabled
+
+function remove_disabled(sn)
+  return remove_blocker(sn, disablednum)
+end
 
 -- make tables that let us convert spell name to spell number
 function make_xrefs ()
@@ -215,17 +328,43 @@ function make_xrefs ()
   for k, v in pairs (spells) do
     spells_xref [v.name] = k
   end -- for each spell
- 
+
   recoveries_xref = {}
   for k, v in pairs (recoveries) do
     recoveries_xref [v.name] = k
   end -- for each recovery
-
 end -- make_xrefs
 
+function find_spellsn(item)
+  if not item then
+    ColourNote ("red", "", "A nil value was passed to find_spellsn")
+    return false
+  end
+  item = trim (item):lower ()
+  local sn = tonumber (item)
+  local name
+  invalid = false
+  -- see if numeric spell numbner given
+  if sn and not spells [sn] then
+    ColourNote ("red", "", "Spell number '" .. item .. "' does not exist.")
+    invalid = true
+    sn = nil
+  elseif not sn then
+    -- look up word
+    sn = spells_xref [item]  -- look for exact match first
+                             -- (otherwise "bless" might match "bless weapon")
+    if not sn then
+      _, sn = PrefixCheck (spells_xref, item)
+    end -- not found by exact match
+    if not sn then
+      ColourNote ("red", "", "Spell named '" .. item .. "' does not exist.")
+      invalid = true
+    end -- name mot found
+  end -- if
+  return sn, invalid
+end -- find_spell
 
 --   PLUGIN INSTALL ---
-
 function OnPluginInstall ()
   -- Dummy window to get font characteristics
   check (WindowCreate (Win, 0, 0, 1, 1, 0, 0, WINDOW_BACKGROUND_COLOUR) )
@@ -244,11 +383,12 @@ function OnPluginInstall ()
     WINDOW_HEIGHT = TITLE_HEIGHT+(line_height*30)+2 -- 30 lines
   end
 
- -- on plugin install, convert variable into Lua table
+  -- on plugin install, convert variable into Lua table
   assert (loadstring (GetVariable ("wanted_buffs") or "")) ()
   assert (loadstring (GetVariable ("spells") or "")) ()
   assert (loadstring (GetVariable ("recoveries") or "")) ()
-  
+  assert (loadstring (GetVariable ("blockers") or "")) ()
+
   make_xrefs ()
 
   if GetVariable ("enabled") == "false" then
@@ -256,10 +396,9 @@ function OnPluginInstall ()
     check (EnablePlugin(GetPluginID (), false))
     return
   end -- they didn't enable us last time
-  
+
   init(true)
   OnPluginEnable ()  -- do initialization stuff
-  
 end -- OnPluginInstall
 
 function init(firstTime)
@@ -288,16 +427,18 @@ end
 function drawStuff()
     -- draw border
     WindowRectOp (Win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
+    WindowRectOp (Win, 1, 1, 1, -1, -1, WINDOW_BORDER_COLOUR/2)
     
-    -- resize tag    
-    WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+1, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+2, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+4, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+5, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+7, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+8, ColourNameToRGB ("dimgray"), 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+10, ColourNameToRGB ("white"), 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-RESIZER_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-RESIZER_WIDTH+11, ColourNameToRGB ("dimgray"), 0, 1)
+    -- draw the resize widget bottom right corner.
+    WindowLine(Win, WINDOW_WIDTH-3, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-3, 0xffffff, 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-4, 0x696969, 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-6, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-6, 0xffffff, 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-7, 0x696969, 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-9, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-9, 0xffffff, 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-10, 0x696969, 0, 1)
+    WindowLine(Win, WINDOW_WIDTH-12, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-12, 0xffffff, 0, 2)
+    WindowLine(Win, WINDOW_WIDTH-13, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-13, 0x696969, 0, 1)
+
     Redraw()
 end
 
@@ -339,18 +480,21 @@ end -- miniNote
 
 function OnPluginDisconnect ()
   disconnected = true
-  coroutine.resume (thread, "disconnect")  
+  current_buffs = {}
+  EnableTimer("display_timer", false)
+  coroutine.resume (thread, "disconnect")
 end -- OnPluginDisconnect
 
 function OnPluginConnect ()
   TelnetOptionOn (TELOPT_SPELLUP)
   TelnetOptionOn (TELOPT_SKILLGAINS)
   disconnected = false
-  
+  have_slist = false
   thread = coroutine.create (buff_loop)
-  resume_buff_loop ("connect")
-  
+  EnableTimer("display_timer", true)
+  --resume_buff_loop ("connect")
 end -- function OnPluginConnect
+
 
 function OnPluginClose ()
   -- if enabled
@@ -360,30 +504,30 @@ function OnPluginClose ()
   end -- if enabled
 end -- OnPluginClose
 
+
 function OnPluginEnable ()
+  checkplugin ("3e7dedbe37e44942dd46d264", "GMCP_Handler.xml")
+  checkplugin ("aaa79afcb20fa11787c5a327", "broadcast_state.xml")
   WindowShow (Win, true)
- 
-  checkplugin ("0e191dc7829ff2ac2433c2d8", "AFK_Detector.xml")
-  checkplugin ("8a710e0783b431c06d61a54c", "Stats_Detector.xml")
-  checkplugin ("f5b05e8826711cdb0d141939", "Playing_Detector.xml")
-   
   miniNote("Spellups will appear here.")
 
   miniNote("")
 
+  disconnected = true
   -- if we are connected when the plugin loads, it must have been reloaded whilst playing
   if IsConnected () then
     TelnetOptionOn (TELOPT_REQUEST_STATUS) -- get actual status (eg. afk, playing)
     OnPluginConnect ()
   end -- if already connected
-  
-  -- see if we are playing at install time
-  playing = GetPluginVariable ("f5b05e8826711cdb0d141939", "playing") == "y"
-  if playing then
-     Send "slist noprompt"
-  end
 
-  
+  -- see if we are playing at install time
+  tstatus = GetPluginVariableList("aaa79afcb20fa11787c5a327")
+  status = tstatus or status
+  if status.statestring == "active" then
+    if getStats() then
+      spellup_refresh()
+    end
+  end
 end -- OnPluginEnable
 
 function OnPluginDisable ()
@@ -393,18 +537,28 @@ function OnPluginDisable ()
   WindowShow( Win, false ) 
 end -- OnPluginDisable
 
-
 function resume_buff_loop (reason, other_reason)
+  pdebug("res_buf_loop: ", reason, other_reason)
+  pdebug("Waiting: ", waiting)
 
   if disconnected then
     return
   end -- don't bother
 
+  if waiting > 0 then
+    if reason == "sfail" or reason == "affecton" then
+      --pdebug("resume_buff_loop: Changing waiting to -1")
+      --waiting = -1
+    else
+      return
+    end
+  end
+
   if coroutine.status (thread) ~= "suspended" then
     ColourNote ("red", "yellow", "Problem with spellup plugin - please reinstall.")
     return
   end -- if problem
-  
+
   local ok, err = coroutine.resume (thread, reason, other_reason)
   if not ok then
      print (debug.traceback (thread))
@@ -413,11 +567,16 @@ function resume_buff_loop (reason, other_reason)
 end -- resume_buff_loop
 
 --   SAVE STATE ---
-
 function OnPluginSaveState ()
-  SetVariable ("wanted_buffs", "wanted_buffs = " .. serialize.save_simple (wanted_buffs))
-  SetVariable ("spells", "spells = " .. serialize.save_simple (spells))
-  SetVariable("recoveries", "recoveries = " .. serialize.save_simple (recoveries))
+  SetVariable ("wanted_buffs",
+               "wanted_buffs = " .. serialize.save_simple (wanted_buffs))
+  SetVariable ("blockers",
+               "blockers = " .. serialize.save_simple (blockers))
+  SetVariable ("spells",
+               "spells = " .. serialize.save_simple (spells))
+  SetVariable ("recoveries",
+               "recoveries = " .. serialize.save_simple (recoveries))
+
   SetVariable("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
   movewindow.save_state (Win)
   SetVariable("WINDOW_WIDTH", WINDOW_WIDTH)
@@ -428,38 +587,35 @@ end -- function OnPluginSaveState
 
 --[[
 Spell targets are:
-
    0 : No target
-   1 : Combat / Attack  
+   1 : Combat / Attack
    2 : Spellup/cure - can cast on others.
-   3 : Spellup/cure - self only.   
+   3 : Spellup/cure - self only.
    4 : Objects.
 
-  Skilltype:
-  
-   
+Skilltype:
   1 for spell,
   2 for skill.
 
  --]]
- 
+
 -- parse spellheaders line, break into pieces
 function parse_spell_line (line)
-  local sn, name, target, duration, percent, recovery, skilltype = 
-     string.match (line, "^(%d+)%,([A-Za-z0-9 ]+)%,(%d+)%,(%d+)%,(%d+),(-?%d+),(%d+)$")
+  local sn, name, target, duration, percent, recovery, skilltype =
+    string.match (line, "^(%d+)%,([A-Za-z0-9 ]+)%,(%d+)%,(%d+)%,(%d+),(-?%d+),(%d+)$")
   if not sn then
-    ColourNote ("white", "re,d", "Invalid spellheaders line: " .. line)
+    ColourNote ("white", "red", "Invalid spellheaders line: " .. line)
     return nil
   end -- not a valid spell name
-  
-  return tonumber (sn), 
+
+  return tonumber (sn),
          trim (name:lower()),
          tonumber (target),
          tonumber (duration),
          tonumber (percent),
          tonumber (recovery),
          tonumber (skilltype)
-         
+
 end -- parse_spell_line
 
 -- parse recoveries line, break into pieces
@@ -470,71 +626,66 @@ function parse_recoveries_line (line)
     ColourNote ("white", "red", "Invalid recoveries line: " .. line)
     return nil
   end -- not a valid spell name
-  
+
   return tonumber (sn), trim (name:lower ()), tonumber (duration)
- 
 end -- parse_recoveries_line
 
+function getStats()
+  res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", "char")
+  tt = assert (loadstring ('return ' .. gmcparg or ""))()
+
+  if tt['vitals'] and tt['stats'] and tt['maxstats'] and tt['worth'] and tt['status'] and tt['base'] then
+    stats = tt
+    return true
+  end
+
+  return false
+end
 
 function OnPluginBroadcast (msg, id, name, text)
- 
-  local old_fighting = fighting
-  local old_playing = playing
-  local old_AFK = AFK
-  local old_position = stats.position
-  local old_mana = stats.mana
-  local old_moves = stats.moves
- 
-  -- AFK check
-  if id == "0e191dc7829ff2ac2433c2d8" then
-    AFK = text == "y"
-     
-  -- stats change
-  elseif id == "8a710e0783b431c06d61a54c" then
-    stats = GetPluginVariableList("8a710e0783b431c06d61a54c")
-    fighting = stats.fighting == "y"
-    
-  -- playing status
-  elseif id == "f5b05e8826711cdb0d141939" then
-    playing = text == "y"
+  if next(stats) then
+    local old_mana = stats.vitals.mana
+    local old_moves = stats.vitals.moves
+  end
+  local new_stats = false
+  local old_state = status.state
 
+
+  -- stats change
+  if id == '3e7dedbe37e44942dd46d264' then
+    if text:find("char") then
+      if getStats() then
+        if not next(stats) then
+          newstats = true
+        end
+      end
+    end
+  elseif id == "aaa79afcb20fa11787c5a327" then
+    status = GetPluginVariableList("aaa79afcb20fa11787c5a327")
   end -- if
 
-  if AFK ~= old_AFK then
-    -- if we are too quick, it rejects it
-    ResetTimer ("affects_timer")  -- heartbeat not needed for a while yet
-  elseif playing ~= old_playing then
-     resume_buff_loop ("playing_change", playing)
-  elseif fighting ~= old_fighting then
-     resume_buff_loop ("fighting_change", fighting)
-  elseif stats.position ~= old_position then
-     resume_buff_loop ("position_change", stats.position)
-  elseif tonumber (stats.mana) > tonumber (old_mana) then
-     low_mana = nil
-     resume_buff_loop ("more_mana", stats.mana)
-  elseif tonumber (stats.moves) > tonumber (old_moves) then
-     low_moves = nil
-     resume_buff_loop ("more_moves", stats.moves)
+  if old_state ~= status.state then
+    waiting = -1
+    resume_buff_loop ("playing_change", status.state)
+  elseif new_stats then
+    resume_buff_loop("newstats")
+  elseif next(stats) and not (old_mana == nil or old_moves == nil) then
+    pdebug("stats.vitals.mana: ", stats.vitals.mana, " old_mana: ", old_mana)
+    if tonumber (stats.vitals.mana) > tonumber (old_mana) then
+      low_mana = nil
+      resume_buff_loop ("more_mana", stats.vitals.mana)
+    elseif tonumber (stats.vitals.moves) > tonumber (old_moves) then
+      low_moves = nil
+      resume_buff_loop ("more_moves", stats.vitals.moves)
+    end
   end -- something changed
-  
- old_fighting = fighting
- old_playing = playing
- old_AFK = AFK
- old_position = stats.position
- old_mana = stats.mana
- old_moves = stats.moves
-  
 end  -- OnPluginBroadcast
-
 
 ]]>
 </script>
 
-
 <!--  {spellheaders}  -->
-
 <triggers>
-
  <trigger
    enabled="y"
    match="{spellheaders noprompt}"
@@ -544,7 +695,7 @@ end  -- OnPluginBroadcast
    sequence="100"
   >
   </trigger>
-    
+
   <trigger
    enabled="n"
    match="*"
@@ -553,17 +704,15 @@ end  -- OnPluginBroadcast
    omit_from_output="y"
    sequence="10"
   >
-  </trigger>  
-  
+  </trigger>
 </triggers>
-
 
 <script>
 <![CDATA[
 
 -- spells redirector
 function spellheaders_redirect (name, line, wildcards, styles)
-  
+
   -- start of spells list? remove old ones
   if name == "start_spellheaders" then
     spells = {}
@@ -572,38 +721,34 @@ function spellheaders_redirect (name, line, wildcards, styles)
     return
   end -- if
 
-  if line == "{/spellheaders}" then  
+  if line == "{/spellheaders}" then
     EnableTrigger ("multi_line_spellheaders", false)  -- no more lines to go
     ColourNote ("green", "", "Loaded information about " .. spells_count .. " spells.")
     make_xrefs ()
     SaveState ()
     return
   end -- if
-  
+
   local sn, name, target, duration, percent, recovery, skilltype = parse_spell_line (line)
-  
+
   if not sn then return end
-  
-  spells [sn] = { 
+
+  spells [sn] = {
       name = name:lower (),   -- name of spell
       target = target,        -- target code
       percent = percent,      -- percent known for this character
       recovery = recovery,    -- depends on which recovery
       skilltype = skilltype,  -- 1 = spell, 2 = skill
       } -- end spells table item
-      
+
   spells_count = spells_count + 1
-  
-end -- function spellheaders_redirect 
+
+end -- function spellheaders_redirect
 ]]>
 </script>
 
-
-
 <!--  {spellheaders spellups}  -->
-
 <triggers>
-
  <trigger
    enabled="y"
    match="{spellheaders spellup noprompt}"
@@ -613,7 +758,7 @@ end -- function spellheaders_redirect
    sequence="100"
   >
   </trigger>
-    
+
   <trigger
    enabled="n"
    match="*"
@@ -622,61 +767,54 @@ end -- function spellheaders_redirect
    omit_from_output="y"
    sequence="10"
   >
-  </trigger>  
-  
+  </trigger>
 </triggers>
-
 
 <script>
 <![CDATA[
 
 -- spells redirector
 function spellups_redirect (name, line, wildcards, styles)
-  
+
   -- start of spells list? remove old ones
   if name == "start_spellups" then
-  
     -- mark all as not spellups for now
     for k, v in pairs (spells) do
-      v.spellup = false
+        v.spellup = false
     end -- for
-    
+
     EnableTrigger ("multi_line_spellups", true)  -- capture subsequent lines
     return
   end -- if
 
-  if line == "{/spellheaders}" then  
+  if line == "{/spellheaders}" then
     EnableTrigger ("multi_line_spellups", false)  -- no more lines to go
     have_slist = true  -- we now know all we need to
     make_xrefs ()
     SaveState ()
+    resume_buff_loop("have_slist")
     return
   end -- if
-  
+
   local sn, name, target, duration, percent, recovery, skilltype = parse_spell_line (line)
-  
+
   if not sn then return end
-  
-  spells [sn] = { 
+
+  spells [sn] = {
       name = name:lower (),   -- name of spell
       target = target,        -- target code
       percent = percent,      -- percent known for this character
       recovery = recovery,    -- depends on which recovery
       spellup = true,         -- this is a spellup
       skilltype = skilltype,  -- 1 = spell, 2 = skill
-            } -- end spells table item
-      
+  } -- end spells table item
 
-end -- function spellups_redirect 
+end -- function spellups_redirect
 ]]>
 </script>
 
 <!--  {spellheaders affected}  -->
-
-
 <triggers>
-
-  
  <trigger
    enabled="y"
    match="{spellheaders affected noprompt}"
@@ -686,7 +824,7 @@ end -- function spellups_redirect
    sequence="100"
   >
   </trigger>
-    
+
   <trigger
    enabled="n"
    match="*"
@@ -695,51 +833,46 @@ end -- function spellups_redirect
    omit_from_output="y"
    sequence="10"
   >
-  </trigger>  
-    
+  </trigger>
 </triggers>
-
 
 <script>
 <![CDATA[
 
 -- current affects redirector
 function affected_redirect (name, line, wildcards, styles)
-  
+
   -- start of affected list? remove old ones
   if name == "start_affected" then
-  
     -- we must leave the "true" entries, because they won't be on the list possibly
     for k, v in pairs (current_buffs) do
       if v ~= true then
         current_buffs [k] = nil
-      end -- if    
+      end -- if
     end -- for
     check (EnableTrigger ("multi_line_affected", true))  -- capture subsequent lines
     return
   end -- if
 
-  if line == "{/spellheaders}" then  
+  if line == "{/spellheaders}" then
     check (EnableTrigger ("multi_line_affected", false))  -- no more lines to go
     return
   end -- if
-  
+
   local sn, name, target, duration, percent, recovery, skilltype = parse_spell_line (line)
 
   if sn then
     current_buffs [sn] = os.time () + duration
   end  -- if
-  
-end -- function affected_redirect 
+
+end -- function affected_redirect
+
 
 ]]>
 </script>
 
-
 <!--  {spellheaders learned}  -->
-
 <triggers>
-   
 <trigger
    enabled="y"
    match="{spellheaders learned noprompt}"
@@ -749,7 +882,7 @@ end -- function affected_redirect
    sequence="100"
   >
   </trigger>
-    
+
   <trigger
    enabled="n"
    match="*"
@@ -758,56 +891,48 @@ end -- function affected_redirect
    omit_from_output="y"
    sequence="10"
   >
-  </trigger>  
-  
+  </trigger>
 </triggers>
-
 
 <script>
 <![CDATA[
 
 -- learned spells redirector
 function learned_redirect (name, line, wildcards, styles)
-  -- start of learned list? 
+  -- start of learned list?
   if name == "start_learned" then
-  
     -- reset learned amount
     for sn, v in pairs (spells) do
       v.percent = 0
     end -- for
-    
+
     check (EnableTrigger ("multi_line_learned", true))  -- capture subsequent lines
     return
   end -- if
 
-  if line == "{/spellheaders}" then  
+  if line == "{/spellheaders}" then
     check (EnableTrigger ("multi_line_learned", false))  -- no more lines to go
     return
   end -- if
-  
+
   local sn, name, target, duration, percent, recovery, skilltype = parse_spell_line (line)
 
   -- update our percent learned
   if sn then
     if spells[sn] == nil then
-       Note("New spells have been added. Please type 'spellup refresh'")
+      Note("New spells have been added. Please type 'spellup refresh'")
     else
-       spells [sn].percent = percent
+      spells [sn].percent = percent
     end
   end  -- if
-  
-end -- function learned_redirect 
+
+end -- function learned_redirect
 
 ]]>
 </script>
 
-
-
 <!--  {recoveries}  -->
-
 <triggers>
-
- 
 <trigger
    enabled="y"
    match="{recoveries noprompt}"
@@ -817,7 +942,7 @@ end -- function learned_redirect
    sequence="100"
   >
   </trigger>
-  
+
   <trigger
    enabled="n"
    match="*"
@@ -826,20 +951,15 @@ end -- function learned_redirect
    omit_from_output="y"
    sequence="10"
   >
-  </trigger>  
-    
-  
+  </trigger>
 </triggers>
-
 
 <script>
 <![CDATA[
 
-
-
 -- cooldowns redirector
 function recoveries_redirect (name, line, wildcards, styles)
-  
+
   -- start of recoveries list? remove old ones
   if name == "start_recoveries" then
     recoveries = {}
@@ -848,37 +968,30 @@ function recoveries_redirect (name, line, wildcards, styles)
     return
   end -- if
 
-  if line == "{/recoveries}" then  
+  if line == "{/recoveries}" then
     EnableTrigger ("multi_line_recoveries", false)  -- no more lines to go
     ColourNote ("green", "", "Loaded information about " .. recoveries_count .. " recoveries.")
     make_xrefs ()
     SaveState ()
     return
   end -- if
-  
+
   local sn, name, duration = parse_recoveries_line (line)
-  
+
   if not sn then
     return
   end -- not a valid spell name
- 
+
   recoveries [sn] = { name = name  }
   recoveries_count = recoveries_count + 1
-  
-end -- function recoveries_redirect 
 
+end -- function recoveries_redirect
 
 ]]>
 </script>
 
-
-
-
 <!--  {recoveries affected}  -->
-
 <triggers>
-
-    
 <trigger
    enabled="y"
    match="{recoveries affected noprompt}"
@@ -888,7 +1001,7 @@ end -- function recoveries_redirect
    sequence="100"
   >
   </trigger>
-  
+
   <trigger
    enabled="n"
    match="*"
@@ -897,18 +1010,15 @@ end -- function recoveries_redirect
    omit_from_output="y"
    sequence="10"
   >
-  </trigger>  
-  
-
+  </trigger>
 </triggers>
-
 
 <script>
 <![CDATA[
 
 -- cooldowns redirector
 function recoveries_affected_redirect (name, line, wildcards, styles)
-  
+
   -- start of recoveries list? remove old ones
   if name == "start_affected_recoveries" then
     cooldowns = {}
@@ -916,40 +1026,36 @@ function recoveries_affected_redirect (name, line, wildcards, styles)
     return
   end -- if
 
-  if line == "{/recoveries}" then  
+  if line == "{/recoveries}" then
     check (EnableTrigger ("multi_line_affected_recoveries", false))  -- no more lines to go
     return
   end -- if
-  
+
   local sn, name, duration = parse_recoveries_line (line)
-  
+
   if not sn then
     return
   end -- not a valid spell name
-  
-  cooldowns [sn] = os.time () + duration -- add to our table
-  
-end -- function recoveries_affected_redirect 
 
+  cooldowns [sn] = os.time () + duration -- add to our table
+
+end -- function recoveries_affected_redirect
 
 ]]>
 </script>
 
-
 <!--  show buffs on us -->
-
 <script>
 <![CDATA[
 
 -- note maximum spell name length is 24 at present
 
 function show_spells (t, colour)
- 
+
   for _, v in ipairs (t) do
       miniColourTell (colour, "black",capitalize (v.name))
-          
+
      if tonumber (v.duration) then
-     
        local time_to_go = v.duration - os.time ()
        local time_colour
        if time_to_go >= 180 then
@@ -959,22 +1065,21 @@ function show_spells (t, colour)
        else
          time_colour = "deeppink"
        end -- if
-       
+
        miniColourNote (time_colour, "black", 
-                    string.format ("%s %4s", string.rep (" ", 25 - #v.name), 
+                    string.format ("%s %4s", string.rep (" ", 25 - #v.name),
                                    convert_time (time_to_go)))
      else
        miniNote("")
-     end      
+     end
   end -- for
-
 end -- show_spells
 
 function show_status ()
   -- show our status
-    
-  miniColourTell ("silver", "black", "Position: " .. capitalize (stats.position_str or "unknown"))
-  if AFK then
+
+  miniColourTell ("silver", "black", "Position: " .. capitalize (stats.status.pos or "unknown"))
+  if status.statestring == "afk" then
     miniColourTell ("cyan", "black", " (AFK)")
   end -- AFK
   if low_mana then
@@ -983,23 +1088,23 @@ function show_status ()
   if low_moves then
     miniColourTell ("yellow", "black", " (Moves low)")
   end -- low_moves
-  
-  if not playing then
+
+  if not status.statestring == "active" then
     miniColourTell ("cyan", "black", " (Not playing)")
   end -- not playing
-  
+
   if paused then
     miniColourTell ("orangered", "black", " (Paused)")
   end -- paused
-  
+
   miniNote("")
 end -- show_status
 
 function show_brief_version () 
   local count, badcount = 0, 0
   for k in pairs (current_buffs) do
-    if spells [k].target == 1 or    -- combat
-       spells [k].skilltype ~= 1 then  -- not a spell
+    if (spells [k].target == 1 or    -- combat
+      spells [k].skilltype ~= 1) and spells[k].spellup == false then  -- not a spell
       badcount = badcount + 1
     else
       count = count + 1
@@ -1007,23 +1112,23 @@ function show_brief_version ()
   end -- for
 
   miniTell("Spellups: " .. count)
-  
+
   if badcount > 0 then
     miniColourTell ("red", "black", " Debuffs: " .. badcount)
   end -- if
-  
+
   count = 0
   for k in pairs (cooldowns) do
     count = count + 1
-  end -- for  
+  end -- for
 
   miniNote(" Recoveries: " .. count)
 
   
   miniColourTell ("olive", "black", "Requested: ".. #wanted_buffs)
-  
+
   local pending, oncooldown = 0, 0
-  
+
   for _, v in ipairs (wanted_buffs) do
     if not current_buffs [v] then
       if cooldowns [spells [v].recovery] then
@@ -1036,24 +1141,22 @@ function show_brief_version ()
 
   miniColourTell ("gray", "black", " Pending: " .. pending)
   miniColourNote ("darkslateblue", "black", " Cooldown: " .. oncooldown)
-  
+
   show_status ()
-  
+
 end -- show_brief_version
-
-
 
 -- show our current state
 function show_current_buffs (name, line, wildcards, styles)
 
-  if next (spells) == nil or 
+  if next (spells) == nil or
      next (recoveries) == nil or
-     stats.hp == nil then
+     stats.vitals.hp == nil then
     return
   end -- no spells known
-  
+
   blank()
-  
+
   if not IsConnected () then
     miniNote("Spellups will appear here.")
     miniColourNote ("silver", "black", "Not connected to Aardwolf.")
@@ -1061,25 +1164,24 @@ function show_current_buffs (name, line, wildcards, styles)
     show_wanted ()
     return
   end -- not connected
-  
+
   if brief then
     show_brief_version ()
     return
   end -- if brief
-  
+
   if next (current_buffs) == nil then
     miniNote("You are not affected by any spellups.")
     miniNote("")
   else
-  
     local good = {}
     local bad = {}
     -- local ugly = {}  -- joke
-  
+
     local count, badcount = 0, 0
     for k, v in pairs (current_buffs) do
-    if spells [k].target == 1 or    -- combat
-       spells [k].skilltype ~= 1 then  -- not a spell
+      if (spells [k].target == 1 or    -- combat
+        spells [k].skilltype ~= 1) and spells[k].spellup == false then  -- not a spell
         table.insert (bad, { name = spells [k].name, duration = v } )
         badcount = badcount + 1
       else
@@ -1094,40 +1196,39 @@ function show_current_buffs (name, line, wildcards, styles)
     miniNote(":")
     
     miniNote("")
-    
-    table.sort (good, function (a, b) 
+
+    table.sort (good, function (a, b)
         if tonumber (a.duration) and tonumber (b.duration) then
-          return a.duration < b.duration 
+          return a.duration < b.duration
         end  -- if
         return a.name < b.name
         end )
-    table.sort (bad, function (a, b) 
+    table.sort (bad, function (a, b)
         if tonumber (a.duration) and tonumber (b.duration) then
-          return a.duration < b.duration 
+          return a.duration < b.duration
         end  -- if
         return a.name < b.name
     end )
-            
+
     show_spells (good, "green")
-    
+
     if #good > 0 and #bad > 0 then
       miniNote("")
     end
-  
+
     show_spells (bad, "red")
 
   end -- if at least one spell
   
   
   miniNote("")
-  
+
   if next (cooldowns) == nil then
     miniNote("You have no spells on recovery.")
     miniNote("")
   else
-   
     local cool = {}
-    
+
     for k, v in pairs (cooldowns) do
       if (recoveries[k]) then
          table.insert (cool, { name = recoveries [k].name, duration = v } )
@@ -1136,9 +1237,9 @@ function show_current_buffs (name, line, wildcards, styles)
         end -- if
     end -- for
 
-    table.sort (cool, function (a, b) 
+    table.sort (cool, function (a, b)
         if tonumber (a.duration) and tonumber (b.duration) then
-          return a.duration < b.duration 
+          return a.duration < b.duration
         end  -- if
         return a.name < b.name
     end )
@@ -1147,36 +1248,49 @@ function show_current_buffs (name, line, wildcards, styles)
       miniNote("Active recovery (1):")
     else
       miniNote("Active recoveries (" .. #cool .. "):")
-    end -- if    
+    end -- if
     miniNote("")
-    
+
     show_spells (cool, "yellow")
-    
+
   end -- if at least one cooldown
-  
+
   miniNote("")
-    
+
   show_wanted ()
-  
+
   -- what is pending I wonder?
-  
+
   pending = {}
   awaiting_cooldown = {}
-  
+  disabled = {}
+
   for _, v in ipairs (wanted_buffs) do
     if not current_buffs [v] then
+      local text = capitalize(spells[v].name)
       if cooldowns [spells [v].recovery] then
-        table.insert (awaiting_cooldown, capitalize (spells [v].name))
+        table.insert (awaiting_cooldown, text)
       else
-        table.insert (pending, capitalize (spells [v].name))
+        if isdisabled(v) then
+          table.insert(disabled, text)
+        else
+          if isblocked(v) then
+            text = text.." (Blocked)"
+          end -- blocked
+          table.insert (pending, text)
+        end -- disabled
       end -- if
     end -- not cast yet
   end -- for
- 
+
   if #pending > 0 then
     miniColourNote ("gray", "black", "Pending (" .. #pending .. 
                   "): " .. table.concat (pending, ", "))
   end -- some pending
+  if #disabled > 0 then
+    miniColourNote ("gray", "", "Disabled (" .. #disabled ..
+                  "): " .. table.concat (disabled, ", "))
+  end -- some disabled
   if #awaiting_cooldown > 0 then
     miniColourNote ("darkslateblue", "black", "On cooldown (" .. #awaiting_cooldown .. 
                   "): " .. table.concat (awaiting_cooldown, ", "))
@@ -1185,27 +1299,24 @@ function show_current_buffs (name, line, wildcards, styles)
   show_status ()
   drawStuff()
 
-end -- function show_current_buffs 
+end -- function show_current_buffs
+
 
 ]]>
 </script>
 
-
-
-
 <!--  show wanted buffs -->
-
 <script>
 <![CDATA[
 
 function show_wanted ()
 
- if next (spells) == nil or 
-     next (recoveries) == nil then
+  if next (spells) == nil or
+    next (recoveries) == nil then
     return
   end -- no spells known
- 
- if #wanted_buffs == 0 then
+
+  if #wanted_buffs == 0 then
     miniColourNote ("olive", "black", "You have not requested any spellups.")
   else
     local buf_names = {}
@@ -1221,64 +1332,55 @@ end -- show_wanted
 </script>
 
 <!--  configure wanted buffs -->
-
 <aliases>
-
   <alias
    name="spellup"
    script="wanted_spellups"
-   match="^spellups?\:?\s*((?<action>\+|\-)\s*)?(?<list>[A-Za-z0-9, ]+)?$"
+   match="^spellups?\:?\s*((?<action>\+|\-)\s*)?(?<list>[\+\-A-Za-z0-9, :]+)?$"
    enabled="y"
    regexp="y"
    ignore_case="y"
    sequence="100"
   >
   </alias>
-   
 </aliases>
-
 
 <script>
 <![CDATA[
-
 --[[
-
 Spell targets are:
-
    0 : No target
-   1 : Combat / Attack  
+   1 : Combat / Attack
    2 : Spellup/cure - can cast on others.
-   3 : Spellup/cure - self only.   
+   3 : Spellup/cure - self only.
    4 : Objects.
-
 --]]
-   
+
 function spellup_none (name, line, wildcards)
   if wildcards.action ~= "" then
     ColourNote ("red", "", "'" .. line .. "' does not make sense.")
     return true
   end -- if
-  
+
   show_wanted ()
   wanted_buffs = {}
   ColourNote ("yellow", "", "All those above spellups REMOVED from spellups list.")
   return false  -- keep going
-  
+
 end -- spellup_none
 
 function spellup_all (name, line, wildcards)
-
   if wildcards.action ~= "" then
     ColourNote ("red", "", "'" .. line .. "' does not make sense.")
     return
   end -- if
   wanted_buffs = {}
-  
+
   for sn, v in pairs (spells) do
     if spells [sn].percent > 1 and
        spells [sn].spellup and
        spells [sn].skilltype == 1 then
-       table.insert (wanted_buffs, sn) 
+       table.insert (wanted_buffs, sn)
     end -- if possible to spellup this one
   end -- for
   ColourNote ("lime", "", "Set spellups list to all " .. #wanted_buffs .. " possible spellups.")
@@ -1291,7 +1393,6 @@ function spellup_all (name, line, wildcards)
 end -- spellup_all
 
 function spellup_fast (name, line, wildcards)
-
   if paused then
     ColourNote ("green", "", "Spellups casting resumed.")
     paused = false
@@ -1299,7 +1400,7 @@ function spellup_fast (name, line, wildcards)
 
   -- better check what we can do
   local count = 0
-  
+
   for _, v in ipairs (wanted_buffs) do
     if not current_buffs [v] then
       if not cooldowns [spells [v].recovery] then
@@ -1314,26 +1415,23 @@ function spellup_fast (name, line, wildcards)
     ColourNote ("green", "", "Doing fast cast of " .. count .. " pending spellup(s).")
     resume_buff_loop ("fast", line)
   end
-  
-  return true  -- done
 
+  return true  -- done
 end -- spellup_fast
 
 function spellup_pause (name, line, wildcards)
-
   if not paused then
     ColourNote ("orangered", "", "Spellups paused, type 'spellup resume' to continue.")
     paused = true
   else
     ColourNote ("orangered", "", "Spellups already paused, type 'spellup resume' to continue.")
-  end -- if 
+  end -- if
   return true  -- done
-      
 end -- spellup_pause
 
 function spellup_resume (name, line, wildcards)
-
   if paused then
+    waiting = -1
     ColourNote ("green", "", "Spellups casting resumed.")
     paused = false
   else
@@ -1341,56 +1439,191 @@ function spellup_resume (name, line, wildcards)
   end  -- if
 
   return false -- keep going
-  
 end -- spellup_resume
 
 function spellup_help (name, line, wildcards)
   ColourNote ("teal", "", world.GetPluginInfo (world.GetPluginID (), 3))
-  return true -- done  
+  return true -- done
 end -- spellup_help
 
 function spellup_refresh (name, line, wildcards)
-
-  if not playing then
-   ColourNote ("orangered", "", "Cannot refresh if you are not playing.")
-  elseif AFK then
+  if status.statestring == "AFK" then
    ColourNote ("orangered", "", "Cannot refresh if you you are AFK.")
+  elseif not status.statestring == "active" then
+   ColourNote ("orangered", "", "Cannot refresh if you are not playing.")
   else
    ColourNote ("green", "", "Refreshing affected / learned / spellup list.")
-   Send "slist noprompt"
-   Send "slist affected noprompt"
-   Send "slist learned noprompt"
-   Send "slist spellup noprompt"
-  end -- if      
-  return true -- done    
+   current_buffs = {}
+   SendNoEcho "slist noprompt"
+   SendNoEcho "slist affected noprompt"
+   SendNoEcho "slist learned noprompt"
+   SendNoEcho "slist spellup noprompt"
+  end -- if
+  return true -- done
 end -- spellup_refresh
 
 function spellup_brief (name, line, wildcards)
   ColourNote ("teal", "", "Brief spellup list will be shown. Type 'spellup full' to see more info.")
   brief = true
   show_current_buffs ()
-  return true -- done  
+  return true -- done
 end -- spellup_brief
 
 function spellup_full (name, line, wildcards)
   ColourNote ("teal", "", "Full spellup list will be shown. Type 'spellup brief' to see less info.")
   brief = false
   show_current_buffs ()
-  return true -- done  
+  return true -- done
 end -- spellup_full
 
-function spellup_other (who)
-  
+function spellup_other (name, line, wildcards)
+  local who = string.match (wildcards.list, "^other (%a+)$")
+
+  if not who then
+    ColourNote ("red", "", "You did not specify a target!")
+    return
+  end
+
   for sn, v in pairs (spells) do
     if spells [sn].percent > 1 and   -- we know it
        spells [sn].spellup and       -- it is a spellup
        spells [sn].target == 2 and   -- can be cast on others
        spells [sn].skilltype == 1 then   -- spell not skill
-         Send ("cast '" .. spells [sn].name .. "' " .. who)  -- cast it 
+         Send ("cast '" .. spells [sn].name .. "' " .. who)  -- cast it
     end -- if possible to spellup this one
   end -- for
-
 end -- spellup_other
+
+function spellup_block(name, line, wildcards)
+  local arguments = string.match (wildcards.list, "^block (.+)$")
+  local option = ''
+  local spellstring = ''
+
+  if not arguments then
+    ColourNote ("red", "", "You did not specify any arguments!")
+    ColourNote ("red", "", "Arguments:")
+    ColourNote ("red", "", " +, - : <spell>, <spellthatblocks>")
+    ColourNote ("red", "", " list: no arguments")
+    return true
+  end
+
+  fspace, tmp = string.find(arguments, " ")
+  if not fspace then
+    option = trim(arguments)
+  else
+    option = string.match(arguments, "^([%a\+-]+) ")
+    spellstring = string.match(arguments, "(.+)$", fspace + 1)
+  end
+
+  if option == 'list' then
+    lfound = false
+    for sn, blockerlist in pairs(blockers) do
+      for tmp, blocker in ipairs(blockers[sn]) do
+        if not (blocker == disablednum) then
+          lfound = true
+          ColourNote("blue", "", capitalize(spells[sn].name) .. " is blocked by " .. capitalize(spells[blocker].name))
+        end
+      end
+    end
+    if not lfound then
+      ColourNote("blue", "", "No spells are blocked")
+    end
+    return true
+  end
+
+  local tspells = utils.split(spellstring, " ")
+  sncheck = tspells[1]
+  blockcheck = tspells[2]
+  sn, sninvalid = find_spellsn(sncheck)
+  block, blinvalid = find_spellsn(blockcheck)
+  if sninvalid or blinvalid then
+    return false
+  end
+  if option == '-' then
+    if remove_blocker(sn, block) then
+        ColourNote("blue", "", "Removing " .. capitalize(spells[block].name) .. " as a blocker for " .. capitalize(spells[sn].name))
+        return true
+    end
+  end
+  if option == '+' then
+    if add_blocker(sn, block) then
+        ColourNote("blue", "", "Adding " .. capitalize(spells[block].name) .. " as a blocker for " .. capitalize(spells[sn].name))
+        return true
+    end
+  end
+  if #toptions == 0 then
+    ColourNote ("red", "", "You did not specify any arguments!")
+    return true
+  end
+
+  return true
+end -- spellup_block
+
+function spellup_disable(name, line, wildcards)
+  local arguments = string.match (wildcards.list, "^disable (.+)$")
+
+  if not arguments then
+    ColourNote ("red", "", "You did not specify any arguments!")
+    ColourNote ("red", "", "Arguments:")
+    ColourNote ("red", "", " +, - : <spelltodisable>")
+    ColourNote ("red", "", " list: no arguments")
+    return true
+  end
+
+  fspace, tmp = string.find(arguments, " ")
+  if not fspace then
+    option = trim(arguments)
+  else
+    option = string.match(arguments, "^([%a\+-]+) ")
+    spellstring = string.match(arguments, "(.+)$", fspace + 1)
+  end
+
+  if option == 'list' then
+    lfound = false
+    for sn, blockerlist in pairs(blockers) do
+      for tmp, blocker in ipairs(blockers[sn]) do
+        if blocker == disablednum then
+          lfound = true
+          ColourNote("blue", "", capitalize(spells[sn].name) .. " is disabled.")
+        end
+      end
+    end
+    if not lfound then
+      ColourNote("blue", "", "No spells are disabled")
+    end
+    return true
+  end
+
+  sncheck = spellstring
+  sn, sninvalid = find_spellsn(sncheck)
+  if sninvalid then
+    return false
+  end
+  if option == '-' then
+    if remove_disabled(sn) then
+        ColourNote("blue", "", capitalize(spells[sn].name) .. " is now enabled.")
+        resume_buff_loop ("disable", line)
+        return true
+    end
+  end
+  if option == '+' then
+    if add_disabled(sn) then
+        ColourNote("blue", "", capitalize(spells[sn].name) .. " is now disabled.")
+        return true
+    end
+  end
+  if #toptions == 0 then
+    ColourNote ("red", "", "You did not specify any arguments!")
+    return true
+  end
+
+  return true
+end -- spellup_disable
+
+function spellup_debug(name, line, wildcards)
+   fdebug = not fdebug
+   print("Debug is now set to: ", fdebug)
+end -- spellup_debug
 
 spellup_options = {
   none    = spellup_none,     --> no spellups
@@ -1398,110 +1631,99 @@ spellup_options = {
   fast    = spellup_fast,     --> quickly cast what you can
   pause   = spellup_pause,    --> pause doing spellups
   resume  = spellup_resume,   --> resume after pause
-  help    = spellup_help,     --> show help 
+  help    = spellup_help,     --> show help
   refresh = spellup_refresh,  --> request affected / learned / spellup from server
   brief   = spellup_brief,    --> show brief list
   full    = spellup_full,     --> show full list
+  other   = spellup_other,    --> spellup other
+  block   = spellup_block,    --> add a spell block
+  disable = spellup_disable,  --> temporarily disable a single spell
+  debug   = spellup_debug,    --> toggle the debug flag
   }
-  
+
 function wanted_spellups (name, line, wildcards)
 
   if wildcards.list then
-  
+
     wildcards.list = trim (wildcards.list):lower ()
-    
-    local who = string.match (wildcards.list, "^other (%a+)$")
-    if who then
-      spellup_other (who)
-      return
-    end -- if spellup some other guy
-    
-    local f = spellup_options [wildcards.list]
-    
+
+    toptions = utils.split(wildcards.list, " ")
+    option = toptions[1]
+
+    local f = spellup_options [option]
+
     if f then
       if f (name, line, wildcards) then
         return
       end -- all done
     else
-      
+
       -- before we change anything, make sure they all exist
       local invalid = false
-      
+
       new_wanted_list = {}
-      
+      new_place_list = {}
+
       -- check names are valid
-      for item in string.gmatch(wildcards.list, "[^,]+") do 
-        item = trim (item):lower ()
-        local sn = tonumber (item)
-        local name 
-        
-        -- see if numeric spell numbner given
-        if sn and not spells [sn] then
-          ColourNote ("red", "", "Spell number '" .. item .. "' does not exist.")
-          invalid = true
-          sn = nil
-        elseif not sn then
-          -- look up word
-          sn = spells_xref [item]  -- look for exact match first 
-                                   -- (otherwise "bless" might match "bless weapon")
-          if not sn then
-            _, sn = PrefixCheck (spells_xref, item)
-          end -- not found by exact match
-          if not sn then
-            ColourNote ("red", "", "Spell named '" .. item .. "' does not exist.")
-            invalid = true
-          end -- name mot found
-        end -- if
-        
-        
+      for item in string.gmatch(wildcards.list, "[^,]+") do
+        local place = nil
+        colonplace, _ = string.find(item, ':')
+        if colonplace and colonplace > 0 then
+          tlist = utils.split(item, ':')
+          item = tlist[1]
+          place = tlist[2]
+        end
+        sn, invalid = find_spellsn(item)
+
+
         -- if found test it was ok
         if sn then
-           name = spells [sn].name
-           if spells [sn].percent == 0 then
-             ColourNote ("red", "", "You have not learnt '" .. name .. "'.")
-             invalid = true
-           elseif spells [sn].percent == 1 then
-             ColourNote ("red", "", "You have not practised '" .. name .. "'.")
-             invalid = true
-           elseif not spells [sn].spellup then
-             ColourNote ("red", "", "Spell '" .. name .. "' is not a spellup.")
-             invalid = true
-          elseif spells [sn].skilltype ~= 1 then
-             ColourNote ("red", "", "Spell '" .. name .. "' is a skill, not a spell.")
-             invalid = true
-           else
-             table.insert (new_wanted_list, sn)
-           end -- if 
-         end -- if number or name found
+          name = spells [sn].name
+          if spells [sn].percent == 0 then
+            ColourNote ("red", "", "You have not learnt '" .. name .. "'.")
+            invalid = true
+          elseif spells [sn].percent == 1 then
+            ColourNote ("red", "", "You have not practiced '" .. name .. "'.")
+            invalid = true
+          elseif not spells [sn].spellup then
+            ColourNote ("red", "", "Spell '" .. name .. "' is not a spellup.")
+            invalid = true
+          else
+            table.insert (new_wanted_list, sn)
+            table.insert (new_place_list, tonumber(place))
+          end -- if
+        end -- if number or name found
       end  -- for each spell in the list
-      
+
       if invalid then
         ColourNote ("white", "red", "Spellups list contains or or more problems. List not changed.")
         show_wanted ()
         return
       end -- if
-  
+
       -- add to existing list?
       if wildcards.action == "+" then
-        for _, v in ipairs (new_wanted_list) do
+        for i, v in ipairs (new_wanted_list) do
           remove_spellup (v) -- don't have it there twice
-          table.insert (wanted_buffs, v)
-          ColourNote ("lime", "", capitalize (spells [v].name) .. " added to end of spellups list.")
-        end -- for       
-      -- remove from list?  
+          if new_place_list[i] then
+            table.insert (wanted_buffs, new_place_list[i], v)
+            ColourNote ("lime", "", capitalize (spells [v].name) .. " added to spellups list in position " .. new_place_list[i] .. ".")
+          else
+            table.insert (wanted_buffs, v)
+            ColourNote ("lime", "", capitalize (spells [v].name) .. " added to end of spellups list.")
+          end
+        end -- for
+      -- remove from list?
       elseif wildcards.action == "-" then
         for _, v in ipairs (new_wanted_list) do
           if remove_spellup (v) then
             ColourNote ("yellow", "", capitalize (spells [v].name) .. " removed from spellups list.")
           else
             ColourNote ("yellow", "", capitalize (spells [v].name) .. " was NOT in the spellups list.")
-          end -- if 
-        end -- for         
-      else
-        wanted_buffs = new_wanted_list
+          end -- if
+        end -- for
       end -- if
     end -- new list
-    
   end -- if wildcards
 
   show_wanted ()
@@ -1509,15 +1731,11 @@ function wanted_spellups (name, line, wildcards)
 
   SaveState ()
 end -- wanted_spellups
-
-
 ]]>
 </script>
 
 <!--  {affon}  -->
-
 <triggers>
-
   <trigger
    enabled="y"
    omit_from_output="y"
@@ -1527,7 +1745,7 @@ end -- wanted_spellups
    sequence="100"
   >
   </trigger>
-    
+
   <trigger
    enabled="y"
    omit_from_output="y"
@@ -1537,42 +1755,43 @@ end -- wanted_spellups
    sequence="100"
   >
   </trigger>
-  
 </triggers>
-
 
 <script>
 <![CDATA[
-  
 
 function affect_on (name, line, wildcards)
   local sn = tonumber (wildcards.sn)
   local time = tonumber (wildcards.time)
-  
+
   cast_attempt_count [sn] = nil
   failed_attempt_count [sn] = nil
   skip [sn] = nil
   current_buffs [sn] = os.time () + time
-  resume_buff_loop ("affecton", line)
-  
+  if waiting == sn then
+    pdebug("changing waiting to -1")
+    waiting = -1
+    resume_buff_loop ("affecton", line)
+  end
+
   -- success? must have had required mana/moves
   low_mana = nil
   low_moves = nil
 
   if not spells [sn] then return end
-  
+
   if spells [sn].target == 1 or    -- combat
-     spells [sn].skilltype ~= 1 then  -- not a spell
-       BroadcastPlugin (2, spells [sn].name)  -- notify we got bad spell
-     else
-       BroadcastPlugin (1, spells [sn].name)  -- notify we got good spell
+    spells [sn].skilltype ~= 1 then  -- not a spell
+      BroadcastPlugin (2, spells [sn].name)  -- notify we got bad spell
+    else
+      BroadcastPlugin (1, spells [sn].name)  -- notify we got good spell
   end -- if bad spell
-  
+
 end -- affect_on
 
 function affect_off (name, line, wildcards)
   local sn = tonumber (wildcards.sn)
-  
+
   cast_attempt_count [sn] = nil
   failed_attempt_count [sn] = nil
   current_buffs [sn] = nil
@@ -1582,28 +1801,24 @@ function affect_off (name, line, wildcards)
     skip [k] = nil
     cast_attempt_count [k] = nil
   end -- for
-  
+
   resume_buff_loop ("affectoff", line)
-  
+
   if not spells [sn] then return end
-  
+
   if spells [sn].target == 1 or    -- combat
      spells [sn].skilltype ~= 1 then  -- not a spell
        BroadcastPlugin (4, spells [sn].name)  -- notify we lost bad spell
      else
        BroadcastPlugin (3, spells [sn].name)  -- notify we lost good spell
   end -- if bad spell
-    
-end -- affect_off
 
+end -- affect_off
 ]]>
 </script>
 
 <!--  {recon}  -->
-
 <triggers>
-
-    
  <trigger
    enabled="y"
    omit_from_output="y"
@@ -1613,7 +1828,7 @@ end -- affect_off
    sequence="100"
   >
   </trigger>
-    
+
   <trigger
    enabled="y"
    omit_from_output="y"
@@ -1623,39 +1838,30 @@ end -- affect_off
    sequence="100"
   >
   </trigger>
-  
 </triggers>
-
 
 <script>
 <![CDATA[
-  
 
 function recovery_on (name, line, wildcards)
   local sn = tonumber (wildcards.sn)
   local time = tonumber (wildcards.time)
-  
+
   cooldowns [sn] = os.time () + time
   resume_buff_loop ("recoveryon", line)
-  
 end -- recovery_on
 
 function recovery_off (name, line, wildcards)
   local sn = tonumber (wildcards.sn)
-  
+
   cooldowns [sn] = nil
   resume_buff_loop ("recoveryoff", line)
-  
 end -- recovery_off
-
 ]]>
 </script>
 
 <!--  {skillgain}  -->
-
 <triggers>
-
-      
  <trigger
    enabled="y"
    omit_from_output="y"
@@ -1665,12 +1871,10 @@ end -- recovery_off
    sequence="100"
   >
   </trigger>
-       
 </triggers>
 
-
 <script>
-<![CDATA[    
+<![CDATA[
 
 -- we gained a skill
 function skillgain (name, line, wildcards)
@@ -1681,55 +1885,49 @@ function skillgain (name, line, wildcards)
   if spells [sn] then
     ColourNote ("yellow", "", string.format ("Your proficiency at %s is now %i%%.",
                 spells [sn].name, percent))
-  end --  if exists                
+  end --  if exists
   resume_buff_loop ("skillgain", line)
-
 end -- skillgain
-
-
 ]]>
 </script>
 
 <!--  heartbeat timer  -->
-
 <timers>
   <timer name="affects_timer"
-         enabled="y" 
-         second="5.00" 
+         enabled="n"
+         second="5.00"
          script="heartbeat"
          >
-
-
   </timer>
- 
+
  <timer name="display_timer"
-         enabled="y" 
-         second="1.00" 
+         enabled="y"
+         second="1.00"
          script="display_timer"
          active_closed="y"
          >
   </timer>
-    
 </timers>
 
 <script>
-<![CDATA[  
+<![CDATA[
 
 -- kick the loop along, in case nothing happening
 function heartbeat (timername)
   resume_buff_loop "timer"
-end -- heartbeat 
+end -- heartbeat
 
 -- redisplay our status every second
 function display_timer (timername)
-  show_current_buffs ()
-end -- heartbeat 
+  if have_slist then
+    show_current_buffs ()
+  end
+end -- heartbeat
 
 ]]>
 </script>
 
 <!--  {sfail}  -->
-
 <triggers>
   <trigger
    enabled="y"
@@ -1740,7 +1938,7 @@ end -- heartbeat
    sequence="100"
   >
   </trigger>
-  
+
   <trigger
    custom_colour="2"
    enabled="y"
@@ -1749,13 +1947,10 @@ end -- heartbeat
    sequence="100"
   >
   </trigger>
-
 </triggers>
 
-
 <script>
-<![CDATA[  
-
+<![CDATA[
 --[[
    1: Regular fail
    2: Already affected
@@ -1769,28 +1964,26 @@ end -- heartbeat
   10: Resting / sleeping
   11: Other.
   12: Not enough moves (some skills require moves not mana).
-
   --]]
-  
-
 
 function spell_failure (name, line, wildcards)
   local sn = tonumber (wildcards.sn)
   local target = tonumber (wildcards.target)
   local reason = tonumber (wildcards.reason)
   local recovery = tonumber (wildcards.recovery)
- 
---  print ("spell failure: sn=", sn, "target=", target, "reason=", reason, "recovery=", recovery)
-  
+
+  pdebug ("spell failure: sn=", sn, "target=", target, "reason=", reason, "recovery=", recovery)
+
   -- REGULAR FAIL
   if reason == 1 then --  Regular fail - recast
      failed_attempt_count [sn] = (failed_attempt_count [sn] or 0) + 1
      if failed_attempt_count [sn] > MAX_RETRIES then
-       ColourNote ("red", "", "Failed to cast '" .. capitalize (spells [sn].name) .. 
-                   "' "  .. MAX_RETRIES .. " times. Removing from spellup list.")
-       remove_spellup (sn)
+       if remove_spellup (sn) then
+         ColourNote ("red", "", "Failed to cast '" .. capitalize (spells [sn].name) ..
+                     "' "  .. MAX_RETRIES .. " times. Removing from spellup list.")
+       end -- if we had it in the first place
      end -- if
-     
+
   -- ALREADY AFFECTED
   elseif reason == 2 then  -- Already affected - note that
      current_buffs [sn] =  current_buffs [sn] or true  -- maybe it just got cast
@@ -1798,22 +1991,22 @@ function spell_failure (name, line, wildcards)
   -- ON COOLDOWN
   elseif reason == 3 then  -- On recovery
      cooldowns [recovery] =  cooldowns [recovery] or true  -- maybe it just got cast
-     
+
   -- NOT ENOUGH MANA
   elseif reason == 4 then  -- No mana, skip it
-     low_mana = tonumber (stats.mana)
+     low_mana = tonumber (stats.vitals.mana)
 
   -- SPELL DISABLED
   elseif reason == 7 then  -- OooO  - spell disabled
-     ColourNote ("red", "", "Spell '" .. capitalize (spells [sn].name) .. 
+     ColourNote ("red", "", "Spell '" .. capitalize (spells [sn].name) ..
                  "' disabled. Removing from spellup list.")
      remove_spellup (sn)
-     
+
   -- SPELL NOT KNOWN
   elseif reason == 8 then  -- Not known - maybe remorted or something
      if sn ~= -1 and spells [sn] then
        if remove_spellup (sn) then
-         ColourNote ("red", "", "Unknown spell '" .. capitalize (spells [sn].name) .. 
+         ColourNote ("red", "", "Unknown spell '" .. capitalize (spells [sn].name) ..
                      "'. Removing from spellup list.")
        end -- if in list
      end -- if known
@@ -1822,89 +2015,83 @@ function spell_failure (name, line, wildcards)
   elseif reason == 11 then  -- Other - who knows?
      if sn ~= -1 and spells [sn] then
        if remove_spellup (sn) then
-         ColourNote ("red", "", "Problem casting '" .. capitalize (spells [sn].name) .. 
+         ColourNote ("red", "", "Problem casting '" .. capitalize (spells [sn].name) ..
                      "'. Removing from spellup list.")
        end -- if in list
      end -- if known
-                
+
   -- NOT ENOUGH MOVES
   elseif reason == 12 then  -- No moves, skip it
-     low_moves = tonumber (stats.moves)
-     
-  end -- if 
-  
-  resume_buff_loop ("sfail", line)
+     low_moves = tonumber (stats.vitals.moves)
 
+  end -- if
+
+  if waiting == -1 or (waiting > 0 and waiting == sn) then
+    resume_buff_loop ("sfail", line)
+  end
 end -- spell_failure
 
--- eg. You do not know a 'berserk' spell.
 
+-- eg. You do not know a 'berserk' spell.
 function unknown_spell (name, line, wildcards)
   local sn = spells_xref [wildcards [1]:lower ()]
-  
+
   if sn then
     if remove_spellup (sn) then
-      ColourNote ("red", "", "Unknown spell '" .. capitalize (spells [sn].name) .. 
+      ColourNote ("red", "", "Unknown spell '" .. capitalize (spells [sn].name) ..
                    "'. Removing from spellup list.")
-    end -- in list in the first place    
+    end -- in list in the first place
   end -- if
-    
-end -- unknown_spell
 
+end -- unknown_spell
 ]]>
 </script>
 
-
 <!--  MAIN LOOP  -->
-
 <script>
 <![CDATA[
-
-
-
 --[[
-
 positions:
    0 = dead
    1 = sleeping
    2 = resting
-   3 = sitting  
+   3 = sitting
    4 = fighting
    5 = standing
- 
-
 --]]
 
-
 -- called by coroutine to attempt one spellup
-
 function try_to_buff_us (reason)
 
+  pdebug("try_to_buff_us: ", reason)
   local fast = reason == "fast"
-  
-  -- need a certain minimal amount of information to proceed
-  if next (spells) == nil or 
-     next (recoveries) == nil or
-     stats.hp == nil then
-    return
-  end -- tables not set up  
 
-  -- proceed through wanted ones until we find one we can cast
+  -- need a certain minimal amount of information to proceed
+  if next (spells) == nil or
+     next (recoveries) == nil or
+     stats.vitals.hp == nil then
+    pdebug("return because we don't have enough info")
+    return
+  end -- tables not set up
+
+ -- proceed through wanted ones until we find one we can cast
   for _, sn in ipairs (wanted_buffs) do
-  
+
     -- uh oh, they want a non-existant spell
     if not spells [sn] then
       return
     end -- spell doesn't exist, strange
-    
+
     local active = current_buffs [sn]  -- is it already active?
     local cooldown = cooldowns [spells [sn].recovery]  -- is its cooldown active?
-    
---    print ("sn=", sn, "name=", spells [sn].name, "active=", active)
-    
+
+    --pdebug("sn=", sn, "name=", spells [sn].name, "active=", active)
+
     -- recast this one if it is not active, and the cooldown has expired
     if not active and       -- not already on us
        not cooldown and     -- is not cooling down
+       not isblocked(sn) and
+       not isdisabled(sn) and
        (fast or not skip [sn]) then   -- not skipping because we couldn't cast
       cast_attempt_count [sn] = (cast_attempt_count [sn] or 0) + 1
       if cast_attempt_count [sn] > MAX_RETRIES then
@@ -1912,7 +2099,14 @@ function try_to_buff_us (reason)
         ColourNote ("yellow", "", "Too many attempts to cast '" .. capitalize (spells [sn].name) ..
                     "', skipping it for now.")
       else
-        Send ("cast '" .. spells [sn].name .. "'")
+        if spells[sn].skilltype == 1 then
+          SendNoEcho ("cast '" .. spells [sn].name .. "'")
+        else
+          words = justWords(spells[sn].name)
+          SendNoEcho (words[1])
+        end
+        pdebug("changing waiting to ", sn)
+        waiting = sn
         last_cast_time = os.time ()
         spells [sn].last_cast = os.time ()
         if not fast then
@@ -1925,83 +2119,71 @@ function try_to_buff_us (reason)
 end -- try_to_buff_us
 
 --- Called by coroutine to see if we need to request the affected list
-
 function check_we_know_times ()
-local ok = true
+  local ok = true
 
   for sn, time in pairs (current_buffs) do
     if not tonumber (time) then
       ok = false
     end -- if
   end -- for
-  
+
   if ok then
     return
   end -- all times known
 
-  if os.time () > (last_time_check + 30) then 
+  if os.time () > (last_time_check + 30) then
     SendNoEcho "slist affected noprompt"
     last_time_check = os.time ()
-  end -- if 
-  
+  end -- if
+
 end -- check_we_know_times
 
 --- COROUTINE HERE ----
-
-function buff_loop (reason)
- 
-  local other_reason
+function buff_loop (reason, other_reason)
   have_slist = false
-  
+
   last_time_check = last_time_check or (os.time () - 60)
   last_cast_time = os.time ()
-  
+
   low_mana = nil
   low_moves = nil
 
   while reason ~= "disconnect" do
- --   print ("coroutine kicked, reason:", reason, other_reason)
+ --   pdebug ("coroutine kicked, reason:", reason, other_reason)
 
-    if stats.position_str == "standing" and    -- need to be standing
-       playing and           -- and playing
-       not AFK and           -- not AFK
+    -- early on, we need to request lists of known spells etc.
+    if status.statestring == "active" then
+      if have_slist then
+        check_we_know_times ()
+      else
+        if os.time () > (last_time_check + 45) then
+          if next (spells) == nil then
+            SendNoEcho "slist noprompt"
+          end -- if no spells known
+          SendNoEcho "slist affected noprompt"
+          SendNoEcho "slist learned noprompt"
+          SendNoEcho "slist spellup noprompt"
+          last_time_check = os.time ()
+        end -- if
+      end
+    end -- if playing
+
+    if status.statestring == "active" and    -- need to be active
        not low_mana and      -- not recently out of mana
        not low_moves and     -- not recently out of moves
        reason ~= "recoveryon" and  -- recovery on is usually followed by {affon}
        have_slist and        -- have received list of spells
        not paused and        -- they haven't paused us
-       (reason == "affecton" or reason == "fast" or last_cast_time ~= os.time ()) then  -- only once a second, or we thrash
-      try_to_buff_us (reason)    
+       (reason == "affecton" or reason == "fast" or reason == "sfail" or last_cast_time ~= os.time ()) then  -- only once a second, or we thrash
+      try_to_buff_us (reason)
     end -- OK to cast
-       
-    -- early on, we need to request lists of known spells etc.
-    if playing and not AFK then    
-   
-      if have_slist then
-        check_we_know_times ()
-      else
-        if os.time () > (last_time_check + 45) then 
-          if next (spells) == nil then
-            SendNoEcho "slist noprompt"
-          end -- if no spells known      
-          SendNoEcho "slist affected noprompt"
-          SendNoEcho "slist learned noprompt"
-          SendNoEcho "slist spellup noprompt"
-          last_time_check = os.time ()
-        end -- if 
-      end
 
-    end -- if playing
-    
     ResetTimer ("affects_timer")  -- heartbeat not needed for a while yet
-    reason, other_reason = coroutine.yield ()  
+    reason, other_reason = coroutine.yield ()
   end -- main loop
 
---  print "coroutine finished."
-  
 end -- buff_loop
-
 ]]>
 </script>
-
 </muclient>
