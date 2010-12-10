@@ -147,6 +147,7 @@ end  -- function ColoursToStyles
 function strip_colours (s)
   s = s:gsub ("@%-", "~")    -- fix tildes
   s = s:gsub ("@@", "\0")  -- change @@ to 0x00
+  s = s:gsub ("@ ", "")  -- rip out hidden garbage
   s = s:gsub ("@%a([^@]*)", "%1")
   return (s:gsub ("%z", "@")) -- put @ back
 end -- strip_colours
