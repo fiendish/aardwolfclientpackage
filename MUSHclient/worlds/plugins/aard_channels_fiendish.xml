@@ -175,6 +175,9 @@ echo = GetVariable("echo") or "1"
 date_format = GetVariable("date_format") or "[%d %b %H:%M:%S] "
 WINDOW_WIDTH = tonumber(GetVariable("WINDOW_WIDTH"))
 WINDOW_HEIGHT = tonumber(GetVariable("WINDOW_HEIGHT"))
+log_to_file = tonumber(GetVariable("log_to_file")) or 0
+log_colour_codes = tonumber(GetVariable("log_colour_codes")) or 1
+log_timestamps = tonumber(GetVariable("log_timestamps")) or 1
 
 -- colours
 WINDOW_BACKGROUND_COLOUR = 0x000000
@@ -397,6 +400,9 @@ function OnPluginSaveState ()
     SetVariable("info_on", info_on)
     SetVariable("global_quest_on", global_quest_on)
     SetVariable("remort_auction_on", remort_auction_on)
+    SetVariable("log_to_file", log_to_file)
+    SetVariable("log_colour_codes", log_colour_codes)
+    SetVariable("log_timestamps", log_timestamps)
 end --  OnPluginSaveState
 
 function OnPluginDisable ()
@@ -616,15 +622,31 @@ end
 
 function stampAndStore(styles)
 
-     -- inject timestamp if wanted
-     if timestamp == "1" then
-        tstamp = os.date (date_format)
-        timestyle = {}
-        timestyle.text = tstamp
-        timestyle.length = #timestyle.text
-        timestyle.textcolour = 0xc0c0c0
-        table.insert(styles,1,timestyle)
-     end -- if
+    local log_text = ""
+    if (log_to_file == 1 and log_timestamps == 0) then
+        log_text = StylesToColoursOneLine(copytable.deep(styles), 1, 99999)
+    end
+    -- inject timestamp if wanted
+    if timestamp == "1" then
+    tstamp = os.date (date_format)
+    timestyle = {}
+    timestyle.text = tstamp
+    timestyle.length = #timestyle.text
+    timestyle.textcolour = 0xc0c0c0
+    table.insert(styles,1,timestyle)
+    end -- if
+    if (log_to_file == 1 and log_timestamps == 1) then
+        log_text = StylesToColoursOneLine(copytable.deep(styles), 1, 99999)
+    end
+    
+    if (log_to_file == 1) then
+        if (log_colour_codes == 0) then
+            log_text = strip_colours(log_text)
+        end
+        local f = assert(io.open (GetInfo(58).."ChatLog.txt", "a+")) -- handle to chat log file
+        f:write (log_text.."\n") -- write to it
+        f:close ()  -- close that file now
+    end
 
     -- store the raw lines for use during resizing
     if #rawlines >= MAX_LINES then
@@ -688,7 +710,6 @@ function OnPluginBroadcast (msg, id, name, text)
          msg = gmcpval("msg") or ""
 
          stampAndStore(ColoursToStyles(msg))
-         
       end
    end
 end
@@ -861,7 +882,7 @@ function right_click_menu ()
     else
         menustring = (menustring.."|Turn Echo On")
     end --if
-    menustring = menustring.."|>Timestamp|"..((date_format=="" and "*  ") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "*  ") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "*  ") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "*  ") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "*  ") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "*  ") or "").."INFO:|"..((global_quest_on==1 and "*  ") or "").."Global Quest:|"..((remort_auction_on==1 and "*  ") or "").."Remort Auction:"
+    menustring = menustring.."|>Timestamp|"..((date_format=="" and "*  ") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "*  ") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "*  ") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "*  ") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "*  ") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "*  ") or "").."INFO:|"..((global_quest_on==1 and "*  ") or "").."Global Quest:|"..((remort_auction_on==1 and "*  ") or "").."Remort Auction:|<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "*  ") or "").."Remove Colour Codes|"..((log_timestamps==0 and "*  ") or "").."Remove Timestamps"
     result = WindowMenu (Win,
         WindowInfo (Win, 14),  -- x position
         WindowInfo (Win, 15),   -- y position
@@ -931,6 +952,15 @@ function right_click_menu ()
             end
             EnableTrigger("remort_auction", 0 == remort_auction_on)
             remort_auction_on = GetTriggerOption("remort_auction","enabled")
+        elseif numResult == 12 then
+           log_to_file = (((0 == log_to_file) and 1) or 0)
+           SetVariable("log_to_file", log_to_file)
+        elseif numResult == 13 then
+            log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
+            SetVariable("log_colour_codes", log_colour_codes)
+        elseif numResult == 14 then
+            log_timestamps = (((0 == log_timestamps) and 1) or 0)
+            SetVariable("log_timestamps", log_timestamps)
         end
     end
 end -- right_click_menu
