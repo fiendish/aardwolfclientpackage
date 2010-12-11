@@ -502,9 +502,13 @@ default_config = {
   OUR_ROOM_COLOUR         = { name = "Our room",          colour =  ColourNameToRGB "#ff1493", },
   UNKNOWN_ROOM_COLOUR     = { name = "Unknown room",      colour =  ColourNameToRGB "#8b0000", },
   DIFFERENT_AREA_COLOUR   = { name = "Another area",      colour =  ColourNameToRGB "#ff0000", },
+  PK_BORDER_COLOUR        = { name = "PK border",         colour =  ColourNameToRGB "red", },
   SHOP_FILL_COLOUR        = { name = "Shop",              colour =  ColourNameToRGB "#ffad2f", },
-  POSTOFFICE_FILL_COLOUR  = { name = "Post Office",       colour =  ColourNameToRGB "#9acd32", },
+  HEALER_FILL_COLOUR      = { name = "Healer",       colour =  ColourNameToRGB "#9acd32", },
+  TRAINER_FILL_COLOUR     = { name = "Trainer",       colour =  ColourNameToRGB "#9acd32", },
+  QUESTOR_FILL_COLOUR     = { name = "Questor",       colour =  ColourNameToRGB "deepskyblue", },
   BANK_FILL_COLOUR        = { name = "Bank",              colour =  ColourNameToRGB "#ffD700", },
+  GUILD_FILL_COLOUR        = { name = "Guild",              colour =  ColourNameToRGB "magenta", },
   SAFEROOM_FILL_COLOUR    = { name = "Safe room",          colour =  ColourNameToRGB "lightblue", },
   MAPPER_NOTE_COLOUR      = { name = "Messages",          colour =  ColourNameToRGB "lightgreen" },
   
@@ -802,7 +806,7 @@ function create_tables ()
       area          TEXT,            -- which area
       building      TEXT,            -- which building it is in
       terrain       TEXT,            -- eg. road OR water
-      info          TEXT,            -- eg. shop,postoffice
+      info          TEXT,            -- eg. shop,healer
       notes         TEXT,            -- player notes
       x             INTEGER,
       y             INTEGER,
@@ -950,41 +954,59 @@ function get_room (uid)
   room.borderpenwidth = 1
   room.fillcolour = 0xff0000
   room.fillbrush = 1 -- no fill
-              
+  print(room.info)
   -- special room fill colours
-  
+  local special_room = false
   if room.info and room.info ~= "" then
     if string.match (room.info, "shop") then
+      special_room = true
       room.fillcolour = config.SHOP_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
-    elseif string.match (room.info, "postoffice") then
-      room.fillcolour = config.POSTOFFICE_FILL_COLOUR.colour
+    elseif string.match (room.info, "healer") then
+      special_room = true
+      room.fillcolour = config.HEALER_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
+    elseif string.match (room.info, "guild") then
+      special_room = true
+      room.fillcolour = config.GUILD_FILL_COLOUR.colour
+      room.fillbrush = 0 -- solid
+    elseif string.match (room.info, "trainer") then
+      special_room = true
+      room.fillcolour = config.TRAINER_FILL_COLOUR.colour
+      room.fillbrush = 0 -- solid
+    elseif string.match (room.info, "questor") then
+      special_room = true
+      room.fillcolour = config.QUESTOR_FILL_COLOUR.colour
+      room.fillbrush = 0 -- solid
     elseif string.match (room.info, "bank") then
+      special_room = true
       room.fillcolour = config.BANK_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
     elseif string.match (room.info, "safe") then
+      special_room = true
       room.fillcolour = config.SAFEROOM_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
     end -- if
-  else  
-    -- use terrain colour
-    if environmentname then
+  end  
+  -- use terrain colour
+  if environmentname and not special_room then
       if user_terrain_colour [environmentname] then
-        room.fillcolour = user_terrain_colour [environmentname]
-        room.fillbrush = 8  -- fine pattern
-      elseif terrain_colours [environmentname] then
-        room.fillcolour = colour_lookup [terrain_colours [environmentname]]
-        room.fillbrush = 8  -- fine pattern
-      end
-    end -- if environmentname
-  end -- if 
+      room.fillcolour = user_terrain_colour [environmentname]
+      room.fillbrush = 8  -- fine pattern
+    elseif terrain_colours [environmentname] then
+      room.fillcolour = colour_lookup [terrain_colours [environmentname]]
+      room.fillbrush = 8  -- fine pattern
+    end
+  end -- if environmentname
 
   if uid == current_room then
     room.bordercolour = config.OUR_ROOM_COLOUR.colour
     room.borderpenwidth = 2
   elseif room.area ~= current_area then
     room.bordercolour = config.DIFFERENT_AREA_COLOUR.colour
+  elseif room.info and string.match(room.info, "pk") then
+    room.bordercolour = config.PK_BORDER_COLOUR.colour
+    room.borderpenwidth = 2
   end -- not in this area
   
   return room      
@@ -1771,7 +1793,7 @@ for _, v in ipairs ({
       --]]
             
 function map_shops (name, line, wildcards)
-  map_find_special { "shop", "postoffice", "bank", }
+  map_find_special { "shop", "bank", }
 end -- map_shops
 
 function map_trainers (name, line, wildcards)
@@ -2221,7 +2243,7 @@ function create_map_database (name, line, wildcards)
       area          TEXT,            -- which area
       building      TEXT,            -- which building it is in
       terrain       TEXT,            -- eg. road OR water
-      info          TEXT,            -- eg. shop,postoffice
+      info          TEXT,            -- eg. shop,healer
       notes         TEXT,            -- player notes
       x             INTEGER,
       y             INTEGER,
