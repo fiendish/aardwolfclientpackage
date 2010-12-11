@@ -1193,7 +1193,7 @@ function init (t)
   font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
 
   -- find where window was last time
-  windowinfo = movewindow.install (win, miniwin.pos_bottom_right)
+  windowinfo = movewindow.install (win, miniwin.pos_bottom_right,nil , nil, {config_win})
 
   -- calculate box sizes, arrows, connecting lines etc.
   build_room_info ()
