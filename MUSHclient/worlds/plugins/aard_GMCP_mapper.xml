@@ -956,26 +956,26 @@ function get_room (uid)
   if room.info and room.info ~= "" then
     if string.match (room.info, "shop") then
       room.fillcolour = config.SHOP_FILL_COLOUR.colour
-      room.fillbrush = 8  -- fine pattern
+      room.fillbrush = 0  -- solid
     elseif string.match (room.info, "postoffice") then
       room.fillcolour = config.POSTOFFICE_FILL_COLOUR.colour
-      room.fillbrush = 8  -- fine pattern
+      room.fillbrush = 0  -- solid
     elseif string.match (room.info, "bank") then
       room.fillcolour = config.BANK_FILL_COLOUR.colour
-      room.fillbrush = 8  -- fine pattern
+      room.fillbrush = 0  -- solid
     elseif string.match (room.info, "newsroom") then
       room.fillcolour = config.NEWSROOM_FILL_COLOUR.colour
-      room.fillbrush = 8  -- fine pattern
+      room.fillbrush = 0  -- solid
     end -- if
   else  
     -- use terrain colour
     if environmentname then
       if user_terrain_colour [environmentname] then
         room.fillcolour = user_terrain_colour [environmentname]
-        room.fillbrush = 0  -- solid
+        room.fillbrush = 8  -- fine pattern
       elseif terrain_colours [environmentname] then
         room.fillcolour = colour_lookup [terrain_colours [environmentname]]
-        room.fillbrush = 0  -- solid
+        room.fillbrush = 8  -- fine pattern
       end
     end -- if environmentname
   end -- if 
