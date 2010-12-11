@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Wednesday, December 01, 2010, 1:51 PM -->
+<!-- Saved on Saturday, December 11, 2010, 2:57 AM -->
 <!-- MuClient version 4.70 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
@@ -14,7 +14,7 @@
 <variables
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-12-01 13:51:01"
+   date_saved="2010-12-11 02:57:34"
   >
   <variable name="config">config = {
   ROOM_NAME_TEXT = {
@@ -90,13 +90,13 @@
     name = "Shop",
     colour = 3124735,
     },
-  NEWSROOM_FILL_COLOUR = {
-    name = "Newsroom",
-    colour = 15128749,
-    },
   DIFFERENT_AREA_COLOUR = {
     name = "Another area",
     colour = 255,
+    },
+  SAFEROOM_FILL_COLOUR = {
+    name = "Safe room",
+    colour = 15128749,
     },
   EXIT_COLOUR_IN_OUT = {
     name = "Exit in/out",
