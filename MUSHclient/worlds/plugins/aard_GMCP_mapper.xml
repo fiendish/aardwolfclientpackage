@@ -505,7 +505,7 @@ default_config = {
   SHOP_FILL_COLOUR        = { name = "Shop",              colour =  ColourNameToRGB "#ffad2f", },
   POSTOFFICE_FILL_COLOUR  = { name = "Post Office",       colour =  ColourNameToRGB "#9acd32", },
   BANK_FILL_COLOUR        = { name = "Bank",              colour =  ColourNameToRGB "#ffD700", },
-  NEWSROOM_FILL_COLOUR    = { name = "Newsroom",          colour =  ColourNameToRGB "lightblue", },
+  SAFEROOM_FILL_COLOUR    = { name = "Safe room",          colour =  ColourNameToRGB "lightblue", },
   MAPPER_NOTE_COLOUR      = { name = "Messages",          colour =  ColourNameToRGB "lightgreen" },
   
   ROOM_NAME_TEXT          = { name = "Room name text",    colour = ColourNameToRGB "#BEF3F1", },
@@ -963,8 +963,8 @@ function get_room (uid)
     elseif string.match (room.info, "bank") then
       room.fillcolour = config.BANK_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
-    elseif string.match (room.info, "newsroom") then
-      room.fillcolour = config.NEWSROOM_FILL_COLOUR.colour
+    elseif string.match (room.info, "safe") then
+      room.fillcolour = config.SAFEROOM_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
     end -- if
   else  
@@ -1771,7 +1771,7 @@ for _, v in ipairs ({
       --]]
             
 function map_shops (name, line, wildcards)
-  map_find_special { "shop", "postoffice", "bank", "newsroom", }
+  map_find_special { "shop", "postoffice", "bank", }
 end -- map_shops
 
 function map_trainers (name, line, wildcards)
@@ -1783,7 +1783,7 @@ function map_quests (name, line, wildcards)
 end -- map_quests
 
 function map_healers (name, line, wildcards)
-  map_find_special { "healers", }
+  map_find_special { "healer", }
 end -- map_healers
 
 function map_goto (name, line, wildcards)
