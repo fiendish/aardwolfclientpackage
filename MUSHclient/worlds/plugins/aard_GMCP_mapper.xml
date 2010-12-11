@@ -1505,7 +1505,7 @@ function got_gmcp_room()
        area = gmcpval("zone"),
        building = 0,
        terrain = gmcpval("terrain"),
-       info = gmcpval("flags"),
+       info = gmcpval("details"),
        notes = "",
        x = gmcpval("coord.x"),
        y = gmcpval("coord.y"),
@@ -2055,7 +2055,7 @@ function  process_info (args)
   
   info = args.flags
                
-end --  process_environment 
+end --  process_info
           
 function process_start_room (args)
   if not args.id and args.area and args.title and args.environment then
