@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Saturday, December 11, 2010, 2:57 AM -->
+<!-- Saved on Saturday, December 11, 2010, 3:51 AM -->
 <!-- MuClient version 4.70 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
@@ -14,7 +14,7 @@
 <variables
    muclient_version="4.70"
    world_file_version="15"
-   date_saved="2010-12-11 02:57:34"
+   date_saved="2010-12-11 03:51:08"
   >
   <variable name="config">config = {
   ROOM_NAME_TEXT = {
@@ -32,13 +32,29 @@
   LAST_VISIT_TIME = {
     time = 180,
     },
-  POSTOFFICE_FILL_COLOUR = {
-    name = "Post Office",
-    colour = 3329434,
-    },
   ROOM_NAME_BORDER = {
     name = "Room name box",
     colour = 0,
+    },
+  TRAINER_FILL_COLOUR = {
+    name = "Trainer",
+    colour = 3329434,
+    },
+  GUILD_FILL_COLOUR = {
+    name = "Guild",
+    colour = 16711935,
+    },
+  QUESTOR_FILL_COLOUR = {
+    name = "Questor",
+    colour = 16760576,
+    },
+  PK_BORDER_COLOUR = {
+    name = "PK border",
+    colour = 255,
+    },
+  HEALER_FILL_COLOUR = {
+    name = "Healer",
+    colour = 3329434,
     },
   SCAN = {
     depth = 15,
