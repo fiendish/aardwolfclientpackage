@@ -906,17 +906,17 @@ function get_room (uid)
   end -- convert to name
   
   local terrain = ""
-  if environmentname then
+  if environmentname and environmentname ~= "" then
     terrain = "\nTerrain: " .. capitalize (environmentname)
   end -- if terrain known
   
   local info = ""
-  if room.info then
+  if room.info and room.info ~= "" then
     info = "\nInfo: " .. capitalize (room.info)
   end -- if info known
   
   local notes = ""
-  if room.notes then
+  if room.notes and room.notes ~= "" then
     notes = "\nBookmark: " .. room.notes
   end -- if notes
   
@@ -953,19 +953,19 @@ function get_room (uid)
               
   -- special room fill colours
   
-  if room.info then
+  if room.info and room.info ~= "" then
     if string.match (room.info, "shop") then
       room.fillcolour = config.SHOP_FILL_COLOUR.colour
-      room.fillbrush = 8
+      room.fillbrush = 8  -- fine pattern
     elseif string.match (room.info, "postoffice") then
       room.fillcolour = config.POSTOFFICE_FILL_COLOUR.colour
-      room.fillbrush = 8
+      room.fillbrush = 8  -- fine pattern
     elseif string.match (room.info, "bank") then
       room.fillcolour = config.BANK_FILL_COLOUR.colour
-      room.fillbrush = 8
+      room.fillbrush = 8  -- fine pattern
     elseif string.match (room.info, "newsroom") then
       room.fillcolour = config.NEWSROOM_FILL_COLOUR.colour
-      room.fillbrush = 8
+      room.fillbrush = 8  -- fine pattern
     end -- if
   else  
     -- use terrain colour
@@ -975,7 +975,7 @@ function get_room (uid)
         room.fillbrush = 0  -- solid
       elseif terrain_colours [environmentname] then
         room.fillcolour = colour_lookup [terrain_colours [environmentname]]
-        room.fillbrush = 8  -- solid
+        room.fillbrush = 0  -- solid
       end
     end -- if environmentname
   end -- if 
