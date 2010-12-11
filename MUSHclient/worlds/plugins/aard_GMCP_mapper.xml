@@ -954,7 +954,6 @@ function get_room (uid)
   room.borderpenwidth = 1
   room.fillcolour = 0xff0000
   room.fillbrush = 1 -- no fill
-  print(room.info)
   -- special room fill colours
   local special_room = false
   if room.info and room.info ~= "" then
