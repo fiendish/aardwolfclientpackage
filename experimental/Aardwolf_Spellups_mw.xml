@@ -655,13 +655,14 @@ function getStats()
 end
 
 function OnPluginBroadcast (msg, id, name, text)
+  local old_mana = nil
+  local old_moves = nil
   if next(stats) then
-    local old_mana = stats.vitals.mana
-    local old_moves = stats.vitals.moves
+    old_mana = stats.vitals.mana
+    old_moves = stats.vitals.moves
   end
   local new_stats = false
   local old_state = status.state
-
 
   -- stats change
   if id == '3e7dedbe37e44942dd46d264' then
@@ -680,7 +681,6 @@ function OnPluginBroadcast (msg, id, name, text)
       status.statestring = statestrings[tonumber(status.state)]
     end
   end
-  
   if old_state ~= status.state then
     waiting = -1
     resume_buff_loop ("playing_change", status.state)
