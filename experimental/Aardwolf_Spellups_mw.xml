@@ -150,6 +150,20 @@ blockers = {}
 spells_xref = {}
 recoveries_xref = {}
 
+statestrings = {
+  [1] = 'login',
+  [2] = 'motd',
+  [3] = 'active',
+  [4] = 'afk',
+  [5] = 'note',
+  [6] = 'edit',
+  [7] = 'page',
+  [8] = 'combat',
+  [9] = 'sleeping',
+  [11] = 'resting',
+  [12] = 'running'
+  }
+
 function MouseDown(flags, hotspot_id)
     if (hotspot_id == "resize") then
         startx, starty = WindowInfo (Win, 17), WindowInfo (Win, 18)
@@ -506,7 +520,6 @@ end -- OnPluginClose
 
 function OnPluginEnable ()
   checkplugin ("3e7dedbe37e44942dd46d264", "GMCP_Handler.xml")
-  checkplugin ("aaa79afcb20fa11787c5a327", "broadcast_state.xml")
   WindowShow (Win, true)
   miniNote("Spellups will appear here.")
 
@@ -659,10 +672,15 @@ function OnPluginBroadcast (msg, id, name, text)
         end
       end
     end
-  elseif id == "aaa79afcb20fa11787c5a327" then
-    status = GetPluginVariableList("aaa79afcb20fa11787c5a327")
-  end -- if
 
+    if text:find("char.status") then
+      res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char")
+      char = assert (loadstring ('return ' .. gmcparg or ""))()
+      status.state = char.status.state
+      status.statestring = statestrings[tonumber(status.state)]
+    end
+  end
+  
   if old_state ~= status.state then
     waiting = -1
     resume_buff_loop ("playing_change", status.state)
