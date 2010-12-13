@@ -7,7 +7,7 @@ Miniwindow drag-to-move functions.
 Author: Nick Gammon
 Date:   15th July 2009
 Modified: 16th November 2010 to add preprocessing
-
+Modified: 29th November 2010 by Fiendish to improve dragging offscreen
 
 This module is intended to make it easier to add drag handlers for miniwindows.
 
