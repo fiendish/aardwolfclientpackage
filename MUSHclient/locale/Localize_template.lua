@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Wednesday, 10 November 2010 at 13:37:58
+-- Written: Monday, 13 December 2010 at 14:33:30
 
 -- Static messages
 
@@ -14,23 +14,23 @@ messages = {
   ["This field may not be blank"] =
     "",
 
--- C:\source\mushclient\Finding.cpp:172
+-- C:\source\mushclient\Finding.cpp:180
   ["Finding..."] =
     "",
 
--- C:\source\mushclient\MUSHclient.cpp:428
+-- C:\source\mushclient\MUSHclient.cpp:432
   ["OLE initialization failed"] =
     "",
 
--- C:\source\mushclient\MUSHclient.cpp:585
+-- C:\source\mushclient\MUSHclient.cpp:589
   ["Unable to load main frame window"] =
     "",
 
--- C:\source\mushclient\MUSHclient.cpp:808
+-- C:\source\mushclient\MUSHclient.cpp:812
   ["I notice that this is the first time you have used MUSHclient on this PC."] =
     "",
 
--- C:\source\mushclient\MUSHclient.cpp:975
+-- C:\source\mushclient\MUSHclient.cpp:979
   ["This will end your MUSHclient session."] =
     "",
 
@@ -48,7 +48,7 @@ messages = {
 
 -- C:\source\mushclient\TextView.cpp:678 C:\source\mushclient\sendvw.cpp:338
 
--- C:\source\mushclient\sendvw.cpp:2256
+-- C:\source\mushclient\sendvw.cpp:2259
   ["Spell check ..."] =
     "",
 
@@ -122,99 +122,99 @@ messages = {
   ["Closing network connection ..."] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2530
+-- C:\source\mushclient\Utilities.cpp:2534
   ["No match"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2531
+-- C:\source\mushclient\Utilities.cpp:2535
   ["Null"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2532
+-- C:\source\mushclient\Utilities.cpp:2536
   ["Bad option"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2533
+-- C:\source\mushclient\Utilities.cpp:2537
   ["Bad magic"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2534
+-- C:\source\mushclient\Utilities.cpp:2538
   ["Unknown Opcode"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2535
+-- C:\source\mushclient\Utilities.cpp:2539
   ["No Memory"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2536
+-- C:\source\mushclient\Utilities.cpp:2540
   ["No Substring"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2537
+-- C:\source\mushclient\Utilities.cpp:2541
   ["Match Limit"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2538
+-- C:\source\mushclient\Utilities.cpp:2542
   ["Callout"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2539
+-- C:\source\mushclient\Utilities.cpp:2543
   ["Bad UTF8"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2540
+-- C:\source\mushclient\Utilities.cpp:2544
   ["Bad UTF8 Offset"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2541
+-- C:\source\mushclient\Utilities.cpp:2545
   ["Partial"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2542
+-- C:\source\mushclient\Utilities.cpp:2546
   ["Bad Partial"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2543
+-- C:\source\mushclient\Utilities.cpp:2547
   ["Internal"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2544
+-- C:\source\mushclient\Utilities.cpp:2548
   ["Bad Count"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2545
+-- C:\source\mushclient\Utilities.cpp:2549
   ["Dfa Uitem"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2546
+-- C:\source\mushclient\Utilities.cpp:2550
   ["Dfa Ucond"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2547
+-- C:\source\mushclient\Utilities.cpp:2551
   ["Dfa Umlimit"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2548
+-- C:\source\mushclient\Utilities.cpp:2552
   ["Dfa Wssize"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2549
+-- C:\source\mushclient\Utilities.cpp:2553
   ["Dfa Recurse"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2550
+-- C:\source\mushclient\Utilities.cpp:2554
   ["Recursion Limit"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2551
+-- C:\source\mushclient\Utilities.cpp:2555
   ["Null Ws Limit"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2552
+-- C:\source\mushclient\Utilities.cpp:2556
   ["Bad Newline"] =
     "",
 
--- C:\source\mushclient\Utilities.cpp:2553
+-- C:\source\mushclient\Utilities.cpp:2557
   ["Unknown PCRE error"] =
     "",
 
@@ -540,7 +540,7 @@ messages = {
 
 -- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:5179
 
--- C:\source\mushclient\doc.cpp:3644
+-- C:\source\mushclient\doc.cpp:3645
   ["Unable to open or read the requested file"] =
     "",
 
@@ -560,33 +560,33 @@ messages = {
   ["Regular expressions not supported here."] =
     "",
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7381
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7384
 
--- C:\source\mushclient\doc.cpp:7669
+-- C:\source\mushclient\doc.cpp:7678
   ["Unable to edit the script file."] =
     "",
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7903
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7906
   ["No variables in this world."] =
     "",
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:8054
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:8057
   ["Your \"auto say\" string cannot be blank"] =
     "",
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:8245
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:8248
   ["Your character name cannot be blank for auto-connect."] =
     "",
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:9002
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:9005
   ["Calculating memory usage..."] =
     "",
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:9004
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:9007
   ["Memory used by output buffer"] =
     "",
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:9013
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:9016
   ["Calculating size of output buffer..."] =
     "",
 
@@ -646,323 +646,323 @@ messages = {
   ["Cannot connect. World name not specified"] =
     "",
 
--- C:\source\mushclient\doc.cpp:1418
+-- C:\source\mushclient\doc.cpp:1419
   ["Insufficient memory in buffer to decompress text"] =
     "",
 
--- C:\source\mushclient\doc.cpp:2477
+-- C:\source\mushclient\doc.cpp:2478
   ["Ran out of memory. The world has been closed."] =
     "",
 
--- C:\source\mushclient\doc.cpp:2647
+-- C:\source\mushclient\doc.cpp:2648
   ["processing hotspot callback"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3216 C:\source\mushclient\doc.cpp:3286
+-- C:\source\mushclient\doc.cpp:3217 C:\source\mushclient\doc.cpp:3287
   ["Unable to allocate memory for screen font"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3431
+-- C:\source\mushclient\doc.cpp:3432
   ["An error occurred calculating amount to send to world"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3464
+-- C:\source\mushclient\doc.cpp:3465
   ["Sending to world..."] =
     "",
 
--- C:\source\mushclient\doc.cpp:3466
+-- C:\source\mushclient\doc.cpp:3467
   ["Sending..."] =
     "",
 
--- C:\source\mushclient\doc.cpp:3583
+-- C:\source\mushclient\doc.cpp:3584
   ["An error occurred when sending/pasting to this world"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3667 C:\source\mushclient\doc.cpp:3754
+-- C:\source\mushclient\doc.cpp:3668 C:\source\mushclient\doc.cpp:3755
   ["Cannot open the Clipboard"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3699
+-- C:\source\mushclient\doc.cpp:3700
   ["Unable to get Clipboard data"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3711 C:\source\mushclient\doc.cpp:3823
+-- C:\source\mushclient\doc.cpp:3712 C:\source\mushclient\doc.cpp:3824
   ["Unable to lock memory for Clipboard data"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3769
+-- C:\source\mushclient\doc.cpp:3770
   ["Unable to allocate memory for Clipboard data"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3780
+-- C:\source\mushclient\doc.cpp:3781
   ["Unable to lock memory for Clipboard text data"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3795
+-- C:\source\mushclient\doc.cpp:3796
   ["Unable to set Clipboard text data"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3812
+-- C:\source\mushclient\doc.cpp:3813
   ["Unable to allocate memory for Clipboard Unicode data"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3840
+-- C:\source\mushclient\doc.cpp:3841
   ["Unable to set Clipboard Unicode data"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3959 C:\source\mushclient\doc.cpp:3972
+-- C:\source\mushclient\doc.cpp:3960 C:\source\mushclient\doc.cpp:3973
   ["For assistance with connection problems see: "] =
     "",
 
--- C:\source\mushclient\doc.cpp:3963
+-- C:\source\mushclient\doc.cpp:3964
   ["How to resolve network connection problems"] =
     "",
 
--- C:\source\mushclient\doc.cpp:3975
+-- C:\source\mushclient\doc.cpp:3976
   ["This message can be suppressed, or displayed in the main window."] =
     "",
 
--- C:\source\mushclient\doc.cpp:3977
+-- C:\source\mushclient\doc.cpp:3978
   ["See the File menu -> Global Preferences -> General to do this."] =
     "",
 
--- C:\source\mushclient\doc.cpp:4111
+-- C:\source\mushclient\doc.cpp:4112
   ["Unexpected phase in HostNameResolved function"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4217
+-- C:\source\mushclient\doc.cpp:4218
   ["Recalculating line positions"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4572
+-- C:\source\mushclient\doc.cpp:4579
   ["Permission denied"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4573
+-- C:\source\mushclient\doc.cpp:4580
   ["Address already in use"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4574
+-- C:\source\mushclient\doc.cpp:4581
   ["Cannot assign requested address"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4575
+-- C:\source\mushclient\doc.cpp:4582
   ["Address family not supported by protocol family"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4576
+-- C:\source\mushclient\doc.cpp:4583
   ["Operation already in progress. "] =
     "",
 
--- C:\source\mushclient\doc.cpp:4577
+-- C:\source\mushclient\doc.cpp:4584
   ["Software caused connection abort"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4578
+-- C:\source\mushclient\doc.cpp:4585
   ["Connection refused"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4579
+-- C:\source\mushclient\doc.cpp:4586
   ["Connection reset by peer"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4580
+-- C:\source\mushclient\doc.cpp:4587
   ["Destination address required"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4581
+-- C:\source\mushclient\doc.cpp:4588
   ["Bad address"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4582
+-- C:\source\mushclient\doc.cpp:4589
   ["Host is down"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4583
+-- C:\source\mushclient\doc.cpp:4590
   ["No route to host"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4584
+-- C:\source\mushclient\doc.cpp:4591
   ["Operation now in progress"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4585
+-- C:\source\mushclient\doc.cpp:4592
   ["Interrupted function call"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4586
+-- C:\source\mushclient\doc.cpp:4593
   ["Invalid argument"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4587
+-- C:\source\mushclient\doc.cpp:4594
   ["Socket is already connected"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4588
+-- C:\source\mushclient\doc.cpp:4595
   ["Too many open files"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4589
+-- C:\source\mushclient\doc.cpp:4596
   ["Message too long"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4590
+-- C:\source\mushclient\doc.cpp:4597
   ["Network is down"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4591
+-- C:\source\mushclient\doc.cpp:4598
   ["Network dropped connection on reset"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4592
+-- C:\source\mushclient\doc.cpp:4599
   ["Network is unreachable"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4593
+-- C:\source\mushclient\doc.cpp:4600
   ["No buffer space available"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4594
+-- C:\source\mushclient\doc.cpp:4601
   ["Bad protocol option"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4595
+-- C:\source\mushclient\doc.cpp:4602
   ["Socket is not connected"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4596
+-- C:\source\mushclient\doc.cpp:4603
   ["Socket operation on non-socket"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4597
+-- C:\source\mushclient\doc.cpp:4604
   ["Operation not supported"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4598
+-- C:\source\mushclient\doc.cpp:4605
   ["Protocol family not supported"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4599
+-- C:\source\mushclient\doc.cpp:4606
   ["Too many processes"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4600
+-- C:\source\mushclient\doc.cpp:4607
   ["Protocol not supported"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4601
+-- C:\source\mushclient\doc.cpp:4608
   ["Protocol wrong type for socket"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4602
+-- C:\source\mushclient\doc.cpp:4609
   ["Cannot send after socket shutdown"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4603
+-- C:\source\mushclient\doc.cpp:4610
   ["Socket type not supported"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4604
+-- C:\source\mushclient\doc.cpp:4611
   ["Connection timed out"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4605
+-- C:\source\mushclient\doc.cpp:4612
   ["Resource temporarily unavailable"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4606
+-- C:\source\mushclient\doc.cpp:4613
   ["Host not found"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4607
+-- C:\source\mushclient\doc.cpp:4614
   ["Specified event object handle is invalid"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4608
+-- C:\source\mushclient\doc.cpp:4615
   ["One or more parameters are invalid"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4609
+-- C:\source\mushclient\doc.cpp:4616
   ["Invalid procedure table from service provider"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4610
+-- C:\source\mushclient\doc.cpp:4617
   ["Invalid service provider version number"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4611
+-- C:\source\mushclient\doc.cpp:4618
   ["Overlapped operations will complete later"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4612
+-- C:\source\mushclient\doc.cpp:4619
   ["Overlapped I/O event object not in signaled state"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4613
+-- C:\source\mushclient\doc.cpp:4620
   ["Insufficient memory available"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4614
+-- C:\source\mushclient\doc.cpp:4621
   ["Successful WSAStartup not yet performed"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4615
+-- C:\source\mushclient\doc.cpp:4622
   ["Valid name, no data record of requested type"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4616
+-- C:\source\mushclient\doc.cpp:4623
   ["This is a non-recoverable error"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4617
+-- C:\source\mushclient\doc.cpp:4624
   ["Unable to initialize a service provider"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4618
+-- C:\source\mushclient\doc.cpp:4625
   ["System call failure"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4619
+-- C:\source\mushclient\doc.cpp:4626
   ["Network subsystem is unavailable"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4620
+-- C:\source\mushclient\doc.cpp:4627
   ["Non-authoritative host not found"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4621
+-- C:\source\mushclient\doc.cpp:4628
   ["WINSOCK.DLL version out of range"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4622
+-- C:\source\mushclient\doc.cpp:4629
   ["Graceful shutdown in progress"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4623
+-- C:\source\mushclient\doc.cpp:4630
   ["Overlapped operation aborted"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4627
+-- C:\source\mushclient\doc.cpp:4634
   ["Unknown error code"] =
     "",
 
--- C:\source\mushclient\doc.cpp:4849
+-- C:\source\mushclient\doc.cpp:4856
   ["Recalling..."] =
     "",
 
--- C:\source\mushclient\doc.cpp:6402 C:\source\mushclient\doc.cpp:6424
+-- C:\source\mushclient\doc.cpp:6409 C:\source\mushclient\doc.cpp:6431
   ["Send-to-script cannot execute because scripting is not enabled."] =
     "",
 
--- C:\source\mushclient\doc.cpp:6493
+-- C:\source\mushclient\doc.cpp:6500
   ["Unable to allocate memory for host name lookup"] =
     "",
 
--- C:\source\mushclient\doc.cpp:6953 C:\source\mushclient\doc.cpp:6955
+-- C:\source\mushclient\doc.cpp:6962 C:\source\mushclient\doc.cpp:6964
   ["Proxy server refused authentication"] =
     "",
 
--- C:\source\mushclient\doc.cpp:7113
+-- C:\source\mushclient\doc.cpp:7122
   ["Proxy server username or password lengths cannot be > 255 characters"] =
     "",
 
@@ -972,23 +972,23 @@ messages = {
   ["Ready"] =
     "",
 
--- C:\source\mushclient\doc_construct.cpp:666
+-- C:\source\mushclient\doc_construct.cpp:667
   ["Preload world defaults from an existing world?"] =
     "",
 
--- C:\source\mushclient\doc_construct.cpp:712
+-- C:\source\mushclient\doc_construct.cpp:713
   ["Unexpected file format - invalid world file"] =
     "",
 
--- C:\source\mushclient\doc_construct.cpp:723
+-- C:\source\mushclient\doc_construct.cpp:724
   ["Unable to open world file"] =
     "",
 
--- C:\source\mushclient\doc_construct.cpp:859
+-- C:\source\mushclient\doc_construct.cpp:860
   ["Your world name cannot be blank."] =
     "",
 
--- C:\source\mushclient\doc_construct.cpp:865
+-- C:\source\mushclient\doc_construct.cpp:866
   ["The world TCP/IP address cannot be blank."] =
     "",
 
@@ -1076,41 +1076,41 @@ messages = {
   ["Unable to open the plugins web page: "] =
     "",
 
--- C:\source\mushclient\mushview.cpp:3726
+-- C:\source\mushclient\mushview.cpp:3734
   ["Printing world..."] =
     "",
 
--- C:\source\mushclient\mushview.cpp:3912
+-- C:\source\mushclient\mushview.cpp:3920
   ["Printing cancelled"] =
     "",
 
--- C:\source\mushclient\mushview.cpp:4403
+-- C:\source\mushclient\mushview.cpp:4411
   ["No URL selected"] =
     "",
 
--- C:\source\mushclient\mushview.cpp:4405
+-- C:\source\mushclient\mushview.cpp:4413
   ["URL too long"] =
     "",
 
--- C:\source\mushclient\mushview.cpp:4445
+-- C:\source\mushclient\mushview.cpp:4453
   ["No email address selected"] =
     "",
 
--- C:\source\mushclient\mushview.cpp:4447
+-- C:\source\mushclient\mushview.cpp:4455
   ["Email address too long"] =
     "",
 
--- C:\source\mushclient\mushview.cpp:5161
+-- C:\source\mushclient\mushview.cpp:5169
   ["Cannot find style of this character"] =
     "",
 
--- C:\source\mushclient\mushview.cpp:5596
+-- C:\source\mushclient\mushview.cpp:5604
   ["@ must be followed by a variable name"] =
     "",
 
--- C:\source\mushclient\mushview.cpp:6182
+-- C:\source\mushclient\mushview.cpp:6190
 
--- C:\source\mushclient\mushview.cpp:6266
+-- C:\source\mushclient\mushview.cpp:6274
   ["Cannot compile regular expression"] =
     "",
 
@@ -1524,27 +1524,27 @@ messages = {
   ["Action code of '(' not terminated by a ')'"] =
     "",
 
--- C:\source\mushclient\scripting\scriptengine.cpp:200
+-- C:\source\mushclient\scripting\scriptengine.cpp:202
   ["Immediate execution"] =
     "",
 
--- C:\source\mushclient\scripting\scriptengine.cpp:205
+-- C:\source\mushclient\scripting\scriptengine.cpp:207
   ["Line in error: "] =
     "",
 
--- C:\source\mushclient\scripting\scriptengine.cpp:211
+-- C:\source\mushclient\scripting\scriptengine.cpp:213
   ["No active world"] =
     "",
 
--- C:\source\mushclient\scripting\scriptengine.cpp:238
+-- C:\source\mushclient\scripting\scriptengine.cpp:240
   ["Script error"] =
     "",
 
--- C:\source\mushclient\scripting\scriptengine.cpp:391
+-- C:\source\mushclient\scripting\scriptengine.cpp:393
   ["Something nasty happened whilst initialising the scripting engine"] =
     "",
 
--- C:\source\mushclient\scripting\scriptengine.cpp:429
+-- C:\source\mushclient\scripting\scriptengine.cpp:431
   ["Script engine problem on script parse"] =
     "",
 
@@ -1590,89 +1590,89 @@ messages = {
   ["MCCP not active."] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:1543
+-- C:\source\mushclient\world_debug.cpp:1548
   ["        WARNING: temporarily hidden by auto-positioning (no room)"] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:1671
+-- C:\source\mushclient\world_debug.cpp:1676
   ["----- Debug commands available -----"] =
-    "",
-
--- C:\source\mushclient\world_debug.cpp:2268
-
--- C:\source\mushclient\world_debug.cpp:2338
-  ["Matched count"] =
-    "",
-
--- C:\source\mushclient\world_debug.cpp:2269
-
--- C:\source\mushclient\world_debug.cpp:2339
-
--- C:\source\mushclient\world_debug.cpp:2409
-  ["Has script"] =
-    "",
-
--- C:\source\mushclient\world_debug.cpp:2270
-
--- C:\source\mushclient\world_debug.cpp:2340
-
--- C:\source\mushclient\world_debug.cpp:2410
-  ["Times script called"] =
-    "",
-
--- C:\source\mushclient\world_debug.cpp:2271
-
--- C:\source\mushclient\world_debug.cpp:2341
-  ["When last matched"] =
-    "",
-
--- C:\source\mushclient\world_debug.cpp:2272
-
--- C:\source\mushclient\world_debug.cpp:2342
-
--- C:\source\mushclient\world_debug.cpp:2414
-  ["Send to"] =
     "",
 
 -- C:\source\mushclient\world_debug.cpp:2273
 
 -- C:\source\mushclient\world_debug.cpp:2343
+  ["Matched count"] =
+    "",
+
+-- C:\source\mushclient\world_debug.cpp:2274
+
+-- C:\source\mushclient\world_debug.cpp:2344
+
+-- C:\source\mushclient\world_debug.cpp:2414
+  ["Has script"] =
+    "",
+
+-- C:\source\mushclient\world_debug.cpp:2275
+
+-- C:\source\mushclient\world_debug.cpp:2345
 
 -- C:\source\mushclient\world_debug.cpp:2415
+  ["Times script called"] =
+    "",
+
+-- C:\source\mushclient\world_debug.cpp:2276
+
+-- C:\source\mushclient\world_debug.cpp:2346
+  ["When last matched"] =
+    "",
+
+-- C:\source\mushclient\world_debug.cpp:2277
+
+-- C:\source\mushclient\world_debug.cpp:2347
+
+-- C:\source\mushclient\world_debug.cpp:2419
+  ["Send to"] =
+    "",
+
+-- C:\source\mushclient\world_debug.cpp:2278
+
+-- C:\source\mushclient\world_debug.cpp:2348
+
+-- C:\source\mushclient\world_debug.cpp:2420
   ["Temporary"] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:2279
+-- C:\source\mushclient\world_debug.cpp:2284
 
--- C:\source\mushclient\world_debug.cpp:2348
+-- C:\source\mushclient\world_debug.cpp:2353
   ["Time to match"] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:2283
+-- C:\source\mushclient\world_debug.cpp:2288
 
--- C:\source\mushclient\world_debug.cpp:2351
+-- C:\source\mushclient\world_debug.cpp:2356
   ["Match attempts"] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:2408
+-- C:\source\mushclient\world_debug.cpp:2413
   ["Fired count"] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:2411
+-- C:\source\mushclient\world_debug.cpp:2416
   ["When to fire next"] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:2412
+-- C:\source\mushclient\world_debug.cpp:2417
   ["Seconds to fire next"] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:2413
+-- C:\source\mushclient\world_debug.cpp:2418
   ["When last reset/fired"] =
     "",
 
--- C:\source\mushclient\world_debug.cpp:2523
+-- C:\source\mushclient\world_debug.cpp:2528
 
--- C:\source\mushclient\world_debug.cpp:2532
+-- C:\source\mushclient\world_debug.cpp:2537
   ["Never"] =
     "",
   } -- end messages
@@ -1688,49 +1688,49 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\Finding.cpp:153
+-- C:\source\mushclient\Finding.cpp:161
   ["Finding: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\MUSHclient.cpp:551
+-- C:\source\mushclient\MUSHclient.cpp:555
   ["Internal MUSHclient error, config name collision: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\MUSHclient.cpp:828
+-- C:\source\mushclient\MUSHclient.cpp:832
   ["Welcome to MUSHclient, version %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\MUSHclient.cpp:829
+-- C:\source\mushclient\MUSHclient.cpp:833
   ["Thank you for upgrading MUSHclient to version %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\MUSHclient.cpp:1408
+-- C:\source\mushclient\MUSHclient.cpp:1412
   ["Function '%s' not in spellchecker.lua file"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\MUSHclient.cpp:1439
+-- C:\source\mushclient\MUSHclient.cpp:1443
   ["Could not initialise zlib decompression engine: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\MUSHclient.cpp:1442
+-- C:\source\mushclient\MUSHclient.cpp:1446
   ["Could not initialise zlib decompression engine: %i"] =
     function (a)
      
@@ -1751,14 +1751,14 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\ProcessPreviousLine.cpp:567
+-- C:\source\mushclient\ProcessPreviousLine.cpp:568
   ["Previous line had a bad UTF-8 sequence at column %i, and was not evaluated for trigger matches"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\ProcessPreviousLine.cpp:1086
+-- C:\source\mushclient\ProcessPreviousLine.cpp:1087
   ["Trigger: %s"] =
     function (a)
      
@@ -1783,9 +1783,9 @@ formatted = {
 
 -- C:\source\mushclient\dialogs\cmdhist.cpp:246
 
--- C:\source\mushclient\doc.cpp:5695 C:\source\mushclient\mushview.cpp:5265
+-- C:\source\mushclient\doc.cpp:5702 C:\source\mushclient\mushview.cpp:5273
 
--- C:\source\mushclient\sendvw.cpp:2316
+-- C:\source\mushclient\sendvw.cpp:2319
   ["Notepad: %s"] =
     function (a)
      
@@ -1883,14 +1883,14 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\Utilities.cpp:1740
+-- C:\source\mushclient\Utilities.cpp:1744
   ["Cannot find the function '%s' - item '%s' is %s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\Utilities.cpp:2328
+-- C:\source\mushclient\Utilities.cpp:2332
   ["Clipboard converted for use with the Forum, %i change%s made"] =
     function (a, b)
      
@@ -2561,7 +2561,7 @@ formatted = {
 
 -- C:\source\mushclient\dialogs\plugins\PluginsDlg.cpp:556
 
--- C:\source\mushclient\world_debug.cpp:2444
+-- C:\source\mushclient\world_debug.cpp:2449
   ["Unable to edit the plugin file %s."] =
     function (a)
      
@@ -2733,49 +2733,49 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:6183
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:6186
   ["By checking the option \"Override with default timers\"  your existing %i timer%s will be PERMANENTLY discarded next time you open this world.\n\nAre you SURE you want to do this?"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7350
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7353
   ["Successfully registered %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7877
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7880
   ["%i line%s could not be added as a variable."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7891
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7894
   ["Loaded %i variable%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7950
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:7953
   ["Saved %i variable%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:8294
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:8297
   ["(%i line%s)"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:9046
+-- C:\source\mushclient\dialogs\world_prefs\prefspropertypages.cpp:9049
   [" (%i styles)"] =
     function (a)
      
@@ -2866,175 +2866,175 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:1481
+-- C:\source\mushclient\doc.cpp:1482
   ["Could not decompress text from MUD: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:1484
+-- C:\source\mushclient\doc.cpp:1485
   ["Could not decompress text from MUD: %i"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:2521
+-- C:\source\mushclient\doc.cpp:2522
   ["%s function \"%s\" cannot execute - scripting disabled/parse error."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:2533
+-- C:\source\mushclient\doc.cpp:2534
   ["%s function \"%s\" not found or had a previous error."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:2552
+-- C:\source\mushclient\doc.cpp:2553
   ["processing trigger \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:2711
+-- C:\source\mushclient\doc.cpp:2712
   ["Close log file %s?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:2823
+-- C:\source\mushclient\doc.cpp:2824
   ["Unable to open log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:3102
+-- C:\source\mushclient\doc.cpp:3103
   ["An error occurred writing to log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:3932 C:\source\mushclient\doc.cpp:6567
+-- C:\source\mushclient\doc.cpp:3933 C:\source\mushclient\doc.cpp:6574
   ["Unable to connect to \"%s\", code = %i (%s)\n\nError occurred during phase: %s"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:4087
+-- C:\source\mushclient\doc.cpp:4088
   ["Unable to resolve host name for \"%s\", code = %i (%s)"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:4412
+-- C:\source\mushclient\doc.cpp:4419
   ["This will end your %s session."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:4442
+-- C:\source\mushclient\doc.cpp:4449
   ["World internal variables (only) have changed.\n\nSave changes to %s?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:4803
+-- C:\source\mushclient\doc.cpp:4810
   ["Are you SURE you want to clear all %i lines in the output window?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:4832
+-- C:\source\mushclient\doc.cpp:4839
   ["Recalling: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:4995
+-- C:\source\mushclient\doc.cpp:5002
   ["The %s \"%s\" was not found"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:5056 C:\source\mushclient\mushview.cpp:5318
+-- C:\source\mushclient\doc.cpp:5063 C:\source\mushclient\mushview.cpp:5326
   ["Recall: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:5233
+-- C:\source\mushclient\doc.cpp:5240
   ["The connection to %s is currently being established."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:5239
+-- C:\source\mushclient\doc.cpp:5246
   ["The connection to %s is not open. Attempt to reconnect?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:5544
+-- C:\source\mushclient\doc.cpp:5551
   ["%s%s packet: %I64d (%i bytes) at %s%s%s"] =
     function (a, b, c, d, e, f, g)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:6508
+-- C:\source\mushclient\doc.cpp:6515
   ["Unable to initiate host name lookup for \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:6718
+-- C:\source\mushclient\doc.cpp:6727
   ["Could not open log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:6931
+-- C:\source\mushclient\doc.cpp:6940
   ["Proxy server cannot authenticate, reason: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:6997 C:\source\mushclient\doc.cpp:7035
+-- C:\source\mushclient\doc.cpp:7006 C:\source\mushclient\doc.cpp:7044
   ["Proxy server refused connection, reason: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:7065
+-- C:\source\mushclient\doc.cpp:7074
   ["Unexpected proxy server response %i, expected %i"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\doc.cpp:7639
+-- C:\source\mushclient\doc.cpp:7648
   ["Unable to edit file %s."] =
     function (a)
      
@@ -3050,7 +3050,7 @@ formatted = {
 
 -- C:\source\mushclient\evaluate.cpp:917
 
--- C:\source\mushclient\mushview.cpp:5704
+-- C:\source\mushclient\mushview.cpp:5712
   ["Alias: %s"] =
     function (a)
      
@@ -3059,7 +3059,7 @@ formatted = {
 
 -- C:\source\mushclient\evaluate.cpp:948
 
--- C:\source\mushclient\mushview.cpp:5634
+-- C:\source\mushclient\mushview.cpp:5642
   ["processing alias \"%s\""] =
     function (a)
      
@@ -3096,7 +3096,7 @@ formatted = {
 
 -- C:\source\mushclient\mushview.cpp:2258
 
--- C:\source\mushclient\mushview.cpp:5442
+-- C:\source\mushclient\mushview.cpp:5450
   ["Hyperlink action \"%s\" - permission denied."] =
     function (a)
      
@@ -3105,42 +3105,42 @@ formatted = {
 
 -- C:\source\mushclient\mushview.cpp:2263
 
--- C:\source\mushclient\mushview.cpp:5447
+-- C:\source\mushclient\mushview.cpp:5455
   ["Unable to open the hyperlink \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\mushview.cpp:4318
+-- C:\source\mushclient\mushview.cpp:4326
   ["Line %ld, %s%s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\mushview.cpp:4415
+-- C:\source\mushclient\mushview.cpp:4423
   ["Unable to open the URL \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\mushview.cpp:4449
+-- C:\source\mushclient\mushview.cpp:4457
   ["Email address \"%s\" invalid - does not contain a \"@\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\mushview.cpp:4457
+-- C:\source\mushclient\mushview.cpp:4465
   ["Unable to send mail to \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\mushview.cpp:5606
+-- C:\source\mushclient\mushview.cpp:5614
   ["Variable '%s' is not defined."] =
     function (a)
      
@@ -3631,58 +3631,58 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\plugins.cpp:219 C:\source\mushclient\plugins.cpp:266
+-- C:\source\mushclient\plugins.cpp:220 C:\source\mushclient\plugins.cpp:267
 
--- C:\source\mushclient\plugins.cpp:348 C:\source\mushclient\plugins.cpp:438
+-- C:\source\mushclient\plugins.cpp:349 C:\source\mushclient\plugins.cpp:439
 
--- C:\source\mushclient\plugins.cpp:526 C:\source\mushclient\plugins.cpp:614
+-- C:\source\mushclient\plugins.cpp:527 C:\source\mushclient\plugins.cpp:615
 
 -- C:\source\mushclient\scripting\lua_methods.cpp:1127
 
--- C:\source\mushclient\scripting\methods\methods_plugins.cpp:400
+-- C:\source\mushclient\scripting\methods\methods_plugins.cpp:411
   ["Plugin %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\plugins.cpp:221 C:\source\mushclient\plugins.cpp:269
+-- C:\source\mushclient\plugins.cpp:222 C:\source\mushclient\plugins.cpp:270
 
--- C:\source\mushclient\plugins.cpp:349 C:\source\mushclient\plugins.cpp:439
+-- C:\source\mushclient\plugins.cpp:350 C:\source\mushclient\plugins.cpp:440
 
--- C:\source\mushclient\plugins.cpp:527 C:\source\mushclient\plugins.cpp:617
+-- C:\source\mushclient\plugins.cpp:528 C:\source\mushclient\plugins.cpp:618
 
 -- C:\source\mushclient\scripting\lua_methods.cpp:1128
 
--- C:\source\mushclient\scripting\methods\methods_plugins.cpp:401
+-- C:\source\mushclient\scripting\methods\methods_plugins.cpp:412
   ["Executing plugin %s sub %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\plugins.cpp:802
+-- C:\source\mushclient\plugins.cpp:803
   ["Plugin state saved. Plugin: \"%s\". World: \"%s\"."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\plugins.cpp:815
+-- C:\source\mushclient\plugins.cpp:816
   ["Unable to create the plugin save state file: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\plugins.cpp:824
+-- C:\source\mushclient\plugins.cpp:825
   ["Insufficient memory to write the plugin save state file: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\plugins.cpp:833
+-- C:\source\mushclient\plugins.cpp:834
   ["There was a problem saving the plugin save state file: %s"] =
     function (a)
      
@@ -3747,7 +3747,7 @@ formatted = {
 
 -- C:\source\mushclient\scripting\lua_scripting.cpp:447
 
--- C:\source\mushclient\scripting\lua_scripting.cpp:661
+-- C:\source\mushclient\scripting\lua_scripting.cpp:663
 
 -- C:\source\mushclient\scripting\scriptengine.cpp:70
   ["Executing %s script \"%s\""] =
@@ -4105,35 +4105,35 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\scripting\scriptengine.cpp:134
+-- C:\source\mushclient\scripting\scriptengine.cpp:136
   ["Wrong number of arguments for script subroutine \"%s\" when %s\n\nWe expected your subroutine to have %i argument%s"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\scripting\scriptengine.cpp:140
+-- C:\source\mushclient\scripting\scriptengine.cpp:142
   ["Unable to invoke script subroutine \"%s\" when %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\scripting\scriptengine.cpp:183
+-- C:\source\mushclient\scripting\scriptengine.cpp:185
   ["Execution of line %i column %i"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\scripting\scriptengine.cpp:217
+-- C:\source\mushclient\scripting\scriptengine.cpp:219
   ["Plugin: %s (called from world: %s)"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\scripting\scriptengine.cpp:222
+-- C:\source\mushclient\scripting\scriptengine.cpp:224
   ["World: %s"] =
     function (a)
      
@@ -4189,21 +4189,21 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\sendvw.cpp:2137
+-- C:\source\mushclient\sendvw.cpp:2140
   ["Are you SURE you want to clear all %i commands you have typed?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\sendvw.cpp:2223
+-- C:\source\mushclient\sendvw.cpp:2226
   ["No replacements made for \"%s\"."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\sendvw.cpp:2540
+-- C:\source\mushclient\sendvw.cpp:2543
   ["Accelerator: %s"] =
     function (a)
      
@@ -4335,7 +4335,7 @@ formatted = {
 
 -- C:\source\mushclient\world_debug.cpp:574
 
--- C:\source\mushclient\world_debug.cpp:1914
+-- C:\source\mushclient\world_debug.cpp:1919
   ["%i alias%s."] =
     function (a, b)
      
@@ -4344,7 +4344,7 @@ formatted = {
 
 -- C:\source\mushclient\world_debug.cpp:645
 
--- C:\source\mushclient\world_debug.cpp:1851
+-- C:\source\mushclient\world_debug.cpp:1856
   ["%i trigger%s."] =
     function (a, b)
      
@@ -4353,7 +4353,7 @@ formatted = {
 
 -- C:\source\mushclient\world_debug.cpp:782
 
--- C:\source\mushclient\world_debug.cpp:2050
+-- C:\source\mushclient\world_debug.cpp:2055
   ["%i variable%s."] =
     function (a, b)
      
@@ -4644,315 +4644,315 @@ formatted = {
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1295
-  ["', (%s) %s"] =
-    function (a, b)
+-- C:\source\mushclient\world_debug.cpp:1300
+  ["', (%s, %0.3f s) %s"] =
+    function (a, b, c)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1394
+-- C:\source\mushclient\world_debug.cpp:1399
   ["** Plugins: %ld loaded, %ld enabled."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1402
+-- C:\source\mushclient\world_debug.cpp:1407
   ["Connect phase: %i (%s). NAWS wanted: %s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1407
+-- C:\source\mushclient\world_debug.cpp:1412
   ["Received: %I64d bytes (%I64d Kb)"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1408
+-- C:\source\mushclient\world_debug.cpp:1413
   ["Sent: %I64d bytes (%I64d Kb)"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1409
+-- C:\source\mushclient\world_debug.cpp:1414
   ["Received %I64d packets, sent %I64d packets."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1410
+-- C:\source\mushclient\world_debug.cpp:1415
   ["Total lines received: %ld"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1412
+-- C:\source\mushclient\world_debug.cpp:1417
   ["This connection: Sent %ld lines, received %ld lines."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1416
+-- C:\source\mushclient\world_debug.cpp:1421
   ["Telnet (IAC) received: DO: %ld, DONT: %ld, WILL: %ld, WONT: %ld, SB: %ld"] =
     function (a, b, c, d, e)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1442
+-- C:\source\mushclient\world_debug.cpp:1447
   ["MXP active: %s, Pueblo mode: %s, Activated: %s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1447
+-- C:\source\mushclient\world_debug.cpp:1452
   ["MXP tags received: %I64d"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1448
+-- C:\source\mushclient\world_debug.cpp:1453
   ["MXP entities received: %I64d"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1449
+-- C:\source\mushclient\world_debug.cpp:1454
   ["MXP errors: %I64d"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1471
+-- C:\source\mushclient\world_debug.cpp:1476
   ["Commands in command history: %ld"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1472
+-- C:\source\mushclient\world_debug.cpp:1477
   ["Speed walking enabled: %s. Speed walking prefix: %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1474
+-- C:\source\mushclient\world_debug.cpp:1479
   ["Command stacking enabled: %s. Command stack character: '%s'"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1479
+-- C:\source\mushclient\world_debug.cpp:1484
   ["Accelerators defined: %ld"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1526
+-- C:\source\mushclient\world_debug.cpp:1531
   ["Window: '%s', at (%ld,%ld,%ld,%ld), shown: %s"] =
     function (a, b, c, d, e, f)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1534
+-- C:\source\mushclient\world_debug.cpp:1539
   ["        width: %ld, height: %ld, position: %d, hotspots: %ld, fonts: %ld, images: %ld"] =
     function (a, b, c, d, e, f)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1547
+-- C:\source\mushclient\world_debug.cpp:1552
   ["** Miniwindows: %ld loaded, %ld shown."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1559
+-- C:\source\mushclient\world_debug.cpp:1564
   ["Output pixels: width %ld, height: %ld, font width: %ld, font height: %ld"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1563
+-- C:\source\mushclient\world_debug.cpp:1568
   ["               can show %ld characters, wrapping at column %ld, height %ld lines."] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1567
+-- C:\source\mushclient\world_debug.cpp:1572
   ["Output buffer: %i of %ld lines."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1575
+-- C:\source\mushclient\world_debug.cpp:1580
   ["Logging: %s, tracing: %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1584
+-- C:\source\mushclient\world_debug.cpp:1589
   ["Database: '%s', disk file: '%s'"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1590
+-- C:\source\mushclient\world_debug.cpp:1595
   ["** SQLite3 databases: %i"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1600
+-- C:\source\mushclient\world_debug.cpp:1605
   ["Sound buffers in use: %ld"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1623
+-- C:\source\mushclient\world_debug.cpp:1628
   ["Pane name   = %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1624
+-- C:\source\mushclient\world_debug.cpp:1629
   [" Pane title = %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1625
+-- C:\source\mushclient\world_debug.cpp:1630
   [" Left = %i, Top = %i, Width = %i, Height = %i, Flags = %08X, Lines = %i"] =
     function (a, b, c, d, e, f)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1643
+-- C:\source\mushclient\world_debug.cpp:1648
   ["Line %i, Width = %i, Styles = %i, newline = %i"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1665
+-- C:\source\mushclient\world_debug.cpp:1670
   ["%i pane%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1763
+-- C:\source\mushclient\world_debug.cpp:1768
   ["Plugin ID %s does not exist."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1772
+-- C:\source\mushclient\world_debug.cpp:1777
   ["(For plugin: %s)"] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1775
+-- C:\source\mushclient\world_debug.cpp:1780
   ["Warning: Plugin '%s' disabled."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1986
+-- C:\source\mushclient\world_debug.cpp:1991
   [" %5s %02i:%02i:%04.2f"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:1995
+-- C:\source\mushclient\world_debug.cpp:2000
   [" - firing in %8.1f seconds."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:2002
+-- C:\source\mushclient\world_debug.cpp:2007
   ["%i timer%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:2085
+-- C:\source\mushclient\world_debug.cpp:2090
   ["%i callback%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:2137
+-- C:\source\mushclient\world_debug.cpp:2142
   ["%i accelerator%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:2232
+-- C:\source\mushclient\world_debug.cpp:2237
   ["Trigger %s does not exist."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:2302
+-- C:\source\mushclient\world_debug.cpp:2307
   ["Alias %s does not exist."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:2370
+-- C:\source\mushclient\world_debug.cpp:2375
   ["Timer %s does not exist."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:2473
+-- C:\source\mushclient\world_debug.cpp:2478
   ["Unable to edit the script file %s."] =
     function (a)
      
       return ""
     end,  -- function
 
--- C:\source\mushclient\world_debug.cpp:2488
+-- C:\source\mushclient\world_debug.cpp:2493
   ["DebugHelper: %s, %s"] =
     function (a, b)
      
@@ -5051,9 +5051,9 @@ times = {
 
 -- C:\source\mushclient\dialogs\world_prefs\configuration.cpp:514
 
--- C:\source\mushclient\doc.cpp:2897 C:\source\mushclient\doc.cpp:6747
+-- C:\source\mushclient\doc.cpp:2898 C:\source\mushclient\doc.cpp:6756
 
--- C:\source\mushclient\mushview.cpp:3776 C:\source\mushclient\plugins.cpp:985
+-- C:\source\mushclient\mushview.cpp:3784 C:\source\mushclient\plugins.cpp:986
 
 -- C:\source\mushclient\scripting\methods\methods_chat.cpp:700
 
@@ -5061,15 +5061,15 @@ times = {
   ["%A, %B %d, %Y, %#I:%M %p"] =
     "",
 
--- C:\source\mushclient\doc.cpp:5538
+-- C:\source\mushclient\doc.cpp:5545
   ["%A, %B %d, %Y, %#I:%M:%S %p"] =
     "",
 
--- C:\source\mushclient\doc.cpp:6654
+-- C:\source\mushclient\doc.cpp:6663
   ["--- Connected on %A, %B %d, %Y, %#I:%M %p ---"] =
     "",
 
--- C:\source\mushclient\mushview.cpp:4310
+-- C:\source\mushclient\mushview.cpp:4318
   ["%A, %B %d, %#I:%M:%S %p"] =
     "",
 
