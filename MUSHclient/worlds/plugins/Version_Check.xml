@@ -10,7 +10,7 @@
    purpose="Checks for a new version of MUSHclient"
    date_written="2010-11-13 16:45:58"
    requires="4.60"
-   version="1.4"
+   version="1.5"
    >
 <description trim="y">
 <![CDATA[
@@ -163,6 +163,14 @@ function do_version_check ()
   require "getlines"
   require "movewindow"
   
+  if package.loaders [3] == nil or package.loadlib == nil then
+     ColourNote ("orange", "", GetPluginName () .. " cannot do version check.") 
+     ColourNote ("orange", "", "You need to allow DLLs to be loaded.")
+     ColourNote ("orange", "", "You also need to trust this plugin.")
+     ColourNote ("orange", "", "See File Menu -> Global Preferences -> Lua")
+     return
+  end -- if
+    
   local http = require "socket.http" 
   
   SetStatus "Checking for latest MUSHclient version ..."
@@ -276,7 +284,7 @@ function do_version_check ()
   WindowText (win, font_id, "Current version: " .. Version (), x, y, 0, 0, WINDOW_TEXT_COLOUR )
   y = y + font_height
   
-  WindowText (win, font_id, "Available version: " .. new_version, x, y, 0, 0, WINDOW_TEXT_COLOUR )
+  WindowText (win, font_id, "Available version: " .. info.version, x, y, 0, 0, WINDOW_TEXT_COLOUR )
   y = y + font_height
   
   WindowText (win, font_id, string.format ("Size: %0.2f Mb", info.installer_size / 1024 / 1024), x, y, 0, 0, WINDOW_TEXT_COLOUR )
@@ -285,9 +293,9 @@ function do_version_check ()
   installer_url = info.installer_url 
   
   -- link to download this version
-  make_hyperlink ("Download version " .. new_version, 
+  make_hyperlink ("Download version " .. info.version, 
                   "download", 
-                  x, y, hyperlink_download, "Download version " .. new_version)
+                  x, y, hyperlink_download, "Download version " .. info.version)
   y = y + font_height
   
   -- link to view announcements forum topic
