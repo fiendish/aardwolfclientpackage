@@ -614,20 +614,23 @@ function save_room_to_database (uid,room)
   assert (uid, "No UID supplied to save_room_to_database")
 
   dbcheck (db:execute (string.format (
-        "INSERT INTO rooms (uid, name, terrain, info, x, y, z, area, date_added) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, DATETIME('NOW'));",
+        "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, date_added) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, DATETIME('NOW'));",
           fixsql (uid), 
           fixsql (room.name),
           fixsql (room.terrain), 
           fixsql (room.info),
           room.x, room.y, room.z, fixsql(room.area)
         )))
-        
-  dbcheck (db:execute (string.format ([[
-        INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);
-      ]], fixsql  (uid),       
-          fixsql  (room.name) 
-          )))
-
+  
+  local exists = false      
+  for n in db:nrows(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s AND name = %s", fixsql(uid), fixsql(name))) do 
+      exists = true 
+  end
+  -- don't add multiple times, maintaining backwards database compatibility (there's no uniqueness constraint on rooms_lookup.uid)
+  if not exists then
+      dbcheck (db:execute (string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name))))
+  end
+  
   room_not_in_database [uid] = false
   
   if show_database_mods then
@@ -830,13 +833,19 @@ function create_tables ()
   CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);
   
   ]])
+
+  -- Since the MUD sends terrain as a string and not as an integer,
+  -- it was wrong to originally produce rooms with integer terrains.
+  -- Or maybe it's wrong for the MUD to send strings. Either way, we now
+  -- have databases with inconsistent data. So let's make it consistent.
+  dbcheck (db:execute "UPDATE OR IGNORE rooms SET terrain = ifnull((SELECT name FROM environments WHERE environments.uid = rooms.terrain), rooms.terrain);")
   
   -- check if rooms_lookup table exists
   local table_exists
   for a in db:nrows "SELECT * FROM sqlite_master WHERE name = 'rooms_lookup' AND type = 'table'" do
     table_exists = true
   end  -- for
-  
+
   if not table_exists then
     dbcheck (db:execute "CREATE VIRTUAL TABLE rooms_lookup USING FTS3(uid, name);")
     -- in case we only deleted the rooms_lookup table to save space in the download
@@ -1519,9 +1528,9 @@ function got_gmcp_room()
   if not room then
     room = load_room_from_database (room_number)
   end -- not in cache
-  
-  if not room then
 
+-- re-save if we got information that is different than before  
+  if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or nilToStr(room.area) ~= nilToStr(gmcproom.area) or nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or nilToStr(room.info) ~= nilToStr(gmcproom.info) then
      db:exec ("BEGIN TRANSACTION;") 
    
      room = gmcproom
@@ -2147,6 +2156,10 @@ function fixsql (s)
     return "NULL"
   end -- if
 end -- fixsql
+
+function nilToStr(n)
+    return (((n ~= nil) and n) or "")
+end
 
 function fixbool (b)
   if b then
