@@ -303,7 +303,7 @@ function right_click_menu ()
         end
     end
     menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
-    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Good|Evil|<|<|Reset Defaults"
+    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -334,9 +334,9 @@ function right_click_menu ()
         elseif numResult >= 4 and numResult <= 9 then
            showBar[barIndex[numResult-3]][2] = not showBar[barIndex[numResult-3]][2]
         elseif numResult >= 10 and numResult <= 21 then
-           local colourIndex = 5
+           local colourIndex = 4
            if (numResult % 2 == 1) then
-              colourIndex = 4
+              colourIndex = 5
            end
            local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex])
            if newcolour ~= -1 then
