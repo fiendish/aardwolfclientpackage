@@ -141,7 +141,7 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       for item in string.gmatch(message,"%a+") do
 
          -- reset room data hack, for now.
-         if item == "room" or item == "comm" then parent[item] = nil end
+         if item == "room" or item == "comm" or item == "group" then parent[item] = nil end
 
          parent[item] = parent[item] or {}
          parent = parent[item]
