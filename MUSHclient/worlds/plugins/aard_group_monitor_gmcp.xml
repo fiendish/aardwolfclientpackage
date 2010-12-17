@@ -111,7 +111,7 @@ function DisplayMapPage()
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
    
    -- title rectangle
-   local title_height = line_height*2
+   local title_height = line_height*2+2
    WindowGradient(win, 2, 2, -2, title_height, title_gradient_col1, title_gradient_col2, 2)
    WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
 
@@ -128,11 +128,12 @@ function DisplayMapPage()
    else
       styles = ColoursToStyles(group_data["groupname"])
       x = GAP
+      y = 2
       for _, v in ipairs (styles) do
-         x = x + WindowText (win, font_id, v.text, x, 0, 0, 0, v.textcolour)
+         x = x + WindowText (win, font_id, v.text, x, y, 0, 0, v.textcolour)
       end -- for each style run
-      WindowText(win, font_id, group_data["status"], width-WindowTextWidth(win, font_id, group_data["status"])-GAP, 0, 0, 0, ((group_data["status"]=="Private" and 0x0000ff) or 0x00ff00), utf8)
-      y = line_height
+      WindowText(win, font_id, group_data["status"], width-WindowTextWidth(win, font_id, group_data["status"])-GAP, y, 0, 0, ((group_data["status"]=="Private" and 0x0000ff) or 0x00ff00), utf8)
+      y = y + line_height
       WindowText(win, font_id, "Leader: "..group_data["leader"], GAP, y, 0, 0, 0xeeeeee, utf8)
       WindowText(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"], width-WindowTextWidth(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"])-GAP, y, 0,0, 0xeeeeee, utf8)
       y = title_height
