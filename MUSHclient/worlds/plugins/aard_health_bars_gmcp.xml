@@ -297,9 +297,9 @@ function right_click_menu ()
     local activeBars = ""
     for i,v in ipairs(barIndex) do
         if (showBar[v][2] == true) then
-            activeBars = activeBars.."[*] "..v.."|"
+            activeBars = activeBars.."+"..v.."|"
         else
-            activeBars = activeBars.."[ ] "..v.."|"
+            activeBars = activeBars..""..v.."|"
         end
     end
     menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
