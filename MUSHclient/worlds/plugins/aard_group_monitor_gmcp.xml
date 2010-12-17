@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Aardwolf_Group_Monitor"
+   author="Fiendish"
+   id="f178e68512c685b3be1e9b07"
+   language="Lua"
+   purpose="Aardwolf Group Monitor"
+   date_written="2010-12-13 15:35:02"
+   requires="4.71"
+   version="1.0"
+   save_state="y"
+   >
+
+<description trim="y">
+
+Aardwolf Group Monitor
+
+Gives a persistant visual display of the status of your group members using
+details captured through GMCP.
+
+</description>
+
+</plugin>
+
+
+<!--  Triggers  -->
+
+<triggers>  
+</triggers>
+
+<script>
+<![CDATA[
+
+require "gauge"
+require "movewindow"
+require "mw"
+require "tprint"
+
+background_colour = tonumber (GetVariable ("background_colour")) or 0x000000
+title_colour = tonumber (GetVariable ("title_colour")) or 0x292929
+default_height = 100
+default_width = 100
+default_font_name = ""
+default_font_size = 0
+height = tonumber (GetVariable ("height")) or default_height
+width = tonumber (GetVariable ("width")) or default_width
+GAP = 5
+font_size = 0
+font_name = ""
+border_color = 0xdddddd
+title_gradient_col1 = 0x151515
+title_gradient_col2 = 0x444444
+group_members = {}
+group_info = {}
+
+RESIZE_TAG_SIZE = 10
+MIN_SIZE        = 100
+
+-- Variables not saved.
+startx      = ""  
+starty      = ""
+posx        = "" 
+posy        = ""
+font_height = 0
+
+-- pull in telnet option handling
+dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
+
+-- functions for handling Aardwolf color codes
+dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
+function SetUpHotspotsAndDraw(firstTime)
+   if (firstTime == true) then
+       check (WindowCreate (win, 
+             windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
+             width,     -- width
+             height,  -- height
+             windowinfo.window_mode,       -- auto-position: middle right
+             windowinfo.window_flags,  -- flags
+             background_colour) )
+       -- Add the drag handler so they can move the window around
+       movewindow.add_drag_handler (win, 0, 0, 0, 0)
+
+       -- Add handler for resizing
+       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
+       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+   else
+       -- everything has already been made
+       -- just move them back into place
+       WindowResize(win, width, height, background_colour)
+       WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
+   end
+
+   DisplayMapPage()
+end
+
+string.lpad = function(str, len, char)
+    if char == nil then char = ' ' end
+    return string.rep(char, len - #str) .. str
+end
+
+string.rpad = function(str, len, char)
+    if char == nil then char = ' ' end
+    return str .. string.rep(char, len - #str)
+end
+
+function DisplayMapPage()
+       
+   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
+   
+   -- title rectangle
+   local title_height = line_height*2
+   WindowGradient(win, 2, 2, -2, title_height, title_gradient_col1, title_gradient_col2, 2)
+   WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
+
+   if not page_built then
+      txt = "No Group To Display"
+      txtlen = WindowTextWidth(win,font_id, txt)
+      WindowText(win, font_id, txt, (width-txtlen)/2, 0, 0, 0, 0xeeeeee, utf8)
+      txt = "Group info will appear here"
+      txtlen = WindowTextWidth(win,font_id,txt)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
+      txt = "once you create or join one."
+      txtlen = WindowTextWidth(win,font_id,txt)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee, utf8)
+   else
+      styles = ColoursToStyles(group_data["groupname"])
+      x = GAP
+      for _, v in ipairs (styles) do
+         x = x + WindowText (win, font_id, v.text, x, 0, 0, 0, v.textcolour)
+      end -- for each style run
+      WindowText(win, font_id, group_data["status"], width-WindowTextWidth(win, font_id, group_data["status"])-GAP, 0, 0, 0, ((group_data["status"]=="Private" and 0x0000ff) or 0x00ff00), utf8)
+      y = line_height
+      WindowText(win, font_id, "Leader: "..group_data["leader"], GAP, y, 0, 0, 0xeeeeee, utf8)
+      WindowText(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"], width-WindowTextWidth(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"])-GAP, y, 0,0, 0xeeeeee, utf8)
+      y = title_height
+      -- MAIN DISPLAY BODY
+      for i,v in ipairs(group_data["members"]) do
+        y = y + GAP 
+        x = GAP
+       -- txt = "["..(("P" and v["info"]["status"]["poisoned"] == true) or "_")..
+       --     (("B" and v["info"]["status"]["blind"] == true) or "_")..
+       --     (("W" and v["info"]["status"]["webbed"] == true) or "_")..
+       --     (("C" and v["info"]["status"]["cursed"] == true) or "_")..
+       --     (("*" and v["info"]["status"]["attacked"] == true) or "_").."]"
+       -- WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
+       -- x = x + math.max(WindowTextWidth(win, font_id, "[PBWC*]"), WindowTextWidth(win, font_id, "[_____]")) + GAP
+        txt = "["..string.lpad(v["info"]["lvl"], 3, ' ').."]"
+        x = x + WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8) + GAP
+        txt = v["name"]
+        WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
+        txt = "Qt: "..v["info"]["qt"].." - ".."TNL: "..v["info"]["tnl"]
+        WindowText(win, font_id, txt, width-GAP-WindowTextWidth(win, font_id, txt), y, 0, 0, 0xeeeeee, utf8)
+        labels_width = math.max(WindowTextWidth(win, font_id, "HP"), WindowTextWidth(win, font_id, "MN"), WindowTextWidth(win, font_id, "MV"))
+        bar_width = width - GAP*4 - labels_width - WindowTextWidth(win, font_id, "\\") - 2*WindowTextWidth(win, font_id, math.max(v["info"]["mhp"], v["info"]["mmn"], v["info"]["mmv"]))
+        -- HP BAR
+        y = y + line_height + 1
+        x = GAP
+        WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
+        x = x + labels_width + GAP
+        gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, 0x00ff00, 0x000000, 4, 0x000000, 0x004400, nil)
+        txt = v["info"]["hp"].."\\"..v["info"]["mhp"]
+        WindowText(win, font_id, txt, width-GAP-WindowTextWidth(win, font_id, txt), y, 0, 0, 0xeeeeee, utf8)
+        -- MANA BAR
+        y = y + line_height + 1
+        x = GAP
+        WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
+        x = x + labels_width + GAP
+        gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, 0xff0000, 0x000000, 4, 0x000000, 0x440000, nil)
+        txt = v["info"]["mn"].."\\"..v["info"]["mmn"]
+        WindowText(win, font_id, txt, width-GAP-WindowTextWidth(win, font_id, txt), y, 0, 0, 0xeeeeee, utf8)
+        -- MOVES BAR
+        y = y + line_height + 1
+        x = GAP
+        WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
+        x = x + labels_width + GAP
+        gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, 0x00ffff, 0x000000, 4, 0x000000, 0x004444, nil)
+        txt = v["info"]["mv"].."\\"..v["info"]["mmv"]
+        WindowText(win, font_id, txt, width-GAP-WindowTextWidth(win, font_id, txt), y, 0, 0, 0xeeeeee, utf8)
+        y = y + line_height + GAP
+        WindowLine(win, 0, y, width, y, 0xeeeeee, 0, 1)
+      end
+   end
+
+   -- draw edge frame.
+   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
+   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+
+   -- draw the resize widget bottom right corner.
+   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+
+   -- show it now (or refresh)
+   WindowShow (win, true)
+   --Redraw()
+   BroadcastPlugin (999, "repaint")
+                 
+end -- Display_Map
+
+function right_click_menu ()
+
+    menustring ="Change Font"
+    menustring = (menustring .."|Reset Defaults")
+    result = WindowMenu (win,
+        WindowInfo (win, 14),  -- x position
+        WindowInfo (win, 15),   -- y position
+        menustring) -- content
+
+    if result == "Change Font" then
+       wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+       if wanted_font then
+          font_name = wanted_font.name
+          font_size = wanted_font.size
+          -- save and reload
+          OnPluginSaveState()
+          OnPluginInstall()
+       end
+    elseif result == "Reset Defaults" then
+       font_name        = default_font_name
+       font_size        = default_font_size
+       height           = default_height
+       width            = default_width
+       show_coords      = 0
+       -- save and reload
+       OnPluginSaveState()
+       OnPluginInstall()
+    end -- if
+
+end -- right_click_menu
+
+--=================================================================================
+-- Called when plugin receives telnet data - main entry point for actually running
+-- the plugin.
+--=================================================================================
+function OnPluginBroadcast (msg, id, name, text)
+   -- Look for GMCP handler.
+   if (id == '3e7dedbe37e44942dd46d264') then
+      if (text == 'reload') then
+         -- invalidate current data
+         page_built = false 
+         return
+      end
+
+      if (text == "group") then
+         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","group")
+         luastmt = "group_data = " .. gmcparg
+         assert (loadstring (luastmt or "")) ()
+         page_built = true
+         DisplayMapPage()
+      end
+   end
+end
+
+function debugp(source,hsid)
+print("------------------------------------------------------------------------------")
+print("Called FROM : " .. source .. "     HOTSPOT ID: " .. hsid)
+print("startx:  " .. startx .. "   starty:  " .. starty)
+print("posx:  " .. posx.. "   posy: " .. posy)
+print("height: " .. height .. " width: " .. width)
+print("------------------------------------------------------------------------------")
+end
+
+function ResizeMoveCallback()
+   --debugp("ResizeMoveCallback()","")
+
+   posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
+   width = width + posx - startx
+   startx = posx
+   if (width < MIN_SIZE) then
+      width = MIN_SIZE
+      startx = windowinfo.window_left+width
+   elseif (windowinfo.window_left+width > GetInfo(281)) then
+      width = GetInfo(281)-windowinfo.window_left
+      startx = GetInfo(281)
+   end 
+
+   height = height + posy - starty
+   starty = posy
+   if (height < MIN_SIZE) then
+      height = MIN_SIZE
+      starty = windowinfo.window_top+height
+   elseif (windowinfo.window_top+height > GetInfo(280)) then
+      height = GetInfo(280)-windowinfo.window_top
+      starty = GetInfo(280)
+   end
+   SetUpHotspotsAndDraw(false)
+end
+
+function ResizeReleaseCallback()
+    --debugp("ResizeReleaseCallback()","")
+    SetUpHotspotsAndDraw(true)
+end
+
+function MouseDown(flags, hotspot_id)
+   -- debugp("mousedown",hotspot_id)
+   if (hotspot_id == "resize") then
+      startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
+      -- debugp("MouseDown")
+   end
+end
+
+function CancelMouseOver (flags, hotspotid)
+end -- cancelmouseover
+
+function CancelMouseDown(flags, hotspot_id)
+end
+
+function MouseUp(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+       right_click_menu()
+    end
+    return true
+end
+
+function LeftClickOnly(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+        return true
+    end
+    return false
+end
+
+function OnPluginConnect()
+end
+
+function OnPluginSaveState ()
+  -- save window current location for next time  
+  movewindow.save_state (win)
+
+  SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+  SetVariable ("background_colour", background_colour)
+  SetVariable ("title_colour", title_colour)  
+  SetVariable ("width", width)
+  SetVariable ("height", height)
+  SetVariable ("font_name", font_name)
+  SetVariable ("font_size", font_size)
+end -- OnPluginSaveState
+
+function OnPluginDisable ()
+    WindowShow( win, false )
+end --  OnPluginDisable
+
+function OnPluginEnable ()
+    WindowShow (win, true)
+end -- OnPluginEnable
+
+function OnPluginInstall() 
+   --- Get a unique name for main window and resizer window.
+   win = GetPluginID ()  -- get a unique name
+   
+   -- make window so I can grab the font info
+   WindowCreate (win, width, height, 1, 1, 0, 0, background_colour) 
+
+   font_id        = "font"
+   font_id_bold   = "font_bold"
+
+   local fonts = utils.getfontfamilies ()
+
+   -- if not there already, add it
+   if not fonts.Dina then
+     AddFont (GetInfo (66) .. "\\Dina.fon")
+   end -- if Dina not installed
+
+   if fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
+   elseif fonts ["Dina"] then
+      default_font_size = 8
+      default_font_name = "Dina"    -- the actual font
+   else
+      default_font_size = 9
+      default_font_name = "Lucida Console"
+   end -- if
+
+   font_name = GetVariable("font_name") or default_font_name
+   font_size = tonumber(GetVariable("font_size")) or default_font_size
+
+   --- Load the fonts into the temp window.
+   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
+   WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false) -- bold font
+
+   --- Grab font size settings.
+   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
+   line_height = font_height + 1
+
+   --- install the window movement handler, get back the window position.
+   windowinfo  = movewindow.install (win, miniwin.pos_center, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+
+   -- Draw the initial group window
+   SetUpHotspotsAndDraw(true)
+end
+
+]]>
+
+</script>
+
+</muclient>
