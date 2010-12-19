@@ -552,6 +552,7 @@ function OnPluginConnect()
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
    SendNoEcho("tags mapnames on")
    SendNoEcho("tags mapexits on")
+   SendNoEcho("map")
 end
 
 ---------------------------------------------------------------------------------
@@ -658,6 +659,11 @@ function OnPluginInstall()
    -- install the fonts  (49 is modern / fixed pitch)
    WindowFont (infowin, popup_font_id, font_name, font_size, false, false, false, false, 0, 49) 
    WindowFont (infowin, heading_font_id, font_name, font_size + 2, false, false, false, false, 0, 49)
+   
+   -- update on reload
+   if IsConnected() then
+        OnPluginConnect()
+   end
 
 end
 
