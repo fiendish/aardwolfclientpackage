@@ -606,6 +606,7 @@ function OnPluginInstall()
    -- if not there already, add it
    if not fonts.Dina then
      AddFont (GetInfo (66) .. "\\Dina.fon")
+     fonts = utils.getfontfamilies ()
    end -- if Dina not installed
 
    if fonts["Courier New"] then
