@@ -206,12 +206,6 @@ local expand_direction = {
   w = "west",
   u = "up",
   d = "down",
-  ne = "northeast",
-  sw = "southwest",
-  nw = "northwest",
-  se = "southeast",
-  ['in'] = "in",
-  out = "out",
   }  -- end of expand_direction
   
 local function get_room (uid)
@@ -507,12 +501,6 @@ local inverse_direction = {
   w = "e",
   u = "d",
   d = "u",
-  ne = "sw",
-  sw = "ne",
-  nw = "se",
-  se = "nw",
-  ['in'] = "out",
-  out = "in",
   }  -- end of inverse_direction
   
 local function add_another_room (uid, path, x, y)
@@ -566,33 +554,15 @@ local function draw_room (uid, path, x, y)
     
     -- draw up in the ne/nw position if not already an exit there at this level
     if dir == "u" then
-      if not room.exits.nw then
         exit_info = connectors.nw
         stub_exit_info = half_connectors.nw
         arrow = arrows.nw
         exit_line_colour = config.EXIT_COLOUR_UP_DOWN.colour
-      end -- if available
-    elseif dir == "in" then
-      if not room.exits.ne then
-        exit_info = connectors.ne
-        stub_exit_info = half_connectors.ne
-        arrow = arrows.ne
-        exit_line_colour = config.EXIT_COLOUR_IN_OUT.colour
-      end -- if
     elseif dir == "d" then
-      if not room.exits.se then
         exit_info = connectors.se
         stub_exit_info = half_connectors.se
         arrow = arrows.se
         exit_line_colour = config.EXIT_COLOUR_UP_DOWN.colour
-      end -- if available
-    elseif dir == "out" then
-      if not room.exits.sw then
-        exit_info = connectors.sw
-        stub_exit_info = half_connectors.sw
-        arrow = arrows.sw
-        exit_line_colour = config.EXIT_COLOUR_IN_OUT.colour
-      end -- if
     end -- if down
         
     if exit_info then
@@ -715,12 +685,6 @@ local function draw_room (uid, path, x, y)
   end -- if
   if room.exits.d then  -- line at bottom
     WindowLine (win, left, bottom, left + ROOM_SIZE, bottom, config.EXIT_COLOUR_UP_DOWN.colour, miniwin.pen_solid, 1)
-  end -- if
-  if room.exits ['in'] then  -- line at right
-    WindowLine (win, left + ROOM_SIZE, top, left + ROOM_SIZE, bottom, config.EXIT_COLOUR_IN_OUT.colour, miniwin.pen_solid, 1)
-  end -- if
-  if room.exits.out then  -- line at left
-    WindowLine (win, left, top, left, bottom, config.EXIT_COLOUR_IN_OUT.colour, miniwin.pen_solid , 1)
   end -- if
   
   speedwalks [uid] = path  -- so we know how to get here
