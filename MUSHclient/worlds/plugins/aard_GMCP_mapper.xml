@@ -64,7 +64,7 @@ mapper purgezone <area> --> remove an area from the map database
 
 FINDING THINGS
 
-mapper bookmarks        --> show nearby rooms that you bookmarked
+mapper notes            --> show nearby rooms that you marked with notes
 mapper area <text>      --> full-text search limited to the current zone
 mapper find <text>      --> full-text search  (eg. shop OR baker)
 mapper areas            --> show path to nearby areas (zones)
@@ -182,10 +182,20 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>  
     
   <alias
+   match="mapper notes"
+   enabled="y"
+   sequence="100"
+   script="map_notes"
+  >
+  
+  </alias>  
+
+  <!--  for backwards compatibility with other scripts -->
+  <alias
    match="mapper bookmarks"
    enabled="y"
    sequence="100"
-   script="map_bookmarks"
+   script="map_notes"
   >
   
   </alias>  
@@ -852,7 +862,7 @@ function create_tables ()
     dbcheck (db:execute "INSERT INTO rooms_lookup (uid, name) SELECT uid, name FROM rooms;")
   end -- if
   
-  -- create bookmarks and terrain colours table in separate database
+  -- create notes and terrain colours table in separate database
   dbcheck (db_bm:execute[[
   
   PRAGMA foreign_keys = ON;
@@ -930,7 +940,7 @@ function get_room (uid)
   
   local notes = ""
   if room.notes and room.notes ~= "" then
-    notes = "\nBookmark: " .. room.notes
+    notes = "\nNote: " .. room.notes
   end -- if notes
   
   local texits = {}
@@ -1021,7 +1031,7 @@ function get_room (uid)
       
 end -- get_room
 
-function room_edit_bookmark (room, uid)
+function room_edit_note (room, uid)
 
   local notes, found
   
@@ -1033,7 +1043,7 @@ function room_edit_bookmark (room, uid)
   if found then  
     newnotes = utils.inputbox ("Modify room comment (clear it to delete from database)", room.name, notes)
   else
-    newnotes = utils.inputbox ("Enter room comment (creates a bookmark for this room)", room.name, notes)
+    newnotes = utils.inputbox ("Enter room comment (creates a note for this room)", room.name, notes)
   end -- if
   
   if not newnotes then
@@ -1042,14 +1052,14 @@ function room_edit_bookmark (room, uid)
   
   if newnotes == "" then
     if not found then
-      mapper.mapprint ("No comment entered, bookmark not saved.")
+      mapper.mapprint ("No comment entered, note not saved.")
       return
     else
       dbcheck (db_bm:execute (string.format (
         "DELETE FROM bookmarks WHERE uid = %s;",
           fixsql (uid)
         )))
-      mapper.mapprint ("Bookmark for room", uid, "deleted. Was previously:", notes)
+      mapper.mapprint ("Note for room", uid, "deleted. Was previously:", notes)
       rooms [uid].notes = nil
       return
     end -- if
@@ -1065,19 +1075,19 @@ function room_edit_bookmark (room, uid)
           fixsql (newnotes),
           fixsql (uid)
         )))
-     mapper.mapprint ("Bookmark for room", uid, "changed to:", newnotes)
+     mapper.mapprint ("Note for room", uid, "changed to:", newnotes)
    else
     dbcheck (db_bm:execute (string.format (
         "INSERT INTO bookmarks (uid, notes, date_added) VALUES (%s, %s, DATETIME('NOW'));",
           fixsql (uid), 
           fixsql (newnotes)
         )))
-     mapper.mapprint ("Bookmark added to room", uid, ":", newnotes)
+     mapper.mapprint ("Note added to room", uid, ":", newnotes)
    end -- if    
    
    rooms [uid].notes = newnotes
    
-end -- room_edit_bookmark
+end -- room_edit_note
 
 function room_edit_terrain_colour (room, uid)
 
@@ -1138,12 +1148,6 @@ local available =  {
   w = "West",
   u = "Up",
   d = "Down",
-  ne = "Northeast",
-  sw = "Southwest",
-  nw = "Northwest",
-  se = "Southeast",
-  ['in'] = "In",
-  out = "Out",
   }  -- end of available
 
   -- remove existing exits
@@ -1209,12 +1213,6 @@ local available =  {
   w = "West",
   u = "Up",
   d = "Down",
-  ne = "Northeast",
-  sw = "Southwest",
-  nw = "Northwest",
-  se = "Southeast",
-  ['in'] = "In",
-  out = "Out",
   }  -- end of available
 
   -- remove non-existent exits
@@ -1262,12 +1260,6 @@ local available =  {
   w = "West",
   u = "Up",
   d = "Down",
-  ne = "Northeast",
-  sw = "Southwest",
-  nw = "Northwest",
-  se = "Southeast",
-  ['in'] = "In",
-  out = "Out",
   }  -- end of available
 
   -- remove non-existent exits
@@ -1348,7 +1340,7 @@ function room_click (uid, flags)
   end -- if still not there
   
   local handlers = {
-      { name = "Edit Bookmark", func = room_edit_bookmark} ,
+      { name = "Edit Note", func = room_edit_note} ,
       { name = "Edit Terrain Colour", func = room_edit_terrain_colour} ,
       { name = "-", } ,
       { name = "Add Exit", func = room_add_exit} ,
@@ -1894,7 +1886,7 @@ function map_resume (name, line, wildcards)
         
 end -- map_resume
 
-function map_bookmarks (name, line, wildcards)
+function map_notes (name, line, wildcards)
 
   local rooms = {}
   local count = 0
@@ -1918,8 +1910,8 @@ function map_bookmarks (name, line, wildcards)
     count,       -- how many to expect
     false        -- don't auto-walk
     )
-        
-end -- map_bookmarks
+
+end -- map_notes
 
 function map_areas (name, line, wildcards)
 
@@ -1964,22 +1956,12 @@ valid_direction = {
   w = "w",
   u = "u",
   d = "d",
-  ne = "ne",
-  sw = "sw",
-  nw = "nw",
-  se = "se",
   north = "n",
   south = "s",
   east = "e",
   west = "w",
   up = "u",
   down = "d",
-  northeast = "ne",
-  northwest = "nw",
-  southeast = "se",
-  southwest = "sw",
-  ['in'] = "in",
-  out = "out",
   }  -- end of valid_direction
   
 -- try to detect when we send a movement command
