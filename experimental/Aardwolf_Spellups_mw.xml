@@ -1168,6 +1168,8 @@ function show_current_buffs (name, line, wildcards, styles)
 
   if next (spells) == nil or
      next (recoveries) == nil or
+     stats == nil or
+     stats.vitals == nil or
      stats.vitals.hp == nil then
     return
   end -- no spells known
