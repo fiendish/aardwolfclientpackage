@@ -93,6 +93,7 @@ require "commas"
 
 MAX_RETRIES = 10  -- max tries we will allow them to fail to cast
 FONT_NAME = GetVariable("font") or "Dina"
+brief = GetVariable("brief") or false
 FONT_SIZE = GetVariable("font_size") or 8
 RESIZER_WIDTH = 15
 TITLE_HEIGHT = 17
@@ -595,6 +596,7 @@ function OnPluginSaveState ()
   SetVariable("WINDOW_HEIGHT", WINDOW_HEIGHT)
   SetVariable ("font", FONT_NAME)
   SetVariable ("font_size", FONT_SIZE)
+  SetVariable("brief", brief)
 end -- function OnPluginSaveState
 
 --[[
