@@ -549,10 +549,9 @@ end
 function OnPluginConnect()
    TelnetOptionOn(TELOPT_MAP)
    TelnetOptionOff(TELOPT_SHORTMAP)
+   TelnetOptionOn(TELOPT_ROOM_NAMES)
+   TelnetOptionOn(TELOPT_EXIT_NAMES)
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
-   SendNoEcho("tags mapnames on")
-   SendNoEcho("tags mapexits on")
-   SendNoEcho("map")
 end
 
 ---------------------------------------------------------------------------------
