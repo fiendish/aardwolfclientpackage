@@ -93,7 +93,7 @@ require "commas"
 
 MAX_RETRIES = 10  -- max tries we will allow them to fail to cast
 FONT_NAME = GetVariable("font") or "Dina"
-brief = GetVariable("brief") or false
+brief = tonumber(GetVariable("brief")) or 0
 FONT_SIZE = GetVariable("font_size") or 8
 RESIZER_WIDTH = 15
 TITLE_HEIGHT = 17
@@ -1186,7 +1186,7 @@ function show_current_buffs (name, line, wildcards, styles)
     return
   end -- not connected
 
-  if brief then
+  if brief == 1 then
     show_brief_version ()
     return
   end -- if brief
@@ -1485,14 +1485,14 @@ end -- spellup_refresh
 
 function spellup_brief (name, line, wildcards)
   ColourNote ("teal", "", "Brief spellup list will be shown. Type 'spellup full' to see more info.")
-  brief = true
+  brief = 1
   show_current_buffs ()
   return true -- done
 end -- spellup_brief
 
 function spellup_full (name, line, wildcards)
   ColourNote ("teal", "", "Full spellup list will be shown. Type 'spellup brief' to see less info.")
-  brief = false
+  brief = 0
   show_current_buffs ()
   return true -- done
 end -- spellup_full
