@@ -165,10 +165,10 @@ SCROLL_BAR_HEIGHT = 45
 MAX_LINES = 10000 -- how many lines to store in scrollback
 TITLE_HEIGHT = 20
 
--- date_format = "[%d %b %H:%M:%S] "        -- [30 Aug 13:29:49]   date and time 24 hour
+-- date_format = "[%d %b %H:%M:%S] "    -- [30 Aug 13:29:49]   date and time 24 hour
 -- date_format = "[%d %b %I:%M:%S%p] "  -- [30 Aug 01:20:12PM]     date and time 12 hour
 -- date_format = "[%H:%M:%S] "          -- [13:29:08]          time 24 hour
--- date_format = "[%X] "                  -- [1:22:06 PM]            time 12 hour
+-- date_format = "[%X] "                -- [1:22:06 PM]            time 12 hour
 
 timestamp = GetVariable("timestamp") or "1"
 echo = GetVariable("echo") or "1"
@@ -178,6 +178,7 @@ WINDOW_HEIGHT = tonumber(GetVariable("WINDOW_HEIGHT"))
 log_to_file = tonumber(GetVariable("log_to_file")) or 0
 log_colour_codes = tonumber(GetVariable("log_colour_codes")) or 1
 log_timestamps = tonumber(GetVariable("log_timestamps")) or 1
+show_donations = tonumber(GetVariable("show_donations")) or 1
 
 -- colours
 WINDOW_BACKGROUND_COLOUR = 0x000000
@@ -404,6 +405,7 @@ function OnPluginSaveState ()
     SetVariable("log_to_file", log_to_file)
     SetVariable("log_colour_codes", log_colour_codes)
     SetVariable("log_timestamps", log_timestamps)
+    SetVariable("show_donations", show_donations)
 end --  OnPluginSaveState
 
 function OnPluginDisable ()
@@ -709,8 +711,9 @@ function OnPluginBroadcast (msg, id, name, text)
          assert (loadstring (luastmt or ""))()
 
          msg = gmcpval("msg") or ""
-
-         stampAndStore(ColoursToStyles(msg))
+         if (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+            stampAndStore(ColoursToStyles(msg))
+         end
       end
    end
 end
@@ -883,7 +886,7 @@ function right_click_menu ()
     else
         menustring = (menustring.."|Turn Echo On")
     end --if
-    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Colour Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps"
+    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Colour Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps"
     result = WindowMenu (Win,
         WindowInfo (Win, 14),  -- x position
         WindowInfo (Win, 15),   -- y position
@@ -954,12 +957,20 @@ function right_click_menu ()
             EnableTrigger("remort_auction", 0 == remort_auction_on)
             remort_auction_on = GetTriggerOption("remort_auction","enabled")
         elseif numResult == 12 then
+            if show_donations == 0 then
+                ColourNote ("yellow", "", "Clan donation capturing is now ENABLED.")
+            else
+                ColourNote ("yellow", "", "Clan donation capturing is now DISABLED.")
+            end
+            show_donations = (((0 == show_donations) and 1) or 0)
+            SetVariable("show_donations", show_donations)
+        elseif numResult == 13 then
            log_to_file = (((0 == log_to_file) and 1) or 0)
            SetVariable("log_to_file", log_to_file)
-        elseif numResult == 13 then
+        elseif numResult == 14 then
             log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
             SetVariable("log_colour_codes", log_colour_codes)
-        elseif numResult == 14 then
+        elseif numResult == 15 then
             log_timestamps = (((0 == log_timestamps) and 1) or 0)
             SetVariable("log_timestamps", log_timestamps)
         end
