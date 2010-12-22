@@ -71,21 +71,6 @@ page_built       = false
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
--- returns the end of the line
-function Display_Styled_Line (win, font_id, styles, left, top)
-  for _, v in ipairs (styles) do
-    left = left + WindowText (win, font_id, v.text, left, top, 0, 0, v.textcolour)
-  end -- for each style run
-  return left                
-end -- Display_Styled_Line
-
-
--- returns the end of the line
-function Display_ColourText_Line (win, font_id, msg, left, top)
-  styles = ColoursToStyles(msg)
-  return Display_Styled_Line(win, font_id, styles, left, top)
-end -- Display_ColourText_Line
-
 function DisplayStatsPage()
 
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
@@ -128,9 +113,9 @@ function DisplayStatsPage()
       if (showBar[bar][2] == true) then
           if showLabels == 1 then
               if stacked == 1 then
-                  Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=showBar[bar][4]}}, xpos, ypos)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               else
-                  xpos = Display_Styled_Line (win, font_id, {{text=showBar[bar][3],textcolour=showBar[bar][4]}}, xpos, ypos)
+                  xpos = WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               end
           end
           gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
@@ -144,9 +129,9 @@ function DisplayStatsPage()
       if (showBar[bar][2] == true) then
           if showLabels == 1 then
               if stacked == 1 then
-                  Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=showBar[bar][4]}}, xpos, ypos)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               else
-                  xpos = Display_Styled_Line (win, font_id, {{text=showBar[bar][3],textcolour=showBar[bar][4]}}, xpos, ypos)
+                  xpos = WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               end
           end
           gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
@@ -160,9 +145,9 @@ function DisplayStatsPage()
       if (showBar[bar][2] == true) then
           if showLabels == 1 then
               if stacked == 1 then
-                  Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=showBar[bar][4]}}, xpos, ypos)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               else
-                  xpos = Display_Styled_Line (win, font_id, {{text=showBar[bar][3],textcolour=showBar[bar][4]}}, xpos, ypos)
+                  xpos = WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               end
           end
           gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil) 
@@ -176,9 +161,9 @@ function DisplayStatsPage()
       if (showBar[bar][2] == true) then
           if showLabels == 1 then
               if stacked == 1 then
-                  Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=showBar[bar][4]}}, xpos, ypos)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               else
-                  xpos = Display_Styled_Line (win, font_id, {{text=showBar[bar][3],textcolour=showBar[bar][4]}}, xpos, ypos)
+                  xpos = WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               end
           end
           gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil) 
@@ -196,9 +181,9 @@ function DisplayStatsPage()
              if enemypct ~= "" then
                 if showLabels == 1 then
                     if stacked == 1 then
-                        Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=showBar[bar][4]}}, xpos, ypos)
+                        WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
                     else
-                        xpos = Display_Styled_Line (win, font_id, {{text=showBar[bar][3],textcolour=showBar[bar][4]}}, xpos, ypos)
+                        xpos = WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
                     end
                 end
              end
@@ -206,9 +191,9 @@ function DisplayStatsPage()
           else
              if showLabels == 1 then
                  if stacked == 1 then
-                    Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=0x444444}}, xpos, ypos)
+                    WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, utf8)
                  else
-                    xpos = Display_Styled_Line (win, font_id, {{text=showBar[bar][3],textcolour=0x444444}}, xpos, ypos)
+                    xpos = WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, utf8)
                  end
              end
              gauge(win,"Enemy:",tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,3,0x000000,0x222222,nil) 
@@ -227,9 +212,9 @@ function DisplayStatsPage()
               bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
               if showLabels == 1 then
                   if stacked == 1 then
-                      Display_Styled_Line (win, font_id, {{text=showBar[bar][1],textcolour=bar_colour}}, xpos, ypos)
+                      WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, utf8)
                   else
-                      xpos = Display_Styled_Line (win, font_id, {{text=showBar[bar][3],textcolour=bar_colour}}, xpos, ypos)
+                      xpos = WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, utf8)
                   end
               end
 
@@ -259,26 +244,6 @@ function DisplayStatsPage()
    --Repaint()                 
    BroadcastPlugin (999, "repaint")
 end -- DisplayStatsPage
-
-function RefreshPage()
-   DisplayStatsPage()
-end
-
--- returns the end of the line
-function Display_Styled_Line (win, font_id, styles, left, top)
-  for _, v in ipairs (styles) do
-    left = left + WindowText (win, font_id, v.text, left, top, 0, 0, v.textcolour)
-  end -- for each style run
-  return left                
-end -- Display_Styled_Line
-
-
--- returns the end of the line
-function Display_ColourText_Line (win, font_id, msg, left, top)
-  styles = ColoursToStyles(msg)
-  return Display_Styled_Line(win, font_id, styles, left, top)
-end -- Display_ColourText_Line
-
 
 -- right click menu
 function right_click_menu ()
@@ -384,7 +349,7 @@ function OnPluginBroadcast (msg, id, name, text)
              WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
          end
          page_built = true
-         RefreshPage()
+         DisplayStatsPage()
       end
    end
 end
