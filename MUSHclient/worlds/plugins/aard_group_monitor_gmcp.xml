@@ -36,7 +36,7 @@ details captured through GMCP.
 require "gauge"
 require "movewindow"
 require "mw"
-require "tprint"
+require "gmcphelper"
 
 background_colour = tonumber (GetVariable ("background_colour")) or 0x000000
 title_colour = tonumber (GetVariable ("title_colour")) or 0x292929
@@ -106,16 +106,24 @@ string.rpad = function(str, len, char)
     return str .. string.rep(char, len - #str)
 end
 
+function RemoveSelfFromGroupDisplay()
+    for i,v in ipairs(group_data["members"]) do
+       if (v["name"] == char_data["name"]) then
+          table.remove(group_data["members"], i)
+       end
+    end
+end
+
 function DisplayMapPage()
        
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
    
    -- title rectangle
-   local title_height = line_height*2+2
+   title_height = line_height*2+2
    WindowGradient(win, 2, 2, -2, title_height, title_gradient_col1, title_gradient_col2, 2)
    WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
 
-   if not page_built then
+   if not group_built then
       txt = "No Group To Display"
       txtlen = WindowTextWidth(win,font_id, txt)
       WindowText(win, font_id, txt, (width-txtlen)/2, 0, 0, 0, 0xeeeeee, utf8)
@@ -129,6 +137,7 @@ function DisplayMapPage()
       styles = ColoursToStyles(group_data["groupname"])
       x = GAP
       y = 2
+      x = x + WindowText(win, font_id, "Group: ", x, y, 0, 0, 0xeeeeee, utf8)
       for _, v in ipairs (styles) do
          x = x + WindowText (win, font_id, v.text, x, y, 0, 0, v.textcolour)
       end -- for each style run
@@ -137,51 +146,75 @@ function DisplayMapPage()
       WindowText(win, font_id, "Leader: "..group_data["leader"], GAP, y, 0, 0, 0xeeeeee, utf8)
       WindowText(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"], width-WindowTextWidth(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"])-GAP, y, 0,0, 0xeeeeee, utf8)
       y = title_height
-      -- MAIN DISPLAY BODY
-      for i,v in ipairs(group_data["members"]) do
-        y = y + GAP 
-        x = GAP
-       -- txt = "["..(("P" and v["info"]["status"]["poisoned"] == true) or "_")..
-       --     (("B" and v["info"]["status"]["blind"] == true) or "_")..
-       --     (("W" and v["info"]["status"]["webbed"] == true) or "_")..
-       --     (("C" and v["info"]["status"]["cursed"] == true) or "_")..
-       --     (("*" and v["info"]["status"]["attacked"] == true) or "_").."]"
-       -- WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
-       -- x = x + math.max(WindowTextWidth(win, font_id, "[PBWC*]"), WindowTextWidth(win, font_id, "[_____]")) + GAP
-        txt = "["..string.lpad(v["info"]["lvl"], 3, ' ').."]"
-        x = x + WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8) + GAP
-        txt = v["name"]
-        WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
-        txt = "Qt: "..v["info"]["qt"].." - ".."TNL: "..v["info"]["tnl"]
-        WindowText(win, font_id, txt, width-GAP-WindowTextWidth(win, font_id, txt), y, 0, 0, 0xeeeeee, utf8)
-        labels_width = math.max(WindowTextWidth(win, font_id, "HP"), WindowTextWidth(win, font_id, "MN"), WindowTextWidth(win, font_id, "MV"))
-        bar_width = width - GAP*4 - labels_width - WindowTextWidth(win, font_id, "\\") - 2*WindowTextWidth(win, font_id, math.max(v["info"]["mhp"], v["info"]["mmn"], v["info"]["mmv"]))
-        -- HP BAR
-        y = y + line_height + 1
-        x = GAP
-        WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
-        x = x + labels_width + GAP
-        gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, 0x00ff00, 0x000000, 4, 0x000000, 0x004400, nil)
-        txt = v["info"]["hp"].."\\"..v["info"]["mhp"]
-        WindowText(win, font_id, txt, width-GAP-WindowTextWidth(win, font_id, txt), y, 0, 0, 0xeeeeee, utf8)
-        -- MANA BAR
-        y = y + line_height + 1
-        x = GAP
-        WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
-        x = x + labels_width + GAP
-        gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, 0xff0000, 0x000000, 4, 0x000000, 0x440000, nil)
-        txt = v["info"]["mn"].."\\"..v["info"]["mmn"]
-        WindowText(win, font_id, txt, width-GAP-WindowTextWidth(win, font_id, txt), y, 0, 0, 0xeeeeee, utf8)
-        -- MOVES BAR
-        y = y + line_height + 1
-        x = GAP
-        WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
-        x = x + labels_width + GAP
-        gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, 0x00ffff, 0x000000, 4, 0x000000, 0x004444, nil)
-        txt = v["info"]["mv"].."\\"..v["info"]["mmv"]
-        WindowText(win, font_id, txt, width-GAP-WindowTextWidth(win, font_id, txt), y, 0, 0, 0xeeeeee, utf8)
-        y = y + line_height + GAP
-        WindowLine(win, 0, y, width, y, 0xeeeeee, 0, 1)
+      
+      if (char_data ~= nil) then
+          RemoveSelfFromGroupDisplay()
+      end
+      if #group_data["members"] > 0 then
+          -- MAIN DISPLAY BODY
+          baseX = GAP
+          baseY = y+GAP
+          column_width = WindowTextWidth(win, font_id, "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW")+GAP*4
+          num_columns = math.max(math.floor(width / column_width), 1)
+          members_per_col = math.ceil((#group_data["members"])/num_columns)
+          labels_width = math.max(WindowTextWidth(win, font_id, "HP"), WindowTextWidth(win, font_id, "MN"), WindowTextWidth(win, font_id, "MV"))
+          bar_width = column_width - GAP*4 - labels_width - WindowTextWidth(win, font_id, "88888\\88888")
+          for i,v in ipairs(group_data["members"]) do
+            if (i ~= 1) and ((i-1) % members_per_col == 0) then
+                baseY = title_height+GAP
+                y = baseY
+                baseX = baseX + column_width
+                x = baseX
+            else
+                baseY = y + GAP
+                y = baseY
+                x = baseX
+            end
+           -- txt = "["..(("P" and v["info"]["status"]["poisoned"] == true) or "_")..
+           --     (("B" and v["info"]["status"]["blind"] == true) or "_")..
+           --     (("W" and v["info"]["status"]["webbed"] == true) or "_")..
+           --     (("C" and v["info"]["status"]["cursed"] == true) or "_")..
+           --     (("*" and v["info"]["status"]["attacked"] == true) or "_").."]"
+           -- WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
+           -- x = x + math.max(WindowTextWidth(win, font_id, "[PBWC*]"), WindowTextWidth(win, font_id, "[_____]")) + GAP
+            txt = "["..string.lpad(v["info"]["lvl"], 3, ' ').."]"
+            x = x + WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8) + GAP
+            txt = string.rpad(v["name"], 12, ' ')
+            x = x + WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8) + GAP
+            txt = "Qt: "..string.lpad(v["info"]["qt"], 2, ' ').." - ".."TNL: "..string.lpad(v["info"]["tnl"], 5, ' ')
+            WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
+            -- HP BAR
+            y = y + line_height + 1
+            x = baseX
+            WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
+            x = x + labels_width + GAP
+            gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, 0x00ff00, 0x000000, 3, 0x000000, 0x004400, nil)
+            txt = string.lpad(v["info"]["hp"], 5, ' ').."\\"..v["info"]["mhp"]
+            WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
+            -- MANA BAR
+            y = y + line_height + 1
+            x = baseX
+            WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
+            x = x + labels_width + GAP
+            gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, 0xff0000, 0x000000, 3, 0x000000, 0x440000, nil)
+            txt = string.lpad(v["info"]["mn"],5,' ').."\\"..v["info"]["mmn"]
+            WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
+            -- MOVES BAR
+            y = y + line_height + 1
+            x = baseX
+            WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
+            x = x + labels_width + GAP
+            gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, 0x00ffff, 0x000000, 3, 0x000000, 0x004444, nil)
+            txt = string.lpad(v["info"]["mv"],5,' ').."\\"..v["info"]["mmv"]
+            WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
+            y = y + line_height + GAP
+            WindowLine(win, baseX-GAP, y, baseX+column_width-GAP+1, y, 0xeeeeee, 0, 1) -- horizontal line
+            WindowLine(win, baseX+column_width-GAP, baseY-GAP, baseX+column_width-GAP, y, 0xeeeeee, 0, 1) -- vertical line
+          end
+      else
+          txt = "You group is empty."
+          txtlen = WindowTextWidth(win,font_id, txt)
+          WindowText(win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
       end
    end
 
@@ -208,8 +241,7 @@ end -- Display_Map
 
 function right_click_menu ()
 
-    menustring ="Change Font"
-    menustring = (menustring .."|Reset Defaults")
+    menustring ="Change Font|Reset Defaults"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
@@ -246,7 +278,8 @@ function OnPluginBroadcast (msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == 'reload') then
          -- invalidate current data
-         page_built = false 
+         group_built = false
+         self_built = false
          return
       end
 
@@ -254,7 +287,10 @@ function OnPluginBroadcast (msg, id, name, text)
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","group")
          luastmt = "group_data = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
-         page_built = true
+         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base")
+         luastmt = "char_data = " .. gmcparg
+         assert (loadstring (luastmt or "")) ()
+         group_built = true
          DisplayMapPage()
       end
    end
@@ -285,8 +321,8 @@ function ResizeMoveCallback()
 
    height = height + posy - starty
    starty = posy
-   if (height < MIN_SIZE) then
-      height = MIN_SIZE
+   if (height < title_height+(4*line_height)+(3*GAP)) then
+      height = title_height+(4*line_height)+(3*GAP)
       starty = windowinfo.window_top+height
    elseif (windowinfo.window_top+height > GetInfo(280)) then
       height = GetInfo(280)-windowinfo.window_top
@@ -329,6 +365,7 @@ function LeftClickOnly(flags, hotspot_id, win)
 end
 
 function OnPluginConnect()
+    Send_GMCP_Packet("rawcolor on")
 end
 
 function OnPluginSaveState ()
@@ -395,6 +432,10 @@ function OnPluginInstall()
    --- install the window movement handler, get back the window position.
    windowinfo  = movewindow.install (win, miniwin.pos_center, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
+   if IsConnected() then
+     OnPluginConnect()
+   end
+   
    -- Draw the initial group window
    SetUpHotspotsAndDraw(true)
 end
