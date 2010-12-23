@@ -37,6 +37,7 @@ require "gauge"
 require "movewindow"
 require "mw"
 require "gmcphelper"
+require "copytable"
 
 background_colour = tonumber (GetVariable ("background_colour")) or 0x000000
 title_colour = tonumber (GetVariable ("title_colour")) or 0x292929
@@ -46,6 +47,7 @@ default_font_name = ""
 default_font_size = 0
 height = tonumber (GetVariable ("height")) or default_height
 width = tonumber (GetVariable ("width")) or default_width
+show_self = tonumber (GetVariable ("show_self")) or 0
 GAP = 5
 font_size = 0
 font_name = ""
@@ -115,7 +117,7 @@ function RemoveSelfFromGroupDisplay()
 end
 
 function DisplayMapPage()
-       
+   group_data = copytable.deep(full_group_data)
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
    
    -- title rectangle
@@ -147,7 +149,7 @@ function DisplayMapPage()
       WindowText(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"], width-WindowTextWidth(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"])-GAP, y, 0,0, 0xeeeeee, utf8)
       y = title_height
       
-      if (char_data ~= nil) then
+      if (show_self == 0 and char_data ~= nil) then
           RemoveSelfFromGroupDisplay()
       end
       if #group_data["members"] > 0 then
@@ -241,7 +243,7 @@ end -- Display_Map
 
 function right_click_menu ()
 
-    menustring ="Change Font|Reset Defaults"
+    menustring ="Change Font|"..((show_self==1 and "+") or "").."Show Self In Group".."|Reset Defaults"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
@@ -256,6 +258,16 @@ function right_click_menu ()
           OnPluginSaveState()
           OnPluginInstall()
        end
+    elseif result == "Show Self In Group" then
+       show_self = (((show_self == 0) and 1) or 0)
+       if (show_self == 0) then
+          ColourNote("yellow", "", "You will no longer see your own status in the group monitor.")
+       else
+          ColourNote("yellow", "", "You will now see your own status in the group monitor.")
+       end
+       -- save and reload
+       OnPluginSaveState()
+       DisplayMapPage()
     elseif result == "Reset Defaults" then
        font_name        = default_font_name
        font_size        = default_font_size
@@ -285,7 +297,7 @@ function OnPluginBroadcast (msg, id, name, text)
 
       if (text == "group") then
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","group")
-         luastmt = "group_data = " .. gmcparg
+         luastmt = "full_group_data = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base")
          luastmt = "char_data = " .. gmcparg
@@ -366,6 +378,8 @@ end
 
 function OnPluginConnect()
     Send_GMCP_Packet("rawcolor on")
+    Send_GMCP_Packet("group on")
+    Send_GMCP_Packet("request group")
 end
 
 function OnPluginSaveState ()
@@ -379,6 +393,7 @@ function OnPluginSaveState ()
   SetVariable ("height", height)
   SetVariable ("font_name", font_name)
   SetVariable ("font_size", font_size)
+  SetVariable ("show_self", show_self)
 end -- OnPluginSaveState
 
 function OnPluginDisable ()
