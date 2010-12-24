@@ -336,8 +336,12 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "full_group_data = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base")
-         luastmt = "char_data = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
+         if gmcparg ~= "" then
+            luastmt = "char_data = " .. gmcparg
+            assert (loadstring (luastmt or "")) ()
+         else
+            ColourNote("yellow","","Something may be wrong with the group monitor plugin. Please disconnect and reconnect to the MUD to correct this problem. (If you see this message, alert someone in charge.)")
+         end
          group_built = true
          DisplayMapPage()
       end
@@ -413,7 +417,7 @@ function LeftClickOnly(flags, hotspot_id, win)
 end
 
 function leaveGroup (name, line, wildcards, styles)
-    if (wildcards["leader"] == nil and wildcards["groupname"] == nil) or (wildcards["leader"] == group_data["leader"] or wildcards["groupname"] == strip_colours(group_data["groupname"])) then
+    if (wildcards == nil) or (wildcards["leader"] == nil and wildcards["groupname"] == nil) or (wildcards["leader"] == group_data["leader"] or wildcards["groupname"] == strip_colours(group_data["groupname"])) then
         group_built = false
         full_group_data = {}
         group_data = {}
@@ -425,6 +429,7 @@ function OnPluginConnect()
     Send_GMCP_Packet("rawcolor on")
     Send_GMCP_Packet("group on")
     leaveGroup()
+    Send_GMCP_Packet("request char")
     Send_GMCP_Packet("request group")
 end
 
