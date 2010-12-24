@@ -128,7 +128,7 @@ function DisplayMapPage()
    if not group_built then
       txt = "No Group To Display"
       txtlen = WindowTextWidth(win,font_id, txt)
-      WindowText(win, font_id, txt, (width-txtlen)/2, 0, 0, 0, 0xeeeeee, utf8)
+      WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, 0xeeeeee, utf8)
       txt = "Group info will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
@@ -379,6 +379,10 @@ end
 function OnPluginConnect()
     Send_GMCP_Packet("rawcolor on")
     Send_GMCP_Packet("group on")
+    group_built = false
+    full_group_data = {}
+    group_data = {}
+    DisplayMapPage()
     Send_GMCP_Packet("request group")
 end
 
