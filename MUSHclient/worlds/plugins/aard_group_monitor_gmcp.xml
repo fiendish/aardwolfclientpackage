@@ -28,6 +28,42 @@ details captured through GMCP.
 <!--  Triggers  -->
 
 <triggers>  
+
+ <trigger
+   enabled="y"
+   regexp="y"
+   match="^(?<leader>.*) has kicked you from the group."
+   script="leaveGroup"
+   sequence="100"
+  >
+  </trigger>
+  
+   <trigger
+   enabled="y"
+   regexp="y"
+   match="^You have removed yourself from group: (?<groupname>.*)$"
+   script="leaveGroup"
+   sequence="100"
+  >
+  </trigger>
+  
+   <trigger
+   enabled="y"
+   regexp="y"
+   match="\(Group\) The group has been disbanded by (?<leader>.*)\."
+   script="leaveGroup"
+   sequence="100"
+  >
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  regexp="y"
+  match="^You are not{ currently}? in a group.$"
+  script="leaveGroup"
+  sequence="100"
+  >
+  </trigger>
 </triggers>
 
 <script>
@@ -376,13 +412,19 @@ function LeftClickOnly(flags, hotspot_id, win)
     return false
 end
 
+function leaveGroup (name, line, wildcards, styles)
+    if (wildcards["leader"] == nil and wildcards["groupname"] == nil) or (wildcards["leader"] == group_data["leader"] or wildcards["groupname"] == strip_colours(group_data["groupname"])) then
+        group_built = false
+        full_group_data = {}
+        group_data = {}
+        DisplayMapPage()
+    end
+end
+
 function OnPluginConnect()
     Send_GMCP_Packet("rawcolor on")
     Send_GMCP_Packet("group on")
-    group_built = false
-    full_group_data = {}
-    group_data = {}
-    DisplayMapPage()
+    leaveGroup()
     Send_GMCP_Packet("request group")
 end
 
