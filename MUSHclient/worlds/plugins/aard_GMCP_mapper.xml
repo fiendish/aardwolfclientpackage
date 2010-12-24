@@ -1495,6 +1495,15 @@ function activate_running(run)
     mapper.draw(current_room)
 end
 
+function compareTables(primary, secondary)
+    for i,v in pairs(primary) do
+        if secondary[i] ~= v then
+            return false
+        end
+    end
+    return true
+end
+
 function got_gmcp_room()
 
   local room_number = gmcpval("num")
@@ -1513,7 +1522,7 @@ function got_gmcp_room()
        z = 0,
        exits = {} }
   
-  local  exits      = gmcpval("exits")
+  local exits = gmcpval("exits")
   local room = rooms [room_number]
  
   -- not cached - see if in database
@@ -1522,7 +1531,7 @@ function got_gmcp_room()
   end -- not in cache
 
 -- re-save if we got information that is different than before  
-  if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or nilToStr(room.area) ~= nilToStr(gmcproom.area) or nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or nilToStr(room.info) ~= nilToStr(gmcproom.info) then
+  if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or nilToStr(room.area) ~= nilToStr(gmcproom.area) or nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or nilToStr(room.info) ~= nilToStr(gmcproom.info) or compareTables(gmcpdata.exits, room.exits)==false then
      db:exec ("BEGIN TRANSACTION;") 
    
      room = gmcproom
