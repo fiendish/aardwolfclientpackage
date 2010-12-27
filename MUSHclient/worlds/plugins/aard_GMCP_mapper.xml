@@ -67,6 +67,7 @@ FINDING THINGS
 mapper notes            --> show nearby rooms that you marked with notes
 mapper area <text>      --> full-text search limited to the current zone
 mapper find <text>      --> full-text search  (eg. shop OR baker)
+mapper list <text>      --> list matching rooms without the known-path limitation of area and find
 mapper areas            --> show path to nearby areas (zones)
 mapper shop             --> show nearby shops/banks etc.
 mapper train            --> show nearby trainers
