@@ -300,6 +300,15 @@ mapper goto <room>      --> walk to a room by its room number
    regexp="y"
   >
   </alias>
+  
+ <alias
+   match="^mapper list ([\w* %d/&quot;]+)$"
+   enabled="y"
+   sequence="100"
+   script="map_list"
+   regexp="y"
+  >
+  </alias>  
 
 </aliases>
 
@@ -620,6 +629,28 @@ function fixbool (b)
     return 0
   end -- if
 end -- fixbool
+
+-- map_list function by Spartacus
+function map_list (name, line, wildcards)
+  -- ok, so if I want to lookup a room in my db, I don't want it only if the mapper can find a sw in a certain # of rooms.
+  -- if it is in the db, I want its vnum and area, so that I can figure out how to get there if the mapper does not know.
+  local rooms = {}
+  local count = 0
+  local line = ""
+  local area = ""
+  
+  -- find matching rooms using FTS3
+  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup MATCH %s", fixsql (wildcards [1]))) do
+     rooms [row.uid] = true
+     count = count + 1
+     for a in db:nrows(string.format ("SELECT area FROM rooms WHERE uid = \'%s\'", row.uid)) do
+       area = a.area
+     end -- for
+     line = string.format("(%s) %s is in area \"%s\"",row.uid, row.name, area)
+     print (line)
+  end   -- finding room
+  print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
+end -- map_list
 
 function save_room_to_database (uid,room) 
   
@@ -1752,6 +1783,8 @@ function map_area (name, line, wildcards)
     count,      -- how many to expect
     false       -- don't auto-walk
     )
+  
+  print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
 
 end -- map_area
 
@@ -1781,6 +1814,8 @@ function map_find (name, line, wildcards)
     false       -- don't auto-walk
     )
   
+  print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
+
 end -- map_find
 
 
