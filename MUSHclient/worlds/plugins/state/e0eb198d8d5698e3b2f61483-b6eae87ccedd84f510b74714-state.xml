@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Saturday, December 11, 2010, 3:51 AM -->
-<!-- MuClient version 4.70 -->
+<!-- Saved on Monday, December 27, 2010, 4:06 AM -->
+<!-- MuClient version 4.71 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 
@@ -12,9 +12,9 @@
 <!-- variables -->
 
 <variables
-   muclient_version="4.70"
+   muclient_version="4.71"
    world_file_version="15"
-   date_saved="2010-12-11 03:51:08"
+   date_saved="2010-12-27 04:06:08"
   >
   <variable name="config">config = {
   ROOM_NAME_TEXT = {
@@ -25,9 +25,9 @@
     name = "Exit",
     colour = 16777184,
     },
-  ROOM_COLOUR = {
-    name = "Room",
-    colour = 14474460,
+  UNKNOWN_ROOM_COLOUR = {
+    name = "Unknown room",
+    colour = 139,
     },
   LAST_VISIT_TIME = {
     time = 180,
@@ -44,32 +44,32 @@
     name = "Guild",
     colour = 16711935,
     },
-  QUESTOR_FILL_COLOUR = {
-    name = "Questor",
-    colour = 16760576,
+  BANK_FILL_COLOUR = {
+    name = "Bank",
+    colour = 55295,
     },
-  PK_BORDER_COLOUR = {
-    name = "PK border",
-    colour = 255,
+  ROOM_COLOUR = {
+    name = "Room",
+    colour = 14474460,
+    },
+  SHOP_FILL_COLOUR = {
+    name = "Shop",
+    colour = 3124735,
+    },
+  FONT = {
+    name = "Dina",
+    size = 8,
     },
   HEALER_FILL_COLOUR = {
     name = "Healer",
     colour = 3329434,
     },
-  SCAN = {
-    depth = 15,
-    },
-  FONT = {
-    size = 8,
-    name = "Dina",
-    },
   ROOM_NAME_FILL = {
     name = "Room name fill",
     colour = 5461520,
     },
-  UNKNOWN_ROOM_COLOUR = {
-    name = "Unknown room",
-    colour = 139,
+  SCAN = {
+    depth = 300,
     },
   DELAY = {
     time = 0,
@@ -79,20 +79,24 @@
     colour = 2367522,
     },
   WINDOW = {
-    height = 332,
-    width = 255,
+    height = 340,
+    width = 270,
     },
-  MAPPER_NOTE_COLOUR = {
-    name = "Messages",
-    colour = 9498256,
+  AREA_NAME_TEXT = {
+    name = "Area name text",
+    colour = 15856574,
     },
   OUR_ROOM_COLOUR = {
     name = "Our room",
     colour = 9639167,
     },
-  AREA_NAME_TEXT = {
-    name = "Area name text",
-    colour = 15856574,
+  SAFEROOM_FILL_COLOUR = {
+    name = "Safe room",
+    colour = 15128749,
+    },
+  DIFFERENT_AREA_COLOUR = {
+    name = "Another area",
+    colour = 255,
     },
   EXIT_COLOUR_UP_DOWN = {
     name = "Exit up/down",
@@ -102,25 +106,21 @@
     name = "Area name fill",
     colour = 5461520,
     },
-  SHOP_FILL_COLOUR = {
-    name = "Shop",
-    colour = 3124735,
+  QUESTOR_FILL_COLOUR = {
+    name = "Questor",
+    colour = 16760576,
     },
-  DIFFERENT_AREA_COLOUR = {
-    name = "Another area",
+  PK_BORDER_COLOUR = {
+    name = "PK border",
     colour = 255,
-    },
-  SAFEROOM_FILL_COLOUR = {
-    name = "Safe room",
-    colour = 15128749,
     },
   EXIT_COLOUR_IN_OUT = {
     name = "Exit in/out",
     colour = 3634664,
     },
-  BANK_FILL_COLOUR = {
-    name = "Bank",
-    colour = 55295,
+  MAPPER_NOTE_COLOUR = {
+    name = "Messages",
+    colour = 9498256,
     },
   AREA_NAME_BORDER = {
     name = "Area name box",
