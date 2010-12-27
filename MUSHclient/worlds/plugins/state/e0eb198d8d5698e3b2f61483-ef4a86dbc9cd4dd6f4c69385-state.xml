@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Monday, December 06, 2010, 10:01 AM -->
-<!-- MuClient version 4.70 -->
+<!-- Saved on Monday, December 27, 2010, 4:06 AM -->
+<!-- MuClient version 4.71 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 
@@ -12,9 +12,9 @@
 <!-- variables -->
 
 <variables
-   muclient_version="4.70"
+   muclient_version="4.71"
    world_file_version="15"
-   date_saved="2010-12-06 10:01:36"
+   date_saved="2010-12-27 04:06:08"
   >
   <variable name="background_colour">0</variable>
   <variable name="enabled">true</variable>
