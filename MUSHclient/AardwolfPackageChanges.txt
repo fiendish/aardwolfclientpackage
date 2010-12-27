@@ -1,0 +1,27 @@
+Aardwolf Client Package Major Changes List
+
+r260 snapshot
+- new group monitor plugin
+- new gmcp mapper function "mapper list <text>" quickly lists matching rooms regardless of search depth. Does not do path discovery.
+- fix duplicate entries in exits table in mapper databaes
+- re-map rooms that have changed exits
+- option to not capture clan donation messages in the channel capture window, for those in spammy clans
+- properly toggle required tags for the ascii map on connect
+- various cleanup and other tweaks
+
+Official Release Snapshot (r236)
+- update MUSHclient from 4.70 to 4.71
+- menu selections now use proper checkmarks
+- re-map rooms that have changed detail information (pk, shop, bank, graffiti, etc)
+- add tick timer plugin
+- add logging to file for the channel capture plugin
+- fix major bug in capturing room information for the mapper. should now actually see details like pk/shop/bank/etc.
+- made special room types in the gmcp mapper more meaningful for Aardwolf
+- fix gmcp mapper room display bug where newly mapped rooms had no color at all
+- add alignment to the health bars
+- add options for capturing non-channel info outputs INFO/Global Quest/Remort Auction
+- add saves to statmon plugin
+- various cleanup and other tweaks
+
+Beta
+- initial beta release
