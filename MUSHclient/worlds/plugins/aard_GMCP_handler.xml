@@ -85,7 +85,7 @@ require "gmcphelper"
 
 local IAC, SB, SE, DO = 0xFF, 0xFA, 0xF0, 0xFD
 local GMCP      = 201
-local GMCPDebug = 0
+local GMCPDebug = tonumber(GetVariable("GMCPDebug")) or 0
 
 function gmcpdebug(name, line, wildcards)
   newval = tonumber(wildcards[1])
@@ -170,6 +170,14 @@ end -- function OnPluginTelnetSubnegotiation
 
 function OnPluginInstall()
       BroadcastPlugin(1,"reload") -- reload basically tells other plugins "clear all your gmcp data"
+      if IsConnected() then
+        -- pretend like we just logged in
+        Send_GMCP_Packet("request char")
+      end
+end
+
+function OnPluginSaveState()
+    SetVariable("GMCPDebug", GMCPDebug)
 end
 
 function OnPluginTelnetRequest (msg_type, data)
