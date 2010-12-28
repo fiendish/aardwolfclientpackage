@@ -340,7 +340,7 @@ function OnPluginBroadcast (msg, id, name, text)
             luastmt = "char_data = " .. gmcparg
             assert (loadstring (luastmt or "")) ()
          else
-            ColourNote("yellow","","Something may be wrong with the group monitor plugin. Please disconnect and reconnect to the MUD to correct this problem. (If you see this message, alert someone in charge.)")
+            ColourNote("yellow","","Something may be wrong with the group monitor plugin. Please disconnect and reconnect to the MUD to correct this problem.")
          end
          group_built = true
          DisplayMapPage()
