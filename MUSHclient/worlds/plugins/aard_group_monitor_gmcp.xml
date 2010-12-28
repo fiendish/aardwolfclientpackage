@@ -74,6 +74,7 @@ require "movewindow"
 require "mw"
 require "gmcphelper"
 require "copytable"
+require "serialize"
 
 background_colour = tonumber (GetVariable ("background_colour")) or 0x000000
 title_colour = tonumber (GetVariable ("title_colour")) or 0x292929
@@ -92,6 +93,10 @@ title_gradient_col1 = 0x151515
 title_gradient_col2 = 0x444444
 group_members = {}
 group_info = {}
+
+local defaultColorVals = {Health={0x00ff00,0x004400}, Mana={0xff5500,0x442200}, Moves={0x00ffff,0x004444}, Align={0x0000ff,0x00ffff}}
+colorVals = defaultColorVals
+local barIndex = {"Health", "Mana", "Moves", "Align"}
 
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
@@ -218,7 +223,9 @@ function DisplayMapPage()
             txt = "["..string.lpad(v["info"]["lvl"], 3, ' ').."]"
             x = x + WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8) + GAP
             txt = string.rpad(v["name"], 12, ' ')
-            x = x + WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8) + GAP
+            zeroed_alignment = v["info"]["align"]+2500
+            name_colour = ((zeroed_alignment<=1625 and colorVals["Align"][1]) or ((zeroed_alignment>=3375 and colorVals["Align"][2]) or 0xeeeeee))
+            x = x + WindowText(win, font_id, txt, x, y, 0, 0, name_colour, utf8) + GAP
             txt = "Qt: "..string.lpad(v["info"]["qt"], 2, ' ').." - ".."TNL: "..string.lpad(v["info"]["tnl"], 5, ' ')
             WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
             -- HP BAR
@@ -226,7 +233,7 @@ function DisplayMapPage()
             x = baseX
             WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
             x = x + labels_width + GAP
-            gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, 0x00ff00, 0x000000, 3, 0x000000, 0x004400, nil)
+            gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, colorVals["Health"][1], 0x000000, 3, 0x000000, colorVals["Health"][2], nil)
             txt = string.lpad(v["info"]["hp"], 5, ' ').."\\"..v["info"]["mhp"]
             WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
             -- MANA BAR
@@ -234,7 +241,7 @@ function DisplayMapPage()
             x = baseX
             WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
             x = x + labels_width + GAP
-            gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, 0xff0000, 0x000000, 3, 0x000000, 0x440000, nil)
+            gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, colorVals["Mana"][1], 0x000000, 3, 0x000000, colorVals["Mana"][2], nil)
             txt = string.lpad(v["info"]["mn"],5,' ').."\\"..v["info"]["mmn"]
             WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
             -- MOVES BAR
@@ -242,7 +249,7 @@ function DisplayMapPage()
             x = baseX
             WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
             x = x + labels_width + GAP
-            gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, 0x00ffff, 0x000000, 3, 0x000000, 0x004444, nil)
+            gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, colorVals["Moves"][1], 0x000000, 3, 0x000000, colorVals["Moves"][2], nil)
             txt = string.lpad(v["info"]["mv"],5,' ').."\\"..v["info"]["mmv"]
             WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
             y = y + line_height + GAP
@@ -279,42 +286,47 @@ end -- Display_Map
 
 function right_click_menu ()
 
-    menustring ="Change Font|"..((show_self==1 and "+") or "").."Show Self In Group".."|Reset Defaults"
+    menustring ="!Change Font|"..((show_self==1 and "+") or "").."Show Self In Group".."|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|-|Reset Defaults"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
         menustring) -- content
 
-    if result == "Change Font" then
-       wanted_font = utils.fontpicker (font_name, font_size) --font dialog
-       if wanted_font then
-          font_name = wanted_font.name
-          font_size = wanted_font.size
-          -- save and reload
-          OnPluginSaveState()
-          OnPluginInstall()
-       end
-    elseif result == "Show Self In Group" then
-       show_self = (((show_self == 0) and 1) or 0)
-       if (show_self == 0) then
-          ColourNote("yellow", "", "You will no longer see your own status in the group monitor.")
-       else
-          ColourNote("yellow", "", "You will now see your own status in the group monitor.")
-       end
-       -- save and reload
-       OnPluginSaveState()
-       DisplayMapPage()
-    elseif result == "Reset Defaults" then
-       font_name        = default_font_name
-       font_size        = default_font_size
-       height           = default_height
-       width            = default_width
-       show_coords      = 0
+    if result ~= "" then
+        numResult = tonumber(result)
+        if numResult == 1 then
+           wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+           if wanted_font then
+              font_name = wanted_font.name
+              font_size = wanted_font.size
+           end
+        elseif numResult == 2 then
+           show_self = (((show_self == 0) and 1) or 0)
+           if (show_self == 0) then
+              ColourNote("yellow", "", "You will no longer see your own status in the group monitor.")
+           else
+              ColourNote("yellow", "", "You will now see your own status in the group monitor.")
+           end
+        elseif numResult >= 3 and numResult <= 10 then
+           local colourIndex = 2
+           if (numResult % 2 == 1) then
+              colourIndex = 1
+           end
+           local newcolour = PickColour (colorVals[barIndex[math.ceil((numResult-2)/2)]][colourIndex])
+           if newcolour ~= -1 then
+              colorVals[barIndex[math.ceil((numResult-2)/2)]][colourIndex] = newcolour
+           end
+        elseif numResult == 11 then
+           font_name        = default_font_name
+           font_size        = default_font_size
+           height           = default_height
+           width            = default_width
+           show_coords      = 0
+        end -- if
        -- save and reload
        OnPluginSaveState()
        OnPluginInstall()
-    end -- if
-
+    end
 end -- right_click_menu
 
 --=================================================================================
@@ -428,7 +440,6 @@ end
 function OnPluginConnect()
     Send_GMCP_Packet("rawcolor on")
     Send_GMCP_Packet("group on")
-    leaveGroup()
     Send_GMCP_Packet("request char")
     Send_GMCP_Packet("request group")
 end
@@ -445,6 +456,8 @@ function OnPluginSaveState ()
   SetVariable ("font_name", font_name)
   SetVariable ("font_size", font_size)
   SetVariable ("show_self", show_self)
+  SetVariable ("colorVals", serialize.save ("colorVals"))
+
 end -- OnPluginSaveState
 
 function OnPluginDisable ()
@@ -498,6 +511,9 @@ function OnPluginInstall()
    --- install the window movement handler, get back the window position.
    windowinfo  = movewindow.install (win, miniwin.pos_center, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
+   colorVals = defaultColorVals
+   assert (loadstring (GetVariable ("colorVals") or "")) ()
+   
    if IsConnected() then
      OnPluginConnect()
    end
