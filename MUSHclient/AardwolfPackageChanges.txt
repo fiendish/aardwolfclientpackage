@@ -1,7 +1,8 @@
 Aardwolf Client Package Major Changes List
 
-r271 snapshot
+r275 snapshot
 - new group monitor plugin
+- gmcpdebug state saved across reloads
 - new gmcp mapper function "mapper list <text>" quickly lists matching rooms regardless of search depth. Does not do path discovery.
 - fix duplicate entries in exits table in mapper databaes
 - re-map rooms that have changed exits
