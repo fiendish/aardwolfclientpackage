@@ -286,46 +286,71 @@ end -- Display_Map
 
 function right_click_menu ()
 
-    menustring ="!Change Font|"..((show_self==1 and "+") or "").."Show Self In Group".."|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|-|Reset Defaults"
+    menustring ="!Show Help|-|Change Font|"..((show_self==1 and "+") or "").."Show Self In Group".."|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|-|Reset Defaults"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
         menustring) -- content
-
+    
     if result ~= "" then
+        local reload = false
         numResult = tonumber(result)
         if numResult == 1 then
+           ColourNote("yellow", "", [[
+           
+        +--------------- Group Monitor Plugin Info ----------------+
+        
+          * Resizing the group window will cause visible player 
+            entries to automatically wrap to fit the space based
+            on the number of columns that can go into the width.
+        
+          * Most of the color configuration options are pretty
+            self-explanatory, and adjust the border and fill
+            colors of the gauge bars. Alignment colors affect the
+            colorization of names of the players in the group.
+        
+        +----------------------------------------------------------+
+           
+           ]])
+        elseif numResult == 2 then
            wanted_font = utils.fontpicker (font_name, font_size) --font dialog
            if wanted_font then
               font_name = wanted_font.name
               font_size = wanted_font.size
+              reload = true
            end
-        elseif numResult == 2 then
+        elseif numResult == 3 then
            show_self = (((show_self == 0) and 1) or 0)
            if (show_self == 0) then
               ColourNote("yellow", "", "You will no longer see your own status in the group monitor.")
            else
               ColourNote("yellow", "", "You will now see your own status in the group monitor.")
            end
-        elseif numResult >= 3 and numResult <= 10 then
-           local colourIndex = 2
+           reload = true
+        elseif numResult >= 4 and numResult <= 11 then
+           local colourIndex = 1
            if (numResult % 2 == 1) then
-              colourIndex = 1
+              colourIndex = 2
            end
            local newcolour = PickColour (colorVals[barIndex[math.ceil((numResult-2)/2)]][colourIndex])
            if newcolour ~= -1 then
               colorVals[barIndex[math.ceil((numResult-2)/2)]][colourIndex] = newcolour
            end
-        elseif numResult == 11 then
+           reload = true
+        elseif numResult == 12 then
            font_name        = default_font_name
            font_size        = default_font_size
            height           = default_height
            width            = default_width
            show_coords      = 0
+           reload = true
         end -- if
-       -- save and reload
-       OnPluginSaveState()
-       OnPluginInstall()
+
+       if reload then
+           -- save and reload
+           OnPluginSaveState()
+           OnPluginInstall()
+       end
     end
 end -- right_click_menu
 
