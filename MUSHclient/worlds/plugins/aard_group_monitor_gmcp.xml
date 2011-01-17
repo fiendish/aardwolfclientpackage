@@ -27,43 +27,7 @@ details captured through GMCP.
 
 <!--  Triggers  -->
 
-<triggers>  
-
- <trigger
-   enabled="y"
-   regexp="y"
-   match="^(?<leader>.*) has kicked you from the group."
-   script="leaveGroup"
-   sequence="100"
-  >
-  </trigger>
-  
-   <trigger
-   enabled="y"
-   regexp="y"
-   match="^You have removed yourself from group: (?<groupname>.*)$"
-   script="leaveGroup"
-   sequence="100"
-  >
-  </trigger>
-  
-   <trigger
-   enabled="y"
-   regexp="y"
-   match="\(Group\) The group has been disbanded by (?<leader>.*)\."
-   script="leaveGroup"
-   sequence="100"
-  >
-  </trigger>
-  
-  <trigger
-  enabled="y"
-  regexp="y"
-  match="^You are not{ currently}? in a group.$"
-  script="leaveGroup"
-  sequence="100"
-  >
-  </trigger>
+<triggers>
 </triggers>
 
 <script>
@@ -379,8 +343,12 @@ function OnPluginBroadcast (msg, id, name, text)
          else
             ColourNote("yellow","","Something may be wrong with the group monitor plugin. Please disconnect and reconnect to the MUD to correct this problem.")
          end
-         group_built = true
-         DisplayMapPage()
+         if (full_group_data.groupname == "") then
+             leaveGroup()
+         else
+             group_built = true
+             DisplayMapPage()
+         end
       end
    end
 end
