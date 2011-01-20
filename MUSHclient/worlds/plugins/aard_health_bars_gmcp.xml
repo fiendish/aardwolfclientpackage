@@ -56,6 +56,7 @@ local LEFT_MARGIN     = 10
 local TOP_MARGIN      = 5
 local stacked = 1
 local showLabels = 1
+local reverseTNL = 0
 local numBars = 6
 local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Mana={"Mana  :",true,"Mana:",0xff5500,0x442200}, Moves={"Moves :",true,"Moves:",0x00ffff,0x004444}, TNL={"TNL   :",true,"TNL:",0xffffff,0x444444}, Enemy={"Enemy :",true,"Enemy:",0x0000ff,0x000044}, Align={"Align :",true, "Alignment:",0x0000ff,0x00ffff}}
 showBar = defaultShowBar
@@ -161,12 +162,19 @@ function DisplayStatsPage()
       if (showBar[bar][2] == true) then
           if showLabels == 1 then
               if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  -- switch title from "to next level" to "current level experience"
+                  WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][1]) or string.gsub(showBar[bar][1],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  -- switch title from "to next level" to "current level experience"
+                  xpos = xpos + WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][3]) or string.gsub(showBar[bar][3],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], utf8)
               end
           end
-          gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil) 
+          -- switch from "to next level" to "current level experience"
+          if (reverseTNL == 0) then
+             gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+          else
+             gauge(win,showBar[bar][3],tonumber(gmcpval("base.perlevel"))-tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+          end
           if stacked == 1 then
               ypos = ypos + line_height + 1
           else
@@ -268,7 +276,7 @@ function right_click_menu ()
         end
     end
     menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
-    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|Reset Defaults"
+    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -308,6 +316,12 @@ function right_click_menu ()
               showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex] = newcolour
            end
         elseif numResult == 22 then
+           if reverseTNL == 0 then
+              reverseTNL = 1
+           else
+              reverseTNL = 0
+           end
+        elseif numResult == 23 then
            font_name = default_font_name
            font_size = default_font_size
            numBars = 5
@@ -315,6 +329,7 @@ function right_click_menu ()
            width = default_width
            stacked = 1
            showLabels = 1
+           reverseTNL = 0
            showBar = defaultShowBar
         end -- if
         
@@ -447,6 +462,7 @@ function OnPluginSaveState ()
   end
   SetVariable ("stacked", stacked)
   SetVariable ("showLabels", showLabels)
+  SetVariable ("reverseTNL", reverseTNL)
   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
   SetVariable ("background_colour", background_colour)
   SetVariable ("width", width)
@@ -517,10 +533,11 @@ function OnPluginInstall()
 
    MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN*2)
 
-   width             = tonumber (GetVariable ("width")) or default_width
-   stacked           = tonumber(GetVariable("stacked")) or stacked
-   showLabels        = tonumber(GetVariable("showLabels")) or showLabels
-   numBars           = tonumber(GetVariable("numBars")) or numBars
+   width      = tonumber(GetVariable("width")) or default_width
+   stacked    = tonumber(GetVariable("stacked")) or stacked
+   showLabels = tonumber(GetVariable("showLabels")) or showLabels
+   reverseTNL = tonumber(GetVariable("reverseTNL")) or reverseTNL
+   numBars    = tonumber(GetVariable("numBars")) or numBars
    showBar = defaultShowBar
    assert (loadstring (GetVariable ("showBar") or "")) ()
 
