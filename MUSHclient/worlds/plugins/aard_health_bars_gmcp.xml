@@ -173,7 +173,7 @@ function DisplayStatsPage()
           if (reverseTNL == 0) then
              gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
           else
-             gauge(win,showBar[bar][3],tonumber(gmcpval("base.perlevel"))-tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+             gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
           end
           if stacked == 1 then
               ypos = ypos + line_height + 1
