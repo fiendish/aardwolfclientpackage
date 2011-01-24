@@ -17,7 +17,7 @@
 <muclient>
 <plugin
    name="Aardwolf_GMCP_Mapper"
-   author="Nick Gammon"
+   author="Multiple"
    id="b6eae87ccedd84f510b74714"
    language="Lua"
    purpose="Draws maps for GMCP MUDs"
@@ -30,11 +30,12 @@
 <description trim="y">
 <![CDATA[
 
-AUTOMATIC MAPPER ...  by Nick Gammon
+AUTOMATIC MAPPER ... Originally by Nick Gammon
 
 ** This plugin is a GMCP version of the ATCP mapper by Nick Gammon.
-** The work here is almost all Nicks - just the GMCP specific code was 
-** added by Lasher.
+** GMCP specific code added by Lasher. 
+** Various bugs squashed by Fiendish.
+** New features added by Fiendish and Spartacus.
 
 The window can be dragged to a new location by dragging the room name.
 
@@ -67,12 +68,13 @@ FINDING THINGS
 mapper notes            --> show nearby rooms that you marked with notes
 mapper area <text>      --> full-text search limited to the current zone
 mapper find <text>      --> full-text search  (eg. shop OR baker)
-mapper list <text>      --> list matching rooms without the known-path limitation of area and find
+mapper list <text>      --> find rooms without the known-path limitation of "area" and "find"
 mapper areas            --> show path to nearby areas (zones)
 mapper shop             --> show nearby shops/banks etc.
 mapper train            --> show nearby trainers
 mapper quest            --> show nearby quest-givers
 mapper where <room>     --> show directions to a room
+
 
 MOVING  
 
@@ -87,6 +89,7 @@ mapper goto <room>      --> walk to a room by its room number
 <aliases>
  
   <!--  zooming aliases -->
+
 
  <alias
    match="mapper zoom out"
@@ -115,16 +118,15 @@ mapper goto <room>      --> walk to a room by its room number
    script="map_find"
    regexp="y"
   >
-  
-  </alias>  
     
+  </alias>
+ 
  <alias
    match="mapper areas"
    enabled="y"
    sequence="100"
    script="map_areas"
   >
-  
   </alias>  
     
  <alias
@@ -134,7 +136,6 @@ mapper goto <room>      --> walk to a room by its room number
    sequence="100"
    script="map_shops"
   >
-  
   </alias>  
 
  <alias
@@ -142,8 +143,7 @@ mapper goto <room>      --> walk to a room by its room number
    enabled="y"
    sequence="100"
    script="map_trainers"
-  >
-  
+  >  
   </alias>  
 
  <alias
@@ -152,7 +152,6 @@ mapper goto <room>      --> walk to a room by its room number
    sequence="100"
    script="map_quests"
   >
-  
   </alias>  
         
 <alias
@@ -161,7 +160,6 @@ mapper goto <room>      --> walk to a room by its room number
    sequence="100"
    script="map_healers"
   >
-  
   </alias>  
     
  <alias
@@ -170,7 +168,6 @@ mapper goto <room>      --> walk to a room by its room number
    sequence="100"
    script="map_goto"
   >
-  
   </alias>  
     
  <alias
@@ -179,26 +176,23 @@ mapper goto <room>      --> walk to a room by its room number
    sequence="100"
    script="map_where"
   >
-  
-  </alias>  
-    
+  </alias>
+ 
   <alias
    match="mapper notes"
    enabled="y"
    sequence="100"
    script="map_notes"
-  >
+  >  
+  </alias>
   
-  </alias>  
-
-  <!--  for backwards compatibility with other scripts -->
+  <!-- for backwards compatibility with other scripts -->
   <alias
    match="mapper bookmarks"
    enabled="y"
    sequence="100"
    script="map_notes"
-  >
-  
+  >  
   </alias>  
 
   <alias
@@ -301,7 +295,7 @@ mapper goto <room>      --> walk to a room by its room number
    regexp="y"
   >
   </alias>
-  
+
  <alias
    match="^mapper list ([\w* %d/&quot;]+)$"
    enabled="y"
@@ -310,7 +304,6 @@ mapper goto <room>      --> walk to a room by its room number
    regexp="y"
   >
   </alias>  
-
 </aliases>
 
 <triggers>
@@ -431,8 +424,6 @@ mapper goto <room>      --> walk to a room by its room number
    sequence="100"
   >
   </trigger>
-
-
   
    <trigger
    enabled="y"
@@ -516,7 +507,7 @@ require "tprint"
 
 default_config = {
   -- assorted colours
-  BACKGROUND_COLOUR       = { name = "Background",        colour =  ColourNameToRGB "#222024", },
+  BACKGROUND_COLOUR       = { name = "Area Background",        colour =  ColourNameToRGB "#111111", },
   ROOM_COLOUR             = { name = "Room",              colour =  ColourNameToRGB "#dcdcdc", },
   EXIT_COLOUR             = { name = "Exit",              colour =  ColourNameToRGB "#e0ffff", },
   EXIT_COLOUR_UP_DOWN     = { name = "Exit up/down",      colour =  ColourNameToRGB "#ffb6c1", },
@@ -552,8 +543,8 @@ default_config = {
   -- how far from where we are standing to draw (rooms)
   SCAN = { depth = 15 },
   
-  -- speedwalk delay
-  DELAY = { time = 0.0 },
+  -- show custom tiling background textures
+  USE_TEXTURES = { enabled = true },
   
   -- how many seconds to show "recent visit" lines (default 3 minutes)
   LAST_VISIT_TIME = { time = 60 * 3 },  
@@ -692,6 +683,7 @@ function map_savedirty()
      
      save_room_to_database(uid,room)
      save_room_exits(uid)     
+
      ctr = ctr + 1  
   end -- for each dirty room
   
@@ -874,6 +866,7 @@ function create_tables ()
       FOREIGN KEY(fromuid) REFERENCES rooms(uid)
     );
   ]])
+
   
   -- The original database implementation was naive. We want to fix it up here
   -- by setting a uniqueness constraint on the pair (fromuid, dir). The alternative is to
@@ -1784,14 +1777,13 @@ function map_area (name, line, wildcards)
     count,      -- how many to expect
     false       -- don't auto-walk
     )
-  
-  print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
 
+  print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
 end -- map_area
 
 
 function map_find (name, line, wildcards)
- 
+
   local rooms = {}
   local count = 0
   
@@ -1816,7 +1808,7 @@ function map_find (name, line, wildcards)
     )
   
   print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
-
+  
 end -- map_find
 
 
@@ -1990,7 +1982,7 @@ function map_notes (name, line, wildcards)
     count,       -- how many to expect
     false        -- don't auto-walk
     )
-
+        
 end -- map_notes
 
 function map_areas (name, line, wildcards)
@@ -2331,15 +2323,16 @@ function create_map_database (name, line, wildcards)
   CREATE INDEX IF NOT EXISTS area_index ON rooms (area);   
            
   CREATE TABLE exits (
-      exitid      INTEGER PRIMARY KEY AUTOINCREMENT,
       dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
       fromuid     STRING  NOT NULL, -- exit from which room (in rooms table)
       touid       STRING  NOT NULL, -- exit to which room (in rooms table)
       date_added  DATE,             -- date added to database
+      PRIMARY KEY(fromuid, dir),
       FOREIGN KEY(fromuid) REFERENCES rooms(uid)
     );
+
   CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
-  CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);
+  CREATE INDEX IF NOT EXISTS touid_index ON exits (touid);
   
   DROP TABLE IF EXISTS rooms_lookup;
       
