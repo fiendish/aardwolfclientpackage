@@ -165,7 +165,7 @@ end -- build_room_info
 
 local default_config = {
   -- assorted colours
-  BACKGROUND_COLOUR       = { name = "Background",        colour =  ColourNameToRGB "lightseagreen", },
+  BACKGROUND_COLOUR       = { name = "Area Background",   colour =  ColourNameToRGB "lightseagreen", },
   ROOM_COLOUR             = { name = "Room",              colour =  ColourNameToRGB "cyan", },
   EXIT_COLOUR             = { name = "Exit",              colour =  ColourNameToRGB "darkgreen", },
   EXIT_COLOUR_UP_DOWN     = { name = "Exit up/down",      colour =  ColourNameToRGB "darkmagenta", },
@@ -191,8 +191,8 @@ local default_config = {
   -- how far from where we are standing to draw (rooms)
   SCAN = { depth = 30 },
   
-  -- speedwalk delay
-  DELAY = { time = 0.3 },
+  -- show custom tiling background textures
+  USE_TEXTURES = { enabled = true },
   
   -- how many seconds to show "recent visit" lines (default 3 minutes)
   LAST_VISIT_TIME = { time = 60 * 3 },  
@@ -310,8 +310,8 @@ end -- get_number_from_user
 
 local function draw_configuration ()
 
-  local width =  max_text_width (config_win, CONFIG_FONT_ID, {"Configuration", "Font", "Depth", "Delay", "Room size"}, true)
-  local lines = 5  -- Configuration, font, depth, delay, room size
+  local width =  max_text_width (config_win, CONFIG_FONT_ID, {"Configuration", "Font", "Depth", "Area Textures", "Room size"}, true)
+  local lines = 5  -- Configuration, font, depth, Area Textures, room size
   local GAP = 5
   local suppress_colours = false
   
@@ -327,8 +327,8 @@ local function draw_configuration ()
   local box_size = font_height - 2
   local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID, 
     {config.FONT.name .. " " .. config.FONT.size,
-     tostring (config.DELAY.time),
-     tostring ("- +"), 
+     ((config.USE_TEXTURES.enabled and "On") or "Off"),
+     "- +", 
      tostring (config.SCAN.depth)}, 
     true))
   local frame_width = GAP + width + GAP + rh_size + GAP  -- gap / text / gap / box / gap
@@ -447,19 +447,19 @@ local function draw_configuration ()
                    miniwin.cursor_hand, 0)  -- hand cursor
   y = y + font_height
   
-  -- delay
-  WindowText   (config_win, CONFIG_FONT_ID, "Walk delay", x, y, 0, 0, 0x000000, true)
-  WindowText   (config_win, CONFIG_FONT_ID_UL, tostring (config.DELAY.time), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.DELAY.time, true)/2, y, 0, 0, 0x808080, true)
+  -- area textures
+  WindowText   (config_win, CONFIG_FONT_ID, "Area Textures", x, y, 0, 0, 0x000000, true)
+  WindowText   (config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"), true)/2, y, 0, 0, 0x808080, true)
                                   
-  -- delay hotspot               
+  -- area textures hotspot               
   WindowAddHotspot(config_win, 
-                   "$<delay>",  
+                   "$<area_textures>",  
                    x + GAP, 
                    y, 
                    x + frame_width, 
                    y + font_height,   -- rectangle
-                   "", "", "", "", "mapper.mouseup_change_delay",  -- mouseup
-                   "Click to change speedwalk delay",
+                   "", "", "", "", "mapper.mouseup_change_area_textures",  -- mouseup
+                   "Click to toggle use of area textures",
                    miniwin.cursor_hand, 0)  -- hand cursor
   y = y + font_height
   
@@ -730,14 +730,7 @@ local function changed_room (uid)
                    " to " .. walk_to_room_name ..
                    ". Speedwalks to go: " .. #current_speedwalk + 1)
         expected_room = dir.uid
-        if config.DELAY.time > 0 then
-          if GetOption ("enable_timers") ~= 1 then
-            maperror ("WARNING! Timers not enabled. Speedwalking will not work properly.")
-          end -- if timers disabled
-          DoAfter (config.DELAY.time, dir.dir)
-        else
-          Send (dir.dir)
-        end -- if
+        Send (dir.dir)
       else
         last_hyperlink_uid = nil
         last_speedwalk_uid = nil
@@ -933,7 +926,7 @@ function draw (uid)
                  config.BACKGROUND_COLOUR.colour) 
 
    -- Handle background texture.
-   if room.textimage ~= nil then
+   if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
       local iwidth = WindowImageInfo(win,room.textimage,2)
       local iheight= WindowImageInfo(win,room.textimage,3)
       local x = 0
@@ -1575,17 +1568,14 @@ function mouseup_change_depth (flags, hotspot_id)
   draw (current_room)
 end -- mouseup_change_depth
 
-function mouseup_change_delay (flags, hotspot_id)
-  
-  local delay = get_number_from_user ("Choose speedwalk delay time (0 to 10 seconds)", "Delay in seconds", config.DELAY.time, 0, 10, true)
-      
-  if not delay then
-    return
-  end -- if dismissed
-    
-  config.DELAY.time = delay
+function mouseup_change_area_textures (flags, hotspot_id)
+  if config.USE_TEXTURES.enabled == true then
+    config.USE_TEXTURES.enabled = false
+  else
+    config.USE_TEXTURES.enabled = true
+  end
   draw (current_room)
-end -- mouseup_change_delay
+end -- mouseup_change_area_textures
 
 function zoom_map (flags, hotspot_id)
 
