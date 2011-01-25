@@ -112,11 +112,11 @@ mapper goto <room>      --> walk to a room by its room number
   <!--  finding aliases -->
   
  <alias
-   match="^mapper find ([\w* %d/&quot;]+)$"
+   match="mapper find *"
    enabled="y"
    sequence="100"
    script="map_find"
-   regexp="y"
+   regexp="n"
   >
     
   </alias>
@@ -288,11 +288,11 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>  
 
   <alias
-   match="^mapper area ([\w* %d/&quot;]+)$"
+   match="mapper area *"
    enabled="y"
    sequence="100"
    script="map_area"
-   regexp="y"
+   regexp="n"
   >
   </alias>
 
@@ -671,6 +671,7 @@ function save_room_to_database (uid,room)
   if show_database_mods then
     mapper.mapprint ("Added room", uid, "to database. Name:", room.name)
   end -- if
+
   
 end -- function save_room_to_database
 
@@ -1756,10 +1757,7 @@ function map_area (name, line, wildcards)
   local rooms = {}
   local count = 0
 
-  local SQLst = string.format ("SELECT uid, name, area FROM rooms WHERE name LIKE '%s' and area = '%s'",
-                "%" .. wildcards [1] .. "%", area)
-
-  for row in db:nrows(SQLst) do
+  for row in db:nrows(string.format ("SELECT uid, name, area FROM rooms WHERE name LIKE %s and area = %s", fixsql("%" .. wildcards [1] .. "%"), fixsql(area))) do
      rooms [row.uid] = true
      count = count + 1
   end   -- finding room
