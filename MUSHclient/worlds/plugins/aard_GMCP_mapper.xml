@@ -318,11 +318,11 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>
 
  <alias
-   match="^mapper list  ([\w* %d/&quot;]+)$"
+   match="mapper list *"
    enabled="y"
    sequence="100"
    script="map_list"
-   regexp="y"
+   regexp="n"
   >
   </alias>  
 </aliases>
@@ -656,7 +656,7 @@ function map_list (name, line, wildcards)
   for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup MATCH %s", fixsql (wildcards [1]))) do
      rooms [row.uid] = true
      count = count + 1
-     for a in db:nrows(string.format ("SELECT area FROM rooms WHERE uid = \'%s\'", row.uid)) do
+     for a in db:nrows(string.format ("SELECT area FROM rooms WHERE uid = %s", row.uid)) do
        area = a.area
      end -- for
      line = string.format("(%s) %s is in area \"%s\"",row.uid, row.name, area)
