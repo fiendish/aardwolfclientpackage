@@ -136,12 +136,13 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       gmcpdata = gmcpdata or {}
 
       -- Create the higher level tables based on tag such as char.vitals or room.info etc.
-      -- Lowest level of those wlil be the 'parent' for parse_gmcp
+      -- Lowest level of those will be the 'parent' for parse_gmcp
       local parent = gmcpdata
       for item in string.gmatch(message,"%a+") do
 
-         -- reset room data hack, for now.
-         if item == "room" or item == "comm" or item == "group" then parent[item] = nil end
+         -- reset data hacks
+         if (item == "room" and message:sub(1,13) ~= "room.wrongdir") -- don't let room.wrongdir erase current room info
+          or item == "comm" or item == "group" then parent[item] = nil end
 
          parent[item] = parent[item] or {}
          parent = parent[item]
