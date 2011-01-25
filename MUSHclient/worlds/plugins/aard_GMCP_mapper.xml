@@ -892,6 +892,8 @@ function create_tables ()
       color       TEXT,               -- ANSI colour code.
       UNIQUE (uid)
     );
+  CREATE INDEX IF NOT EXISTS areas_uid_index ON areas (uid);
+  CREATE INDEX IF NOT EXISTS areas_name_index ON areas (name);
 
   CREATE TABLE IF NOT EXISTS environments (
       environmentid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -921,6 +923,7 @@ function create_tables ()
   CREATE INDEX IF NOT EXISTS info_index ON rooms (info);
   CREATE INDEX IF NOT EXISTS terrain_index ON rooms (terrain);
   CREATE INDEX IF NOT EXISTS area_index ON rooms (area);
+  CREATE INDEX IF NOT EXISTS rname_index ON rooms (name);  
 
   CREATE TABLE IF NOT EXISTS exits (
       dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
@@ -930,6 +933,8 @@ function create_tables ()
       PRIMARY KEY(fromuid, dir),
       FOREIGN KEY(fromuid) REFERENCES rooms(uid)
     );
+  CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
+  CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);  
   ]])
 
   
