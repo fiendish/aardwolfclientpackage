@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Monday, December 27, 2010, 4:06 AM -->
+<!-- Saved on Tuesday, January 25, 2011, 1:17 PM -->
 <!-- MuClient version 4.71 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
@@ -14,7 +14,7 @@
 <variables
    muclient_version="4.71"
    world_file_version="15"
-   date_saved="2010-12-27 04:06:08"
+   date_saved="2011-01-25 13:17:50"
   >
   <variable name="config">config = {
   ROOM_NAME_TEXT = {
@@ -25,9 +25,12 @@
     name = "Exit",
     colour = 16777184,
     },
-  UNKNOWN_ROOM_COLOUR = {
-    name = "Unknown room",
-    colour = 139,
+  ROOM_COLOUR = {
+    name = "Room",
+    colour = 14474460,
+    },
+  USE_TEXTURES = {
+    enabled = true,
     },
   LAST_VISIT_TIME = {
     time = 180,
@@ -36,55 +39,52 @@
     name = "Room name box",
     colour = 0,
     },
-  TRAINER_FILL_COLOUR = {
-    name = "Trainer",
-    colour = 3329434,
-    },
   GUILD_FILL_COLOUR = {
     name = "Guild",
     colour = 16711935,
     },
+  TRAINER_FILL_COLOUR = {
+    name = "Trainer",
+    colour = 3329434,
+    },
   BANK_FILL_COLOUR = {
     name = "Bank",
     colour = 55295,
-    },
-  ROOM_COLOUR = {
-    name = "Room",
-    colour = 14474460,
     },
   SHOP_FILL_COLOUR = {
     name = "Shop",
     colour = 3124735,
     },
   FONT = {
-    name = "Dina",
     size = 8,
+    name = "Dina",
     },
   HEALER_FILL_COLOUR = {
     name = "Healer",
     colour = 3329434,
     },
-  ROOM_NAME_FILL = {
-    name = "Room name fill",
-    colour = 5461520,
+  QUESTOR_FILL_COLOUR = {
+    name = "Questor",
+    colour = 16760576,
     },
   SCAN = {
     depth = 300,
     },
-  DELAY = {
-    time = 0,
+  UNKNOWN_ROOM_COLOUR = {
+    name = "Unknown room",
+    colour = 139,
     },
   BACKGROUND_COLOUR = {
-    name = "Background",
-    colour = 2367522,
+    name = "Area Background",
+    colour = 1118481,
     },
   WINDOW = {
-    height = 340,
+    height = 367,
     width = 270,
     },
-  AREA_NAME_TEXT = {
-    name = "Area name text",
-    colour = 15856574,
+  DIFFERENT_AREA_COLOUR = {
+    name = "Another area",
+    colour = 255,
     },
   OUR_ROOM_COLOUR = {
     name = "Our room",
@@ -94,10 +94,6 @@
     name = "Safe room",
     colour = 15128749,
     },
-  DIFFERENT_AREA_COLOUR = {
-    name = "Another area",
-    colour = 255,
-    },
   EXIT_COLOUR_UP_DOWN = {
     name = "Exit up/down",
     colour = 12695295,
@@ -106,9 +102,13 @@
     name = "Area name fill",
     colour = 5461520,
     },
-  QUESTOR_FILL_COLOUR = {
-    name = "Questor",
-    colour = 16760576,
+  ROOM_NAME_FILL = {
+    name = "Room name fill",
+    colour = 5461520,
+    },
+  AREA_NAME_TEXT = {
+    name = "Area name text",
+    colour = 15856574,
     },
   PK_BORDER_COLOUR = {
     name = "PK border",
@@ -129,7 +129,7 @@
   }</variable>
   <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowflags">2</variable>
   <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowmode">0</variable>
-  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowx">0</variable>
-  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowy">275</variable>
+  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowx">987</variable>
+  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowy">219</variable>
 </variables>
 </muclient>
