@@ -75,6 +75,9 @@ mapper train            --> show nearby trainers
 mapper quest            --> show nearby quest-givers
 mapper where <room>     --> show directions to a room
 
+EXPLORING
+
+mapper unmapped <area>  --> list unmapped destinations from mapped rooms
 
 MOVING  
 
@@ -175,6 +178,24 @@ mapper goto <room>      --> walk to a room by its room number
    enabled="y"
    sequence="100"
    script="map_where"
+  >
+  </alias>
+ 
+  <alias
+   match="mapper unmapped *"
+   enabled="y"
+   sequence="100"
+   script="show_known_unmapped_exits"
+   regexp="n"
+  >
+  </alias>
+
+ <alias
+   match="mapper unmapped"
+   enabled="y"
+   sequence="100"
+   script="show_known_unmapped_exits"
+   regexp="n"
   >
   </alias>
  
@@ -297,7 +318,7 @@ mapper goto <room>      --> walk to a room by its room number
   </alias>
 
  <alias
-   match="^mapper list ([\w* %d/&quot;]+)$"
+   match="^mapper list  ([\w* %d/&quot;]+)$"
    enabled="y"
    sequence="100"
    script="map_list"
@@ -643,6 +664,49 @@ function map_list (name, line, wildcards)
   end   -- finding room
   print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
 end -- map_list
+
+-- show_known_unmapped_exits function by Spartacus
+function show_known_unmapped_exits (name, line, wildcards)
+  -- I want to get a list of exits whose destinations are not yet in the rooms table (i.e. I have not gone through the exit?)
+  -- select uid, name, area from rooms inner join exits on rooms.uid = fromuid where area = area and touid not in (select uid from rooms)
+  local line = ""
+  local count = 0
+  local query
+  local display_limit = 30
+
+  res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
+  luastmt = "gmcpdata = " .. gmcparg
+  if (gmcparg ~= "") then -- in case he user has an old gmcp handler that clears room on room.wrongdir
+    assert(loadstring (luastmt or "")) ()
+  end
+  local current_area = gmcpval("zone")
+  
+  if wildcards [1] ~= nil then
+    area = wildcards [1]
+  elseif current_area ~= nil then
+    area = current_area
+  elseif area == nil then
+    area = ""
+  end -- if area == nil
+  
+  query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and touid not in (select uid from rooms) order by area, uid", fixsql("\%" .. area .. "\%"))
+  -- print ("Query: " .. query)
+  print ("\nThe following rooms have exits whose destinations are unknown to the mapper:")
+  for row in db:nrows(query) do
+    if count < display_limit then
+      line = string.format("(%s) %s in area \"%s\" exit \"%s\" leads to %s",row.uid, row.name, row.area, row.dir, row.touid)
+      Hyperlink(string.format("mapper goto %s",row.uid), line, "Click to attempt to walk here", "", "", false)
+      print("")
+    end -- if count
+    -- keep counting even if display limit reached
+    count = count + 1
+  end -- unmapped rooms query
+  line = string.format ("The database currently contains %s unmapped exits in areas matching \'%s\'.", count, area)
+  if count >= display_limit then
+    line = line .. string.format(" Only the top %s are shown here.", display_limit)
+  end -- if count
+  print (line.."\n")
+end -- show_known_unmapped_exits
 
 function save_room_to_database (uid,room) 
   
@@ -1736,7 +1800,7 @@ function map_area (name, line, wildcards)
 
   -- check we got room at all
   if not uid then
-    print "I do not know your room!"
+    print("I do not know your room!")
   end -- if
 
   -- look it up
@@ -1749,7 +1813,7 @@ function map_area (name, line, wildcards)
   end -- not in cache
 
   if not ourroom then
-     print "I could not lookup your room!"
+     print("I could not look up your room!")
   end -- if
 
   local area = rooms[uid].area
@@ -1854,13 +1918,6 @@ local wanted_items = {}
     )
         
 end -- map_find_special
-
-  --[[
-for _, v in ipairs ({
-     
-    -- "guild", "healer", "trainer", "questor",
-            }) do wanted_items [v] = true end
-      --]]
             
 function map_shops (name, line, wildcards)
   map_find_special { "shop", "bank", }
