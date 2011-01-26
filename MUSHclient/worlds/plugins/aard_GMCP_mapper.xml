@@ -748,13 +748,15 @@ function custom_exit (name, line, wildcards)
     if cexit_dest then
       if cexit_dest ~= cexit_start then
         world.Note (string.format("Custom Exit: %d (%s) -> %d", cexit_start, cexit_command, cexit_dest))
-          dbcheck (db:execute (string.format ([[
+        dbcheck (db:execute (string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
             VALUES (%s, %s, %s, DATETIME('NOW'));
             ]], fixsql  (string.lower(cexit_command)),  -- direction (eg. "n")
                 fixsql  (cexit_start),  -- from current room
                 fixsql  (cexit_dest) -- destination room 
-          )))
+        )))
+        rooms[cexit_start].exits[cexit_command] = cexit_dest
+        mapper.draw (current_room)
       else
         world.Note (string.format("Custom Exit %s leads back here!", cexit_command))
       end
