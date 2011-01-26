@@ -62,6 +62,7 @@ mapper zoom in          --> zoom in
 mapper hide             --> hide map
 mapper show             --> show map
 mapper purgezone <area> --> remove an area from the map database
+mapper cexit <text>     --> follow and link a custom exit (e.g. mapper cexit ride bucket)
 
 FINDING THINGS
 
@@ -324,7 +325,17 @@ mapper goto <room>      --> walk to a room by its room number
    script="map_list"
    regexp="n"
   >
-  </alias>  
+  </alias>
+  
+  <alias
+   match="^mapper cexit (.*)$"
+   enabled="y"
+   sequence="100"
+   script="custom_exit"
+   regexp="y"
+  >  
+  </alias>
+  
 </aliases>
 
 <triggers>
@@ -523,6 +534,7 @@ require "checkplugin"
 mapper = require "aardmapper"
 require "gmcphelper"
 require "tprint"
+require "wait"
 
 -- Mapper Variables --
 
@@ -707,6 +719,50 @@ function show_known_unmapped_exits (name, line, wildcards)
   end -- if count
   print (line.."\n")
 end -- show_known_unmapped_exits
+
+-- custom_exit function by Spartacus
+function custom_exit (name, line, wildcards)
+
+  local cexit_command = wildcards [1] or ""
+  local cexit_start
+  
+  if cexit_command == "" then
+    world.Note("Nothing to do!")
+    return
+  end -- if cexit_command
+  
+  if current_room then
+    cexit_start = current_room
+  else
+    cexit_start = gmcpval("num")
+    if not cexit_start then
+      world.Note("Need to know where we started out.")
+    end
+  end -- if current_room
+  
+  wait.make (function()
+    world.Send(cexit_command)
+    wait.regexp("^\<(.*?)\>$")
+    wait.time(1)
+    cexit_dest = gmcpval("num")
+    if cexit_dest then
+      if cexit_dest ~= cexit_start then
+        world.Note (string.format("Custom Exit: %d (%s) -> %d", cexit_start, cexit_command, cexit_dest))
+          dbcheck (db:execute (string.format ([[
+            INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
+            VALUES (%s, %s, %s, DATETIME('NOW'));
+            ]], fixsql  (string.lower(cexit_command)),  -- direction (eg. "n")
+                fixsql  (cexit_start),  -- from current room
+                fixsql  (cexit_dest) -- destination room 
+          )))
+      else
+        world.Note (string.format("Custom Exit %s leads back here!", cexit_command))
+      end
+    else
+      world.Note ("Need to know where we ended up.")
+    end
+  end)
+end -- custom_exit
 
 function save_room_to_database (uid,room) 
   
