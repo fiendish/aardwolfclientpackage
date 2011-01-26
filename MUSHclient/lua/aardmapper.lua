@@ -1396,16 +1396,20 @@ function build_speedwalk (path)
   -- now build string like: 2n3e4(sw)
   local s = ""
   
+  local new_command = false
   for _, dir in ipairs (tspeed) do
-    if dir.count > 1 then
-      s = s .. dir.count
-    end -- if
     if #dir.dir == 1 then
+      if new_command then
+         s = s .. ";" .. speedwalk_prefix .. " "
+      end
+      if dir.count > 1 then
+         s = s .. dir.count
+      end -- if
       s = s .. dir.dir
     else
-      s = s .. "(" .. dir.dir .. ")"
+      s = s .. ";" .. dir.dir
+      new_command = true
     end -- if
-    s = s .. " "
   end -- if
   
   return s
@@ -1433,7 +1437,13 @@ function start_speedwalk (path)
       
       -- fast speedwalk: just send # 4s 3e  etc.
       if type (speedwalk_prefix) == "string" and speedwalk_prefix ~= "" then
-        local s = speedwalk_prefix .. " " .. build_speedwalk (path)
+        local s = speedwalk_prefix .. " "
+        local p = build_speedwalk (path)
+        if p:sub(1,1) ~= ";" then
+            s = s .. p        
+        else
+            s = p:sub(2)
+        end
         Execute (s)
         current_speedwalk = nil
         return  
