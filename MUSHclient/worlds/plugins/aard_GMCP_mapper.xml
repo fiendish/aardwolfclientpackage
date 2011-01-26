@@ -2050,7 +2050,7 @@ function map_where (name, line, wildcards)
   local path = mapper.build_speedwalk (item.path)
   
   -- display it
-  mapper.mapprint (string.format ("Path to %s is: %s", wanted, path))
+  mapper.mapprint (string.format ("Path to %s is: %s", wanted, speedwalk_prefix.." "..path))
   
 end -- map_where
 
