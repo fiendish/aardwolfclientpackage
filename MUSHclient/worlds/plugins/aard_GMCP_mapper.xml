@@ -84,7 +84,7 @@ mapper where <room>     --> show directions to a room
 EXPLORING
 
 mapper unmapped         --> list unmapped exit counts for known areas
-mapper unmapped <here/area>   --> list unmapped destinations from known rooms
+mapper unmapped <here/area>   --> list unmapped exits in this or another area
 
 MOVING  
 
@@ -1694,6 +1694,7 @@ function OnPluginInstall ()
   mapper.init { config = config,            -- colours, timing etc.
                 get_room = get_room,        -- get_room (uid) called to get room info
                 show_help = OnHelp,         -- to show help
+
                 room_click = room_click,    -- called on RH click on room square
                 timing = show_timing,       -- want to see timing
                 show_completed = show_completed,  -- want to see "Speedwalk completed." message
