@@ -1,5 +1,16 @@
 Aardwolf Client Package Major Changes List
 
+r296 snapshot
+- new hand-held portal functions in the gmcp mapper (not yet used for searching)
+- new custom room exit functions in the gmcp mapper
+- new unmapped exits function in the gmcp mapper
+- prevent room.wrongdir from erroneously clearing stored room data in the gmcp handler
+- gmcp mapper find functions should now work on all room names
+- new option for disabling area background textures in the gmcp mapper
+- new option to reverse the growth of the TNL bar in the status bars
+- new "Show Help" option in the group monitor
+- various other tweaks and bug fixes and other cleanup
+
 r275 snapshot
 - new group monitor plugin
 - gmcpdebug state saved across reloads
