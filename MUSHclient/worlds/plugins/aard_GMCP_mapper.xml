@@ -68,6 +68,8 @@ mapper cexit <text>     --> follow and link a custom exit (e.g. mapper cexit rid
 
 mapper portals          --> list known hand-held portals
 mapper portal <text>    --> link a hand-held portal alias to here as a custom exit (e.g. mapper portal port amulet)
+mapper portal delete <text> --> remove the specified hand-held portal alias
+mapper portal purge     --> remove all hand-held portal aliases
 
 FINDING THINGS
 
@@ -758,8 +760,50 @@ function show_known_unmapped_exits (name, line, wildcards)
   print (line.."\n")
 end -- show_known_unmapped_exits
 
+function map_portal_delete (keywords)
+  if keywords ~= nil then
+      query = string.format("DELETE FROM exits WHERE fromuid = %s AND dir = %s;",
+            fixsql("*"),
+            fixsql(keywords)
+      )
+      dbcheck (db:execute (query))
+      print (string.format("Deleted mapper hand-held exit '%s'.", keywords))
+      rooms["*"].exits[keywords] = {}
+  end
+end -- map_portal_delete
+
+function map_portal_purge()
+    query = string.format("DELETE FROM exits WHERE fromuid = %s;", fixsql("*"))
+    dbcheck (db:execute (query))
+    print ("Purged all mapper hand-held exits.")
+    rooms["*"].exits = {}
+end
+
 -- map_portal function by Spartacus
 function map_portal (name, line, wildcards)
+  if rooms["*"] == nil then
+    rooms["*"] = {
+       name = "*",
+       area = "*",
+       building = 0,
+       terrain = "*",
+       info = "*",
+       notes = "",
+       x = "*",
+       y = "*",
+       z = 0,
+       exits = {} }
+  end
+
+  if (wildcards[1] == "purge") then
+     map_portal_purge()
+     return
+  end
+  if string.sub(wildcards[1],1,7)=="delete " then
+     map_portal_delete(string.sub(wildcards[1],8))
+     return
+  end
+  
   -- store portal as an exit from anywhere to the current room
   res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
   luastmt = "gmcpdata = " .. gmcparg
@@ -789,22 +833,7 @@ function map_portal (name, line, wildcards)
   dbcheck (db:execute (query))
 --  print ("Executed: " .. query)
 
-  if rooms["*"] == nil then
-    rooms["*"] = {
-       name = "*",
-       area = "*",
-       building = 0,
-       terrain = "*",
-       info = "*",
-       notes = "",
-       x = "*",
-       y = "*",
-       z = 0,
-       exits = {} }
-  end
-
   rooms["*"].exits[wildcards[1]] = current_room
-  mapper.draw (current_room)
 end -- map_portal
 
 -- map_portal_list function by Spartacus
