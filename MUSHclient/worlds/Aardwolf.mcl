@@ -11,7 +11,7 @@
    date_saved="2010-12-13 09:55:25"
 
    auto_say_override_prefix="-"
-   auto_say_string="say "
+   auto_say_string=""
    chat_name="Name-not-set"
    command_stack_character=";"
    id="e0eb198d8d5698e3b2f61483"
@@ -434,6 +434,7 @@
 <include name="aard_layout.xml" plugin="y" />
 <include name="aard_helper_aliases.xml" plugin="y" />
 <include name="aard_statmon_gmcp.xml" plugin="y" />
+<include name="aard_group_monitor_gmcp.xml" plugin="y" />
 <include name="aard_health_bars_gmcp.xml" plugin="y" />
 <include name="aard_GMCP_mapper.xml" plugin="y" />
 <include name="aard_Copy_Colour_Codes.xml" plugin="y" />
