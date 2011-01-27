@@ -1,6 +1,7 @@
 Aardwolf Client Package Major Changes List
 
-r298 snapshot
+r300 snapshot
+- by default load the group monitor and disable autosay
 - new hand-held portal functions in the gmcp mapper (not yet used for searching)
 - new custom room exit functions in the gmcp mapper
 - new unmapped exits function in the gmcp mapper
