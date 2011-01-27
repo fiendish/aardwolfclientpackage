@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r296 snapshot
+r298 snapshot
 - new hand-held portal functions in the gmcp mapper (not yet used for searching)
 - new custom room exit functions in the gmcp mapper
 - new unmapped exits function in the gmcp mapper
