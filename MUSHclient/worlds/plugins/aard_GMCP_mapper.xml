@@ -738,7 +738,7 @@ function fixbool (b)
   end -- if
 end -- fixbool
 
--- map_list function by Spartacus
+-- map_list function contributed by Spartacus
 function map_list (name, line, wildcards)
   -- ok, so if I want to lookup a room in my db, I don't want it only if the mapper can find a sw in a certain # of rooms.
   -- if it is in the db, I want its vnum and area, so that I can figure out how to get there if the mapper does not know.
@@ -824,7 +824,7 @@ function custom_exit_list (name, line, wildcards)
   print (line.."\n")
 end -- custom_exits_list
 
--- show_known_unmapped_exits function by Spartacus
+-- show_known_unmapped_exits function contributed by Spartacus
 function show_known_unmapped_exits (name, line, wildcards)
   -- I want to get a list of exits whose destinations are not yet in the rooms table (i.e. I have not gone through the exit?)
   -- select uid, name, area from rooms inner join exits on rooms.uid = fromuid where area = area and touid not in (select uid from rooms)
@@ -899,7 +899,7 @@ function map_portal_purge(name, line, wildcards)
     rooms["*"].exits = {}
 end
 
--- map_portal function by Spartacus
+-- map_portal function contributed by Spartacus
 function map_portal (name, line, wildcards)
   if rooms["*"] == nil then
     rooms["*"] = {
@@ -956,7 +956,7 @@ function map_portal (name, line, wildcards)
   rooms["*"].exits[wildcards[1]] = current_room
 end -- map_portal
 
--- map_portal_list function by Spartacus
+-- map_portal_list function contributed by Spartacus
 function map_portal_list ()
   local line
   -- show portals stored in the exits table
@@ -986,7 +986,7 @@ function map_portal_list ()
   world.Note (hl.."\n")
 end -- map_portal_list
 
--- custom_exit function by Spartacus
+-- custom_exit function contributed by Spartacus
 function custom_exit (name, line, wildcards)
 
   local cexit_command = wildcards [1] or ""
