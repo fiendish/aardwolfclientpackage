@@ -56,32 +56,34 @@ room the stub will disappear and the room(s) in question will be drawn.
 
 ACTIONS
 
-mapper help             --> this help  (or click the "?" button on the top right)
-mapper zoom out         --> zoom out
-mapper zoom in          --> zoom in
-mapper hide             --> hide map
-mapper show             --> show map
+mapper help              --> this help  (or click the "?" button on the top right)
+mapper zoom out          --> zoom out
+mapper zoom in           --> zoom in
+mapper hide              --> hide map
+mapper show              --> show map
 mapper purgezone <area> --> remove an area from the map database
 
-mapper cexits           --> list known custom exits
-mapper cexit <text>     --> follow and link a custom exit (e.g. mapper cexit ride bucket)
+mapper cexits            --> list known custom exits
+mapper cexit <command>   --> follow and link a custom exit (e.g. mapper cexit ride bucket)
+mapper delete cexits     --> remove the custom exits from this room
+mapper purge cexits      --> remove all custom exits
 
-mapper portals          --> list known hand-held portals
-mapper portal <text>    --> link a hand-held portal alias to here as a custom exit (e.g. mapper portal port amulet)
-mapper portal delete <text> --> remove the specified hand-held portal alias
-mapper portal purge     --> remove all hand-held portal aliases
+mapper portals           --> list known hand-held portals
+mapper portal <command>  --> link a hand-held portal alias to here as a custom exit (e.g. mapper portal port amulet)
+mapper delete portal <command> --> remove the specified hand-held portal alias
+mapper purge portals     --> remove all hand-held portal aliases
 
 FINDING THINGS
 
-mapper notes            --> show nearby rooms that you marked with notes
-mapper area <text>      --> full-text search limited to the current zone
-mapper find <text>      --> full-text search  (eg. shop OR baker)
-mapper list <text>      --> find rooms without the known-path limitation of "area" and "find"
-mapper areas            --> show path to nearby areas (zones)
-mapper shop             --> show nearby shops/banks etc.
-mapper train            --> show nearby trainers
-mapper quest            --> show nearby quest-givers
-mapper where <room>     --> show directions to a room
+mapper notes             --> show nearby rooms that you marked with notes
+mapper area <text>       --> full-text search limited to the current zone
+mapper find <text>       --> full-text search  (eg. shop OR baker)
+mapper list <text>       --> find rooms without the known-path limitation of "area" and "find"
+mapper areas             --> show path to nearby areas (zones)
+mapper shop              --> show nearby shops/banks etc.
+mapper train             --> show nearby trainers
+mapper quest             --> show nearby quest-givers
+mapper where <room>      --> show directions to a room
 
 EXPLORING
 
@@ -351,6 +353,61 @@ mapper goto <room>      --> walk to a room by its room number
    regexp="y"
   >  
   </alias>
+
+  <alias
+   match="^mapper delete portal (.+)$"
+   enabled="y"
+   sequence="100"
+   script="map_portal_delete"
+   regexp="y"
+  >  
+  </alias>  
+  
+  <alias
+   match="^mapper purge portals$"
+   enabled="y"
+   sequence="100"
+   script="map_portal_purge"
+   regexp="y"
+  >  
+  </alias>  
+  
+    <alias
+   match="^mapper delete cexits$"
+   enabled="y"
+   sequence="100"
+   script="map_cexits_delete"
+   regexp="y"
+  >  
+  </alias>  
+  
+  <alias
+   match="^mapper purge cexits$"
+   enabled="y"
+   sequence="100"
+   script="map_cexits_purge"
+   regexp="y"
+  >  
+  </alias>
+  
+  <alias
+   match="mapper cexits *"
+   enabled="y"
+   sequence="100"
+   script="custom_exit_list"
+   regexp="n"
+  >  
+  </alias>
+  
+  <alias
+   match="mapper cexits"
+   enabled="y"
+   sequence="100"
+   script="custom_exit_list"
+   regexp="n"
+  >  
+  </alias>
+
   
   <alias
    match="^mapper cexit (.+)$"
@@ -703,6 +760,70 @@ function map_list (name, line, wildcards)
   print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
 end -- map_list
 
+function map_cexits_delete (name, line, wildcards)
+   local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", current_room)
+   dbcheck (db:execute (query))
+   for k,v in pairs(rooms[current_room].exits) do
+     if #k > 1 then
+       rooms[current_room].exits[k] = nil
+     end
+   end
+   mapper.draw (current_room)
+   print("Removed custom exits from the current room.")
+end
+
+function map_cexits_purge (name, line, wildcards)
+   local query = "delete from exits where dir not in ('n','s','e','w','d','u');"
+   dbcheck (db:execute (query))
+   for k,v in pairs(rooms) do
+      for l,w in pairs(v.exits) do
+         if #l > 1 then
+            rooms[k].exits[l] = nil
+         end
+      end
+   end
+   mapper.draw (current_room)
+   print("Purged all custom exits.")
+end
+
+function custom_exit_list (name, line, wildcards)
+  local line = ""
+  local count = 0
+  local query
+  local display_limit = 30
+
+  res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
+  luastmt = "gmcpdata = " .. gmcparg
+  assert(loadstring (luastmt or "")) ()
+  local current_area = gmcpval("zone")
+
+  area = wildcards [1] or ""
+  if area == "here" then
+     area = current_area
+  end
+
+  query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') order by area, uid", fixsql("\%" .. area .. "\%"))
+  hr = "| area       | room name            | rm uid  | dir            | to uid  |"
+  hl = "+------------+----------------------+---------+----------------+---------+"
+  intro = string.format("The following rooms in areas matching '%s' have custom exits:",area)
+  -- area - room name - room uid - direction - destination uid
+  fmt = "| %10.10s | %-20.20s | %7.7s | %-14.14s | %7.7s |"
+  -- print ("Query: " .. query)
+  world.Note ("\n"..intro)
+  world.Note (hl)
+  world.Note (hr)
+  world.Note (hl)
+  for row in db:nrows(query) do
+      line = string.format(fmt,row.area, row.name, row.uid, row.dir, row.touid)
+      Hyperlink(string.format("mapper goto %s",row.uid), line, "Click to attempt to walk here", "", "", false)
+      print("")
+      count = count + 1
+  end -- custom exits query
+  world.Note (hl)
+  line = string.format ("Found %s custom exits.", count)
+  print (line.."\n")
+end -- custom_exits_list
+
 -- show_known_unmapped_exits function by Spartacus
 function show_known_unmapped_exits (name, line, wildcards)
   -- I want to get a list of exits whose destinations are not yet in the rooms table (i.e. I have not gone through the exit?)
@@ -732,11 +853,11 @@ function show_known_unmapped_exits (name, line, wildcards)
     fmt = "| %10.10s | %5d |"
   else
     query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and touid not in (select uid from rooms) order by area, uid", fixsql("\%" .. area .. "\%"))
-    hr = "| area       | room name            | rm uid  | dir     | to uid  |"
-    hl = "+------------+----------------------+---------+---------+---------+"
+    hr = "| area       | room name            | rm uid  | dir | to uid  |"
+    hl = "+------------+----------------------+---------+-----+---------+"
     intro = string.format("The following rooms in areas matching '%s' have unmapped exits:",area)
     -- area - room name - room uid - direction - destination uid
-    fmt = "| %10.10s | %20.20s | %7.7s | %-7.7s | %7.7s |"
+    fmt = "| %10.10s | %-20.20s | %7.7s | %-3.3s | %7.7s |"
   end -- if area
   -- print ("Query: " .. query)
   world.Note ("\n"..intro)
@@ -760,19 +881,18 @@ function show_known_unmapped_exits (name, line, wildcards)
   print (line.."\n")
 end -- show_known_unmapped_exits
 
-function map_portal_delete (keywords)
-  if keywords ~= nil then
-      query = string.format("DELETE FROM exits WHERE fromuid = %s AND dir = %s;",
-            fixsql("*"),
-            fixsql(keywords)
-      )
-      dbcheck (db:execute (query))
-      print (string.format("Deleted mapper hand-held exit '%s'.", keywords))
-      rooms["*"].exits[keywords] = {}
-  end
+function map_portal_delete (name, line, wildcards)
+  local keywords = wildcards[1]
+  query = string.format("DELETE FROM exits WHERE fromuid = %s AND dir = %s;",
+        fixsql("*"),
+        fixsql(keywords)
+  )
+  dbcheck (db:execute (query))
+  print (string.format("Deleted mapper hand-held exit '%s'.", keywords))
+  rooms["*"].exits[keywords] = {}
 end -- map_portal_delete
 
-function map_portal_purge()
+function map_portal_purge(name, line, wildcards)
     query = string.format("DELETE FROM exits WHERE fromuid = %s;", fixsql("*"))
     dbcheck (db:execute (query))
     print ("Purged all mapper hand-held exits.")
