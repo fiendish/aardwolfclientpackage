@@ -1372,7 +1372,7 @@ end -- do_hyperlink
 
 -- build a speedwalk from a path into a string
 
-function build_speedwalk (path)
+function build_speedwalk (path, prefix)
 
  -- build speedwalk string (collect identical directions)
   local tspeed = {}
@@ -1395,12 +1395,13 @@ function build_speedwalk (path)
   
   -- now build string like: 2n3e4(sw)
   local s = ""
-  
+
   local new_command = false
   for _, dir in ipairs (tspeed) do
     if #dir.dir == 1 then
       if new_command then
          s = s .. ";" .. speedwalk_prefix .. " "
+         new_command = false
       end
       if dir.count > 1 then
          s = s .. dir.count
@@ -1412,8 +1413,14 @@ function build_speedwalk (path)
     end -- if
   end -- if
   
+  if prefix ~= nil then
+    if s:sub(1,1) == ";" then
+      return s:sub(2)
+    else
+      return prefix.." "..s
+    end
+  end
   return s
-  
 end -- build_speedwalk
 
 -- start a speedwalk to a path
