@@ -79,7 +79,6 @@ mapper notes             --> show nearby rooms that you marked with notes
 mapper area <text>       --> full-text search limited to the current zone
 mapper find <text>       --> full-text search  (eg. shop OR baker)
 mapper list <text>       --> find rooms without the known-path limitation of "area" and "find"
-mapper areas             --> show path to nearby areas (zones)
 mapper shop              --> show nearby shops/banks etc.
 mapper train             --> show nearby trainers
 mapper quest             --> show nearby quest-givers
@@ -105,6 +104,15 @@ mapper goto <room>      --> walk to a room by its room number
   <!--  zooming aliases -->
 
  <alias
+   match="mapper findpath * *"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   script="findpathfast"
+  >
+  </alias>
+  
+  <alias
    match="mapper zoom out"
    enabled="y"
    sequence="100"
@@ -133,14 +141,6 @@ mapper goto <room>      --> walk to a room by its room number
   >
     
   </alias>
- 
- <alias
-   match="mapper areas"
-   enabled="y"
-   sequence="100"
-   script="map_areas"
-  >
-  </alias>  
     
  <alias
    match="^mapper shops?"
@@ -394,6 +394,8 @@ mapper goto <room>      --> walk to a room by its room number
    match="mapper cexits *"
    enabled="y"
    sequence="100"
+
+
    script="custom_exit_list"
    regexp="n"
   >  
@@ -738,24 +740,25 @@ function fixbool (b)
   end -- if
 end -- fixbool
 
+function findpathfast(name, line, wildcards)
+db = assert (sqlite3.open(GetInfo (66) .. Trim (WorldName ()) .. ".db"))
+findpath(tonumber(wildcards[1]),tonumber(wildcards[2]))
+end
+
 -- map_list function contributed by Spartacus
 function map_list (name, line, wildcards)
   -- ok, so if I want to lookup a room in my db, I don't want it only if the mapper can find a sw in a certain # of rooms.
   -- if it is in the db, I want its vnum and area, so that I can figure out how to get there if the mapper does not know.
-  local rooms = {}
-  local count = 0
-  local line = ""
   local area = ""
+  local count = 0
   
   -- find matching rooms using FTS3
-  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup MATCH %s", fixsql (wildcards [1]))) do
-     rooms [row.uid] = true
+  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE name LIKE %s", fixsql ("%"..wildcards [1].."%"))) do
      count = count + 1
      for a in db:nrows(string.format ("SELECT area FROM rooms WHERE uid = %s", row.uid)) do
        area = a.area
      end -- for
-     line = string.format("(%s) %s is in area \"%s\"",row.uid, row.name, area)
-     print (line)
+     print (string.format("(%s) %s is in area \"%s\"",row.uid, row.name, area))
   end   -- finding room
   print(count .. " rooms matched \"" .. wildcards [1] .. "\"")
 end -- map_list
@@ -802,7 +805,7 @@ function custom_exit_list (name, line, wildcards)
      area = current_area
   end
 
-  query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') order by area, uid", fixsql("\%" .. area .. "\%"))
+  query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid <> '*' order by area, uid", fixsql("\%" .. area .. "\%"))
   hr = "| area       | room name            | rm uid  | dir            | to uid  |"
   hl = "+------------+----------------------+---------+----------------+---------+"
   intro = string.format("The following rooms in areas matching '%s' have custom exits:",area)
@@ -1241,7 +1244,8 @@ function create_tables ()
       y             INTEGER,
       z             INTEGER,
       date_added    DATE,            -- date added to database
-      UNIQUE (uid)
+      UNIQUE (uid),
+      FOREIGN KEY(area) REFERENCES areas(uid)
     );
   CREATE INDEX IF NOT EXISTS info_index ON rooms (info);
   CREATE INDEX IF NOT EXISTS terrain_index ON rooms (terrain);
@@ -1303,16 +1307,9 @@ function create_tables ()
   dbcheck (db:execute "UPDATE OR IGNORE rooms SET terrain = ifnull((SELECT name FROM environments WHERE environments.uid = rooms.terrain), rooms.terrain);")
   
   -- check if rooms_lookup table exists
-  local table_exists
-  for a in db:nrows "SELECT * FROM sqlite_master WHERE name = 'rooms_lookup' AND type = 'table'" do
-    table_exists = true
-  end  -- for
-
-  if not table_exists then
-    dbcheck (db:execute "CREATE VIRTUAL TABLE rooms_lookup USING FTS3(uid, name);")
-    -- in case we only deleted the rooms_lookup table to save space in the download
+    dbcheck (db:execute "DROP TABLE IF EXISTS rooms_lookup;");
+    dbcheck (db:execute "CREATE VIRTUAL TABLE rooms_lookup USING FTS3(uid, name);");
     dbcheck (db:execute "INSERT INTO rooms_lookup (uid, name) SELECT uid, name FROM rooms;")
-  end -- if
   
   -- create notes and terrain colours table in separate database
   dbcheck (db_bm:execute[[
@@ -1512,7 +1509,8 @@ function room_edit_note (room, uid)
           fixsql (uid)
         )))
       mapper.mapprint ("Note for room", uid, "deleted. Was previously:", notes)
-      rooms [uid].notes = nil
+      rooms [uid].notes = nil   
+      mapper.draw (current_room)
       return
     end -- if
   end -- if
@@ -1538,6 +1536,7 @@ function room_edit_note (room, uid)
    end -- if    
    
    rooms [uid].notes = newnotes
+   mapper.draw (current_room)
    
 end -- room_edit_note
 
@@ -1671,6 +1670,7 @@ local available =  {
   for k in pairs (available) do
     if room.exits [k] then
       available [k] = available [k] .. " --> " .. room.exits [k] 
+
     else
       available [k] = nil
     end -- if not a room exit
@@ -2150,19 +2150,15 @@ function map_area (name, line, wildcards)
   local count = 0
 
   for row in db:nrows(string.format ("SELECT uid, name, area FROM rooms WHERE name LIKE %s and area = %s", fixsql("%" .. wildcards [1] .. "%"), fixsql(area))) do
-     rooms [row.uid] = true
+     table.insert(rooms,{uid=row.uid, reason=true})
      count = count + 1
   end   -- finding room
 
   -- see if nearby
-  mapper.find (
-    function (uid)
-      local room = rooms [uid]
-      if room then
-        rooms [uid] = nil
-      end -- if
-      return room, next (rooms) == nil
-    end,  -- function
+
+  mapper.find (findpath,
+    rooms,
+    50,
     show_vnums,  -- show vnum?
     count,      -- how many to expect
     false       -- don't auto-walk
@@ -2178,20 +2174,16 @@ function map_find (name, line, wildcards)
   local count = 0
   
   -- find matching rooms using FTS3
-  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup MATCH %s", fixsql (wildcards [1]))) do
-     rooms [row.uid] = true
+  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql ("%"..wildcards [1].."%"))) do
+     table.insert(rooms, {uid=row.uid, reason=true})
      count = count + 1
   end   -- finding room
-  
+
   -- see if nearby
   mapper.find (
-    function (uid) 
-      local room = rooms [uid] 
-      if room then
-        rooms [uid] = nil
-      end -- if
-      return room, next (rooms) == nil
-    end,  -- function
+    findpath,
+    rooms,  -- function
+    50,
     show_vnums,  -- show vnum?
     count,      -- how many to expect
     false       -- don't auto-walk
@@ -2225,7 +2217,7 @@ local wanted_items = {}
           end -- if
        end -- for
        if wanted then
-         rooms [row.uid] = table.concat(t, ", ")
+         table.insert(rooms, {uid=row.uid, reason=table.concat(t, ", ")})
          count = count + 1
        end -- if
      end -- if
@@ -2233,13 +2225,9 @@ local wanted_items = {}
   
   -- find such places
   mapper.find (
-    function (uid) 
-      local room = rooms [uid] 
-      if room then
-        rooms [uid] = nil
-      end -- if
-      return room, next (rooms) == nil  -- room will be type of info (eg. shop)
-    end,  -- function
+    findpath,
+    rooms,
+    0,
     show_vnums,  -- show vnum?
     count,      -- how many to expect
     false       -- don't auto-walk
@@ -2265,18 +2253,21 @@ end -- map_healers
 
 function map_goto (name, line, wildcards)
 
-  local wanted = wildcards [1]
-  
-  if current_room and wanted == current_room then
+  local wanted = tonumber(wildcards [1])
+  if not wanted then
+    mapper.mapprint ("The mapper goto command expects a room id number as input.")
+    return
+  end
+  if current_room and (wanted == current_room) then
     mapper.mapprint ("You are already in that room.")
     return
   end -- if
   
   -- find desired room
   mapper.find (
-    function (uid) 
-      return uid == wanted, uid == wanted  
-    end,  -- function
+    findpath,  -- function
+    {{uid=wanted, reason=true}},
+    0,
     show_vnums,  -- show vnum?
     1,          -- how many to expect
     true        -- just walk there
@@ -2290,18 +2281,23 @@ function map_where (name, line, wildcards)
     return
   end -- if
 
-  local wanted = wildcards [1]
+  local wanted = tonumber(wildcards [1])
+  
+  if not wanted then
+    mapper.mapprint ("The mapper where command expects a room id number as input.")
+    return
+  end
   
   if current_room and wanted == current_room then
     mapper.mapprint ("You are already in that room.")
     return
   end -- if
   
-  local paths = mapper.find_paths (current_room, 
-           function (uid) 
-             return uid == wanted,  -- wanted room?
-                    uid == wanted   -- stop searching?
-            end)
+  local paths = {}
+  local foundpath = findpath(current_room, wanted)
+  if foundpath ~= nil then
+    paths[wanted] = {path=foundpath, reason=true}
+  end
 
   local uid, item = next (paths, nil) -- extract first (only) path
   
@@ -2312,16 +2308,16 @@ function map_where (name, line, wildcards)
   end -- if
   
   -- turn into speedwalk
-  local path = mapper.build_speedwalk (item.path)
+  local speedwalk = mapper.build_speedwalk (item.path, speedwalk_prefix)
   
   -- display it
-  mapper.mapprint (string.format ("Path to %s is: %s", wanted, speedwalk_prefix.." "..path))
+  mapper.mapprint (string.format ("Path to %s is: %s", wanted, speedwalk))
   
 end -- map_where
 
 function map_resume (name, line, wildcards)
 
-  local wanted = mapper.last_hyperlink_uid or mapper.last_speedwalk_uid
+  local wanted = tonumber(mapper.last_hyperlink_uid or mapper.last_speedwalk_uid)
   
   if not wanted then
     mapper.print "No outstanding speedwalks or hyperlinks."
@@ -2330,10 +2326,9 @@ function map_resume (name, line, wildcards)
   
   -- find desired room
   mapper.find (
-    function (uid) 
-      return uid == wanted, uid == wanted  
-
-    end,  -- function
+    findpath,
+    {{uid=wanted,reason=true}},
+    0,  -- function
     show_vnums,  -- show vnum?
     1,      -- how many to expect
     true    -- just walk there
@@ -2348,19 +2343,15 @@ function map_notes (name, line, wildcards)
   
   -- build table of special places (with info in them)
   for row in db_bm:nrows(string.format ("SELECT uid, notes FROM bookmarks")) do
-     rooms [row.uid] = capitalize (row.notes)
+     table.insert(rooms,{uid=row.uid, reason=row.notes})
      count = count + 1
   end   -- finding room
   
   -- find such places
   mapper.find (
-    function (uid) 
-      local room = rooms [uid] 
-      if room then
-        rooms [uid] = nil
-      end -- if
-      return room, next (rooms) == nil  -- room will be type of info (eg. shop)
-    end,  -- function
+    findpath,
+    rooms,
+    0,  -- function
     show_vnums,  -- show vnum?
     count,       -- how many to expect
     false        -- don't auto-walk
@@ -2368,40 +2359,104 @@ function map_notes (name, line, wildcards)
         
 end -- map_notes
 
-function map_areas (name, line, wildcards)
-
-  local wanted_areas = {}
-  local count = 0
+function findpath(src, dst)
+  local depth = 0
+  local max_depth = mapper.config.SCAN.depth
+  local room_sets = {}
+  local rooms_list = ""
+  local found = false
+  local ftd = ""
+  local rcount = 0
+  local next_room = 0
   
-  if next (areas) == nil then
-    mapper.maperror "No areas known."
+  src = tonumber(src)
+  dst = tonumber(dst)
+
+  if src == dst or dst == nil then
+    return {}
+  end
+  
+  rooms_list = string.format("%s", dst)
+  
+  
+  -- debug notes
+  -- world.Note ()
+  -- world.Note (string.format("Start: %s\nEnd: %s\nFirst List (%d): %s",src, dst, depth, rooms_list))
+  -- world.Note ()
+  
+  -- we're going to build an array of strings that look like "fromuid,touid,dir"
+  -- this way when we go forward to build our path, we don't have to re-query the
+  -- database for information we have already retrieved
+  local visited = ""
+  while not found and depth < max_depth do
+    depth = depth + 1
+    if depth > 1 then
+      ftd = room_sets [depth-1] or ""
+      rooms_list = ""
+      for f, t, d in string.gmatch(ftd, "([^:]-),(%d*),([ %w]*)") do
+        if rooms_list ~= "" then rooms_list = rooms_list .. "," end
+        rooms_list = rooms_list .. f
+      end -- for from, to, dir      
+    end -- if depth
+    -- get all exits to any room in the previous set
+    if visited ~= "" then 
+       visited = visited .. ","..rooms_list 
+    else 
+       visited = rooms_list 
+    end
+    local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) order by fromuid desc",rooms_list, visited)
+    local dcount = 0
+    for row in db:nrows(q) do
+      dcount = dcount + 1
+      ftd = string.format ("%s,%d,%s",row.fromuid, row.touid, row.dir)
+      if room_sets [depth] then
+        room_sets [depth] = room_sets [depth] .. ":" .. ftd
+      else
+        room_sets [depth] = ftd
+      end -- if room_set [depth]
+      if row.fromuid == src or row.fromuid == "*" then
+        found = true
+        found_depth = depth
+        break
+      end -- if src
+    end -- for select
+    rcount = rcount + dcount
+    if dcount == 0 then
+      return -- there is no path from here to there
+      -- world.Note(string.format("No rooms fount at depth %d\nrooms_list was: %s\nquery was: %s\n", depth, rooms_list, q))
+    -- else
+      -- world.Note(string.format("Found %d rooms at depth %d\nroom_sets: %s\n", dcount, depth, room_sets [depth]))
+    end -- if dcount
+  end -- while
+    
+  if found == false then
     return
-  end -- if
- 
-  -- build table of all areas, keyed by area code
-  for k, v in pairs (areas) do
-    wanted_areas [k] = v
-    count = count + 1
-  end -- for
-    
-  -- find all areas
-  mapper.find (
-    function (uid) 
-      local room = rooms [uid]
-      local reason
-      -- if this room is in the list of wanted areas then save its path
-      if wanted_areas[room.area] then
-        reason = wanted_areas [room.area]
-        wanted_areas [room.area] = nil
-      end -- found one!
-      return reason, next (wanted_areas) == nil
-    end,  -- function
-    show_vnums,  -- show vnum?
-    count,       -- how many to expect
-    false        -- don't auto-walk
-    )
-    
-end -- map_areas
+  end
+
+  -- we found a path...
+  local path = {}
+  -- ftd is currently the first from,to,dir set where from was either our start room or *
+  f, t, d = string.match (ftd, "([^:]-),(%d*),([ %w]*)")
+  table.insert(path, {dir=d, uid=t})
+
+  next_room = t
+  while depth > 1 do
+    depth = depth - 1
+    ftd = room_sets [depth]
+    -- world.Note (string.format("\nDepth: %d\nroom_sets: %s", depth, room_sets [depth]))
+    pattern = string.format("(%d),(%%d*),([ %%w]*)", next_room)
+    -- world.Note(string.format("\nMatching %s to pattern %s\n", ftd, pattern))
+    -- for f, t, d in string.gmatch(ftd, pattern) do
+    f, t, d = string.match (ftd, pattern)
+      next_room = t
+      -- world.Note(string.format("Found f=%d, t=%d, d=%s", f, t, d))
+      if not rooms[t] then
+        rooms[t] = get_room (t)
+      end -- if not in memory yet
+      table.insert(path, {dir=d, uid=t})
+  end -- while
+  return path, count, found_depth
+end -- function findpath
 
 
 valid_direction = {
@@ -2545,12 +2600,16 @@ function process_end_room ()
           )))
   end -- for each exit
 
-  dbcheck (db:execute (string.format ([[
-    INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);
-  ]], fixsql  (room.id),       
-      fixsql  (room.title) 
-      )))
-            
+
+  local exists = false      
+  for n in db:nrows(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s AND name = %s", fixsql(room.id), fixsql(room.title))) do 
+      exists = true 
+  end
+  -- don't add multiple times, maintaining backwards database compatibility (there's no uniqueness constraint on rooms_lookup.uid)
+  if not exists then
+      dbcheck (db:execute (string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(room.id), fixsql(room.title))))
+  end
+              
 end -- process_end_room
 
 function process_coord (args)
@@ -2703,7 +2762,8 @@ function create_map_database (name, line, wildcards)
 
   CREATE INDEX IF NOT EXISTS info_index ON rooms (info);
   CREATE INDEX IF NOT EXISTS terrain_index ON rooms (terrain);
-  CREATE INDEX IF NOT EXISTS area_index ON rooms (area);   
+  CREATE INDEX IF NOT EXISTS area_index ON rooms (area);  
+  CREATE INDEX IF NOT EXISTS rname_index ON rooms (name); 
            
   CREATE TABLE exits (
       dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
