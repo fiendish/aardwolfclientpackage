@@ -33,9 +33,9 @@
 AUTOMATIC MAPPER ... Originally by Nick Gammon
 
 ** This plugin is a GMCP version of the ATCP mapper by Nick Gammon.
-** GMCP specific code added by Lasher. 
-** Various bugs squashed by Fiendish.
-** New features added by Fiendish and Spartacus.
+** GMCP specific code added by Lasher.
+** Major new features contributed by Spartacus.
+** Many bugs squashed and improvements made by Fiendish.
 
 The window can be dragged to a new location by dragging the room name.
 
@@ -2370,6 +2370,7 @@ function map_notes (name, line, wildcards)
         
 end -- map_notes
 
+-- original findpath function contributed by Spartacus
 function findpath(src, dst)
   local depth = 0
   local max_depth = mapper.config.SCAN.depth
@@ -2388,8 +2389,7 @@ function findpath(src, dst)
   end
   
   rooms_list = string.format("%s", dst)
-  
-  
+    
   -- debug notes
   -- world.Note ()
   -- world.Note (string.format("Start: %s\nEnd: %s\nFirst List (%d): %s",src, dst, depth, rooms_list))
