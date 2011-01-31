@@ -11,7 +11,7 @@ local DEFAULT_COLOUR = "@w"
 -- colour styles (eg. @r is normal red, @R is bold red)
 
 local conversion = {
-  [GetNormalColour (BLACK)]   = "@k",
+  [GetNormalColour (BLACK)]   = "@k", -- note: aardwolf does not use this
   [GetNormalColour (RED)]     = "@r",
   [GetNormalColour (GREEN)]   = "@g",
   [GetNormalColour (YELLOW)]  = "@y",
@@ -19,7 +19,7 @@ local conversion = {
   [GetNormalColour (MAGENTA)] = "@m",
   [GetNormalColour (CYAN)]    = "@c",
   [GetNormalColour (WHITE)]   = "@w",
-  [GetBoldColour   (BLACK)]   = "@K",
+  [GetBoldColour   (BLACK)]   = "@D",
   [GetBoldColour   (RED)]     = "@R",
   [GetBoldColour   (GREEN)]   = "@G",
   [GetBoldColour   (YELLOW)]  = "@Y",
@@ -27,6 +27,7 @@ local conversion = {
   [GetBoldColour   (MAGENTA)] = "@M",
   [GetBoldColour   (CYAN)]    = "@C",
   [GetBoldColour   (WHITE)]   = "@W",
+  
   }  -- end conversion table
   
 -- This table uses the colours as defined in the MUSHclient ANSI tab, however the
@@ -41,7 +42,7 @@ colour_conversion = {
    m = GetNormalColour (MAGENTA) ,   -- 0x800080 
    c = GetNormalColour (CYAN)    ,   -- 0x808000 
    w = GetNormalColour (WHITE)   ,   -- 0xC0C0C0 
-   K = GetBoldColour   (BLACK)   ,   -- 0x808080 
+   D = GetBoldColour   (BLACK)   ,   -- 0x808080 
    R = GetBoldColour   (RED)     ,   -- 0x0000FF 
    G = GetBoldColour   (GREEN)   ,   -- 0x00FF00 
    Y = GetBoldColour   (YELLOW)  ,   -- 0x00FFFF 
