@@ -1,6 +1,7 @@
 Aardwolf Client Package Major Changes List
 
-r313 snapshot
+r315 snapshot
+- fixed use of the gray color code in the channel capture window
 - disallow setting cexits and portals to/from rooms with uid -1 ("unmappable")
 - new pathfinding algorithm in the gmcp mapper. pathfinding will now go through handheld portals and other from-anywhere commands.
 - removed the worthless mapper areas command
