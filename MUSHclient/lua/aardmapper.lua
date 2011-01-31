@@ -1240,9 +1240,9 @@ end -- save_state
 
 -- generic room finder
 
--- f (uid) is a function which returns: found, done
---    found is not nil if uid is a wanted room - if it is a string it is the reason it matched (eg. shop)
---    done is true if we know there is nothing else to search for (eg. all rooms found)
+-- findpath is the function used for finding a path
+
+-- dests is a list of room/reason pairs where reason is either true (meaning generic) or a string to find
 
 -- show_uid is true if you want the room uid to be displayed
 
@@ -1252,8 +1252,7 @@ end -- save_state
 
 -- if fcb is a function, it is called back after displaying each line
 
-function find (f, show_uid, expected_count, walk, fcb)
- 
+function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
   if not check_we_can_find () then
     return
   end -- if
@@ -1262,22 +1261,32 @@ function find (f, show_uid, expected_count, walk, fcb)
     assert (type (fcb) == "function")
   end -- if
 
-  local start_time = utils.timer ()
-  local paths, count, depth = find_paths (current_room, f)
-  local end_time = utils.timer ()
-  
+  local paths = {}
+  if max_paths <= 0 then
+    max_paths = #dests
+  end
+  if #dests > max_paths then
+    mapprint(string.format("Your search returned more than %s results. Choose a more specific target.", max_paths))
+    return
+  end
+  for i,v in ipairs(dests) do
+      SetStatus (string.format ("Pathfinding: %i/%i discovered routes", i, #dests))
+      BroadcastPlugin (999, "repaint")
+      local foundpath = findpath(current_room, v.uid)
+      if foundpath ~= nil then
+        paths[v.uid] = {path=foundpath, reason=v.reason}
+        -- get room if not already gotten
+        if not rooms [v.uid] then
+           rooms [v.uid] = get_room (v.uid)
+        end -- if
+      end
+  end
   local t = {}
   local found_count = 0
   for k in pairs (paths) do
     table.insert (t, k)
     found_count = found_count + 1
   end -- for
-
-  -- timing stuff
-  if timing then
-    print (string.format ("Time to search %i rooms = %0.3f seconds, search depth = %i", 
-                          count, end_time - start_time, depth))
-  end -- if
   
   if found_count == 0 then
     mapprint ("No matches.")
@@ -1295,45 +1304,44 @@ function find (f, show_uid, expected_count, walk, fcb)
   table.sort (t, function (a, b) return #paths [a].path < #paths [b].path end )
   
   hyperlink_paths = {}
-
+  
   for _, uid in ipairs (t) do
     local room = rooms [uid] -- ought to exist or wouldn't be in table
-    
     assert (room, "Room " .. uid .. " is not in rooms table.")
     
-    if current_room == uid then
-      mapprint (room.name, "is the room you are in")
-    else
-      local distance = #paths [uid].path .. " room"
-      if #paths [uid].path > 1 then
-        distance = distance .. "s"
-      end -- if
-      distance = distance .. " away"
-      
-      local room_name = room.name
-      room_name = room_name .. " (" .. room.area .. ")"
-
-      if show_uid then
-        room_name = room_name .. " (" .. uid .. ")"
-      end -- if
-      
-      -- in case the same UID shows up later, it is only valid from the same room
-      local hash = utils.tohex (utils.md5 (tostring (current_room) .. "<-->" .. tostring (uid)))
-      
-      Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")", 
-                room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
-      local info = ""
-      if type (paths [uid].reason) == "string" and paths [uid].reason ~= "" then
-        info = " [" .. paths [uid].reason .. "]"
-      end -- if
-      mapprint (" - " .. distance .. info) -- new line
-      
-      -- callback to display extra stuff (like find context, room description)
-      if fcb then
-        fcb (uid)
-      end -- if callback
-      hyperlink_paths [hash] = paths [uid].path
+    local distance = #paths [uid].path .. " room"
+    if #paths [uid].path > 1 or #paths[uid].path == 0 then
+      distance = distance .. "s"
     end -- if
+    distance = distance .. " away"
+    
+    local room_name = room.name
+    room_name = room_name .. " (" .. room.area .. ")"
+
+    if show_uid then
+      room_name = room_name .. " (" .. uid .. ")"
+    end -- if
+      
+    -- in case the same UID shows up later, it is only valid from the same room
+    local hash = utils.tohex (utils.md5 (tostring (current_room) .. "<-->" .. tostring (uid)))
+      
+    if current_room ~= uid then
+        Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")", 
+              room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
+    else
+        Tell(room_name)
+    end
+    local info = ""
+    if type (paths [uid].reason) == "string" and paths [uid].reason ~= "" then
+      info = " [" .. paths [uid].reason .. "]"
+    end -- if
+    mapprint (" - " .. distance .. info) -- new line
+    
+    -- callback to display extra stuff (like find context, room description)
+    if fcb then
+      fcb (uid)
+    end -- if callback
+    hyperlink_paths [hash] = paths [uid].path
   end -- for each room
 
   if expected_count and found_count < expected_count then
