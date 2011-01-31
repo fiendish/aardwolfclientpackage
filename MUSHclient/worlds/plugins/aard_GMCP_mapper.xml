@@ -741,8 +741,19 @@ function fixbool (b)
 end -- fixbool
 
 function findpathfast(name, line, wildcards)
-db = assert (sqlite3.open(GetInfo (66) .. Trim (WorldName ()) .. ".db"))
-findpath(tonumber(wildcards[1]),tonumber(wildcards[2]))
+    db = assert (sqlite3.open(GetInfo (66) .. Trim (WorldName ()) .. ".db"))
+    local foundpath = findpath(tonumber(wildcards[1]),tonumber(wildcards[2]))
+    if foundpath == nil then
+        mapper.mapprint (string.format ("Path from %s to %s not found.", wildcards[1], wildcards[2]))
+        return
+    end
+    
+  -- turn into speedwalk
+  local speedwalk = mapper.build_speedwalk (foundpath, speedwalk_prefix)
+
+  -- display it
+  mapper.mapprint (string.format ("Path from %s to %s is: %s", wildcards[1], wildcards[2], speedwalk))
+    
 end
 
 -- map_list function contributed by Spartacus
