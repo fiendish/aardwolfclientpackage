@@ -1021,7 +1021,7 @@ function custom_exit (name, line, wildcards)
   end -- if current_room
   
   wait.make (function()
-    world.Send(cexit_command)
+    Execute(cexit_command)
     wait.regexp("^\<(.*?)\>$")
     wait.time(1)
     cexit_dest = gmcpval("num")
@@ -2404,7 +2404,7 @@ function findpath(src, dst)
     if depth > 1 then
       ftd = room_sets [depth-1] or ""
       rooms_list = ""
-      for f, t, d in string.gmatch(ftd, "([^:]-),(%d*),([ %w]*)") do
+      for f, t, d in string.gmatch(ftd, "([^:]-),(%d*),(.-)") do
         if rooms_list ~= "" then rooms_list = rooms_list .. "," end
         rooms_list = rooms_list .. f
       end -- for from, to, dir      
@@ -2447,7 +2447,7 @@ function findpath(src, dst)
   -- we found a path...
   local path = {}
   -- ftd is currently the first from,to,dir set where from was either our start room or *
-  f, t, d = string.match (ftd, "([^:]-),(%d*),([ %w]*)")
+  f, t, d = string.match (ftd, "([^:]-),(%d*),(.*)")
   table.insert(path, {dir=d, uid=t})
 
   next_room = t
@@ -2455,7 +2455,7 @@ function findpath(src, dst)
     depth = depth - 1
     ftd = room_sets [depth]
     -- world.Note (string.format("\nDepth: %d\nroom_sets: %s", depth, room_sets [depth]))
-    pattern = string.format("(%d),(%%d*),([ %%w]*)", next_room)
+    pattern = string.format("(%d),(%%d*),(.*)", next_room)
     -- world.Note(string.format("\nMatching %s to pattern %s\n", ftd, pattern))
     -- for f, t, d in string.gmatch(ftd, pattern) do
     f, t, d = string.match (ftd, pattern)
