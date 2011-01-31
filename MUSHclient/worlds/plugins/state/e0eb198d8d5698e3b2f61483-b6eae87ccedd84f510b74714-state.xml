@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Tuesday, January 25, 2011, 1:17 PM -->
+<!-- Saved on Monday, January 31, 2011, 2:16 AM -->
 <!-- MuClient version 4.71 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
@@ -14,7 +14,7 @@
 <variables
    muclient_version="4.71"
    world_file_version="15"
-   date_saved="2011-01-25 13:17:50"
+   date_saved="2011-01-31 02:16:18"
   >
   <variable name="config">config = {
   ROOM_NAME_TEXT = {
@@ -39,6 +39,10 @@
     name = "Room name box",
     colour = 0,
     },
+  ROOM_NOTE_COLOUR = {
+    name = "Room notes",
+    colour = 9498256,
+    },
   GUILD_FILL_COLOUR = {
     name = "Guild",
     colour = 16711935,
@@ -46,10 +50,6 @@
   TRAINER_FILL_COLOUR = {
     name = "Trainer",
     colour = 3329434,
-    },
-  BANK_FILL_COLOUR = {
-    name = "Bank",
-    colour = 55295,
     },
   SHOP_FILL_COLOUR = {
     name = "Shop",
@@ -63,24 +63,25 @@
     name = "Healer",
     colour = 3329434,
     },
-  QUESTOR_FILL_COLOUR = {
-    name = "Questor",
-    colour = 16760576,
-    },
-  SCAN = {
-    depth = 300,
+  BANK_FILL_COLOUR = {
+    name = "Bank",
+    colour = 55295,
     },
   UNKNOWN_ROOM_COLOUR = {
     name = "Unknown room",
     colour = 139,
+    },
+  QUESTOR_FILL_COLOUR = {
+    name = "Questor",
+    colour = 16760576,
     },
   BACKGROUND_COLOUR = {
     name = "Area Background",
     colour = 1118481,
     },
   WINDOW = {
-    height = 367,
-    width = 270,
+    height = 400,
+    width = 250,
     },
   DIFFERENT_AREA_COLOUR = {
     name = "Another area",
@@ -114,9 +115,8 @@
     name = "PK border",
     colour = 255,
     },
-  EXIT_COLOUR_IN_OUT = {
-    name = "Exit in/out",
-    colour = 3634664,
+  SCAN = {
+    depth = 300,
     },
   MAPPER_NOTE_COLOUR = {
     name = "Messages",
@@ -129,7 +129,7 @@
   }</variable>
   <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowflags">2</variable>
   <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowmode">0</variable>
-  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowx">987</variable>
-  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowy">219</variable>
+  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowx">960</variable>
+  <variable name="mw_b6eae87ccedd84f510b74714_mapper_windowy">183</variable>
 </variables>
 </muclient>
