@@ -629,7 +629,7 @@ default_config = {
   ROOM_COLOUR             = { name = "Room",              colour =  ColourNameToRGB "#dcdcdc", },
   EXIT_COLOUR             = { name = "Exit",              colour =  ColourNameToRGB "#e0ffff", },
   EXIT_COLOUR_UP_DOWN     = { name = "Exit up/down",      colour =  ColourNameToRGB "#ffb6c1", },
-  EXIT_COLOUR_IN_OUT      = { name = "Exit in/out",       colour =  ColourNameToRGB "#e87537", },
+  ROOM_NOTE_COLOUR        = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen", },
   OUR_ROOM_COLOUR         = { name = "Our room",          colour =  ColourNameToRGB "#ff1493", },
   UNKNOWN_ROOM_COLOUR     = { name = "Unknown room",      colour =  ColourNameToRGB "#8b0000", },
   DIFFERENT_AREA_COLOUR   = { name = "Another area",      colour =  ColourNameToRGB "#ff0000", },
@@ -659,7 +659,7 @@ default_config = {
   WINDOW = { width = 250, height = 400 },
   
   -- how far from where we are standing to draw (rooms)
-  SCAN = { depth = 15 },
+  SCAN = { depth = 300 },
   
   -- show custom tiling background textures
   USE_TEXTURES = { enabled = true },
@@ -922,7 +922,7 @@ function map_portal (name, line, wildcards)
        building = 0,
        terrain = "*",
        info = "*",
-       notes = "",
+       notes = nil,
        x = "*",
        y = "*",
        z = 0,

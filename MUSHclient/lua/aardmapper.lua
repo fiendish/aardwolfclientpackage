@@ -169,7 +169,7 @@ local default_config = {
   ROOM_COLOUR             = { name = "Room",              colour =  ColourNameToRGB "cyan", },
   EXIT_COLOUR             = { name = "Exit",              colour =  ColourNameToRGB "darkgreen", },
   EXIT_COLOUR_UP_DOWN     = { name = "Exit up/down",      colour =  ColourNameToRGB "darkmagenta", },
-  EXIT_COLOUR_IN_OUT      = { name = "Exit in/out",       colour =  ColourNameToRGB "#3775E8", },
+  ROOM_NOTE_COLOUR        = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen", },
   UNKNOWN_ROOM_COLOUR     = { name = "Unknown room",      colour =  ColourNameToRGB "#00CACA", },
   MAPPER_NOTE_COLOUR      = { name = "Messages",          colour =  ColourNameToRGB "lightgreen" },
   
@@ -675,6 +675,11 @@ local function draw_room (uid, path, x, y)
     WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
                     room.bordercolour, room.borderpen, room.borderpenwidth,  -- pen
                     -1, miniwin.brush_null)  -- opaque, no brush
+    if room.notes ~= nil and room.notes ~= "" then
+            WindowCircleOp (win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth, 
+                    right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,config.MAPPER_NOTE_COLOUR.colour,
+                    room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+    end
   end -- if 
                
           
