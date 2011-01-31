@@ -394,8 +394,6 @@ mapper goto <room>      --> walk to a room by its room number
    match="mapper cexits *"
    enabled="y"
    sequence="100"
-
-
    script="custom_exit_list"
    regexp="n"
   >  
@@ -919,6 +917,21 @@ end
 
 -- map_portal function contributed by Spartacus
 function map_portal (name, line, wildcards)
+  -- store portal as an exit from anywhere to the current room
+  res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
+  luastmt = "gmcpdata = " .. gmcparg
+  assert (loadstring (luastmt or "")) ()
+  local current_room = gmcpval("num")
+  if not(current_room) or current_room == "" or current_room == nil then
+    print ("PORTAL FAILED: No room number received from the mud yet.  Please try looking.")
+    return
+  end -- no room number.map_portal
+  
+  if current_room == "-1" then
+    print("PORTAL FAILED: Cannot link portals to unmappable rooms.")
+    return
+  end
+  
   if rooms["*"] == nil then
     rooms["*"] = {
        name = "*",
@@ -932,16 +945,7 @@ function map_portal (name, line, wildcards)
        z = 0,
        exits = {} }
   end
-
-  -- store portal as an exit from anywhere to the current room
-  res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-  luastmt = "gmcpdata = " .. gmcparg
-  assert (loadstring (luastmt or "")) ()
-  local current_room = gmcpval("num")
-  if not(current_room) or current_room == "" or current_room == nil then
-    print ("No room number received from the mud yet.  Please try looking.")
-    return
-  end -- no room number.map_portal
+  
   local hhp_room_exists = 0
   local query = ""
   -- first check to see if our special room exists...
@@ -950,7 +954,6 @@ function map_portal (name, line, wildcards)
   end
   query = "INSERT OR REPLACE INTO rooms (uid, name, area, date_added) VALUES ('*', '___HERE___', '___EVERYWHERE___', DATETIME('NOW'))"
   dbcheck(db:execute(query))
---  print ("Executed: " .. query)
   print (string.format("Storing %s as a custom exit to %s.", wildcards [1], current_room))
   query = string.format ([[
     INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
@@ -960,7 +963,6 @@ function map_portal (name, line, wildcards)
           fixsql  (current_room)    -- destination room
           )
   dbcheck (db:execute (query))
---  print ("Executed: " .. query)
 
   rooms["*"].exits[wildcards[1]] = current_room
 end -- map_portal
@@ -1014,6 +1016,11 @@ function custom_exit (name, line, wildcards)
       world.Note("Need to know where we started out.")
     end
   end -- if current_room
+
+  if cexit_start == "-1" then
+     world.Note ("CEXIT FAILED: You cannot link custom exits from unmappable rooms.")
+     return
+  end
   
   wait.make (function()
     Execute(cexit_command)
@@ -1021,7 +1028,9 @@ function custom_exit (name, line, wildcards)
     wait.time(1)
     cexit_dest = gmcpval("num")
     if cexit_dest then
-      if cexit_dest ~= cexit_start then
+      if cexit_dest == "-1" then
+        world.Note ("CEXIT FAILED: You cannot link custom exits to unmappable rooms.")
+      elseif cexit_dest ~= cexit_start then
         world.Note (string.format("Custom Exit: %d (%s) -> %d", cexit_start, cexit_command, cexit_dest))
         dbcheck (db:execute (string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
@@ -1033,10 +1042,10 @@ function custom_exit (name, line, wildcards)
         rooms[cexit_start].exits[cexit_command] = cexit_dest
         mapper.draw (current_room)
       else
-        world.Note (string.format("Custom Exit %s leads back here!", cexit_command))
+        world.Note (string.format("CEXIT FAILED: Custom Exit %s leads back here!", cexit_command))
       end
     else
-      world.Note ("Need to know where we ended up.")
+      world.Note ("CEXIT FAILED: Need to know where we ended up.")
     end
   end)
 end -- custom_exit
