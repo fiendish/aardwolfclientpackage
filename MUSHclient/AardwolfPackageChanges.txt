@@ -1,8 +1,15 @@
 Aardwolf Client Package Major Changes List
 
+r307 snapshot
+- new pathfinding algorithm in the gmcp mapper. pathfinding will now go through handheld portals and other from-anywhere commands.
+- removed the worthless mapper areas command
+- new findpath command in the gmcp mapper that finds the path between any two room uids.
+- added visual indication of room notes in the gmcp mapper
+- various other bug fixes
+
 r300 snapshot
 - by default load the group monitor and disable autosay
-- new hand-held portal functions in the gmcp mapper (not yet used for searching)
+- new handheld portal functions in the gmcp mapper (not yet used for searching)
 - new custom room exit functions in the gmcp mapper
 - new unmapped exits function in the gmcp mapper
 - prevent room.wrongdir from erroneously clearing stored room data in the gmcp handler
