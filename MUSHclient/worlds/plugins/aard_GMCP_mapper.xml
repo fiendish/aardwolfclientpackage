@@ -903,14 +903,18 @@ function map_portal_delete (name, line, wildcards)
   )
   dbcheck (db:execute (query))
   print (string.format("Deleted mapper hand-held exit '%s'.", keywords))
-  rooms["*"].exits[keywords] = {}
+  if rooms["*"] then
+    rooms["*"].exits[keywords] = {}
+  end
 end -- map_portal_delete
 
 function map_portal_purge(name, line, wildcards)
     query = string.format("DELETE FROM exits WHERE fromuid = %s;", fixsql("*"))
     dbcheck (db:execute (query))
     print ("Purged all mapper hand-held exits.")
-    rooms["*"].exits = {}
+    if rooms["*"] then
+       rooms["*"].exits = {}
+    end
 end
 
 -- map_portal function contributed by Spartacus
@@ -929,15 +933,6 @@ function map_portal (name, line, wildcards)
        exits = {} }
   end
 
-  if (wildcards[1] == "purge") then
-     map_portal_purge()
-     return
-  end
-  if string.sub(wildcards[1],1,7)=="delete " then
-     map_portal_delete(string.sub(wildcards[1],8))
-     return
-  end
-  
   -- store portal as an exit from anywhere to the current room
   res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
   luastmt = "gmcpdata = " .. gmcparg
