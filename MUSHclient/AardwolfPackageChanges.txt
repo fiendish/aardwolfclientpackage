@@ -1,6 +1,7 @@
 Aardwolf Client Package Major Changes List
 
-r311 snapshot
+r313 snapshot
+- disallow setting cexits and portals to/from rooms with uid -1 ("unmappable")
 - new pathfinding algorithm in the gmcp mapper. pathfinding will now go through handheld portals and other from-anywhere commands.
 - removed the worthless mapper areas command
 - new findpath command in the gmcp mapper that finds the path between any two room uids.
