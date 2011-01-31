@@ -2370,9 +2370,10 @@ function findpath(src, dst)
   local depth = 0
   local max_depth = mapper.config.SCAN.depth
   local room_sets = {}
-  local rooms_list = ""
+  local rooms_list = {}
   local found = false
-  local ftd = ""
+  local ftd = {}
+  local f = ""
   local rcount = 0
   local next_room = 0
   
@@ -2383,7 +2384,7 @@ function findpath(src, dst)
     return {}
   end
   
-  rooms_list = string.format("%s", dst)
+  table.insert(rooms_list, dst)
     
   -- debug notes
   -- world.Note ()
@@ -2397,30 +2398,26 @@ function findpath(src, dst)
   while not found and depth < max_depth do
     depth = depth + 1
     if depth > 1 then
-      ftd = room_sets [depth-1] or ""
-      rooms_list = ""
-      for f, t, d in string.gmatch(ftd, "([^:]-),(%d*),(.-)") do
-        if rooms_list ~= "" then rooms_list = rooms_list .. "," end
-        rooms_list = rooms_list .. f
+      ftd = room_sets[depth-1] or {}
+      rooms_list = {}
+      for k,v in pairs(ftd) do
+        table.insert(rooms_list, v.fromuid)
       end -- for from, to, dir      
     end -- if depth
     -- get all exits to any room in the previous set
     if visited ~= "" then 
-       visited = visited .. ","..rooms_list 
+       visited = visited..","..table.concat(rooms_list, ",")
     else 
-       visited = rooms_list 
+       visited = table.concat(rooms_list, ",")
     end
-    local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) order by fromuid desc",rooms_list, visited)
+    local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) order by fromuid desc",table.concat(rooms_list,","), visited)
     local dcount = 0
+    room_sets[depth] = {}
     for row in db:nrows(q) do
       dcount = dcount + 1
-      ftd = string.format ("%s,%d,%s",row.fromuid, row.touid, row.dir)
-      if room_sets [depth] then
-        room_sets [depth] = room_sets [depth] .. ":" .. ftd
-      else
-        room_sets [depth] = ftd
-      end -- if room_set [depth]
+      room_sets[depth][row.fromuid]={fromuid=row.fromuid, touid=row.touid, dir=row.dir}
       if row.fromuid == src or row.fromuid == "*" then
+        f = row.fromuid
         found = true
         found_depth = depth
         break
@@ -2429,37 +2426,28 @@ function findpath(src, dst)
     rcount = rcount + dcount
     if dcount == 0 then
       return -- there is no path from here to there
-      -- world.Note(string.format("No rooms fount at depth %d\nrooms_list was: %s\nquery was: %s\n", depth, rooms_list, q))
-    -- else
-      -- world.Note(string.format("Found %d rooms at depth %d\nroom_sets: %s\n", dcount, depth, room_sets [depth]))
     end -- if dcount
   end -- while
-    
+  
   if found == false then
     return
   end
-
+  
   -- we found a path...
   local path = {}
   -- ftd is currently the first from,to,dir set where from was either our start room or *
-  f, t, d = string.match (ftd, "([^:]-),(%d*),(.*)")
-  table.insert(path, {dir=d, uid=t})
+  ftd = room_sets[found_depth][f]
+  table.insert(path, {dir=ftd.dir, uid=ftd.touid})
 
-  next_room = t
+  next_room = ftd.touid
   while depth > 1 do
     depth = depth - 1
-    ftd = room_sets [depth]
-    -- world.Note (string.format("\nDepth: %d\nroom_sets: %s", depth, room_sets [depth]))
-    pattern = string.format("(%d),(%%d*),(.*)", next_room)
-    -- world.Note(string.format("\nMatching %s to pattern %s\n", ftd, pattern))
-    -- for f, t, d in string.gmatch(ftd, pattern) do
-    f, t, d = string.match (ftd, pattern)
-      next_room = t
-      -- world.Note(string.format("Found f=%d, t=%d, d=%s", f, t, d))
-      if not rooms[t] then
-        rooms[t] = get_room (t)
-      end -- if not in memory yet
-      table.insert(path, {dir=d, uid=t})
+    ftd = room_sets[depth][next_room]
+    next_room = ftd.touid
+    if not rooms[ftd.touid] then
+      rooms[ftd.touid] = get_room (ftd.touid)
+    end -- if not in memory yet
+    table.insert(path, {dir=ftd.dir, uid=ftd.touid})
   end -- while
   return path, count, found_depth
 end -- function findpath
