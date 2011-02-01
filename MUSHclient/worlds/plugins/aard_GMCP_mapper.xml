@@ -935,6 +935,7 @@ function map_portal (name, line, wildcards)
   if rooms["*"] == nil then
     rooms["*"] = {
        name = "*",
+
        area = "*",
        building = 0,
        terrain = "*",
@@ -978,22 +979,12 @@ function map_portal_list ()
   world.Note (hr)
   world.Note (hl)
 
-  local exq = "select * from exits where fromuid='*'"
+  local q = "select area, name, touid, dir from exits, rooms where exits.touid=rooms.uid and exits.fromuid='*'"
 
-  for erow in db:nrows(exq) do
-    if erow.touid == "" then
-      -- zap any rows that got added with an empty touid
-      dbcheck (db:execute (string.format("DELETE from exits WHERE fromuid = %d AND dir = %s", row.fromuid, fixsql(row.dir))))
-      line = string.format("| %-10.10s | %-20.20s | %+7.7s | %-28.28s |", rrow.area, rrow.name, "DELETED", erow.dir)
-      world.Note (line)
-    else
-      rmq = string.format("select uid, name, area from rooms where uid='%s'",erow.touid)
-      for rrow in db:nrows(rmq) do
-        line = string.format("| %-10.10s | %-20.20s | %+7.7s | %-28.28s |", rrow.area, rrow.name, erow.touid, erow.dir)
-        world.Note (line)
-      end -- rrow
-    end -- if no destination
-  end -- erow
+  for row in db:nrows(q) do
+    line = string.format("| %-10.10s | %-20.20s | %+7.7s | %-28.28s | %5.5s |", row.area, row.name, row.touid, row.dir, row.level or "")
+    world.Note (line)
+  end
   world.Note (hl.."\n")
 end -- map_portal_list
 
