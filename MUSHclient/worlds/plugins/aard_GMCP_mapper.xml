@@ -936,6 +936,7 @@ function map_portal (name, line, wildcards)
     rooms["*"] = {
        name = "*",
 
+
        area = "*",
        building = 0,
        terrain = "*",
@@ -982,7 +983,7 @@ function map_portal_list ()
   local q = "select area, name, touid, dir from exits, rooms where exits.touid=rooms.uid and exits.fromuid='*'"
 
   for row in db:nrows(q) do
-    line = string.format("| %-10.10s | %-20.20s | %+7.7s | %-28.28s | %5.5s |", row.area, row.name, row.touid, row.dir, row.level or "")
+    line = string.format("| %-10.10s | %-20.20s | %+7.7s | %-28.28s |", row.area, row.name, row.touid, row.dir)
     world.Note (line)
   end
   world.Note (hl.."\n")
