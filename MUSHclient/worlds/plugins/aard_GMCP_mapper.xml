@@ -64,6 +64,7 @@ mapper show              --> show map
 mapper purgezone <area> --> remove an area from the map database
 
 mapper cexits            --> list known custom exits
+mapper cexits <here/area> --> list known custom exits only in this or another area
 mapper cexit <command>   --> follow and link a custom exit (e.g. mapper cexit ride bucket)
 mapper delete cexits     --> remove the custom exits from this room
 mapper purge cexits      --> remove all custom exits
@@ -72,6 +73,9 @@ mapper portals           --> list known hand-held portals
 mapper portal <command>  --> link a hand-held portal alias to here as a custom exit (e.g. mapper portal port amulet)
 mapper delete portal <command> --> remove the specified hand-held portal alias
 mapper purge portals     --> remove all hand-held portal aliases
+mapper portallevel <index> <level> --> change the level lock on a stored portal command (0 means no minimum level)
+                                   --> index is found with the 'portals list' command
+                                   --> you should not manually account for tiers
 
 FINDING THINGS
 
@@ -361,7 +365,7 @@ mapper goto <room>      --> walk to a room by its room number
    script="map_portal_delete"
    regexp="y"
   >  
-  </alias>  
+  </alias>
   
   <alias
    match="^mapper purge portals$"
@@ -371,6 +375,15 @@ mapper goto <room>      --> walk to a room by its room number
    regexp="y"
   >  
   </alias>  
+  
+  <alias
+   match="mapper portallevel *"
+   enabled="y"
+   sequence="100"
+   script="map_portal_level"
+   regexp="n"
+  >  
+  </alias>
   
     <alias
    match="^mapper delete cexits$"
@@ -667,6 +680,8 @@ default_config = {
   
   }
 
+mylevel = 0
+mytier = 0
 local rooms = {}
 local areas = {}
 local dirty_rooms = {}
@@ -969,21 +984,66 @@ function map_portal (name, line, wildcards)
   rooms["*"].exits[wildcards[1]] = current_room
 end -- map_portal
 
+function string:split(sep)
+    local sep, fields = sep or ":", {}
+    local pattern = string.format("([^%s]+)", sep)
+    self:gsub(pattern, function(c) fields[#fields+1] = c end)
+    return fields
+end
+
+function map_portal_level (name, line, wildcards)
+  
+  local keys = wildcards[1]:split(" ")
+  local pnum = tonumber(keys[1])
+  local level = tonumber(keys[2])
+
+  if pnum==nil or level==nil then
+    world.Note("\nPORTALLEVEL FAILED: The parameters for mapper portal level are <portal_index> <min_level>. Current portal indexes can be found in the 'mapper portals' output.\n")
+    return
+  end
+  
+  if level < 0 then
+    level = 0
+  end
+ 
+  local q = "select area, name, touid, dir, exits.date_added from exits,rooms where exits.touid=rooms.uid and exits.fromuid='*' order by area,touid"
+  local count = 1
+  for row in db:nrows(q) do
+    if count == pnum then
+       query = string.format ([[
+          INSERT OR REPLACE INTO exits (dir, fromuid, touid, level, date_added) 
+          VALUES (%s, %s, %s, %s, %s);
+          ]], fixsql(row.dir),  -- direction (eg. "n")
+              fixsql("*"),         -- from current room
+              fixsql(row.touid),    -- destination room
+              fixsql(level),
+              fixsql(row.date_added)
+       )
+       dbcheck (db:execute (query))
+       world.Note(string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",row.dir,row.name,level))
+       return
+    end
+    count = count + 1
+  end
+  world.Note(string.format("\nPORTALLEVEL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+end -- map_portal_level
+
 -- map_portal_list function contributed by Spartacus
 function map_portal_list ()
   local line
   -- show portals stored in the exits table
-  local hl = "+------------+----------------------+---------+------------------------------+"
-  local hr = "| area       | room name            | vnum    | hand held portal keywords    |"
+  local hl = "+-----+------------+----------------------+---------+------------------------------+-------+"
+  local hr = "|  #  | area       | room name            | vnum    | hand held portal keywords    | level |"
 
   world.Note ("\n"..hl)
   world.Note (hr)
   world.Note (hl)
 
-  local q = "select area, name, touid, dir from exits, rooms where exits.touid=rooms.uid and exits.fromuid='*'"
-
+  local q = "select area, name, touid, dir,level from exits, rooms where exits.touid=rooms.uid and exits.fromuid='*' order by area,touid"
+  local count = 0
   for row in db:nrows(q) do
-    line = string.format("| %-10.10s | %-20.20s | %+7.7s | %-28.28s |", row.area, row.name, row.touid, row.dir)
+    count = count + 1
+    line = string.format("| %+3.3s | %-10.10s | %-20.20s | %+7.7s | %-28.28s | %+5.5s |", count, row.area, row.name, row.touid, row.dir, row.level)
     world.Note (line)
   end
   world.Note (hl.."\n")
@@ -1263,6 +1323,7 @@ function create_tables ()
       dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
       fromuid     STRING  NOT NULL, -- exit from which room (in rooms table)
       touid       STRING  NOT NULL, -- exit to which room (in rooms table)
+      level       STRING  NOT NULL DEFAULT '0', -- minimum level to make use of this exit
       date_added  DATE,             -- date added to database
       PRIMARY KEY(fromuid, dir),
       FOREIGN KEY(fromuid) REFERENCES rooms(uid)
@@ -1272,31 +1333,34 @@ function create_tables ()
   ]])
 
   
-  -- The original database implementation was naive. We want to fix it up here
-  -- by setting a uniqueness constraint on the pair (fromuid, dir). The alternative is to
-  -- manually check if the pair would be duplicate before inserting. Unfortunately, sqlite requires
-  -- a little dance of table dropping for this to happen.
-  local bad_exits = false
+  -- The original database implementation was naive. We want to fix it up here.
+  -- Unfortunately, sqlite requires a little dance of table dropping for this to happen.
+  local bad_exits1 = false
+  local bad_exits2 = true
   for a in db:nrows "PRAGMA table_info('exits')" do
     if a["name"] == "exitid" then
-        bad_exits = true
+        bad_exits1 = true
+    end
+    if a["name"] == "level" then
+        bad_exits2 = false
     end
   end
-  if bad_exits == true then
+  if bad_exits1 == true or bad_exits2 == true then
       dbcheck (db:execute [[
       BEGIN TRANSACTION;
-      CREATE TEMPORARY TABLE exits_backup(dir, fromuid,touid, date_added);
+      CREATE TEMPORARY TABLE exits_backup(dir, fromuid, touid, date_added);
       INSERT OR REPLACE INTO exits_backup SELECT dir, fromuid, touid, date_added FROM exits;
       DROP TABLE exits;
       CREATE TABLE exits (
           dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
           fromuid     STRING  NOT NULL, -- exit from which room (in rooms table)
           touid       STRING  NOT NULL, -- exit to which room (in rooms table)
+          level       STRING  NOT NULL DEFAULT '0', -- minimum level to make use of this exit
           date_added  DATE,             -- date added to database
           PRIMARY KEY(fromuid, dir),
           FOREIGN KEY(fromuid) REFERENCES rooms(uid)
         );
-      INSERT OR REPLACE INTO exits SELECT dir, fromuid, touid, date_added FROM exits_backup;
+      INSERT OR REPLACE INTO exits(dir,fromuid,touid,date_added) SELECT dir, fromuid, touid, date_added FROM exits_backup;
       DROP TABLE exits_backup;
       COMMIT;
       ]])
@@ -1602,6 +1666,7 @@ function room_add_exit (room, uid)
 local available =  {
   n = "North",
   s = "South",
+
   e = "East",
   w = "West",
   u = "Up",
@@ -1890,6 +1955,10 @@ function OnPluginInstall ()
     terrain_colours [row.name] = tonumber (row.color)
   end   -- finding environments
   
+  if IsConnected() then
+     OnPluginConnect()
+  end
+  
 end -- OnPluginInstall
 
 function OnPluginEnable ()
@@ -2107,10 +2176,18 @@ function OnPluginBroadcast (msg, id, name, text)
        mapper.cancel_speedwalk()
     end -- wrongdir
 
+    if (text == "char.base") then
+       res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base")
+       luastmt = "gmcpdata = " .. gmcparg
+       assert (loadstring (luastmt or "")) ()
+       mytier = tonumber(gmcpdata.tier)
+    end -- running
+
     if (text == "char.status") then
        res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status")
        luastmt = "gmcpdata = " .. gmcparg
        assert (loadstring (luastmt or "")) ()
+       mylevel = tonumber(gmcpdata.level)
        if running == false and gmcpdata.state == "12" then
            activate_running(true)
        elseif running == true and gmcpdata.state ~= "12" then
@@ -2411,7 +2488,7 @@ function findpath(src, dst)
     else 
        visited = table.concat(rooms_list, ",")
     end
-    local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) order by fromuid desc",table.concat(rooms_list,","), visited)
+    local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and level <= %s order by fromuid desc",table.concat(rooms_list,","), visited, mylevel+(mytier*10))
     local dcount = 0
     room_sets[depth] = {}
     for row in db:nrows(q) do
@@ -2486,6 +2563,7 @@ end -- function
 
 function OnPluginConnect ()
   Send_GMCP_Packet("rawcolor on")
+  Send_GMCP_Packet("request char")
   mapper.cancel_speedwalk ()
   -- DoAfter (3, "look")  -- force mapper update
 end -- OnPluginConnect
@@ -2764,10 +2842,11 @@ function create_map_database (name, line, wildcards)
       dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
       fromuid     STRING  NOT NULL, -- exit from which room (in rooms table)
       touid       STRING  NOT NULL, -- exit to which room (in rooms table)
+      level       STRING  NOT NULL DEFAULT '0', -- minimum level to make use of this exit
       date_added  DATE,             -- date added to database
       PRIMARY KEY(fromuid, dir),
       FOREIGN KEY(fromuid) REFERENCES rooms(uid)
-    );
+  );
 
   CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
   CREATE INDEX IF NOT EXISTS touid_index ON exits (touid);
