@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r319 snapshot
+- added a way to put minimum level locks on portals
+
 r315 snapshot
 - fixed use of the gray color code in the channel capture window
 - disallow setting cexits and portals to/from rooms with uid -1 ("unmappable")
