@@ -1429,11 +1429,11 @@ function get_room (uid)
   end -- if
 
   local room = copytable.deep (ourroom)
-  room.bordercolour = config.ROOM_COLOUR.colour
+  room.bordercolour = configs.ROOM_COLOUR.colour
   if areas[room.area] then
      room.texture = areas[room.area].texture
      if areas[room.area].color ~= "" then
-        room.bordercolour = areas[room.area].color or config.ROOM_COLOUR.colour
+        room.bordercolour = areas[room.area].color or configs.ROOM_COLOUR.colour
      end
      room.area = areas[room.area].name or string.format ("%s", room.area or "<unknown>")
   end
@@ -1488,7 +1488,7 @@ function get_room (uid)
       )
       
 
-  --room.bordercolour = config.ROOM_COLOUR.colour
+  --room.bordercolour = configs.ROOM_COLOUR.colour
   room.borderpen = 0 -- solid
   room.borderpenwidth = 1
   room.fillcolour = 0xff0000
@@ -1498,31 +1498,31 @@ function get_room (uid)
   if room.info and room.info ~= "" then
     if string.match (room.info, "shop") then
       special_room = true
-      room.fillcolour = config.SHOP_FILL_COLOUR.colour
+      room.fillcolour = configs.SHOP_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
     elseif string.match (room.info, "healer") then
       special_room = true
-      room.fillcolour = config.HEALER_FILL_COLOUR.colour
+      room.fillcolour = configs.HEALER_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
     elseif string.match (room.info, "guild") then
       special_room = true
-      room.fillcolour = config.GUILD_FILL_COLOUR.colour
+      room.fillcolour = configs.GUILD_FILL_COLOUR.colour
       room.fillbrush = 0 -- solid
     elseif string.match (room.info, "trainer") then
       special_room = true
-      room.fillcolour = config.TRAINER_FILL_COLOUR.colour
+      room.fillcolour = configs.TRAINER_FILL_COLOUR.colour
       room.fillbrush = 0 -- solid
     elseif string.match (room.info, "questor") then
       special_room = true
-      room.fillcolour = config.QUESTOR_FILL_COLOUR.colour
+      room.fillcolour = configs.QUESTOR_FILL_COLOUR.colour
       room.fillbrush = 0 -- solid
     elseif string.match (room.info, "bank") then
       special_room = true
-      room.fillcolour = config.BANK_FILL_COLOUR.colour
+      room.fillcolour = configs.BANK_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
     elseif string.match (room.info, "safe") then
       special_room = true
-      room.fillcolour = config.SAFEROOM_FILL_COLOUR.colour
+      room.fillcolour = configs.SAFEROOM_FILL_COLOUR.colour
       room.fillbrush = 0  -- solid
     end -- if
   end  
@@ -1538,12 +1538,12 @@ function get_room (uid)
   end -- if environmentname
 
   if uid == current_room then
-    room.bordercolour = config.OUR_ROOM_COLOUR.colour
+    room.bordercolour = configs.OUR_ROOM_COLOUR.colour
     room.borderpenwidth = 2
   elseif room.area ~= current_area then
-    room.bordercolour = config.DIFFERENT_AREA_COLOUR.colour
+    room.bordercolour = configs.DIFFERENT_AREA_COLOUR.colour
   elseif room.info and string.match(room.info, "pk") then
-    room.bordercolour = config.PK_BORDER_COLOUR.colour
+    room.bordercolour = configs.PK_BORDER_COLOUR.colour
     room.borderpenwidth = 2
   end -- not in this area
   
@@ -1894,7 +1894,7 @@ end -- room_click
 
 function OnPluginInstall ()
   
-  config = {}  -- in case not found
+  configs = {}  -- in case not found
 
   fonts = utils.getfontfamilies ()
 
@@ -1904,15 +1904,15 @@ function OnPluginInstall ()
   end -- if Dina not installed
 
   -- get saved configuration
-  assert (loadstring (GetVariable ("config") or "")) ()
+  assert (loadstring (GetVariable ("configs") or "")) ()
 
-  -- allow for additions to config
+  -- allow for additions to configs
   for k, v in pairs (default_config) do
-    config [k] = config [k] or v
+    configs [k] = configs [k] or v
   end -- for
   
   -- initialize mapper engine
-  mapper.init { config = config,            -- colours, timing etc.
+  mapper.init { config = configs,            -- colours, timing etc.
                 get_room = get_room,        -- get_room (uid) called to get room info
                 show_help = OnHelp,         -- to show help
 
@@ -1978,12 +1978,12 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginSaveState ()
-  if config.SCAN.depth < temp_scan_depth then
+  if configs.SCAN.depth < temp_scan_depth then
     -- then we probably caught ourselves in a botched run or something
-    config.SCAN.depth = temp_scan_depth
+    configs.SCAN.depth = temp_scan_depth
   end
   mapper.save_state ()
-  SetVariable ("config", "config = " .. serialize.save_simple (config))
+  SetVariable ("configs", "configs = " .. serialize.save_simple (configs))
 end -- OnPluginSaveState
  
 terrain_colours = {}
@@ -2016,10 +2016,10 @@ temp_scan_depth = 4
 function activate_running(run)
     running = run
     if running then
-        temp_scan_depth = mapper.config.SCAN.depth
-        mapper.config.SCAN.depth = 4  -- or whatever
+        temp_scan_depth = mapper.configs.SCAN.depth
+        mapper.configs.SCAN.depth = 4  -- or whatever
     else
-        mapper.config.SCAN.depth = temp_scan_depth
+        mapper.configs.SCAN.depth = temp_scan_depth
     end
     mapper.draw(current_room)
 end
@@ -2446,7 +2446,7 @@ end -- map_notes
 -- original findpath function contributed by Spartacus
 function findpath(src, dst)
   local depth = 0
-  local max_depth = mapper.config.SCAN.depth
+  local max_depth = mapper.configs.SCAN.depth
   local room_sets = {}
   local rooms_list = {}
   local found = false
