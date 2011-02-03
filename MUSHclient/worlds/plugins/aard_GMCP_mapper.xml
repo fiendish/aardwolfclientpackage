@@ -1032,8 +1032,8 @@ end -- map_portal_level
 function map_portal_list ()
   local line
   -- show portals stored in the exits table
-  local hl = "+-----+------------+----------------------+---------+------------------------------+-------+"
-  local hr = "|  #  | area       | room name            | vnum    | hand held portal keywords    | level |"
+  local hl = "+-----+------------+----------------------+-------+----------------------+-----+"
+  local hr = "|   # | area       | room name            |  vnum | portal keywords      | lvl |"
 
   world.Note ("\n"..hl)
   world.Note (hr)
@@ -1043,7 +1043,7 @@ function map_portal_list ()
   local count = 0
   for row in db:nrows(q) do
     count = count + 1
-    line = string.format("| %+3.3s | %-10.10s | %-20.20s | %+7.7s | %-28.28s | %+5.5s |", count, row.area, row.name, row.touid, row.dir, row.level)
+    line = string.format("| %+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area, row.name, row.touid, row.dir, row.level)
     world.Note (line)
   end
   world.Note (hl.."\n")
