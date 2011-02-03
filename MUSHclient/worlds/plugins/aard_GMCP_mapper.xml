@@ -56,46 +56,52 @@ room the stub will disappear and the room(s) in question will be drawn.
 
 ACTIONS
 
-mapper help              --> this help  (or click the "?" button on the top right)
-mapper zoom out          --> zoom out
-mapper zoom in           --> zoom in
-mapper hide              --> hide map
-mapper show              --> show map
-mapper purgezone <area> --> remove an area from the map database
+mapper help               --> this help (or click the "?" button the top right)
+mapper zoom out           --> zoom out
+mapper zoom in            --> zoom in
+mapper hide               --> hide map
+mapper show               --> show map
+mapper purgezone <area>   --> remove an area from the map database
 
-mapper cexits            --> list known custom exits
-mapper cexits <here/area> --> list known custom exits only in this or another area
-mapper cexit <command>   --> follow and link a custom exit (e.g. mapper cexit ride bucket)
-mapper delete cexits     --> remove the custom exits from this room
-mapper purge cexits      --> remove all custom exits
+mapper cexits             --> list known custom exits
+mapper delete cexits      --> remove the custom exits from this room
+mapper purge cexits       --> remove all custom exits
+mapper cexits <here/area> --> list known custom exits only in this or another
+                          --> area
+mapper cexit <command>    --> follow and link a custom exit (e.g. mapper cexit
+                          --> ride bucket)
 
-mapper portals           --> list known hand-held portals
-mapper portal <command>  --> link a hand-held portal alias to here as a custom exit (e.g. mapper portal port amulet)
+mapper portals            --> list known hand-held portals
 mapper delete portal <command> --> remove the specified hand-held portal alias
-mapper purge portals     --> remove all hand-held portal aliases
-mapper portallevel <index> <level> --> change the level lock on a stored portal command (0 means no minimum level)
-                                   --> index is found with the 'portals list' command
-                                   --> you should not manually account for tiers
+mapper purge portals           --> remove all hand-held portal aliases
+mapper portal <command>   --> link a hand-held portal alias to here as a
+                          --> custom exit (e.g. mapper portal port amulet)
+mapper portallevel <index> <level> --> change the level lock on a stored
+                                   --> portal command (0 means no minimum
+                                   --> level) index is found with the 
+                                   --> 'portals list' command you should not
+                                   --> manually account for tiers
 
 FINDING THINGS
 
-mapper notes             --> show nearby rooms that you marked with notes
-mapper area <text>       --> full-text search limited to the current zone
-mapper find <text>       --> full-text search  (eg. shop OR baker)
-mapper list <text>       --> find rooms without the known-path limitation of "area" and "find"
-mapper shop              --> show nearby shops/banks etc.
-mapper train             --> show nearby trainers
-mapper quest             --> show nearby quest-givers
-mapper where <room>      --> show directions to a room
+mapper notes        --> show nearby rooms that you marked with notes
+mapper area <text>  --> full-text search limited to the current zone
+mapper find <text>  --> full-text search  (eg. shop OR baker)
+mapper list <text>  --> find rooms without the known-path limitation of "area"
+                    --> and "find"
+mapper shop         --> show nearby shops/banks etc.
+mapper train        --> show nearby trainers
+mapper quest        --> show nearby quest-givers
+mapper where <room> --> show directions to a room
 
 EXPLORING
 
-mapper unmapped         --> list unmapped exit counts for known areas
-mapper unmapped <here/area>   --> list unmapped exits in this or another area
+mapper unmapped             --> list unmapped exit counts for know areas
+mapper unmapped <here/area> --> list unmapped exits in this or another area
 
 MOVING  
 
-mapper goto <room>      --> walk to a room by its room number
+mapper goto <room>          --> walk to a room by its room number
 
 
 ]]>
