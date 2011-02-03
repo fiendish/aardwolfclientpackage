@@ -1983,6 +1983,7 @@ function OnPluginSaveState ()
     configs.SCAN.depth = temp_scan_depth
   end
   mapper.save_state ()
+  SetVariable("config","") -- wipe out the old config table
   SetVariable ("configs", "configs = " .. serialize.save_simple (configs))
 end -- OnPluginSaveState
  
