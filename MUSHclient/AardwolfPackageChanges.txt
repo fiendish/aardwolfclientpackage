@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r319 snapshot
+r321 snapshot
 - added a way to put minimum level locks on portals
 
 r315 snapshot
