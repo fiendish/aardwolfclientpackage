@@ -721,13 +721,7 @@ convert_direction = {
   east = "e",
   west = "w",
   up = "u",
-  down = "d",
-  northeast = "ne",
-  northwest = "nw",
-  southeast = "se",
-  southwest = "sw",
-  ['in'] = "in",
-  out = "out",
+  down = "d"
   }
 
 function dbcheck (code)
@@ -2469,15 +2463,7 @@ function findpath(src, dst)
   end
   
   table.insert(rooms_list, dst)
-    
-  -- debug notes
-  -- world.Note ()
-  -- world.Note (string.format("Start: %s\nEnd: %s\nFirst List (%d): %s",src, dst, depth, rooms_list))
-  -- world.Note ()
   
-  -- we're going to build an array of strings that look like "fromuid,touid,dir"
-  -- this way when we go forward to build our path, we don't have to re-query the
-  -- database for information we have already retrieved
   local visited = ""
   while not found and depth < max_depth do
     depth = depth + 1
@@ -2488,12 +2474,15 @@ function findpath(src, dst)
         table.insert(rooms_list, v.fromuid)
       end -- for from, to, dir      
     end -- if depth
-    -- get all exits to any room in the previous set
+
+    -- prune the search space
     if visited ~= "" then 
        visited = visited..","..table.concat(rooms_list, ",")
     else 
        visited = table.concat(rooms_list, ",")
     end
+    
+    -- get all exits to any room in the previous set
     local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and level <= %s order by fromuid desc",table.concat(rooms_list,","), visited, mylevel+(mytier*10))
     local dcount = 0
     room_sets[depth] = {}
@@ -2517,9 +2506,9 @@ function findpath(src, dst)
     return
   end
   
-  -- we found a path...
+  -- We've gotten back to the starting room from our destination. Now reconstruct the path.
   local path = {}
-  -- ftd is currently the first from,to,dir set where from was either our start room or *
+  -- set ftd to the first from,to,dir set where from was either our start room or *
   ftd = room_sets[found_depth][f]
   table.insert(path, {dir=ftd.dir, uid=ftd.touid})
 
@@ -2528,12 +2517,14 @@ function findpath(src, dst)
     depth = depth - 1
     ftd = room_sets[depth][next_room]
     next_room = ftd.touid
-    if not rooms[ftd.touid] then
+    if not rooms[ftd.touid] then -- if not in memory yet, get it
       rooms[ftd.touid] = get_room (ftd.touid)
-    end -- if not in memory yet
+    end
     table.insert(path, {dir=ftd.dir, uid=ftd.touid})
   end -- while
+  
   return path, count, found_depth
+  
 end -- function findpath
 
 
