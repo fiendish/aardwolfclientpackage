@@ -1,7 +1,14 @@
 Aardwolf Client Package Major Changes List
 
+r336 snapshot
+- updated to MUSHclient 4.72
+- added clickable links to mapper portals list
+- updated mapper find display
+- fixed a bug when defining custom mapper exits sometimes
+
 r326 snapshot
 - added a way to put minimum level locks on portals
+- various help/output tweaks
 
 r315 snapshot
 - fixed use of the gray color code in the channel capture window
