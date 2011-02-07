@@ -1030,6 +1030,8 @@ end -- map_portal_level
 -- map_portal_list function contributed by Spartacus
 function map_portal_list ()
   local line
+  local cmd
+  local txt
   -- show portals stored in the exits table
   local hl = "+-----+------------+----------------------+-------+----------------------+-----+"
   local hr = "|   # | area       | room name            |  vnum | portal keywords      | lvl |"
@@ -1043,8 +1045,16 @@ function map_portal_list ()
   for row in db:nrows(q) do
     count = count + 1
     line = string.format("| %+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area, row.name, row.touid, row.dir, row.level)
-    world.Note (line)
-  end
+    if row.level <= mylevel+(mytier*10) then
+      -- make the whole line click-able
+      cmd = "mapper goto " .. row.touid
+      txt = "click here to run to " .. row.name
+      world.Hyperlink(cmd, line, txt, "", "", false)
+      world.Note ()
+    else
+      world.Note(line)
+    end -- if row.level
+  end -- for row (portals query)
   world.Note (hl.."\n")
 end -- map_portal_list
 
