@@ -1274,16 +1274,19 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
     mapprint(string.format("Your search returned more than %s results. Choose a more specific target.", max_paths))
     return
   end
+  local notfound = {}
   for i,v in ipairs(dests) do
       SetStatus (string.format ("Pathfinding: %i/%i discovered routes", i, #dests))
       BroadcastPlugin (999, "repaint")
       local foundpath = findpath(current_room, v.uid)
+      if not rooms [v.uid] then
+         rooms [v.uid] = get_room (v.uid)
+      end -- if
       if foundpath ~= nil then
         paths[v.uid] = {path=foundpath, reason=v.reason}
         -- get room if not already gotten
-        if not rooms [v.uid] then
-           rooms [v.uid] = get_room (v.uid)
-        end -- if
+      else
+        table.insert(notfound, {uid=v.uid, reason=v.reason})
       end
   end
   local t = {}
@@ -1292,12 +1295,7 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
     table.insert (t, k)
     found_count = found_count + 1
   end -- for
-  
-  if found_count == 0 then
-    mapprint ("No matches.")
-    return
-  end -- if
-    
+      
   if found_count == 1 and walk then
     uid, item = next (paths, nil)
     mapprint ("Walking to:", rooms [uid].name)
@@ -1309,6 +1307,9 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
   table.sort (t, function (a, b) return #paths [a].path < #paths [b].path end )
   
   hyperlink_paths = {}
+  Note("+------------------------------ START OF SEARCH -------------------------------+")
+  mapprint ("Found",found_count,"path"..((found_count ~= 1 and "s") or ""),"within", 
+          config.SCAN.depth, "rooms:")
   
   for _, uid in ipairs (t) do
     local room = rooms [uid] -- ought to exist or wouldn't be in table
@@ -1355,11 +1356,28 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
     if diff == 1 then
       were, matches = "was", "match"
     end -- if
+    Note("+------------------------------------------------------------------------------+")
     mapprint ("There", were, diff, matches, 
               "which I could not find a path to within", 
-              config.SCAN.depth, "rooms.")
+              config.SCAN.depth, "rooms:")
   end -- if
-  
+  for i,v in ipairs(notfound) do
+    local nfroom = rooms[v.uid]
+    local nfline = nfroom.name
+    nfline = nfline .. " (" .. nfroom.area .. ")"
+
+    if show_uid then
+      nfline = nfline .. " (" .. v.uid .. ")"
+    end -- if
+    Tell(nfline)
+    if type (v.reason) == "string" and v.reason ~= "" then
+      nfinfo = " - [" .. v.reason .. "]"
+      mapprint (nfinfo) -- new line
+    else
+    Note("")
+    end -- if
+  end
+  Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end -- map_find_things
 
 -- executed when the mapper draws a hyperlink to a room
