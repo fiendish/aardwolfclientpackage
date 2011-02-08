@@ -221,7 +221,7 @@ function DisplayMapPage()
             WindowLine(win, baseX+column_width-GAP, baseY-GAP, baseX+column_width-GAP, y, 0xeeeeee, 0, 1) -- vertical line
           end
       else
-          txt = "You group is empty."
+          txt = "Your group is empty."
           txtlen = WindowTextWidth(win,font_id, txt)
           WindowText(win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
       end
