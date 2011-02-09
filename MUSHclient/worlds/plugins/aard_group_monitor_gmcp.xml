@@ -296,9 +296,9 @@ function right_click_menu ()
            if (numResult % 2 == 1) then
               colourIndex = 2
            end
-           local newcolour = PickColour (colorVals[barIndex[math.ceil((numResult-2)/2)]][colourIndex])
+           local newcolour = PickColour (colorVals[barIndex[math.floor((numResult/2)-1)]][colourIndex])
            if newcolour ~= -1 then
-              colorVals[barIndex[math.ceil((numResult-2)/2)]][colourIndex] = newcolour
+              colorVals[barIndex[math.floor((numResult/2)-1)]][colourIndex] = newcolour
            end
            reload = true
         elseif numResult == 12 then
