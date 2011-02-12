@@ -1112,7 +1112,14 @@ end -- custom_exit
 function save_room_to_database (uid,room) 
   
   assert (uid, "No UID supplied to save_room_to_database")
-
+  local area_exists = false
+  for n in db:nrows (string.format ("SELECT uid FROM areas where uid=%s", fixsql(room.area))) do
+    area_exists = true
+  end
+  if not area_exists then
+    Send_GMCP_Packet("request area")
+    return false
+  end
   dbcheck (db:execute (string.format (
         "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, date_added) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, DATETIME('NOW'));",
           fixsql (uid), 
@@ -1136,7 +1143,7 @@ function save_room_to_database (uid,room)
   if show_database_mods then
     mapper.mapprint ("Added room", uid, "to database. Name:", room.name)
   end -- if
-
+  return true
 end -- function save_room_to_database
 
 function map_savedirty()
@@ -2073,19 +2080,15 @@ function got_gmcp_room()
    
      room = gmcproom
      dirty_rooms[room_number] = room
-
-     save_room_to_database (room_number,room)
-     rooms[room_number] = room
-
-     --if gmcpdata.exits ~= nil then
-     --   for dir,touid in pairs(gmcpdata.exits) do
-     --     room.exits [dir] = touid
-     --   end -- if can decode    
-     --aend
-
-     save_room_exits(room_number)
-
+     local success = save_room_to_database(room_number,room)
+     if success then
+       rooms[room_number] = room
+       save_room_exits(room_number)
+     end
      db:exec ("COMMIT;") 
+     if not success then
+        return
+     end
 
   end -- if room not there
   
@@ -2123,6 +2126,7 @@ function update_gmcp_area()
     }
     areas [areaid] = area
 
+    Send_GMCP_Packet("request room") -- Just got a new area update. Now check for our room again.
 return
 end
 
