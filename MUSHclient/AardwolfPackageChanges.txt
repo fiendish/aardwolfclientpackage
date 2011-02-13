@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r342 snapshot
+- fix a bug on saving rooms when using the mapper without a pre-initialized database
+
 r340 snapshot
 - fixed color selection (crash) bug in the group monitor plugin
 - fixed a typo in the group monitor empty group message
