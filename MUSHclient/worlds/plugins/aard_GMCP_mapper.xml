@@ -775,15 +775,20 @@ function map_list (name, line, wildcards)
   -- if it is in the db, I want its vnum and area, so that I can figure out how to get there if the mapper does not know.
   local area = ""
   local count = 0
-  
+    Note("+------------------------------ START OF SEARCH -------------------------------+")
   -- find matching rooms using FTS3
   for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE name LIKE %s", fixsql ("%"..wildcards [1].."%"))) do
+     if count > 100 then
+        Note(string.format("More than 100 search results found. Aborting query. Try a more specific search phrase than '%s'.",wildcards[1]))
+        break
+     end
      count = count + 1
      for a in db:nrows(string.format ("SELECT area FROM rooms WHERE uid = %s", row.uid)) do
        area = a.area
      end -- for
      print (string.format("(%s) %s is in area \"%s\"",row.uid, row.name, area))
   end   -- finding room
+  Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end -- map_list
 
 function map_cexits_delete (name, line, wildcards)
@@ -2453,7 +2458,7 @@ function map_notes (name, line, wildcards)
         
 end -- map_notes
 
--- original findpath function contributed by Spartacus
+-- original findpath function idea contributed by Spartacus
 function findpath(src, dst)
   local depth = 0
   local max_depth = mapper.configs.SCAN.depth
