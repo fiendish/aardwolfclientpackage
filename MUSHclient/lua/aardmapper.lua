@@ -1412,7 +1412,7 @@ function build_speedwalk (path, prefix)
     if n == 0 then
       table.insert (tspeed, { dir = dir.dir, count = 1 })
     else
-      if tspeed [n].dir == dir.dir then
+      if expand_direction[dir.dir] ~= nil and tspeed [n].dir == dir.dir then
         tspeed [n].count = tspeed [n].count + 1
       else
         table.insert (tspeed, { dir = dir.dir, count = 1 })
@@ -1429,7 +1429,7 @@ function build_speedwalk (path, prefix)
 
   local new_command = false
   for _, dir in ipairs (tspeed) do
-    if #dir.dir == 1 then
+    if expand_direction[dir.dir] ~= nil then
       if new_command then
          s = s .. ";" .. speedwalk_prefix .. " "
          new_command = false
