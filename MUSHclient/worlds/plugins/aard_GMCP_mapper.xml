@@ -1135,13 +1135,17 @@ function save_room_to_database (uid,room)
         )))
   
   local exists = false      
-  for n in db:nrows(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s AND name = %s", fixsql(uid), fixsql(name))) do 
+  for n in db:nrows(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s", fixsql(uid))) do 
       exists = true 
   end
   -- don't add multiple times, maintaining backwards database compatibility (there's no uniqueness constraint on rooms_lookup.uid)
   if not exists then
       dbcheck (db:execute (string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name))))
+  else
+      dbcheck (db:execute (string.format ("DELETE FROM rooms_lookup WHERE uid = %s",fixsql(uid))))
+      dbcheck (db:execute (string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name))))
   end
+      
   
   room_not_in_database [uid] = false
   
@@ -2053,6 +2057,9 @@ function compareTables(primary, secondary)
     return true
 end
 
+-- functions for handling Aardwolf color codes
+dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
 function got_gmcp_room()
 
   local room_number = gmcpval("num")
@@ -2060,7 +2067,7 @@ function got_gmcp_room()
   current_room = room_number
 
   gmcproom = {
-       name = gmcpval("name"),
+       name = strip_colours(gmcpval("name")),
        area = gmcpval("zone"),
        building = 0,
        terrain = gmcpval("terrain"),
