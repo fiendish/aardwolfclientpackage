@@ -113,6 +113,14 @@ mapper goto <room>          --> walk to a room by its room number
  
   <!--  zooming aliases -->
 
+<alias
+match="mapper backup"
+enabled="y"
+sequence="100"
+omit_from_output="y"
+script="backup_databases"
+></alias>
+
  <alias
    match="mapper findpath * *"
    enabled="y"
@@ -693,6 +701,7 @@ local areas = {}
 local dirty_rooms = {}
 local environments = {}
 local user_terrain_colour = {}
+local in_backup = false
 
 room_not_in_database = {}
 room_in_database = {}
@@ -1915,6 +1924,27 @@ function room_click (uid, flags)
                            
 end -- room_click
 
+function backup_databases ()
+  in_backup = true
+  Note("PERFORMING DATABASE BACKUP. DON'T TOUCH ANYTHING!")
+  BroadcastPlugin (999, "repaint")
+  local name = GetInfo(66)..Trim(WorldName ())
+
+  -- close databases
+  db:close()
+  db_bm:close()
+  
+  -- copy
+  os.execute("copy /B /V /Y "..name..".db".." "..name..".db.bak2")
+  os.execute("copy /B /V /Y "..name.."_bookmarks.db".." "..name.."_bookmarks.db.bak2")
+  
+  -- re-open databases 
+  db    = assert (sqlite3.open(name..".db"))
+  db_bm = assert (sqlite3.open(name.."_bookmarks.db"))
+  Note("FINISHED DATABASE BACKUP.")
+  in_backup = false
+end
+
 function OnPluginInstall ()
   
   configs = {}  -- in case not found
@@ -2183,7 +2213,9 @@ end -- save_room_exits
 
   
 function OnPluginBroadcast (msg, id, name, text)
-
+  if in_backup == true then
+    return
+  end
   if id == "3e7dedbe37e44942dd46d264" then 
     -- gmcphandler.
     if (text == "room.info") then
