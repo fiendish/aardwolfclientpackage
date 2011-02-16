@@ -1270,8 +1270,9 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
   if max_paths <= 0 then
     max_paths = #dests
   end
+  mapprint ("Found",#dests,"target"..((found_count ~= 1 and "s") or "")..".")
   if #dests > max_paths then
-    mapprint(string.format("Your search returned more than %s results. Choose a more specific target.", max_paths))
+    mapprint(string.format("Your search returned more than %s results. Choose a more specific pattern.", max_paths))
     return
   end
   local notfound = {}
@@ -1307,10 +1308,7 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
   table.sort (t, function (a, b) return #paths [a].path < #paths [b].path end )
   
   hyperlink_paths = {}
-  Note("+------------------------------ START OF SEARCH -------------------------------+")
-  mapprint ("Found",found_count,"path"..((found_count ~= 1 and "s") or ""),"within", 
-          config.SCAN.depth, "rooms:")
-  
+  Note("+------------------------------ START OF SEARCH -------------------------------+")  
   for _, uid in ipairs (t) do
     local room = rooms [uid] -- ought to exist or wouldn't be in table
     assert (room, "Room " .. uid .. " is not in rooms table.")
