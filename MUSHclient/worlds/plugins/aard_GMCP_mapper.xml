@@ -788,7 +788,7 @@ function map_list (name, line, wildcards)
   -- find matching rooms using FTS3
   for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE name LIKE %s", fixsql ("%"..wildcards [1].."%"))) do
      if count > 100 then
-        Note(string.format("More than 100 search results found. Aborting query. Try a more specific search phrase than '%s'.",wildcards[1]))
+        mapper.mapprint(string.format("More than 100 search results found. Aborting query. Try a more specific search phrase than '%s'.",wildcards[1]))
         break
      end
      count = count + 1
@@ -933,6 +933,7 @@ function map_portal_delete (name, line, wildcards)
     rooms["*"].exits[keywords] = {}
   end
 end -- map_portal_delete
+
 
 function map_portal_purge(name, line, wildcards)
     query = string.format("DELETE FROM exits WHERE fromuid = %s;", fixsql("*"))
@@ -1935,8 +1936,8 @@ function backup_databases ()
   db_bm:close()
   
   -- copy
-  os.execute("copy /B /V /Y "..name..".db".." "..name..".db.bak2")
-  os.execute("copy /B /V /Y "..name.."_bookmarks.db".." "..name.."_bookmarks.db.bak2")
+  os.execute("copy /B /V /Y "..name..".db".." "..name..".db.bak")
+  os.execute("copy /B /V /Y "..name.."_bookmarks.db".." "..name.."_bookmarks.db.bak")
   
   -- re-open databases 
   db    = assert (sqlite3.open(name..".db"))
@@ -2215,6 +2216,7 @@ end -- save_room_exits
 function OnPluginBroadcast (msg, id, name, text)
   if in_backup == true then
     return
+
   end
   if id == "3e7dedbe37e44942dd46d264" then 
     -- gmcphandler.
