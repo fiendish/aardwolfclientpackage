@@ -56,6 +56,8 @@ room the stub will disappear and the room(s) in question will be drawn.
 
 ACTIONS
 
+mapper backup             --> create archived backups of your map database
+                          --> creates a db_backups directory 
 mapper help               --> this help (or click the "?" button the top right)
 mapper zoom out           --> zoom out
 mapper zoom in            --> zoom in
@@ -1653,6 +1655,7 @@ function room_edit_terrain_colour (room, uid)
    
   local environmentname = room.terrain
   if tonumber (environmentname) then
+
 
     environmentname = environments [tonumber (environmentname)]
   end -- convert to name
