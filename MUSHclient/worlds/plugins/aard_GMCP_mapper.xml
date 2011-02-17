@@ -1653,6 +1653,7 @@ function room_edit_terrain_colour (room, uid)
    
   local environmentname = room.terrain
   if tonumber (environmentname) then
+
     environmentname = environments [tonumber (environmentname)]
   end -- convert to name
   
@@ -1925,24 +1926,53 @@ function room_click (uid, flags)
                            
 end -- room_click
 
+function rotate_backups (backupPath)
+  os.remove(backupPath.."_DB_Backup_older.zip")
+  os.rename(backupPath.."_DB_Backup_old.zip", backupPath.."_DB_Backup_older.zip")
+  os.rename(backupPath.."_DB_Backup.zip", backupPath.."_DB_Backup_old.zip")
+end
+
 function backup_databases ()
   in_backup = true
   Note("PERFORMING DATABASE BACKUP. DON'T TOUCH ANYTHING!")
+  Note("CHECKING INTEGRITY")
   BroadcastPlugin (999, "repaint")
-  local name = GetInfo(66)..Trim(WorldName ())
+  local integrityCheck = true
+  for row in db:nrows("PRAGMA integrity_check;") do
+     tprint(row)
+     if row.integrity_check ~= "ok" then 
+        integrityCheck = false
+     end
+  end
+  if not integrityCheck then
+    Note("FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE.")
+    Note("ABORTING CURRENT BACKUP")
+    in_backup = false
+    return
+  end
+  Note("INTEGRITY CHECK PASSED")
+  Note("BACKING UP DATABASES")
+  BroadcastPlugin (999, "repaint")
+  
+  local worldPath = GetInfo(66)..Trim(WorldName())
+  local backupPath = GetInfo(66).."db_backups\\"..Trim(WorldName())
+
+  os.execute("md "..GetInfo(66).."db_backups\\")
+  
+  -- rotate old backup files
+  rotate_backups(backupPath)
 
   -- close databases
   db:close()
   db_bm:close()
   
-  -- copy
-  os.execute("copy /B /V /Y "..name..".db".." "..name..".db.bak")
-  os.execute("copy /B /V /Y "..name.."_bookmarks.db".." "..name.."_bookmarks.db.bak")
+  -- make new backup
+  os.execute(GetInfo(66).."zip -j -q -T "..backupPath.."_DB_Backup.zip "..worldPath.."*.db")
   
   -- re-open databases 
-  db    = assert (sqlite3.open(name..".db"))
-  db_bm = assert (sqlite3.open(name.."_bookmarks.db"))
-  Note("FINISHED DATABASE BACKUP.")
+  db    = assert (sqlite3.open(worldPath..".db"))
+  db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
+  Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
   in_backup = false
 end
 
@@ -2759,37 +2789,9 @@ function process_exit (args)
   exits [(convert_direction [args.direction]) or args.direction] = args.target
 end -- process_exit
 
-function dbcheck (code)
-
- if code ~= sqlite3.OK and    -- no error
-    code ~= sqlite3.ROW and   -- completed OK with another row of data
-    code ~= sqlite3.DONE then -- completed OK, no more rows
-    local err = db:errmsg ()  -- the rollback will change the error message
-    db:exec ("ROLLBACK")      -- rollback any transaction to unlock the database
-    error (err, 2)            -- show error in caller's context
-  end -- if
-
-end -- dbcheck 
-
-function fixsql (s)
-  if s then
-    return "'" .. (string.gsub (s, "'", "''")) .. "'" -- replace single quotes with two lots of single quotes
-  else
-    return "NULL"
-  end -- if
-end -- fixsql
-
 function nilToStr(n)
     return (((n ~= nil) and n) or "")
 end
-
-function fixbool (b)
-  if b then
-    return 1
-  else
-    return 0
-  end -- if
-end -- fixbool
 
 function ignore (args)
   -- ignore this tag
