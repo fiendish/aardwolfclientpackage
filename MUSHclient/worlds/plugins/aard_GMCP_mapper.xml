@@ -57,7 +57,7 @@ room the stub will disappear and the room(s) in question will be drawn.
 ACTIONS
 
 mapper backup             --> Create new archived backups of your map database
-                          --> in a db_backups directory, preserving the two 
+                          --> in a db_backups directory, preserving a few 
                           --> prior backups
 mapper help               --> This help (or click the "?" button the top right)
 mapper zoom out           --> Zoom out
@@ -1931,7 +1931,8 @@ function room_click (uid, flags)
 end -- room_click
 
 function rotate_backups (backupPath)
-  os.remove(backupPath.."_DB_Backup_older.zip")
+  os.remove(backupPath.."_DB_Backup_oldest.zip")
+  os.rename(backupPath.."_DB_Backup_older.zip", backupPath.."_DB_Backup_oldest.zip")
   os.rename(backupPath.."_DB_Backup_old.zip", backupPath.."_DB_Backup_older.zip")
   os.rename(backupPath.."_DB_Backup.zip", backupPath.."_DB_Backup_old.zip")
 end
