@@ -368,6 +368,7 @@ script="backup_databases"
  
   <alias
    match="^mapper portal (.+)$"
+
    enabled="y"
    sequence="100"
    script="map_portal"
@@ -1414,9 +1415,13 @@ function create_tables ()
   dbcheck (db:execute "UPDATE OR IGNORE rooms SET terrain = ifnull((SELECT name FROM environments WHERE environments.uid = rooms.terrain), rooms.terrain);")
   
   -- check if rooms_lookup table exists
-    dbcheck (db:execute "DROP TABLE IF EXISTS rooms_lookup;");
-    dbcheck (db:execute "CREATE VIRTUAL TABLE rooms_lookup USING FTS3(uid, name);");
-    dbcheck (db:execute "INSERT INTO rooms_lookup (uid, name) SELECT uid, name FROM rooms;")
+  dbcheck (db:execute [[
+  BEGIN TRANSACTION;
+  DROP TABLE IF EXISTS rooms_lookup;
+  CREATE VIRTUAL TABLE rooms_lookup USING FTS3(uid, name);
+  INSERT INTO rooms_lookup (uid, name) SELECT uid, name FROM rooms;
+  COMMIT;
+  ]])
   
   -- create notes and terrain colours table in separate database
   dbcheck (db_bm:execute[[
@@ -1942,6 +1947,10 @@ function backup_databases ()
   Note("PERFORMING DATABASE BACKUP. DON'T TOUCH ANYTHING!")
   Note("CHECKING INTEGRITY")
   BroadcastPlugin (999, "repaint")
+  -- If needed, force wal_checkpoint databases to make sure everything gets written out
+  -- this is a harmless no-op if not using journal_mode=WAL
+  db:exec("PRAGMA wal_checkpoint;")
+  db_bm:exec("PRAGMA wal_checkpoint;")
   local integrityCheck = true
   for row in db:nrows("PRAGMA integrity_check;") do
      tprint(row)
@@ -2154,6 +2163,7 @@ function got_gmcp_room()
 
 -- re-save if we got information that is different than before  
   if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or nilToStr(room.area) ~= nilToStr(gmcproom.area) or nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or nilToStr(room.info) ~= nilToStr(gmcproom.info) or compareTables(gmcpdata.exits, room.exits)==false then
+
      db:exec ("BEGIN TRANSACTION;") 
    
      room = gmcproom
@@ -2163,7 +2173,9 @@ function got_gmcp_room()
        rooms[room_number] = room
        save_room_exits(room_number)
      end
+     
      db:exec ("COMMIT;") 
+     
      if not success then
         return
      end
@@ -2847,7 +2859,7 @@ function create_map_database (name, line, wildcards)
   dbcheck (db:execute[[
   
   PRAGMA foreign_keys = ON;
-  PRAGMA journal_mode=WAL;
+  PRAGMA journal_mode=DELETE;
   
   DROP TABLE IF EXISTS exits;
   DROP TABLE IF EXISTS rooms;
