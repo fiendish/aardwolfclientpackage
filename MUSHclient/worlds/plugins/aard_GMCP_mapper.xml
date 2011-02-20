@@ -368,6 +368,7 @@ script="backup_databases"
  
   <alias
    match="^mapper portal (.+)$"
+
    enabled="y"
    sequence="100"
    script="map_portal"
@@ -2698,6 +2699,7 @@ end -- function
 function OnPluginConnect ()
   Send_GMCP_Packet("rawcolor on")
   Send_GMCP_Packet("request char")
+  Send_GMCP_Packet("request room")
   mapper.cancel_speedwalk ()
   -- DoAfter (3, "look")  -- force mapper update
 end -- OnPluginConnect
