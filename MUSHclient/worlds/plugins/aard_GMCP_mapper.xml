@@ -369,6 +369,7 @@ script="backup_databases"
   <alias
    match="^mapper portal (.+)$"
 
+
    enabled="y"
    sequence="100"
    script="map_portal"
@@ -416,9 +417,34 @@ script="backup_databases"
    match="^mapper purge cexits$"
    enabled="y"
    sequence="100"
-   script="map_cexits_purge"
    regexp="y"
+   send_to="12"
   >  
+  <send>
+  Note("Are you sure you want to purge all custom mapper exits? To confirm type 'mapper purge cexits confirm'.")
+  toConfirm = "purge cexits"
+  EnableAlias("confirm_catch", true)
+  </send>
+  </alias>
+
+  <alias
+   match="^(.*)$"
+   enabled="n"
+   name="confirm_catch"
+   keep_evaluating="n"
+   sequence="1"
+   regexp="y"
+   send_to="12"
+  >  
+  <send>
+  if "%1" == "mapper purge cexits confirm" and toConfirm == "purge cexits" then
+    map_cexits_purge()
+  else
+    Note("Failed to confirm. Aborting.")
+  end
+  toConfirm = ""
+  EnableAlias("confirm_catch", false)
+  </send>
   </alias>
   
   <alias
@@ -649,6 +675,8 @@ mapper = require "aardmapper"
 require "gmcphelper"
 require "tprint"
 require "wait"
+
+toConfirm = ""
 
 -- Mapper Variables --
 
@@ -1938,6 +1966,7 @@ end -- room_click
 function rotate_backups (backupPath)
   os.remove(backupPath.."_DB_Backup_oldest.zip")
   os.rename(backupPath.."_DB_Backup_older.zip", backupPath.."_DB_Backup_oldest.zip")
+
   os.rename(backupPath.."_DB_Backup_old.zip", backupPath.."_DB_Backup_older.zip")
   os.rename(backupPath.."_DB_Backup.zip", backupPath.."_DB_Backup_old.zip")
 end
