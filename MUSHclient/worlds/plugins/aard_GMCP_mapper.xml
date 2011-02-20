@@ -368,8 +368,6 @@ script="backup_databases"
  
   <alias
    match="^mapper portal (.+)$"
-
-
    enabled="y"
    sequence="100"
    script="map_portal"
@@ -387,15 +385,6 @@ script="backup_databases"
   </alias>
   
   <alias
-   match="^mapper purge portals$"
-   enabled="y"
-   sequence="100"
-   script="map_portal_purge"
-   regexp="y"
-  >  
-  </alias>  
-  
-  <alias
    match="mapper portallevel *"
    enabled="y"
    sequence="100"
@@ -411,6 +400,20 @@ script="backup_databases"
    script="map_cexits_delete"
    regexp="y"
   >  
+  </alias>  
+  
+  <alias
+   match="^mapper purge portals$"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+   send_to="12"
+  >  
+  <send>
+  Note("Are you sure you want to purge all portal exits? To confirm type 'mapper purge portals confirm'.")
+  toConfirm = "purge portals"
+  EnableAlias("confirm_catch", true)
+  </send>
   </alias>  
   
   <alias
@@ -439,8 +442,10 @@ script="backup_databases"
   <send>
   if "%1" == "mapper purge cexits confirm" and toConfirm == "purge cexits" then
     map_cexits_purge()
+  elseif "%1" == "mapper purge portals confirm" and toConfirm == "purge portals" then
+    map_portal_purge()
   else
-    Note("Failed to confirm. Aborting.")
+    Note(string.format("Failed to confirm '%s'. Aborting.", toConfirm))
   end
   toConfirm = ""
   EnableAlias("confirm_catch", false)
