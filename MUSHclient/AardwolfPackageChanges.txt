@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r359 snapshot
+- purging all custom exits and portal exits now requires confirmation
+- added manual mapper database backup command with zip compressed rotating backup storage
+- fix a bug in channel capture that lost lines with hidden garbage/fake color codes
+- fix a bug in the mapper preventing finding rooms with oddly colored names
+- fix a bug in the mapper that blocked sending two identical custom exit commands in a row
+- various other tweaks
+
 r342 snapshot
 - fix a bug on saving rooms when using the mapper without a pre-initialized database
 
