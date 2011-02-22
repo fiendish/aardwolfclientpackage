@@ -1277,7 +1277,7 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
   end
   local notfound = {}
   for i,v in ipairs(dests) do
-      SetStatus (string.format ("Pathfinding: %i/%i discovered routes", i, #dests))
+      SetStatus (string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
       BroadcastPlugin (999, "repaint")
       local foundpath = findpath(current_room, v.uid)
       if not rooms [v.uid] then
