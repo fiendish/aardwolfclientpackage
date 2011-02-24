@@ -310,6 +310,7 @@ function init(firstTime)
 
         -- catch for right-click menu and line selection
         WindowAddHotspot(Win, "textarea", 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1,WINDOW_HEIGHT-3, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 2, 0)
+        WindowDragHandler(Win, "textarea", "TextareaMoveCallback", "TextareaReleaseCallback", 0x10)
         
         -- mouse wheel handler for scrolling up/down
         WindowScrollwheelHandler(Win, "textarea", "wheel_move")
@@ -362,7 +363,7 @@ function init(firstTime)
     -- draw border
     WindowRectOp (Win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
 
-    refresh()
+    drawStuff()
 end
 
 function OnPluginConnect ()
@@ -416,10 +417,10 @@ function OnPluginDisable ()
 end --  OnPluginDisable
 
 -- display one line
-function Display_Line (line, styles, backfill)
+function Display_Line (line, styles, backfill_start, backfill_end)
     local left = TEXT_INSET
-    if (backfill) then
-        WindowRectOp(Win, 2, 1, TITLE_HEIGHT+(line*line_height)+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT+(line*line_height)+line_height+1, 0x333333)
+    if (backfill_start ~= nil and backfill_end ~= nil) then
+        WindowRectOp(Win, 2, backfill_start, TITLE_HEIGHT+(line*line_height)+1, backfill_end, TITLE_HEIGHT+(line*line_height)+line_height+1, 0x444444)
     end -- backfill
     if (styles) then
         for _, v in ipairs (styles) do
@@ -431,15 +432,20 @@ end -- Display_Line
 
 -- display all visible lines
 function writeLines()
-    for count = lineStart, lineEnd do
-        Display_Line( count-lineStart, lines[count][1], false )
+    WindowRectOp(Win, 2, 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH, -1, WINDOW_BACKGROUND_COLOUR) -- clear
+    if #lines >= 1 then
+        for count = lineStart, lineEnd do
+            local ax = nil
+            local zx = nil
+            if copy_start_line ~= nil and copy_end_line ~= nil and count >= copy_start_line and count <= copy_end_line then
+                local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[count][1]), 1, 99999))
+                ax = (((count == copy_start_line) and math.min(start_copying_x, WindowTextWidth(Win, "font"..Win, line_no_colors)+TEXT_INSET)) or TEXT_INSET)
+                -- end of highlight for this line
+                zx = (((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(Win, "font"..Win, line_no_colors)+TEXT_INSET)) or WindowTextWidth(Win, "font"..Win, line_no_colors)+TEXT_INSET)
+            end
+            Display_Line( count-lineStart, lines[count][1], ax, zx )
+        end
     end
-end
-
--- clear and redraw
-function refresh()
-    WindowRectOp(Win, 2, 1, TITLE_HEIGHT+1, WINDOW_WIDTH-SCROLL_BAR_WIDTH, -1, WINDOW_BACKGROUND_COLOUR)
-    drawStuff()
 end
 
 barPos = ""
@@ -447,9 +453,7 @@ barSize = ""
 totalSteps = ""
 function drawStuff()
    
-    if #lines >= 1 then
-        writeLines()
-    end -- if
+    writeLines()
        
     -- Scrollbar base
     WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, WINDOW_WIDTH, -SCROLL_BAR_WIDTH, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
@@ -524,13 +528,13 @@ function wheel_move (flags, hotspot_id)
         -- print("Down")
         lineStart = math.max(1, math.min(#lines-WINDOW_LINES+2, lineStart+3))
         lineEnd = math.min(#lines, lineStart+WINDOW_LINES-2)    
-        refresh()
+        drawStuff()
     end
   elseif lineStart > 1 then
     -- print("Up")
     lineStart = math.max(1, lineStart-3)
     lineEnd = math.min(#lines, lineStart+WINDOW_LINES-2)
-    refresh()
+    drawStuff()
   end -- if
 end -- wheel_move
 
@@ -546,12 +550,12 @@ function ScrollerMoveCallback(flags, hotspot_id)
         lineStart = math.floor((barPos-SCROLL_BAR_WIDTH-TITLE_HEIGHT)/(SCROLL_BAR_HEIGHT/totalSteps)+1)
         lineEnd = math.min(lineStart + WINDOW_LINES-2, #lines)
     end
-    refresh()
+    drawStuff()
 end
 
 function ScrollerReleaseCallback(flags, hotspot_id)
     dragscrolling = false
-    refresh()
+    drawStuff()
 end
 
 function fillBuffer(rawstyles)
@@ -658,7 +662,7 @@ function stampAndStore(styles)
     table.insert(rawlines, styles)
     
     fillBuffer(styles)
-    refresh( )
+    drawStuff()
 
 end
 
@@ -755,7 +759,7 @@ function scrollbar()
                 end
             end
             wait.time(0.1)
-            refresh()
+            drawStuff()
         end
     end)
 end
@@ -765,38 +769,7 @@ function GetAllBufferedMessages()
     for _,styles in ipairs(rawlines) do
         table.insert(t, StylesToColoursOneLine(copytable.deep(styles), 1, 99999)) -- 99999 basically means don't truncate lines
     end
-    SetClipboard(table.concat(t,"\r\n"))
-end
-
-function GetBufferedMessage(xpos, ypos)
-    max_height_allowed = TITLE_HEIGHT+(line_height*(WINDOW_LINES-1)) -- snap height down to not have dead space after last line
-    windowline = math.floor((ypos-TITLE_HEIGHT)/line_height)
-    text = ""
-    if (ypos < max_height_allowed and #lines > windowline) then
-        local line = windowline+lineStart
-        -- go to beginning of message
-        while lines[line][2] ~= true and line > 1 do
-            line = line - 1
-        end -- while
-        -- first line
-        local styles = copytable.deep(lines[line][1])
-        if (line-lineStart+1 > 0) then
-            Display_Line (line-lineStart, styles, true)
-        end
-        text = StylesToColoursOneLine(styles, 1, 99999) -- 99999 fixes a potential bug with WINE
-        -- remaining lines
-        line = line + 1
-        while line <= #lines and lines[line][2] ~= true do
-            local styles = copytable.deep(lines[line][1])
-            if (line-lineStart+1 > 0 and line-lineStart < WINDOW_LINES) then
-                Display_Line (line-lineStart, styles, true)
-            end
-            text = text..StylesToColoursOneLine(styles, 1, 99999) -- 99999 fixes a potential bug with WINE
-            line = line + 1
-        end -- while
-        SetClipboard(text)
-        ColourNote("yellow","","Copied: "..text)
-    end
+    SetClipboard(table.concat(t,"\n"))
 end
 
 function MouseOver(flags, hotspot_id)
@@ -807,6 +780,9 @@ function CancelMouseOver(flags, hotspot_id)
     keepscrolling = ""
 end
 
+temp_start_copying_x = 0
+start_copying_y = 0
+copied_text = ""
 function MouseDown(flags, hotspot_id)
     if (hotspot_id == "resize") then
         startx, starty = WindowInfo (Win, 17), WindowInfo (Win, 18)
@@ -814,7 +790,14 @@ function MouseDown(flags, hotspot_id)
         clickdelta = WindowHotspotInfo(Win, "scroller", 2)-WindowInfo (Win, 15)
         dragscrolling = true
     elseif (hotspot_id == "textarea" and flags == 0x10) then
-        GetBufferedMessage(WindowInfo(Win, 14), WindowInfo(Win,15))
+        temp_start_copying_x = WindowInfo(Win, 14)
+        start_copying_y = WindowInfo(Win, 15)
+        copy_start_windowline = math.floor((start_copying_y-TITLE_HEIGHT)/line_height)
+        temp_start_line = copy_start_windowline+lineStart
+        copied_text = ""
+        copy_start_line = nil
+        copy_end_line = nil
+        writeLines()
     else
         keepscrolling = hotspot_id
         scrollbar()
@@ -823,7 +806,7 @@ end
 
 function CancelMouseDown(flags, hotspot_id)
     keepscrolling = ""
-    refresh()
+    drawStuff()
 end
 
 function debugp(source)
@@ -834,14 +817,90 @@ print("SCROLL_BAR_WIDTH: " .. SCROLL_BAR_WIDTH .. " SCROLL_BAR_HEIGHT: " .. SCRO
 print("------------------------------------------------------------------------------")
 end
 
+end_copying_x = 0
+end_copying_y = 0
 function MouseUp(flags, hotspot_id)
     if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
         right_click_menu()
     else
-        refresh()
+        drawStuff()
     end
     keepscrolling = ""
     return true
+end
+
+function TextareaMoveCallback(flags, hotspot_id)
+    if bit.band (flags, miniwin.hotspot_got_lh_mouse) ~= 0 then -- only on left mouse button
+        copied_text = ""
+        end_copying_x = WindowInfo(Win, 17)-WindowInfo(Win, 1)
+        end_copying_y = WindowInfo(Win, 18)-WindowInfo(Win, 2)
+        end_copying_x = math.max(TEXT_INSET,math.min(end_copying_x, WINDOW_WIDTH-SCROLL_BAR_WIDTH))
+        end_copying_y = math.max(TITLE_HEIGHT+1,math.min(end_copying_y, TITLE_HEIGHT-1+(line_height*(WINDOW_LINES-1))))
+        copy_end_windowline = math.floor((end_copying_y-TITLE_HEIGHT)/line_height)
+        copy_end_line = math.min(#lines, copy_end_windowline+lineStart)
+        copy_start_line = temp_start_line
+        start_copying_x = temp_start_copying_x
+        
+        -- the user is selecting backwards, so reverse the start/end orders
+        if copy_end_line < temp_start_line then
+           local temp = copy_end_line
+           copy_end_line = copy_start_line
+           copy_start_line = temp
+           temp = end_copying_x
+           end_copying_x = start_copying_x
+           start_copying_x = temp
+        end -- if copy_end_line < temp_start_line        
+        if copy_end_line == copy_start_line and end_copying_x < start_copying_x then
+           local temp = end_copying_x
+           end_copying_x = start_copying_x
+           start_copying_x = temp
+        end  
+        
+        for copy_line=copy_start_line,copy_end_line do
+           if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
+           
+               -- snap to character boundaries instead of selecting arbitrary pixel widths
+               local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), 1, 99999))
+               local startpos = 1
+               local endpos = #line_no_colors
+               -- special deal for the first line
+               if copy_line == copy_start_line then
+                   for pos=1,#line_no_colors do
+                      startpos = pos
+                      if WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos)) > start_copying_x then
+                        start_copying_x = WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
+                        break
+                      end
+                   end
+               end
+               -- special deal for the last line
+               if copy_line == copy_end_line then
+                   local found = false
+                   endpos = 0
+                   for pos=1,#line_no_colors do
+                      if WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos)) > end_copying_x then
+                        end_copying_x = WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,endpos))+TEXT_INSET
+                        found = true
+                        break
+                      end
+                      endpos = pos
+                   end
+               end
+               
+               -- store selected area for later
+               copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
+               copied_text = table.concat({copied_text,(((copied_part ~= nil) and copied_part) or ""),"@w"})
+               if copy_line ~= copy_end_line then
+                  copied_text = copied_text.."\n"
+               end
+               
+           end -- if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines)
+        end -- for copy_line=copy_start_line,copy_end_line
+        writeLines()
+    end -- if left mouse button
+end -- function TextareaMoveCallback
+
+function TextareaReleaseCallback(flags, hotspot_id)
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
@@ -880,13 +939,13 @@ end -- function chat_hide
 
 -- right click menu
 function right_click_menu ()
-    menustring ="!Copy All To Clipboard|-|Change Font"
+    menustring ="!Copy Selected|Copy Selected Without Colors|Copy All|-|Change Font"
     if echo == "1" then
         menustring = (menustring .."|Turn Echo Off")
     else
         menustring = (menustring.."|Turn Echo On")
     end --if
-    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Colour Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps"
+    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps"
     result = WindowMenu (Win,
         WindowInfo (Win, 14),  -- x position
         WindowInfo (Win, 15),   -- y position
@@ -895,9 +954,24 @@ function right_click_menu ()
         numResult = tonumber(result)
         
         if numResult == 1 then
+            if #copied_text > 0 then
+                SetClipboard(copied_text)
+                ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
+                ColourNote("yellow","",copied_text)
+                ColourNote("cyan","","^---------------------------------------------------------^")  
+            end
+        elseif numResult == 2 then
+            if #copied_text > 0 then
+                local declored_text = strip_colours(copied_text)
+                SetClipboard(declored_text)
+                ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
+                ColourNote("yellow","",declored_text)
+                ColourNote("cyan","","^---------------------------------------------------------^")
+            end
+        elseif numResult == 3 then
             GetAllBufferedMessages()
             ColourNote ("yellow", "", "All chat messages copied to clipboard.")
-        elseif numResult == 2 then
+        elseif numResult == 4 then
             wanted_font = utils.fontpicker (FONT_NAME, FONT_SIZE) --font dialog
             if wanted_font then
                 FONT_NAME = wanted_font.name
@@ -906,33 +980,33 @@ function right_click_menu ()
                 SetVariable ("font_size", FONT_SIZE)
                 OnPluginInstall()
             end
-        elseif numResult == 3 and echo == "1" then
+        elseif numResult == 5 and echo == "1" then
             echo = "0"
             ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
-        elseif numResult == 3 and echo == "0" then
+        elseif numResult == 6 and echo == "0" then
             echo = "1"
             ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
-        elseif numResult == 4 then
+        elseif numResult == 7 then
             timestamp = "0"
             date_format = ""
             ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
-        elseif numResult == 5 then
+        elseif numResult == 8 then
             timestamp = "1"
             date_format = "[%d %b %H:%M:%S] "
             ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
-        elseif numResult == 6 then
+        elseif numResult == 9 then
             timestamp = "1"
             date_format = "[%d %b %I:%M:%S%p] "
             ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
-        elseif numResult == 7 then
+        elseif numResult == 10 then
             timestamp = "1"
             date_format = "[%H:%M:%S] "
             ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
-        elseif numResult == 8 then
+        elseif numResult == 11 then
             timestamp = "1"
             date_format = "[%I:%M:%S%p] "
             ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
-        elseif numResult == 9 then
+        elseif numResult == 12 then
             if info_on == 0 then
                 ColourNote ("yellow", "", "INFO capturing is now ENABLED.")
             else
@@ -940,7 +1014,7 @@ function right_click_menu ()
             end
             EnableTrigger("info", 0 == info_on)
             info_on = GetTriggerOption("info","enabled")
-        elseif numResult == 10 then
+        elseif numResult == 13 then
             if global_quest_on == 0 then
                 ColourNote ("yellow", "", "Global Quest capturing is now ENABLED.")
             else
@@ -948,7 +1022,7 @@ function right_click_menu ()
             end
             EnableTrigger("global_quest", 0 == global_quest_on)
             global_quest_on = GetTriggerOption("global_quest","enabled")
-        elseif numResult == 11 then
+        elseif numResult == 14 then
             if remort_auction_on == 0 then
                 ColourNote ("yellow", "", "Remort Auction capturing is now ENABLED.")
             else
@@ -956,7 +1030,7 @@ function right_click_menu ()
             end
             EnableTrigger("remort_auction", 0 == remort_auction_on)
             remort_auction_on = GetTriggerOption("remort_auction","enabled")
-        elseif numResult == 12 then
+        elseif numResult == 15 then
             if show_donations == 0 then
                 ColourNote ("yellow", "", "Clan donation capturing is now ENABLED.")
             else
@@ -964,13 +1038,13 @@ function right_click_menu ()
             end
             show_donations = (((0 == show_donations) and 1) or 0)
             SetVariable("show_donations", show_donations)
-        elseif numResult == 13 then
+        elseif numResult == 16 then
            log_to_file = (((0 == log_to_file) and 1) or 0)
            SetVariable("log_to_file", log_to_file)
-        elseif numResult == 14 then
+        elseif numResult == 17 then
             log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
             SetVariable("log_colour_codes", log_colour_codes)
-        elseif numResult == 15 then
+        elseif numResult == 18 then
             log_timestamps = (((0 == log_timestamps) and 1) or 0)
             SetVariable("log_timestamps", log_timestamps)
         end
