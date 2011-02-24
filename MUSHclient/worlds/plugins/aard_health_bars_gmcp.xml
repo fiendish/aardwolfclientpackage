@@ -22,14 +22,10 @@
 Aardwolf GCMP based health bars
 
 For full details on GMCP in Aardwolf see:
-
    http://www.aardwolf.com/wiki/index.php/Clients/GMCP
-
 For Aardwolf specific GMCP information see:
-
   http://www.aardwolf.com/wiki/index.php/Clients/MushclientGMCP
-
-Feel free to use this for any purpose on any MUD, but I'd appreciate an email if you improve
+Feel free to use this for any purpose on any MUD, but an email would be appreciated if you improve
 something -- wolf@aardwolf.com
 
 </description>
@@ -228,6 +224,13 @@ function DisplayStatsPage()
 
               WindowLine (win, xpos+label_width+line_height/2, math.ceil(ypos+line_height/2), xpos+label_width+bar_width-line_height/2, math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
               WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, bar_colour/2, 0, 2, bar_colour, 0)
+
+              -- add ticks at alignment change boundaries
+              local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width);
+              local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width);
+              WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
+              WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
+
               if stacked == 1 then
                   ypos = ypos + line_height + 1
               else
