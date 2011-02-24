@@ -60,13 +60,13 @@ function StylesToColoursOneLine (styles, startcol, endcol)
     endcol = endcol - styles [1].length
     table.remove (styles, 1)
   end -- do
-  
+
   -- nothing left? uh oh
   if not next (styles) then return end
   
   -- discard unwanted part of first good style
   if startcol > 1 then
-    styles [1].length = styles [1].length - startcol
+    styles [1].length = styles [1].length - startcol + 1
     endcol = endcol - startcol + 1
     styles [1].text =  styles [1].text:sub (startcol)   
     startcol = 1
@@ -75,21 +75,21 @@ function StylesToColoursOneLine (styles, startcol, endcol)
   -- copy appropriate styles and codes into the output
   while next (styles) do
     local len = endcol - startcol + 1
-    
-    if len < 0 or endcol < 1 then
-      return
+
+    if len < 1 or endcol < 1 then
+      break
     end -- done
-    
+
     -- last style?
     if len < styles [1].length then
       styles [1].length = len
       styles [1].text = styles [1].text:sub (1, len)
     end -- if last style
-  
+
     -- fixup string first - change @ to @@ and ~ to @-
     local text = string.gsub (styles [1].text, "@", "@@")
-    text = string.gsub (styles [1].text, "~", "@-")
-    
+    text = string.gsub (text, "~", "@-")
+
     -- put code in front, if we can find one
     local code = conversion [styles [1].textcolour]
     if code then
@@ -98,10 +98,9 @@ function StylesToColoursOneLine (styles, startcol, endcol)
     
     -- now the text
     copystring = copystring .. text
-    
     -- less to go now
     endcol = endcol - styles [1].length
-    
+
     -- done this style
     table.remove (styles, 1)
   end -- while
