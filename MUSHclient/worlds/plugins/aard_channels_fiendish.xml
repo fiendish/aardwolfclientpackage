@@ -179,6 +179,7 @@ log_to_file = tonumber(GetVariable("log_to_file")) or 0
 log_colour_codes = tonumber(GetVariable("log_colour_codes")) or 1
 log_timestamps = tonumber(GetVariable("log_timestamps")) or 1
 show_donations = tonumber(GetVariable("show_donations")) or 1
+show_mobsay = tonumber(GetVariable("show_mobsay")) or 1
 
 -- colours
 WINDOW_BACKGROUND_COLOUR = 0x000000
@@ -407,6 +408,7 @@ function OnPluginSaveState ()
     SetVariable("log_colour_codes", log_colour_codes)
     SetVariable("log_timestamps", log_timestamps)
     SetVariable("show_donations", show_donations)
+    SetVariable("show_mobsay", show_mobsay)
 end --  OnPluginSaveState
 
 function OnPluginDisable ()
@@ -715,7 +717,8 @@ function OnPluginBroadcast (msg, id, name, text)
          assert (loadstring (luastmt or ""))()
 
          msg = gmcpval("msg") or ""
-         if (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+         chan = gmcpval("chan") or ""
+         if (show_mobsay == 1 or chan ~= "mobsay") and (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             stampAndStore(ColoursToStyles(msg))
          end
       end
@@ -941,11 +944,11 @@ end -- function chat_hide
 function right_click_menu ()
     menustring ="!Copy Selected|Copy Selected Without Colors|Copy All|-|Change Font"
     if echo == "1" then
-        menustring = (menustring .."|Turn Echo Off")
+        menustring = (menustring.."|Turn Echo Off")
     else
         menustring = (menustring.."|Turn Echo On")
     end --if
-    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps"
+    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps"
     result = WindowMenu (Win,
         WindowInfo (Win, 14),  -- x position
         WindowInfo (Win, 15),   -- y position
@@ -980,33 +983,35 @@ function right_click_menu ()
                 SetVariable ("font_size", FONT_SIZE)
                 OnPluginInstall()
             end
-        elseif numResult == 5 and echo == "1" then
-            echo = "0"
-            ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
-        elseif numResult == 6 and echo == "0" then
-            echo = "1"
-            ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
-        elseif numResult == 7 then
+        elseif numResult == 5 then
+            if echo == "1" then
+                echo = "0"
+                ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
+            else
+                echo = "1"
+                ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
+            end
+        elseif numResult == 6 then
             timestamp = "0"
             date_format = ""
             ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
-        elseif numResult == 8 then
+        elseif numResult == 7 then
             timestamp = "1"
             date_format = "[%d %b %H:%M:%S] "
             ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
-        elseif numResult == 9 then
+        elseif numResult == 8 then
             timestamp = "1"
             date_format = "[%d %b %I:%M:%S%p] "
             ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
-        elseif numResult == 10 then
+        elseif numResult == 9 then
             timestamp = "1"
             date_format = "[%H:%M:%S] "
             ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
-        elseif numResult == 11 then
+        elseif numResult == 10 then
             timestamp = "1"
             date_format = "[%I:%M:%S%p] "
             ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
-        elseif numResult == 12 then
+        elseif numResult == 11 then
             if info_on == 0 then
                 ColourNote ("yellow", "", "INFO capturing is now ENABLED.")
             else
@@ -1014,7 +1019,7 @@ function right_click_menu ()
             end
             EnableTrigger("info", 0 == info_on)
             info_on = GetTriggerOption("info","enabled")
-        elseif numResult == 13 then
+        elseif numResult == 12 then
             if global_quest_on == 0 then
                 ColourNote ("yellow", "", "Global Quest capturing is now ENABLED.")
             else
@@ -1022,7 +1027,7 @@ function right_click_menu ()
             end
             EnableTrigger("global_quest", 0 == global_quest_on)
             global_quest_on = GetTriggerOption("global_quest","enabled")
-        elseif numResult == 14 then
+        elseif numResult == 13 then
             if remort_auction_on == 0 then
                 ColourNote ("yellow", "", "Remort Auction capturing is now ENABLED.")
             else
@@ -1030,7 +1035,7 @@ function right_click_menu ()
             end
             EnableTrigger("remort_auction", 0 == remort_auction_on)
             remort_auction_on = GetTriggerOption("remort_auction","enabled")
-        elseif numResult == 15 then
+        elseif numResult == 14 then
             if show_donations == 0 then
                 ColourNote ("yellow", "", "Clan donation capturing is now ENABLED.")
             else
@@ -1038,6 +1043,14 @@ function right_click_menu ()
             end
             show_donations = (((0 == show_donations) and 1) or 0)
             SetVariable("show_donations", show_donations)
+        elseif numResult == 15 then
+            if show_mobsay == 0 then
+                ColourNote ("yellow", "", "Mob speech capturing is now ENABLED.")
+            else
+                ColourNote ("yellow", "", "Mob speech capturing is now DISABLED.")
+            end
+            show_mobsay = (((0 == show_mobsay) and 1) or 0)
+            SetVariable("show_mobsay", show_mobsay)
         elseif numResult == 16 then
            log_to_file = (((0 == log_to_file) and 1) or 0)
            SetVariable("log_to_file", log_to_file)
