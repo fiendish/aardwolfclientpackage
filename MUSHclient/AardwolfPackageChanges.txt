@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r366 snapshot
+- add the ability to not capture mob speech to the channel capture window
+- add tick marks at good/neutral/evil alignment boundaries in the health bars plugin
+- fix a right-click option bug accidentally introduced in the last update to the channel capture plugin
+
 r363 snapshot
 - added new text selection routines for the channel capture window. You can now select arbitrary text inside the window and then copy with the right-click menu, instead of clicking on whole individual messages.
 - fix bug in stylestocolours that stopped it from working with startcols other than 1
