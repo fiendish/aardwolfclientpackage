@@ -354,12 +354,6 @@ script="backup_databases"
  
   <alias
    match="^mapper portal (.+)$"
-
-
-
-
-
-
    enabled="y"
    sequence="100"
    script="map_portal"
