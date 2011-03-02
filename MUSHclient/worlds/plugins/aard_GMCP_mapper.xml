@@ -31,28 +31,15 @@
 <![CDATA[
 
 AUTOMATIC MAPPER ... Originally by Nick Gammon
-
 ** This plugin is a GMCP version of the ATCP mapper by Nick Gammon.
 ** GMCP specific code added by Lasher.
 ** Major new features contributed by Spartacus.
 ** Many bugs squashed and improvements made by Fiendish.
 
 The window can be dragged to a new location by dragging the room name.
-
 Your current room is always in the center with a bolder border.
-
 LH-click on a room to speed-walk to it. RH-click on a room for options. 
-
 LH-click on the "*" button on the upper-left corner to configure it.
-
-** WHY DOES THE MAP CHANGE? **
-
-The mapper draws from your room outwards - that is, it draws your room's exits
-first, then the rooms leading from those rooms, and so on.
-
-Eventually it finds an overlap, and draws a short "stub" line to indicate there
-is a room there which there isn't space to draw. If you get closer to that 
-room the stub will disappear and the room(s) in question will be drawn.
 
 ACTIONS
 
@@ -160,7 +147,6 @@ script="backup_databases"
    script="map_find"
    regexp="n"
   >
-    
   </alias>
     
  <alias
@@ -368,6 +354,11 @@ script="backup_databases"
  
   <alias
    match="^mapper portal (.+)$"
+
+
+
+
+
 
    enabled="y"
    sequence="100"
@@ -1256,10 +1247,12 @@ function map_purgezone (name, line, wildcards)
      return
   end
 
+
   -- Delete the exit links or we get foreign key constraint errors.
   dbcheck (db:execute (string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zonename))))
-  dbcheck (db:execute (string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zonename))))        
-  dbcheck (db:execute (string.format ("DELETE from rooms where area = %s;", fixsql(zonename))))
+  dbcheck (db:execute (string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zonename))))
+  dbcheck (db:execute (string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zonename))))
+  dbcheck (db:execute (string.format ("delete from rooms where area = %s;", fixsql(zonename))))
 
   rooms = {}
   mapper.mapprint ("Purged all rooms from " .. zonename .. " and local cache.")
@@ -2187,7 +2180,7 @@ function got_gmcp_room()
        y = gmcpval("coord.y"),
        z = 0,
        exits = {} }
-  
+
   local exits = gmcpval("exits")
   local room = rooms [room_number]
  
@@ -2399,10 +2392,10 @@ function map_find (name, line, wildcards)
   
   -- find matching rooms using FTS3
   for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql ("%"..wildcards [1].."%"))) do
-     table.insert(rooms, {uid=row.uid, reason=true})
-     count = count + 1
+    table.insert(rooms, {uid=row.uid, reason=true})
+    count = count + 1
   end   -- finding room
-
+  
   -- see if nearby
   mapper.find (
     findpath,
@@ -2603,7 +2596,10 @@ function findpath(src, dst)
   table.insert(rooms_list, dst)
   
   local visited = ""
+  local main_status = GetInfo(53)
   while not found and depth < max_depth do
+    SetStatus(main_status.." (searching depth "..depth..")")
+    BroadcastPlugin (999, "repaint")
     depth = depth + 1
     if depth > 1 then
       ftd = room_sets[depth-1] or {}
@@ -2802,6 +2798,7 @@ function process_end_room ()
   for dir, exit in pairs (exits) do
      dbcheck (db:execute (string.format ([[
         INSERT INTO exits (dir, fromuid, touid, date_added) 
+
             VALUES (%s, %s, %s, DATETIME('NOW'));
       ]], fixsql  (dir),  -- direction (eg. "n")
           fixsql  (room.id),         -- from current room
@@ -2895,7 +2892,7 @@ function create_map_database (name, line, wildcards)
   dbcheck (db:execute[[
   
   PRAGMA foreign_keys = ON;
-  PRAGMA journal_mode=DELETE;
+  PRAGMA journal_mode=WAL;
   
   DROP TABLE IF EXISTS exits;
   DROP TABLE IF EXISTS rooms;
