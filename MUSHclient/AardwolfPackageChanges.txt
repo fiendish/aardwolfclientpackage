@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r371 snapshot
+- selecting text in the channel capture window will now make the window scroll appropriately when dragging higher or lower than the window top and bottom respectively.
+- mapper purgezone shouldn't require quitting and restarting mushclient anymore
+- mapper pathfinding now indicates the status of the search better
+
 r366 snapshot
 - add the ability to not capture mob speech to the channel capture window
 - add tick marks at good/neutral/evil alignment boundaries in the health bars plugin
