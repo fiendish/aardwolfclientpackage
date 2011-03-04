@@ -837,6 +837,7 @@ function TextareaMoveCallback(flags, hotspot_id)
         copied_text = ""
         end_copying_x = WindowInfo(Win, 17)-WindowInfo(Win, 1)
         end_copying_y = WindowInfo(Win, 18)-WindowInfo(Win, 2)
+        local ypos = end_copying_y
         end_copying_x = math.max(TEXT_INSET,math.min(end_copying_x, WINDOW_WIDTH-SCROLL_BAR_WIDTH))
         end_copying_y = math.max(TITLE_HEIGHT+1,math.min(end_copying_y, TITLE_HEIGHT-1+(line_height*(WINDOW_LINES-1))))
         copy_end_windowline = math.floor((end_copying_y-TITLE_HEIGHT)/line_height)
@@ -852,20 +853,22 @@ function TextareaMoveCallback(flags, hotspot_id)
            temp = end_copying_x
            end_copying_x = start_copying_x
            start_copying_x = temp
-        end -- if copy_end_line < temp_start_line        
+        end -- if        
         if copy_end_line == copy_start_line and end_copying_x < start_copying_x then
            local temp = end_copying_x
            end_copying_x = start_copying_x
            start_copying_x = temp
-        end  
+        end -- if
         
         for copy_line=copy_start_line,copy_end_line do
+           local startpos = 1
+           local endpos = 99999
            if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
            
                -- snap to character boundaries instead of selecting arbitrary pixel widths
                local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), 1, 99999))
-               local startpos = 1
-               local endpos = #line_no_colors
+               startpos = 1
+               endpos = #line_no_colors
                -- special deal for the first line
                if copy_line == copy_start_line then
                    for pos=1,#line_no_colors do
@@ -889,17 +892,26 @@ function TextareaMoveCallback(flags, hotspot_id)
                       endpos = pos
                    end
                end
-               
-               -- store selected area for later
-               copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
-               copied_text = table.concat({copied_text,(((copied_part ~= nil) and copied_part) or ""),"@w"})
-               if copy_line ~= copy_end_line then
-                  copied_text = copied_text.."\n"
-               end
-               
-           end -- if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines)
-        end -- for copy_line=copy_start_line,copy_end_line
-        writeLines()
+           end -- if should show highlight
+   
+           -- store selected area for later
+           copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
+           copied_text = table.concat({copied_text,(((copied_part ~= nil) and copied_part) or ""),"@w"})
+           if copy_line ~= copy_end_line then
+              copied_text = copied_text.."\n"
+           end
+           
+        end -- for
+        if ypos < TITLE_HEIGHT then
+           keepscrolling = "up"
+           scrollbar()
+        elseif ypos > WINDOW_HEIGHT then
+           keepscrolling = "down"
+           scrollbar()
+        else
+           keepscrolling = ""
+           writeLines()
+        end
     end -- if left mouse button
 end -- function TextareaMoveCallback
 
