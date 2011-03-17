@@ -2,7 +2,7 @@
 <!DOCTYPE muclient>
 
 <!-- Bits of this plugin and ideas were borrowed and remixed from the MUSHclient community. http://www.gammon.com.au/forum/?id=9385 and others. -->
-<!-- Modifications for Aardwolf and extra awesome sauce added by Fiendish with help from Orogan -->
+<!-- Modifications for Aardwolf and a bunch of extra awesome sauce added by Fiendish with help from Orogan -->
 
 <muclient>
     <plugin
@@ -13,7 +13,7 @@
     purpose="Move chats to a miniwindow"
     date_written="2010-10-25"
     requires="4.70"
-    version="1.1"
+    version="1.2"
     save_state="y"
     >
 
@@ -841,9 +841,12 @@ function TextareaMoveCallback(flags, hotspot_id)
         end_copying_x = math.max(TEXT_INSET,math.min(end_copying_x, WINDOW_WIDTH-SCROLL_BAR_WIDTH))
         end_copying_y = math.max(TITLE_HEIGHT+1,math.min(end_copying_y, TITLE_HEIGHT-1+(line_height*(WINDOW_LINES-1))))
         copy_end_windowline = math.floor((end_copying_y-TITLE_HEIGHT)/line_height)
-        copy_end_line = math.min(#lines, copy_end_windowline+lineStart)
+        copy_end_line = copy_end_windowline+lineStart
         copy_start_line = temp_start_line
         start_copying_x = temp_start_copying_x
+        if (copy_start_line > #lines) then
+            start_copying_x = WINDOW_WIDTH-SCROLL_BAR_WIDTH
+        end
         
         -- the user is selecting backwards, so reverse the start/end orders
         if copy_end_line < temp_start_line then
@@ -861,47 +864,49 @@ function TextareaMoveCallback(flags, hotspot_id)
         end -- if
         
         for copy_line=copy_start_line,copy_end_line do
-           local startpos = 1
-           local endpos = 99999
-           if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
-           
-               -- snap to character boundaries instead of selecting arbitrary pixel widths
-               local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), 1, 99999))
-               startpos = 1
-               endpos = #line_no_colors
-               -- special deal for the first line
-               if copy_line == copy_start_line then
-                   for pos=1,#line_no_colors do
-                      startpos = pos
-                      if WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos)) > start_copying_x then
-                        start_copying_x = WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
-                        break
-                      end
+           if (lines[copy_line] ~= nil) then
+               local startpos = 1
+               local endpos = 99999
+               if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
+               
+                   -- snap to character boundaries instead of selecting arbitrary pixel widths
+                   local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), 1, 99999))
+                   startpos = 1
+                   endpos = #line_no_colors
+                   -- special deal for the first line
+                   if copy_line == copy_start_line then
+                       for pos=1,#line_no_colors do
+                          startpos = pos
+                          if WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos)) > start_copying_x then
+                            start_copying_x = WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
+                            break
+                          end
+                       end
                    end
-               end
-               -- special deal for the last line
-               if copy_line == copy_end_line then
-                   local found = false
-                   endpos = 0
-                   for pos=1,#line_no_colors do
-                      if WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos)) > end_copying_x then
-                        end_copying_x = WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,endpos))+TEXT_INSET
-                        found = true
-                        break
-                      end
-                      endpos = pos
+                   -- special deal for the last line
+                   if copy_line == copy_end_line then
+                       local found = false
+                       endpos = 0
+                       for pos=1,#line_no_colors do
+                          if WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos)) > end_copying_x then
+                            end_copying_x = WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,endpos))+TEXT_INSET
+                            found = true
+                            break
+                          end
+                          endpos = pos
+                       end
                    end
+               end -- if should show highlight
+       
+               -- store selected area for later
+               copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
+               copied_text = table.concat({copied_text,(((copied_part ~= nil) and copied_part) or ""),"@w"})
+               if copy_line ~= copy_end_line and copy_line ~= #lines then
+                  copied_text = copied_text.."\n"
                end
-           end -- if should show highlight
-   
-           -- store selected area for later
-           copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
-           copied_text = table.concat({copied_text,(((copied_part ~= nil) and copied_part) or ""),"@w"})
-           if copy_line ~= copy_end_line then
-              copied_text = copied_text.."\n"
-           end
-           
+           end -- if valid line
         end -- for
+
         if ypos < TITLE_HEIGHT then
            keepscrolling = "up"
            scrollbar()
@@ -916,6 +921,8 @@ function TextareaMoveCallback(flags, hotspot_id)
 end -- function TextareaMoveCallback
 
 function TextareaReleaseCallback(flags, hotspot_id)
+    copy_start_line = math.min(#lines, copy_start_line or 0)
+    copy_end_line = math.min(#lines, copy_end_line or 0)
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
