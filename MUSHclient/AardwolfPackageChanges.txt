@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r373 snapshot
+- fixed an error when selecting inside the text area of an empty chat window
+- fix how selecting off the end of the chat window works
+
 r371 snapshot
 - selecting text in the channel capture window will now make the window scroll appropriately when dragging higher or lower than the window top and bottom respectively.
 - mapper purgezone shouldn't require quitting and restarting mushclient anymore
