@@ -900,10 +900,14 @@ function TextareaMoveCallback(flags, hotspot_id)
        
                -- store selected area for later
                copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
-               copied_text = table.concat({copied_text,(((copied_part ~= nil) and copied_part) or ""),"@w"})
-               if copy_line ~= copy_end_line and copy_line ~= #lines then
-                  copied_text = copied_text.."\n"
+               if copy_line ~= copy_end_line and copy_line ~= #lines and lines[copy_line+1][2] == true then
+                  -- only put a line break if the next line is from a different message
+                  copied_part = copied_part.."@w\n"
+               elseif copy_line == copy_end_line or copy_line == #lines then
+                  -- tack a white code on to the very end
+                  copied_part = copied_part.."@w"
                end
+               copied_text = copied_text..(((copied_part ~= nil) and copied_part) or "")
            end -- if valid line
         end -- for
 
