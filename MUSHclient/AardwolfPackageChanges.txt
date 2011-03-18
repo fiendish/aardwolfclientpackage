@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r375 snapshot
+- add a getkeyword function callable by other plugins to the gmcp mapper that returns the keyword of one or more matching areas when passed a name substring
+- add rolling automatic backups of the gmcp mapper database files. If left on and running forever, the rollover schedule approximately follows the pattern: today, yesterday, last week, last month, 3 months ago.
+
 r373 snapshot
 - fixed an error when selecting inside the text area of an empty chat window
 - fix how selecting off the end of the chat window works
