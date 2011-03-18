@@ -43,10 +43,12 @@ LH-click on the "*" button on the upper-left corner to configure it.
 
 ACTIONS
 
-mapper backup             --> Create new archived backups of your map database
+mapper backup             --> Create new manual backups of your map database
                           --> in a db_backups directory, preserving a few 
                           --> prior backups
-mapper help               --> This help (or click the "?" button the top right)
+mapper backups <off/on>   --> Turn off or on automatic database backups
+                          --> The default setting is on
+mapper help               --> This help (or click the top right "?" button)
 mapper zoom out           --> Zoom out
 mapper zoom in            --> Zoom in
 mapper hide               --> Hide map
@@ -99,28 +101,58 @@ mapper resume       --> initiate a new run to the previous target
 
 </plugin>
 
-<aliases>
- 
-  <!--  zooming aliases -->
+<!--  Timers  -->
 
+<timers>
+  <timer 
+    name="backup_timer"
+    enabled="y"
+    script="automatic_backup" 
+    hour="23" minute="59" second="59"
+    active_closed="y" >
+  </timer>
+</timers>
+
+<aliases>
+
+<!--  backup aliases -->
+ 
 <alias
 match="mapper backup"
 enabled="y"
 sequence="100"
 omit_from_output="y"
-script="backup_databases"
+script="manual_backup"
 ></alias>
 
- <alias
-   match="mapper findpath * *"
-   enabled="y"
-   sequence="100"
-   omit_from_output="y"
-   script="findpathfast"
-  >
-  </alias>
+<alias
+match="mapper backups*"
+enabled="y"
+sequence="100"
+omit_from_output="y"
+send_to="12"
+>
+<send>
+  if "%1" == " off" then
+    EnableTimer("backup_timer", false)
+    SetVariable("backup_timer_enabled", "0")
+    Note("Automated map database backup is now off.")
+  elseif "%1" == " on" then
+    EnableTimer("backup_timer", true)
+    SetVariable("backup_timer_enabled", "1")
+    ResetTimer("backup_timer")
+    Note("Automated map database backup is now on.")
+  elseif "%1" == "" then
+    Note("Automated map database backup is currently "..((GetTimerInfo("backup_timer", 6) and "on") or "off")..".")
+  else
+    Note("Invalid option for mapper backups. The current automated backup setting is '"..((GetTimerInfo("backup_timer", 6) and "on") or "off").."'. Try 'mapper backups on' or 'mapper backups off' to set your desired preference.")
+  end
+</send>
+</alias>
   
-  <alias
+   <!--  zooming aliases -->
+
+ <alias
    match="mapper zoom out"
    enabled="y"
    sequence="100"
@@ -140,6 +172,15 @@ script="backup_databases"
     
   <!--  finding aliases -->
   
+ <alias
+   match="mapper findpath * *"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   script="findpathfast"
+  >
+  </alias>
+
  <alias
    match="mapper find *"
    enabled="y"
@@ -1956,19 +1997,75 @@ function room_click (uid, flags)
                            
 end -- room_click
 
-function rotate_backups (backupPath)
-  os.remove(backupPath.."_DB_Backup_oldest.zip")
-  os.rename(backupPath.."_DB_Backup_older.zip", backupPath.."_DB_Backup_oldest.zip")
-
-  os.rename(backupPath.."_DB_Backup_old.zip", backupPath.."_DB_Backup_older.zip")
-  os.rename(backupPath.."_DB_Backup.zip", backupPath.."_DB_Backup_old.zip")
+auto_backup_count = tonumber(GetVariable("auto_backup_count")) or 0
+function rotate_backups (backupPath, manual)
+  if (manual) then
+      os.remove(backupPath.."_DB_Manual_Backup_oldest.zip")
+      os.rename(backupPath.."_DB_Manual_Backup_older.zip", backupPath.."_DB_Manual_Backup_oldest.zip")
+      os.rename(backupPath.."_DB_Manual_Backup_old.zip", backupPath.."_DB_Manual_Backup_older.zip")
+      os.rename(backupPath.."_DB_Manual_Backup.zip", backupPath.."_DB_Manual_Backup_old.zip")
+      os.rename(backupPath.."_DB_Backup.zip", backupPath.."_DB_Manual_Backup.zip")
+  else
+      local t = utils.readdir (backupPath.."_DB_Automatic_Backup*")  
+      local oldest_string = Trim(WorldName()).."_DB_Automatic_Backup_oldest.zip"
+      local olderer_string = Trim(WorldName()).."_DB_Automatic_Backup_olderer.zip"
+      local older_string = Trim(WorldName()).."_DB_Automatic_Backup_older.zip"
+      local oldest_exists = false
+      local olderer_exists = false
+      local older_exists = false
+      if t ~= nil then
+          for k,v in pairs(t) do
+            if k == oldest_string then
+              oldest_exists = true
+            elseif k == olderer_string then
+              olderer_exists = true
+            elseif k == older_string then
+              older_exists = true
+            end
+          end
+      end
+      if not (oldest_exists and olderer_exists and older_exists) then
+        auto_backup_count = 1
+      end
+      if oldest_exists == false or auto_backup_count == 84 then
+        os.remove(backupPath.."_DB_Automatic_Backup_oldest.zip")
+        os.rename(backupPath.."_DB_Automatic_Backup_olderer.zip", backupPath.."_DB_Automatic_Backup_oldest.zip")
+      end
+      if oldest_exists == false or olderer_exists == false or auto_backup_count % 28 == 0 then
+        os.remove(backupPath.."_DB_Automatic_Backup_olderer.zip")
+        os.rename(backupPath.."_DB_Automatic_Backup_older.zip", backupPath.."_DB_Automatic_Backup_olderer.zip")
+      end
+      if oldest_exists == false or olderer_exists == false or older_exists == false or auto_backup_count % 7 == 0 then
+        os.remove(backupPath.."_DB_Automatic_Backup_older.zip")
+        os.rename(backupPath.."_DB_Automatic_Backup_old.zip", backupPath.."_DB_Automatic_Backup_older.zip")
+      end
+      os.remove(backupPath.."_DB_Automatic_Backup_old.zip")
+      os.rename(backupPath.."_DB_Automatic_Backup.zip", backupPath.."_DB_Automatic_Backup_old.zip")
+      os.remove(backupPath.."_DB_Automatic_Backup.zip")
+      os.rename(backupPath.."_DB_Backup.zip", backupPath.."_DB_Automatic_Backup.zip")
+      if auto_backup_count == 84 then
+        auto_backup_count = 1
+        SetVariable("auto_backup_count",auto_backup_count)
+      end
+  end
 end
 
-function backup_databases ()
+function automatic_backup()
+  auto_backup_count = auto_backup_count + 1
+  backup_databases(false)
+  SetVariable("auto_backup_count",auto_backup_count)
+  SetVariable("last_auto_backup", os.time())
+end
+
+function manual_backup()
+  backup_databases(true)
+end
+
+function backup_databases (manual)
   in_backup = true
-  Note("PERFORMING DATABASE BACKUP. DON'T TOUCH ANYTHING!")
+  Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
   Note("CHECKING INTEGRITY")
-  BroadcastPlugin (999, "repaint")
+  Repaint()
   -- If needed, force wal_checkpoint databases to make sure everything gets written out
   -- this is a harmless no-op if not using journal_mode=WAL
   db:exec("PRAGMA wal_checkpoint;")
@@ -1983,20 +2080,17 @@ function backup_databases ()
   if not integrityCheck then
     Note("FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE.")
     Note("ABORTING CURRENT BACKUP")
-    in_backup = false
+    utils.msgbox ("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE IMMEDIATELY.", "Error!", "ok", "!", 1)
     return
   end
   Note("INTEGRITY CHECK PASSED")
   Note("BACKING UP DATABASES")
-  BroadcastPlugin (999, "repaint")
+  Repaint()
   
   local worldPath = GetInfo(66)..Trim(WorldName())
   local backupPath = GetInfo(66).."db_backups\\"..Trim(WorldName())
 
   os.execute("md "..GetInfo(66).."db_backups\\")
-  
-  -- rotate old backup files
-  rotate_backups(backupPath)
 
   -- close databases
   db:close()
@@ -2005,12 +2099,27 @@ function backup_databases ()
   -- make new backup
   os.execute(GetInfo(66).."zip -j -q -T "..backupPath.."_DB_Backup.zip "..worldPath.."*.db")
   
+  -- rotate backup files
+  rotate_backups(backupPath, manual)
+  
   -- re-open databases 
   db    = assert (sqlite3.open(worldPath..".db"))
   db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
+  
   Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
   in_backup = false
 end
+
+-- ec, areaKeys = CallPlugin("b6eae87ccedd84f510b74714", "getkeyword", "The Broken Halls of Horath") puts "horath" into areaKeys
+-- ec, areaKeys = CallPlugin("b6eae87ccedd84f510b74714", "getkeyword", "halls") puts "damned,horath,vanir" into areaKeys
+function getkeyword(area)
+  local keys = {}
+  for row in db:nrows(string.format("SELECT uid FROM areas WHERE name LIKE %s;", fixsql("%"..area.."%"))) do
+     table.insert(keys,row.uid);
+  end -- finding areas
+  return table.concat(keys, ",")
+end
+
 
 function OnPluginInstall ()
   
@@ -2077,6 +2186,15 @@ function OnPluginInstall ()
   
   if IsConnected() then
      OnPluginConnect()
+  end
+  
+  last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
+  SetTimerOption("backup_timer", "enabled", GetVariable("backup_timer_enabled") or "1")
+  if (GetTimerOption("backup_timer", "enabled") == 1) and ((os.time()-last_auto_backup) > 86400) then
+     ResetTimer("backup_timer")
+     Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!\n Forcing an automatic backup now...\n")
+     Repaint()
+     automatic_backup()
   end
   
 end -- OnPluginInstall
