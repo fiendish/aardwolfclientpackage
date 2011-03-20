@@ -53,7 +53,8 @@ mapper zoom out           --> Zoom out
 mapper zoom in            --> Zoom in
 mapper hide               --> Hide map
 mapper show               --> Show map
-mapper purgezone <area>   --> Remove an area from the map database
+mapper purgezone <keyword> --> Remove an area from the map database using
+                           --> the area keywords listed in 'mapper areas'
 
 mapper cexits             --> List known custom exits
 mapper delete cexits      --> Remove the custom exits from this room
@@ -88,6 +89,8 @@ mapper where <room> --> Show directions to a room
 
 EXPLORING
 
+mapper areas        --> Show a list of all mapped areas
+mapper areas <name> --> Show a list of mapped areas partially matching "name"
 mapper unmapped             --> List unmapped exit counts for know areas
 mapper unmapped <here/area> --> List unmapped exits in this or another area
 
@@ -265,7 +268,6 @@ send_to="12"
   >  
   </alias>
   
-  <!-- for backwards compatibility with other scripts -->
   <alias
    match="mapper bookmarks"
    enabled="y"
@@ -293,7 +295,7 @@ send_to="12"
   </alias>  
   
    <alias
-   match="mapper purgezone *"
+   match="mapper purgezone*"
    enabled="y"
    sequence="100"
    script="map_purgezone"
@@ -504,6 +506,22 @@ send_to="12"
    sequence="100"
    script="custom_exit"
    regexp="y"
+  >  
+  </alias>
+  
+  <alias
+   match="mapper areas"
+   enabled="y"
+   sequence="100"
+   script="map_areas"
+  >  
+  </alias>
+  
+  <alias
+   match="mapper areas *"
+   enabled="y"
+   sequence="100"
+   script="map_areas"
   >  
   </alias>
   
@@ -842,6 +860,39 @@ function findpathfast(name, line, wildcards)
     
 end
 
+function map_areas (name, line, wildcards)
+  local line = ""
+  local query = ""
+  local area = wildcards[1] or ""
+  local count = 0
+    
+  local hr = "| keyword    | Area Name                               |"
+  local hl = "+------------+-----------------------------------------+"
+  local fmt = "| %10.10s | %-39.39s |"
+  if area == "" then
+      query = "SELECT uid, name FROM areas ORDER BY name;"
+      intro = "The following areas have been mapped:"
+  else
+      query = string.format("SELECT uid, name FROM areas WHERE name LIKE %s ORDER BY name;", fixsql("%"..area.."%"))
+      intro = string.format("The following rooms in areas matching '%s' have been mapped:",area)
+  end -- if area
+  
+  Note ("\n"..intro)
+  Note (hl)
+  Note (hr)
+  Note (hl)
+
+  for row in db:nrows(query) do
+      line = string.format(fmt,row.uid, row.name)
+      Note (line)
+      count = count + 1
+  end
+  
+  Note (hl)
+  line = string.format ("Found %s areas.\n", count)
+  Note (line)
+end
+
 -- map_list function contributed by Spartacus
 function map_list (name, line, wildcards)
   -- ok, so if I want to lookup a room in my db, I don't want it only if the mapper can find a sw in a certain # of rooms.
@@ -1135,6 +1186,7 @@ function map_portal_list ()
     end -- if row.level
   end -- for row (portals query)
   world.Note (hl.."\n")
+
 end -- map_portal_list
 
 -- custom_exit function contributed by Spartacus
@@ -1276,22 +1328,29 @@ function fix_up_exit ()
 end -- fix_up_exit
 
 function map_purgezone (name, line, wildcards)
-  local zonename = string.gsub(wildcards[1], "^%s*(.-)%s*$", "%1")
-  if zonename == nil or zonename == "" then
-     mapper.mapprint("Syntax: mapper purgezone [zone key]")
+  local zoneuid = string.gsub(wildcards[1], "^%s*(.-)%s*$", "%1")
+  local found = false
+  
+  if #(wildcards[1]) > 1 and string.sub(wildcards[1], 1, 1) == " " then
+      for row in db:nrows(string.format("SELECT uid FROM areas WHERE uid = %s;", fixsql (zoneuid))) do
+        found = true
+      end   -- finding area uid
+  end
+  
+  if found == false then
+     mapper.mapprint("Syntax: mapper purgezone <keyword>\nTry 'mapper areas' for a list of area keywords.\n")
      return
   end
 
-
   -- Delete the exit links or we get foreign key constraint errors.
-  dbcheck (db:execute (string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zonename))))
-  dbcheck (db:execute (string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zonename))))
-  dbcheck (db:execute (string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zonename))))
-  dbcheck (db:execute (string.format ("delete from rooms where area = %s;", fixsql(zonename))))
+  dbcheck (db:execute (string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid))))
+  dbcheck (db:execute (string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid))))
+  dbcheck (db:execute (string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))))
+  dbcheck (db:execute (string.format ("delete from rooms where area = %s;", fixsql(zoneuid))))
+  dbcheck (db:execute (string.format ("delete from areas where uid = %s;", fixsql(zoneuid))))
 
   rooms = {}
-  mapper.mapprint ("Purged all rooms from " .. zonename .. " and local cache.")
-   return
+  mapper.mapprint ("Purged " .. zoneuid .. " from the mapper database.")
 end 
 
 function map_purgeall() 
@@ -1305,7 +1364,6 @@ function map_purgeall()
    if show_database_mods then
      mapper.mapprint ("Purged all rooms from database and local cache.")
    end -- if
-   return
 end 
 
 function map_clearcache() 
@@ -1315,12 +1373,10 @@ function map_clearcache()
      mapper.mapprint ("Cleared local room cache.")
    end -- if
 
-   return
 end 
 
 function map_printrooms() 
    tprint(rooms)
-   return
 end 
 
 function load_room_from_database (uid)
@@ -2501,13 +2557,13 @@ function map_find (name, line, wildcards)
 
   local rooms = {}
   local count = 0
-  
+
   -- find matching rooms using FTS3
   for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql ("%"..wildcards [1].."%"))) do
     table.insert(rooms, {uid=row.uid, reason=true})
     count = count + 1
   end   -- finding room
-  
+    
   -- see if nearby
   mapper.find (
     findpath,
@@ -3025,6 +3081,7 @@ function create_map_database (name, line, wildcards)
   CREATE TABLE environments (
       environmentid INTEGER PRIMARY KEY AUTOINCREMENT,
       uid           TEXT    NOT NULL,   -- code for the environment
+
 
       name          TEXT,               -- name of environment
       color         INTEGER,            -- ANSI colour code
