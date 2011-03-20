@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r378 snapshot
+- when copying text segments in the channel capture window, only put line breaks between complete chat messages. long captures should no longer get broken up.
+- make 'mapper purgezone' in the gmcp mapper a bit more user-friendly
+- make 'mapper purgezone' in the gmcp mapper also delete the areas table entry for the purged area
+- add a pair of 'mapper areas' commands to the gmcp mapper for finding area keywords
+
 r375 snapshot
 - add a getkeyword function callable by other plugins to the gmcp mapper that returns the keyword of one or more matching areas when passed a name substring
 - add rolling automatic backups of the gmcp mapper database files. If left on and running forever, the rollover schedule approximately follows the pattern: today, yesterday, last week, last month, 3 months ago.
