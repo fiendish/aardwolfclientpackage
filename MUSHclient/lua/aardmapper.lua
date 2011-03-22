@@ -1296,16 +1296,17 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
     table.insert (t, k)
     found_count = found_count + 1
   end -- for
-      
-  if found_count == 1 and walk then
-    uid, item = next (paths, nil)
-    mapprint ("Walking to:", rooms [uid].name)
-    start_speedwalk (item.path)
-    return
-  end -- if walking wanted
   
   -- sort so closest ones are first  
   table.sort (t, function (a, b) return #paths [a].path < #paths [b].path end )
+  
+  if walk then
+    local uid = t[1]
+    local path = paths[uid].path
+    mapprint ("Walking to:", rooms[uid].name)
+    start_speedwalk(path)
+    return
+  end -- if walking wanted
   
   hyperlink_paths = {}
   Note("+------------------------------ START OF SEARCH -------------------------------+")  
