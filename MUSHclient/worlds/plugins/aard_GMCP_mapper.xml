@@ -143,10 +143,23 @@ send_to="12"
   elseif "%1" == " on" then
     EnableTimer("backup_timer", true)
     SetVariable("backup_timer_enabled", "1")
-    ResetTimer("backup_timer")
     Note("Automated map database backup is now on.")
+    if ((os.time()-last_auto_backup) >= 86401) then
+        Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
+        Note("Forcing an automatic backup now...")
+        Note("")
+        Repaint()
+        automatic_backup()
+    end
   elseif "%1" == "" then
     Note("Automated map database backup is currently "..((GetTimerInfo("backup_timer", 6) and "on") or "off")..".")
+    local will_be_would_be = ((GetTimerInfo("backup_timer", 6) and "will be") or "would be (if enabled)")
+    local seconds = GetTimerInfo("backup_timer", 13)
+    local hours = math.floor(seconds/3600)
+    seconds = seconds - hours*3600
+    local minutes = math.floor(seconds/60)
+    seconds = math.floor(seconds - minutes*60)
+    Note("Next backup "..will_be_would_be.." in "..hours.." hours, "..minutes.." minutes, "..seconds.." seconds.")
   else
     Note("Invalid option for mapper backups. The current automated backup setting is '"..((GetTimerInfo("backup_timer", 6) and "on") or "off").."'. Try 'mapper backups on' or 'mapper backups off' to set your desired preference.")
   end
@@ -1710,6 +1723,7 @@ function get_room (uid)
       
 end -- get_room
 
+
 function room_edit_note (room, uid)
 
   local notes, found
@@ -2107,6 +2121,7 @@ function rotate_backups (backupPath, manual)
 end
 
 function automatic_backup()
+  AddTimer("backup_timer", 23, 59, 59, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
   auto_backup_count = auto_backup_count + 1
   backup_databases(false)
   SetVariable("auto_backup_count",auto_backup_count)
@@ -2246,11 +2261,19 @@ function OnPluginInstall ()
   
   last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
   SetTimerOption("backup_timer", "enabled", GetVariable("backup_timer_enabled") or "1")
-  if (GetTimerOption("backup_timer", "enabled") == 1) and ((os.time()-last_auto_backup) > 86400) then
-     ResetTimer("backup_timer")
-     Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!\n Forcing an automatic backup now...\n")
+  if (GetTimerOption("backup_timer", "enabled") == 1) and ((os.time()-last_auto_backup) >= 86401) then
+     Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
+     Note("Forcing an automatic backup now...")
+     Note("")
      Repaint()
      automatic_backup()
+  else
+    local seconds = 86400-(os.time()-last_auto_backup)
+    local hours = math.floor(seconds/3600)
+    seconds = seconds - hours*3600
+    local minutes = math.floor(seconds/60)
+    seconds = math.floor(seconds - minutes*60)
+    AddTimer("backup_timer", hours, minutes, seconds, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.OneShot, "automatic_backup")
   end
   
 end -- OnPluginInstall
@@ -2563,7 +2586,7 @@ function map_find (name, line, wildcards)
     table.insert(rooms, {uid=row.uid, reason=true})
     count = count + 1
   end   -- finding room
-    
+      
   -- see if nearby
   mapper.find (
     findpath,
