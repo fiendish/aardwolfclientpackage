@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r381 snapshot
+- fix a bug where the automatic backup countdown timer was getting reset
+- enable automatic walking to the shortest discovered path in the aardmapper find code
+
 r378 snapshot
 - when copying text segments in the channel capture window, only put line breaks between complete chat messages. long captures should no longer get broken up.
 - make 'mapper purgezone' in the gmcp mapper a bit more user-friendly
