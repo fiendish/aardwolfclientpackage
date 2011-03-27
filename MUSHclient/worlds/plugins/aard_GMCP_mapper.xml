@@ -96,6 +96,7 @@ mapper areas        --> Show a list of all mapped areas
 mapper areas <name> --> Show a list of mapped areas partially matching "name"
 mapper unmapped             --> List unmapped exit counts for know areas
 mapper unmapped <here/area> --> List unmapped exits in this or another area
+mapper thisroom     --> Show details about the current room
 
 MOVING  
 
@@ -257,7 +258,15 @@ send_to="12"
    script="map_where"
   >
   </alias>
- 
+  
+  <alias
+  match="mapper thisroom"
+  enabled="y"
+  sequence="100"
+  script="show_this_room"
+  regexp="n"
+  ></alias>
+  
   <alias
    match="mapper unmapped *"
    enabled="y"
@@ -1002,6 +1011,23 @@ function custom_exit_list (name, line, wildcards)
   print (line.."\n")
 end -- custom_exits_list
 
+
+function show_this_room (name, line, wildcards)
+   local room = rooms[current_room]
+   Note("Details about this room:")
+   Note("+---------------------------+")
+   Note("Name: "..(room.name or ""))
+   Note("ID: "..(current_room or ""))
+   Note("Area: "..(room.area or ""))
+   Note("Terrain: "..(room.terrain or ""))
+   Note("Info: "..(room.info or ""))
+   Note("Notes: "..(room.notes or ""))
+   Note("Exits: ")
+   tprint(room.exits)
+   Note("+---------------------------+\n")
+end -- show_this_room
+
+
 -- show_known_unmapped_exits function contributed by Spartacus
 function show_known_unmapped_exits (name, line, wildcards)
   -- I want to get a list of exits whose destinations are not yet in the rooms table (i.e. I have not gone through the exit?)
@@ -1178,6 +1204,7 @@ function map_portal_level (name, line, wildcards)
     count = count + 1
   end
   world.Note(string.format("\nPORTALLEVEL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+
 end -- map_portal_level
 
 -- map_portal_list function contributed by Spartacus
