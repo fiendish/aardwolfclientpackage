@@ -75,6 +75,9 @@ mapper portallevel <index> <level> --> Change the level lock on a stored
                                    --> 'portals list' command you should not
                                    --> manually account for tiers
 
+mapper addnote            --> Add a new note to the current room (don't have
+                          --> to click on the mapper window)
+
 FINDING THINGS
 
 mapper notes        --> Show nearby rooms that you marked with notes
@@ -96,7 +99,7 @@ mapper unmapped <here/area> --> List unmapped exits in this or another area
 
 MOVING  
 
-mapper goto <room>  --> Walk to a room by its room number
+mapper goto <room>         --> Walk to a room by its room number
 mapper resume       --> initiate a new run to the previous target       
 
 ]]>
@@ -238,8 +241,8 @@ send_to="12"
    script="map_healers"
   >
   </alias>  
-    
- <alias
+  
+  <alias
    match="mapper goto *"
    enabled="y"
    sequence="100"
@@ -537,6 +540,13 @@ send_to="12"
    script="map_areas"
   >  
   </alias>
+  
+  <alias
+  match="mapper addnote"
+  enabled="y"
+  sequence="100"
+  script="map_add_note"
+  ></alias>
   
 </aliases>
 
@@ -1723,6 +1733,9 @@ function get_room (uid)
       
 end -- get_room
 
+function map_add_note ()
+    room_edit_note(rooms[current_room], current_room)
+end -- map_add_note
 
 function room_edit_note (room, uid)
 
