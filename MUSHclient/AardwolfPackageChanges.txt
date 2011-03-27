@@ -1,6 +1,7 @@
 Aardwolf Client Package Major Changes List
 
-r384 snapshot
+r386 snapshot
+- cleanup mapper help
 - add 'mapper addnote' command to the gmcp mapper to add notes to rooms without mouse clicking
 - add 'mapper thisroom' command to the gmcp mapper to get information about the current room
 
