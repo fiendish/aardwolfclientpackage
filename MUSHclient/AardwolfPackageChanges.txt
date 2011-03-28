@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r390 snapshot
+- tweak gmcp mapper pathfinding routine so that players can now reliably get cexits to open doors
+
 r386 snapshot
 - cleanup mapper help
 - add 'mapper addnote' command to the gmcp mapper to add notes to rooms without mouse clicking
