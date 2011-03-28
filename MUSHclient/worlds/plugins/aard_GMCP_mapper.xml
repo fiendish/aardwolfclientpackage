@@ -891,8 +891,11 @@ function findpathfast(name, line, wildcards)
   local speedwalk = mapper.build_speedwalk (foundpath, speedwalk_prefix)
 
   -- display it
-  mapper.mapprint (string.format ("Path from %s to %s is: %s", wildcards[1], wildcards[2], speedwalk))
-    
+  if speedwalk ~= nil then
+    mapper.mapprint (string.format ("Path from %s to %s is: %s", wildcards[1], wildcards[2], speedwalk))
+  else
+    mapper.mapprint ("Pick different start and end rooms.")
+  end
 end
 
 function map_areas (name, line, wildcards)
@@ -2850,12 +2853,15 @@ function findpath(src, dst)
     end
     
     -- get all exits to any room in the previous set
-    local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and level <= %s order by fromuid desc",table.concat(rooms_list,","), visited, mylevel+(mytier*10))
+    local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and level <= %s order by date_added desc",table.concat(rooms_list,","), visited, mylevel+(mytier*10))
     local dcount = 0
     room_sets[depth] = {}
     for row in db:nrows(q) do
       dcount = dcount + 1
-      room_sets[depth][row.fromuid]={fromuid=row.fromuid, touid=row.touid, dir=row.dir}
+      -- ordering by date_added desc and then checking here to see if we've already found a connection from a particular room
+      -- ensures that custom exits get used preferentially to normal ones. An alternative solution is to order by date_added asc
+      -- and remove the break from the if block below.
+      room_sets[depth][row.fromuid] = room_sets[depth][row.fromuid] or {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
       if row.fromuid == src or row.fromuid == "*" then
         f = row.fromuid
         found = true
