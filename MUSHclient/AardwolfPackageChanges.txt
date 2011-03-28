@@ -54,7 +54,7 @@ r340 snapshot
 - fixed a typo in the group monitor empty group message
 - default to show self in group on first load of the group monitor
 
-r336 snapshot
+r336 snapshot (Feb 2011 release)
 - updated to MUSHclient 4.72
 - added clickable links to mapper portals list
 - updated mapper find display
