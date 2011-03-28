@@ -33,7 +33,7 @@
 AUTOMATIC MAPPER ... Originally by Nick Gammon
 ** This plugin is a GMCP version of the ATCP mapper by Nick Gammon.
 ** GMCP specific code added by Lasher.
-** Major new features contributed by Spartacus.
+** A few major new features contributed by Spartacus.
 ** Many bugs squashed and improvements made by Fiendish.
 
 The window can be dragged to a new location by dragging the room name.
@@ -41,7 +41,7 @@ Your current room is always in the center with a bolder border.
 LH-click on a room to speed-walk to it. RH-click on a room for options. 
 LH-click on the "*" button on the upper-left corner to configure it.
 
-ACTIONS
+===== ACTIONS ====================>
 
 mapper backup                   --> Create new archived backups of your map
                                   > database in a db_backups directory,
@@ -58,7 +58,7 @@ mapper addnote                  --> Add a new note to the current room (don't
                                   > have to click on the mapper window)
 mapper purgezone <area>         --> Remove an area from the map database
 
-CUSTOM EXIT ACTIONS
+===== CUSTOM EXIT ACTIONS ========>
 
 mapper cexits                   --> List known custom exits
 mapper cexits <here/area>       --> List known custom exits only in this or
@@ -68,7 +68,7 @@ mapper cexit <command>          --> Follow and link a custom exit (e.g. mapper
 mapper delete cexits            --> Remove the custom exits from this room
 mapper purge cexits             --> Remove all custom exits
 
-PORTAL ACTIONS
+===== PORTAL ACTIONS =============>
 
 mapper portals                  --> List known hand-held portals
 mapper portal <command>         --> Link a hand-held portal alias to here as a
@@ -80,7 +80,7 @@ mapper portallevel <ind> <lvl>  --> Change the level lock on a stored portal
 mapper delete portal <command>  --> Remove the specified hand-held portal alias
 mapper purge portals            --> Remove all hand-held portal aliases
 
-FINDING THINGS
+===== FINDING THINGS =============>
 
 mapper notes                    --> Show nearby rooms that you marked with notes
 mapper area <text>              --> Full-text search limited to the current zone
@@ -92,7 +92,7 @@ mapper train                    --> Show nearby trainers
 mapper quest                    --> Show nearby quest-givers
 mapper where <room>             --> Show directions to a room
 
-EXPLORING
+===== EXPLORING ==================>
 
 mapper thisroom                 --> Show details about the current room
 mapper areas                    --> Show a list of all mapped areas
@@ -101,7 +101,7 @@ mapper areas <name>             --> Show a list of mapped areas partially
 mapper unmapped                 --> List unmapped exit counts for know areas
 mapper unmapped <here/area>     --> List unmapped exits in this or another area
 
-MOVING  
+===== MOVING =====================>
 
 mapper goto <room>              --> Walk to a room by its room number
 mapper resume                   --> initiate a new run to the previous target
@@ -1912,6 +1912,7 @@ local available =  {
 
   if not exit_destination then
     return
+
   end -- cancelled
   
     -- look it up
@@ -2701,6 +2702,7 @@ end -- map_quests
 function map_healers (name, line, wildcards)
   map_find_special { "healer", }
 end -- map_healers
+
 
 function map_goto (name, line, wildcards)
 
