@@ -1,7 +1,7 @@
 Aardwolf Client Package Major Changes List
 
 r390 snapshot
-- players can now reliably open doors with cexits
+- players can now reliably open doors with cexits, because if a cexit exists between two rooms then it should now always get used instead of the normal exit
 
 r386 snapshot
 - cleanup mapper help
