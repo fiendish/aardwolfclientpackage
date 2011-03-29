@@ -1,7 +1,7 @@
 Aardwolf Client Package Major Changes List
 
 r390 snapshot
-- tweak gmcp mapper pathfinding routine so that players can now reliably get cexits to open doors
+- players can now reliably open doors with cexits
 
 r386 snapshot
 - cleanup mapper help
@@ -13,7 +13,7 @@ r381 snapshot
 - enable automatic walking to the shortest discovered path in the aardmapper find code
 
 r378 snapshot
-- when copying text segments in the channel capture window, only put line breaks between complete chat messages. long captures should no longer get broken up.
+- when copying text segments in the channel capture window, only put line breaks between complete chat messages.
 - make 'mapper purgezone' in the gmcp mapper a bit more user-friendly
 - make 'mapper purgezone' in the gmcp mapper also delete the areas table entry for the purged area
 - add a pair of 'mapper areas' commands to the gmcp mapper for finding area keywords
