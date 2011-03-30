@@ -1,7 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r397 snapshot
+- the channel capture window can now handle forced newlines like the ones in the flickoff social
+- added xterm 256 color support
+
 r390 snapshot
-- players can now reliably open doors with cexits, because if a cexit exists between two rooms then it should now always get used instead of the normal exit
+- players should now be able to reliably open doors with cexits in the gmcp mapper, because if a cexit exists between two rooms then it should now always get used instead of the normal exit
 
 r386 snapshot
 - cleanup mapper help
