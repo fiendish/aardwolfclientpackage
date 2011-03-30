@@ -564,7 +564,7 @@ function ScrollerReleaseCallback(flags, hotspot_id)
     dragscrolling = false
     drawStuff()
 end
-require "tprint"
+
 function fillBuffer(rawstyles)
     local avail = 0
     local line_styles
