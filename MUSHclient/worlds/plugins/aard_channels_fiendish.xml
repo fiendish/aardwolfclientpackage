@@ -426,7 +426,12 @@ function Display_Line (line, styles, backfill_start, backfill_end)
     end -- backfill
     if (styles) then
         for _, v in ipairs (styles) do
-            left = left + WindowText (Win, "font"..Win, v.text, left, TITLE_HEIGHT+(line*line_height), 0, 0, v.textcolour)
+            local t = v.text
+            -- now clean up dangling newlines that cause block characters to show in MUSHclient 4.72
+            if string.sub(v.text,-1) == "\n" then
+                t = string.sub(v.text,1,-2)
+            end
+            left = left + WindowText (Win, "font"..Win, t, left, TITLE_HEIGHT+(line*line_height), 0, 0, v.textcolour)
         end -- for each style run
     end
     Redraw()
@@ -559,7 +564,7 @@ function ScrollerReleaseCallback(flags, hotspot_id)
     dragscrolling = false
     drawStuff()
 end
-
+require "tprint"
 function fillBuffer(rawstyles)
     local avail = 0
     local line_styles
@@ -584,12 +589,32 @@ function fillBuffer(rawstyles)
 
         -- get next style, work out how long it is
         local style = remove (styles, 1)
+        
+        -- we interrupt this program to bring you a special bulletin
+        -- breaking off newlines and sticking them back into the styles
+        -- list for later
+        foundbreak = false
+        newline = string.find(style.text, "\n")
+        if newline then
+            table.insert(styles, 1, {text = string.sub(style.text,newline+1), 
+                  length = style.length-newline+1, 
+                  textcolour = style.textcolour,
+                  backcolour = style.backcolour })
+-- we're leaving in the newline characters here because we need to be able to copy them later. I'll clean up the buggy visual later when actually displaying the lines.
+            style.length = newline
+            style.text = string.sub(style.text,1,newline)
+            foundbreak = true
+        end
+        
         local width = WindowTextWidth (Win, "font"..Win, style.text)
 
         -- if it fits, copy whole style in
         if width <= avail then
             insert (line_styles, style)
             avail = avail - width
+            if foundbreak then
+               avail = 0
+            end
         else -- otherwise, have to split style  
             -- look for trailing space (work backwards). remember where space is
             local col = style.length - 1
