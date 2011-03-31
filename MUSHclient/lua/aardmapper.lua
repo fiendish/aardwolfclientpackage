@@ -1481,7 +1481,9 @@ function start_speedwalk (path)
         else
             s = p:sub(2)
         end
-        Execute (s)
+        -- replace ";" with "\n" here because some people change their command stack char
+        -- and I don't yet know of a way to query what that char is
+        Execute (s:gsub(";","\n"))
         current_speedwalk = nil
         return  
       end -- if
