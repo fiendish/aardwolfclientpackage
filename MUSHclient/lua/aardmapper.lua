@@ -1404,6 +1404,13 @@ end -- do_hyperlink
 
 function build_speedwalk (path, prefix)
 
+  stack_char = ";"
+  if GetOption("enable_command_stack")==1 then
+    stack_char = GetAlphaOption("command_stack_character")
+  else
+    stack_char = "\n"
+  end
+  
  -- build speedwalk string (collect identical directions)
   local tspeed = {}
   for _, dir in ipairs (path) do
@@ -1430,7 +1437,7 @@ function build_speedwalk (path, prefix)
   for _, dir in ipairs (tspeed) do
     if expand_direction[dir.dir] ~= nil then
       if new_command then
-         s = s .. GetAlphaOption("command_stack_character") .. speedwalk_prefix .. " "
+         s = s .. stack_char .. speedwalk_prefix .. " "
          new_command = false
       end
       if dir.count > 1 then
@@ -1438,19 +1445,19 @@ function build_speedwalk (path, prefix)
       end -- if
       s = s .. dir.dir
     else
-      s = s .. GetAlphaOption("command_stack_character") .. dir.dir
+      s = s .. stack_char .. dir.dir
       new_command = true
     end -- if
   end -- if
   
   if prefix ~= nil then
-    if s:sub(1,1) == GetAlphaOption("command_stack_character") then
-      return s:sub(2)
+    if s:sub(1,1) == stack_char then
+      return string.gsub(s:sub(2),";",stack_char)
     else
-      return prefix.." "..s
+      return string.gsub(prefix.." "..s,";",stack_char)
     end
   end
-  return s
+  return string.gsub(s,";",stack_char)
 end -- build_speedwalk
 
 -- start a speedwalk to a path
@@ -1476,12 +1483,12 @@ function start_speedwalk (path)
       if type (speedwalk_prefix) == "string" and speedwalk_prefix ~= "" then
         local s = speedwalk_prefix .. " "
         local p = build_speedwalk (path)
-        if p:sub(1,1) ~= GetAlphaOption("command_stack_character") then
+        if p:sub(1,1) ~= stack_char then
             s = s .. p        
         else
             s = p:sub(2)
         end
-        Execute (s)
+        Execute (s:gsub(";","\n"))
         current_speedwalk = nil
         return  
       end -- if
