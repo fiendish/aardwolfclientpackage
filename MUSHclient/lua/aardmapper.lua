@@ -1430,7 +1430,7 @@ function build_speedwalk (path, prefix)
   for _, dir in ipairs (tspeed) do
     if expand_direction[dir.dir] ~= nil then
       if new_command then
-         s = s .. ";" .. speedwalk_prefix .. " "
+         s = s .. GetAlphaOption("command_stack_character") .. speedwalk_prefix .. " "
          new_command = false
       end
       if dir.count > 1 then
@@ -1438,13 +1438,13 @@ function build_speedwalk (path, prefix)
       end -- if
       s = s .. dir.dir
     else
-      s = s .. ";" .. dir.dir
+      s = s .. GetAlphaOption("command_stack_character") .. dir.dir
       new_command = true
     end -- if
   end -- if
   
   if prefix ~= nil then
-    if s:sub(1,1) == ";" then
+    if s:sub(1,1) == GetAlphaOption("command_stack_character") then
       return s:sub(2)
     else
       return prefix.." "..s
@@ -1476,14 +1476,12 @@ function start_speedwalk (path)
       if type (speedwalk_prefix) == "string" and speedwalk_prefix ~= "" then
         local s = speedwalk_prefix .. " "
         local p = build_speedwalk (path)
-        if p:sub(1,1) ~= ";" then
+        if p:sub(1,1) ~= GetAlphaOption("command_stack_character") then
             s = s .. p        
         else
             s = p:sub(2)
         end
-        -- replace ";" with "\n" here because some people change their command stack char
-        -- and I don't yet know of a way to query what that char is
-        Execute (s:gsub(";","\n"))
+        Execute (s)
         current_speedwalk = nil
         return  
       end -- if
