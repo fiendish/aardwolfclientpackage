@@ -1912,7 +1912,6 @@ local available =  {
 
   if not exit_destination then
     return
-
   end -- cancelled
   
     -- look it up
@@ -2764,7 +2763,7 @@ function map_where (name, line, wildcards)
   local speedwalk = mapper.build_speedwalk (item.path, speedwalk_prefix)
   
   -- display it
-  mapper.mapprint (string.format ("Path to %s is: %s", wanted, speedwalk))
+  mapper.mapprint (string.format ("Path to %s is:\n%s\n", wanted, speedwalk))
   
 end -- map_where
 
