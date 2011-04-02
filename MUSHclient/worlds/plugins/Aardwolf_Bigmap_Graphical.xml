@@ -61,8 +61,6 @@ bigmap off               --> hide the map
    match="^\{coords\}(?<zone>\d+)\,(?<x>\d+)\,(?<y>\d+)$"
    omit_from_output="y"
    regexp="y"
-   name="coords_trigger"
-   script="catch_coords"
    sequence="100"
   >
   </trigger>
@@ -129,11 +127,6 @@ continentnames = {
  mesolar = true,
  vidblain = true,
 }
-
-function catch_coords()
-  SendNoEcho("tags coords off")
-  EnableTrigger("coords_trigger",false)
-end
 
 function remove_cache ()
   continents = {}
@@ -234,6 +227,19 @@ function ConstructMap()
   end -- for
   WindowImageFromWindow(mapwin, zone, win)
 end
+
+
+function NoMap()
+   WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
+   local messages = {"DON'T PANIC!","Seeing this message is normal","your first time on a continent."}
+   for i,v in ipairs(messages) do
+     local messagewidth = WindowTextWidth (mapwin, font_id, v)
+     WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
+   end
+   -- DrawEdge rectangle
+   WindowRectOp (mapwin, 5, 0, 0, 0, 0, 10, 15)
+end
+
 
 function DrawMap (x, y)
  if show_map and in_continent then
@@ -343,6 +349,8 @@ function updatelocation (coords)
        ConstructMap()
     end
     DrawMap (x, y)
+  else
+    NoMap()
   end -- if
 end -- updatelocation
 
