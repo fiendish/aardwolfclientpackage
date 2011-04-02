@@ -74,7 +74,7 @@ bigmap off               --> hide the map
   <alias
    name="remove_alias"
    script="remove_cache"
-   match="bigmap remove map cache"
+   match="bigmap refresh"
    enabled="y"
    sequence="100"
    ignore_case="y"
@@ -402,9 +402,24 @@ function OnPluginInstall ()
   assert (loadstring (GetVariable ("continents") or "")) ()
   assert (loadstring (GetVariable ("xref") or "")) ()
 
-  win = "map2window"
+  win = GetPluginID ().."_offscreen_buffer"
   mapwin = "b6eae87ccedd84f510b74714_mapper"
 
+  local windows = WindowList()
+  local gmcp_mapwin_found = false
+  if windows then
+    for _, v in ipairs (windows) do 
+      if v == mapwin then
+        gmcp_mapwin_found = true
+        break
+      end
+    end
+  end -- if any
+
+  if not gmcp_mapwin_found then
+    WindowCreate (mapwin, 0, 0, 0, 0, 0, 0, 0) -- dummy window just to load the font stuff
+  end
+  
   WindowCreate (win,
                  0,
                  0,
@@ -423,8 +438,8 @@ function OnPluginInstall ()
     font_name = "Courier"
   end -- if
 
-  font_id = "map_font"  -- our internal name
-  font_id_bold = "map_font_bold"  -- our internal name
+  font_id = "bigmap_font"  -- our internal name
+  font_id_bold = "bigmap_font_bold"  -- our internal name
 
   check (WindowFont (mapwin, font_id, font_name, font_size, false, false, false, false, 0, 49))  -- normal
   font_height = WindowFontInfo (mapwin, font_id, 1) -  WindowFontInfo (mapwin, font_id, 4) + 1 -- height
