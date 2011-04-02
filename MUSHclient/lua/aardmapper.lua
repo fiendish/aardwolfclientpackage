@@ -893,6 +893,10 @@ function find_paths (uid, f)
 end -- function find_paths
 
 -- draw our map starting at room: uid
+dont_draw = false
+function halt_drawing(halt)
+    dont_draw = halt
+end
 
 function draw (uid)
 
@@ -906,6 +910,10 @@ function draw (uid)
   end -- if
   
   current_room = uid -- remember where we are
+  
+  if dont_draw then
+    return
+  end
   
   -- timing
   local start_time = utils.timer ()
