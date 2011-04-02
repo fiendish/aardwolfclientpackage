@@ -1408,7 +1408,7 @@ function build_speedwalk (path, prefix)
   if GetOption("enable_command_stack")==1 then
     stack_char = GetAlphaOption("command_stack_character")
   else
-    stack_char = "\n"
+    stack_char = "\r\n"
   end
   
  -- build speedwalk string (collect identical directions)
@@ -1488,7 +1488,7 @@ function start_speedwalk (path)
         else
             s = p:sub(2)
         end
-        Execute (s:gsub(";","\n"))
+        Execute (s:gsub(";","\r\n"))
         current_speedwalk = nil
         return  
       end -- if
