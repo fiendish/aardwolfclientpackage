@@ -880,7 +880,7 @@ function fixbool (b)
 end -- fixbool
 
 function findpathfast(name, line, wildcards)
-    db = assert (sqlite3.open(GetInfo (66) .. Trim (WorldName ()) .. ".db"))
+    db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
     local foundpath = findpath(tonumber(wildcards[1]),tonumber(wildcards[2]))
     if foundpath == nil then
         mapper.mapprint (string.format ("Path from %s to %s not found.", wildcards[1], wildcards[2]))
@@ -2122,9 +2122,9 @@ function rotate_backups (backupPath, manual)
       os.rename(backupPath.."_DB_Backup.zip", backupPath.."_DB_Manual_Backup.zip")
   else
       local t = utils.readdir (backupPath.."_DB_Automatic_Backup*")  
-      local oldest_string = Trim(WorldName()).."_DB_Automatic_Backup_oldest.zip"
-      local olderer_string = Trim(WorldName()).."_DB_Automatic_Backup_olderer.zip"
-      local older_string = Trim(WorldName()).."_DB_Automatic_Backup_older.zip"
+      local oldest_string = Trim(sanitize_filename(WorldName())).."_DB_Automatic_Backup_oldest.zip"
+      local olderer_string = Trim(sanitize_filename(WorldName())).."_DB_Automatic_Backup_olderer.zip"
+      local older_string = Trim(sanitize_filename(WorldName())).."_DB_Automatic_Backup_older.zip"
       local oldest_exists = false
       local olderer_exists = false
       local older_exists = false
@@ -2177,6 +2177,11 @@ function manual_backup()
   backup_databases(true)
 end
 
+function sanitize_filename(str)
+    str = string.gsub(str, "[^%w()_-]", "")
+    return str
+end
+
 function backup_databases (manual)
   in_backup = true
   Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
@@ -2203,8 +2208,8 @@ function backup_databases (manual)
   Note("BACKING UP DATABASES")
   Repaint()
   
-  local worldPath = GetInfo(66)..Trim(WorldName())
-  local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(WorldName())," ","_")
+  local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
+  local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(sanitize_filename(WorldName()))," ","_")
 
   os.execute("md "..GetInfo(66).."db_backups\\")
 
@@ -2273,8 +2278,8 @@ function OnPluginInstall ()
   mapper.mapprint (string.format ("MUSHclient mapper installed, version %0.1f", mapper.VERSION))
   
   -- open databases on disk 
-  db    = assert (sqlite3.open(GetInfo (66) .. Trim (WorldName ()) .. ".db"))
-  db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (WorldName ()) .. "_bookmarks.db"))
+  db    = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
+  db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
   
   create_tables ()    -- create database structure if necessary
   
@@ -3139,7 +3144,7 @@ function create_map_database (name, line, wildcards)
   end
 
   -- open database on disk 
-  db = assert (sqlite3.open(GetInfo (66) .. Trim (WorldName ()) .. ".db") )
+  db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db") )
   
   -- create rooms table
   dbcheck (db:execute[[
