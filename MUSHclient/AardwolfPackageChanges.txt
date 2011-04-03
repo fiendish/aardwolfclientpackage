@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r418 snapshot
+- sanitize gmcp map database names before creation
+
 r414 snapshot
 - gmcp mapper paths should now work if the player changes the command stack character
 - bigmap miniwindow display is /finally/ now included in the package with the special ability to merge into the gmcp mapper window (can be pulled into its own window with 'bigmap unmerge')
