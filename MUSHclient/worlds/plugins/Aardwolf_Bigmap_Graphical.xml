@@ -36,7 +36,7 @@ bigmap off               --> hide the map
 <triggers>
 
   <trigger
-   enabled="y"
+   enabled="n"
    match="^\{bigmap\}(?<zone>\d+)\,(?<zonename>.+)$"
    script="map_redirect"
    omit_from_output="y"
@@ -45,7 +45,7 @@ bigmap off               --> hide the map
    regexp="y"
   >
   </trigger>
-
+  
   <trigger
    enabled="n"
    match="*"
@@ -55,10 +55,36 @@ bigmap off               --> hide the map
    sequence="10"
   >
   </trigger>
+
+  <trigger
+   enabled="y"
+   match="^\{bigmap\}(?<zone>\d+)\,(?<zonename>.+)$"
+   omit_from_output="y"
+   sequence="101"
+   regexp="y"
+  >
+  </trigger>
+  <trigger
+   enabled="y"
+   match="^\{\/bigmap\}$"
+   omit_from_output="y"
+   sequence="101"
+   regexp="y"
+  >
+  </trigger>
   
   <trigger
    enabled="y"
    match="^\{coords\}(?<zone>\d+)\,(?<x>\d+)\,(?<y>\d+)$"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+  >
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   match="^\{coords\}-1$"
    omit_from_output="y"
    regexp="y"
    sequence="100"
@@ -72,16 +98,25 @@ bigmap off               --> hide the map
   <alias
    name="remove_alias"
    script="remove_cache"
-   match="bigmap refresh"
+   match="bigmap reset"
    enabled="y"
    sequence="100"
    ignore_case="y"
   >
   </alias>
 
+  <alias
+   script="update_map"
+   match="bigmap update"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+  >
+  </alias>
+  
 <alias
    script="map_on_off_alias"
-   match="^bigmap( on| off)?$"
+   match="^bigmap( on| off)$"
    enabled="y"
    regexp="y"
    sequence="100"
@@ -118,21 +153,17 @@ zone_name_colour = ColourNameToRGB "yellow"
 rectangle_size = 8
 in_continent = false
 
-continentnames = {
- alagh = true,
- uncharted = true,
- abend = true,
- gelidus = true,
- southern = true,
- mesolar = true,
- vidblain = true,
-}
-
 function remove_cache ()
   continents = {}
   xref = {}
-  ColourNote ("white", "blue", "Big maps removed from cache.")
+  ColourNote ("white", "blue", "All bigmaps removed from cache.")
 end -- remove_cache
+
+function update_map()
+   EnableTrigger("multi_line_map",false)
+   EnableTrigger("map_start",true)
+   SendNoEcho "bigmap noself" -- grab map
+end
 
 function map_on_off_alias (name, line, wildcards)
   if wildcards [1] == false then
@@ -225,13 +256,14 @@ function ConstructMap()
   for i, v in ipairs (map) do
     Display_Styled_Line (i, v, font_id)
   end -- for
-  WindowImageFromWindow(mapwin, zone, win)
+  WindowImageFromWindow(mapwin, "bigmap_continent_"..zone, win)
+  ColourNote ("yellow", "", string.format("BIGMAP INFO: Constructed new continent bigmap for %s.", continent))
 end
 
 
 function NoMap()
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
-   local messages = {"DON'T PANIC!","Seeing this message is normal","your first time on a continent."}
+   local messages = {"To activate this continent map","walk onto the continent and type:","'bigmap update'"}
    for i,v in ipairs(messages) do
      local messagewidth = WindowTextWidth (mapwin, font_id, v)
      WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
@@ -241,28 +273,24 @@ function NoMap()
 end
 
 
-function DrawMap (x, y)
- if show_map and in_continent then
+function DrawMap ()
+ if show_map then
   
-  local origx, origy = x, y
-  x = x + 1  -- allow for border, make 1-relative
-  y = y + 1  -- ditto
-
   local startx = 4
   local starty = font_height*2+15
   
-  local xdiff = (WindowInfo(mapwin,3)-10)-WindowImageInfo(mapwin,zone,2)
-  local ydiff = (WindowInfo(mapwin,4)-starty-6)-WindowImageInfo(mapwin,zone,3)
+  local xdiff = (WindowInfo(mapwin,3)-10)-WindowImageInfo(mapwin,"bigmap_continent_"..zone,2)
+  local ydiff = (WindowInfo(mapwin,4)-starty-6)-WindowImageInfo(mapwin,"bigmap_continent_"..zone,3)
   
-  local correction_x = (WindowInfo(mapwin,3)-10)/WindowImageInfo(mapwin,zone,2) -- stretch to x
-  local correction_y = (WindowInfo(mapwin,4)-starty-5)/WindowImageInfo(mapwin,zone,3) -- stretch to y
+  local correction_x = (WindowInfo(mapwin,3)-10)/WindowImageInfo(mapwin,"bigmap_continent_"..zone,2) -- stretch to x
+  local correction_y = (WindowInfo(mapwin,4)-starty-5)/WindowImageInfo(mapwin,"bigmap_continent_"..zone,3) -- stretch to y
   if xdiff < ydiff then
     correction_y = correction_x
   else
     correction_x = correction_y
   end
   WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
-  WindowDrawImage (mapwin, zone, startx, starty, startx+(correction_x*WindowImageInfo(mapwin,zone,2)), starty + (correction_y*WindowImageInfo(mapwin,zone,3)), 2)
+  WindowDrawImage (mapwin, "bigmap_continent_"..zone, startx, starty, startx+(correction_x*WindowImageInfo(mapwin,"bigmap_continent_"..zone,2)), starty + (correction_y*WindowImageInfo(mapwin,"bigmap_continent_"..zone,3)), 2)
   local our_location_x = ((x - 1) * (rectangle_size-1) + (rectangle_size / 2) )
   local our_location_y = ((y - 1) * (rectangle_size-1) + (rectangle_size / 2) )
 
@@ -323,32 +351,29 @@ function table.contains(table, element)
 end
 
 
-function updatelocation (coords)
-  -- where we are
-  x = tonumber (coords.x)
-  y = tonumber (coords.y)
-  zone = tonumber (coords.id)
-
+function updatelocation ()
   -- changed continent?
-  if old_zone ~= zone then
+  if (old_zone ~= zone) or (in_continent ~= (tonumber(oncont) == 1)) then
 
     -- grab cached map
     map = continents [zone]
     continent = xref [zone]
 
     -- no cached map? better get it
-    if not map then
-      SendNoEcho "bigmap noself" -- grab map
-    end -- don't know this one
+    --if not map then
+    --  EnableTrigger("map_start",true)
+    --  SendNoEcho "bigmap noself" -- grab map
+    --end -- don't know this one
     old_zone = zone
   end -- need big map
 
   -- draw our location
   if map then
-    if zone and ((WindowImageList(mapwin) == nil) or (table.contains(WindowImageList(mapwin),tostring(zone)) == false)) then
+    -- just in case, check again for construction
+    if zone and ((WindowImageList(mapwin) == nil) or (table.contains(WindowImageList(mapwin),"bigmap_continent_"..zone) == false)) then
        ConstructMap()
     end
-    DrawMap (x, y)
+    DrawMap ()
   else
     NoMap()
   end -- if
@@ -357,8 +382,8 @@ end -- updatelocation
 
 -- map redirector
 function map_redirect (name, line, wildcards, styles)
-
-  EnableTrigger ("multi_line_map", true)  -- capture subsequent lines
+  EnableTrigger("map_start", false)
+  EnableTrigger("multi_line_map", true)  -- capture subsequent lines
 
   if name == "map_start" then
     map = {}  -- start new map
@@ -397,8 +422,7 @@ function map_redirect (name, line, wildcards, styles)
       continents [zone] = map  -- cache it
       ConstructMap()
     end -- we know the continent
-
-    DrawMap (x, y)
+    DrawMap ()
   else
     table.insert (map, styles)
   end -- if
@@ -486,10 +510,17 @@ function OnPluginBroadcast (msg, id, name, text)
     if text == "room.info" then
       res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room")
       room = assert (loadstring ('return ' .. gmcparg or ""))()
+      -- where we are
+      origx = tonumber (room.info.coord.x)
+      origy = tonumber (room.info.coord.y)
+      zone = tonumber (room.info.coord.id)
       oncont = room.info.coord.cont
+      x = origx + 1  -- make 1-relative
+      y = origy + 1  -- ditto
+
       if tonumber(oncont) == 1 then
+        updatelocation()
         in_continent = true
-        updatelocation(room.info.coord)
       else
         in_continent = false
       end
