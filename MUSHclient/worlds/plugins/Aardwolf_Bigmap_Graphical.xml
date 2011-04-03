@@ -6,32 +6,38 @@
 <muclient>
 <plugin
    name="Aardwolf_BigMap_Graphical"
-   author="Nick Gammon and Fiendish"
+   author="Fiendish and Nick Gammon"
    id="60840c9013c7cc57777ae0ac"
    language="Lua"
    purpose="Redirects Aardwolf bigmap messages to a miniwindow"
    date_written="2009-07-26"
-   date_modified="2009-07-29"
    requires="4.42"
    version="2.0"
    save_state="y"
    >
 <description trim="y">
-Redirects the bigmap to a miniwindow.
+<![CDATA[
 
-Commands:
+Graphical Continent Bigmap Display
+Originally a zMUD script by Fiendish
+First MUSHclient port by Nick Gammon
+GMCP update by Bast
+Made way more awesome by Fiendish
+
+===== COMMANDS ========>
 
 bigmap reset         --> removes the entire cache of maps, 
                        > forcing all maps to be updated again
                        
 bigmap update        --> update the current continent map
 
-bigmap on            --> show the map
-bigmap off           --> hide the map
+bigmap on            --> show the bigmap
+bigmap off           --> hide the bigmap
 
 bigmap merge         --> merge bigmap into the gmcp mapper
 bigmap unmerge       --> split off bigmap from the gmcp mapper
 
+]]>
 </description>
 
 </plugin>
@@ -99,6 +105,12 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
 </triggers>
 
 <aliases>
+  <alias
+   script="OnHelp"
+   match="bigmap help"
+   enabled="y"
+  >
+  </alias>
 
   <alias
    name="remove_alias"
@@ -157,6 +169,10 @@ title_colour = 0x696969
 zone_name_colour = ColourNameToRGB "yellow"
 rectangle_size = 8
 in_continent = false
+
+function OnHelp ()
+  Note (GetPluginInfo (GetPluginID (), 3))
+end
 
 function remove_cache ()
   continents = {}
