@@ -2178,6 +2178,7 @@ function manual_backup()
 end
 
 function sanitize_filename(str)
+    str = string.gsub(str, " ", "_")
     str = string.gsub(str, "[^%w()_-]", "")
     return str
 end
