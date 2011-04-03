@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r414 snapshot
+- gmcp mapper paths should now work if the player changes the command stack character
+- bigmap miniwindow display is /finally/ now included in the package with the special ability to merge into the gmcp mapper window (can be pulled into its own window with 'bigmap unmerge')
+
 r397 snapshot
 - the channel capture window can now handle forced newlines like the ones in the flickoff social
 - added xterm 256 color support
