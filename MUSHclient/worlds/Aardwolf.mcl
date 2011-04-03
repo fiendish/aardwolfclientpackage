@@ -441,6 +441,7 @@
 <include name="aard_channels_fiendish.xml" plugin="y" />
 <include name="aard_ASCII_map.xml" plugin="y" />
 <include name="Aardwolf_Tick_Timer.xml" plugin="y" />
+<include name="Aardwolf_Bigmap_Graphical.xml" plugin="y" />
 <include name="aard_repaint_buffer.xml" plugin="y" />
 <include name="aard_new_connection.xml" plugin="y" />
 </muclient>
