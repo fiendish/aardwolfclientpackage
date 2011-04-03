@@ -27,7 +27,7 @@ Made way more awesome by Fiendish
 ===== COMMANDS ========>
 
 bigmap reset         --> removes the entire cache of maps, 
-                       > forcing all maps to be updated again
+                       > forcing all maps to require updating again
                        
 bigmap update        --> update the current continent map
 
