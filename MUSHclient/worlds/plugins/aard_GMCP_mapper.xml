@@ -2204,7 +2204,7 @@ function backup_databases (manual)
   Repaint()
   
   local worldPath = GetInfo(66)..Trim(WorldName())
-  local backupPath = GetInfo(66).."db_backups\\"..Trim(WorldName())
+  local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(WorldName())," ","_")
 
   os.execute("md "..GetInfo(66).."db_backups\\")
 
@@ -2213,7 +2213,7 @@ function backup_databases (manual)
   db_bm:close()
   
   -- make new backup
-  os.execute(GetInfo(66).."zip -j -q -T "..backupPath.."_DB_Backup.zip "..worldPath.."*.db")
+  os.execute(GetInfo(66).."zip -j -q -T "..backupPath.."_DB_Backup.zip \""..worldPath.."*.db\"")
   
   -- rotate backup files
   rotate_backups(backupPath, manual)
