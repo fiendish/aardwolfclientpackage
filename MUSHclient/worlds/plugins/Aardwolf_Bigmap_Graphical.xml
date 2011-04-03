@@ -169,6 +169,7 @@ title_colour = 0x696969
 zone_name_colour = ColourNameToRGB "yellow"
 rectangle_size = 8
 in_continent = false
+use_gmcp_mapper = tonumber(GetVariable("use_gmcp_mapper")) or 1
 
 function OnHelp ()
   Note (GetPluginInfo (GetPluginID (), 3))
@@ -187,28 +188,28 @@ function update_map()
 end
 
 function map_on_off_alias (name, line, wildcards)
-  if wildcards[1]:lower() == " on" then
+  if (wildcards[1]:lower() == " on") then
     show_map = true
     ColourNote ("yellow", "", "Bigmap enabled.")
-    if not use_gmcp_mapper then
+    if (not (use_gmcp_mapper == 1)) then
         WindowShow (mapwin, true)
     else
         CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "true");
     end
-  elseif wildcards[1]:lower() == " off" then
+  elseif (wildcards[1]:lower() == " off") then
     show_map = false
     ColourNote ("yellow", "", "Bigmap DISABLED - type 'bigmap on' to re-enable.")
-    if not use_gmcp_mapper then
+    if (not (use_gmcp_mapper == 1)) then
         WindowShow (mapwin, false)
     else
         CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "false");
     end
-  elseif wildcards[1]:lower() == " merge" and not use_gmcp_mapper then
-    use_gmcp_mapper = true
+  elseif (wildcards[1]:lower() == " merge") and (not (use_gmcp_mapper == 1)) then
+    use_gmcp_mapper = 1
     WindowShow (mapwin, false)
     CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "true")
-  elseif wildcards[1]:lower() == " unmerge" and use_gmcp_mapper then
-    use_gmcp_mapper = false
+  elseif (wildcards[1]:lower() == " unmerge") and (use_gmcp_mapper == 1) then
+    use_gmcp_mapper = 0
     CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "false");
   end -- if
   OnPluginInstall()
@@ -307,7 +308,7 @@ function DrawMap ()
   local startx = 4
   local starty = (font_height*2)+15
   
-  if not use_gmcp_mapper then
+  if (not (use_gmcp_mapper == 1)) then
       local window_width =  WindowImageInfo(mapwin,"bigmap_continent_"..zone,2) + 10
       local window_height =  WindowImageInfo(mapwin,"bigmap_continent_"..zone,3) + 20 + (font_height * 2)
        -- recreate the window the correct size
@@ -476,13 +477,13 @@ function map_redirect (name, line, wildcards, styles)
 
 end -- function map_redirect
 
-use_gmcp_mapper = false
+
 function OnPluginInstall ()
   assert (loadstring (GetVariable ("continents") or "")) ()
   assert (loadstring (GetVariable ("xref") or "")) ()
 
   win = GetPluginID ().."_offscreen_buffer"
-  mapwin = ((use_gmcp_mapper and "b6eae87ccedd84f510b74714_mapper") or GetPluginID().."_mapper")
+  mapwin = (((use_gmcp_mapper == 1) and "b6eae87ccedd84f510b74714_mapper") or GetPluginID().."_mapper")
 
   local windows = WindowList()
   local mapwin_found = false
@@ -499,7 +500,7 @@ function OnPluginInstall ()
     WindowCreate (mapwin, 0, 0, 0, 0, 0, 0, 0) -- dummy window just to load the font stuff
   end
   
-  if not use_gmcp_mapper then
+  if (not (use_gmcp_mapper == 1)) then
     windowinfo = movewindow.install (mapwin, 6)
   end
   
@@ -549,7 +550,8 @@ function OnPluginSaveState ()
 
   SetVariable ("xref",
                "xref = " .. serialize.save_simple (xref))
-  if not use_gmcp_mapper then             
+  SetVariable("use_gmcp_mapper", tostring(use_gmcp_mapper))
+  if (not (use_gmcp_mapper == 1)) then             
       movewindow.save_state (mapwin)
   end
 end -- function OnPluginSaveState
@@ -560,6 +562,9 @@ function OnPluginBroadcast (msg, id, name, text)
     if not bigmap_enabled then
       TelnetOptionOn(TELOPT_BIGMAP)
       bigmap_enabled = true
+      if use_gmcp_mapper == 1 then
+          CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "true")
+      end
     end
     if text == "room.info" then
       res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room")
@@ -572,7 +577,7 @@ function OnPluginBroadcast (msg, id, name, text)
       x = origx + 1  -- make 1-relative
       y = origy + 1  -- ditto
 
-      if zone ~= -1 and ((not use_gmcp_mapper) or (tonumber(oncont) == 1)) then
+      if zone ~= -1 and ((not (use_gmcp_mapper == 1)) or (tonumber(oncont) == 1)) then
         updatelocation()
         in_continent = true
       else
