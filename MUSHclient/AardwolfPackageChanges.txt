@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r421 snapshot
+- change list reflects official release dates so far
+- fixed bad treatment introduced in r417 of spaces in world names when creating gmcp database
+
 r418 snapshot
 - sanitize gmcp map database names before creation
 
