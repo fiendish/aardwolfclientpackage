@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r423 snapshot
+- the stats window can now display stats as a single vertical column
+
 r421 snapshot
 - change list reflects official release dates so far
 - fixed bad treatment introduced in r417 of spaces in world names when creating gmcp database
