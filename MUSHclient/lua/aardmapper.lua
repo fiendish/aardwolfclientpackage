@@ -1050,6 +1050,7 @@ function draw (uid)
                    config.AREA_NAME_FILL.colour,   -- fill colour   
                    config.AREA_NAME_BORDER.colour)     -- border colour
     
+
     WindowAddHotspot(win, "<configure>",  
                    x, y, x + width, y + font_height,   -- rectangle
                    "",  -- mouseover
@@ -1310,8 +1311,8 @@ function find (findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
   
   -- sort so closest ones are first  
   table.sort (t, function (a, b) return #paths [a].path < #paths [b].path end )
-  
-  if walk then
+ 
+  if walk and t[1] then
     local uid = t[1]
     local path = paths[uid].path
     mapprint ("Walking to:", rooms[uid].name)
