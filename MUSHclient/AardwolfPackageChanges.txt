@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r426 snapshot
+- aardmapper.lua should no longer choke in find when trying to use walk on unfound paths
+- mapper find/area/list will now do more exact room searches if the player wraps the room names in quotation marks (still not case sensitive for now)
+
 r423 snapshot
 - the stats window can now display stats as a single vertical column
 
