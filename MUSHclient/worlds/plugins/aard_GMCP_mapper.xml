@@ -937,9 +937,13 @@ function map_list (name, line, wildcards)
   -- if it is in the db, I want its vnum and area, so that I can figure out how to get there if the mapper does not know.
   local area = ""
   local count = 0
-    Note("+------------------------------ START OF SEARCH -------------------------------+")
+  Note("+------------------------------ START OF SEARCH -------------------------------+")
   -- find matching rooms using FTS3
-  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE name LIKE %s", fixsql ("%"..wildcards [1].."%"))) do
+  local name = "%"..wildcards[1].."%"
+  if string.sub(wildcards[1],1,1) == "\"" and string.sub(wildcards[1],-1) == "\"" then
+     name = string.sub(wildcards[1],2,-2)
+  end
+  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE name LIKE %s", fixsql (name))) do
      if count > 100 then
         mapper.mapprint(string.format("More than 100 search results found. Aborting query. Try a more specific search phrase than '%s'.",wildcards[1]))
         break
@@ -2621,7 +2625,11 @@ function map_area (name, line, wildcards)
   local rooms = {}
   local count = 0
 
-  for row in db:nrows(string.format ("SELECT uid, name, area FROM rooms WHERE name LIKE %s and area = %s", fixsql("%" .. wildcards [1] .. "%"), fixsql(area))) do
+  local name = "%"..wildcards[1].."%"
+  if string.sub(wildcards[1],1,1) == "\"" and string.sub(wildcards[1],-1) == "\"" then
+     name = string.sub(wildcards[1],2,-2)
+  end
+  for row in db:nrows(string.format ("SELECT uid, name, area FROM rooms WHERE name LIKE %s and area = %s", fixsql(name), fixsql(area))) do
      table.insert(rooms,{uid=row.uid, reason=true})
      count = count + 1
   end   -- finding room
@@ -2645,7 +2653,11 @@ function map_find (name, line, wildcards)
   local count = 0
 
   -- find matching rooms using FTS3
-  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql ("%"..wildcards [1].."%"))) do
+  local name = "%"..wildcards[1].."%"
+  if string.sub(wildcards[1],1,1) == "\"" and string.sub(wildcards[1],-1) == "\"" then
+     name = string.sub(wildcards[1],2,-2)
+  end
+  for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql (name))) do
     table.insert(rooms, {uid=row.uid, reason=true})
     count = count + 1
   end   -- finding room
