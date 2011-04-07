@@ -386,6 +386,9 @@ function OnPluginBroadcast (msg, id, name, text)
              coord_data = gmcpdata
              process_coords()
          end
+         if page_built == false then
+            SendNoEcho("map")
+         end
          DisplayMapPage()
       end
    end
