@@ -103,12 +103,12 @@ for i = 1,8 do
     colour_conversion[string.format("x%02d",i-1)] = GetNormalColour(i)
     colour_conversion[string.format("x%d",i-1)] = GetNormalColour(i)
 end
-for i = 9,16 do
+for i = 9,15 do
     colour_conversion[string.format("x%03d",i-1)] = GetBoldColour(i-8)
     colour_conversion[string.format("x%02d",i-1)] = GetBoldColour(i-8)
     colour_conversion[string.format("x%d",i-1)] = GetBoldColour(i-8)
 end
-for i = 17,231 do
+for i = 16,231 do
     BLUE = ((i-16)%6) + 1
     GREEN = (math.floor((i-16)/6)%6) + 1
     RED = (math.floor((i-16)/36)%6) + 1
