@@ -412,8 +412,18 @@ function ResizeMoveCallback()
 
    height = height + posy - starty
    starty = posy
-   if (height < title_height+(4*line_height)+(3*GAP)) then
-      height = title_height+(4*line_height)+(3*GAP)
+   local min_lines = 1
+   if show_hp == 1 then
+     min_lines = min_lines + 1
+   end
+   if show_mn == 1 then
+     min_lines = min_lines + 1
+   end
+   if show_mv == 1 then
+     min_lines = min_lines + 1
+   end
+   if (height < title_height+(min_lines*line_height)+(2*GAP)) then
+      height = title_height+(min_lines*line_height)+(2*GAP)
       starty = windowinfo.window_top+height
    elseif (windowinfo.window_top+height > GetInfo(280)) then
       height = GetInfo(280)-windowinfo.window_top
