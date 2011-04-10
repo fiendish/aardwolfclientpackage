@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r431 snapshot
+- add new right-click config options for hiding information from the group monitor plugin
+- fix minor bug displaying the @x16 xterm color
+
 r426 snapshot
 - aardmapper.lua should no longer choke in find when trying to use walk on unfound paths
 - mapper find/area/list will now do more exact room searches if the player wraps the room names in quotation marks (still not case sensitive for now)
