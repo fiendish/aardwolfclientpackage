@@ -53,6 +53,7 @@ local TOP_MARGIN      = 5
 local stacked = 1
 local showLabels = 1
 local reverseTNL = 0
+graphicalMode = tonumber(GetVariable("graphicalMode") or 1)
 local numBars = 6
 local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Mana={"Mana  :",true,"Mana:",0xff5500,0x442200}, Moves={"Moves :",true,"Moves:",0x00ffff,0x004444}, TNL={"TNL   :",true,"TNL:",0xffffff,0x444444}, Enemy={"Enemy :",true,"Enemy:",0x0000ff,0x000044}, Align={"Align :",true, "Alignment:",0x0000ff,0x00ffff}}
 showBar = defaultShowBar
@@ -75,10 +76,10 @@ function DisplayStatsPage()
    if not page_built then
       local txt = "Status bars will appear here"
       local txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, 0, 0, 0xeeeeee, false)
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, false)
    -- Only draw bars if we have data.
    else 
       local barTexts = ""
@@ -110,48 +111,60 @@ function DisplayStatsPage()
       if (showBar[bar][2] == true) then
           if showLabels == 1 then
               if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
               else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
               end
           end
-          gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+          if graphicalMode == 1 then
+            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+          else
+            xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxhp")).."s",gmcpval("vitals.hp")).."/"..gmcpval("maxstats.maxhp").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+          end
           if stacked == 1 then
               ypos = ypos + line_height + 1
           else
-              xpos = xpos+bar_width+LEFT_MARGIN
+              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
           end
       end
       bar = "Mana"
       if (showBar[bar][2] == true) then
           if showLabels == 1 then
               if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
               else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
               end
           end
-          gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+          if graphicalMode == 1 then
+            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+          else
+            xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxmana")).."s",gmcpval("vitals.mana")).."/"..gmcpval("maxstats.maxmana").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+          end
           if stacked == 1 then
               ypos = ypos + line_height + 1
           else
-              xpos = xpos+bar_width+LEFT_MARGIN
+              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
           end
       end
       bar = "Moves"
       if (showBar[bar][2] == true) then
           if showLabels == 1 then
               if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
               else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
               end
           end
-          gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil) 
+          if graphicalMode == 1 then
+            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+          else
+            xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxmoves")).."s",gmcpval("vitals.moves")).."/"..gmcpval("maxstats.maxmoves").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+          end
           if stacked == 1 then
               ypos = ypos + line_height + 1
           else
-              xpos = xpos+bar_width+LEFT_MARGIN
+              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
           end
       end
       bar = "TNL"
@@ -159,22 +172,30 @@ function DisplayStatsPage()
           if showLabels == 1 then
               if stacked == 1 then
                   -- switch title from "to next level" to "current level experience"
-                  WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][1]) or string.gsub(showBar[bar][1],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][1]) or string.gsub(showBar[bar][1],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
               else
                   -- switch title from "to next level" to "current level experience"
-                  xpos = xpos + WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][3]) or string.gsub(showBar[bar][3],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                  xpos = xpos + WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][3]) or string.gsub(showBar[bar][3],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
               end
           end
           -- switch from "to next level" to "current level experience"
           if (reverseTNL == 0) then
-             gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+             if graphicalMode == 1 then
+                 gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+             else
+                 xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("base.perlevel")).."s",gmcpval("status.tnl")).."/"..gmcpval("base.perlevel").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+             end
           else
-             gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+             if graphicalMode == 1 then
+                 gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+             else
+                 xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("base.perlevel")).."s",(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0).."/"..(gmcpval("base.perlevel") or "0")).."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+             end
           end
           if stacked == 1 then
               ypos = ypos + line_height + 1
           else
-              xpos = xpos+bar_width+LEFT_MARGIN
+              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
           end
       end
       bar = "Enemy"
@@ -185,27 +206,35 @@ function DisplayStatsPage()
              if enemypct ~= "" then
                 if showLabels == 1 then
                     if stacked == 1 then
-                        WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                        WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
                     else
-                        xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], utf8)
+                        xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
                     end
                 end
              end
-             gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil) 
+             if graphicalMode == 1 then
+                 gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil) 
+             else
+                 xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+             end
           else
              if showLabels == 1 then
                  if stacked == 1 then
-                    WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, utf8)
+                    WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, false)
                  else
-                    xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, utf8)
+                    xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, false)
                  end
              end
-             gauge(win,"Enemy:",tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,3,0x000000,0x222222,nil) 
+             if graphicalMode == 1 then
+                 gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,3,0x000000,0x222222,nil) 
+             else
+                 xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
+             end            
           end
           if stacked == 1 then
               ypos = ypos + line_height + 1
           else
-              xpos = xpos+bar_width+LEFT_MARGIN
+              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
           end
       end
       bar = "Align"
@@ -216,25 +245,27 @@ function DisplayStatsPage()
               bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
               if showLabels == 1 then
                   if stacked == 1 then
-                      WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, utf8)
+                      WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
                   else
-                      xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, utf8)
+                      xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, false)
                   end
               end
+              if graphicalMode == 1 then
+                  WindowLine (win, xpos+label_width+line_height/2, math.ceil(ypos+line_height/2), xpos+label_width+bar_width-line_height/2, math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
+                  WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, bar_colour/2, 0, 2, bar_colour, 0)
 
-              WindowLine (win, xpos+label_width+line_height/2, math.ceil(ypos+line_height/2), xpos+label_width+bar_width-line_height/2, math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
-              WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, bar_colour/2, 0, 2, bar_colour, 0)
-
-              -- add ticks at alignment change boundaries
-              local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width);
-              local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width);
-              WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
-              WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
-
+                  -- add ticks at alignment change boundaries
+                  local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width);
+                  local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width);
+                  WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
+                  WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
+              else
+                  xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, 0, 0, bar_colour, false)
+              end
               if stacked == 1 then
                   ypos = ypos + line_height + 1
               else
-                  xpos = xpos+bar_width+LEFT_MARGIN
+                  xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
               end
           end
       end
@@ -279,7 +310,7 @@ function right_click_menu ()
         end
     end
     menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
-    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|Reset Defaults"
+    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|-|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -325,6 +356,12 @@ function right_click_menu ()
               reverseTNL = 0
            end
         elseif numResult == 23 then
+           if graphicalMode == 1 then
+              graphicalMode = 0
+           else
+              graphicalMode = 1
+           end
+        elseif numResult == 24 then
            font_name = default_font_name
            font_size = default_font_size
            numBars = 5
@@ -474,7 +511,7 @@ function OnPluginSaveState ()
   SetVariable ("font_size", font_size)
   SetVariable ("numBars", numBars)
   SetVariable ("showBar", serialize.save ("showBar"))
-
+  SetVariable ("graphicalMode", graphicalMode)
 end -- OnPluginSaveState
 
 function OnPluginDisable ()
