@@ -2337,15 +2337,19 @@ function OnPluginEnable ()
 end -- OnPluginDisable
 
 function OnPluginDisable ()
-  mapper.hide ()
+  OnPluginClose()
 end -- OnPluginDisable
 
 -- hide window on removal
 function OnPluginClose ()
   mapper.hide ()
   -- close databases
-  db:close()
-  db_bm:close()
+  if db:isopen() then
+      db:close()
+  end
+  if db_bm:isopen() then
+      db_bm:close()
+  end
 end -- OnPluginClose
 
 function OnPluginSaveState ()
@@ -2356,6 +2360,16 @@ function OnPluginSaveState ()
   mapper.save_state ()
   SetVariable("config","") -- wipe out the old config table
   SetVariable ("configs", "configs = " .. serialize.save_simple (configs))
+  
+  -- close and reopen database
+  if db:isopen() then
+      db:close()
+      db    = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
+  end
+  if db_bm:isopen() then
+      db_bm:close()
+      db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
+  end
 end -- OnPluginSaveState
  
 terrain_colours = {}
