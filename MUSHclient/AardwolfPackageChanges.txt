@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r438 snapshot
+- health bars now have a "text mode" right-click option for a more prompt-like display
+- various plugins that didn't hide their window graphic upon removal should now do so and will no longer require disabling first
+- saving the world should force the gmcp mapper database to save as well (though this won't produce a backup. for that you need to use the mapper backup commands.)
+
 r431 snapshot
 - add new right-click config options for hiding information from the group monitor plugin
 - fix minor bug displaying the @x16 xterm color
