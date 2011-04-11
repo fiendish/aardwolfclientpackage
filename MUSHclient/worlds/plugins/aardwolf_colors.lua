@@ -105,7 +105,7 @@ for i = 1,8 do
     colour_conversion[string.format("x%02d",i-1)] = GetNormalColour(i)
     colour_conversion[string.format("x%d",i-1)] = GetNormalColour(i)
 end
-for i = 9,15 do
+for i = 9,16 do
     colour_conversion[string.format("x%03d",i-1)] = GetBoldColour(i-8)
     colour_conversion[string.format("x%02d",i-1)] = GetBoldColour(i-8)
     colour_conversion[string.format("x%d",i-1)] = GetBoldColour(i-8)
