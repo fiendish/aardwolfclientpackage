@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r441 snapshot
+- add Bast's showxterm alias to aard_helper_aliases
+- add support for xterm color 244. I don't remember the reason for not including it originally.
+
 r438 snapshot
 - health bars now have a "text mode" right-click option for a more prompt-like display
 - various plugins that didn't hide their window graphic upon removal should now do so and will no longer require disabling first
