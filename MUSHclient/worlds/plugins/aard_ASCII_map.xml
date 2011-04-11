@@ -576,6 +576,10 @@ function OnPluginSaveState ()
 
 end -- OnPluginSaveState
 
+function OnPluginClose ()
+   OnPluginDisable()
+end
+
 function OnPluginDisable ()
     WindowShow( win, false )
 end --  OnPluginDisable
