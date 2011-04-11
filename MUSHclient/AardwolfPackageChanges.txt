@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r443 snapshot
+- the change for color 16 in r431 was wrong. now fixed.
+
 r441 snapshot
 - add Bast's showxterm alias to aard_helper_aliases
 - add support for xterm color 244. I don't remember the reason for not including it originally.
