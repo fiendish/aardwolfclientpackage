@@ -124,8 +124,8 @@ function ShowGreeting(firstTime)
       -- install the window movement handler, get back the window position
          windowinfo  = movewindow.install (win, miniwin.pos_center_all, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
       
-      baselines = {"Welcome to the new Aardwolf MUSHclient package!", "Here are a few helpful tips for navigating this software...","If the main output area is off the edge of your screen, type \"resetaard\" in the input bar below to reset it.","We use miniwindow dialogs (this is a miniwindow) to enhance your experience.", "Most miniwindows in this package let you do the following:"}
-      tablines = {"* Drag the bottom-right corner to resize. (where you see this) -->","* Drag anywhere else in the miniwindow to move it around (try it here).","   There are exceptions to this. When you can't drag everywhere (e.g. the main output),","   you can at least drag along the top where the mouse cursor changes.","* Right-click in the miniwindow to bring up a menu of options (try it here).","   You can usually interact with them by clicking or just moving the mouse over them."}
+      baselines = {"Welcome to the new Aardwolf MUSHclient package!", "IMPORTANT: If you find ANY bugs, PLEASE PLEASE PLEASE report them to ","Here are a few helpful tips for navigating this software...","1) If the main text area is ever off the edge of your screen, type \"RESETAARD\" to reset it.","2) We use miniwindow dialogs (this is a miniwindow) to enhance your experience.", "Most miniwindows in this package let you do the following:", "3) The miniwindows are just 'plugins' and can be removed if you want by going to File->Plugins..."}
+      tablines = {"* DRAG the bottom-right corner to resize. (where you see this) -->","* DRAG anywhere else in the miniwindow to move it around (try it here).","   There are exceptions. When you can't drag everywhere (e.g. the main text area),","   you can at least drag along the top where the mouse cursor changes.","* RIGHT-CLICK in the miniwindow to bring up a menu of options (try it here).","* You might also see things like ","   You can usually interact with them by clicking or just moving the mouse over them."}
       
       local max_width = 0      
       for i,v in ipairs(baselines) do
@@ -140,7 +140,7 @@ function ShowGreeting(firstTime)
       max_width = math.max(text_width, max_width)
       
       window_width = max_width + 2*GAP
-      window_height = 27*line_height
+      window_height = 28*line_height
       -- make the "real" window
       WindowCreate (win, 0, 0, window_width, window_height, miniwin.pos_center_all, 0, 
                                WINDOW_BACKGROUND_COLOUR)  -- create window
@@ -150,21 +150,25 @@ function ShowGreeting(firstTime)
       
       WindowText(win, font_id, never_show_text, window_width-text_width - line_height - GAP, window_height-line_height+1 - GAP, 0, 0, 0xffffff)
 
-      title = "Getting Started"
+      title = "Aardwolf MUSHclient Package: Getting Started"
       title_width = WindowTextWidth(win, font_id_bold, title)
 
       y = y + line_height*2
       
       WindowText (win, font_id, baselines[1], x, y, 0, 0, WINDOW_TEXT_COLOUR )
       y = y + line_height
-      WindowText (win, font_id, baselines[2], x, y, 0, 0, WINDOW_TEXT_COLOUR )
+      tx = WindowText (win, font_id, baselines[2], x, y, 0, 0, WINDOW_TEXT_COLOUR )
+      WindowText(win, font_id_bold, "Fiendish", GAP+tx, y, 0, 0, WINDOW_TEXT_COLOUR )
       y = y + line_height*2
       WindowText (win, font_id, baselines[3], x, y, 0, 0, WINDOW_TEXT_COLOUR )
       y = y + line_height*2
       WindowText (win, font_id, baselines[4], x, y, 0, 0, WINDOW_TEXT_COLOUR )
-      y = y + line_height
-      WindowText (win, font_id, baselines[5], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       y = y + line_height*2
+      WindowText (win, font_id, baselines[5], x, y, 0, 0, WINDOW_TEXT_COLOUR)
+      y = y + line_height
+      WindowText (win, font_id, baselines[6], x, y, 0, 0, WINDOW_TEXT_COLOUR)
+      
+      y = y + line_height*1.6
       x = x+50
       local mx = WindowText (win, font_id, tablines[1], x, y, 0, 0, WINDOW_TEXT_COLOUR) + x + 15
       my = y + line_height
@@ -179,34 +183,40 @@ function ShowGreeting(firstTime)
       WindowLine(win, mx-12, my-2, mx-2, my-12, 0xffffff, 0, 2)
       WindowLine(win, mx-13, my-2, mx-2, my-13, 0x696969, 0, 1)
       
-      y = y + line_height*2
+      y = y + line_height*1.6
       WindowText (win, font_id, tablines[2], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       y = y + line_height
       WindowText (win, font_id, tablines[3], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       y = y + line_height
       WindowText (win, font_id, tablines[4], x, y, 0, 0, WINDOW_TEXT_COLOUR)
-         
-      y = y + line_height*2
-       WindowText (win, font_id, tablines[5], x, y, 0, 0, WINDOW_TEXT_COLOUR)
+      y = y + line_height*1.6
+      WindowText (win, font_id, tablines[5], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       
-      y = y + line_height*2
-      mx = WindowText (win, font_id, "* You might also see things like ", x, y, 0, 0, WINDOW_TEXT_COLOUR) + x
-      
-      qwidth = WindowTextWidth(win, font_id, "?")
+      y = y + line_height*1.6
+      mx = WindowText (win, font_id, tablines[6], x, y, 0, 0, WINDOW_TEXT_COLOUR) + x
+
       -- show the widget for the legend popup
+      qwidth = WindowTextWidth(win, font_id, "?")
       WindowRectOp(win, 2, mx, y, mx+3*qwidth,y+line_height,0x303030,0x0000ff) -- fill
       WindowRectOp(win, 1,mx, y, mx+3*qwidth,y+line_height,0x777777,0x0000ff) -- border
       WindowText (win, font_id, "?", mx+qwidth, y, 0, 0, 0xffffff)
       
       mx = WindowText (win, font_id, " or ", mx+3*qwidth, y, 0, 0, WINDOW_TEXT_COLOUR) + mx + 3*qwidth
-      
+
+      -- show the widget for mapper config
       WindowRectOp(win, 2, mx, y, mx+3*qwidth,y+line_height,0x303030,0x0000ff) -- fill
       WindowRectOp(win, 1,mx, y, mx+3*qwidth,y+line_height,0x777777,0x0000ff) -- border
       WindowText (win, font_id, "*", mx+qwidth, y, 0, 0, 0xffffff)
       mx = mx+3*qwidth
       y = y + line_height
-      WindowText(win, font_id, tablines[6], x, y, 0, 0, WINDOW_TEXT_COLOUR)
+      WindowText(win, font_id, tablines[7], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       
+      y = y + line_height*2
+      WindowText (win, font_id, baselines[7], x-50, y, 0, 0, WINDOW_TEXT_COLOUR)
+      
+      -- frame the tips
+      WindowRectOp(win, 1,GAP/2, line_height*7 + (GAP/2), window_width-(GAP/2),y+line_height+GAP/2,0x777777,0x0000ff) -- border
+
       y = y + line_height*3
       WindowText (win, font_id, "OK? Well, that's all for now. Have fun playing Aardwolf!", 20, y, 0, 0, WINDOW_TEXT_COLOUR)
       y = y + line_height
