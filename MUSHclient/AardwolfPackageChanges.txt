@@ -1,154 +1,160 @@
 Aardwolf Client Package Major Changes List
 
+r449 snapshot
+- bug fix: gmcp mapper backups were apparently completely broken in Windows even though they worked under WINE in Linux
+- bug fix: gmcp mapper backups on/off preference should now persist across sessions
+- bug fix: some of the helper aliases for reloading would fail if the plugin wasn't already loaded, because the file names had changed
+- misc change: update the new connection dialog to tell people to contact me if they find bugs
+
 r443 snapshot
-- the change for color 16 in r431 was wrong. now fixed.
+- bug fix: the change for color 16 in r431 was wrong
 
 r441 snapshot
-- add Bast's showxterm alias to aard_helper_aliases
-- add support for xterm color 244. I don't remember the reason for not including it originally.
+- new feature: add Bast's showxterm alias to aard_helper_aliases
+- bug fix: add support for xterm color 244. I don't remember the reason for not including it originally.
 
 r438 snapshot
-- health bars now have a "text mode" right-click option for a more prompt-like display
-- various plugins that didn't hide their window graphic upon removal should now do so and will no longer require disabling first
-- saving the world should force the gmcp mapper database to save as well (though this won't produce a backup. for that you need to use the mapper backup commands.)
+- new feature: health bars now have a "text mode" right-click option for a more prompt-like display
+- bug fix: various plugins that didn't hide their window graphic upon removal should now do so and will no longer require disabling first
+- misc change: saving the world should force the gmcp mapper database to save as well (though this won't produce a backup. for that you need to use the mapper backup commands.)
 
 r431 snapshot
-- add new right-click config options for hiding information from the group monitor plugin
-- fix minor bug displaying the @x16 xterm color
+- new feature: add new right-click config options for hiding information from the group monitor plugin
+- bug fix: fix minor bug displaying the @x16 xterm color
 
 r426 snapshot
-- aardmapper.lua should no longer choke in find when trying to use walk on unfound paths
-- mapper find/area/list will now do more exact room searches if the player wraps the room names in quotation marks (still not case sensitive for now)
+- bug fix: aardmapper.lua should no longer choke in find when trying to use walk on unfound paths
+- new feature: mapper find/area/list will now do more exact room searches if the player wraps the room names in quotation marks (still not case sensitive for now)
 
 r423 snapshot
-- the stats window can now display stats as a single vertical column
+- new feature: the stats window can now display stats as a single vertical column
 
 r421 snapshot
-- change list reflects official release dates so far
-- fixed bad treatment introduced in r417 of spaces in world names when creating gmcp database
+- misc change: change list reflects official release dates so far
+- bug fix: fixed bad treatment introduced in r417 of spaces in world names when creating gmcp database
 
 r418 snapshot
-- sanitize gmcp map database names before creation
+- bug fix: sanitize gmcp map database names before creation
 
 r414 snapshot
-- gmcp mapper paths should now work if the player changes the command stack character
-- bigmap miniwindow display is /finally/ now included in the package with the special ability to merge into the gmcp mapper window (can be pulled into its own window with 'bigmap unmerge')
+- new feature: gmcp mapper paths should now work if the player changes the command stack character
+- new feature: bigmap miniwindow display is /finally/ now included in the package with the special ability to merge into the gmcp mapper window (can be pulled into its own window with 'bigmap unmerge')
 
 r397 snapshot (April 2011 release)
-- the channel capture window can now handle forced newlines like the ones in the flickoff social
-- added xterm 256 color support
+- bug fix: the channel capture window can now handle forced newlines like the ones in the flickoff social
+- new feature: added xterm 256 color support
 
 r390 snapshot
-- players should now be able to reliably open doors with cexits in the gmcp mapper, because if a cexit exists between two rooms then it should now always get used instead of the normal exit
+- new feature: players should now be able to reliably open doors with cexits in the gmcp mapper, because if a cexit exists between two rooms then it should now always get used instead of the normal exit
 
 r386 snapshot
-- cleanup mapper help
-- add 'mapper addnote' command to the gmcp mapper to add notes to rooms without mouse clicking
-- add 'mapper thisroom' command to the gmcp mapper to get information about the current room
+- misc change: cleanup mapper help
+- new feature: add 'mapper addnote' command to the gmcp mapper to add notes to rooms without mouse clicking
+- new feature: add 'mapper thisroom' command to the gmcp mapper to get information about the current room
 
 r381 snapshot
-- fix a bug where the automatic backup countdown timer was getting reset
-- enable automatic walking to the shortest discovered path in the aardmapper find code
+- bug fix: the automatic backup countdown timer was getting reset sometimes
+- new feature: enable automatic walking to the shortest discovered path in the aardmapper find code
 
 r378 snapshot
-- when copying text segments in the channel capture window, only put line breaks between complete chat messages.
-- make 'mapper purgezone' in the gmcp mapper a bit more user-friendly
-- make 'mapper purgezone' in the gmcp mapper also delete the areas table entry for the purged area
-- add a pair of 'mapper areas' commands to the gmcp mapper for finding area keywords
+- bug fix: when copying text segments in the channel capture window, only put line breaks between complete chat messages.
+- misc change: make 'mapper purgezone' in the gmcp mapper a bit more user-friendly
+- bug fix: make 'mapper purgezone' in the gmcp mapper also delete the areas table entry for the purged area
+- new feature: add a pair of 'mapper areas' commands to the gmcp mapper for finding area keywords
 
 r375 snapshot
-- add a getkeyword function callable by other plugins to the gmcp mapper that returns the keyword of one or more matching areas when passed a name substring
-- add rolling automatic backups of the gmcp mapper database files. If left on and running forever, the rollover schedule approximately follows the pattern: today, yesterday, last week, last month, 3 months ago.
+- new feature: add a getkeyword function callable by other plugins to the gmcp mapper that returns the keyword of one or more matching areas when passed a name substring
+- new feature: add rolling automatic backups of the gmcp mapper database files. If left on and running forever, the rollover schedule approximately follows the pattern: today, yesterday, last week, last month, 3 months ago.
 
 r373 snapshot
-- fixed an error when selecting inside the text area of an empty chat window
-- fix how selecting off the end of the chat window works
+- bug fix: selecting inside the text area of an empty chat window would produce an error
+- bug fix: fix how selecting off the end of the chat window works
 
 r371 snapshot
-- selecting text in the channel capture window will now make the window scroll appropriately when dragging higher or lower than the window top and bottom respectively.
-- mapper purgezone shouldn't require quitting and restarting mushclient anymore
-- mapper pathfinding now indicates the status of the search better
+- new feature: selecting text in the channel capture window will now make the window scroll appropriately when dragging higher or lower than the window top and bottom respectively.
+- bug fix: mapper purgezone shouldn't require quitting and restarting mushclient anymore
+- new feature: mapper pathfinding now indicates the status of the search better
 
 r366 snapshot
-- add the ability to not capture mob speech to the channel capture window
-- add tick marks at good/neutral/evil alignment boundaries in the health bars plugin
-- fix a right-click option bug accidentally introduced in the last update to the channel capture plugin
+- new feature: add the ability to not capture mob speech to the channel capture window
+- new feature: add tick marks at good/neutral/evil alignment boundaries in the health bars plugin
+- bug fix: fix a right-click option bug accidentally introduced in the last update to the channel capture plugin
 
 r363 snapshot
-- added new text selection routines for the channel capture window. You can now select arbitrary text inside the window and then copy with the right-click menu, instead of clicking on whole individual messages.
-- fix bug in stylestocolours that stopped it from working with startcols other than 1
-- modified the status message in mapper find to try and clear up some player confusion
+- new feature: added new text selection routines for the channel capture window. You can now select arbitrary text inside the window and then copy with the right-click menu, instead of clicking on whole individual messages.
+- bug fix: fix bug in stylestocolours that stopped it from working with startcols other than 1
+- misc change: modified the status message in mapper find to try and clear up some player confusion
 
 r359 snapshot
-- purging all custom exits and portal exits now requires confirmation
-- added manual mapper database backup command with zip compressed rotating backup storage
-- fix a bug in channel capture that lost lines with hidden garbage/fake color codes
-- fix a bug in the mapper preventing finding rooms with oddly colored names
-- fix a bug in the mapper that blocked sending two identical custom exit commands in a row
-- various other tweaks
+- new feature: purging all custom exits and portal exits now requires confirmation
+- new feature: added manual mapper database backup command with zip compressed rotating backup storage
+- bug fix: channel capture was losing lines with hidden garbage/fake color codes
+- bug fix: the gmcp mapper can now find rooms with oddly colored names
+- bug fix: the gmcp mapper can now send two identical custom exit commands in a row
+- misc change: various other tweaks
 
 r342 snapshot
-- fix a bug on saving rooms when using the mapper without a pre-initialized database
+- bug fix: saving rooms when using the mapper without a pre-initialized database should no longer cause an error
 
 r340 snapshot (Feb 2011 release)
-- fixed color selection (crash) bug in the group monitor plugin
-- fixed a typo in the group monitor empty group message
-- default to show self in group on first load of the group monitor
+- bug fix: color selection (crash) bug in the group monitor plugin should be fixed
+- bug fix: there was a typo in the group monitor empty group message
+- misc change: default to show self in group on first load of the group monitor
 
 r336 snapshot 
-- updated to MUSHclient 4.72
-- added clickable links to mapper portals list
-- updated mapper find display
-- fixed a bug when defining custom mapper exits sometimes
+- new feature: updated to MUSHclient 4.72
+- new feature: added clickable links to mapper portals list
+- misc change: updated mapper find display
+- bug fix: fixed a bug when defining custom mapper exits sometimes
 
 r326 snapshot
-- added a way to put minimum level locks on portals
-- various help/output tweaks
+- new feature: added a way to put minimum level locks on portals
+- misc change: various help/output tweaks
 
 r315 snapshot
-- fixed use of the gray color code in the channel capture window
-- disallow setting cexits and portals to/from rooms with uid -1 ("unmappable")
-- new pathfinding algorithm in the gmcp mapper. pathfinding will now go through handheld portals and other from-anywhere commands.
-- removed the worthless mapper areas command
-- new findpath command in the gmcp mapper that finds the path between any two room uids.
-- added visual indication of room notes in the gmcp mapper
-- various other bug fixes
+- bug fix: fixed use of the gray color code in the channel capture window
+- bug fix: disallow setting cexits and portals to/from rooms with uid -1 ("unmappable")
+- new feature: new pathfinding algorithm in the gmcp mapper. pathfinding will now go through handheld portals and other from-anywhere commands.
+- misc change: removed the worthless mapper areas command
+- new feature: new findpath command in the gmcp mapper that finds the path between any two room uids.
+- new feature: added visual indication of room notes in the gmcp mapper
+- bug fix: various other minor bug fixes
 
 r300 snapshot
-- by default load the group monitor and disable autosay
-- new handheld portal functions in the gmcp mapper (not yet used for searching)
-- new custom room exit functions in the gmcp mapper
-- new unmapped exits function in the gmcp mapper
-- prevent room.wrongdir from erroneously clearing stored room data in the gmcp handler
-- gmcp mapper find functions should now work on all room names
-- new option for disabling area background textures in the gmcp mapper
-- new option to reverse the growth of the TNL bar in the status bars
-- new "Show Help" option in the group monitor
-- various other tweaks and bug fixes and other cleanup
+- misc change: by default load the group monitor and disable autosay
+- new feature: handheld portal functions added to the gmcp mapper (not yet used for searching)
+- new feature: custom room exit functions add to the gmcp mapper
+- new feature: unmapped exits function added to the gmcp mapper
+- bug fix: prevent room.wrongdir from erroneously clearing stored room data in the gmcp handler
+- bug fix: gmcp mapper find functions should now work on all room names
+- new feature: option added for disabling area background textures in the gmcp mapper
+- new feature: option added to reverse the growth of the TNL bar in the status bars
+- new feature: new "Show Help" option in the group monitor
+- misc change: various other tweaks and bug fixes and other cleanup
 
 r275 snapshot
-- new group monitor plugin
-- gmcpdebug state saved across reloads
-- new gmcp mapper function "mapper list <text>" quickly lists matching rooms regardless of search depth. Does not do path discovery.
-- fix duplicate entries in exits table in mapper databaes
-- re-map rooms that have changed exits
-- option to not capture clan donation messages in the channel capture window, for those in spammy clans
-- properly toggle required tags for the ascii map on connect
-- various cleanup and other tweaks
+- new feature: new group monitor plugin
+- new feature: gmcpdebug state saved across reloads
+- new feature: new gmcp mapper function "mapper list <text>" quickly lists matching rooms regardless of search depth. Does not do path discovery.
+- bug fix: fix duplicate entries in exits table in mapper databaes
+- bug fix: re-map rooms that have changed exits
+- new feature: option to not capture clan donation messages in the channel capture window, for those in spammy clans
+- bug fix: properly toggle required tags for the ascii map on connect
+- misc change: various cleanup and other tweaks
 
 Official Release Snapshot (r236)
-- update MUSHclient from 4.70 to 4.71
-- menu selections now use proper checkmarks
-- re-map rooms that have changed detail information (pk, shop, bank, graffiti, etc)
-- add tick timer plugin
-- add logging to file for the channel capture plugin
-- fix major bug in capturing room information for the mapper. should now actually see details like pk/shop/bank/etc.
-- made special room types in the gmcp mapper more meaningful for Aardwolf
-- fix gmcp mapper room display bug where newly mapped rooms had no color at all
-- add alignment to the health bars
-- add options for capturing non-channel info outputs INFO/Global Quest/Remort Auction
-- add saves to statmon plugin
-- various cleanup and other tweaks
+- new feature: update MUSHclient from 4.70 to 4.71
+- misc change: menu selections now use proper checkmarks
+- bug fix: re-map rooms that have changed detail information (pk, shop, bank, graffiti, etc)
+- new feature: add tick timer plugin
+- new feature: add logging to file for the channel capture plugin
+- bug fix: fix major bug in capturing room information for the mapper. should now actually see details like pk/shop/bank/etc.
+- new feature: made special room types in the gmcp mapper more meaningful for Aardwolf
+- bug fix: fix gmcp mapper room display bug where newly mapped rooms had no color at all
+- new feature: add alignment to the health bars
+- new feature: add options for capturing non-channel info outputs INFO/Global Quest/Remort Auction
+- new feature: add saves to statmon plugin
+- misc change: various cleanup and other tweaks
 
 Beta
-- initial beta release
+- initial beta release (Yay!)
