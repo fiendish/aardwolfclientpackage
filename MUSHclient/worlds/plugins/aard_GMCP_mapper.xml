@@ -2319,20 +2319,23 @@ function OnPluginInstall ()
   end
   
   last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
-  SetTimerOption("backup_timer", "enabled", GetVariable("backup_timer_enabled") or "1")
-  if (GetTimerOption("backup_timer", "enabled") == 1) and ((os.time()-last_auto_backup) >= 86401) then
-     Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
-     Note("Forcing an automatic backup now...")
-     Note("")
-     Repaint()
-     automatic_backup()
-  else
-    local seconds = 86400-(os.time()-last_auto_backup)
-    local hours = math.floor(seconds/3600)
-    seconds = seconds - hours*3600
-    local minutes = math.floor(seconds/60)
-    seconds = math.floor(seconds - minutes*60)
-    AddTimer("backup_timer", hours, minutes, seconds, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.OneShot, "automatic_backup")
+  SetTimerOption("backup_timer", "enabled", tonumber(GetVariable("backup_timer_enabled")) or 1)
+  if GetTimerOption("backup_timer", "enabled") == 1 then
+       if (os.time()-last_auto_backup) >= 86401 then
+         Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
+         Note("Forcing an automatic backup now...")
+         Note("")
+         Repaint()
+         automatic_backup()
+      else
+        local seconds = 86400-(os.time()-last_auto_backup)
+        local hours = math.floor(seconds/3600)
+        seconds = seconds - hours*3600
+        local minutes = math.floor(seconds/60)
+        seconds = math.floor(seconds - minutes*60)
+        -- replace the timer with a new one that has the right time
+        AddTimer("backup_timer", hours, minutes, seconds, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.OneShot, "automatic_backup")
+      end
   end
   
 end -- OnPluginInstall
