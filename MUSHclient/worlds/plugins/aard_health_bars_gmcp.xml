@@ -8,7 +8,7 @@
 <muclient>
 <plugin
    name="Aardwolf_Health_Bars"
-   author="Lasher and Fiendish"
+   author="Fiendish and Lasher"
    id="ef4a86dbc9cd4dd6f4c69385"
    language="Lua"
    purpose="GMCP Version of health bars"
