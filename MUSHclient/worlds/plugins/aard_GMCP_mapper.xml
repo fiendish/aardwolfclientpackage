@@ -2186,6 +2186,10 @@ function sanitize_filename(str)
     return str
 end
 
+function quote(str)
+   return "\""..str.."\""
+end
+
 function backup_databases (manual)
   in_backup = true
   Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
@@ -2215,14 +2219,15 @@ function backup_databases (manual)
   local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
   local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(sanitize_filename(WorldName()))," ","_")
 
-  os.execute("md "..GetInfo(66).."db_backups\\")
+  os.execute("md "..quote(GetInfo(66).."db_backups\\"))
 
   -- close databases
   db:close()
   db_bm:close()
   
   -- make new backup
-  os.execute(GetInfo(66).."zip -j -q -T "..backupPath.."_DB_Backup.zip \""..worldPath.."*.db\"")
+  ChangeDir(GetInfo (66)) -- be in current program directory or zip -T won't work properly
+  os.execute("zip -j -q -T "..quote(backupPath.."_DB_Backup.zip").." "..quote(worldPath.."*.db"))
   
   -- rotate backup files
   rotate_backups(backupPath, manual)
