@@ -93,7 +93,28 @@ USAGE:
    sequence="100"
    >
    </trigger>    
+   
+   <trigger
+   enabled="n"
+   name="raidinfo"
+   match="^RAIDINFO:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+   >
+   </trigger>   
 
+   <trigger
+   enabled="n"
+   name="claninfo"
+   match="^CLANINFO:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+   >
+   </trigger>
 
     <trigger
     enabled="n"
@@ -218,6 +239,8 @@ info_on = tonumber(GetVariable("info_on")) or 0
 global_quest_on = tonumber(GetVariable("global_quest_on")) or 0
 remort_auction_on = tonumber(GetVariable("remort_auction_on")) or 0
 SetTriggerOption("info", "enabled", info_on)
+SetTriggerOption("raidinfo", "enabled", info_on)
+SetTriggerOption("claninfo", "enabled", info_on)
 SetTriggerOption("global_quest", "enabled", global_quest_on)
 SetTriggerOption("remort_auction", "enabled", remort_auction_on)
 
@@ -1066,6 +1089,8 @@ function right_click_menu ()
                 ColourNote ("yellow", "", "INFO capturing is now DISABLED.")
             end
             EnableTrigger("info", 0 == info_on)
+            EnableTrigger("raidinfo", 0 == info_on)
+            EnableTrigger("claninfo", 0 == info_on)
             info_on = GetTriggerOption("info","enabled")
         elseif numResult == 12 then
             if global_quest_on == 0 then
