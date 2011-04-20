@@ -1,8 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r625 snapshot
+- misc change: default numpad macros should now make more sense
+
 r564 snapshot
 - misc change: update a couple default state files
 - new feature: activating the INFO: capture in the channel capture plugin will now also capture RAIDINFO and CLANINFO.
+
+(Big number jumps between snapshots with few changes above here are because of creating the online user guide)
 
 r449 snapshot
 - bug fix: gmcp mapper backups were apparently completely broken in Windows even though they worked under WINE in Linux
