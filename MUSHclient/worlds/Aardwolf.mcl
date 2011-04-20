@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Monday, December 13, 2010, 9:55 AM -->
-<!-- MuClient version 4.71 -->
+<!-- Saved on Wednesday, April 20, 2011, 10:59 AM -->
+<!-- MuClient version 4.72 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
 
    auto_say_override_prefix="-"
    auto_say_string=""
@@ -102,36 +102,36 @@
 <!-- triggers -->
 
 <triggers
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
   >
 </triggers>
 
 <!-- aliases -->
 
 <aliases
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
   >
 </aliases>
 
 <!-- timers -->
 
 <timers
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
   >
 </timers>
 
 <!-- macros -->
 
 <macros
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
   >
 
   <macro name="up" type="send_now" >
@@ -223,18 +223,18 @@
 <!-- variables -->
 
 <variables
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
   >
 </variables>
 
 <!-- colours -->
 
 <colours
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
   >
 
 <ansi>
@@ -289,17 +289,16 @@
 <!-- keypad -->
 
 <keypad
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
   >
 
   <key name="0" >
-  <send>look</send>
+  <send>scan</send>
   </key>
 
   <key name="1" >
-  <send>sw</send>
   </key>
 
   <key name="2" >
@@ -307,7 +306,6 @@
   </key>
 
   <key name="3" >
-  <send>se</send>
   </key>
 
   <key name="4" >
@@ -315,7 +313,7 @@
   </key>
 
   <key name="5" >
-  <send>WHO</send>
+  <send>look</send>
   </key>
 
   <key name="6" >
@@ -323,7 +321,6 @@
   </key>
 
   <key name="7" >
-  <send>nw</send>
   </key>
 
   <key name="8" >
@@ -331,19 +328,18 @@
   </key>
 
   <key name="9" >
-  <send>ne</send>
   </key>
 
   <key name="." >
-  <send>hide</send>
+  <send>score</send>
   </key>
 
   <key name="/" >
-  <send>inventory</send>
+  <send>inv</send>
   </key>
 
   <key name="*" >
-  <send>score</send>
+  <send>eq</send>
   </key>
 
   <key name="-" >
@@ -403,9 +399,9 @@
 <!-- printing -->
 
 <printing
-   muclient_version="4.71"
+   muclient_version="4.72"
    world_file_version="15"
-   date_saved="2010-12-13 09:55:25"
+   date_saved="2011-04-20 10:59:00"
   >
 
 <ansi>
