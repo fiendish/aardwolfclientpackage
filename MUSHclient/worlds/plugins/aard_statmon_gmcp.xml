@@ -122,6 +122,10 @@ function BuildStatsPage()
        fstr = "@GQuest Points : @C\[@W%8d@C\]    @GTrivia  : @C\[@W%5d@C\]@w"
        s = fstr:format(gmcpval("worth.qp"),gmcpval("worth.tp"))
        table.insert(cstyles,s)
+
+       fstr = "@GTrains       : @C\[@W%5d@C\]       @GPracs   : @C\[@W%5d@C\]@w"
+       s = fstr:format(gmcpval("worth.trains"),gmcpval("worth.pracs"))
+       table.insert(cstyles,s)
        
        fighting = gmcpval("status.enemy")
 
@@ -209,6 +213,14 @@ function BuildStatsPage()
               
        fstr = "@GLevel        : @C\[@W%5d@C\]@w"
        s = fstr:format(gmcpval("status.level"))
+       table.insert(cstyles,s)
+       
+       fstr = "@GTrains       : @C\[@W%5d@C\]@w"
+       s = fstr:format(gmcpval("worth.trains"))
+       table.insert(cstyles,s)
+       
+       fstr = "@GPracs        : @C\[@W%5d@C\]@w"
+       s = fstr:format(gmcpval("worth.pracs"))
        table.insert(cstyles,s)
               
        fighting = gmcpval("status.enemy")
@@ -558,7 +570,7 @@ function OnPluginInstall()
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
    line_height = font_height + 1
    stacked = tonumber(GetVariable("stacked")) or 1
-   max_height = (line_height*(((stacked == 1) and 11) or 22))+(TOP_MARGIN*2)
+   max_height = (line_height*(((stacked == 1) and 12) or 24))+(TOP_MARGIN*2)
    default_height = max_height
    --- Pull some state variables.
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
