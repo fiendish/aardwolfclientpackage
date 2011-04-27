@@ -228,7 +228,6 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
-Win = GetPluginID()
 font_height = ""
 line_height = ""
 windowinfo = ""
@@ -245,11 +244,11 @@ SetTriggerOption("global_quest", "enabled", global_quest_on)
 SetTriggerOption("remort_auction", "enabled", remort_auction_on)
 
 function ResizeMoveCallback()
-    posx, posy = WindowInfo (Win, 17), WindowInfo (Win, 18)
+    posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
     WINDOW_WIDTH = WINDOW_WIDTH+posx-startx
     startx = posx
-    if (WindowTextWidth(Win, "font"..Win, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH > WINDOW_WIDTH) then
-        WINDOW_WIDTH = WindowTextWidth(Win, "font"..Win, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH
+    if (WindowTextWidth(win, "font"..win, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH > WINDOW_WIDTH) then
+        WINDOW_WIDTH = WindowTextWidth(win, "font"..win, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH
         startx = windowinfo.window_left+WINDOW_WIDTH
     elseif (windowinfo.window_left+WINDOW_WIDTH > GetInfo(281)) then
         WINDOW_WIDTH = GetInfo(281)-windowinfo.window_left
@@ -272,56 +271,80 @@ function ResizeReleaseCallback()
     init(true) -- true here causes old lines to re-wrap at the new size
 end
 
+layer_lock = 0
+first_check = false
+my_layer_string = ""
+my_layer_number = tonumber(GetVariable("my_layer_number"))
+win = GetPluginID()
+require "checkplugin"
+function OnPluginListChanged ()
+  if not first_check then
+      do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
+      rc, my_layer_number, my_layer_string = CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", GetPluginID(), my_layer_number)
+      first_check = true
+      OnPluginInstall() -- run install again now that the z order plugin is loaded
+  end
+end -- OnPluginListChanged
+
 function OnPluginInstall()
-
-   -- Dummy window to get font characteristics
-   check (WindowCreate (Win, 0, 0, 1, 1, 0, 0, WINDOW_BACKGROUND_COLOUR) )
-
-   local fonts = utils.getfontfamilies ()
-
-   -- if not there already, add it
-   if not fonts.Dina then
-     AddFont (GetInfo (66) .. "\\Dina.fon")
-     fonts = utils.getfontfamilies ()
-   end -- if Dina not installed
-  
-   header_font_name = "Lucida Console"
-   header_font_size = 9
-
-   if fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   elseif fonts ["Dina"] then
-      default_font_size = 8
-      default_font_name = "Dina"    -- the actual font
-   else
-      default_font_size = 9
-      default_font_name = "Lucida Console"
-   end -- if
-
-   FONT_NAME        = GetVariable("font_name") or default_font_name
-   FONT_SIZE        = tonumber(GetVariable("font_size")) or default_font_size
-
-    check (WindowFont(Win, "font"..Win, FONT_NAME, FONT_SIZE))
-    check (WindowFont(Win, "fonthead"..Win, header_font_name, header_font_size))
-
-    font_height = WindowFontInfo (Win, "font"..Win, 1) -  WindowFontInfo (Win, "font"..Win, 4) + 1
-    header_font_height = WindowFontInfo (Win, "fonthead"..Win, 1) - WindowFontInfo (Win, "fonthead"..Win, 4) + 1
-    line_height = font_height+1
-    font_width = WindowTextWidth (Win, "font"..Win, "W")
+   if first_check then
+       -- don't make z order calls until we've loaded the z order plugin
+       rc, my_layer_string = CallPlugin("462b665ecb569efbf261422f","layerString",my_layer_number)
+       local oldwin = win
+       win = my_layer_string.."_"..GetPluginID()  -- get a unique name
+       if oldwin ~= win then
+          CallPlugin("462b665ecb569efbf261422f","cycleOutWindow",oldwin)
+       end
    
-    -- install the window movement handler, get back the window position
-    windowinfo = movewindow.install (Win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+       -- Dummy window to get font characteristics
+       check (WindowCreate (win, 0, 0, 1, 1, 0, 0, WINDOW_BACKGROUND_COLOUR) )
 
-    if WINDOW_WIDTH == nil then
-        WINDOW_WIDTH = (font_width*80)+SCROLL_BAR_WIDTH -- 80 columns
+       local fonts = utils.getfontfamilies ()
+
+       -- if not there already, add it
+       if not fonts.Dina then
+         AddFont (GetInfo (66) .. "\\Dina.fon")
+         fonts = utils.getfontfamilies ()
+       end -- if Dina not installed
+      
+       header_font_name = "Lucida Console"
+       header_font_size = 9
+
+       if fonts["Courier New"] then
+          default_font_size = 9
+          default_font_name = "Courier New"
+       elseif fonts ["Dina"] then
+          default_font_size = 8
+          default_font_name = "Dina"    -- the actual font
+       else
+          default_font_size = 9
+          default_font_name = "Lucida Console"
+       end -- if
+
+       FONT_NAME        = GetVariable("font_name") or default_font_name
+       FONT_SIZE        = tonumber(GetVariable("font_size")) or default_font_size
+
+        check (WindowFont(win, "font"..win, FONT_NAME, FONT_SIZE))
+        check (WindowFont(win, "fonthead"..win, header_font_name, header_font_size))
+
+        font_height = WindowFontInfo (win, "font"..win, 1) -  WindowFontInfo (win, "font"..win, 4) + 1
+        header_font_height = WindowFontInfo (win, "fonthead"..win, 1) - WindowFontInfo (win, "fonthead"..win, 4) + 1
+        line_height = font_height+1
+        font_width = WindowTextWidth (win, "font"..win, "W")
+       
+        -- install the window movement handler, get back the window position
+        windowinfo  = movewindow.install (GetPluginID(), miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, my_layer_string.."_")
+
+        if WINDOW_WIDTH == nil then
+            WINDOW_WIDTH = (font_width*80)+SCROLL_BAR_WIDTH -- 80 columns
+        end
+        if WINDOW_HEIGHT == nil then
+            WINDOW_HEIGHT = TITLE_HEIGHT+(line_height*6)+2 -- 6 lines
+        end
+        
+        init(true)
+        OnPluginEnable ()  -- do initialization stuff
     end
-    if WINDOW_HEIGHT == nil then
-        WINDOW_HEIGHT = TITLE_HEIGHT+(line_height*6)+2 -- 6 lines
-    end
-    
-    init(true)
-    OnPluginEnable ()  -- do initialization stuff
 end
 
 function init(firstTime)
@@ -330,25 +353,25 @@ function init(firstTime)
     WINDOW_COLUMNS = math.ceil((WINDOW_WIDTH-SCROLL_BAR_WIDTH)/font_width)
 
     if (firstTime == true) then
-        WindowCreate(Win, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
+        WindowCreate(win, windowinfo.window_left, windowinfo.window_top, WINDOW_WIDTH, WINDOW_HEIGHT, windowinfo.window_mode, windowinfo.window_flags, WINDOW_BACKGROUND_COLOUR)
 
         -- catch for right-click menu and line selection
-        WindowAddHotspot(Win, "textarea", 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1,WINDOW_HEIGHT-3, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 2, 0)
-        WindowDragHandler(Win, "textarea", "TextareaMoveCallback", "TextareaReleaseCallback", 0x10)
+        WindowAddHotspot(win, "textarea", 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1,WINDOW_HEIGHT-3, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 2, 0)
+        WindowDragHandler(win, "textarea", "TextareaMoveCallback", "TextareaReleaseCallback", 0x10)
         
         -- mouse wheel handler for scrolling up/down
-        WindowScrollwheelHandler(Win, "textarea", "wheel_move")
+        WindowScrollwheelHandler(win, "textarea", "wheel_move")
 
         -- add the drag handler so they can move the window around
-        movewindow.add_drag_handler (Win, 0, 0, 0, TITLE_HEIGHT)
+        movewindow.add_drag_handler (GetPluginID(), 0, 0, 0, TITLE_HEIGHT, nil, my_layer_string.."_")
         
         -- scroll bar up/down buttons
-        WindowAddHotspot(Win, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
-        WindowAddHotspot(Win, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH), 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
+        WindowAddHotspot(win, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
+        WindowAddHotspot(win, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH), 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
 
         -- add the resize widget hotspot
-        WindowAddHotspot(Win, "resize", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, WINDOW_WIDTH, WINDOW_HEIGHT, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-        WindowDragHandler(Win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)    
+        WindowAddHotspot(win, "resize", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, WINDOW_WIDTH, WINDOW_HEIGHT, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+        WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)    
 
         -- re-wrap buffered lines at the new size
         lines = {}
@@ -356,36 +379,36 @@ function init(firstTime)
             fillBuffer(styles)
         end
     else
-        WindowResize(Win, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND_COLOUR)
-        WindowMoveHotspot(Win, "textarea", 0, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1, WINDOW_HEIGHT-3)
-        WindowMoveHotspot(Win, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH)
-        WindowMoveHotspot(Win, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH), 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH)
-        WindowMoveHotspot(Win, "resize", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, WINDOW_WIDTH, 0)
+        WindowResize(win, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND_COLOUR)
+        WindowMoveHotspot(win, "textarea", 0, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1, WINDOW_HEIGHT-3)
+        WindowMoveHotspot(win, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH)
+        WindowMoveHotspot(win, "down", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH), 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH)
+        WindowMoveHotspot(win, "resize", WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, WINDOW_WIDTH, 0)
     end
-    WindowShow(Win, true)
+    WindowShow(win, true)
 
     lineStart = math.max(1, #lines-WINDOW_LINES+2)
     lineEnd = math.max(1, #lines)
     
     -- title rectangle
-    header_width = WindowTextWidth(Win, "fonthead"..Win, "Communication Log")
-    WindowGradient (Win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, 0x111111, 0x333333, 2)
-    WindowText(Win, "fonthead"..Win, "Communication Log", (WINDOW_WIDTH-header_width)/2, (TITLE_HEIGHT-header_font_height)/2, WINDOW_WIDTH, math.ceil((TITLE_HEIGHT+header_font_height)/2), 0xEEEEEE, false)     
-    WindowLine(Win, 0, TITLE_HEIGHT-1, WINDOW_WIDTH, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
+    header_width = WindowTextWidth(win, "fonthead"..win, "Communication Log")
+    WindowGradient (win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, 0x111111, 0x333333, 2)
+    WindowText(win, "fonthead"..win, "Communication Log", (WINDOW_WIDTH-header_width)/2, (TITLE_HEIGHT-header_font_height)/2, WINDOW_WIDTH, math.ceil((TITLE_HEIGHT+header_font_height)/2), 0xEEEEEE, false)     
+    WindowLine(win, 0, TITLE_HEIGHT-1, WINDOW_WIDTH, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
     
     -- resize tag    
-    WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR) -- resizer background
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, 0xffffff, 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+2, 0x696969, 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+4, 0xffffff, 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+5, 0x696969, 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+7, 0xffffff, 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, 0x696969, 0, 1)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, 0xffffff, 0, 2)
-    WindowLine(Win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, 0x696969, 0, 1)
+    WindowRectOp(win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR) -- resizer background
+    WindowLine(win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+1, 0xffffff, 0, 2)
+    WindowLine(win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+2, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+2, 0x696969, 0, 1)
+    WindowLine(win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+4, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+4, 0xffffff, 0, 2)
+    WindowLine(win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+5, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+5, 0x696969, 0, 1)
+    WindowLine(win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+7, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+7, 0xffffff, 0, 2)
+    WindowLine(win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+8, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+8, 0x696969, 0, 1)
+    WindowLine(win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+10, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+10, 0xffffff, 0, 2)
+    WindowLine(win, WINDOW_WIDTH-SCROLL_BAR_WIDTH+11, WINDOW_HEIGHT-2, WINDOW_WIDTH-2, WINDOW_HEIGHT-SCROLL_BAR_WIDTH+11, 0x696969, 0, 1)
     
     -- draw border
-    WindowRectOp (Win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
+    WindowRectOp (win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
 
     drawStuff()
 end
@@ -407,7 +430,7 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginEnable ()
-    WindowShow (Win, true)
+    WindowShow (win, true)
     -- if we are connected when the plugin loads, it must have been reloaded whilst playing
     if IsConnected () then
         OnPluginConnect ()
@@ -417,7 +440,7 @@ end -- OnPluginEnable
 function OnPluginSaveState ()
     -- save window current location for next time  
     SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID(), 17)))
-    movewindow.save_state (Win)
+    movewindow.save_state (GetPluginID())
     -- save echo/timestamp status
     SetVariable ("echo", echo)
     SetVariable ("timestamp", timestamp)
@@ -432,20 +455,21 @@ function OnPluginSaveState ()
     SetVariable("log_timestamps", log_timestamps)
     SetVariable("show_donations", show_donations)
     SetVariable("show_mobsay", show_mobsay)
+    SetVariable("my_layer_number", my_layer_number)
 end --  OnPluginSaveState
 
 function OnPluginDisable ()
     TelnetOptionOff (TELOPT_CHANNELS)
     TelnetOptionOff (TELOPT_TELLS)
     TelnetOptionOff (TELOPT_SAYS)
-    WindowShow( Win, false )
+    WindowShow( win, false )
 end --  OnPluginDisable
 
 -- display one line
 function Display_Line (line, styles, backfill_start, backfill_end)
     local left = TEXT_INSET
     if (backfill_start ~= nil and backfill_end ~= nil) then
-        WindowRectOp(Win, 2, backfill_start, TITLE_HEIGHT+(line*line_height)+1, backfill_end, TITLE_HEIGHT+(line*line_height)+line_height+1, 0x444444)
+        WindowRectOp(win, 2, backfill_start, TITLE_HEIGHT+(line*line_height)+1, backfill_end, TITLE_HEIGHT+(line*line_height)+line_height+1, 0x444444)
     end -- backfill
     if (styles) then
         for _, v in ipairs (styles) do
@@ -454,7 +478,7 @@ function Display_Line (line, styles, backfill_start, backfill_end)
             if string.sub(v.text,-1) == "\n" then
                 t = string.sub(v.text,1,-2)
             end
-            left = left + WindowText (Win, "font"..Win, t, left, TITLE_HEIGHT+(line*line_height), 0, 0, v.textcolour)
+            left = left + WindowText (win, "font"..win, t, left, TITLE_HEIGHT+(line*line_height), 0, 0, v.textcolour)
         end -- for each style run
     end
     Redraw()
@@ -462,16 +486,17 @@ end -- Display_Line
 
 -- display all visible lines
 function writeLines()
-    WindowRectOp(Win, 2, 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH, -1, WINDOW_BACKGROUND_COLOUR) -- clear
+
+    WindowRectOp(win, 2, 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH, -1, WINDOW_BACKGROUND_COLOUR) -- clear
     if #lines >= 1 then
         for count = lineStart, lineEnd do
             local ax = nil
             local zx = nil
             if copy_start_line ~= nil and copy_end_line ~= nil and count >= copy_start_line and count <= copy_end_line then
                 local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[count][1]), 1, 99999))
-                ax = (((count == copy_start_line) and math.min(start_copying_x, WindowTextWidth(Win, "font"..Win, line_no_colors)+TEXT_INSET)) or TEXT_INSET)
+                ax = (((count == copy_start_line) and math.min(start_copying_x, WindowTextWidth(win, "font"..win, line_no_colors)+TEXT_INSET)) or TEXT_INSET)
                 -- end of highlight for this line
-                zx = (((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(Win, "font"..Win, line_no_colors)+TEXT_INSET)) or WindowTextWidth(Win, "font"..Win, line_no_colors)+TEXT_INSET)
+                zx = (((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(win, "font"..win, line_no_colors)+TEXT_INSET)) or WindowTextWidth(win, "font"..win, line_no_colors)+TEXT_INSET)
             end
             Display_Line( count-lineStart, lines[count][1], ax, zx )
         end
@@ -486,23 +511,23 @@ function drawStuff()
     writeLines()
        
     -- Scrollbar base
-    WindowRectOp(Win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, WINDOW_WIDTH, -SCROLL_BAR_WIDTH, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
-    WindowRectOp(Win, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH+TITLE_HEIGHT+1, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH)-1, SCROLL_DETAIL_COLOUR) -- scroll bar background inset rectangle
+    WindowRectOp(win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, WINDOW_WIDTH, -SCROLL_BAR_WIDTH, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
+    WindowRectOp(win, 1, WINDOW_WIDTH-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH+TITLE_HEIGHT+1, WINDOW_WIDTH-1, WINDOW_HEIGHT-(2*SCROLL_BAR_WIDTH)-1, SCROLL_DETAIL_COLOUR) -- scroll bar background inset rectangle
 
     if (keepscrolling == "up") then
         -- draw top scroll button pressed
-        WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 10,  15 + 0x800) -- up arrow pushed
+        WindowRectOp(win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 10,  15 + 0x800) -- up arrow pushed
         points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, TITLE_HEIGHT+9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, TITLE_HEIGHT+5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, TITLE_HEIGHT+9)
-        WindowPolygon (Win, points,
+        WindowPolygon (win, points,
             0x000000, 0, 1, -- pen (solid, width 1)
             0x000000, 0, -- brush (solid)
             true, -- close
             false) -- alt fill
     else
         -- draw top scroll button unpressed
-        WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), TITLE_HEIGHT, WINDOW_WIDTH, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 5, 15 + 0x800)
+        WindowRectOp(win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), TITLE_HEIGHT, WINDOW_WIDTH, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 5, 15 + 0x800)
         points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, TITLE_HEIGHT+9,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, TITLE_HEIGHT+5,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11, TITLE_HEIGHT+9)
-        WindowPolygon (Win, points,
+        WindowPolygon (win, points,
             0x000000, 0, 1,   -- pen (solid, width 1)
             0x000000, 0, --brush (solid)
             true, --close
@@ -511,18 +536,18 @@ function drawStuff()
     
     if (keepscrolling == "down") then
         -- draw bottom scroll button pressed
-        WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2), 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-1, 10,  15 + 0x800) 
+        WindowRectOp(win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2), 0, WINDOW_HEIGHT-SCROLL_BAR_WIDTH-1, 10,  15 + 0x800) 
         points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-7, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11,(WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11)
-        WindowPolygon (Win, points,
+        WindowPolygon (win, points,
             0x000000, 0, 1, -- pen (solid, width 1)
             0x000000, 0, -- brush (solid)
             true, -- close
             false) -- alt fill
     else
         -- draw bottom scroll button unpressed
-        WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2), WINDOW_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 5,  15 + 0x800)
+        WindowRectOp(win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2), WINDOW_WIDTH, WINDOW_HEIGHT-SCROLL_BAR_WIDTH, 5,  15 + 0x800)
         points = string.format ("%i,%i,%i,%i,%i,%i", (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+3, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11,(WINDOW_WIDTH-SCROLL_BAR_WIDTH)+7, (WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-7, (WINDOW_WIDTH-SCROLL_BAR_WIDTH)+11,(WINDOW_HEIGHT-SCROLL_BAR_WIDTH)-11)
-        WindowPolygon (Win, points,
+        WindowPolygon (win, points,
             0x000000, 0, 1,   -- pen (solid, width 1)
             0x000000, 0, --brush (solid)
             true, --close
@@ -543,10 +568,10 @@ function drawStuff()
         if barPos+barSize > SCROLL_BAR_WIDTH+TITLE_HEIGHT+SCROLL_BAR_HEIGHT then
             barPos = SCROLL_BAR_WIDTH+TITLE_HEIGHT+SCROLL_BAR_HEIGHT - barSize
         end
-        WindowAddHotspot(Win, "scroller", (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
-        WindowDragHandler(Win, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
+        WindowAddHotspot(win, "scroller", (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
+        WindowDragHandler(win, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
     end
-    WindowRectOp(Win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800) -- scrollbar position indicator
+    WindowRectOp(win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800) -- scrollbar position indicator
 
     --Redraw()
     BroadcastPlugin (999, "repaint")
@@ -569,8 +594,8 @@ function wheel_move (flags, hotspot_id)
 end -- wheel_move
 
 function ScrollerMoveCallback(flags, hotspot_id)
-    mouseposy = WindowInfo(Win, 18)
-    windowtop = WindowInfo(Win, 2)
+    mouseposy = WindowInfo(win, 18)
+    windowtop = WindowInfo(win, 2)
     barPos = math.max(mouseposy-windowtop+clickdelta, SCROLL_BAR_WIDTH+TITLE_HEIGHT)
     if barPos > WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize then
         barPos = WINDOW_HEIGHT-(SCROLL_BAR_WIDTH*2)-barSize
@@ -613,6 +638,7 @@ function fillBuffer(rawstyles)
         -- get next style, work out how long it is
         local style = remove (styles, 1)
         
+
         -- we interrupt this program to bring you a special bulletin
         -- breaking off newlines and sticking them back into the styles
         -- list for later
@@ -629,7 +655,7 @@ function fillBuffer(rawstyles)
             foundbreak = true
         end
         
-        local width = WindowTextWidth (Win, "font"..Win, style.text)
+        local width = WindowTextWidth (win, "font"..win, style.text)
 
         -- if it fits, copy whole style in
         if width <= avail then
@@ -644,7 +670,7 @@ function fillBuffer(rawstyles)
             local split_col
             -- keep going until out of columns
             while col > 1 do
-                width = WindowTextWidth (Win, "font"..Win, style.text:sub (1, col))
+                width = WindowTextWidth (win, "font"..win, style.text:sub (1, col))
                 if width <= avail then
                     if not split_col then
                         split_col = col  -- in case no space found, this is where we can split
@@ -770,6 +796,19 @@ function OnPluginBroadcast (msg, id, name, text)
             stampAndStore(ColoursToStyles(msg))
          end
       end
+   elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
+      first_check = false
+      OnPluginListChanged()
+   elseif (id ~= GetPluginID()) then -- just in case a plugin receives its own broadcasts
+      if (msg == 995 and text == "lock") then
+         layer_lock = 1
+      elseif (msg == 995 and text == "unlock") then
+         layer_lock = 0
+      elseif (layer_lock == 0 and msg == 998 and tonumber(text) < my_layer_number) then
+         my_layer_number = my_layer_number - 1
+         OnPluginSaveState()
+         OnPluginInstall()
+      end
    end
 end
 
@@ -836,13 +875,13 @@ start_copying_y = 0
 copied_text = ""
 function MouseDown(flags, hotspot_id)
     if (hotspot_id == "resize") then
-        startx, starty = WindowInfo (Win, 17), WindowInfo (Win, 18)
+        startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
     elseif (hotspot_id == "scroller") then
-        clickdelta = WindowHotspotInfo(Win, "scroller", 2)-WindowInfo (Win, 15)
+        clickdelta = WindowHotspotInfo(win, "scroller", 2)-WindowInfo (win, 15)
         dragscrolling = true
     elseif (hotspot_id == "textarea" and flags == 0x10) then
-        temp_start_copying_x = WindowInfo(Win, 14)
-        start_copying_y = WindowInfo(Win, 15)
+        temp_start_copying_x = WindowInfo(win, 14)
+        start_copying_y = WindowInfo(win, 15)
         copy_start_windowline = math.floor((start_copying_y-TITLE_HEIGHT)/line_height)
         temp_start_line = copy_start_windowline+lineStart
         copied_text = ""
@@ -883,8 +922,8 @@ end
 function TextareaMoveCallback(flags, hotspot_id)
     if bit.band (flags, miniwin.hotspot_got_lh_mouse) ~= 0 then -- only on left mouse button
         copied_text = ""
-        end_copying_x = WindowInfo(Win, 17)-WindowInfo(Win, 1)
-        end_copying_y = WindowInfo(Win, 18)-WindowInfo(Win, 2)
+        end_copying_x = WindowInfo(win, 17)-WindowInfo(win, 1)
+        end_copying_y = WindowInfo(win, 18)-WindowInfo(win, 2)
         local ypos = end_copying_y
         end_copying_x = math.max(TEXT_INSET,math.min(end_copying_x, WINDOW_WIDTH-SCROLL_BAR_WIDTH))
         end_copying_y = math.max(TITLE_HEIGHT+1,math.min(end_copying_y, TITLE_HEIGHT-1+(line_height*(WINDOW_LINES-1))))
@@ -925,8 +964,8 @@ function TextareaMoveCallback(flags, hotspot_id)
                    if copy_line == copy_start_line then
                        for pos=1,#line_no_colors do
                           startpos = pos
-                          if WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos)) > start_copying_x then
-                            start_copying_x = WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
+                          if WindowTextWidth(win, "font"..win, string.sub(line_no_colors,1,pos)) > start_copying_x then
+                            start_copying_x = WindowTextWidth(win, "font"..win, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
                             break
                           end
                        end
@@ -936,8 +975,8 @@ function TextareaMoveCallback(flags, hotspot_id)
                        local found = false
                        endpos = 0
                        for pos=1,#line_no_colors do
-                          if WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,pos)) > end_copying_x then
-                            end_copying_x = WindowTextWidth(Win, "font"..Win, string.sub(line_no_colors,1,endpos))+TEXT_INSET
+                          if WindowTextWidth(win, "font"..win, string.sub(line_no_colors,1,pos)) > end_copying_x then
+                            end_copying_x = WindowTextWidth(win, "font"..win, string.sub(line_no_colors,1,endpos))+TEXT_INSET
                             found = true
                             break
                           end
@@ -1002,12 +1041,12 @@ function chat_echo (name, line, wildcards)
 end -- chat_echo
 
 function chat_show (name, line, wildcards)
-   WindowShow( Win, true )
+   WindowShow( win, true )
    ColourNote ("yellow", "", "Chats window now shown. Type 'chats hide' to hide it.")
 end -- function chat_show
 
 function chat_hide (name, line, wildcards)
-   WindowShow( Win, false )
+   WindowShow( win, false )
    ColourNote ("yellow", "", "Chats window now hidden. Type 'chats show' to see it again.")
 end -- function chat_hide
 
@@ -1019,10 +1058,10 @@ function right_click_menu ()
     else
         menustring = (menustring.."|Turn Echo On")
     end --if
-    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps"
-    result = WindowMenu (Win,
-        WindowInfo (Win, 14),  -- x position
-        WindowInfo (Win, 15),   -- y position
+    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front"
+    result = WindowMenu (win,
+        WindowInfo (win, 14),  -- x position
+        WindowInfo (win, 15),   -- y position
         menustring) -- content
     if result ~= "" then
         numResult = tonumber(result)
@@ -1133,6 +1172,14 @@ function right_click_menu ()
         elseif numResult == 18 then
             log_timestamps = (((0 == log_timestamps) and 1) or 0)
             SetVariable("log_timestamps", log_timestamps)
+        elseif numResult == 19 then
+            rc, max_layer = CallPlugin("462b665ecb569efbf261422f","maxLayer")
+            if (my_layer_number ~= max_layer) then
+               BroadcastPlugin(998, tostring(my_layer_number))
+               my_layer_number = max_layer
+               OnPluginSaveState()
+               OnPluginInstall()
+            end 
         end
     end
 end -- right_click_menu

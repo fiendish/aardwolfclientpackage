@@ -304,7 +304,7 @@ end -- Display_ColourText_Line
 -- right click menu
 function right_click_menu ()
 
-    menustring = "Flip Orientation|Change Font|Reset Defaults"
+    menustring = "Flip Orientation|Change Font|-|Bring To Front|-|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -316,7 +316,7 @@ function right_click_menu ()
        SetVariable("stacked", stacked)
        height           = orig_height
        width            = default_width
-       movewindow.save_state (win)
+       movewindow.save_state (GetPluginID())
        SetVariable("width",width)
        SetVariable("height",height)
        SetVariable("font_name",font_name)
@@ -351,12 +351,20 @@ function right_click_menu ()
           end
           OnPluginInstall()
        end
+    elseif result == "Bring To Front" then
+        rc, max_layer = CallPlugin("462b665ecb569efbf261422f","maxLayer")
+        if (my_layer_number ~= max_layer) then
+           BroadcastPlugin(998, tostring(my_layer_number))
+           my_layer_number = max_layer
+           OnPluginSaveState()
+           OnPluginInstall()
+        end
     elseif result == "Reset Defaults" then
        font_name        = default_font_name
        font_size        = default_font_size
        height           = orig_height
        width            = default_width
-       movewindow.save_state (win)
+       movewindow.save_state (GetPluginID())
        stacked = 1
        SetVariable("stacked", stacked)
        SetVariable("width",width)
@@ -378,7 +386,6 @@ function right_click_menu ()
 
 end -- right_click_menu
 
-
 --=================================================================================
 -- Called when plugin receives telnet data - main entry point for actually running
 -- the plugin.
@@ -399,6 +406,19 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          RefreshPage()
+      end
+   elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
+      first_check = false
+      OnPluginListChanged()
+   elseif (id ~= GetPluginID()) then -- just in case a plugin receives its own broadcasts
+      if (msg == 995 and text == "lock") then
+         layer_lock = 1
+      elseif (msg == 995 and text == "unlock") then
+         layer_lock = 0
+      elseif (layer_lock == 0 and msg == 998 and tonumber(text) < my_layer_number) then
+         my_layer_number = my_layer_number - 1
+         OnPluginSaveState()
+         OnPluginInstall()
       end
    end
 end
@@ -497,7 +517,7 @@ end
 function OnPluginSaveState ()
 
   -- save window current location for next time  
-  movewindow.save_state (win)
+  movewindow.save_state (GetPluginID())
   
   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
   SetVariable ("background_colour", background_colour)
@@ -506,6 +526,7 @@ function OnPluginSaveState ()
   SetVariable ("font_name", font_name)
   SetVariable ("font_size", font_size)
   SetVariable ("stacked", stacked)
+  SetVariable ("my_layer_number", my_layer_number)
 
 end -- OnPluginSaveState
 
@@ -526,65 +547,83 @@ function OnPluginConnect()
 end
 
 
---=================================================================================
--- Called when plugin is first installed, including when Mush first starts.
--- This is the place to initialize stuff you need in the main plugin.
---=================================================================================
-function OnPluginInstall() 
-   
-   --- Get a unique name for main window
-   win = GetPluginID ()  -- get a unique name
+layer_lock = 0
+first_check = false
+my_layer_string = ""
+my_layer_number = tonumber(GetVariable("my_layer_number"))
+win = GetPluginID()
+require "checkplugin"
+function OnPluginListChanged ()
+  if not first_check then
+      do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
+      rc, my_layer_number, my_layer_string = CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", GetPluginID(), my_layer_number)
+      first_check = true
+      OnPluginInstall() -- run install again now that the z order plugin is loaded
+  end
+end -- OnPluginListChanged
 
-   -- make window so I can grab the font info
-   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
+function OnPluginInstall()
+   if first_check then
+       -- don't make z order calls until we've loaded the z order plugin
+       rc, my_layer_string = CallPlugin("462b665ecb569efbf261422f","layerString",my_layer_number)
+       local oldwin = win
+       win = my_layer_string.."_"..GetPluginID()  -- get a unique name
+       if oldwin ~= win then
+          CallPlugin("462b665ecb569efbf261422f","cycleOutWindow",oldwin)
+       end
+       
+       -- make window so I can grab the font info
+       WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
 
-   font_id        = "statmon_font"
+       font_id        = "statmon_font"
 
-   local fonts = utils.getfontfamilies ()
+       local fonts = utils.getfontfamilies ()
 
-   -- if not there already, add it
-   if not fonts.Dina then
-     AddFont (GetInfo (66) .. "\\Dina.fon")
-     fonts = utils.getfontfamilies ()
-   end -- if Dina not installed
+       -- if not there already, add it
+       if not fonts.Dina then
+         AddFont (GetInfo (66) .. "\\Dina.fon")
+         fonts = utils.getfontfamilies ()
+       end -- if Dina not installed
 
-   if fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   elseif fonts ["Dina"] then
-      default_font_size = 8
-      default_font_name = "Dina"    -- the actual font
-   else
-      default_font_size = 9
-      default_font_name = "Lucida Console"
-   end -- if
+       if fonts["Courier New"] then
+          default_font_size = 9
+          default_font_name = "Courier New"
+       elseif fonts ["Dina"] then
+          default_font_size = 8
+          default_font_name = "Dina"    -- the actual font
+       else
+          default_font_size = 9
+          default_font_name = "Lucida Console"
+       end -- if
 
-   font_name        = GetVariable("font_name") or default_font_name
-   font_size        = tonumber(GetVariable("font_size")) or default_font_size
+       font_name        = GetVariable("font_name") or default_font_name
+       font_size        = tonumber(GetVariable("font_size")) or default_font_size
 
-   --- Load the fonts into the temp window.
-   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
+       --- Load the fonts into the temp window.
+       WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
 
-   --- Grab font size settings.
-   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-   font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
-   line_height = font_height + 1
-   stacked = tonumber(GetVariable("stacked")) or 1
-   max_height = (line_height*(((stacked == 1) and 12) or 24))+(TOP_MARGIN*2)
-   default_height = max_height
-   --- Pull some state variables.
-   background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-   height            = tonumber (GetVariable ("height")) or default_height
-   orig_height = height
-   width             = tonumber (GetVariable ("width")) or default_width
+       --- Grab font size settings.
+       font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
+       font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
+       line_height = font_height + 1
+       stacked = tonumber(GetVariable("stacked")) or 1
+       max_height = (line_height*(((stacked == 1) and 11) or 22))+(TOP_MARGIN*2)
+       default_height = max_height
+       --- Pull some state variables.
+       background_colour = tonumber (GetVariable ("background_colour")) or background_colour
+       height            = tonumber (GetVariable ("height")) or default_height
+       orig_height = height
+       width             = tonumber (GetVariable ("width")) or default_width
 
-   --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+       --- install the window movement handler, get back the window position.
+       windowinfo  = movewindow.install (GetPluginID(), miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, my_layer_string.."_")
 
-   --- Setup the window.
-   SetUpHotspotsAndDraw(true)
-   
-   Send_GMCP_Packet("request char")
+
+       --- Setup the window.
+       SetUpHotspotsAndDraw(true)
+       
+       Send_GMCP_Packet("request char")
+   end
 end
 
 --=================================================================================
@@ -613,7 +652,7 @@ function SetUpHotspotsAndDraw(firstTime)
    end
 
    -- Add the drag handler so they can move the window around
-   movewindow.add_drag_handler (win, 0, 0, 0, 0)
+   movewindow.add_drag_handler (GetPluginID(), 0, 0, 0, 0, nil, my_layer_string.."_")
        
    -- draw edge frame.
    check (WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15))
