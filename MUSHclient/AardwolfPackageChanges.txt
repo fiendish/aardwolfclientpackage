@@ -1,8 +1,9 @@
 Aardwolf Client Package Major Changes List
 
-r647 snapshot
+r649 snapshot
 - new feature: ASCII map, stats window, channel capture, health bars, and group monitor plugins now have dynamic z-ordering via the "bring to front" menu option
 - new feature: stats window now includes trains and practices
+- new feature: gmcp mapper find/area results will now display the search terms
 
 r625 snapshot
 - misc change: default numpad macros should now make more sense
