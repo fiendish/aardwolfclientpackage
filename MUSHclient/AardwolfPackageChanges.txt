@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r651 snapshot
+- bug fix: gmcp mapper where <current_room> would cause an error
+- bug fix: gmcp mapper thisroom when there was no current room data yet would cause an error
+
 r649 snapshot
 - new feature: ASCII map, stats window, channel capture, health bars, and group monitor plugins now have dynamic z-ordering via the "bring to front" menu option
 - new feature: stats window now includes trains and practices
