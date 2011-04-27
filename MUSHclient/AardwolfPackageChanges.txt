@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r647 snapshot
+- new feature: ASCII map, stats window, channel capture, health bars, and group monitor plugins now have dynamic z-ordering via the "bring to front" menu option
+- new feature: stats window now includes trains and practices
+
 r625 snapshot
 - misc change: default numpad macros should now make more sense
 
@@ -10,7 +14,7 @@ r564 snapshot
 (Big number jumps between snapshots with few changes above here are because of creating the online user guide)
 
 r449 snapshot
-- bug fix: gmcp mapper backups were apparently completely broken in Windows even though they worked under WINE in Linux
+- bug fix: gmcp mapper backups were apparently broken if the path had spaces in it
 - bug fix: gmcp mapper backups on/off preference should now persist across sessions
 - bug fix: some of the helper aliases for reloading would fail if the plugin wasn't already loaded, because the file names had changed
 - misc change: update the new connection dialog to tell people to contact me if they find bugs
