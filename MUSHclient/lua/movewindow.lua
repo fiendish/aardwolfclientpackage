@@ -124,29 +124,30 @@ local function make_mousedown_handler (mwi)
   return function (flags, hotspot_id)
    
     local win = mwi.win
+    local instance = mwi.instance
        
     -- see if other action wanted
     if mwi.preprocess.mousedown then
-      if mwi.preprocess.mousedown (flags, hotspot_id, win) then
+      if mwi.preprocess.mousedown (flags, hotspot_id, (instance or "")..win) then
          return
       end -- if handled already
     end -- if handler
     
     -- find where mouse is so we can adjust window relative to mouse
-    mwi.startx = WindowInfo (win, 14)
-    mwi.starty = WindowInfo (win, 15)
+    mwi.startx = WindowInfo ((instance or "")..win, 14)
+    mwi.starty = WindowInfo ((instance or "")..win, 15)
     
     -- find where window is in case we drag it offscreen
-    mwi.origx = WindowInfo (win, 10) 
-    mwi.origy = WindowInfo (win, 11)
+    mwi.origx = WindowInfo ((instance or "")..win, 10) 
+    mwi.origy = WindowInfo ((instance or "")..win, 11)
     
     -- find where the friends are relative to the window
     for i, v in ipairs (mwi.window_friends) do
         if v then
             mwi.window_friend_deltas [i] = 
                {
-               WindowInfo (v, 10) - mwi.origx, 
-               WindowInfo (v, 11) - mwi.origy
+               WindowInfo ((instance or "")..v, 10) - mwi.origx, 
+               WindowInfo ((instance or "")..v, 11) - mwi.origy
                }
         end -- if
     end -- for
@@ -162,17 +163,18 @@ local function make_dragmove_handler (mwi)
   return function (flags, hotspot_id)
   
     local win = mwi.win
-  
+    local instance = mwi.instance
+    
     -- see if other action wanted
     if mwi.preprocess.dragmove then
-      if mwi.preprocess.dragmove (flags, hotspot_id, win) then
+      if mwi.preprocess.dragmove (flags, hotspot_id, (instance or "")..win) then
          return
       end -- if handled already
     end -- if handler
     
     -- find where it is now
-    local posx, posy = WindowInfo (win, 17) - mwi.startx,
-                       WindowInfo (win, 18) - mwi.starty
+    local posx, posy = WindowInfo ((instance or "")..win, 17) - mwi.startx,
+                       WindowInfo ((instance or "")..win, 18) - mwi.starty
   
     -- change the mouse cursor shape appropriately
     if posx < 0 or 
@@ -196,15 +198,15 @@ local function make_dragmove_handler (mwi)
     end
     
     -- move the window to the new location - offset by how far mouse was into window
-    WindowPosition(win, posx, posy, 0, miniwin.create_absolute_location);
+    WindowPosition((instance or "")..win, posx, posy, 0, miniwin.create_absolute_location);
     
     -- move the friends if they still exist
     for i, v in ipairs(mwi.window_friends) do
         if v then
-            WindowPosition (v, posx + mwi.window_friend_deltas [i] [1], 
+            WindowPosition ((instance or "")..v, posx + mwi.window_friend_deltas [i] [1], 
                                posy + mwi.window_friend_deltas [i] [2], 
                                0, 
-                               WindowInfo (v, 8))
+                               WindowInfo ((instance or "")..v, 8))
         end -- if
     end -- for
         
@@ -224,10 +226,11 @@ local function make_dragrelease_handler (mwi)
   return function (flags, hotspot_id)
   
     local win = mwi.win
+    local instance = mwi.instance
   
     -- see if other action wanted
     if mwi.preprocess.dragrelease then
-      if mwi.preprocess.dragrelease (flags, hotspot_id, win) then
+      if mwi.preprocess.dragrelease (flags, hotspot_id, (instance or "")..win) then
          return
       end -- if handled already
     end -- if handler
@@ -246,7 +249,7 @@ local function make_other_handler (mwi, name)
        
     -- send to supplied handler
     if mwi.preprocess [name] then
-       mwi.preprocess [name] (flags, hotspot_id, mwi.win)
+       mwi.preprocess [name] (flags, hotspot_id, (mwi.instance or "")..mwi.win)
     end -- if handler
         
   end -- other
@@ -260,9 +263,10 @@ local function make_check_map_position_handler (mwi)
   return function ()
    
     local win = mwi.win
+    local instance = mwi.instance
     
-    if not WindowInfo (win, 1) then
-      ColourNote ("white", "red", "Error in make_check_map_position_handler: no window named: " .. win)
+    if not WindowInfo ((instance or "")..win, 1) then
+      ColourNote ("white", "red", "Error in make_check_map_position_handler: no window named: " .. (instance or "")..win)
       return
     end -- no such window
     
@@ -276,7 +280,7 @@ local function make_check_map_position_handler (mwi)
            mwi.window_flags = 0
       end -- if not visible
     
-      WindowPosition (win, 
+      WindowPosition ((instance or "")..win, 
                       mwi.window_left, 
                       mwi.window_top, 
                       mwi.window_mode, 
@@ -289,7 +293,7 @@ end -- make_check_map_position_handler
 -- call movewindow.install in OnPluginInstall to find the position of the window, before creating it
 --  - it also creates the handler functions ready for use later
 
-function movewindow.install (win, default_position, default_flags, nocheck, friends, preprocess)
+function movewindow.install (win, default_position, default_flags, nocheck, friends, preprocess, instance)
 
   win = win or GetPluginID ()  -- default to current plugin ID
   
@@ -301,7 +305,7 @@ function movewindow.install (win, default_position, default_flags, nocheck, frie
   -- set up handlers and where window should be shown (from saved state, if any)
   local movewindow_info = {
      win = win,   -- save window ID
-     
+     instance = instance,
      -- save current position in table (obtained from state file)
      window_left  = tonumber (GetVariable ("mw_" .. win .. "_windowx")) or 0,
      window_top   = tonumber (GetVariable ("mw_" .. win .. "_windowy")) or 0,
@@ -347,20 +351,20 @@ end -- movewindow.install
 -- call movewindow.add_drag_handler after creating the window, and after deleting hotspots where applicable
 --   to add a drag hotspot
 
-function movewindow.add_drag_handler (win, left, top, right, bottom, cursor)
+function movewindow.add_drag_handler (win, left, top, right, bottom, cursor, instance)
 
   win = win or GetPluginID ()  -- default to current plugin ID
 
   -- the zz puts it under other hotspots on the drag area
   local hotspot_id = "zz_mw_" .. win .. "_movewindow_hotspot"
   
-  if not WindowInfo (win, 1) then
-    ColourNote ("white", "red", "Error in movewindow.add_drag_handler: no window named: " .. win)
+  if not WindowInfo ((instance or "")..win, 1) then
+    ColourNote ("white", "red", "Error in movewindow.add_drag_handler: no window named: " .. (instance or "")..win)
     return
   end -- no such window
   
   -- make a hotspot
-  WindowAddHotspot(win, hotspot_id,  
+  WindowAddHotspot((instance or "")..win, hotspot_id,  
                    left or 0, top or 0, right or 0, bottom or 0,        -- rectangle
                    "mw_" .. win .. "_movewindow_info.mouseover",        -- MouseOver
                    "mw_" .. win .. "_movewindow_info.cancelmouseover",  -- CancelMouseOver
@@ -371,7 +375,7 @@ function movewindow.add_drag_handler (win, left, top, right, bottom, cursor)
                    cursor or miniwin.cursor_hand, -- cursor
                    0)  -- flags
                    
-  WindowDragHandler (win, hotspot_id, 
+  WindowDragHandler ((instance or "")..win, hotspot_id, 
                      "mw_" .. win .. "_movewindow_info.dragmove", 
                      "mw_" .. win .. "_movewindow_info.dragrelease", 
                      0)   -- flags
@@ -388,7 +392,7 @@ function movewindow.save_state (win)
   local mwi = _G ["mw_" .. win .. "_movewindow_info"]
 
   if not mwi then
-    ColourNote ("white", "red", "Error in movewindow.save_state: no window movement info for: " .. win)
+    ColourNote ("white", "red", "Error in movewindow.save_state: no window movement info for: " .. (instance or "")..win)
     return
   end -- no such window
   
