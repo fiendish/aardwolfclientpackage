@@ -2658,7 +2658,8 @@ function map_area (name, line, wildcards)
 
   -- see if nearby
 
-  mapper.find (findpath,
+  mapper.find (name,
+    findpath,
     rooms,
     50,
     show_vnums,  -- show vnum?
@@ -2685,7 +2686,7 @@ function map_find (name, line, wildcards)
   end   -- finding room
       
   -- see if nearby
-  mapper.find (
+  mapper.find (name,
     findpath,
     rooms,  -- function
     50,
@@ -2727,7 +2728,7 @@ local wanted_items = {}
   end   -- finding room
   
   -- find such places
-  mapper.find (
+  mapper.find (nil,
     findpath,
     rooms,
     0,
@@ -2768,7 +2769,7 @@ function map_goto (name, line, wildcards)
   end -- if
   
   -- find desired room
-  mapper.find (
+  mapper.find (nil,
     findpath,  -- function
     {{uid=wanted, reason=true}},
     0,
@@ -2829,7 +2830,7 @@ function map_resume (name, line, wildcards)
   end -- if nothing to do
   
   -- find desired room
-  mapper.find (
+  mapper.find (nil,
     findpath,
     {{uid=wanted,reason=true}},
     0,  -- function
@@ -2852,7 +2853,7 @@ function map_notes (name, line, wildcards)
   end   -- finding room
   
   -- find such places
-  mapper.find (
+  mapper.find ("[NOTE]",
     findpath,
     rooms,
     0,  -- function
