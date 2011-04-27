@@ -1024,17 +1024,21 @@ end -- custom_exits_list
 
 function show_this_room (name, line, wildcards)
    local room = rooms[current_room]
-   Note("Details about this room:")
-   Note("+---------------------------+")
-   Note("Name: "..(room.name or ""))
-   Note("ID: "..(current_room or ""))
-   Note("Area: "..(room.area or ""))
-   Note("Terrain: "..(room.terrain or ""))
-   Note("Info: "..(room.info or ""))
-   Note("Notes: "..(room.notes or ""))
-   Note("Exits: ")
-   tprint(room.exits)
-   Note("+---------------------------+\n")
+   if room ~= nil then
+       Note("Details about this room:")
+       Note("+---------------------------+")
+       Note("Name: "..(room.name or ""))
+       Note("ID: "..(current_room or ""))
+       Note("Area: "..(room.area or ""))
+       Note("Terrain: "..(room.terrain or ""))
+       Note("Info: "..(room.info or ""))
+       Note("Notes: "..(room.notes or ""))
+       Note("Exits: ")
+       tprint(room.exits)
+       Note("+---------------------------+\n")
+   else
+       Note("THISROOM ERROR: You need to type 'LOOK' first to initialize the mapper before trying to get room information.")
+   end
 end -- show_this_room
 
 
@@ -2677,6 +2681,7 @@ function map_find (name, line, wildcards)
 
   -- find matching rooms using FTS3
   local name = "%"..wildcards[1].."%"
+
   if string.sub(wildcards[1],1,1) == "\"" and string.sub(wildcards[1],-1) == "\"" then
      name = string.sub(wildcards[1],2,-2)
   end
@@ -2816,7 +2821,11 @@ function map_where (name, line, wildcards)
   local speedwalk = mapper.build_speedwalk (item.path, speedwalk_prefix)
   
   -- display it
-  mapper.mapprint (string.format ("Path to %s is:\n%s\n", wanted, speedwalk))
+  if speedwalk ~= nil then
+      mapper.mapprint (string.format ("Path to %s is:\n%s\n", wanted, speedwalk))
+  else
+      mapper.mapprint (string.format("You're IN room %s!", wanted))
+  end
   
 end -- map_where
 
