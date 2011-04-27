@@ -289,7 +289,6 @@ end -- DisplayStatsPage
 
 -- right click menu
 function right_click_menu ()
--- Take | Drop | >Eat | With Fork | With Hands | < | >Emote | Smile | Laugh
     menustring ="!Change Font|"
     if showLabels == 1 then
        menustring = menustring.."Hide Labels|"
@@ -310,7 +309,7 @@ function right_click_menu ()
         end
     end
     menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
-    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|-|Reset Defaults"
+    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|-|Bring To Front|-|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -362,6 +361,14 @@ function right_click_menu ()
               graphicalMode = 1
            end
         elseif numResult == 24 then
+           rc, max_layer = CallPlugin("462b665ecb569efbf261422f","maxLayer")
+           if (my_layer_number ~= max_layer) then
+              BroadcastPlugin(998, tostring(my_layer_number))
+              my_layer_number = max_layer
+              OnPluginSaveState()
+              OnPluginInstall()
+           end
+        elseif numResult == 25 then
            font_name = default_font_name
            font_size = default_font_size
            numBars = 5
@@ -377,7 +384,6 @@ function right_click_menu ()
         OnPluginInstall()
     end
 end -- right_click_menu
-
 
 --=================================================================================
 -- Called when plugin receives telnet data - main entry point for actually running
@@ -405,6 +411,19 @@ function OnPluginBroadcast (msg, id, name, text)
          end
          page_built = true
          DisplayStatsPage()
+      end
+   elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
+      first_check = false
+      OnPluginListChanged()
+   elseif (id ~= GetPluginID()) then -- just in case a plugin receives its own broadcasts
+      if (msg == 995 and text == "lock") then
+         layer_lock = 1
+      elseif (msg == 995 and text == "unlock") then
+         layer_lock = 0
+      elseif (layer_lock == 0 and msg == 998 and tonumber(text) < my_layer_number) then
+         my_layer_number = my_layer_number - 1
+         OnPluginSaveState()
+         OnPluginInstall()
       end
    end
 end
@@ -491,7 +510,7 @@ end
 function OnPluginSaveState ()
 
   -- save window current location for next time  
-  movewindow.save_state (win)
+  movewindow.save_state (GetPluginID())
   barTexts = ""
   numBars = 0
   for i,v in pairs(showBar) do
@@ -512,6 +531,7 @@ function OnPluginSaveState ()
   SetVariable ("numBars", numBars)
   SetVariable ("showBar", serialize.save ("showBar"))
   SetVariable ("graphicalMode", graphicalMode)
+  SetVariable ("my_layer_number", my_layer_number)
 end -- OnPluginSaveState
 
 function OnPluginClose()
@@ -527,86 +547,104 @@ function OnPluginEnable ()
 end -- OnPluginEnable
 
 
---=================================================================================
--- Called when plugin is first installed, including when Mush first starts.
--- This is the place to initialize stuff you need in the main plugin.
---=================================================================================
-function OnPluginInstall() 
-   
-   --- Get a unique name for main window
-   win = GetPluginID ()  -- get a unique name
+layer_lock = 0
+first_check = false
+my_layer_string = ""
+my_layer_number = tonumber(GetVariable("my_layer_number"))
+win = GetPluginID()
+require "checkplugin"
+function OnPluginListChanged ()
+  if not first_check then
+      do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
+      rc, my_layer_number, my_layer_string = CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", GetPluginID(), my_layer_number)
+      first_check = true
+      OnPluginInstall() -- run install again now that the z order plugin is loaded
+  end
+end -- OnPluginListChanged
 
-   background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-   -- make window so I can grab the font info
-   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
-
-   font_id        = "statmon_font"
-
-   local fonts = utils.getfontfamilies ()
-
-   -- if not there already, add it
-   if not fonts.Dina then
-     AddFont (GetInfo (66) .. "\\Dina.fon")
-     fonts = utils.getfontfamilies ()
-   end -- if Dina not installed
-
-   if fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   elseif fonts ["Dina"] then
-      default_font_size = 8
-      default_font_name = "Dina"    -- the actual font
-   else
-      default_font_size = 9
-      default_font_name = "Lucida Console"
-   end -- if
-
-   font_name        = GetVariable("font_name") or default_font_name
-   font_size        = tonumber(GetVariable("font_size")) or default_font_size
-
-   --- Load the fonts into the temp window.
-   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
-
-   --- Grab font size settings.
-   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-   font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
-   line_height = font_height + 1
-
-   --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
-
-   MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN*2)
-
-   width      = tonumber(GetVariable("width")) or default_width
-   stacked    = tonumber(GetVariable("stacked")) or stacked
-   showLabels = tonumber(GetVariable("showLabels")) or showLabels
-   reverseTNL = tonumber(GetVariable("reverseTNL")) or reverseTNL
-   numBars    = tonumber(GetVariable("numBars")) or numBars
-   showBar = defaultShowBar
-   assert (loadstring (GetVariable ("showBar") or "")) ()
-
-   barTexts = ""
-   for i,v in pairs(showBar) do
-      if (v[2] == true) then
-         barTexts = barTexts..v[3]
-      end
-   end
-   if stacked == 1 then
-       height = (TOP_MARGIN*2)+(numBars*(line_height+1))
-   else
-       if showLabels == 1 then
-           MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+LEFT_MARGIN*2)
+function OnPluginInstall()
+   if first_check then
+       -- don't make z order calls until we've loaded the z order plugin
+       rc, my_layer_string = CallPlugin("462b665ecb569efbf261422f","layerString",my_layer_number)
+       local oldwin = win
+       win = my_layer_string.."_"..GetPluginID()  -- get a unique name
+       if oldwin ~= win then
+          CallPlugin("462b665ecb569efbf261422f","cycleOutWindow",oldwin)
        end
-       height = TOP_MARGIN*2 + line_height
-   end
-   width = math.max(width, MIN_WIDTH)
-
-   OnPluginSaveState()
    
-   --- Setup the window.
-   SetUpHotspotsAndDraw(true)
-      
-   Send_GMCP_Packet("request char")
+   
+       background_colour = tonumber (GetVariable ("background_colour")) or background_colour
+       -- make window so I can grab the font info
+       WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
+
+       font_id        = "statmon_font"
+
+       local fonts = utils.getfontfamilies ()
+
+       -- if not there already, add it
+       if not fonts.Dina then
+         AddFont (GetInfo (66) .. "\\Dina.fon")
+         fonts = utils.getfontfamilies ()
+       end -- if Dina not installed
+
+       if fonts["Courier New"] then
+          default_font_size = 9
+          default_font_name = "Courier New"
+       elseif fonts ["Dina"] then
+          default_font_size = 8
+          default_font_name = "Dina"    -- the actual font
+       else
+          default_font_size = 9
+          default_font_name = "Lucida Console"
+       end -- if
+
+       font_name        = GetVariable("font_name") or default_font_name
+       font_size        = tonumber(GetVariable("font_size")) or default_font_size
+
+       --- Load the fonts into the temp window.
+       WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
+
+       --- Grab font size settings.
+       font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
+       font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
+       line_height = font_height + 1
+
+       --- install the window movement handler, get back the window position.
+       windowinfo  = movewindow.install (GetPluginID(), miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, my_layer_string.."_")
+
+       MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN*2)
+
+       width      = tonumber(GetVariable("width")) or default_width
+       stacked    = tonumber(GetVariable("stacked")) or stacked
+       showLabels = tonumber(GetVariable("showLabels")) or showLabels
+       reverseTNL = tonumber(GetVariable("reverseTNL")) or reverseTNL
+       numBars    = tonumber(GetVariable("numBars")) or numBars
+       showBar = defaultShowBar
+       assert (loadstring (GetVariable ("showBar") or "")) ()
+
+       barTexts = ""
+       for i,v in pairs(showBar) do
+          if (v[2] == true) then
+             barTexts = barTexts..v[3]
+          end
+       end
+       if stacked == 1 then
+           height = (TOP_MARGIN*2)+(numBars*(line_height+1))
+       else
+           if showLabels == 1 then
+               MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+LEFT_MARGIN*2)
+           end
+           height = TOP_MARGIN*2 + line_height
+       end
+       width = math.max(width, MIN_WIDTH)
+
+       OnPluginSaveState()
+       
+       --- Setup the window.
+       SetUpHotspotsAndDraw(true)
+          
+       Send_GMCP_Packet("request char")
+   end
 end
 
 --=================================================================================
@@ -633,7 +671,7 @@ function SetUpHotspotsAndDraw(firstTime)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
    -- Add the drag handler so they can move the window around
-   movewindow.add_drag_handler (win, 0, 0, 0, 0)
+   movewindow.add_drag_handler (GetPluginID(), 0, 0, 0, 0, nil, my_layer_string.."_")
  
    -- draw edge frame.
    WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
