@@ -427,6 +427,7 @@
 
 <!-- plugins -->
 <include name="aard_GMCP_handler.xml" plugin="y" />
+<include name="aard_miniwindow_z_order_monitor.xml" plugin="y" />
 <include name="aard_layout.xml" plugin="y" />
 <include name="aard_helper_aliases.xml" plugin="y" />
 <include name="aard_statmon_gmcp.xml" plugin="y" />
