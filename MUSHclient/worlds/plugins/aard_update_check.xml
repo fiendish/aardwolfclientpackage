@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="Package_Update_Checker"
+   author="Fiendish"
+   id="462bba665ecef2bbf2b5692f"
+   language="Lua"
+   purpose="Monitors the z-order of plugin miniwindows to maintain uniqueness."
+   date_written="2011-04-23 11:51:55"
+   requires="4.72"
+   version="1.0"
+   >
+
+</plugin>
+<!--  Script  -->
+
+<aliases>
+  <alias
+   match="package update check"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   script="OnPluginInstall"
+  >
+  </alias>
+  </aliases>
+  
+<script>
+<![CDATA[
+
+http = require "socket.http"	-- loads http and various dlls
+download_url = "https://code.google.com/p/aardwolfclientpackage/downloads/detail?name=MUSHclient.zip"
+
+function convertHTMLcodesToStandardText(str)
+    local replacements = { -- minimal set. can add more later if needed.
+    {"&gt;",">"},
+    {"&lt;","<"},
+    {"&quot;","\""},
+    {"&amp;","&"}
+    }
+    for i,v in ipairs(replacements) do
+        str = string.gsub(str, v[1],v[2])
+    end
+    return str
+end
+
+function updaterDialog()
+    if utils.editbox("There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\nThe major differences between your version and the latest version are:","Aardwolf MUSHclient Package Update Checker",convertHTMLcodesToStandardText(final_update_list)) then
+        OpenBrowser(download_url)
+    end
+end
+
+function OnPluginInstall()
+    print("Checking for newer versions of the Aardwolf MUSHclient Package.")
+    print("")
+    -- open the local version file and read the snapshot revision on the third line
+    version_file = io.input ("AardwolfPackageChanges.txt")
+    line = version_file:read ("*l") -- read one line
+    line = version_file:read ("*l") -- read one line
+    line = version_file:read ("*l") -- read one line
+    if line then  -- if we got something
+       local_version = string.match(line, "r(%d+) snapshot")
+    else
+       print ("The file AardwolfPackageChanges.txt appears to be missing (this is bad), so the version check cannot proceed. You may download the latest development snapshot from:")
+       print("")
+       print(download_url)
+       print("")
+       return
+    end
+    version_file:close ()
+    
+    -- grab the download page
+    page, status, headers = http.request(download_url)
+    if status == 200 then
+        update_list = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r%d+ snapshot.*)")
+        -- extract the snapshot revision number
+        latest_version = string.match(update_list, "r(%d+) snapshot")
+    else
+        print("Could not access the Aardwolf MUSHclient Package download page to check for the latest version number. Please make sure that you are able to access the following url in your browser and then type 'package update check'...")
+        print("")
+        print(download_url)
+        print("")
+        return
+    end
+    
+    if tonumber(local_version) and tonumber(latest_version) then
+        if tonumber(local_version) < tonumber(latest_version) then
+            print("Hey you! There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".")
+            print("The major differences between your version and the latest version are:")
+            print("")
+            final_update_list = string.match(update_list,"(.*)r"..local_version.." snapshot")
+            print(convertHTMLcodesToStandardText(final_update_list))
+            print("You can get the new version from:")
+            print(download_url)
+            print("")
+            -- updaterDialog()
+            -- DoAfterSpecial (5, 'updaterDialog()', sendto.script)
+        elseif tonumber(local_version) == tonumber(latest_version) then
+            print("Congratulations, you have the latest version of the Aardwolf MUSHclient Package!")
+        else
+            print("Oh, dear...this is embarrassing. The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Please contact Fiendish about this message, because clearly this situation is impossible. :)")
+        end
+    end
+
+    print("")    
+    print("Finished checking for newer versions of the Aardwolf MUSHclient Package.")
+    print("")    
+end
+
+]]>
+
+</script>
+</muclient>
