@@ -29,82 +29,7 @@
    sequence="100"
    ignore_case="y"
   >
-  </alias>
-  
-
-  <alias
-   match="#alias {*} {*}"
-   enabled="y"
-   send_to="12"
-   ignore_case="y"
-   sequence="100"
-  >
-  <send>
-
-require "addxml"  -- addxml extension
-
--- add the alias
-
-addxml.alias {  
-  match = "%1", 
-  send = "%2",
-  sequence = 100,
-  enabled = true,
-  name = "%1",
-  send_to = 10,
-  group = "speedwalks"
-               }
-
-ColourNote ("white", "green", "Added alias to match on '%1', sending '%2'")
-</send>
-  </alias>
-
-  <alias
-   match="#action {*} {*}"
-   enabled="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-
-require "addxml"  -- addxml extension
-
--- add the trigger 
-
-addxml.trigger {  
-  match = "%1", 
-  send = "%2",
-  sequence = 100,
-  enabled = true,
-               }
-
-ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
-</send>
-  </alias>
-
-  <alias
-   match="#trigger {*} {*}"
-   enabled="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-
-require "addxml"  -- addxml extension
-
--- add the trigger 
-
-addxml.trigger {  
-  match = "%1", 
-  send = "%2",
-  sequence = 100,
-  enabled = true,
-               }
-
-ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
-</send>
-  </alias>
-
+ </alias>
 </aliases>
 
 <!--  Get our standard constants -->
@@ -402,6 +327,7 @@ function draw_main_window()
    WindowDrawImage (bgwin, "wolf_logo", xpos, ypos, 0, 0, miniwin.image_copy)  -- straight copy
 
 end
+
 
 ]]>
 
