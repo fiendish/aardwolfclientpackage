@@ -92,9 +92,7 @@ function OnPluginInstall()
             final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR>").."\r\nGet it from: "..download_url
              -- FYI: a bug causes MUSHclient 4.72 to crash if utils.editbox is used immediately after a call to Connect()
             DoAfterSpecial (10, 'updateDialog()', sendto.script)
-        elseif tonumber(local_version) == tonumber(latest_version) then
-            print("Congratulations, you have the latest version of the Aardwolf MUSHclient Package!")
-        else
+        elseif tonumber(local_version) > tonumber(latest_version) then
              DoAfterSpecial(10,'errorMessage("Oh, dear...this is embarrassing. The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Go to the following url in your browser to get the latest package and contact Fiendish about this message, because clearly this situation is impossible. :/")', sendto.script)
         end
     end
