@@ -26,30 +26,6 @@ local conversion = {
   [GetBoldColour   (MAGENTA)] = "@M",
   [GetBoldColour   (CYAN)]    = "@C",
   [GetBoldColour   (WHITE)]   = "@W",
-    [526344] = "@x232",
-    [1184274] = "@x233",
-    [1842204] = "@x234",
-    [2500134] = "@x235",
-    [3158064] = "@x236",
-    [3815994] = "@x237",
-    [4473924] = "@x238",
-    [5131854] = "@x239",
-    [5789784] = "@x240",
-    [6447714] = "@x241",
-    [7105644] = "@x242",
-    [7763574] = "@x243",
-    [8421504] = "@x244",
-    [9079434] = "@x245",
-    [9737364] = "@x246",
-    [10395294] = "@x247",
-    [11053224] = "@x248",
-    [11711154] = "@x249",
-    [12369084] = "@x250",
-    [13027014] = "@x251",
-    [13684944] = "@x252",
-    [14342874] = "@x253",
-    [15000804] = "@x254",
-    [15658734] = "@x255",
   }  -- end conversion table
   
 -- This table uses the colours as defined in the MUSHclient ANSI tab, however the
@@ -72,30 +48,6 @@ colour_conversion = {
    M = GetBoldColour   (MAGENTA) ,   -- 0xFF00FF 
    C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00 
    W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
-    x232 = 526344,
-    x233 = 1184274,
-    x234 = 1842204,
-    x235 = 2500134,
-    x236 = 3158064,
-    x237 = 3815994,
-    x238 = 4473924,
-    x239 = 5131854,
-    x240 = 5789784,
-    x241 = 6447714,
-    x242 = 7105644,
-    x243 = 7763574,
-    x244 = 8421504,
-    x245 = 9079434,
-    x246 = 9737364,
-    x247 = 10395294,
-    x248 = 11053224,
-    x249 = 11711154,
-    x250 = 12369084,
-    x251 = 13027014,
-    x252 = 13684944,
-    x253 = 14342874,
-    x254 = 15000804,
-    x255 = 15658734,
 }  -- end conversion table
 
 -- Set up xterm color conversions
@@ -110,11 +62,8 @@ for i = 9,16 do
     colour_conversion[string.format("x%02d",i-1)] = GetBoldColour(i-8)
     colour_conversion[string.format("x%d",i-1)] = GetBoldColour(i-8)
 end
-for i = 16,231 do
-    BLUE = ((i-16)%6) + 1
-    GREEN = (math.floor((i-16)/6)%6) + 1
-    RED = (math.floor((i-16)/36)%6) + 1
-    xterm_colour = bit.shl(xterm_intensities[BLUE],16)+bit.shl(xterm_intensities[GREEN],8)+xterm_intensities[RED]
+for i = 16,255 do
+    local xterm_colour = extended_colours[i]
     conversion[xterm_colour] = (conversion[xterm_colour] or string.format("@x%03d",i))
     colour_conversion[string.format("x%03d",i)] = xterm_colour
     colour_conversion[string.format("x%02d",i)] = xterm_colour
@@ -185,7 +134,10 @@ function ColoursToStyles (Text)
 
         Text = Text:gsub ("@%-", "~") -- fix tildes
         Text = Text:gsub ("@@", "\0") -- change @@ to 0x00
-        Text = Text:gsub ("@x([^%d])","%1") -- strip invalid xterm codes
+        Text = Text:gsub ("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
+        Text = Text:gsub ("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
+        Text = Text:gsub ("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
+        Text = Text:gsub ("@x25[6-9]","") -- strip invalid xterm codes (256+)
         Text = Text:gsub ("@[^xcmyrgbwCMYRGBWD]", "")  -- rip out hidden garbage
         
         -- make sure we start with @ or gsub doesn't work properly
