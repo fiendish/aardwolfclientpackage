@@ -8,8 +8,27 @@ local CYAN = 7
 local WHITE = 8
 local DEFAULT_COLOUR = "@w"
 
--- colour styles (eg. @r is normal red, @R is bold red)
-local conversion = {
+-- map aardwolf color codes to ansi values
+ANSI_colors = {
+["@r"] = {31,0},
+["@g"] = {32,0},
+["@y"] = {33,0},
+["@b"] = {34,0},
+["@m"] = {35,0},
+["@c"] = {36,0},
+["@w"] = {37,0},
+["@D"] = {30,1},
+["@R"] = {31,1},
+["@G"] = {32,1},
+["@Y"] = {33,1},
+["@B"] = {34,1},
+["@M"] = {35,1},
+["@C"] = {36,1},
+["@W"] = {37,1}
+}
+
+-- map from color values to aardwolf color codes
+conversion_colours = {
   [GetNormalColour (BLACK)]   = "@x000",
   [GetNormalColour (RED)]     = "@r",
   [GetNormalColour (GREEN)]   = "@g",
@@ -31,6 +50,7 @@ local conversion = {
 -- This table uses the colours as defined in the MUSHclient ANSI tab, however the
 -- defaults are shown on the right if you prefer to use those.
 
+-- map from aardwolf color codes to color values
 colour_conversion = {
    k = GetNormalColour (BLACK)   ,   -- 0x000000 
    r = GetNormalColour (RED)     ,   -- 0x000080 
@@ -64,10 +84,16 @@ for i = 9,16 do
 end
 for i = 16,255 do
     local xterm_colour = extended_colours[i]
-    conversion[xterm_colour] = (conversion[xterm_colour] or string.format("@x%03d",i))
+    conversion_colours[xterm_colour] = (conversion_colours[xterm_colour] or string.format("@x%03d",i))
     colour_conversion[string.format("x%03d",i)] = xterm_colour
     colour_conversion[string.format("x%02d",i)] = xterm_colour
     colour_conversion[string.format("x%d",i)] = xterm_colour
+end
+
+-- also provide the reverse of the extended_colours global table
+colours_extended = {}
+for i,v in ipairs(extended_colours) do
+   colours_extended[v] = i
 end
 
 -- convert a line of style runs into color codes
@@ -110,7 +136,7 @@ function StylesToColoursOneLine (styles, startcol, endcol)
     text = string.gsub (text, "~", "@-")
 
     -- put code in front, if we can find one
-    local code = conversion [styles[1].textcolour]
+    local code = conversion_colours [styles[1].textcolour]
 
     if code then
       copystring = copystring .. code
@@ -171,6 +197,7 @@ function ColoursToStyles (Text)
             backcolour = GetNormalColour (BLACK) } }
 end  -- function ColoursToStyles
 
+-- strip all aardwolf color codes from a string
 function strip_colours (s)
   s = s:gsub ("@%-", "~")    -- fix tildes
   s = s:gsub ("@@", "\0")  -- change @@ to 0x00
@@ -180,3 +207,20 @@ function strip_colours (s)
   return (s:gsub ("%z", "@")) -- put @ back
 end -- strip_colours
 
+-- returns a string with embedded ansi codes
+function stylesToANSI (styles)
+   line = {}
+   for _,v in ipairs (styles) do
+      if colours_extended[v.textcolour] then
+         table.insert(line, ANSI(38,5,colours_extended[v.textcolour]))
+      else
+         local ansi_tab = ANSI_colors[conversion_colours[v.textcolour]]
+         if ansi_tab then
+            table.insert(line, ANSI(ansi_tab[1],ansi_tab[2]))
+         end
+      end
+      table.insert(line, v.text)
+   end
+   table.insert(line, ANSI(0))
+   return table.concat(line)
+end
