@@ -54,7 +54,7 @@ function convertHTMLcodesToStandardText(str)
 end
 
 function updateDialog()
-    if utils.editbox("There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..(local_version or "<ERROR!>").." and the newest version is r"..(latest_version or "<ERROR!>")..".\nThe major differences between your version and the latest version are:",window_title,convertHTMLcodesToStandardText(final_update_list) or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>",nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later"}) then
+    if utils.editbox("There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..(local_version or "<ERROR!>").." and the newest version is r"..(latest_version or "<ERROR!>")..".\nThe major differences between your version and the latest version are:",window_title,convertHTMLcodesToStandardText(final_update_list) or "<ERROR!>",nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later"}) then
         OpenBrowser(download_url)
     end
 end
@@ -90,7 +90,7 @@ function OnPluginInstall()
     
     if tonumber(local_version) and tonumber(latest_version) then
         if tonumber(local_version) < tonumber(latest_version) then
-            final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR>").."\r\nGet it from: "..download_url
+            final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>\r\n").."\r\nGet it from: "..download_url
              -- FYI: a bug causes MUSHclient 4.72 to crash if utils.editbox is used immediately after a call to Connect()
             DoAfterSpecial (10, 'updateDialog()', sendto.script)
         elseif tonumber(local_version) > tonumber(latest_version) then
