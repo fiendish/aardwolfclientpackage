@@ -44,6 +44,7 @@ function convertHTMLcodesToStandardText(str)
     {"&gt;",">"},
     {"&lt;","<"},
     {"&quot;","\""},
+    {"&#39;","'"},
     {"&amp;","&"}
     }
     for i,v in ipairs(replacements) do
