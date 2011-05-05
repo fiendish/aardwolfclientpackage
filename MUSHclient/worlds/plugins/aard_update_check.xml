@@ -37,7 +37,7 @@ window_title = "Aardwolf MUSHclient Package Update Checker"
 
 function convertHTMLcodesToStandardText(str)
     if not str then
-        return "<ERROR!>"
+        return nil
     end
     
     local replacements = { -- minimal set. can add more later if needed.
@@ -54,7 +54,7 @@ function convertHTMLcodesToStandardText(str)
 end
 
 function updateDialog()
-    if utils.editbox("There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..(local_version or "<ERROR!>").." and the newest version is r"..(latest_version or "<ERROR!>")..".\nThe major differences between your version and the latest version are:",window_title,convertHTMLcodesToStandardText(final_update_list),nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later"}) then
+    if utils.editbox("There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..(local_version or "<ERROR!>").." and the newest version is r"..(latest_version or "<ERROR!>")..".\nThe major differences between your version and the latest version are:",window_title,convertHTMLcodesToStandardText(final_update_list) or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>",nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later"}) then
         OpenBrowser(download_url)
     end
 end
