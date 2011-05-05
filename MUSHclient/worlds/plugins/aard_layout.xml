@@ -196,16 +196,26 @@ function resetaard()
    check_main_background()
 end
 
+function OnPluginClose()
+    OnPluginDisable()
+end
+
 function OnPluginDisable ()
+    OnPluginSaveState()
+    TextRectangle(0,0,0,0,
+              5,  -- BorderOffset, 
+              ColourNameToRGB ("darkgray"),    -- BorderColour, 
+              2,  -- BorderWidth, 
+              ColourNameToRGB ("darkslategray"),  -- OutsideFillColour, 
+              0) -- OutsideFillStyle (fine hatch)
+    SetBackgroundImage("",0)
     WindowShow( textDragger, false )
     WindowShow( textResizer, false )
     WindowShow( bgwin, false)
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-    WindowShow( textDragger, true )
-    WindowShow( textResizer, true )
-    WindowShow( bgwin, true)
+    OnPluginInstall()
 end -- OnPluginEnable
 
 
@@ -214,7 +224,7 @@ end -- OnPluginEnable
 -- This is the place to initialize stuff you need in the main plugin.
 --=================================================================================
 function OnPluginInstall() 
-
+   
    --- Get a unique name for main window and resizer window.
    win = GetPluginID ()  -- get a unique name
    textDragger = "      "..win.."txtdragger"
@@ -226,14 +236,6 @@ function OnPluginInstall()
 
    --- Pull some state variables.
    default_textrect  = tonumber (GetVariable ("defaulttr")) or default_textrect
-
-   if (default_textrect == 0) then
-      textrect_top = tonumber(GetVariable("trtop")) or 22
-      textrect_bottom = tonumber(GetVariable("trbottom")) or 400
-      textrect_left = tonumber(GetVariable("trleft")) or 200
-      textrect_right = tonumber(GetVariable("trright")) or 200 + GetInfo(213) * 90
-   end  
-
    -- give main world window time to stabilize its size and position
    check_main_background()
    DoAfterSpecial(2,"check_main_background()",12)
@@ -241,7 +243,12 @@ end
 
 function check_main_background()
 
-   if (default_textrect == 1) then
+   if (default_textrect == 0) then
+      textrect_top = tonumber(GetVariable("trtop")) or 22
+      textrect_bottom = tonumber(GetVariable("trbottom")) or 400
+      textrect_left = tonumber(GetVariable("trleft")) or 200
+      textrect_right = tonumber(GetVariable("trright")) or 200 + GetInfo(213) * 90
+   elseif (default_textrect == 1) then
       textrect_left   = 1
       textrect_top    = 22
       textrect_right  = textrect_left + GetInfo(213) * 90 -- Sized for 90 chars
