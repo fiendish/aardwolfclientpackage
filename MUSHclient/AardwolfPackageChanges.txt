@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r741 snapshot
+r745 snapshot
 - new feature: there's a new plugin that automatically checks for snapshot updates on the google code site. This is NOT currently loaded by default.
 - misc change: added z-order plugin to the default plugin list
 - new feature: (for developers) there is some new functionality in aardwolf_colours.lua
