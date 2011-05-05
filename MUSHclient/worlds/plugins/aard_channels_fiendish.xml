@@ -742,6 +742,13 @@ function stampAndStore(styles)
 
 end
 
+function echoStyles(styles)
+    for _, v in ipairs (styles) do
+        ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
+    end -- for each style run
+    Note ("")  -- wrap up line
+end
+
 function chats (name, line, wildcards, styles)
     if (echo == "0") then
         EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
@@ -758,10 +765,7 @@ function chats (name, line, wildcards, styles)
         styles[1].length = styles[1].length-tag_length
         
         -- display
-        for _, v in ipairs (styles) do
-            ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
-        end -- for each style run
-        Note ("")  -- wrap up line
+        echoStyles(styles)
     end -- echo wanted
 end -- chats
 
@@ -773,10 +777,7 @@ function untagged_info (name, line, wildcards, styles)
     
     -- echo in this world as well if the user wants
     if echo == "1" then
-        for _, v in ipairs (styles) do
-            ColourTell (RGBColourToName (v.textcolour),RGBColourToName (v.backcolour),v.text)
-        end -- for each style run
-        Note ("")  -- wrap up line
+        echoStyles(styles)
     end -- echo wanted
     
     stampAndStore(styles)
@@ -835,6 +836,7 @@ function scrollbar()
         while keepscrolling == "up" or keepscrolling == "down" do
             if keepscrolling == "up" then
                 if (lineStart > 1) then
+
                     lineStart = lineStart - 1
                     lineEnd = lineEnd - 1
                 else
