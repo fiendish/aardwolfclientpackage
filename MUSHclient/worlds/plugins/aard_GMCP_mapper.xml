@@ -1633,6 +1633,7 @@ end -- function create_tables
 function get_room (uid)
 
   -- check we got room at all
+
   if not uid then
    -- return nil
   end -- if
@@ -2222,17 +2223,26 @@ function backup_databases (manual)
   
   local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
   local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(sanitize_filename(WorldName()))," ","_")
-
-  os.execute("md "..quote(GetInfo(66).."db_backups\\"))
-
+  
+local execute_string = "md "..quote(GetInfo(66).."db_backups\\")
+  if os.execute(execute_string) ~= error_code.eOK then
+     ColourNote("yellow","red", "ERROR executing system command: "..execute_string)
+     ColourNote("white", "red", "Aborting Backup\n")
+     return
+  end  
+  
   -- close databases
   db:close()
   db_bm:close()
   
   -- make new backup
   ChangeDir(GetInfo (66)) -- be in current program directory or zip -T won't work properly
-  os.execute("zip -j -q -T "..quote(backupPath.."_DB_Backup.zip").." "..quote(worldPath.."*.db"))
-  
+  execute_string = "zip -j -q -T "..quote(backupPath.."_DB_Backup.zip").." "..quote(worldPath.."*.db")
+  if os.execute(execute_string) ~= error_code.eOK then
+     ColourNote("yellow","red", "ERROR executing system command: "..execute_string)
+     ColourNote("white", "red", "Aborting Backup\n")
+     return
+  end
   -- rotate backup files
   rotate_backups(backupPath, manual)
   
