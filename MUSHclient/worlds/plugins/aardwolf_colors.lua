@@ -8,25 +8,6 @@ local CYAN = 7
 local WHITE = 8
 local DEFAULT_COLOUR = "@w"
 
--- map aardwolf color codes to ansi values
-ANSI_colors = {
-["@r"] = {0,31},
-["@g"] = {0,32},
-["@y"] = {0,33},
-["@b"] = {0,34},
-["@m"] = {0,35},
-["@c"] = {0,36},
-["@w"] = {0,37},
-["@D"] = {1,30},
-["@R"] = {1,31},
-["@G"] = {1,32},
-["@Y"] = {1,33},
-["@B"] = {1,34},
-["@M"] = {1,35},
-["@C"] = {1,36},
-["@W"] = {1,37}
-}
-
 -- map from color values to aardwolf color codes
 conversion_colours = {
   [GetNormalColour (BLACK)]   = "@x000",
@@ -88,12 +69,6 @@ for i = 16,255 do
     colour_conversion[string.format("x%03d",i)] = xterm_colour
     colour_conversion[string.format("x%02d",i)] = xterm_colour
     colour_conversion[string.format("x%d",i)] = xterm_colour
-end
-
--- also provide the reverse of the extended_colours global table
-colours_extended = {}
-for i,v in ipairs(extended_colours) do
-   colours_extended[v] = i
 end
 
 -- convert a line of style runs into color codes
@@ -207,14 +182,39 @@ function strip_colours (s)
   return (s:gsub ("%z", "@")) -- put @ back
 end -- strip_colours
 
+-- also provide the reverse of the extended_colours global table
+colours_extended = {}
+for i,v in ipairs(extended_colours) do
+   colours_extended[v] = i
+end
+
+ANSI_colours = {
+  [GetNormalColour (BLACK)]   = {0,30},
+  [GetNormalColour (RED)]     = {0,31},
+  [GetNormalColour (GREEN)]   = {0,32},
+  [GetNormalColour (YELLOW)]  = {0,33},
+  [GetNormalColour (BLUE)]    = {0,34},
+  [GetNormalColour (MAGENTA)] = {0,35},
+  [GetNormalColour (CYAN)]    = {0,36},
+  [GetNormalColour (WHITE)]   = {0,37},
+  [GetBoldColour   (BLACK)]   = {1,30},
+  [GetBoldColour   (RED)]     = {1,31},
+  [GetBoldColour   (GREEN)]   = {1,32},
+  [GetBoldColour   (YELLOW)]  = {1,33},
+  [GetBoldColour   (BLUE)]    = {1,34},
+  [GetBoldColour   (MAGENTA)] = {1,35},
+  [GetBoldColour   (CYAN)]    = {1,36},
+  [GetBoldColour   (WHITE)]   = {1,37}
+  }  -- end conversion table
+
 -- returns a string with embedded ansi codes
 function stylesToANSI (styles)
    line = {}
    for _,v in ipairs (styles) do
-      if colours_extended[v.textcolour] then
+      if colours_extended[v.textcolour] then -- use 256 color xterm ansi when available
          table.insert(line, ANSI(38,5,colours_extended[v.textcolour]))
-      else
-         local ansi_tab = ANSI_colors[conversion_colours[v.textcolour]]
+      else -- the user may have customized their standard 16 colors
+         local ansi_tab = ANSI_colours[v.textcolour]
          if ansi_tab then
             table.insert(line, ANSI(ansi_tab[1],ansi_tab[2]))
          end
@@ -224,3 +224,4 @@ function stylesToANSI (styles)
    table.insert(line, ANSI(0))
    return table.concat(line)
 end
+
