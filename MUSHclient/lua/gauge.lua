@@ -57,7 +57,7 @@ function gauge (win,                        -- miniwindow ID to draw in
   WindowRectOp (win, 2, left, top, left + width, top + height, bg_colour)  -- fill entire box
     
   -- how big filled part is
-  local gauge_width = (width-2) * Fraction
+  local gauge_width = (width - 2) * Fraction
     
    -- box size must be > 0 or WindowGradient fills the whole thing 
   if math.floor (gauge_width) > 0 then
