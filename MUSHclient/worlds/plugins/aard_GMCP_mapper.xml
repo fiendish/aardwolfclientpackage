@@ -2224,33 +2224,57 @@ function backup_databases (manual)
   local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
   local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(sanitize_filename(WorldName()))," ","_")
   
-local execute_string = "md "..quote(GetInfo(66).."db_backups\\")
-  if os.execute(execute_string) ~= error_code.eOK then
-     ColourNote("yellow","red", "ERROR executing system command: "..execute_string)
-     ColourNote("white", "red", "Aborting Backup\n")
-     return
-  end  
+n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
+
+  ChangeDir("C:") -- Hide stupid *@#&$@! "started in a UNC path" warning messages, because CMD.EXE is a piece of garbage
   
+  local execute_string = "md "..quote(GetInfo(66).."db_backups\\").." >"..quote(n).." 2>&1"
+  os.execute(execute_string) -- this will fail in Windows if the directory already exists. So we can't check for errors here. Argh.
+  -- It's not so simple to catch errors from os.execute, so just display the system output here
+  for line in io.lines (n) do
+    print (line)
+  end
+  os.remove (n) -- remove temp file
+ 
   -- close databases
   db:close()
   db_bm:close()
   
   -- make new backup
-  ChangeDir(GetInfo (66)) -- be in current program directory or zip -T won't work properly
-  execute_string = "zip -j -q -T "..quote(backupPath.."_DB_Backup.zip").." "..quote(worldPath.."*.db")
-  if os.execute(execute_string) ~= error_code.eOK then
-     ColourNote("yellow","red", "ERROR executing system command: "..execute_string)
-     ColourNote("white", "red", "Aborting Backup\n")
-     return
+  -- use pushd/popd here because CMD.EXE can't @!#($$# access UNC directory paths
+  execute_string = "pushd "..quote(GetInfo(66)).." & zip -j -T "..quote(backupPath.."_DB_Backup.zip").." "..quote(worldPath.."*.db").." >"..quote(n).." 2>&1 & popd"  
+  os.execute(execute_string)
+  -- It's not so simple to catch errors from os.execute, so just display the system output here
+  local lines = {}
+  for line in io.lines (n) do
+    table.insert(lines,line)
   end
-  -- rotate backup files
-  rotate_backups(backupPath, manual)
+  os.remove (n) -- remove temp file
+
+  ChangeDir(GetInfo(66)) -- Go back to default directory
+
+  if not string.find(lines[#lines], "test of .*_DB_Backup.zip OK") then
+     -- we expect to see the last line show a passing test
+     -- otherwise something went wrong
+     ColourNote("yellow","red", "ERROR executing system command: "..execute_string.."\n")
+     for i,v in ipairs(lines) do
+        ColourNote("yellow","red",v) -- flaming output
+     end
+     Note("ABORTING BACKUP. YOU MAY NEED TO REPORT THIS ERROR TO FIENDISH.")
+     Note("")
+  else
+     for i,v in ipairs(lines) do
+        Note(v) -- less intense output
+     end
+     rotate_backups(backupPath, manual) -- rotate backup files (obviously)
+     Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
+     Note("")
+  end
   
   -- re-open databases 
   db    = assert (sqlite3.open(worldPath..".db"))
   db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
   
-  Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
   in_backup = false
 end
 
