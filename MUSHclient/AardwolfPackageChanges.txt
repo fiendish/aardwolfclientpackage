@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r758 snapshot
+- new feature: updated to MUSHclient 4.73
+- bug fix: (I really sincerely hope) os.execute in Windows is now the bane of my existence. I hope that gmcp mapper database backups are working properly now for everyone.
+- new feature: prompt on first run to add the update checker plugin
+
 r745 snapshot
 - new feature: there's a new plugin that automatically checks for snapshot updates on the google code site. This is NOT currently loaded by default.
 - misc change: added z-order plugin to the default plugin list
