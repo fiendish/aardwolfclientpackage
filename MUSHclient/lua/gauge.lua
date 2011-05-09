@@ -18,7 +18,8 @@ function gauge (win,                        -- miniwindow ID to draw in
                 fg_colour, bg_colour,       -- colour for bar, colour for unfilled part
                 ticks, tick_colour,         -- number of ticks to draw, and in what colour
                 frame_colour,               -- colour for frame around bar
-                shadow_colour)              -- colour for shadow, nil for no shadow
+                shadow_colour,              -- colour for shadow, nil for no shadow
+                no_gradient)
 
   local Fraction
   
@@ -62,18 +63,22 @@ function gauge (win,                        -- miniwindow ID to draw in
    -- box size must be > 0 or WindowGradient fills the whole thing 
   if math.floor (gauge_width) > 0 then
     
-    -- top half
-    WindowGradient (win, left, top-1, 
-                    left + gauge_width, top + height / 2, 
-                    0x000000, -- black
-                    fg_colour, 2)  -- vertical top to bottom
-    
-    -- bottom half
-    WindowGradient (win, left, top + height / 2, 
-                    left + gauge_width, top + height,   
-                    fg_colour,
-                    0x000000, -- black
-                    2) -- vertical top to bottom
+    if no_gradient then
+        WindowRectOp (win, 2, left+1, top, left+1+gauge_width, top+height, fg_colour)
+    else 
+        -- top half
+        WindowGradient (win, left, top-1, 
+                        left + gauge_width, top + height / 2, 
+                        0x000000, -- black
+                        fg_colour, 2)  -- vertical top to bottom
+        
+        -- bottom half
+        WindowGradient (win, left, top + height / 2, 
+                        left + gauge_width, top + height,   
+                        fg_colour,
+                        0x000000, -- black
+                        2) -- vertical top to bottom
+    end
 
   end -- non-zero
   
