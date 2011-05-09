@@ -19,7 +19,7 @@ function gauge (win,                        -- miniwindow ID to draw in
                 ticks, tick_colour,         -- number of ticks to draw, and in what colour
                 frame_colour,               -- colour for frame around bar
                 shadow_colour,              -- colour for shadow, nil for no shadow
-                no_gradient)
+                no_gradient)                -- don't use the gradient fill effect
 
   local Fraction
   
