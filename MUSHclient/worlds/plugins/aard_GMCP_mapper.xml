@@ -2223,8 +2223,8 @@ function backup_databases (manual)
   
   local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
   local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(sanitize_filename(WorldName()))," ","_")
-  
-n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
+
+  n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
 
   ChangeDir("C:") -- Hide stupid *@#&$@! "started in a UNC path" warning messages, because CMD.EXE is a piece of garbage
   
@@ -2235,7 +2235,7 @@ n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execu
     print (line)
   end
   os.remove (n) -- remove temp file
- 
+
   -- close databases
   db:close()
   db_bm:close()
@@ -3046,7 +3046,7 @@ function OnHelp ()
 end
 
 function OnPluginListChanged ()
-  do_plugin_check_now ("3e7dedbe37e44942dd46d264", "GMCP_handler")    -- check we have ATCP plugin
+  do_plugin_check_now ("3e7dedbe37e44942dd46d264", "GMCP_handler")    -- check we have GMCP plugin
 end -- OnPluginListChanged
 
 
