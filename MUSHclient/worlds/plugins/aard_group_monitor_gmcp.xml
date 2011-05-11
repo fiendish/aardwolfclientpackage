@@ -114,6 +114,8 @@ function SetUpHotspotsAndDraw(firstTime)
        -- Add handler for resizing
        WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
        WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+
+       WindowShow (win, true)
    else
        -- everything has already been made
        -- just move them back into place
@@ -291,8 +293,6 @@ function DisplayGroupPage()
    WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
    WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
 
-   -- show it now (or refresh)
-   WindowShow (win, true)
    --Redraw()
    BroadcastPlugin (999, "repaint")
                  
@@ -664,7 +664,7 @@ function OnPluginInstall()
        if IsConnected() then
          OnPluginConnect()
        end
-       
+              
        -- Draw the initial group window
        SetUpHotspotsAndDraw(true)
     end
