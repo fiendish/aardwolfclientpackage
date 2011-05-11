@@ -171,3 +171,17 @@ local font_height = WindowFontInfo (win, font, 1)
   
   return width
 end -- draw_text_box
+
+-- text with a black outline
+function outlined_text(window, font, text, startx, starty, endx, endy, color, utf8)
+    WindowText(window, font, text, startx-1, starty-1, endx, endy, 0x000000, utf8)
+    WindowText(window, font, text, startx-1, starty, endx, endy, 0x000000, utf8)
+    WindowText(window, font, text, startx-1, starty+1, endx, endy, 0x000000, utf8)
+    WindowText(window, font, text, startx, starty-1, endx, endy, 0x000000, utf8)
+    WindowText(window, font, text, startx, starty+1, endx, endy, 0x000000, utf8)
+    WindowText(window, font, text, startx+1, starty-1, endx, endy, 0x000000, utf8)
+    WindowText(window, font, text, startx+1, starty, endx, endy, 0x000000, utf8)
+    WindowText(window, font, text, startx+1, starty+1, endx, endy, 0x000000, utf8)
+    WindowText(window, font, text, startx, starty, endx, endy, color, utf8)
+end
+
