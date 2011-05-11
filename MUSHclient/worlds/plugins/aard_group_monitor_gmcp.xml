@@ -91,6 +91,7 @@ starty      = ""
 posx        = "" 
 posy        = ""
 font_height = 0
+hidden_members = {}
 
 -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
@@ -114,8 +115,9 @@ function SetUpHotspotsAndDraw(firstTime)
        -- Add handler for resizing
        WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
        WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-
-       WindowShow (win, true)
+       if hidden == 0 then
+          WindowShow (win, true)
+       end
    else
        -- everything has already been made
        -- just move them back into place
@@ -136,11 +138,24 @@ string.rpad = function(str, len, char)
     return str .. string.rep(char, len - #str)
 end
 
-function RemoveSelfFromGroupDisplay()
-    for i,v in ipairs(group_data["members"]) do
-       if (v["name"] == char_data["name"]) then
-          table.remove(group_data["members"], i)
-       end
+function RemoveMembersFromGroupDisplay()
+    -- hide self if applicable
+    if (show_self == 0) and (char_data ~= nil) then
+        for i,v in ipairs(group_data["members"]) do
+            if v["name"] == char_data["name"] then
+              table.remove(group_data["members"], i)
+            end
+        end
+    end
+    
+    -- hide other hidden members (inefficient method, but who cares)
+    for k,v in pairs(hidden_members) do
+        for i,v in ipairs(group_data["members"]) do
+            if v["name"] == k then
+              table.remove(group_data["members"], i)
+              break
+            end
+        end
     end
 end
 
@@ -178,9 +193,7 @@ function DisplayGroupPage()
       WindowText(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"], width-WindowTextWidth(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"])-GAP, y, 0,0, 0xeeeeee, utf8)
       y = title_height
       
-      if (show_self == 0 and char_data ~= nil) then
-          RemoveSelfFromGroupDisplay()
-      end
+      RemoveMembersFromGroupDisplay()
       if #group_data["members"] > 0 then
           -- MAIN DISPLAY BODY
           baseX = GAP
@@ -300,7 +313,19 @@ end -- Display_Map
 
 function right_click_menu ()
 
-    menustring ="!Show Help|-|Change Font|"..((show_self==1 and "+") or "").."Show Self In Group".."|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|-|Reset Defaults"
+    menustring ="!Change Font|>Show In Group|"..((show_self==1 and "+") or "").."Include Self|All Others|-|"
+    local member_count = 0
+    local member_names = {}
+    if full_group_data and full_group_data["members"] then
+        for i,v in ipairs(full_group_data["members"]) do
+            if char_data and char_data["name"] and v["name"] ~= char_data["name"] then
+                menustring = menustring..(((hidden_members[v["name"]] == nil) and "+") or "")..v["name"].."|"
+                member_count = member_count + 1
+                table.insert(member_names, v["name"])
+            end
+        end
+    end
+    menustring = menustring.."<|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|-|Reset Defaults"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
@@ -310,30 +335,15 @@ function right_click_menu ()
         local reload = false
         numResult = tonumber(result)
         if numResult == 1 then
-           ColourNote("yellow", "", [[
-           
-        +--------------- Group Monitor Plugin Info ----------------+
-        
-          * Resizing the group window will cause visible player 
-            entries to automatically wrap to fit the space based
-            on the number of columns that can go into the width.
-        
-          * Most of the color configuration options are pretty
-            self-explanatory, and adjust the border and fill
-            colors of the gauge bars. Alignment colors affect the
-            colorization of names of the players in the group.
-        
-        +----------------------------------------------------------+
-           
-           ]])
-        elseif numResult == 2 then
+           -- change font
            wanted_font = utils.fontpicker (font_name, font_size) --font dialog
            if wanted_font then
               font_name = wanted_font.name
               font_size = wanted_font.size
               reload = true
            end
-        elseif numResult == 3 then
+        elseif numResult == 2 then
+           -- show/hide self
            show_self = (((show_self == 0) and 1) or 0)
            if (show_self == 0) then
               ColourNote("yellow", "", "You will no longer see your own status in the group monitor.")
@@ -341,26 +351,38 @@ function right_click_menu ()
               ColourNote("yellow", "", "You will now see your own status in the group monitor.")
            end
            reload = true
-        elseif numResult >= 4 and numResult <= 11 then
-           local colourIndex = 1
-           if (numResult % 2 == 1) then
-              colourIndex = 2
+        elseif numResult == 3 then
+           -- remove all from the hidden list
+           hidden_members = {}
+           reload = true
+        elseif numResult >= 4 and numResult <= member_count+3 then
+           -- add/remove members in the hidden list
+           local adjustedNumResult = numResult - 3
+           hidden_members[member_names[adjustedNumResult]] = (((hidden_members[member_names[adjustedNumResult]]== nil) and true) or nil)
+           reload = true
+        elseif numResult >= member_count+4 and numResult <= member_count+11 then
+           -- change color settings
+           local adjustedNumResult = numResult-member_count-3
+           local colourIndex = 2
+           if (adjustedNumResult % 2 == 1) then
+              colourIndex = 1
            end
-           local newcolour = PickColour (colorVals[barIndex[math.floor((numResult/2)-1)]][colourIndex])
+           local newcolour = PickColour (colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex])
            if newcolour ~= -1 then
-              colorVals[barIndex[math.floor((numResult/2)-1)]][colourIndex] = newcolour
+              colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex] = newcolour
            end
            reload = true
-        elseif numResult == 12 then
-		           show_hp = (((show_hp == 0) and 1) or 0)
+        elseif numResult == member_count+12 then
+           -- show/hide HP info
+           show_hp = (((show_hp == 0) and 1) or 0)
            if (show_hp == 0) then
-
               ColourNote("yellow", "", "You will no longer see HP info in the group monitor.")
            else
               ColourNote("yellow", "", "You will now see HP info in the group monitor.")
            end
            reload = true
-        elseif numResult == 13   then
+        elseif numResult == member_count+13   then
+           -- show/hide MANA info
            show_mn = (((show_mn == 0) and 1) or 0)
            if (show_mn == 0) then
               ColourNote("yellow", "", "You will no longer see MN info in the group monitor.")
@@ -368,7 +390,8 @@ function right_click_menu ()
               ColourNote("yellow", "", "You will now see MN info in the group monitor.")
            end
            reload = true
-        elseif numResult == 14 then
+        elseif numResult == member_count+14 then
+           -- show/hide MOVES info
            show_mv = (((show_mv == 0) and 1) or 0)
            if (show_mv == 0) then
               ColourNote("yellow", "", "You will no longer see MV info in the group monitor.")
@@ -376,20 +399,24 @@ function right_click_menu ()
               ColourNote("yellow", "", "You will now see MV info in the group monitor.")
            end
            reload = true
-        elseif numResult == 15 then
+        elseif numResult == member_count+15 then
+            -- use flat/shaded gauges
             flat_gauges = (((flat_gauges == 0) and 1) or 0)
             reload = true
-        elseif numResult == 16 then
+        elseif numResult == member_count+16 then
+            -- toggle overlay numbers on top of gauges
             overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
             reload = true
-        elseif numResult == 17 then
+        elseif numResult == member_count+17 then
+           -- bring to front
            rc, max_layer = CallPlugin("462b665ecb569efbf261422f","maxLayer")
            if (my_layer_number ~= max_layer) then
               BroadcastPlugin(998, tostring(my_layer_number))
               my_layer_number = max_layer
               reload = true
            end
-        elseif numResult == 18 then
+        elseif numResult == member_count+18 then
+           -- reset
            font_name        = default_font_name
            font_size        = default_font_size
            height           = default_height
@@ -435,9 +462,7 @@ function OnPluginBroadcast (msg, id, name, text)
              leaveGroup()
          else
              group_built = true
-			 if hidden==0 then
-			    DisplayGroupPage()
-             end
+             DisplayGroupPage()
 		 end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
@@ -579,11 +604,13 @@ end
 function HideIt()
     WindowShow( win, false )
     hidden = 1
+    OnPluginSaveState()
 end
 
 function ShowIt()
     WindowShow (win, true)
     hidden = 0
+    OnPluginSaveState()
 end
 
 function OnPluginDisable ()
@@ -591,7 +618,9 @@ function OnPluginDisable ()
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-    WindowShow (win, true)
+    if hidden == 0 then
+        WindowShow (win, true)
+    end
 end -- OnPluginEnable
 
 layer_lock = 0
@@ -664,7 +693,7 @@ function OnPluginInstall()
        if IsConnected() then
          OnPluginConnect()
        end
-              
+       
        -- Draw the initial group window
        SetUpHotspotsAndDraw(true)
     end
