@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r769 snapshot
+- new feature: 'checkversion' command displays the current package version
+- new feature: group monitor can show gauges as flat bars instead of shaded
+- new feature: group monitor can overlay hp/mn/mv numbers on top of the bars instead of taking up space on the side
+- new feature: health bars can show gauges as flat bars instead of shaded
+- new feature: health bars can overlay hp/mn/mv/tnl/enemy numbers on top of the bars
+- new feature: group monitor now has the ability to selectively hide group members. useful for those very large chat groups where not everyone is active.
+
 r758 snapshot
 - new feature: updated to MUSHclient 4.73
 - bug fix: (I really sincerely hope) os.execute in Windows is now the bane of my existence. I hope that gmcp mapper database backups are working properly now for everyone.
