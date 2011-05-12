@@ -21,13 +21,6 @@
 
 Aardwolf GCMP based health bars
 
-For full details on GMCP in Aardwolf see:
-   http://www.aardwolf.com/wiki/index.php/Clients/GMCP
-For Aardwolf specific GMCP information see:
-  http://www.aardwolf.com/wiki/index.php/Clients/MushclientGMCP
-Feel free to use this for any purpose on any MUD, but an email would be appreciated if you improve
-something -- wolf@aardwolf.com
-
 </description>
 
 </plugin>
@@ -69,6 +62,18 @@ page_built       = false
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
+string.lpad = function(str, len, char)
+    str = tostring(str)
+    if char == nil then char = ' ' end
+    return string.rep(char, len - #str) .. str
+end
+
+string.rpad = function(str, len, char)
+    str = tostring(str)
+    if char == nil then char = ' ' end
+    return str .. string.rep(char, len - #str)
+end
+
 function DisplayStatsPage()
 
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
@@ -87,6 +92,10 @@ function DisplayStatsPage()
       local xpos = LEFT_MARGIN
       local label_width = 0
       local bar_width = 0
+      local num_ticks = 3
+      if overlay_numbers == 1 then
+         num_ticks = 0
+      end
 
       -- count up the bars we're going to use
 
@@ -117,7 +126,12 @@ function DisplayStatsPage()
               end
           end
           if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+            if overlay_numbers == 1 then
+                txt = string.lpad(gmcpval("vitals.hp"), 5, ' ').."\\"..string.rpad(gmcpval("maxstats.maxhp"),5,' ')
+                txtlen = WindowTextWidth(win,font_id,txt)
+                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+            end
           else
             xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxhp")).."s",gmcpval("vitals.hp")).."/"..gmcpval("maxstats.maxhp").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
           end
@@ -137,7 +151,12 @@ function DisplayStatsPage()
               end
           end
           if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+            if overlay_numbers == 1 then
+                txt = string.lpad(gmcpval("vitals.mana"), 5, ' ').."\\"..string.rpad(gmcpval("maxstats.maxmana"),5,' ')
+                txtlen = WindowTextWidth(win,font_id,txt)
+                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+            end
           else
             xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxmana")).."s",gmcpval("vitals.mana")).."/"..gmcpval("maxstats.maxmana").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
           end
@@ -157,7 +176,12 @@ function DisplayStatsPage()
               end
           end
           if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+            if overlay_numbers == 1 then
+                txt = string.lpad(gmcpval("vitals.moves"), 5, ' ').."\\"..string.rpad(gmcpval("maxstats.maxmoves"),5,' ')
+                txtlen = WindowTextWidth(win,font_id,txt)
+                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+            end
           else
             xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxmoves")).."s",gmcpval("vitals.moves")).."/"..gmcpval("maxstats.maxmoves").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
           end
@@ -181,13 +205,23 @@ function DisplayStatsPage()
           -- switch from "to next level" to "current level experience"
           if (reverseTNL == 0) then
              if graphicalMode == 1 then
-                 gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+                 gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+                 if overlay_numbers == 1 then
+                    txt = string.lpad(gmcpval("status.tnl"), 5, ' ').."\\"..string.rpad(gmcpval("base.perlevel"),5,' ')
+                    txtlen = WindowTextWidth(win,font_id,txt)
+                    outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+                 end
              else
                  xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("base.perlevel")).."s",gmcpval("status.tnl")).."/"..gmcpval("base.perlevel").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
              end
           else
              if graphicalMode == 1 then
-                 gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil)
+                 gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+                 if overlay_numbers == 1 then
+                    txt = string.lpad((tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0), 5, ' ').."\\"..string.rpad(gmcpval("base.perlevel") or 0,5,' ')
+                    txtlen = WindowTextWidth(win,font_id,txt)
+                    outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+                 end
              else
                  xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("base.perlevel")).."s",(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0).."/"..(gmcpval("base.perlevel") or "0")).."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
              end
@@ -213,7 +247,12 @@ function DisplayStatsPage()
                 end
              end
              if graphicalMode == 1 then
-                 gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,3,0x000000,showBar[bar][5],nil) 
+                 gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+                 if overlay_numbers == 1 then
+                    txt = string.lpad(enemypct.."%", 4, ' ')
+                    txtlen = WindowTextWidth(win,font_id,txt)
+                    outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+                 end
              else
                  xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
              end
@@ -226,7 +265,7 @@ function DisplayStatsPage()
                  end
              end
              if graphicalMode == 1 then
-                 gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,3,0x000000,0x222222,nil) 
+                 gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1) 
              else
                  xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
              end            
@@ -309,7 +348,7 @@ function right_click_menu ()
         end
     end
     menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
-    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|-|Bring To Front|-|Reset Defaults"
+    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|-|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -318,18 +357,17 @@ function right_click_menu ()
    if result ~= "" then
         numResult = tonumber(result)
         if numResult == 1 then
+           -- change font
            wanted_font = utils.fontpicker (font_name, font_size) --font dialog
            if wanted_font then
               font_name = wanted_font.name
               font_size = wanted_font.size
            end
         elseif numResult == 2 then
-            if showLabels == 1 then
-                showLabels = 0
-            else
-                showLabels = 1
-            end
+            -- show/hide labels
+            showLabels = (((showLabels == 0) and 1) or 0)
         elseif numResult == 3 then
+            -- stack/unstack bars
             if stacked == 1 then
                 stacked = 0
                 height = line_height+(TOP_MARGIN*2)
@@ -338,8 +376,10 @@ function right_click_menu ()
                 height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
             end
         elseif numResult >= 4 and numResult <= 9 then
+           -- activate/de-activate
            showBar[barIndex[numResult-3]][2] = not showBar[barIndex[numResult-3]][2]
         elseif numResult >= 10 and numResult <= 21 then
+           -- change colors
            local colourIndex = 4
            if (numResult % 2 == 1) then
               colourIndex = 5
@@ -349,18 +389,17 @@ function right_click_menu ()
               showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex] = newcolour
            end
         elseif numResult == 22 then
-           if reverseTNL == 0 then
-              reverseTNL = 1
-           else
-              reverseTNL = 0
-           end
+           -- reverse tnl
+           reverseTNL = (((reverseTNL == 0) and 1) or 0)
         elseif numResult == 23 then
-           if graphicalMode == 1 then
-              graphicalMode = 0
-           else
-              graphicalMode = 1
-           end
+           -- text mode
+           graphicalMode = (((graphicalMode == 0) and 1) or 0)
         elseif numResult == 24 then
+           flat_gauges = (((flat_gauges == 0) and 1) or 0)
+        elseif numResult == 25 then
+           overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
+        elseif numResult == 26 then
+           -- bring to front
            rc, max_layer = CallPlugin("462b665ecb569efbf261422f","maxLayer")
            if (my_layer_number ~= max_layer) then
               BroadcastPlugin(998, tostring(my_layer_number))
@@ -368,7 +407,8 @@ function right_click_menu ()
               OnPluginSaveState()
               OnPluginInstall()
            end
-        elseif numResult == 25 then
+        elseif numResult == 27 then
+           -- reset defaults
            font_name = default_font_name
            font_size = default_font_size
            numBars = 5
@@ -532,6 +572,8 @@ function OnPluginSaveState ()
   SetVariable ("showBar", serialize.save ("showBar"))
   SetVariable ("graphicalMode", graphicalMode)
   SetVariable ("my_layer_number", my_layer_number)
+  SetVariable ("flat_gauges", flat_gauges)
+  SetVariable ("overlay_numbers", overlay_numbers)
 end -- OnPluginSaveState
 
 function OnPluginClose()
@@ -619,6 +661,8 @@ function OnPluginInstall()
        showLabels = tonumber(GetVariable("showLabels")) or showLabels
        reverseTNL = tonumber(GetVariable("reverseTNL")) or reverseTNL
        numBars    = tonumber(GetVariable("numBars")) or numBars
+       flat_gauges = tonumber(GetVariable("flat_gauges")) or 0
+       overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 0
        showBar = defaultShowBar
        assert (loadstring (GetVariable ("showBar") or "")) ()
 
