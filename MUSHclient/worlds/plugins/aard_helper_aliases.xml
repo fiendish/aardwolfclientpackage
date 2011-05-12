@@ -10,7 +10,7 @@
 <muclient>
 <plugin
    name="Aardwolf_Helper_Aliases"
-   author="Lasher"
+   author="Multiple"
    id="b11c1b7fe961558d6f6aba5e"
    language="Lua"
    purpose="Plugin to hold various aliases only."
@@ -21,6 +21,36 @@
 </plugin>
 
 <aliases>
+
+  <alias
+   match="checkversion"
+   enabled="y"
+   send_to="12"
+   sequence="100"
+   >
+   <send>
+   -- code taken from the package update checker
+    version_file,err = io.open ("AardwolfPackageChanges.txt", "r")
+    if not version_file then -- the file is missing or unreadable
+       ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.")
+       return
+    end
+    --- read the snapshot revision from the third line
+    line = version_file:read ("*l") -- read one line
+    line = version_file:read ("*l") -- read one line
+    line = version_file:read ("*l") -- read one line
+    local_version = nil
+    if line then -- if we got something
+       local_version = tonumber(string.match(line, "r(%d+) snapshot"))
+    end
+    if not local_version then -- the file is messed up such that the third line doesn't contain "r### snapshot"
+       ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to have been modified (this is bad), so the version check cannot proceed.")
+       return
+    end
+    ColourNote("white","blue","You are currently using Aardwolf MUSHclient Package version: r"..local_version)
+    </send>
+  </alias>
+
   <alias
    match="reload statmon"
    enabled="y"
