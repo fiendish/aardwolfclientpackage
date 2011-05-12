@@ -245,7 +245,7 @@ function DisplayGroupPage()
 			    txt = string.lpad(v["info"]["hp"], 5, ' ').."\\"..string.rpad(v["info"]["mhp"],5,' ')
                 if overlay_numbers == 1 then
                     txtlen = WindowTextWidth(win,font_id,txt)
-                    outlinedText(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
+                    outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
                 else
                     WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
                 end
@@ -260,7 +260,7 @@ function DisplayGroupPage()
                 txt = string.lpad(v["info"]["mn"],5,' ').."\\"..string.rpad(v["info"]["mmn"],5,' ')
                 if overlay_numbers == 1 then
                     txtlen = WindowTextWidth(win,font_id,txt)
-                    outlinedText(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
+                    outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
                 else
                     WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
                 end
@@ -275,7 +275,7 @@ function DisplayGroupPage()
                 txt = string.lpad(v["info"]["mv"],5,' ').."\\"..string.rpad(v["info"]["mmv"],5,' ')
                 if overlay_numbers == 1 then
                     txtlen = WindowTextWidth(win,font_id,txt)
-                    outlinedText(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
+                    outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
                 else
                     WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
                 end
@@ -479,19 +479,6 @@ function OnPluginBroadcast (msg, id, name, text)
          OnPluginInstall()
       end
    end
-end
-
-function outlinedText(window, font, text, startx, starty, endx, endy, color, utf8)
-    -- text with a black outline
-    WindowText(window, font, text, startx-1, starty-1, endx, endy, 0x000000, utf8)
-    WindowText(window, font, text, startx-1, starty, endx, endy, 0x000000, utf8)
-    WindowText(window, font, text, startx-1, starty+1, endx, endy, 0x000000, utf8)
-    WindowText(window, font, text, startx, starty-1, endx, endy, 0x000000, utf8)
-    WindowText(window, font, text, startx, starty+1, endx, endy, 0x000000, utf8)
-    WindowText(window, font, text, startx+1, starty-1, endx, endy, 0x000000, utf8)
-    WindowText(window, font, text, startx+1, starty, endx, endy, 0x000000, utf8)
-    WindowText(window, font, text, startx+1, starty+1, endx, endy, 0x000000, utf8)
-    WindowText(window, font, text, startx, starty, endx, endy, color, utf8)
 end
 
 function ResizeMoveCallback()
