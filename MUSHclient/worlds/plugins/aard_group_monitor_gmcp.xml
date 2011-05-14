@@ -8,8 +8,8 @@
    language="Lua"
    purpose="Aardwolf Group Monitor"
    date_written="2010-12-13 15:35:02"
-   requires="4.71"
-   version="1.0"
+   requires="4.73"
+   version="2.0"
    save_state="y"
    >
 
@@ -110,21 +110,21 @@ function SetUpHotspotsAndDraw(firstTime)
              windowinfo.window_flags,  -- flags
              background_colour) )
        -- Add the drag handler so they can move the window around
-       movewindow.add_drag_handler (GetPluginID(), 0, 0, 0, 0, nil, my_layer_string.."_")
+       movewindow.add_drag_handler (win, 0, 0, 0, 0)
 
        -- Add handler for resizing
        WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
        WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-       if hidden == 0 then
-          WindowShow (win, true)
-       end
+       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
    else
        -- everything has already been made
        -- just move them back into place
        WindowResize(win, width, height, background_colour)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
-
+   if hidden == 0 then
+      WindowShow (win, true)
+   end
    DisplayGroupPage()
 end
 
@@ -409,12 +409,7 @@ function right_click_menu ()
             reload = true
         elseif numResult == member_count+17 then
            -- bring to front
-           rc, max_layer = CallPlugin("462b665ecb569efbf261422f","maxLayer")
-           if (my_layer_number ~= max_layer) then
-              BroadcastPlugin(998, tostring(my_layer_number))
-              my_layer_number = max_layer
-              reload = true
-           end
+           CallPlugin("462b665ecb569efbf261422f","boostMe", win)
         elseif numResult == member_count+18 then
            -- reset
            font_name        = default_font_name
@@ -466,18 +461,7 @@ function OnPluginBroadcast (msg, id, name, text)
 		 end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
-      first_check = false
-      OnPluginListChanged()
-   elseif (id ~= GetPluginID()) then -- just in case a plugin receives its own broadcasts
-      if (msg == 995 and text == "lock") then
-         layer_lock = 1
-      elseif (msg == 995 and text == "unlock") then
-         layer_lock = 0
-      elseif (layer_lock == 0 and msg == 998 and tonumber(text) < my_layer_number) then
-         my_layer_number = my_layer_number - 1
-         OnPluginSaveState()
-         OnPluginInstall()
-      end
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
    end
 end
 
@@ -564,7 +548,7 @@ end
 
 function OnPluginSaveState ()
   -- save window current location for next time  
-  movewindow.save_state (GetPluginID())
+  movewindow.save_state (win)
 
   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
   SetVariable ("background_colour", background_colour)
@@ -579,7 +563,6 @@ function OnPluginSaveState ()
   SetVariable ("show_mv", show_mv)
   SetVariable ("hidden", hidden)
   SetVariable ("colorVals", serialize.save ("colorVals"))
-  SetVariable ("my_layer_number", my_layer_number)
   SetVariable ("flat_gauges", flat_gauges)
   SetVariable ("overlay_numbers", overlay_numbers)
 end -- OnPluginSaveState
@@ -610,80 +593,66 @@ function OnPluginEnable ()
     end
 end -- OnPluginEnable
 
-layer_lock = 0
 first_check = false
-my_layer_string = ""
-my_layer_number = tonumber(GetVariable("my_layer_number"))
 win = GetPluginID()
 require "checkplugin"
 function OnPluginListChanged ()
   if not first_check then
       do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
-      rc, my_layer_number, my_layer_string = CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", GetPluginID(), my_layer_number)
       first_check = true
       OnPluginInstall() -- run install again now that the z order plugin is loaded
   end
 end -- OnPluginListChanged
 
-function OnPluginInstall() 
-   if first_check then
-       -- don't make z order calls until we've loaded the z order plugin
-       rc, my_layer_string = CallPlugin("462b665ecb569efbf261422f","layerString",my_layer_number)
-       local oldwin = win
-       win = my_layer_string.."_"..GetPluginID()  -- get a unique name
-       if oldwin ~= win then
-          CallPlugin("462b665ecb569efbf261422f","cycleOutWindow",oldwin)
-       end
+function OnPluginInstall()
+   -- make window so I can grab the font info
+   WindowCreate (win, width, height, 1, 1, 0, 0, background_colour) 
+
+   font_id        = "font"
+   font_id_bold   = "font_bold"
+
+   local fonts = utils.getfontfamilies ()
+
+   -- if not there already, add it
+   if not fonts.Dina then
+     AddFont (GetInfo (66) .. "\\Dina.fon")
+     fonts = utils.getfontfamilies ()
+   end -- if Dina not installed
+
+   if fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
+   elseif fonts ["Dina"] then
+      default_font_size = 8
+      default_font_name = "Dina"    -- the actual font
+   else
+      default_font_size = 9
+      default_font_name = "Lucida Console"
+   end -- if
+
+   font_name = GetVariable("font_name") or default_font_name
+   font_size = tonumber(GetVariable("font_size")) or default_font_size
+
+   --- Load the fonts into the temp window.
+   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
+   WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false) -- bold font
+
+   --- Grab font size settings.
+   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
+   line_height = font_height + 1
+
+   --- install the window movement handler, get back the window position.
+   windowinfo = movewindow.install (win, miniwin.pos_center, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+
+   colorVals = defaultColorVals
+   assert (loadstring (GetVariable ("colorVals") or "")) ()
    
-       -- make window so I can grab the font info
-       WindowCreate (win, width, height, 1, 1, 0, 0, background_colour) 
-
-       font_id        = "font"
-       font_id_bold   = "font_bold"
-
-       local fonts = utils.getfontfamilies ()
-
-       -- if not there already, add it
-       if not fonts.Dina then
-         AddFont (GetInfo (66) .. "\\Dina.fon")
-         fonts = utils.getfontfamilies ()
-       end -- if Dina not installed
-
-       if fonts["Courier New"] then
-          default_font_size = 9
-          default_font_name = "Courier New"
-       elseif fonts ["Dina"] then
-          default_font_size = 8
-          default_font_name = "Dina"    -- the actual font
-       else
-          default_font_size = 9
-          default_font_name = "Lucida Console"
-       end -- if
-
-       font_name = GetVariable("font_name") or default_font_name
-       font_size = tonumber(GetVariable("font_size")) or default_font_size
-
-       --- Load the fonts into the temp window.
-       WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
-       WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false) -- bold font
-
-       --- Grab font size settings.
-       font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-       line_height = font_height + 1
-
-       --- install the window movement handler, get back the window position.
-           windowinfo  = movewindow.install (GetPluginID(), miniwin.pos_center, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, my_layer_string.."_")
-
-       colorVals = defaultColorVals
-       assert (loadstring (GetVariable ("colorVals") or "")) ()
-       
-       if IsConnected() then
-         OnPluginConnect()
-       end
-       
-       -- Draw the initial group window
-       SetUpHotspotsAndDraw(true)
-    end
+   if IsConnected() then
+     OnPluginConnect()
+   end
+   
+   -- Draw the initial group window
+   SetUpHotspotsAndDraw(true)
 end
 
 ]]>
