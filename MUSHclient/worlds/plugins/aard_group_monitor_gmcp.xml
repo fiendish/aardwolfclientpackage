@@ -159,6 +159,17 @@ function RemoveMembersFromGroupDisplay()
     end
 end
 
+-- put all current group members into the hidden_members list
+function hideAllMembers()
+    if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
+        for i,v in ipairs(full_group_data["members"]) do
+            if v["name"] ~= char_data["name"] then
+                hidden_members[v["name"]] = true
+            end
+        end
+    end
+end
+
 -- build and draw the group display
 function DisplayGroupPage()
    group_data = copytable.deep(full_group_data)
@@ -313,19 +324,19 @@ end -- Display_Map
 
 function right_click_menu ()
 
-    menustring ="!Change Font|>Show In Group|"..((show_self==1 and "+") or "").."Include Self|All Others|-|"
+    menustring ="!Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|All Others|No Others|-|"
     local member_count = 0
     local member_names = {}
-    if full_group_data and full_group_data["members"] then
+    if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
         for i,v in ipairs(full_group_data["members"]) do
-            if char_data and char_data["name"] and v["name"] ~= char_data["name"] then
+            if v["name"] ~= char_data["name"] then
                 menustring = menustring..(((hidden_members[v["name"]] == nil) and "+") or "")..v["name"].."|"
                 member_count = member_count + 1
                 table.insert(member_names, v["name"])
             end
         end
     end
-    menustring = menustring.."<|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|Send To Back|-|Reset Defaults"
+    menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|Send To Back|-|Reset Defaults"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
@@ -355,14 +366,18 @@ function right_click_menu ()
            -- remove all from the hidden list
            hidden_members = {}
            reload = true
-        elseif numResult >= 4 and numResult <= member_count+3 then
+        elseif numResult == 4 then
+           -- add all to the hidden list
+           hideAllMembers()
+           reload = true
+        elseif numResult >= 5 and numResult <= member_count+4 then
            -- add/remove members in the hidden list
-           local adjustedNumResult = numResult - 3
+           local adjustedNumResult = numResult - 4
            hidden_members[member_names[adjustedNumResult]] = (((hidden_members[member_names[adjustedNumResult]]== nil) and true) or nil)
            reload = true
-        elseif numResult >= member_count+4 and numResult <= member_count+11 then
+        elseif numResult >= member_count+5 and numResult <= member_count+12 then
            -- change color settings
-           local adjustedNumResult = numResult-member_count-3
+           local adjustedNumResult = numResult-member_count-4
            local colourIndex = 2
            if (adjustedNumResult % 2 == 1) then
               colourIndex = 1
@@ -372,7 +387,7 @@ function right_click_menu ()
               colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex] = newcolour
            end
            reload = true
-        elseif numResult == member_count+12 then
+        elseif numResult == member_count+13 then
            -- show/hide HP info
            show_hp = (((show_hp == 0) and 1) or 0)
            if (show_hp == 0) then
@@ -381,7 +396,7 @@ function right_click_menu ()
               ColourNote("yellow", "", "You will now see HP info in the group monitor.")
            end
            reload = true
-        elseif numResult == member_count+13   then
+        elseif numResult == member_count+14   then
            -- show/hide MANA info
            show_mn = (((show_mn == 0) and 1) or 0)
            if (show_mn == 0) then
@@ -390,7 +405,7 @@ function right_click_menu ()
               ColourNote("yellow", "", "You will now see MN info in the group monitor.")
            end
            reload = true
-        elseif numResult == member_count+14 then
+        elseif numResult == member_count+15 then
            -- show/hide MOVES info
            show_mv = (((show_mv == 0) and 1) or 0)
            if (show_mv == 0) then
@@ -399,21 +414,21 @@ function right_click_menu ()
               ColourNote("yellow", "", "You will now see MV info in the group monitor.")
            end
            reload = true
-        elseif numResult == member_count+15 then
+        elseif numResult == member_count+16 then
             -- use flat/shaded gauges
             flat_gauges = (((flat_gauges == 0) and 1) or 0)
             reload = true
-        elseif numResult == member_count+16 then
+        elseif numResult == member_count+17 then
             -- toggle overlay numbers on top of gauges
             overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
             reload = true
-        elseif numResult == member_count+17 then
+        elseif numResult == member_count+18 then
            -- bring to front
            CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-        elseif numResult == member_count+18 then
+        elseif numResult == member_count+19 then
            -- send to back
            CallPlugin("462b665ecb569efbf261422f","dropMe", win)        
-        elseif numResult == member_count+19 then
+        elseif numResult == member_count+20 then
            -- reset
            font_name        = default_font_name
            font_size        = default_font_size
