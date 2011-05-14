@@ -207,7 +207,7 @@ function DisplayGroupPage()
           labels_width = math.max(WindowTextWidth(win, font_id, "HP"), WindowTextWidth(win, font_id, "MN"), WindowTextWidth(win, font_id, "MV"))
           bar_width = column_width - GAP*4 - labels_width
           if overlay_numbers == 0 then
-             bar_width = bar_width - WindowTextWidth(win, font_id, "88888\\88888")
+             bar_width = bar_width - WindowTextWidth(win, font_id, "88888/88888")
           end
           for i,v in ipairs(group_data["members"]) do
             if (i ~= 1) and ((i-1) % members_per_col == 0) then
@@ -242,7 +242,7 @@ function DisplayGroupPage()
                 WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
                 x = x + labels_width + GAP
                 gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, colorVals["Health"][1], 0x000000, 0, 0x000000, colorVals["Health"][2], nil, flat_gauges==1)
-			    txt = string.lpad(v["info"]["hp"], 5, ' ').."\\"..string.rpad(v["info"]["mhp"],5,' ')
+			    txt = string.lpad(v["info"]["hp"], 5, ' ').."/"..string.rpad(v["info"]["mhp"],5,' ')
                 if overlay_numbers == 1 then
                     txtlen = WindowTextWidth(win,font_id,txt)
                     outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
@@ -257,7 +257,7 @@ function DisplayGroupPage()
                 WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
                 x = x + labels_width + GAP
                 gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, colorVals["Mana"][1], 0x000000, 0, 0x000000, colorVals["Mana"][2], nil, flat_gauges==1)
-                txt = string.lpad(v["info"]["mn"],5,' ').."\\"..string.rpad(v["info"]["mmn"],5,' ')
+                txt = string.lpad(v["info"]["mn"],5,' ').."/"..string.rpad(v["info"]["mmn"],5,' ')
                 if overlay_numbers == 1 then
                     txtlen = WindowTextWidth(win,font_id,txt)
                     outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
@@ -272,7 +272,7 @@ function DisplayGroupPage()
                 WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
                 x = x + labels_width + GAP
                 gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, colorVals["Moves"][1], 0x000000, 0, 0x000000, colorVals["Moves"][2], nil, flat_gauges==1)
-                txt = string.lpad(v["info"]["mv"],5,' ').."\\"..string.rpad(v["info"]["mmv"],5,' ')
+                txt = string.lpad(v["info"]["mv"],5,' ').."/"..string.rpad(v["info"]["mmv"],5,' ')
                 if overlay_numbers == 1 then
                     txtlen = WindowTextWidth(win,font_id,txt)
                     outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)

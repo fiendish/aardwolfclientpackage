@@ -128,7 +128,7 @@ function DisplayStatsPage()
           if graphicalMode == 1 then
             gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers == 1 then
-                txt = string.lpad(gmcpval("vitals.hp"), 5, ' ').."\\"..string.rpad(gmcpval("maxstats.maxhp"),5,' ')
+                txt = string.lpad(gmcpval("vitals.hp"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxhp"),5,' ')
                 txtlen = WindowTextWidth(win,font_id,txt)
                 outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
             end
@@ -153,7 +153,7 @@ function DisplayStatsPage()
           if graphicalMode == 1 then
             gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers == 1 then
-                txt = string.lpad(gmcpval("vitals.mana"), 5, ' ').."\\"..string.rpad(gmcpval("maxstats.maxmana"),5,' ')
+                txt = string.lpad(gmcpval("vitals.mana"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxmana"),5,' ')
                 txtlen = WindowTextWidth(win,font_id,txt)
                 outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
             end
@@ -178,7 +178,7 @@ function DisplayStatsPage()
           if graphicalMode == 1 then
             gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers == 1 then
-                txt = string.lpad(gmcpval("vitals.moves"), 5, ' ').."\\"..string.rpad(gmcpval("maxstats.maxmoves"),5,' ')
+                txt = string.lpad(gmcpval("vitals.moves"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxmoves"),5,' ')
                 txtlen = WindowTextWidth(win,font_id,txt)
                 outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
             end
@@ -207,7 +207,7 @@ function DisplayStatsPage()
              if graphicalMode == 1 then
                  gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
                  if overlay_numbers == 1 then
-                    txt = string.lpad(gmcpval("status.tnl"), 5, ' ').."\\"..string.rpad(gmcpval("base.perlevel"),5,' ')
+                    txt = string.lpad(gmcpval("status.tnl"), 5, ' ').."/"..string.rpad(gmcpval("base.perlevel"),5,' ')
                     txtlen = WindowTextWidth(win,font_id,txt)
                     outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
                  end
@@ -218,7 +218,7 @@ function DisplayStatsPage()
              if graphicalMode == 1 then
                  gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
                  if overlay_numbers == 1 then
-                    txt = string.lpad((tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0), 5, ' ').."\\"..string.rpad(gmcpval("base.perlevel") or 0,5,' ')
+                    txt = string.lpad((tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0), 5, ' ').."/"..string.rpad(gmcpval("base.perlevel") or 0,5,' ')
                     txtlen = WindowTextWidth(win,font_id,txt)
                     outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
                  end
