@@ -31,16 +31,24 @@ function OnPluginSaveState()
 end
 
 -- Register a new miniwindow with the system.
+--
 -- To use this:
 -- CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", windowID)
+--
+-- windowID MUST conform to the rules for variable names for SetVariable for this to work properly 
+-- with one exception: the name may start with a number rather than a 
+-- letter (if the name is based on a plugin UID, for example)
 function registerMiniwindow(callerID)
-    local requestedZNumber = tonumber(GetVariable(callerID))
+    if callerID == nil then
+        callerID = ""
+    end
+    local requestedZNumber = tonumber(GetVariable("a"..callerID))
     -- If we were previously using a particular spot and nothing else is 
     -- already using it go ahead and assign that one. Otherwise find another
     -- spot for it.
     if requestedZNumber == nil or (usedNumbers[requestedZNumber] ~= callerID and usedNumbers[requestedZNumber] ~= nil) then
        requestedZNumber = (#usedNumbers)+1
-       SetVariable(callerID, requestedZNumber)
+       SetVariable("a"..callerID, requestedZNumber)
     end
     usedNumbers[requestedZNumber] = callerID
     WindowSetZOrder(callerID, requestedZNumber)
@@ -70,7 +78,7 @@ end
 function arrangeZ()
    for k,v in pairs(usedNumbers) do
       WindowSetZOrder(v, k)
-      SetVariable(v, k)
+      SetVariable("a"..v, k)
    end
    BroadcastPlugin (999, "repaint")
 end
