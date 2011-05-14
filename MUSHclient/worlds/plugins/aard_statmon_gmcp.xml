@@ -291,7 +291,7 @@ end -- Display_ColourText_Line
 -- right click menu
 function right_click_menu ()
 
-    menustring = "Flip Orientation|Change Font|-|Bring To Front|-|Reset Defaults"
+    menustring = "Flip Orientation|Change Font|-|Bring To Front|Send To Back|-|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -340,6 +340,8 @@ function right_click_menu ()
        end
     elseif result == "Bring To Front" then
        CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+    elseif result == "Send To Back" then
+       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
     elseif result == "Reset Defaults" then
        font_name        = default_font_name
        font_size        = default_font_size

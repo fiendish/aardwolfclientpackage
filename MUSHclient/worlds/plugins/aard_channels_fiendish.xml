@@ -460,6 +460,7 @@ function Display_Line (line, styles, backfill_start, backfill_end)
     if (styles) then
         for _, v in ipairs (styles) do
             local t = v.text
+
             -- now clean up dangling newlines that cause block characters to show in MUSHclient 4.72
             if string.sub(v.text,-1) == "\n" then
                 t = string.sub(v.text,1,-2)
@@ -1025,7 +1026,7 @@ function right_click_menu ()
     else
         menustring = (menustring.."|Turn Echo On")
     end --if
-    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front"
+    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
@@ -1141,6 +1142,8 @@ function right_click_menu ()
             SetVariable("log_timestamps", log_timestamps)
         elseif numResult == 19 then
             CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+        elseif numResult == 20 then
+            CallPlugin("462b665ecb569efbf261422f","dropMe", win)
         end
     end
 end -- right_click_menu
