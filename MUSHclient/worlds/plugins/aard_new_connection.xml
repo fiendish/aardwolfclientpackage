@@ -10,7 +10,7 @@
    language="Lua"
    purpose="Welcome players to the new client package"
    date_written="2010-11-22 18:32:06"
-   requires="4.70"
+   requires="4.73"
    version="1.0"
    save_state="y"
    >
@@ -161,6 +161,7 @@ function ShowGreeting(firstTime)
       -- make the "real" window
       WindowCreate (win, 0, 0, window_width, window_height, miniwin.pos_center_all, 0, 
                                WINDOW_BACKGROUND_COLOUR)  -- create window
+      WindowSetZOrder(win, 99999)
       
       -- add the drag handler so they can move the window around
       movewindow.add_drag_handler (win, 0, 0, 0, 0)
