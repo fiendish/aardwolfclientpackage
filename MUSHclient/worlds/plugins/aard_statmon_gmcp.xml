@@ -402,11 +402,8 @@ function ResizeMoveCallback()
    posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
    width = width + posx - startx
    startx = posx
-   if max_width ~= 0 and width < (max_width + LEFT_MARGIN) then
-      width = max_width + LEFT_MARGIN
-      startx = windowinfo.window_left+width
-   elseif (width < MIN_SIZE) then
-      width = MIN_SIZE
+   if max_width ~= 0 and width < math.min(MIN_SIZE, max_width + LEFT_MARGIN) then
+      width = math.min(MIN_SIZE, max_width + LEFT_MARGIN)
       startx = windowinfo.window_left+width
    elseif (windowinfo.window_left+width > GetInfo(281)) then
       width = GetInfo(281)-windowinfo.window_left
@@ -415,8 +412,8 @@ function ResizeMoveCallback()
 
    height = height + posy - starty
    starty = posy
-   if (height < (max_height+TOP_MARGIN)) then
-      height = max_height + TOP_MARGIN
+   if height < math.min(MIN_SIZE, max_height+TOP_MARGIN) then
+      height = math.min(MIN_SIZE, max_height+TOP_MARGIN)
       starty = windowinfo.window_top+height
    elseif (windowinfo.window_top+height > GetInfo(280)) then
       height = GetInfo(280)-windowinfo.window_top
