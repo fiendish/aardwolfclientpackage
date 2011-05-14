@@ -22,8 +22,8 @@
    language="Lua"
    purpose="Draws maps for GMCP MUDs"
    date_written="2010-09-01 16:37:14"
-   requires="4.59"
-   version="1.0"
+   requires="4.73"
+   version="2.0"
    save_state="y"
    >
 
@@ -31,7 +31,7 @@
 <![CDATA[
 
 AUTOMATIC MAPPER ... Originally by Nick Gammon
-** This plugin is a GMCP version of the ATCP mapper by Nick Gammon.
+** This plugin is a significantly improved GMCP version of the original ATCP mapper by Nick Gammon.
 ** GMCP specific code added by Lasher.
 ** A few major new features contributed by Spartacus.
 ** Many bugs squashed and improvements made by Fiendish.
@@ -755,7 +755,6 @@ local speedwalk_prefix = "&speedwalk_prefix;"
 <![CDATA[
 
 require "serialize"
-require "checkplugin"
 mapper = require "aardmapper"
 require "gmcphelper"
 require "tprint"
@@ -2652,9 +2651,10 @@ function OnPluginBroadcast (msg, id, name, text)
        assert (loadstring (luastmt or "")) ()
        update_gmcp_area()
     end -- room.zone
-
-  end -- if gmcp msg.
-
+    
+  elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
+     CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapper.win)
+  end
 end
 
 function map_area (name, line, wildcards)
@@ -3045,10 +3045,16 @@ function OnHelp ()
   mapper.mapprint (world.GetPluginInfo (world.GetPluginID (), 3))
 end
 
+first_check = false
+require "checkplugin"
 function OnPluginListChanged ()
   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "GMCP_handler")    -- check we have GMCP plugin
+  if not first_check then
+      do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
+      first_check = true
+      OnPluginInstall() -- run install again now that the z order plugin is loaded
+  end
 end -- OnPluginListChanged
-
 
 --
 -- Functions used by create GMCP database - initial load of XML files.

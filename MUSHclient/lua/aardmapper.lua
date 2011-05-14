@@ -334,6 +334,7 @@ local function draw_configuration ()
   local frame_width = GAP + width + GAP + rh_size + GAP  -- gap / text / gap / box / gap
 
   WindowCreate(config_win, windowinfo.window_left, windowinfo.window_top, frame_width, font_height * lines + 10, windowinfo.window_mode, windowinfo.window_flags, 0xDCDCDC)
+  WindowSetZOrder(config_win, 99999) -- always on top
   
   -- frame it
   draw_3d_box (config_win, 0, 0, frame_width, font_height * lines + 10)
@@ -1171,7 +1172,7 @@ function init (t)
   font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
 
   -- find where window was last time
-  windowinfo = movewindow.install (win, miniwin.pos_bottom_right,nil , nil, {config_win})
+  windowinfo = movewindow.install (win, miniwin.pos_bottom_right,nil , nil, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
   -- calculate box sizes, arrows, connecting lines etc.
   build_room_info ()
@@ -1184,6 +1185,8 @@ function init (t)
                  windowinfo.window_mode,   -- top right
                  windowinfo.window_flags,
                  config.BACKGROUND_COLOUR.colour) 
+  
+  CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
 
   -- let them move it around                 
 --  movewindow.add_drag_handler (win, 0, 0, 0, font_height)
@@ -1205,6 +1208,31 @@ function init (t)
   WindowShow (config_win, false)
   
 end -- init  
+
+function MouseUp(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+       right_click_menu()
+    end
+    return true
+end
+
+function LeftClickOnly(flags, hotspot_id, win)
+    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+        return true
+    end
+    return false
+end
+
+function right_click_menu()
+    menustring = "Bring To Front"
+    result = WindowMenu (win,
+        WindowInfo (win, 14),  -- x position
+        WindowInfo (win, 15),   -- y position
+        menustring) -- content
+    if result == "Bring To Front" then
+       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+    end
+end
 
 function zoom_in ()
   if last_drawn and ROOM_SIZE < 40 then
