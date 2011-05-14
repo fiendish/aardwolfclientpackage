@@ -348,7 +348,7 @@ function right_click_menu ()
         end
     end
     menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
-    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|-|Reset Defaults"
+    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|Send To Back|-|Reset Defaults"
 
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
@@ -402,6 +402,9 @@ function right_click_menu ()
            -- bring to front
            CallPlugin("462b665ecb569efbf261422f","boostMe", win)
         elseif numResult == 27 then
+           -- send to back
+           CallPlugin("462b665ecb569efbf261422f","dropMe", win) 
+        elseif numResult == 28 then
            -- reset defaults
            font_name = default_font_name
            font_size = default_font_size

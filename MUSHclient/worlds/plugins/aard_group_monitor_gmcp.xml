@@ -325,7 +325,7 @@ function right_click_menu ()
             end
         end
     end
-    menustring = menustring.."<|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|-|Reset Defaults"
+    menustring = menustring.."<|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|Send To Back|-|Reset Defaults"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
@@ -411,6 +411,9 @@ function right_click_menu ()
            -- bring to front
            CallPlugin("462b665ecb569efbf261422f","boostMe", win)
         elseif numResult == member_count+18 then
+           -- send to back
+           CallPlugin("462b665ecb569efbf261422f","dropMe", win)        
+        elseif numResult == member_count+19 then
            -- reset
            font_name        = default_font_name
            font_size        = default_font_size

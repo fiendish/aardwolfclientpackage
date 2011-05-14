@@ -75,6 +75,28 @@ function boostMe(callerID)
    arrangeZ()
 end
 
+-- Drop the calling miniwindow to the back.
+-- This also collapses the stack to eliminate gaps.
+-- To use this:
+-- CallPlugin("462b665ecb569efbf261422f", "dropMe", windowID)
+function dropMe(callerID)
+   local newNumbers = {}
+   newNumbers[1] = callerID
+   local i = 2
+   for k,v in pairs(usedNumbers) do
+      if v ~= callerID then
+         newNumbers[i] = v
+         i = i + 1
+      end
+   end
+
+   usedNumbers = {}
+   for k,v in pairs(newNumbers) do
+      usedNumbers[k] = v
+   end
+   arrangeZ()
+end
+
 function arrangeZ()
    for k,v in pairs(usedNumbers) do
       WindowSetZOrder(v, k)
