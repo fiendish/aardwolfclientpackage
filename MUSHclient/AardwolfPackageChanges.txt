@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r778 snapshot
+- new feature: 'Send To Back' option for z ordering to complement Bring To Front
+- new feature: the gmcp mapper now has a right-click menu (on the drag bar) for z ordering
+- misc change: complete z ordering re-write. now uses the WindowSetZOrder feature added in MUSHclient 4.73
+- misc change: stats monitor window can be resized smaller
+
 r769 snapshot
 - new feature: 'checkversion' command displays the current package version
 - new feature: group monitor can show gauges as flat bars instead of shaded
