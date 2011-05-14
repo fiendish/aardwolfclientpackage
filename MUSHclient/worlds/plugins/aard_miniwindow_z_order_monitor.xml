@@ -9,8 +9,8 @@
    language="Lua"
    purpose="Monitors the z-order of plugin miniwindows to maintain uniqueness."
    date_written="2011-04-23 11:51:55"
-   requires="4.72"
-   version="1.0"
+   requires="4.73"
+   version="2.0"
    >
 
 </plugin>
@@ -21,49 +21,58 @@
 
 usedNumbers = {}
 
-
 function OnPluginInstall()
+   usedNumbers = {}
    BroadcastPlugin(996,"re-register z")
 end
 
+function OnPluginSaveState()
+   arrangeZ() -- just rename for less confusing calls from the outside
+end
+
+-- Register a new miniwindow with the system.
 -- To use this:
--- rc, my_layer_number, my_layer_string = CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", GetPluginID(), tonumber(GetVariable("my_layer_number")))
--- my_layer_number is either nil or an integer between 1 and 99
--- return value is layer_number (this is what you should save in state)
-function registerMiniwindow(callerID, requestedZNumber)
-    if requestedZNumber ~= nil and (usedNumbers[requestedZNumber] == callerID or usedNumbers[requestedZNumber] == nil) then
-       -- if we request a particular spot and nothing else is already using it go ahead and assign that one
-       usedNumbers[requestedZNumber] = callerID
-       return requestedZNumber
-    else
-       -- find another spot for it
-       for i = 1,99 do -- allow for a large number of ordered miniwindows
-          if usedNumbers[i] == nil then
-             usedNumbers[i] = callerID
-             return i
-          end
-       end
+-- CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", windowID)
+function registerMiniwindow(callerID)
+    local requestedZNumber = tonumber(GetVariable(callerID))
+    -- If we were previously using a particular spot and nothing else is 
+    -- already using it go ahead and assign that one. Otherwise find another
+    -- spot for it.
+    if requestedZNumber == nil or (usedNumbers[requestedZNumber] ~= callerID and usedNumbers[requestedZNumber] ~= nil) then
+       requestedZNumber = (#usedNumbers)+1
+       SetVariable(callerID, requestedZNumber)
     end
-    return 100,"" -- seriously? we didn't find a single free spot in 99? *snerk*
+    usedNumbers[requestedZNumber] = callerID
+    WindowSetZOrder(callerID, requestedZNumber)
 end
 
-function maxLayer()
-    local max = 0
-    for i,v in ipairs(usedNumbers) do
-        if i > max then
-            max = i
-        end
-    end
-    return max
+-- Bump the calling miniwindow to the front.
+-- This also collapses the stack to eliminate gaps.
+-- To use this: 
+-- CallPlugin("462b665ecb569efbf261422f", "boostMe", windowID)
+function boostMe(callerID)
+   local newNumbers = {}
+   local i = 1
+   for k,v in pairs(usedNumbers) do
+      if v ~= callerID then
+         newNumbers[i] = v
+         i = i + 1
+      end
+   end
+   newNumbers[i] = callerID
+   usedNumbers = {}
+   for k,v in pairs(newNumbers) do
+      usedNumbers[k] = v
+   end
+   arrangeZ()
 end
 
-function layerString(layer_number)
-    return string.rep("z",layer_number)..string.rep("a",99-layer_number)
-end
-
-function cycleOutWindow(oldID)
-    WindowShow(oldID, false)
-    DoAfterSpecial (0.1, 'WindowDelete ("'..oldID..'")', sendto.script)
+function arrangeZ()
+   for k,v in pairs(usedNumbers) do
+      WindowSetZOrder(v, k)
+      SetVariable(v, k)
+   end
+   BroadcastPlugin (999, "repaint")
 end
 
 ]]>

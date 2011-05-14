@@ -12,8 +12,8 @@
     language="Lua"
     purpose="Move chats to a miniwindow"
     date_written="2010-10-25"
-    requires="4.70"
-    version="1.2"
+    requires="4.73"
+    version="2.0"
     save_state="y"
     >
 
@@ -271,80 +271,66 @@ function ResizeReleaseCallback()
     init(true) -- true here causes old lines to re-wrap at the new size
 end
 
-layer_lock = 0
 first_check = false
-my_layer_string = ""
-my_layer_number = tonumber(GetVariable("my_layer_number"))
 win = GetPluginID()
 require "checkplugin"
 function OnPluginListChanged ()
   if not first_check then
       do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
-      rc, my_layer_number, my_layer_string = CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", GetPluginID(), my_layer_number)
       first_check = true
       OnPluginInstall() -- run install again now that the z order plugin is loaded
   end
 end -- OnPluginListChanged
 
 function OnPluginInstall()
-   if first_check then
-       -- don't make z order calls until we've loaded the z order plugin
-       rc, my_layer_string = CallPlugin("462b665ecb569efbf261422f","layerString",my_layer_number)
-       local oldwin = win
-       win = my_layer_string.."_"..GetPluginID()  -- get a unique name
-       if oldwin ~= win then
-          CallPlugin("462b665ecb569efbf261422f","cycleOutWindow",oldwin)
-       end
+   -- Dummy window to get font characteristics
+   check (WindowCreate (win, 0, 0, 1, 1, 0, 0, WINDOW_BACKGROUND_COLOUR) )
+
+   local fonts = utils.getfontfamilies ()
+
+   -- if not there already, add it
+   if not fonts.Dina then
+     AddFont (GetInfo (66) .. "\\Dina.fon")
+     fonts = utils.getfontfamilies ()
+   end -- if Dina not installed
+  
+   header_font_name = "Lucida Console"
+   header_font_size = 9
+
+   if fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
+   elseif fonts ["Dina"] then
+      default_font_size = 8
+      default_font_name = "Dina"    -- the actual font
+   else
+      default_font_size = 9
+      default_font_name = "Lucida Console"
+   end -- if
+
+   FONT_NAME        = GetVariable("font_name") or default_font_name
+   FONT_SIZE        = tonumber(GetVariable("font_size")) or default_font_size
+
+    check (WindowFont(win, "font"..win, FONT_NAME, FONT_SIZE))
+    check (WindowFont(win, "fonthead"..win, header_font_name, header_font_size))
+
+    font_height = WindowFontInfo (win, "font"..win, 1) -  WindowFontInfo (win, "font"..win, 4) + 1
+    header_font_height = WindowFontInfo (win, "fonthead"..win, 1) - WindowFontInfo (win, "fonthead"..win, 4) + 1
+    line_height = font_height+1
+    font_width = WindowTextWidth (win, "font"..win, "W")
    
-       -- Dummy window to get font characteristics
-       check (WindowCreate (win, 0, 0, 1, 1, 0, 0, WINDOW_BACKGROUND_COLOUR) )
+    -- install the window movement handler, get back the window position
+    windowinfo  = movewindow.install (win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
-       local fonts = utils.getfontfamilies ()
-
-       -- if not there already, add it
-       if not fonts.Dina then
-         AddFont (GetInfo (66) .. "\\Dina.fon")
-         fonts = utils.getfontfamilies ()
-       end -- if Dina not installed
-      
-       header_font_name = "Lucida Console"
-       header_font_size = 9
-
-       if fonts["Courier New"] then
-          default_font_size = 9
-          default_font_name = "Courier New"
-       elseif fonts ["Dina"] then
-          default_font_size = 8
-          default_font_name = "Dina"    -- the actual font
-       else
-          default_font_size = 9
-          default_font_name = "Lucida Console"
-       end -- if
-
-       FONT_NAME        = GetVariable("font_name") or default_font_name
-       FONT_SIZE        = tonumber(GetVariable("font_size")) or default_font_size
-
-        check (WindowFont(win, "font"..win, FONT_NAME, FONT_SIZE))
-        check (WindowFont(win, "fonthead"..win, header_font_name, header_font_size))
-
-        font_height = WindowFontInfo (win, "font"..win, 1) -  WindowFontInfo (win, "font"..win, 4) + 1
-        header_font_height = WindowFontInfo (win, "fonthead"..win, 1) - WindowFontInfo (win, "fonthead"..win, 4) + 1
-        line_height = font_height+1
-        font_width = WindowTextWidth (win, "font"..win, "W")
-       
-        -- install the window movement handler, get back the window position
-        windowinfo  = movewindow.install (GetPluginID(), miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, my_layer_string.."_")
-
-        if WINDOW_WIDTH == nil then
-            WINDOW_WIDTH = (font_width*80)+SCROLL_BAR_WIDTH -- 80 columns
-        end
-        if WINDOW_HEIGHT == nil then
-            WINDOW_HEIGHT = TITLE_HEIGHT+(line_height*6)+2 -- 6 lines
-        end
-        
-        init(true)
-        OnPluginEnable ()  -- do initialization stuff
+    if WINDOW_WIDTH == nil then
+        WINDOW_WIDTH = (font_width*80)+SCROLL_BAR_WIDTH -- 80 columns
     end
+    if WINDOW_HEIGHT == nil then
+        WINDOW_HEIGHT = TITLE_HEIGHT+(line_height*6)+2 -- 6 lines
+    end
+    
+    init(true)
+    OnPluginEnable ()  -- do initialization stuff
 end
 
 function init(firstTime)
@@ -363,7 +349,7 @@ function init(firstTime)
         WindowScrollwheelHandler(win, "textarea", "wheel_move")
 
         -- add the drag handler so they can move the window around
-        movewindow.add_drag_handler (GetPluginID(), 0, 0, 0, TITLE_HEIGHT, nil, my_layer_string.."_")
+        movewindow.add_drag_handler (win, 0, 0, 0, TITLE_HEIGHT)
         
         -- scroll bar up/down buttons
         WindowAddHotspot(win, "up", WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
@@ -378,6 +364,7 @@ function init(firstTime)
         for _,styles in ipairs(rawlines) do 
             fillBuffer(styles)
         end
+        CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
     else
         WindowResize(win, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND_COLOUR)
         WindowMoveHotspot(win, "textarea", 0, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1, WINDOW_HEIGHT-3)
@@ -440,7 +427,7 @@ end -- OnPluginEnable
 function OnPluginSaveState ()
     -- save window current location for next time  
     SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID(), 17)))
-    movewindow.save_state (GetPluginID())
+    movewindow.save_state (win)
     -- save echo/timestamp status
     SetVariable ("echo", echo)
     SetVariable ("timestamp", timestamp)
@@ -455,7 +442,6 @@ function OnPluginSaveState ()
     SetVariable("log_timestamps", log_timestamps)
     SetVariable("show_donations", show_donations)
     SetVariable("show_mobsay", show_mobsay)
-    SetVariable("my_layer_number", my_layer_number)
 end --  OnPluginSaveState
 
 function OnPluginDisable ()
@@ -486,7 +472,6 @@ end -- Display_Line
 
 -- display all visible lines
 function writeLines()
-
     WindowRectOp(win, 2, 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH, -1, WINDOW_BACKGROUND_COLOUR) -- clear
     if #lines >= 1 then
         for count = lineStart, lineEnd do
@@ -638,7 +623,6 @@ function fillBuffer(rawstyles)
         -- get next style, work out how long it is
         local style = remove (styles, 1)
         
-
         -- we interrupt this program to bring you a special bulletin
         -- breaking off newlines and sticking them back into the styles
         -- list for later
@@ -798,18 +782,7 @@ function OnPluginBroadcast (msg, id, name, text)
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
-      first_check = false
-      OnPluginListChanged()
-   elseif (id ~= GetPluginID()) then -- just in case a plugin receives its own broadcasts
-      if (msg == 995 and text == "lock") then
-         layer_lock = 1
-      elseif (msg == 995 and text == "unlock") then
-         layer_lock = 0
-      elseif (layer_lock == 0 and msg == 998 and tonumber(text) < my_layer_number) then
-         my_layer_number = my_layer_number - 1
-         OnPluginSaveState()
-         OnPluginInstall()
-      end
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
    end
 end
 
@@ -899,14 +872,6 @@ end
 function CancelMouseDown(flags, hotspot_id)
     keepscrolling = ""
     drawStuff()
-end
-
-function debugp(source)
-print("------------------------------------------------------------------------------")
-print("Called FROM : " .. source)
-print("startx:  " .. startx .. "   starty:  " .. starty)
-print("SCROLL_BAR_WIDTH: " .. SCROLL_BAR_WIDTH .. " SCROLL_BAR_HEIGHT: " .. SCROLL_BAR_HEIGHT)
-print("------------------------------------------------------------------------------")
 end
 
 end_copying_x = 0
@@ -1175,13 +1140,7 @@ function right_click_menu ()
             log_timestamps = (((0 == log_timestamps) and 1) or 0)
             SetVariable("log_timestamps", log_timestamps)
         elseif numResult == 19 then
-            rc, max_layer = CallPlugin("462b665ecb569efbf261422f","maxLayer")
-            if (my_layer_number ~= max_layer) then
-               BroadcastPlugin(998, tostring(my_layer_number))
-               my_layer_number = max_layer
-               OnPluginSaveState()
-               OnPluginInstall()
-            end 
+            CallPlugin("462b665ecb569efbf261422f","boostMe", win)
         end
     end
 end -- right_click_menu

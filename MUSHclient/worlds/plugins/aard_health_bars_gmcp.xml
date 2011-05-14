@@ -13,8 +13,8 @@
    language="Lua"
    purpose="GMCP Version of health bars"
    date_written="2010-08-15 21:25:03"
-   requires="4.70"
-   version="1.0"
+   requires="4.73"
+   version="2.0"
    save_state="y"
    >
  <description trim="y">
@@ -400,13 +400,7 @@ function right_click_menu ()
            overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
         elseif numResult == 26 then
            -- bring to front
-           rc, max_layer = CallPlugin("462b665ecb569efbf261422f","maxLayer")
-           if (my_layer_number ~= max_layer) then
-              BroadcastPlugin(998, tostring(my_layer_number))
-              my_layer_number = max_layer
-              OnPluginSaveState()
-              OnPluginInstall()
-           end
+           CallPlugin("462b665ecb569efbf261422f","boostMe", win)
         elseif numResult == 27 then
            -- reset defaults
            font_name = default_font_name
@@ -453,29 +447,8 @@ function OnPluginBroadcast (msg, id, name, text)
          DisplayStatsPage()
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
-      first_check = false
-      OnPluginListChanged()
-   elseif (id ~= GetPluginID()) then -- just in case a plugin receives its own broadcasts
-      if (msg == 995 and text == "lock") then
-         layer_lock = 1
-      elseif (msg == 995 and text == "unlock") then
-         layer_lock = 0
-      elseif (layer_lock == 0 and msg == 998 and tonumber(text) < my_layer_number) then
-         my_layer_number = my_layer_number - 1
-         OnPluginSaveState()
-         OnPluginInstall()
-      end
+       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
    end
-end
-
-
-function debugp(source,hsid)
-print("------------------------------------------------------------------------------")
-print("Called FROM : " .. source .. "     HOTSPOT ID: " .. hsid)
-print("startx:  " .. startx .. "   starty:  " .. starty)
-print("posx:  " .. posx.. "   posy: " .. posy)
-print("height: " .. height .. " width: " .. width)
-print("------------------------------------------------------------------------------")
 end
 
 
@@ -484,7 +457,6 @@ end
 -- only 'handlers' because they are set in WindowAddHotSpot
 ---------------------------------------------------------------------------------
 function ResizeMoveCallback()
-   --debugp("ResizeMoveCallback()","")
 
    posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
    width = width + posx - startx
@@ -504,7 +476,6 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-    --debugp("ResizeReleaseCallback()","")
     SetUpHotspotsAndDraw()
 end
 
@@ -512,10 +483,8 @@ end
 -- Called when mouse button is pressed on hotspot.
 ---------------------------------------------------------------------------------
 function MouseDown(flags, hotspot_id)
-   --debugp("mousedown",hotspot_id)
    if (hotspot_id == "resize") then
       startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
-      -- debugp("MouseDown")
    end
 
 end
@@ -524,7 +493,6 @@ end
 -- Called when mouse moved away from hotspot. Doesn't really apply for draggables.
 ---------------------------------------------------------------------------------
 function CancelMouseDown(flags, hotspot_id)
-   --debugp("CancelMouseDown")
 end
 
 ---------------------------------------------------------------------------------
@@ -550,7 +518,7 @@ end
 function OnPluginSaveState ()
 
   -- save window current location for next time  
-  movewindow.save_state (GetPluginID())
+  movewindow.save_state (win)
   barTexts = ""
   numBars = 0
   for i,v in pairs(showBar) do
@@ -571,7 +539,6 @@ function OnPluginSaveState ()
   SetVariable ("numBars", numBars)
   SetVariable ("showBar", serialize.save ("showBar"))
   SetVariable ("graphicalMode", graphicalMode)
-  SetVariable ("my_layer_number", my_layer_number)
   SetVariable ("flat_gauges", flat_gauges)
   SetVariable ("overlay_numbers", overlay_numbers)
 end -- OnPluginSaveState
@@ -589,106 +556,91 @@ function OnPluginEnable ()
 end -- OnPluginEnable
 
 
-layer_lock = 0
 first_check = false
-my_layer_string = ""
-my_layer_number = tonumber(GetVariable("my_layer_number"))
 win = GetPluginID()
 require "checkplugin"
 function OnPluginListChanged ()
   if not first_check then
       do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
-      rc, my_layer_number, my_layer_string = CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", GetPluginID(), my_layer_number)
       first_check = true
       OnPluginInstall() -- run install again now that the z order plugin is loaded
   end
 end -- OnPluginListChanged
 
 function OnPluginInstall()
-   if first_check then
-       -- don't make z order calls until we've loaded the z order plugin
-       rc, my_layer_string = CallPlugin("462b665ecb569efbf261422f","layerString",my_layer_number)
-       local oldwin = win
-       win = my_layer_string.."_"..GetPluginID()  -- get a unique name
-       if oldwin ~= win then
-          CallPlugin("462b665ecb569efbf261422f","cycleOutWindow",oldwin)
-       end
-   
-   
-       background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-       -- make window so I can grab the font info
-       WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
+   background_colour = tonumber (GetVariable ("background_colour")) or background_colour
+   -- make window so I can grab the font info
+   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
 
-       font_id        = "statmon_font"
+   font_id        = "statmon_font"
 
-       local fonts = utils.getfontfamilies ()
+   local fonts = utils.getfontfamilies ()
 
-       -- if not there already, add it
-       if not fonts.Dina then
-         AddFont (GetInfo (66) .. "\\Dina.fon")
-         fonts = utils.getfontfamilies ()
-       end -- if Dina not installed
+   -- if not there already, add it
+   if not fonts.Dina then
+     AddFont (GetInfo (66) .. "\\Dina.fon")
+     fonts = utils.getfontfamilies ()
+   end -- if Dina not installed
 
-       if fonts["Courier New"] then
-          default_font_size = 9
-          default_font_name = "Courier New"
-       elseif fonts ["Dina"] then
-          default_font_size = 8
-          default_font_name = "Dina"    -- the actual font
-       else
-          default_font_size = 9
-          default_font_name = "Lucida Console"
-       end -- if
+   if fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
+   elseif fonts ["Dina"] then
+      default_font_size = 8
+      default_font_name = "Dina"    -- the actual font
+   else
+      default_font_size = 9
+      default_font_name = "Lucida Console"
+   end -- if
 
-       font_name        = GetVariable("font_name") or default_font_name
-       font_size        = tonumber(GetVariable("font_size")) or default_font_size
+   font_name        = GetVariable("font_name") or default_font_name
+   font_size        = tonumber(GetVariable("font_size")) or default_font_size
 
-       --- Load the fonts into the temp window.
-       WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
+   --- Load the fonts into the temp window.
+   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
 
-       --- Grab font size settings.
-       font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-       font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
-       line_height = font_height + 1
+   --- Grab font size settings.
+   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
+   font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
+   line_height = font_height + 1
 
-       --- install the window movement handler, get back the window position.
-       windowinfo  = movewindow.install (GetPluginID(), miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, my_layer_string.."_")
+   --- install the window movement handler, get back the window position.
+   windowinfo  = movewindow.install (win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
-       MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN*2)
+   MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN*2)
 
-       width      = tonumber(GetVariable("width")) or default_width
-       stacked    = tonumber(GetVariable("stacked")) or stacked
-       showLabels = tonumber(GetVariable("showLabels")) or showLabels
-       reverseTNL = tonumber(GetVariable("reverseTNL")) or reverseTNL
-       numBars    = tonumber(GetVariable("numBars")) or numBars
-       flat_gauges = tonumber(GetVariable("flat_gauges")) or 0
-       overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 0
-       showBar = defaultShowBar
-       assert (loadstring (GetVariable ("showBar") or "")) ()
+   width      = tonumber(GetVariable("width")) or default_width
+   stacked    = tonumber(GetVariable("stacked")) or stacked
+   showLabels = tonumber(GetVariable("showLabels")) or showLabels
+   reverseTNL = tonumber(GetVariable("reverseTNL")) or reverseTNL
+   numBars    = tonumber(GetVariable("numBars")) or numBars
+   flat_gauges = tonumber(GetVariable("flat_gauges")) or 0
+   overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 0
+   showBar = defaultShowBar
+   assert (loadstring (GetVariable ("showBar") or "")) ()
 
-       barTexts = ""
-       for i,v in pairs(showBar) do
-          if (v[2] == true) then
-             barTexts = barTexts..v[3]
-          end
-       end
-       if stacked == 1 then
-           height = (TOP_MARGIN*2)+(numBars*(line_height+1))
-       else
-           if showLabels == 1 then
-               MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+LEFT_MARGIN*2)
-           end
-           height = TOP_MARGIN*2 + line_height
-       end
-       width = math.max(width, MIN_WIDTH)
-
-       OnPluginSaveState()
-       
-       --- Setup the window.
-       SetUpHotspotsAndDraw(true)
-          
-       Send_GMCP_Packet("request char")
+   barTexts = ""
+   for i,v in pairs(showBar) do
+      if (v[2] == true) then
+         barTexts = barTexts..v[3]
+      end
    end
+   if stacked == 1 then
+       height = (TOP_MARGIN*2)+(numBars*(line_height+1))
+   else
+       if showLabels == 1 then
+           MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+LEFT_MARGIN*2)
+       end
+       height = TOP_MARGIN*2 + line_height
+   end
+   width = math.max(width, MIN_WIDTH)
+
+   OnPluginSaveState()
+   
+   --- Setup the window.
+   SetUpHotspotsAndDraw(true)
+      
+   Send_GMCP_Packet("request char")
 end
 
 --=================================================================================
@@ -708,14 +660,16 @@ function SetUpHotspotsAndDraw(firstTime)
        -- Add handler for resizing
        WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
        WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
    else
        -- everything has already been made
        -- just move them back into place
        WindowResize(win, width, height, background_colour)
        WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
+   
    -- Add the drag handler so they can move the window around
-   movewindow.add_drag_handler (GetPluginID(), 0, 0, 0, 0, nil, my_layer_string.."_")
+   movewindow.add_drag_handler (win, 0, 0, 0, 0)
  
    -- draw edge frame.
    WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
