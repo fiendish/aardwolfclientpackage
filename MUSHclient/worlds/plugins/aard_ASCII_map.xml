@@ -652,7 +652,8 @@ function OnPluginInstall()
  
    -- load fonts - mouseover window
    WindowCreate (infowin, 0, 0, 1, 1, 0, 0, 0)   -- make 1-pixel wide window
-  
+   WindowSetZOrder(infowin, 99999)
+   
    -- install the fonts  (49 is modern / fixed pitch)
    WindowFont (infowin, popup_font_id, font_name, font_size, false, false, false, false, 0, 49) 
    WindowFont (infowin, heading_font_id, font_name, font_size + 2, false, false, false, false, 0, 49)
