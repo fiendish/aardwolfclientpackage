@@ -53,16 +53,7 @@ hotspot_id       = ""
 orig_height      = 400  -- saves old height when we collapse window.
 default_textrect = 1    -- start with default textrec.
 MIN_SIZE         = 50
-
-function debugp(source,hsid)
-print("------------------------------------------------------------------------------")
-print("Called FROM : " .. source .. "     HOTSPOT ID: " .. hsid)
-print("Textrect_top: " .. textrect_top .. " Textrect_left: " .. textrect_left)
-print("Textrect_bot: " .. textrect_bottom .. " Textrect_right: " .. textrect_right)
-print("startx:  " .. startx .. "   starty:  " .. starty)
-print("posx:  " .. posx.. "   posy: " .. posy)
-print("------------------------------------------------------------------------------")
-end
+rstagsize        = 15
 
 function ResizeMainCallback()
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
@@ -88,17 +79,11 @@ function ResizeMainCallback()
 
    default_textrect = 0 -- we moved something, no longer on autopilot.
    draw_main_window()
-   add_title_dragger()
-   
-   --- Reposition the resize tag.
-   WindowPosition(textResizer, textrect_right - rstagsize+5, textrect_bottom - rstagsize+5, 0, 6)
-
 end
 
 function DragMainCallback()
 
    posx, posy = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
-   --debugp("ResizeMain","dragmaincallback")
    local height = GetInfo(293) - GetInfo(291)
    local width = GetInfo(292) - GetInfo(290)
    
@@ -129,10 +114,6 @@ function DragMainCallback()
 
    default_textrect = 0 -- we moved something, no longer on autopilot.
    draw_main_window()
-   add_main_resizer()
-   --- Reposition the dragger tag.
-   WindowPosition(textDragger, textrect_left-6, textrect_top-7, 0, 6)
-
 end
 
 
@@ -140,7 +121,6 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-    --debugp("ResizeReleaseCallback()","")
 end
 
 ---------------------------------------------------------------------------------
@@ -152,15 +132,12 @@ function MouseDown(flags, hotspot_id)
    elseif (hotspot_id == "dragmain") then
       startx, starty = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
    end
-   --debugp("mousedown",hotspot_id)
-
 end
 
 ---------------------------------------------------------------------------------
 -- Called when mouse moved away from hotspot. Doesn't really apply for draggables.
 ---------------------------------------------------------------------------------
 function CancelMouseDown(flags, hotspot_id)
-   --debugp("CancelMouseDown")
 end
 
 ---------------------------------------------------------------------------------
@@ -242,7 +219,6 @@ function OnPluginInstall()
 end
 
 function check_main_background()
-
    if (default_textrect == 0) then
       textrect_top = tonumber(GetVariable("trtop")) or 22
       textrect_bottom = tonumber(GetVariable("trbottom")) or 400
@@ -256,52 +232,64 @@ function check_main_background()
   end -- assume if textrec isn't default, it is set.
 
   draw_main_window()
-  add_main_resizer()
-  add_title_dragger()
 end
 
 function add_main_resizer()
+   if WindowInfo(textResizer, 1) then -- if it already exists
+       --- Reposition the resize tag.
+       WindowPosition(textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 0, 6)
+   else
+       -- Add another mini-window in bottom right corner for resizer tag.
+       check (WindowCreate (textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 
+                    rstagsize, rstagsize,
+                    12  , 2, 0x000000))
 
-   -- Add another mini-window in bottom right corner for resizer tag.
-   rstagsize = 15
-   check (WindowCreate (textResizer, textrect_right - rstagsize+5, textrect_bottom - rstagsize+5, 
-                rstagsize, rstagsize,
-                12  , 2, 0x000000))
+       -- draw the resize widget bottom right corner.
+       WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, 0xffffff, 0, 2)
+       WindowLine(textResizer, rstagsize-2, rstagsize-0, rstagsize-0, rstagsize-2, 0x696969, 0, 1)
+       WindowLine(textResizer, rstagsize-4, rstagsize-0, rstagsize-0, rstagsize-4, 0xffffff, 0, 2)
+       WindowLine(textResizer, rstagsize-5, rstagsize-0, rstagsize-0, rstagsize-5, 0x696969, 0, 1)
+       WindowLine(textResizer, rstagsize-7, rstagsize-0, rstagsize-0, rstagsize-7, 0xffffff, 0, 2)
+       WindowLine(textResizer, rstagsize-8, rstagsize-0, rstagsize-0, rstagsize-8, 0x696969, 0, 1)
+       WindowLine(textResizer, rstagsize-10, rstagsize-0, rstagsize-0, rstagsize-10, 0xffffff, 0, 2)
+       WindowLine(textResizer, rstagsize-11, rstagsize-0, rstagsize-0, rstagsize-11, 0x696969, 0, 1)
+       WindowLine(textResizer, rstagsize-12, rstagsize-0, rstagsize-0, rstagsize-12, 0xffffff, 0, 1)
+       WindowLine(textResizer, rstagsize-13, rstagsize-0, rstagsize-0, rstagsize-13, 0xffffff, 0, 1)
 
-   -- draw the resize widget bottom right corner.
-   WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, 0xffffff, 0, 2)
-   WindowLine(textResizer, rstagsize-2, rstagsize-0, rstagsize-0, rstagsize-2, 0x696969, 0, 1)
-   WindowLine(textResizer, rstagsize-4, rstagsize-0, rstagsize-0, rstagsize-4, 0xffffff, 0, 2)
-   WindowLine(textResizer, rstagsize-5, rstagsize-0, rstagsize-0, rstagsize-5, 0x696969, 0, 1)
-   WindowLine(textResizer, rstagsize-7, rstagsize-0, rstagsize-0, rstagsize-7, 0xffffff, 0, 2)
-   WindowLine(textResizer, rstagsize-8, rstagsize-0, rstagsize-0, rstagsize-8, 0x696969, 0, 1)
-   WindowLine(textResizer, rstagsize-10, rstagsize-0, rstagsize-0, rstagsize-10, 0xffffff, 0, 2)
-   WindowLine(textResizer, rstagsize-11, rstagsize-0, rstagsize-0, rstagsize-11, 0x696969, 0, 1)
-   WindowLine(textResizer, rstagsize-12, rstagsize-0, rstagsize-0, rstagsize-12, 0xffffff, 0, 1)
-   WindowLine(textResizer, rstagsize-13, rstagsize-0, rstagsize-0, rstagsize-13, 0xffffff, 0, 1)
-
-   -- Add a drag handler to this window, effectively allows textrectangle to be resized.
-   WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-   WindowDragHandler(textResizer, "resizemain", "ResizeMainCallback", "ResizeReleaseMainCallback", 0)
-   WindowShow(textResizer)
-
+       -- Add a drag handler to this window, effectively allows textrectangle to be resized.
+       WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+       WindowDragHandler(textResizer, "resizemain", "ResizeMainCallback", "ResizeReleaseMainCallback", 0)
+   end
+   WindowShow(textResizer, true)
 end
 
 function add_title_dragger() 
+   if WindowInfo(textDragger, 1) then -- if it already exists
+       --- Reposition the dragger tag.
+       WindowPosition(textDragger, GetInfo(272)-6, GetInfo(273)-7, 0, 6)
+   else
+       -- Add another mini-window at top for dragging bar.
+       dragsize = 10
 
-   -- Add another mini-window at top for dragging bar.
-   dragsize = 10
-   check (WindowCreate (textDragger, textrect_left-6, textrect_top-6, textrect_right - textrect_left+11, dragsize, 12, 2, 0x000000))
+       check (WindowCreate (textDragger, GetInfo(272)-6, GetInfo(273)-6, GetInfo(274)-GetInfo(272)+11, dragsize, 12, 2, 0x000000))
+       
+       WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
+       WindowDragHandler(textDragger, "dragmain", "DragMainCallback", "DragReleaseMainCallback", 0)
+   end
    WindowShow(textDragger,true)
+end
 
-   WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
-   WindowDragHandler(textDragger, "dragmain", "DragMainCallback", "DragReleaseMainCallback", 0)
-
+function OnPluginWorldOutputResized()
+    draw_main_window()
 end
    
 function draw_main_window()
 
-   TextRectangle(textrect_left, textrect_top, textrect_right, textrect_bottom,
+   -- addresses a problem where new users are trying to play without the window maximized
+   local t_right = math.min(textrect_right,GetInfo(281)-7)
+   local t_bottom = math.min(textrect_bottom, GetInfo(280)-7)
+
+   TextRectangle(textrect_left, textrect_top, t_right, t_bottom,
               5,  -- BorderOffset, 
               ColourNameToRGB ("darkgray"),    -- BorderColour, 
               2,  -- BorderWidth, 
@@ -310,17 +298,18 @@ function draw_main_window()
 
    -- Add a mini-window under main text area so background won't mess it up.
    bgwin = "text_background"
+   trwidth = GetInfo(274) - GetInfo(272)
+   trheight = GetInfo(275) - GetInfo(273)
+
    check (WindowCreate (bgwin, textrect_left - 3, textrect_top - 3, 
-                textrect_right-textrect_left + 6, textrect_bottom - textrect_top + 6,
+                trwidth + 6, trheight + 6,
                 12  , 3, 0x000000)) 
-   WindowShow(bgwin)
+   WindowShow(bgwin, true)
 
    local dir = GetInfo(66)
    imgpath = dir .. "worlds\\plugins\\images\\aardbg13.png"
    WindowLoadImage(bgwin, "wolf_logo", imgpath)
 
-   trwidth = GetInfo(274) - GetInfo(272)
-   trheight = GetInfo(275) - GetInfo(273)
    xpos = 0 
    ypos = 0
 
@@ -332,7 +321,8 @@ function draw_main_window()
       ypos = (trheight - 500) / 2
    end
    WindowDrawImage (bgwin, "wolf_logo", xpos, ypos, 0, 0, miniwin.image_copy)  -- straight copy
-
+   add_title_dragger()
+   add_main_resizer()
 end
 
 
