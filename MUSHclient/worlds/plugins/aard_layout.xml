@@ -214,6 +214,7 @@ function OnPluginInstall()
    --- Pull some state variables.
    default_textrect  = tonumber (GetVariable ("defaulttr")) or default_textrect
    check_main_background()
+   -- give main world window time to stabilize its size and position
    AddTimer("checkTimer", 0, 0, 2, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
 end
 
