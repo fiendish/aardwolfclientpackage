@@ -213,9 +213,8 @@ function OnPluginInstall()
 
    --- Pull some state variables.
    default_textrect  = tonumber (GetVariable ("defaulttr")) or default_textrect
-   -- give main world window time to stabilize its size and position
    check_main_background()
-   DoAfterSpecial(2,"check_main_background()",12)
+   AddTimer("checkTimer", 0, 0, 2, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
 end
 
 function check_main_background()
@@ -280,7 +279,7 @@ function add_title_dragger()
 end
 
 function OnPluginWorldOutputResized()
-    draw_main_window()
+    AddTimer("checkTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
 end
    
 function draw_main_window()
