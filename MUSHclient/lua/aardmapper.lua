@@ -1224,13 +1224,15 @@ function LeftClickOnly(flags, hotspot_id, win)
 end
 
 function right_click_menu()
-    menustring = "Bring To Front"
+    menustring = "Bring To Front|Send To Back"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
         menustring) -- content
     if result == "Bring To Front" then
        CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+    elseif result == "Send To Back" then
+       CallPlugin("462b665ecb569efbf261422f","dropMe", win) 
     end
 end
 
