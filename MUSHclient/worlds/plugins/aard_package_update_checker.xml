@@ -59,14 +59,14 @@ end
 -- Shows an editbox dialog detailing the posted differences between
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
-    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later"}) then
+    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
         OpenBrowser(download_url)
     end
 end
 
 -- Something went wrong when trying to check for updates
 function errorMessage(msg)
-   if utils.inputbox(msg,"ERROR: "..window_title,download_url,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later"}) then
+   if utils.inputbox(msg,"ERROR: "..window_title,download_url,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
        OpenBrowser(download_url)
    end
 end
