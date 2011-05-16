@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r786 snapshot
+- new feature: can now set 2 health percent thresholds for changing the color of the HP bars in the group monitor. this makes it easier to spot when groupie health has dropped
+- bug fix/new feature: the main output layout plugin is now compatible with not having MUSHclient in full-screen mode
+- new feature: added an option to the group monitor to hide all others to complement the one to show all others
+
 r780 snapshot
 - new feature: 'Send To Back' option for z ordering to complement Bring To Front
 - new feature: the gmcp mapper now has a right-click menu (on the drag bar) for z ordering
