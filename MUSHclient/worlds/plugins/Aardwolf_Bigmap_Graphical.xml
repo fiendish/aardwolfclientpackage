@@ -162,8 +162,7 @@ dofile (GetPluginInfo (GetPluginID (), 20) .. "telnet_options.lua")
 map = {}
 continents = {}
 xref = {}
-auto_minimize = true
-show_map = true
+show_map = tonumber(GetVariable("show_map")) or 1
 background_colour = 0x000028
 title_colour = 0x696969
 zone_name_colour = ColourNameToRGB "yellow"
@@ -189,7 +188,7 @@ end
 
 function map_on_off_alias (name, line, wildcards)
   if (wildcards[1]:lower() == " on") then
-    show_map = true
+    show_map = 1
     ColourNote ("yellow", "", "Bigmap enabled.")
     if (not (use_gmcp_mapper == 1)) then
         WindowShow (mapwin, true)
@@ -197,7 +196,7 @@ function map_on_off_alias (name, line, wildcards)
         CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true");
     end
   elseif (wildcards[1]:lower() == " off") then
-    show_map = false
+    show_map = 0
     ColourNote ("yellow", "", "Bigmap DISABLED - type 'bigmap on' to re-enable.")
     if (not (use_gmcp_mapper == 1)) then
         WindowShow (mapwin, false)
@@ -213,7 +212,7 @@ function map_on_off_alias (name, line, wildcards)
     CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
   end -- if
   OnPluginInstall()
-end -- auto_minimize_alias
+end -- map_on_off_alias
 
 brushes = {
   ["~"] = miniwin.e,
@@ -302,7 +301,7 @@ end
 
 
 function DrawMap ()
- if show_map then
+ if show_map == 1 then
   
   local startx = 4
   local starty = (font_height*2)+15
@@ -551,6 +550,7 @@ function OnPluginSaveState ()
   SetVariable ("xref",
                "xref = " .. serialize.save_simple (xref))
   SetVariable("use_gmcp_mapper", tostring(use_gmcp_mapper))
+  SetVariable("show_map", show_map)
   if (not (use_gmcp_mapper == 1)) then             
       movewindow.save_state (mapwin)
   end
@@ -595,12 +595,10 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginEnable ()
-    -- if we are connected when the plugin loads, it must have been reloaded whilst playing
-    show_map = true
     if (not (use_gmcp_mapper == 1)) then
-        WindowShow (mapwin, true)
+        WindowShow (mapwin, show_map)
     else
-        CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true");
+        CallPlugin("b6eae87ccedd84f510b74714", "override_continents", ((show_map == 1) and "true") or "false");
     end
     if IsConnected() then
         Send_GMCP_Packet("request room")
@@ -609,7 +607,6 @@ end -- OnPluginEnable
     
 function OnPluginDisable ()
   bigmap_enabled = false
-  show_map = false
   if (not (use_gmcp_mapper == 1)) then
     WindowShow (mapwin, false)
   else
