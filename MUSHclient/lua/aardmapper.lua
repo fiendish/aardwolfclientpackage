@@ -897,9 +897,6 @@ end -- function find_paths
 dont_draw = false
 function halt_drawing(halt)
     dont_draw = halt
-    if dont_draw then
-       WindowDeleteAllHotspots(win)
-    end
 end
 
 function draw (uid)

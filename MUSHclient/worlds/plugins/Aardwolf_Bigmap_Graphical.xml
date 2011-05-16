@@ -322,9 +322,9 @@ function DrawMap ()
           else
                WindowResize(mapwin, window_width, window_height, background_colour)
           end
-          WindowDeleteAllHotspots (mapwin)
           WindowShow (mapwin, true)
       end
+      WindowDeleteAllHotspots (mapwin)
       movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
             
       local xdiff = (WindowInfo(mapwin,3)-10)-WindowImageInfo(mapwin,image_name,2)
@@ -539,7 +539,7 @@ function OnPluginInstall ()
   if not mapwin_found then
     WindowCreate (mapwin, 0, 0, 0, 0, 0, 0, 0) -- dummy window just to load the font stuff
   end
-  
+
   windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, 0, true, nil, {mouseup=MouseUp, 
                     mousedown=LeftClickOnly, dragmove=LeftClickOnly, 
                     dragrelease=LeftClickOnly})
