@@ -1,6 +1,7 @@
 Aardwolf Client Package Major Changes List
 
-r786 snapshot
+r788 snapshot
+- misc change: the world file now has the annoying line information popup bubble disabled by default
 - new feature: can now set 2 health percent thresholds for changing the color of the HP bars in the group monitor. this makes it easier to spot when groupie health has dropped
 - bug fix/new feature: the main output layout plugin is now compatible with not having MUSHclient in full-screen mode
 - new feature: added an option to the group monitor to hide all others to complement the one to show all others
