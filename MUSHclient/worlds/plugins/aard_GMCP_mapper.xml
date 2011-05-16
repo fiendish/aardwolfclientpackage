@@ -1489,7 +1489,7 @@ end -- load_room_from_database
 function create_tables ()
   -- create rooms table
   dbcheck (db:execute[[
-  
+  PRAGMA user_version = 2;
   PRAGMA foreign_keys = ON;
   PRAGMA journal_mode=WAL;
 
@@ -2321,13 +2321,20 @@ function OnPluginInstall ()
                 speedwalk_prefix = speedwalk_prefix,  -- how to speedwalk
                 } 
   
-  mapper.mapprint (string.format ("MUSHclient mapper installed, version %0.1f", mapper.VERSION))
+  -- mapper.mapprint (string.format ("MUSHclient mapper installed, version %0.1f", mapper.VERSION))
   
   -- open databases on disk 
   db    = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
   db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
   
-  create_tables ()    -- create database structure if necessary
+  for row in db:nrows("PRAGMA user_version") do
+     db_user_version = row.user_version
+  end
+  
+  if db_user_version ~= 2 then
+      -- Only go through the structure creation if we haven't done it already
+      create_tables()
+  end
   
   -- grab all area names
   for row in db:nrows("SELECT * FROM areas") do
