@@ -598,7 +598,7 @@ function OnPluginInstall()
    show_coords       = tonumber (GetVariable ("showcoords")) or show_coords
 
    -- make window so I can grab the font info
-   WindowCreate (win, width, height, 1, 1, 0, 0, background_colour) 
+   WindowCreate (win, 1, 1, width, height, 0, 0, background_colour) 
 
    font_id        = "mapper_font"
    font_id_bold   = "mapper_bold"
