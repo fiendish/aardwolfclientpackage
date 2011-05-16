@@ -11,8 +11,8 @@
    language="Lua"
    purpose="Redirects Aardwolf bigmap messages to a miniwindow"
    date_written="2009-07-26"
-   requires="4.42"
-   version="2.0"
+   requires="4.73"
+   version="3.0"
    save_state="y"
    >
 <description trim="y">
@@ -194,7 +194,7 @@ function map_on_off_alias (name, line, wildcards)
     if (not (use_gmcp_mapper == 1)) then
         WindowShow (mapwin, true)
     else
-        CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "true");
+        CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true");
     end
   elseif (wildcards[1]:lower() == " off") then
     show_map = false
@@ -202,15 +202,15 @@ function map_on_off_alias (name, line, wildcards)
     if (not (use_gmcp_mapper == 1)) then
         WindowShow (mapwin, false)
     else
-        CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "false");
+        CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
     end
   elseif (wildcards[1]:lower() == " merge") and (not (use_gmcp_mapper == 1)) then
     use_gmcp_mapper = 1
     WindowShow (mapwin, false)
-    CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "true")
+    CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
   elseif (wildcards[1]:lower() == " unmerge") and (use_gmcp_mapper == 1) then
     use_gmcp_mapper = 0
-    CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "false");
+    CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
   end -- if
   OnPluginInstall()
 end -- auto_minimize_alias
@@ -286,7 +286,6 @@ function ConstructMap()
     Display_Styled_Line (i, v, font_id)
   end -- for
   WindowImageFromWindow(mapwin, "bigmap_continent_"..zone, win)
-  ColourNote ("yellow", "", string.format("BIGMAP INFO: Constructed new continent bigmap for %s.", continent))
 end
 
 
@@ -468,6 +467,7 @@ function map_redirect (name, line, wildcards, styles)
     if zone then
       continents [zone] = map  -- cache it
       ConstructMap()
+      ColourNote ("yellow", "", string.format("BIGMAP INFO: Constructed new continent bigmap for %s.", continent))
     end -- we know the continent
     DrawMap ()
   else
@@ -563,7 +563,7 @@ function OnPluginBroadcast (msg, id, name, text)
       TelnetOptionOn(TELOPT_BIGMAP)
       bigmap_enabled = true
       if use_gmcp_mapper == 1 then
-          CallPlugin("b6eae87ccedd84f510b74714", " override_continents", "true")
+          CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
       end
     end
     if text == "room.info" then
@@ -590,21 +590,35 @@ end
 function OnPluginClose ()
   -- if enabled
   if GetPluginInfo (GetPluginID (), 17) then
-    TelnetOptionOff(TELOPT_BIGMAP)
-    bigmap_enabled = false
+    OnPluginDisable()
   end -- currently enabled
 end -- OnPluginClose
 
 function OnPluginEnable ()
     -- if we are connected when the plugin loads, it must have been reloaded whilst playing
-    if GetPluginInfo (GetPluginID (), 17) then
+    show_map = true
+    if (not (use_gmcp_mapper == 1)) then
+        WindowShow (mapwin, true)
+    else
+        CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true");
+    end
+    if IsConnected() then
         Send_GMCP_Packet("request room")
     end -- currently enabled
 end -- OnPluginEnable
-
+    
 function OnPluginDisable ()
-  TelnetOptionOff(TELOPT_BIGMAP)
   bigmap_enabled = false
+  show_map = false
+  if (not (use_gmcp_mapper == 1)) then
+    WindowShow (mapwin, false)
+  else
+    CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
+  end
+  if IsConnected() then
+    TelnetOptionOff(TELOPT_BIGMAP)
+    Send_GMCP_Packet("request room")
+  end -- currently enabled
 end -- OnPluginDisable
 
 ]]>
