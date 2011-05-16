@@ -80,6 +80,15 @@ group_info = {}
 
 local defaultColorVals = {Health={0x00ff00,0x004400}, Mana={0xff5500,0x442200}, Moves={0x00ffff,0x004444}, Align={0x0000ff,0x00ffff}}
 colorVals = defaultColorVals
+assert (loadstring (GetVariable ("colorVals") or "")) ()
+
+thresh1active = tonumber (GetVariable("thresh1active")) or 0
+thresh2active = tonumber (GetVariable("thresh2active")) or 0
+thresh1percent = tonumber (GetVariable("thresh1percent")) or 40
+thresh2percent = tonumber (GetVariable("thresh2percent")) or 20
+thresh1color = tonumber (GetVariable("thresh1color")) or 0x00ffff
+thresh2color = tonumber (GetVariable("thresh2color")) or 0x0000ff
+
 local barIndex = {"Health", "Mana", "Moves", "Align"}
 
 RESIZE_TAG_SIZE = 10
@@ -252,7 +261,25 @@ function DisplayGroupPage()
                 x = baseX
                 WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
                 x = x + labels_width + GAP
-                gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, colorVals["Health"][1], 0x000000, 0, 0x000000, colorVals["Health"][2], nil, flat_gauges==1)
+                local hpColor1 = colorVals["Health"][1]
+                local hpColor2 = colorVals["Health"][2]
+                local hpPercent = 100
+                if tonumber(v["info"]["hp"]) and tonumber(v["info"]["mhp"]) then
+                    hpPercent = tonumber(v["info"]["hp"]) / tonumber(v["info"]["mhp"])
+                end
+                if thresh1active == 1 then
+                    if hpPercent < thresh1percent then
+                        hpColor1 = thresh1color
+                        hpColor2 = thresh1color
+                    end
+                end
+                if thresh2active == 1 then
+                    if hpPercent < thresh2percent then
+                        hpColor1 = thresh2color
+                        hpColor2 = thresh2color
+                    end
+                end
+                gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, hpColor, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
 			    txt = string.lpad(v["info"]["hp"], 5, ' ').."/"..string.rpad(v["info"]["mhp"],5,' ')
                 if overlay_numbers == 1 then
                     txtlen = WindowTextWidth(win,font_id,txt)
@@ -322,6 +349,18 @@ function DisplayGroupPage()
                  
 end -- Display_Map
 
+function validate_percent(input)
+    if string.sub(input, -1) == "%" then
+        input = string.sub(input, 1,-2)
+    end
+    local inputNum = tonumber(input)
+    if not inputNum or inputNum < 1 or inputNum > 100 or inputNum % 1 ~= 0 then
+        ColourNote("white","red","'"..input.."' is not a whole number between 1 and 100. Try again.")
+        return false
+    end
+    return true
+end
+
 function right_click_menu ()
 
     menustring ="!Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|All Others|No Others|-|"
@@ -336,7 +375,7 @@ function right_click_menu ()
             end
         end
     end
-    menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|Send To Back|-|Reset Defaults"
+    menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|-|Bring To Front|Send To Back|-|Reset Defaults"
     result = WindowMenu (win,
         WindowInfo (win, 14),  -- x position
         WindowInfo (win, 15),   -- y position
@@ -423,12 +462,48 @@ function right_click_menu ()
             overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
             reload = true
         elseif numResult == member_count+18 then
+            thresh1active = (((thresh1active == 0) and 1) or 0)
+            reload = true
+        elseif numResult == member_count+19 then
+            local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
+            if perc then
+                if string.sub(perc, -1) == "%" then
+                    perc = string.sub(perc, 1,-2)
+                end
+                thresh1percent = perc
+                reload = true
+            end
+        elseif numResult == member_count+20 then
+            local newColor = PickColour (thresh1color)
+            if newcolor ~= -1 then
+                thresh1color = newColor
+                reload = true
+            end
+        elseif numResult == member_count+21 then
+            thresh2active = (((thresh2active == 0) and 1) or 0)
+            reload = true
+        elseif numResult == member_count+22 then
+            local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
+            if perc then
+                if string.sub(perc, -1) == "%" then
+                    perc = string.sub(perc, 1,-2)
+                end
+                thresh2percent = perc
+                reload = true
+            end
+        elseif numResult == member_count+23 then
+            local newColor = PickColour (thresh2color)
+            if newcolor ~= -1 then
+                thresh2color = newColor
+                reload = true
+            end
+        elseif numResult == member_count+24 then
            -- bring to front
            CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-        elseif numResult == member_count+19 then
+        elseif numResult == member_count+25 then
            -- send to back
            CallPlugin("462b665ecb569efbf261422f","dropMe", win)        
-        elseif numResult == member_count+20 then
+        elseif numResult == member_count+26 then
            -- reset
            font_name        = default_font_name
            font_size        = default_font_size
@@ -583,6 +658,12 @@ function OnPluginSaveState ()
   SetVariable ("colorVals", serialize.save ("colorVals"))
   SetVariable ("flat_gauges", flat_gauges)
   SetVariable ("overlay_numbers", overlay_numbers)
+  SetVariable ("thresh1active", thresh1active)
+  SetVariable ("thresh2active", thresh2active)
+  SetVariable ("thresh1percent", thresh1percent)
+  SetVariable ("thresh2percent", thresh2percent)
+  SetVariable ("thresh1color", thresh1color)
+  SetVariable ("thresh2color", thresh2color)
 end -- OnPluginSaveState
 
 function OnPluginClose ()
@@ -661,9 +742,6 @@ function OnPluginInstall()
 
    --- install the window movement handler, get back the window position.
    windowinfo = movewindow.install (win, miniwin.pos_center, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
-
-   colorVals = defaultColorVals
-   assert (loadstring (GetVariable ("colorVals") or "")) ()
    
    if IsConnected() then
      OnPluginConnect()
