@@ -461,6 +461,7 @@ function Display_Line (line, styles, backfill_start, backfill_end)
         for _, v in ipairs (styles) do
             local t = v.text
 
+
             -- now clean up dangling newlines that cause block characters to show in MUSHclient 4.72
             if string.sub(v.text,-1) == "\n" then
                 t = string.sub(v.text,1,-2)
@@ -1020,7 +1021,7 @@ end -- function chat_hide
 
 -- right click menu
 function right_click_menu ()
-    menustring ="!Copy Selected|Copy Selected Without Colors|Copy All|-|Change Font"
+    menustring ="!Copy Selected Without Colors|Copy Selected|Copy All|-|Change Font"
     if echo == "1" then
         menustring = (menustring.."|Turn Echo Off")
     else
@@ -1036,18 +1037,18 @@ function right_click_menu ()
         
         if numResult == 1 then
             if #copied_text > 0 then
-                SetClipboard(copied_text)
-                ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
-                ColourNote("yellow","",copied_text)
-                ColourNote("cyan","","^---------------------------------------------------------^")  
-            end
-        elseif numResult == 2 then
-            if #copied_text > 0 then
                 local declored_text = strip_colours(copied_text)
                 SetClipboard(declored_text)
                 ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
                 ColourNote("yellow","",declored_text)
                 ColourNote("cyan","","^---------------------------------------------------------^")
+            end
+        elseif numResult == 2 then
+            if #copied_text > 0 then
+                SetClipboard(copied_text)
+                ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
+                ColourNote("yellow","",copied_text)
+                ColourNote("cyan","","^---------------------------------------------------------^")  
             end
         elseif numResult == 3 then
             GetAllBufferedMessages()
