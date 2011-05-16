@@ -265,7 +265,7 @@ function DisplayGroupPage()
                 local hpColor2 = colorVals["Health"][2]
                 local hpPercent = 100
                 if tonumber(v["info"]["hp"]) and tonumber(v["info"]["mhp"]) then
-                    hpPercent = tonumber(v["info"]["hp"]) / tonumber(v["info"]["mhp"])
+                    hpPercent = 100* (tonumber(v["info"]["hp"]) / tonumber(v["info"]["mhp"]))
                 end
                 if thresh1active == 1 then
                     if hpPercent < thresh1percent then
@@ -279,7 +279,7 @@ function DisplayGroupPage()
                         hpColor2 = thresh2color
                     end
                 end
-                gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, hpColor, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
+                gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
 			    txt = string.lpad(v["info"]["hp"], 5, ' ').."/"..string.rpad(v["info"]["mhp"],5,' ')
                 if overlay_numbers == 1 then
                     txtlen = WindowTextWidth(win,font_id,txt)
