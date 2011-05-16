@@ -1,7 +1,15 @@
 Aardwolf Client Package Major Changes List
 
-r788 snapshot
-- misc change: the world file now has the annoying line information popup bubble disabled by default
+r800 snapshot
+- bug fix: loading the gmcp mapper after the bigmap plugin is already loaded should no longer turn bigmap off
+- new feature: z-ordering functionality added to the bigmap display as well
+- bug fix: the bigmap view should now be draggable when merged with the gmcp mapper
+- bug fix: the bigmap on/off choice should now persist across sessions
+- bug fix: the bigmap update messages will only show now when actually updating
+- misc change: the package update checker dialogs are now read-only.
+- new feature: gmcp mapper plugin should now start up much faster after the first time
+- bug fix: closing mushclient without saving the world settings after answering "yes" to the question about using the update checker plugin will let you see the question again next time.
+- misc change: the annoying output line information popup bubbles are disabled by default in the world file
 - new feature: can now set 2 health percent thresholds for changing the color of the HP bars in the group monitor. this makes it easier to spot when groupie health has dropped
 - bug fix/new feature: the main output layout plugin is now compatible with not having MUSHclient in full-screen mode
 - new feature: added an option to the group monitor to hide all others to complement the one to show all others
