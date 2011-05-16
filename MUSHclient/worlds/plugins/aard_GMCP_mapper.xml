@@ -1333,7 +1333,6 @@ function save_room_to_database (uid,room)
       dbcheck (db:execute (string.format ("DELETE FROM rooms_lookup WHERE uid = %s",fixsql(uid))))
       dbcheck (db:execute (string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name))))
   end
-      
   
   room_not_in_database [uid] = false
   
@@ -1347,13 +1346,13 @@ function map_savedirty()
 
   db:exec ("BEGIN TRANSACTION;") 
   ctr = 0
-
+  
   for uid,room in pairs(dirty_rooms) do
      
      save_room_to_database(uid,room)
-     save_room_exits(uid)     
+     save_room_exits(uid)
 
-     ctr = ctr + 1  
+     ctr = ctr + 1
   end -- for each dirty room
   
   db:exec ("COMMIT;") 
@@ -1549,7 +1548,6 @@ function create_tables ()
   CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);  
   ]])
 
-  
   -- The original database implementation was naive. We want to fix it up here.
   -- Unfortunately, sqlite requires a little dance of table dropping for this to happen.
   local bad_exits1 = false
