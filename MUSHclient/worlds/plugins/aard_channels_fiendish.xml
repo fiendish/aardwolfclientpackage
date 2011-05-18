@@ -462,13 +462,11 @@ function Display_Line (line, styles, backfill_start, backfill_end)
     if (styles) then
         for _, v in ipairs (styles) do
             local t = v.text
-
-
-            -- now clean up dangling newlines that cause block characters to show in MUSHclient 4.72
+            -- now clean up dangling newlines that cause block characters to show
             if string.sub(v.text,-1) == "\n" then
                 t = string.sub(v.text,1,-2)
             end
-            left = left + WindowText (win, win_font, t, left, TITLE_HEIGHT+(line*line_height), 0, 0, v.textcolour)
+            left = left + WindowText (win, win_font, t, left, TITLE_HEIGHT+(line*line_height),  WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, v.textcolour)
         end -- for each style run
     end
 end -- Display_Line
@@ -484,20 +482,18 @@ function writeLines()
                 local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[count][1]), 1, 99999))
                 ax = (((count == copy_start_line) and math.min(start_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or TEXT_INSET)
                 -- end of highlight for this line
-                zx = (((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)
+                zx = math.min(WINDOW_WIDTH-SCROLL_BAR_WIDTH,(((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET))
             end
             Display_Line( count-lineStart, lines[count][1], ax, zx )
         end
     end
-    BroadcastPlugin(999, "repaint")
+    BroadcastPlugin (999, "repaint")
 end
 
 barPos = ""
 barSize = ""
 totalSteps = ""
 function drawStuff()
-   
-    writeLines()
        
     -- Scrollbar base
     WindowRectOp(win, 2, WINDOW_WIDTH-SCROLL_BAR_WIDTH, TITLE_HEIGHT, WINDOW_WIDTH, -SCROLL_BAR_WIDTH, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
@@ -562,8 +558,7 @@ function drawStuff()
     end
     WindowRectOp(win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800) -- scrollbar position indicator
 
-    --Redraw()
-    BroadcastPlugin (999, "repaint")
+    writeLines()
 end
 
 function wheel_move (flags, hotspot_id)
