@@ -247,8 +247,8 @@ function ResizeMoveCallback()
     posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
     WINDOW_WIDTH = WINDOW_WIDTH+posx-startx
     startx = posx
-    if (WindowTextWidth(win, "font"..win, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH > WINDOW_WIDTH) then
-        WINDOW_WIDTH = WindowTextWidth(win, "font"..win, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH
+    if (WindowTextWidth(win, win_font, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH > WINDOW_WIDTH) then
+        WINDOW_WIDTH = WindowTextWidth(win, win_font, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH
         startx = windowinfo.window_left+WINDOW_WIDTH
     elseif (windowinfo.window_left+WINDOW_WIDTH > GetInfo(281)) then
         WINDOW_WIDTH = GetInfo(281)-windowinfo.window_left
@@ -310,14 +310,16 @@ function OnPluginInstall()
 
    FONT_NAME        = GetVariable("font_name") or default_font_name
    FONT_SIZE        = tonumber(GetVariable("font_size")) or default_font_size
+   
+   win_font = "font"..win
+   win_head_font = "fonthead"..win
+    check (WindowFont(win, win_font, FONT_NAME, FONT_SIZE))
+    check (WindowFont(win, win_head_font, header_font_name, header_font_size))
 
-    check (WindowFont(win, "font"..win, FONT_NAME, FONT_SIZE))
-    check (WindowFont(win, "fonthead"..win, header_font_name, header_font_size))
-
-    font_height = WindowFontInfo (win, "font"..win, 1) -  WindowFontInfo (win, "font"..win, 4) + 1
-    header_font_height = WindowFontInfo (win, "fonthead"..win, 1) - WindowFontInfo (win, "fonthead"..win, 4) + 1
+    font_height = WindowFontInfo (win, win_font, 1) -  WindowFontInfo (win, win_font, 4) + 1
+    header_font_height = WindowFontInfo (win, win_head_font, 1) - WindowFontInfo (win, win_head_font, 4) + 1
     line_height = font_height+1
-    font_width = WindowTextWidth (win, "font"..win, "W")
+    font_width = WindowTextWidth (win, win_font, "W")
    
     -- install the window movement handler, get back the window position
     windowinfo  = movewindow.install (win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
@@ -378,9 +380,9 @@ function init(firstTime)
     lineEnd = math.max(1, #lines)
     
     -- title rectangle
-    header_width = WindowTextWidth(win, "fonthead"..win, "Communication Log")
+    header_width = WindowTextWidth(win, win_head_font, "Communication Log")
     WindowGradient (win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, 0x111111, 0x333333, 2)
-    WindowText(win, "fonthead"..win, "Communication Log", (WINDOW_WIDTH-header_width)/2, (TITLE_HEIGHT-header_font_height)/2, WINDOW_WIDTH, math.ceil((TITLE_HEIGHT+header_font_height)/2), 0xEEEEEE, false)     
+    WindowText(win, win_head_font, "Communication Log", (WINDOW_WIDTH-header_width)/2, (TITLE_HEIGHT-header_font_height)/2, WINDOW_WIDTH, math.ceil((TITLE_HEIGHT+header_font_height)/2), 0xEEEEEE, false)     
     WindowLine(win, 0, TITLE_HEIGHT-1, WINDOW_WIDTH, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
     
     -- resize tag    
@@ -466,10 +468,9 @@ function Display_Line (line, styles, backfill_start, backfill_end)
             if string.sub(v.text,-1) == "\n" then
                 t = string.sub(v.text,1,-2)
             end
-            left = left + WindowText (win, "font"..win, t, left, TITLE_HEIGHT+(line*line_height), 0, 0, v.textcolour)
+            left = left + WindowText (win, win_font, t, left, TITLE_HEIGHT+(line*line_height), 0, 0, v.textcolour)
         end -- for each style run
     end
-    Redraw()
 end -- Display_Line
 
 -- display all visible lines
@@ -481,13 +482,14 @@ function writeLines()
             local zx = nil
             if copy_start_line ~= nil and copy_end_line ~= nil and count >= copy_start_line and count <= copy_end_line then
                 local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[count][1]), 1, 99999))
-                ax = (((count == copy_start_line) and math.min(start_copying_x, WindowTextWidth(win, "font"..win, line_no_colors)+TEXT_INSET)) or TEXT_INSET)
+                ax = (((count == copy_start_line) and math.min(start_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or TEXT_INSET)
                 -- end of highlight for this line
-                zx = (((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(win, "font"..win, line_no_colors)+TEXT_INSET)) or WindowTextWidth(win, "font"..win, line_no_colors)+TEXT_INSET)
+                zx = (((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)
             end
             Display_Line( count-lineStart, lines[count][1], ax, zx )
         end
     end
+    BroadcastPlugin(999, "repaint")
 end
 
 barPos = ""
@@ -641,7 +643,7 @@ function fillBuffer(rawstyles)
             foundbreak = true
         end
         
-        local width = WindowTextWidth (win, "font"..win, style.text)
+        local width = WindowTextWidth (win, win_font, style.text)
 
         -- if it fits, copy whole style in
         if width <= avail then
@@ -656,7 +658,7 @@ function fillBuffer(rawstyles)
             local split_col
             -- keep going until out of columns
             while col > 1 do
-                width = WindowTextWidth (win, "font"..win, style.text:sub (1, col))
+                width = WindowTextWidth (win, win_font, style.text:sub (1, col))
                 if width <= avail then
                     if not split_col then
                         split_col = col  -- in case no space found, this is where we can split
@@ -933,8 +935,8 @@ function TextareaMoveCallback(flags, hotspot_id)
                    if copy_line == copy_start_line then
                        for pos=1,#line_no_colors do
                           startpos = pos
-                          if WindowTextWidth(win, "font"..win, string.sub(line_no_colors,1,pos)) > start_copying_x then
-                            start_copying_x = WindowTextWidth(win, "font"..win, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
+                          if WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos)) > start_copying_x then
+                            start_copying_x = WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
                             break
                           end
                        end
@@ -944,8 +946,8 @@ function TextareaMoveCallback(flags, hotspot_id)
                        local found = false
                        endpos = 0
                        for pos=1,#line_no_colors do
-                          if WindowTextWidth(win, "font"..win, string.sub(line_no_colors,1,pos)) > end_copying_x then
-                            end_copying_x = WindowTextWidth(win, "font"..win, string.sub(line_no_colors,1,endpos))+TEXT_INSET
+                          if WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos)) > end_copying_x then
+                            end_copying_x = WindowTextWidth(win, win_font, string.sub(line_no_colors,1,endpos))+TEXT_INSET
                             found = true
                             break
                           end
