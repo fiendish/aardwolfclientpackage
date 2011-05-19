@@ -2803,7 +2803,7 @@ end -- map_healers
 function map_goto (name, line, wildcards)
 
   local wanted = tonumber(wildcards [1])
-  if not wanted then
+  if not wanted or wanted < 0 then
     mapper.mapprint ("The mapper goto command expects a room id number as input.")
     return
   end
