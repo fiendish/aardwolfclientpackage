@@ -603,7 +603,7 @@ function OnPluginBroadcast (msg, id, name, text)
     if not bigmap_enabled then
       TelnetOptionOn(TELOPT_BIGMAP)
       bigmap_enabled = true
-      if use_gmcp_mapper == 1 then
+      if show_map == 1 and use_gmcp_mapper == 1 then
           CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
       end
     end
