@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r810 snapshot
+- bug fix: mapper goto won't allow negative input anymore
+- bug fix: having bigmap off and bigmap merged and then restarting the gmcp mapper will no longer make the gmcp mapper not update
+- misc change: the world file now has a beep sound set by default
+
 r800 snapshot
 - bug fix: loading the gmcp mapper after the bigmap plugin is already loaded should no longer turn bigmap off
 - new feature: z-ordering functionality added to the bigmap display as well
