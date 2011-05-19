@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r812 snapshot
+- bug fix: don't crash the gmcp mapper plugin if for some reason the backup command isn't running
+
 r810 snapshot
 - bug fix: mapper goto won't allow negative input anymore
 - bug fix: having bigmap off and bigmap merged and then restarting the gmcp mapper will no longer make the gmcp mapper not update
