@@ -2250,7 +2250,7 @@ function backup_databases (manual)
 
   ChangeDir(GetInfo(66)) -- Go back to default directory
 
-  if not string.find(lines[#lines], "test of .*_DB_Backup.zip OK") then
+  if not lines[#lines] or not string.find(lines[#lines], "zip OK") then
      -- we expect to see the last line show a passing test
      -- otherwise something went wrong
      ColourNote("yellow","red", "ERROR executing system command: "..execute_string.."\n")
