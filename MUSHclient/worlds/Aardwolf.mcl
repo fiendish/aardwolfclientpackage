@@ -6,12 +6,12 @@
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-19 10:59:00"
 
    auto_say_override_prefix="-"
-   auto_say_string=""
+   beep_sound="C:\Program Files\MUSHclient\sounds\beep-01.wav"
    chat_name="Name-not-set"
    command_stack_character=";"
    id="e0eb198d8d5698e3b2f61483"
@@ -19,7 +19,7 @@
    mapping_failure="Alas, you cannot go that way."
    name="Aardwolf"
    new_activity_sound="(No sound)"
-   output_font_name="Lucida Console"
+   output_font_name="Courier"
    script_editor="notepad"
    script_editor_argument="%file"
    script_language="Lua"
@@ -102,7 +102,7 @@
 <!-- triggers -->
 
 <triggers
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
    date_saved="2011-04-20 10:59:00"
   >
@@ -111,7 +111,7 @@
 <!-- aliases -->
 
 <aliases
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
    date_saved="2011-04-20 10:59:00"
   >
@@ -120,7 +120,7 @@
 <!-- timers -->
 
 <timers
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
    date_saved="2011-04-20 10:59:00"
   >
@@ -129,7 +129,7 @@
 <!-- macros -->
 
 <macros
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
    date_saved="2011-04-20 10:59:00"
   >
@@ -223,7 +223,7 @@
 <!-- variables -->
 
 <variables
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
    date_saved="2011-04-20 10:59:00"
   >
@@ -232,7 +232,7 @@
 <!-- colours -->
 
 <colours
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
    date_saved="2011-04-20 10:59:00"
   >
@@ -289,7 +289,7 @@
 <!-- keypad -->
 
 <keypad
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
    date_saved="2011-04-20 10:59:00"
   >
@@ -399,7 +399,7 @@
 <!-- printing -->
 
 <printing
-   muclient_version="4.72"
+   muclient_version="4.73"
    world_file_version="15"
    date_saved="2011-04-20 10:59:00"
   >
