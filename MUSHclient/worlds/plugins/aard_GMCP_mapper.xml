@@ -1472,6 +1472,10 @@ function load_room_from_database (uid)
   end   -- finding room
 
   if room then
+    if not rooms then
+      -- this shouldn't even be possible. what the hell.
+      rooms = {}
+    end
     rooms [uid] = room
     for row in db_bm:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
       rooms [uid].notes = row.notes
