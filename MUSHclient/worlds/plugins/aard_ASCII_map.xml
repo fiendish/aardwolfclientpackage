@@ -133,7 +133,7 @@ map_lines = {}
 coord_data= {}
 show_coords = 0
 
-
+                                                
 --title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
@@ -572,10 +572,17 @@ end
 
 function OnPluginDisable ()
     WindowShow( win, false )
+    if IsConnected() then
+       TelnetOptionOff(TELOPT_MAP)
+       TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
+    end
 end --  OnPluginDisable
 
 function OnPluginEnable ()
     WindowShow (win, true)
+    if IsConnected() then
+       OnPluginConnect()
+    end
 end -- OnPluginEnable
 
 first_check = false
@@ -662,7 +669,7 @@ function OnPluginInstall()
    
    -- update on reload
    if IsConnected() then
-        OnPluginConnect()
+      OnPluginConnect()
    end
 end
 
