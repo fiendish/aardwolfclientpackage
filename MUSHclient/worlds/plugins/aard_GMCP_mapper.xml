@@ -246,7 +246,7 @@ send_to="12"
   >
   </alias>  
   
- <alias
+  <alias
    match="mapper goto *"
    enabled="y"
    sequence="100"
@@ -1346,13 +1346,13 @@ function map_savedirty()
 
   db:exec ("BEGIN TRANSACTION;") 
   ctr = 0
-  
+
   for uid,room in pairs(dirty_rooms) do
      
      save_room_to_database(uid,room)
-     save_room_exits(uid)
+     save_room_exits(uid)     
 
-     ctr = ctr + 1
+     ctr = ctr + 1  
   end -- for each dirty room
   
   db:exec ("COMMIT;") 
@@ -1551,7 +1551,7 @@ function create_tables ()
   CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
   CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);  
   ]])
-
+  
   -- The original database implementation was naive. We want to fix it up here.
   -- Unfortunately, sqlite requires a little dance of table dropping for this to happen.
   local bad_exits1 = false
@@ -1634,7 +1634,6 @@ end -- function create_tables
 function get_room (uid)
 
   -- check we got room at all
-
   if not uid then
    -- return nil
   end -- if
@@ -2225,7 +2224,7 @@ function backup_databases (manual)
   local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
   local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(sanitize_filename(WorldName()))," ","_")
 
-  n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
+n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
 
   ChangeDir("C:") -- Hide stupid *@#&$@! "started in a UNC path" warning messages, because CMD.EXE is a piece of garbage
   
@@ -2251,7 +2250,7 @@ function backup_databases (manual)
     table.insert(lines,line)
   end
   os.remove (n) -- remove temp file
-
+  
   ChangeDir(GetInfo(66)) -- Go back to default directory
 
   if not lines[#lines] or not string.find(lines[#lines], "zip OK") then
@@ -2388,6 +2387,12 @@ end -- OnPluginInstall
 
 function OnPluginEnable ()
   mapper.show ()
+  if not db:isopen() then
+      db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
+  end
+  if not db_bm:isopen() then
+      db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
+  end
 end -- OnPluginDisable
 
 function OnPluginDisable ()
@@ -2418,7 +2423,7 @@ function OnPluginSaveState ()
   -- close and reopen database
   if db:isopen() then
       db:close()
-      db    = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
   end
   if db_bm:isopen() then
       db_bm:close()
@@ -2660,7 +2665,7 @@ function OnPluginBroadcast (msg, id, name, text)
        assert (loadstring (luastmt or "")) ()
        update_gmcp_area()
     end -- room.zone
-    
+
   elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapper.win)
   end
