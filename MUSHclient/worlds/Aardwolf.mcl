@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Wednesday, April 20, 2011, 10:59 AM -->
-<!-- MuClient version 4.72 -->
+<!-- Saved on Tuesday, May 24, 2011, 2:40 PM -->
+<!-- MuClient version 4.73 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-05-19 10:59:00"
+   date_saved="2011-05-24 14:40:52"
 
    auto_say_override_prefix="-"
    beep_sound="C:\Program Files\MUSHclient\sounds\beep-01.wav"
@@ -23,6 +23,7 @@
    script_editor="notepad"
    script_editor_argument="%file"
    script_language="Lua"
+   script_prefix="\\\"
    site="aardmud.org"
    spam_message="look"
    speed_walk_prefix="#"
@@ -104,7 +105,7 @@
 <triggers
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-24 14:40:52"
   >
 </triggers>
 
@@ -113,8 +114,55 @@
 <aliases
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-24 14:40:52"
   >
+  <alias
+   match="#alias {*} {*}"
+   enabled="y"
+   group="special_convenience_aliases"
+   send_to="12"
+   ignore_case="y"
+   sequence="100"
+  >
+  <send>require "addxml"  -- addxml extension
+
+-- add the alias
+
+addxml.alias {  
+  match = "%1", 
+  send = "%2",
+  sequence = 100,
+  enabled = true,
+  send_to = 10,
+  group = "command_line_aliases"
+             }
+
+ColourNote ("white", "green", "Added alias to match on '%1', sending '%2'")
+  </send>
+  </alias>
+  <alias
+   match="#trigger {*} {*}"
+   enabled="y"
+   group="special_convenience_aliases"
+   send_to="12"
+   ignore_case="y"
+   sequence="100"
+  >
+  <send>require "addxml"  -- addxml extension
+
+-- add the trigger 
+
+addxml.trigger {
+  match = "%1", 
+  send = "%2",
+  sequence = 100,
+  enabled = true,
+  group = "command_line_triggers"
+               }
+
+ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
+  </send>
+  </alias>
 </aliases>
 
 <!-- timers -->
@@ -122,7 +170,7 @@
 <timers
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-24 14:40:52"
   >
 </timers>
 
@@ -131,7 +179,7 @@
 <macros
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-24 14:40:52"
   >
 
   <macro name="up" type="send_now" >
@@ -225,7 +273,7 @@
 <variables
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-24 14:40:52"
   >
 </variables>
 
@@ -234,7 +282,7 @@
 <colours
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-24 14:40:52"
   >
 
 <ansi>
@@ -291,7 +339,7 @@
 <keypad
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-24 14:40:52"
   >
 
   <key name="0" >
@@ -401,7 +449,7 @@
 <printing
    muclient_version="4.73"
    world_file_version="15"
-   date_saved="2011-04-20 10:59:00"
+   date_saved="2011-05-24 14:40:52"
   >
 
 <ansi>
