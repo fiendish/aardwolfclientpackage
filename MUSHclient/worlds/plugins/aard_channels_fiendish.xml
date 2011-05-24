@@ -601,9 +601,23 @@ function ScrollerReleaseCallback(flags, hotspot_id)
    drawStuff()
 end
 
+function add_line ( line, is_beginning_of_message )
+    -- add new line
+    table.insert(lines, {[1]=line, [2]=false} )
+
+    -- advance the count
+    if #lines >= WINDOW_LINES then
+        lineStart = lineStart + 1
+    end -- if
+       
+    if #lines > 1 then
+        lineEnd = lineEnd + 1
+    end -- if
+end -- add_line
+
 function fillBuffer(rawstyles)
-   local avail = 0
-   local line_styles
+   local avail = WINDOW_WIDTH - (TEXT_INSET * 2) - 9
+   local line_styles = {}
    local beginning = true
    local styles = copytable.deep (rawstyles)
    
@@ -615,22 +629,9 @@ function fillBuffer(rawstyles)
    
    -- Keep pulling out styles and trying to fit them on the current line
    while #styles > 0 do
-      if avail <= 0 then -- no room available on the line? start new line
-         if #lines >= MAX_LINES then
-            -- if the history buffer is full then remove the oldest line
-            remove(lines, 1)
-            lineStart = lineStart - 1
-            lineEnd = lineEnd - 1
-         end -- buffer full
-         avail = WINDOW_WIDTH - (TEXT_INSET * 2) - 9
-         line_styles = {}
-         add_line( line_styles, beginning )
-         beginning = false
-      end -- line full
-
       -- break off the next style
       local style = remove(styles, 1)
-        
+      
       -- make this handle forced newlines like in the flickoff social
       -- by splitting off and sticking the next part back into the 
       -- styles list for the next pass
@@ -678,8 +679,9 @@ function fillBuffer(rawstyles)
             col = col - 1
          end -- while
          
-         -- if we found a place to split, use old style, and make it shorter. Also make a copy and put the rest in that
          if split_col then
+         -- if we found a place to split, use old style and truncate it.
+         -- Also stick the rest back with the same styling back into the styles list
             insert(line_styles, style)
             local style_copy = copytable.shallow(style)
             style.text = style.text:sub(1, split_col)
@@ -688,12 +690,30 @@ function fillBuffer(rawstyles)
             style_copy.length = #style_copy.text
             insert(styles, 1, style_copy)
          elseif next(line_styles) == nil then
+         -- Actually, I don't think this can ever happen. -Fiendish
             insert(line_styles, style)
          else
+         -- if we're about to start a new style and the
+         -- line is completely full, put it back in the list for later
             insert(styles, 1, style)
          end -- if    
          avail = 0  -- now we need to wrap    
-      end -- if could not fit whole thing in
+      end -- if could/not fit whole thing in
+      
+      -- out of styles or out of room? add a line for what we have so far
+      if #styles == 0 or avail <= 0 then
+         if #lines >= MAX_LINES then
+            -- if the history buffer is full then remove the oldest line
+            remove(lines, 1)
+            lineStart = lineStart - 1
+            lineEnd = lineEnd - 1
+         end -- buffer full
+         add_line( line_styles, beginning )
+         avail = WINDOW_WIDTH - (TEXT_INSET * 2) - 9
+         line_styles = {}
+         beginning = false
+      end -- line full
+      
    end -- while we still have styles over
 end
 
@@ -795,21 +815,6 @@ function OnPluginBroadcast (msg, id, name, text)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
    end
 end
-
-function add_line ( line, is_beginning_of_message )
-    -- add new line
-    table.insert(lines, {line, false} )
-    lines[#lines][2] = is_beginning_of_message
-
-    -- advance the count
-    if #lines >= WINDOW_LINES then
-        lineStart = lineStart + 1
-    end -- if
-       
-    if #lines > 1 then
-        lineEnd = lineEnd + 1
-    end -- if
-end -- add_line
 
 keepscrolling = ""
 require "wait"
