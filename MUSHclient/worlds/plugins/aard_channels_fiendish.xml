@@ -334,7 +334,14 @@ function OnPluginInstall ()
    end
     
    init(true)
-   OnPluginEnable()  -- do initialization stuff
+   -- if disabled last time, stay disabled
+   if GetVariable ("enabled") == "false" then
+      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+      check (EnablePlugin(GetPluginID (), false))
+      return
+   else
+      OnPluginEnable()  -- do initialization stuff
+   end-- they didn't enable us last time
 end
 
 function init (firstTime)
@@ -426,6 +433,7 @@ function OnPluginEnable ()
    if IsConnected() then
       OnPluginConnect()
    end -- if already connected
+   OnPluginSaveState()
 end -- OnPluginEnable
 
 function OnPluginSaveState ()
@@ -453,6 +461,7 @@ function OnPluginDisable ()
    TelnetOptionOff(TELOPT_TELLS)
    TelnetOptionOff(TELOPT_SAYS)
    WindowShow( win, false )
+   OnPluginSaveState()
 end --  OnPluginDisable
 
 -- display one line

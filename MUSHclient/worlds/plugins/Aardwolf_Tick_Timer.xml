@@ -37,20 +37,21 @@ SetStatus ("Time to tick: " .. (last_tick + 30) - os.time ())</send>
 <![CDATA[
 
 function OnPluginTelnetOption (option)
-  if option == string.char (101,1) then
-    last_tick = os.time()
-    SetStatus ("Time to tick: " .. (last_tick + 30) - os.time ())
-  end -- if
+   if option == string.char (101,1) then
+      last_tick = os.time()
+      SetStatus ("Time to tick: " .. (last_tick + 30) - os.time ())
+   end -- if
 end -- function
 
 function OnPluginInstall ()
 
-  if GetVariable ("enabled") == "false" then
-    ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
-    check (EnablePlugin(GetPluginID (), false))
-    return
-  end -- they didn't enable us last time
-  
+   -- if disabled last time, stay disabled
+   if GetVariable ("enabled") == "false" then
+      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+      check (EnablePlugin(GetPluginID (), false))
+      return
+   end -- they didn't enable us last time  
+
   
 end -- OnPluginInstall
 
@@ -58,12 +59,15 @@ end -- OnPluginInstall
 dofile (GetPluginInfo (GetPluginID (), 20) .. "telnet_options.lua")
 
 function OnPluginDisable ()
-    OnPluginSaveState()
+   OnPluginSaveState()
 end -- OnPluginSaveState
   
+function OnPluginEnable ()
+   OnPluginSaveState()
+end
 
 function OnPluginSaveState ()
-  SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
 end -- OnPluginSaveState
 
 
