@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r936 snapshot
+- bug fix: included miniwindow plugins should now remember if you disabled them last time
+- new feature: there are now two aliases included in the world file by default for creating simple aliases and triggers from the command line. see: https://code.google.com/p/aardwolfclientpackage/wiki/CommandLineAliasesAndTriggers
+- misc change: added a new AardMUSH_README.html file in the MUSHclient directory that links directly to the online guide
+- bug fix: make sure the gmcp mapper database gets opened upon enabling and not just upon loading the plugin
+- bug fix: the ascii map tags will now get toggled on/off properly when enabling/disabling the plugin
+- bug fix: fixed line endings in the AardwolfPackageChanges.txt file
+
 r812 snapshot
 - bug fix: don't crash the gmcp mapper plugin if for some reason the backup command isn't running
 
