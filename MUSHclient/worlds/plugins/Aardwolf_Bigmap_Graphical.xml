@@ -513,9 +513,9 @@ require "checkplugin"
 function OnPluginListChanged ()
     bigmap_enabled = false
     if not first_check then
-        do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-        first_check = true
-        OnPluginInstall() -- run install again now that the z order plugin is loaded
+      do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
+      first_check = true
+      OnPluginInstall() -- run install again now that the z order plugin is loaded
     end
 end -- OnPluginListChanged
 
@@ -581,21 +581,30 @@ function OnPluginInstall ()
         tonumber ("11000011", 2),  -- row 7
         tonumber ("11111111", 2))  -- row 8
 
-  OnPluginEnable ()  -- do initialization stuff
+
+   -- if disabled last time, stay disabled
+   if GetVariable ("enabled") == "false" then
+      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+      check (EnablePlugin(GetPluginID (), false))
+      return
+   else
+      OnPluginEnable ()  -- do initialization stuff
+   end
 
 end -- OnPluginInstall
 
 function OnPluginSaveState ()
-  SetVariable ("continents",
-               "continents = " .. serialize.save_simple (continents))
+   SetVariable("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+   SetVariable ("continents",
+      "continents = " .. serialize.save_simple (continents))
 
-  SetVariable ("xref",
-               "xref = " .. serialize.save_simple (xref))
-  SetVariable("use_gmcp_mapper", tostring(use_gmcp_mapper))
-  SetVariable("show_map", show_map)
-  if (not (use_gmcp_mapper == 1)) then             
+   SetVariable ("xref",
+      "xref = " .. serialize.save_simple (xref))
+   SetVariable("use_gmcp_mapper", tostring(use_gmcp_mapper))
+   SetVariable("show_map", show_map)
+   if (not (use_gmcp_mapper == 1)) then             
       movewindow.save_state (mapwin)
-  end
+   end
 end -- function OnPluginSaveState
 
 function OnPluginBroadcast (msg, id, name, text)
@@ -646,19 +655,21 @@ function OnPluginEnable ()
     if IsConnected() then
         Send_GMCP_Packet("request room")
     end -- currently enabled
+    OnPluginSaveState()
 end -- OnPluginEnable
     
 function OnPluginDisable ()
-  bigmap_enabled = false
-  if (not (use_gmcp_mapper == 1)) then
-    WindowShow (mapwin, false)
-  else
-    CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
-  end
-  if IsConnected() then
-    TelnetOptionOff(TELOPT_BIGMAP)
-    Send_GMCP_Packet("request room")
-  end -- currently enabled
+   OnPluginSaveState()
+   bigmap_enabled = false
+   if (not (use_gmcp_mapper == 1)) then
+      WindowShow (mapwin, false)
+   else
+      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
+   end
+   if IsConnected() then
+      TelnetOptionOff(TELOPT_BIGMAP)
+      Send_GMCP_Packet("request room")
+   end -- currently enabled
 end -- OnPluginDisable
 
 ]]>

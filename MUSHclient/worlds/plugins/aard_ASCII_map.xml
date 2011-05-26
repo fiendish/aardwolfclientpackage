@@ -576,6 +576,7 @@ function OnPluginDisable ()
        TelnetOptionOff(TELOPT_MAP)
        TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
     end
+    OnPluginSaveState()
 end --  OnPluginDisable
 
 function OnPluginEnable ()
@@ -583,6 +584,7 @@ function OnPluginEnable ()
     if IsConnected() then
        OnPluginConnect()
     end
+    OnPluginSaveState()
 end -- OnPluginEnable
 
 first_check = false
@@ -671,6 +673,14 @@ function OnPluginInstall()
    if IsConnected() then
       OnPluginConnect()
    end
+   
+   -- if disabled last time, stay disabled
+   if GetVariable ("enabled") == "false" then
+      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+      check (EnablePlugin(GetPluginID (), false))
+      return
+   end -- they didn't enable us last time
+
 end
 
 -- Added only so I can 'sendgmcp request char' to refresh char stats.

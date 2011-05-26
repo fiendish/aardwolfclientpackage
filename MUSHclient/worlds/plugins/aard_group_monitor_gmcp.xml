@@ -667,7 +667,7 @@ function OnPluginSaveState ()
 end -- OnPluginSaveState
 
 function OnPluginClose ()
-    OnPluginDisable()
+   OnPluginDisable()
 end
 
 function HideIt()
@@ -683,13 +683,15 @@ function ShowIt()
 end
 
 function OnPluginDisable ()
-    WindowShow( win, false )
+   OnPluginSaveState()
+   WindowShow( win, false )
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-    if hidden == 0 then
-        WindowShow (win, true)
-    end
+   if hidden == 0 then
+      WindowShow (win, true)
+   end
+   OnPluginSaveState()
 end -- OnPluginEnable
 
 first_check = false
@@ -747,6 +749,13 @@ function OnPluginInstall()
      OnPluginConnect()
    end
    
+   -- if disabled last time, stay disabled
+   if GetVariable ("enabled") == "false" then
+      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+      check (EnablePlugin(GetPluginID (), false))
+      return
+   end -- they didn't enable us last time
+
    -- Draw the initial group window
    SetUpHotspotsAndDraw(true)
 end

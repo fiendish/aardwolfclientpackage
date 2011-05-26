@@ -151,6 +151,8 @@ end
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
 
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+
    --- Pull some state variables.
    SetVariable("defaulttr",default_textrect)
 
@@ -192,6 +194,7 @@ function OnPluginDisable ()
 end --  OnPluginDisable
 
 function OnPluginEnable ()
+    OnPluginSaveState()
     OnPluginInstall()
 end -- OnPluginEnable
 
@@ -200,13 +203,13 @@ end -- OnPluginEnable
 -- Called when plugin is first installed, including when Mush first starts.
 -- This is the place to initialize stuff you need in the main plugin.
 --=================================================================================
-function OnPluginInstall() 
-   
+function OnPluginInstall()
    --- Get a unique name for main window and resizer window.
    win = GetPluginID ()  -- get a unique name
    textDragger = "      "..win.."txtdragger"
    textResizer = "      "..win.."txtresize"
-
+   bgwin = "      "..win.."text_background"
+      
    local dir = GetInfo(66)
    local imgpath = dir .. "worlds\\plugins\\images\\bg1.png"
    SetBackgroundImage(imgpath,13)
@@ -216,6 +219,13 @@ function OnPluginInstall()
    check_main_background()
    -- give main world window time to stabilize its size and position
    AddTimer("checkTimer", 0, 0, 2, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
+   
+   -- if disabled last time, stay disabled
+   if GetVariable ("enabled") == "false" then
+      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+      check (EnablePlugin(GetPluginID (), false))
+      return
+   end -- they didn't enable us last time
 end
 
 function check_main_background()
@@ -297,7 +307,6 @@ function draw_main_window()
               0) -- OutsideFillStyle (fine hatch)
 
    -- Add a mini-window under main text area so background won't mess it up.
-   bgwin = "text_background"
    trwidth = GetInfo(274) - GetInfo(272)
    trheight = GetInfo(275) - GetInfo(273)
 

@@ -2363,6 +2363,13 @@ function OnPluginInstall ()
      OnPluginConnect()
   end
   
+   -- if disabled last time, stay disabled
+   if GetVariable ("enabled") == "false" then
+      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+      check (EnablePlugin(GetPluginID (), false))
+      return
+   end -- they didn't enable us last time
+
   last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
   SetTimerOption("backup_timer", "enabled", tonumber(GetVariable("backup_timer_enabled")) or 1)
   if GetTimerOption("backup_timer", "enabled") == 1 then
@@ -2393,42 +2400,48 @@ function OnPluginEnable ()
   if not db_bm:isopen() then
       db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
   end
-end -- OnPluginDisable
-
-function OnPluginDisable ()
-  OnPluginClose()
-end -- OnPluginDisable
+  OnPluginSaveState()
+end -- OnPluginEnable
 
 -- hide window on removal
-function OnPluginClose ()
-  mapper.hide ()
-  -- close databases
-  if db:isopen() then
+function OnPluginDisable ()
+   OnPluginSaveState()
+   mapper.hide ()
+   -- close databases
+   if db:isopen() then
       db:close()
-  end
-  if db_bm:isopen() then
+   end
+   if db_bm:isopen() then
       db_bm:close()
-  end
+   end
+end -- OnPluginDisable
+
+function OnPluginClose ()
+   -- if enabled
+   if GetPluginInfo(GetPluginID(), 17) then
+      OnPluginDisable()
+   end -- if enabled
 end -- OnPluginClose
 
 function OnPluginSaveState ()
-  if configs.SCAN.depth < temp_scan_depth then
-    -- then we probably caught ourselves in a botched run or something
-    configs.SCAN.depth = temp_scan_depth
-  end
-  mapper.save_state ()
-  SetVariable("config","") -- wipe out the old config table
-  SetVariable ("configs", "configs = " .. serialize.save_simple (configs))
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+   if configs.SCAN.depth < temp_scan_depth then
+      -- then we probably caught ourselves in a botched run or something
+      configs.SCAN.depth = temp_scan_depth
+   end
+   mapper.save_state ()
+   SetVariable("config","") -- wipe out the old config table
+   SetVariable ("configs", "configs = " .. serialize.save_simple (configs))
   
-  -- close and reopen database
-  if db:isopen() then
+   -- close and reopen database
+   if db:isopen() then
       db:close()
       db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
-  end
-  if db_bm:isopen() then
+   end
+   if db_bm:isopen() then
       db_bm:close()
       db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
-  end
+   end
 end -- OnPluginSaveState
  
 terrain_colours = {}

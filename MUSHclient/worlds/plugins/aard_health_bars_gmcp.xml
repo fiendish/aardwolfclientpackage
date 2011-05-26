@@ -551,11 +551,13 @@ function OnPluginClose()
 end
 
 function OnPluginDisable ()
-    WindowShow( win, false )
+   OnPluginSaveState()
+   WindowShow( win, false )
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-    WindowShow (win, true)
+   WindowShow (win, true)
+   OnPluginSaveState()
 end -- OnPluginEnable
 
 
@@ -638,12 +640,20 @@ function OnPluginInstall()
    end
    width = math.max(width, MIN_WIDTH)
 
-   OnPluginSaveState()
-   
    --- Setup the window.
    SetUpHotspotsAndDraw(true)
       
-   Send_GMCP_Packet("request char")
+   Send_GMCP_Packet("request char")      
+
+   -- if disabled last time, stay disabled
+   if GetVariable ("enabled") == "false" then
+      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+      check (EnablePlugin(GetPluginID (), false))
+      return
+   end -- they didn't enable us last time
+   
+   OnPluginSaveState()
+   
 end
 
 --=================================================================================
