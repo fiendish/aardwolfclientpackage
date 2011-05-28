@@ -698,6 +698,7 @@ first_check = false
 win = GetPluginID()
 require "checkplugin"
 function OnPluginListChanged ()
+  do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
   if not first_check then
       do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
       first_check = true
