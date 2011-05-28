@@ -16,7 +16,8 @@ Generic MUD mapper.
 
 Exposed functions:
 
-init (t)            -- call once, supply: 
+init (t)            -- call once, supply:
+                          t.findpath    -- function for finding the path between two rooms (src, dest)
                           t.config      -- ie. colours, sizes
                           t.get_room    -- info about room (uid)
                           t.show_help   -- function that displays some help
@@ -106,7 +107,7 @@ local textures = {}
 
 -- other locals
 local HALF_ROOM, connectors, half_connectors, arrows
-local plan_to_draw, speedwalks, drawn, drawn_coords
+local plan_to_draw, drawn, drawn_coords
 local last_drawn, depth, windowinfo, font_height 
 local walk_to_room_name
 local total_times_drawn = 0
@@ -691,9 +692,7 @@ local function draw_room (uid, path, x, y)
   if room.exits.d then  -- line at bottom
     WindowLine (win, left, bottom, left + ROOM_SIZE, bottom, config.EXIT_COLOUR_UP_DOWN.colour, miniwin.pen_solid, 1)
   end -- if
-  
-  speedwalks [uid] = path  -- so we know how to get here
-  
+    
   WindowAddHotspot(win, uid,  
                  left, top, right, bottom,   -- rectangle
                  "",  -- mouseover
@@ -711,7 +710,6 @@ end -- draw_room
 local function changed_room (uid)
 
   hyperlink_paths = nil  -- those hyperlinks are meaningless now
-  speedwalks = {}  -- old speedwalks are irrelevant
   
   if current_speedwalk then
   
@@ -879,7 +877,7 @@ function draw (uid)
   WindowScrollwheelHandler (win, "zzz_zoom", "mapper.zoom_map")
    
   -- set up for initial room, in middle
-  drawn, drawn_coords, rooms_to_be_drawn, speedwalks, plan_to_draw, area_exits = {}, {}, {}, {}, {}, {}
+  drawn, drawn_coords, rooms_to_be_drawn, plan_to_draw, area_exits = {}, {}, {}, {}, {}, {}
   depth = 0
   
   -- insert initial room
@@ -1032,8 +1030,8 @@ end -- draw
 local credits = {
   "MUSHclient mapper",
   string.format ("Version %0.1f", VERSION),
-  "Written by Nick Gammon",
-  "Customized for Aardwolf",
+  "Originally Written by Nick Gammon",
+  "Customized for Aardwolf by Fiendish",
   "World: "..WorldName (),
   GetInfo (3),
   }
@@ -1042,6 +1040,7 @@ local credits = {
 function init (t)
 
   -- make copy of colours, sizes etc.
+  findpath = t.findpath
   config = t.config
   assert (type (config) == "table", "No 'config' table supplied to mapper.")
 
@@ -1193,8 +1192,6 @@ end -- save_state
 
 -- generic room finder
 
--- findpath is the function used for finding a path
-
 -- dests is a list of room/reason pairs where reason is either true (meaning generic) or a string to find
 
 -- show_uid is true if you want the room uid to be displayed
@@ -1205,7 +1202,7 @@ end -- save_state
 
 -- if fcb is a function, it is called back after displaying each line
 
-function find (name, findpath, dests, max_paths, show_uid, expected_count, walk, fcb)
+function find (name, dests, max_paths, show_uid, expected_count, walk, fcb)
   if not check_we_can_find () then
     return
   end -- if
@@ -1496,7 +1493,14 @@ function mouseup_room (flags, hotspot_id)
     return
   end -- if ctrl-LH click
   
-  start_speedwalk (speedwalks [uid])
+  -- find desired room
+  find (nil,
+    {{uid=uid, reason=true}},
+    0,
+    false,  -- show vnum?
+    1,          -- how many to expect
+    true        -- just walk there
+    )
    
 end -- mouseup_room
 

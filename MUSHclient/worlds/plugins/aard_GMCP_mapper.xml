@@ -2427,7 +2427,8 @@ function OnPluginInstall ()
   end -- for
   
   -- initialize mapper engine
-  mapper.init { config = configs,            -- colours, timing etc.
+  mapper.init { findpath = findpath,
+                config = configs,            -- colours, timing etc.
                 get_room = get_room,        -- get_room (uid) called to get room info
                 show_help = OnHelp,         -- to show help
 
@@ -2849,7 +2850,6 @@ function map_area (name, line, wildcards)
   -- see if nearby
 
   mapper.find (name,
-    findpath,
     rooms,
     50,
     show_vnums,  -- show vnum?
@@ -2878,7 +2878,6 @@ function map_find (name, line, wildcards)
       
   -- see if nearby
   mapper.find (name,
-    findpath,
     rooms,  -- function
     50,
     show_vnums,  -- show vnum?
@@ -2920,7 +2919,6 @@ local wanted_items = {}
   
   -- find such places
   mapper.find (nil,
-    findpath,
     rooms,
     0,
     show_vnums,  -- show vnum?
@@ -2961,7 +2959,6 @@ function map_goto (name, line, wildcards)
   
   -- find desired room
   mapper.find (nil,
-    findpath,  -- function
     {{uid=wanted, reason=true}},
     0,
     show_vnums,  -- show vnum?
@@ -3026,7 +3023,6 @@ function map_resume (name, line, wildcards)
   
   -- find desired room
   mapper.find (nil,
-    findpath,
     {{uid=wanted,reason=true}},
     0,  -- function
     show_vnums,  -- show vnum?
@@ -3049,7 +3045,6 @@ function map_notes (name, line, wildcards)
   
   -- find such places
   mapper.find ("[NOTE]",
-    findpath,
     rooms,
     0,  -- function
     show_vnums,  -- show vnum?
