@@ -1215,7 +1215,7 @@ function find (name, dests, max_paths, show_uid, expected_count, walk, fcb)
   if max_paths <= 0 then
     max_paths = #dests
   end
-  mapprint ("Found",#dests,"target"..(((found_count ~= 1) and "s") or "")..(((name ~= nil) and (" matching '"..name.."'")) or "")..".")
+  mapprint ("Found",#dests,"target"..(((#dests ~= 1) and "s") or "")..(((name ~= nil) and (" matching '"..name.."'")) or "")..".")
   if #dests > max_paths then
     mapprint(string.format("Your search returned more than %s results. Choose a more specific pattern.", max_paths))
     return
