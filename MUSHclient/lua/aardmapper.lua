@@ -41,7 +41,6 @@ build_speedwalk (path)  -- builds a client speedwalk string from path
 cancel_speedwalk ()     -- cancel current speedwalk, if any
 check_we_can_find ()    -- returns true if doing a find is OK right now
 find (f, show_uid, count, walk)      -- generic room finder
-find_paths (uid, f)     -- lower-level room finder (for getting back a path)
 
 Exposed variables:
 
@@ -802,96 +801,6 @@ function check_we_can_find ()
   return true
 end -- check_we_can_find
 
--- see: http://www.gammon.com.au/forum/?id=7306&page=2
--- Thanks to Ked.
-
--- uid is starting room
--- f returns true (or a "reason" string) if we want to store this one, and true,true if
---   we have done searching (ie. all wanted rooms found)
-
-function find_paths (uid, f)
-  
-  local function make_particle (curr_loc, prev_path)
-    local prev_path = prev_path or {}
-    return {current_room=curr_loc, path=prev_path}
-  end
-
-  local depth = 0
-  local count = 0
-  local done = false
-  local found, reason 
-  local explored_rooms, particles = {}, {}
-  
-  -- this is where we collect found paths
-  -- the table is keyed by destination, with paths as values
-  local paths = {}
-  
-  -- create particle for the initial room
-  table.insert (particles, make_particle (uid))
-  
-  while (not done) and #particles > 0 and depth < config.SCAN.depth do
-  
-    -- create a new generation of particles
-    new_generation = {}
-    depth = depth + 1
-    
-    SetStatus (string.format ("Scanning: %i/%i depth (%i rooms)", depth, config.SCAN.depth, count))
-    
-    -- process each active particle
-    for i, part in ipairs (particles) do
-    
-      count = count + 1
-      
-      if not rooms [part.current_room] then
-        rooms [part.current_room] = get_room (part.current_room)
-      end -- if not in memory yet
-    
-      -- if room doesn't exist, forget it
-      if rooms [part.current_room] then
-      
-        -- get a list of exits from the current room
-        exits = rooms [part.current_room].exits
-        
-        -- create one new particle for each exit
-        for dir, dest in pairs(exits) do
-        
-          -- if we've been in this room before, drop it
-          if not explored_rooms[dest] then
-            explored_rooms[dest] = true           
-            rooms [dest] = supplied_get_room (dest)  -- make sure this room in table
-            if rooms [dest] then
-              new_path = copytable.deep (part.path)
-              table.insert(new_path, { dir = dir, uid = dest } )
-              
-              -- if this room is in the list of destinations then save its path
-              found, done = f (dest)
-              if found then
-                paths[dest] = { path = new_path, reason = found }
-              end -- found one!
-              
-              -- make a new particle in the new room
-              table.insert(new_generation, make_particle(dest, new_path))
-            end -- if room exists
-          end -- not explored this room
-          if done then
-            break
-          end
-          
-        end  -- for each exit
-      
-      end -- if room exists
-      
-      if done then
-        break
-      end
-    end  -- for each particle
-      
-    particles = new_generation
-  end   -- while more particles
-  
-  SetStatus "Ready"
-  return paths, count, depth      
-end -- function find_paths
 
 -- draw our map starting at room: uid
 dont_draw = false
