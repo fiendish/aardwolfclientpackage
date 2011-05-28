@@ -110,6 +110,12 @@ function arrangeZ()
    BroadcastPlugin (999, "repaint")
 end
 
+function OnPluginDisable()
+   EnablePlugin(GetPluginID(), true)
+   ColourNote("white", "blue", "You are not allowed to disable the "..
+      GetPluginInfo(GetPluginID(), 1).." plugin. It is necessary for other plugins.")
+end
+
 ]]>
 
 </script>

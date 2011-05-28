@@ -249,6 +249,12 @@ function parse_gmcp(t, done, parent)
    end -- for
 end -- parse_gmcp function
 
+function OnPluginDisable()
+   EnablePlugin(GetPluginID(), true)
+   ColourNote("white", "blue", "You are not allowed to disable the "..
+      GetPluginInfo(GetPluginID(), 1).." plugin. It is necessary for other plugins.")
+end
+
 ]]>
 </script>
 
