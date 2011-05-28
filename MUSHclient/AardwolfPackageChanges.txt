@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r947 snapshot
+- bug fix: gmcp mapper target/targets typo fixed on find results
+- bug fix: clicking rooms in the gmcp mapper window will now use the same pathfinding as everything else
+- misc change: removed some obsolete code from the gmcp mapper
+- misc change: update the luajit dll to beta7
+- bug fix: empty mapper databases will get proper sector colors now when rooms are added
+
 r936 snapshot
 - bug fix: included miniwindow plugins should now remember if you disabled them last time
 - new feature: there are now two aliases included in the world file by default for creating simple aliases and triggers from the command line. see: https://code.google.com/p/aardwolfclientpackage/wiki/CommandLineAliasesAndTriggers
