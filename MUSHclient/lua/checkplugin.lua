@@ -4,24 +4,35 @@
 
 function do_plugin_check_now (id, name)
 
-  if IsPluginInstalled (id) then
-    return  -- all is well
-  end -- plugin is installed
+   if not IsPluginInstalled (id) then
+      ColourNote ("white", "green", "Plugin '" .. name .. "' not installed. Attempting to install it...") 
+      LoadPlugin (GetPluginInfo(GetPluginID (), 20) .. name .. ".xml") 
 
-  ColourNote ("white", "green", "Plugin '" .. name .. "' not installed. Attempting to install it...") 
-  LoadPlugin (GetPluginInfo(GetPluginID (), 20) .. name .. ".xml") 
-
-  if IsPluginInstalled (id) then
-    ColourNote ("white", "green", "Success!") 
-    return  -- all is well ... now
-  end -- plugin is installed
-    
-  ColourNote ("white", "red", string.rep ("-", 80))
-  ColourNote ("white", "red", "Plugin '" .. name .. "' not installed. Please download and install it.") 
-  ColourNote ("white", "red", "It is required for the correct operation of the " ..
-              GetPluginName () .. " plugin.")
-  ColourNote ("white", "red", string.rep ("-", 80))
-
+      if IsPluginInstalled (id) then
+         ColourNote ("white", "green", "Success!") 
+      else
+         ColourNote ("white", "red", string.rep ("-", 80))
+         ColourNote ("white", "red", "Plugin '" .. name .. "' not installed. Please download and install it.") 
+         ColourNote ("white", "red", "It is required for the correct operation of the " ..
+                    GetPluginName () .. " plugin.")
+         ColourNote ("white", "red", string.rep ("-", 80))
+         return
+      end
+   end
+   
+   if not GetPluginInfo(id, 17) then
+      ColourNote ("white", "green", "Plugin '" .. name .. "' not enabled. Attempting to enable it...")
+      EnablePlugin(id, true)
+      if GetPluginInfo(id, 17) then
+         ColourNote ("white", "green", "Success!") 
+      else
+         ColourNote ("white", "red", string.rep ("-", 80))
+         ColourNote ("white", "red", "Plugin '" .. name .. "' not enabled. Please make sure it can be enabled.")
+         ColourNote ("white", "red", "It is required for the correct operation of the " ..
+                    GetPluginName () .. " plugin.")
+         ColourNote ("white", "red", string.rep ("-", 80))        
+      end
+   end
 end -- do_plugin_check_now
 
 
