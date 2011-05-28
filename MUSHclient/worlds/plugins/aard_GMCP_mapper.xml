@@ -2682,8 +2682,6 @@ function got_gmcp_room()
   end -- if room not there
   
   mapper.draw(room_number)
-  --Redraw()
-  BroadcastPlugin (999, "repaint")
 
   if expected_exit == "0" and from_room then
     fix_up_exit ()
