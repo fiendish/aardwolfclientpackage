@@ -1026,7 +1026,7 @@ function draw (uid)
                           total_times_drawn,
                           total_time_taken / total_times_drawn))
   end -- if
-  
+  BroadcastPlugin (999, "repaint")
 end -- draw
   
 local credits = {
