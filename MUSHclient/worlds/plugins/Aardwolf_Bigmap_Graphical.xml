@@ -408,10 +408,9 @@ function updatelocation ()
     continent = xref [zone]
 
     -- no cached map? better get it
-    --if not map then
-    --  EnableTrigger("map_start",true)
-    --  SendNoEcho "bigmap noself" -- grab map
-    --end -- don't know this one
+    if not map then
+      update_map()
+    end -- don't know this one
     old_zone = zone
   end -- need big map
 
@@ -471,12 +470,12 @@ function map_redirect (name, line, wildcards, styles)
       ConstructMap()
       ColourNote ("yellow", "", string.format("BIGMAP INFO: Constructed new continent bigmap for %s.", continent))
     end -- we know the continent
-    DrawMap ()
+    if in_continent then
+       DrawMap ()
+    end
   else
     table.insert (map, styles)
   end -- if
-
-
 end -- function map_redirect
 
 
