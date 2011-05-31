@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r956 snapshot
+- misc change: 'bigmap update' will now typically happen automatically
+- misc change: setting mapper portal levels should be less of a hassle now
+- misc change: it should no longer be possible to remove or disable these very important plugins: z-order monitor, repaint buffer, and gmcp handler
+
 r947 snapshot
 - bug fix: gmcp mapper target/targets typo fixed on find results
 - bug fix: clicking rooms in the gmcp mapper window will now use the same pathfinding as everything else
