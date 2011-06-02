@@ -3227,16 +3227,11 @@ function OnHelp ()
   mapper.mapprint (world.GetPluginInfo (world.GetPluginID (), 3))
 end
 
-first_check = false
 require "checkplugin"
 function OnPluginListChanged ()
-  do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-  do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-  if not first_check then
-      do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-      first_check = true
-      OnPluginInstall() -- run install again now that the z order plugin is loaded
-  end
+   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
+   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
+   do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
 end -- OnPluginListChanged
 
 --
