@@ -2304,16 +2304,14 @@ function quote(str)
    return "\""..str.."\""
 end
 
-function backup_databases (manual)
-  in_backup = true
-  Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
+function checkDatabaseIntegrity()
   Note("CHECKING INTEGRITY")
   Repaint()
   -- If needed, force wal_checkpoint databases to make sure everything gets written out
   -- this is a harmless no-op if not using journal_mode=WAL
   db:exec("PRAGMA wal_checkpoint;")
   local integrityCheck = true
-  for row in db:nrows("PRAGMA integrity_check;") do
+  for row in db:nrows("PRAGMA quick_check;") do
      tprint(row)
      if row.integrity_check ~= "ok" then 
         integrityCheck = false
@@ -2321,11 +2319,21 @@ function backup_databases (manual)
   end
   if not integrityCheck then
     Note("FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE.")
-    Note("ABORTING CURRENT BACKUP")
+    if in_backup then Note("ABORTING CURRENT BACKUP") end
     utils.msgbox ("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE IMMEDIATELY.", "Error!", "ok", "!", 1)
-    return
+    in_backup = false
+    return false
   end
   Note("INTEGRITY CHECK PASSED")
+  return true
+end
+
+function backup_databases (manual)
+  in_backup = true
+  Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
+  if not checkDatabaseIntegrity() then
+     return
+  end
   Note("BACKING UP DATABASES")
   Repaint()
   
@@ -2434,6 +2442,10 @@ function OnPluginInstall ()
   worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
 
   db    = assert (sqlite3.open(worldPath..".db"))
+
+  if not checkDatabaseIntegrity() then
+     return
+  end
   
   for row in db:nrows("PRAGMA user_version") do
      db_user_version = row.user_version
