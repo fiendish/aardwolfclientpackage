@@ -1493,7 +1493,7 @@ function load_room_from_database (uid)
       rooms = {}
     end
     rooms [uid] = room
-    for row in db_bm:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
+    for row in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
       rooms [uid].notes = row.notes
     end   -- finding room
         
@@ -1738,31 +1738,6 @@ function create_tables ()
   INSERT INTO rooms_lookup (uid, name) SELECT uid, name FROM rooms;
   COMMIT;
   ]])
-  
-  -- create notes and terrain colours table in separate database
-  dbcheck (db_bm:execute[[
-  
-  PRAGMA foreign_keys = ON;
-  
-  CREATE TABLE IF NOT EXISTS bookmarks (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      uid         TEXT    NOT NULL,   -- vnum of room
-      notes       TEXT,               -- user notes
-      date_added  DATE,               -- date added to database
-      UNIQUE (uid)
-    );
-    
-  CREATE TABLE IF NOT EXISTS terrain (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      name        TEXT    NOT NULL,   -- terrain name
-      color       INTEGER,            -- RGB code
-      date_added  DATE,               -- date added to database
-      UNIQUE (name)
-    );
-        
-    
-  ]])
-      
 end -- function create_tables
 
 function get_room (uid)
@@ -1916,7 +1891,7 @@ function room_edit_note (room, uid)
 
   local notes, found
   
-  for row in db_bm:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
+  for row in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
     notes = row.notes
     found = true
   end   -- finding room
@@ -1936,7 +1911,7 @@ function room_edit_note (room, uid)
       mapper.mapprint ("No comment entered, note not saved.")
       return
     else
-      dbcheck (db_bm:execute (string.format (
+      dbcheck (db:execute (string.format (
         "DELETE FROM bookmarks WHERE uid = %s;",
           fixsql (uid)
         )))
@@ -1952,14 +1927,14 @@ function room_edit_note (room, uid)
   end -- if
   
   if found then
-    dbcheck (db_bm:execute (string.format (
+    dbcheck (db:execute (string.format (
         "UPDATE bookmarks SET notes = %s, date_added = DATETIME('NOW') WHERE uid = %s;",
           fixsql (newnotes),
           fixsql (uid)
         )))
      mapper.mapprint ("Note for room", uid, "changed to:", newnotes)
    else
-    dbcheck (db_bm:execute (string.format (
+    dbcheck (db:execute (string.format (
         "INSERT INTO bookmarks (uid, notes, date_added) VALUES (%s, %s, DATETIME('NOW'));",
           fixsql (uid), 
           fixsql (newnotes)
@@ -2003,14 +1978,14 @@ function room_edit_terrain_colour (room, uid)
   end -- cancelled
   
   if user_terrain_colour [environmentname] then
-    dbcheck (db_bm:execute (string.format (
+    dbcheck (db:execute (string.format (
         "UPDATE terrain SET color = %s, date_added = DATETIME('NOW') WHERE name = %s;",
           fixsql (newcolour),
           fixsql (environmentname)
         )))
      mapper.mapprint ("Colour for terrain '" .. environmentname .. "' changed to:", RGBColourToName (newcolour))
    else
-    dbcheck (db_bm:execute (string.format (
+    dbcheck (db:execute (string.format (
         "INSERT INTO terrain (name, color, date_added) VALUES (%s, %s, DATETIME('NOW'));",
           fixsql (environmentname), 
           fixsql (newcolour)
@@ -2337,7 +2312,6 @@ function backup_databases (manual)
   -- If needed, force wal_checkpoint databases to make sure everything gets written out
   -- this is a harmless no-op if not using journal_mode=WAL
   db:exec("PRAGMA wal_checkpoint;")
-  db_bm:exec("PRAGMA wal_checkpoint;")
   local integrityCheck = true
   for row in db:nrows("PRAGMA integrity_check;") do
      tprint(row)
@@ -2355,10 +2329,9 @@ function backup_databases (manual)
   Note("BACKING UP DATABASES")
   Repaint()
   
-  local worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
   local backupPath = GetInfo(66).."db_backups\\"..string.gsub(Trim(sanitize_filename(WorldName()))," ","_")
 
-n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
+  n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
 
   ChangeDir("C:") -- Hide stupid *@#&$@! "started in a UNC path" warning messages, because CMD.EXE is a piece of garbage
   
@@ -2372,8 +2345,7 @@ n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execu
 
   -- close databases
   db:close()
-  db_bm:close()
-  
+
   -- make new backup
   -- use pushd/popd here because CMD.EXE can't @!#($$# access UNC directory paths
   execute_string = "pushd "..quote(GetInfo(66)).." & zip -j -T "..quote(backupPath.."_DB_Backup.zip").." "..quote(worldPath.."*.db").." >"..quote(n).." 2>&1 & popd"  
@@ -2407,7 +2379,6 @@ n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execu
   
   -- re-open databases 
   db    = assert (sqlite3.open(worldPath..".db"))
-  db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
   
   in_backup = false
 end
@@ -2460,8 +2431,9 @@ function OnPluginInstall ()
   -- mapper.mapprint (string.format ("MUSHclient mapper installed, version %0.1f", mapper.VERSION))
   
   -- open databases on disk 
-  db    = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
-  db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
+  worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
+
+  db    = assert (sqlite3.open(worldPath..".db"))
   
   for row in db:nrows("PRAGMA user_version") do
      db_user_version = row.user_version
@@ -2475,12 +2447,57 @@ function OnPluginInstall ()
   if db_user_version < 3 then
       generate_terrains()
   end
-  
+  if db_user_version < 4 then
+     -- add bookmarks and terrain tables to the main db since we're
+     -- ditching the second db file
+     dbcheck (db:execute[[  
+     CREATE TABLE IF NOT EXISTS bookmarks (
+         id          INTEGER PRIMARY KEY AUTOINCREMENT,
+         uid         TEXT    NOT NULL,   -- vnum of room
+         notes       TEXT,               -- user notes
+         date_added  DATE,               -- date added to database
+         UNIQUE (uid)
+       );
+       
+     CREATE TABLE IF NOT EXISTS terrain (
+         id          INTEGER PRIMARY KEY AUTOINCREMENT,
+         name        TEXT    NOT NULL,   -- terrain name
+         color       INTEGER,            -- RGB code
+         date_added  DATE,               -- date added to database
+         UNIQUE (name)
+       );
+     ]])
+  end
+
   -- update db version
   dbcheck (db:execute [[
-     PRAGMA user_version = 3;
+     PRAGMA user_version = 4;
   ]])
   
+  b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
+  if b_b ~= nil then
+      io.close(b_b)
+      ColourNote("white", "blue", "Found obsolete bookmarks file "..Trim(sanitize_filename(WorldName())).."_bookmarks.db.")
+      ColourNote("white", "blue", "Merging into the main database file.")
+      ColourNote("white", "blue", Trim(sanitize_filename(WorldName())).."_bookmarks.db --> "..Trim(sanitize_filename(WorldName()))..".db")
+      db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
+      
+      for row in db_bm:nrows("SELECT * FROM bookmarks;") do
+        dbcheck(db:execute(string.format("INSERT OR REPLACE INTO bookmarks (uid, notes, date_added) VALUES (%s, %s, DATETIME('NOW'));",
+        fixsql(row.uid),fixsql(row.notes))))
+      end
+      for row in db_bm:nrows("SELECT * FROM terrain;") do
+        dbcheck(db:execute(string.format("INSERT OR REPLACE INTO terrain (name, color, date_added) VALUES (%s, %i, DATETIME('NOW'));",
+        fixsql(row.name),row.color)))
+      end
+      
+      db_bm:close()
+      ok, err = os.remove(worldPath.."_bookmarks.db")
+      if not ok then
+         ColourNote("white","red", "Error trying to delete obsolete file: "..worldPath.."_bookmarks.db. Please delete it manually.")
+      end
+  end
+
   -- grab all area names
   for row in db:nrows("SELECT * FROM areas") do
      area = {
@@ -2493,7 +2510,7 @@ function OnPluginInstall ()
   end   -- finding areas
   
   -- grab all user terrain info
-  for row in db_bm:nrows("SELECT * FROM terrain") do
+  for row in db:nrows("SELECT * FROM terrain") do
     user_terrain_colour [row.name] = row.color
   end   -- finding terrains
  
@@ -2541,9 +2558,6 @@ function OnPluginEnable ()
   if not db:isopen() then
       db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
   end
-  if not db_bm:isopen() then
-      db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
-  end
   OnPluginSaveState()
 end -- OnPluginEnable
 
@@ -2554,9 +2568,6 @@ function OnPluginDisable ()
   -- close databases
   if db:isopen() then
       db:close()
-  end
-  if db_bm:isopen() then
-      db_bm:close()
   end
 end -- OnPluginDisable
 
@@ -2581,10 +2592,6 @@ function OnPluginSaveState ()
   if db:isopen() then
       db:close()
       db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
-  end
-  if db_bm:isopen() then
-      db_bm:close()
-      db_bm = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. "_bookmarks.db"))
   end
 end -- OnPluginSaveState
  
@@ -3054,7 +3061,7 @@ function map_notes (name, line, wildcards)
   local count = 0
   
   -- build table of special places (with info in them)
-  for row in db_bm:nrows(string.format ("SELECT uid, notes FROM bookmarks")) do
+  for row in db:nrows(string.format ("SELECT uid, notes FROM bookmarks")) do
      table.insert(rooms,{uid=row.uid, reason=row.notes})
      count = count + 1
   end   -- finding room
