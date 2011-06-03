@@ -310,9 +310,9 @@ function draw_main_window()
    trwidth = GetInfo(274) - GetInfo(272)
    trheight = GetInfo(275) - GetInfo(273)
 
-   check (WindowCreate (bgwin, textrect_left - 3, textrect_top - 3, 
-                trwidth + 6, trheight + 6,
-                12  , 3, 0x000000)) 
+   WindowCreate (bgwin, textrect_left - 3, textrect_top - 3, 
+                math.max(0, trwidth + 6), math.max(0, trheight + 6),
+                12  , 3, 0x000000)
    WindowShow(bgwin, true)
 
    local dir = GetInfo(66)
