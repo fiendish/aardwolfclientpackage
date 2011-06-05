@@ -262,8 +262,6 @@ function DisplayStatsPage()
    WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
    WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
 
-   -- show it now (or refresh)
-   WindowShow (win, true)
    BroadcastPlugin (999, "repaint")
 end -- DisplayStatsPage
 
@@ -575,6 +573,7 @@ function SetUpHotspotsAndDraw(firstTime)
       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
+      WindowShow (win, true)
    else
       -- everything has already been made
       -- just move them back into place
