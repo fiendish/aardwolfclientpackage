@@ -48,6 +48,8 @@ mapper backup                   --> Create new archived backups of your map
                                   > preserving a few prior backups
 mapper backups <off/on>         --> Turn off or on automatic database backups.
                                   > The default setting is on
+mapper backups [un]compressed   --> Turn off or on database backup compression.
+                                  > The default setting is uncompressed (off)
 mapper help                     --> This help (click the "?" button on the
                                   > top right)
 mapper zoom out                 --> Zoom out
