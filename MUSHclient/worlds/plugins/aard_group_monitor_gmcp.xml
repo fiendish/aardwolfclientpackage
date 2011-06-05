@@ -11,7 +11,7 @@
    requires="4.73"
    version="2.0"
    save_state="y"
-   >
+>
 
 <description trim="y">
 
@@ -25,23 +25,23 @@ details captured through GMCP.
 </plugin>
 
 <aliases>
-    -- show the group window
-    <alias
-    match="groupon"
-    enabled="y"
-    sequence="100"
-    omit_from_output="y"
-    script="ShowIt"
-    ></alias>
+-- show the group window
+<alias
+   match="groupon"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   script="ShowIt"
+></alias>
 
-    -- hide the group window
-    <alias
-    match="groupoff"
-    enabled="y"
-    sequence="100"
-    omit_from_output="y"
-    script="HideIt"
-    ></alias>
+-- hide the group window
+<alias
+   match="groupoff"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   script="HideIt"
+></alias>
 </aliases>
 
 <script>
@@ -111,25 +111,25 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 function SetUpHotspotsAndDraw(firstTime)
    -- don't use windowcreate after the first time, because it messes with hotspot handlers
    if (firstTime == true) then
-       check (WindowCreate (win, 
-             windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-             width,     -- width
-             height,  -- height
-             windowinfo.window_mode,       -- auto-position: middle right
-             windowinfo.window_flags,  -- flags
-             background_colour) )
-       -- Add the drag handler so they can move the window around
-       movewindow.add_drag_handler (win, 0, 0, 0, 0)
+      check (WindowCreate (win, 
+         windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
+         width,     -- width
+         height,  -- height
+         windowinfo.window_mode,       -- auto-position: middle right
+         windowinfo.window_flags,  -- flags
+         background_colour) )
+      -- Add the drag handler so they can move the window around
+      movewindow.add_drag_handler (win, 0, 0, 0, 0)
 
-       -- Add handler for resizing
-       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
-       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
+      -- Add handler for resizing
+      WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
+      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
    else
-       -- everything has already been made
-       -- just move them back into place
-       WindowResize(win, width, height, background_colour)
-       WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
+      -- everything has already been made
+      -- just move them back into place
+      WindowResize(win, width, height, background_colour)
+      WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
    if hidden == 0 then
       WindowShow (win, true)
@@ -138,45 +138,45 @@ function SetUpHotspotsAndDraw(firstTime)
 end
 
 string.lpad = function(str, len, char)
-    if char == nil then char = ' ' end
-    return string.rep(char, len - #str) .. str
+   if char == nil then char = ' ' end
+   return string.rep(char, len - #str) .. str
 end
 
 string.rpad = function(str, len, char)
-    if char == nil then char = ' ' end
-    return str .. string.rep(char, len - #str)
+   if char == nil then char = ' ' end
+   return str .. string.rep(char, len - #str)
 end
 
 function RemoveMembersFromGroupDisplay()
-    -- hide self if applicable
-    if (show_self == 0) and (char_data ~= nil) then
-        for i,v in ipairs(group_data["members"]) do
-            if v["name"] == char_data["name"] then
-              table.remove(group_data["members"], i)
-            end
-        end
-    end
+   -- hide self if applicable
+   if (show_self == 0) and (char_data ~= nil) then
+      for i,v in ipairs(group_data["members"]) do
+         if v["name"] == char_data["name"] then
+            table.remove(group_data["members"], i)
+         end
+      end
+   end
     
-    -- hide other hidden members (inefficient method, but who cares)
-    for k,v in pairs(hidden_members) do
-        for i,v in ipairs(group_data["members"]) do
-            if v["name"] == k then
-              table.remove(group_data["members"], i)
-              break
-            end
-        end
-    end
+   -- hide other hidden members (inefficient method, but who cares)
+   for k,v in pairs(hidden_members) do
+      for i,v in ipairs(group_data["members"]) do
+         if v["name"] == k then
+            table.remove(group_data["members"], i)
+            break
+         end
+      end
+   end
 end
 
 -- put all current group members into the hidden_members list
 function hideAllMembers()
-    if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
-        for i,v in ipairs(full_group_data["members"]) do
-            if v["name"] ~= char_data["name"] then
-                hidden_members[v["name"]] = true
-            end
-        end
-    end
+   if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
+      for i,v in ipairs(full_group_data["members"]) do
+         if v["name"] ~= char_data["name"] then
+            hidden_members[v["name"]] = true
+         end
+      end
+   end
 end
 
 -- build and draw the group display
@@ -215,30 +215,30 @@ function DisplayGroupPage()
       
       RemoveMembersFromGroupDisplay()
       if #group_data["members"] > 0 then
-          -- MAIN DISPLAY BODY
-          baseX = GAP
-          baseY = y+GAP
-          column_width = WindowTextWidth(win, font_id, "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW")+GAP*4
-          if overlay_numbers == 0 then
-             column_width = column_width+WindowTextWidth(win, font_id, "WWWW")
-          end
-          num_columns = math.max(math.floor(width / column_width), 1)
-          members_per_col = math.ceil((#group_data["members"])/num_columns)
-          labels_width = math.max(WindowTextWidth(win, font_id, "HP"), WindowTextWidth(win, font_id, "MN"), WindowTextWidth(win, font_id, "MV"))
-          bar_width = column_width - GAP*4 - labels_width
-          if overlay_numbers == 0 then
-             bar_width = bar_width - WindowTextWidth(win, font_id, "88888/88888")
-          end
-          for i,v in ipairs(group_data["members"]) do
+         -- MAIN DISPLAY BODY
+         baseX = GAP
+         baseY = y+GAP
+         column_width = WindowTextWidth(win, font_id, "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW")+GAP*4
+         if overlay_numbers == 0 then
+            column_width = column_width+WindowTextWidth(win, font_id, "WWWW")
+         end
+         num_columns = math.max(math.floor(width / column_width), 1)
+         members_per_col = math.ceil((#group_data["members"])/num_columns)
+         labels_width = math.max(WindowTextWidth(win, font_id, "HP"), WindowTextWidth(win, font_id, "MN"), WindowTextWidth(win, font_id, "MV"))
+         bar_width = column_width - GAP*4 - labels_width
+         if overlay_numbers == 0 then
+            bar_width = bar_width - WindowTextWidth(win, font_id, "88888/88888")
+         end
+         for i,v in ipairs(group_data["members"]) do
             if (i ~= 1) and ((i-1) % members_per_col == 0) then
-                baseY = title_height+GAP-1
-                y = baseY
-                baseX = baseX + column_width
-                x = baseX
+               baseY = title_height+GAP-1
+               y = baseY
+               baseX = baseX + column_width
+               x = baseX
             else
-                baseY = y + GAP-1
-                y = baseY
-                x = baseX
+               baseY = y + GAP-1
+               y = baseY
+               x = baseX
             end
            -- txt = "["..(("P" and v["info"]["status"]["poisoned"] == true) or "_")..
            --     (("B" and v["info"]["status"]["blind"] == true) or "_")..
@@ -258,75 +258,75 @@ function DisplayGroupPage()
             y = y + line_height + 1
 
             if show_hp == 1 then -- HP BAR
-                x = baseX
-                WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
-                x = x + labels_width + GAP
-                local hpColor1 = colorVals["Health"][1]
-                local hpColor2 = colorVals["Health"][2]
-                local hpPercent = 100
-                if tonumber(v["info"]["hp"]) and tonumber(v["info"]["mhp"]) then
-                    hpPercent = 100* (tonumber(v["info"]["hp"]) / tonumber(v["info"]["mhp"]))
-                end
-                if thresh1active == 1 then
-                    if hpPercent < thresh1percent then
-                        hpColor1 = thresh1color
-                        hpColor2 = thresh1color
-                    end
-                end
-                if thresh2active == 1 then
-                    if hpPercent < thresh2percent then
-                        hpColor1 = thresh2color
-                        hpColor2 = thresh2color
-                    end
-                end
-                gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
-			    txt = string.lpad(v["info"]["hp"], 5, ' ').."/"..string.rpad(v["info"]["mhp"],5,' ')
-                if overlay_numbers == 1 then
-                    txtlen = WindowTextWidth(win,font_id,txt)
-                    outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
-                else
-                    WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
-                end
-			    y = y + line_height + 1
+               x = baseX
+               WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
+               x = x + labels_width + GAP
+               local hpColor1 = colorVals["Health"][1]
+               local hpColor2 = colorVals["Health"][2]
+               local hpPercent = 100
+               if tonumber(v["info"]["hp"]) and tonumber(v["info"]["mhp"]) then
+                  hpPercent = 100* (tonumber(v["info"]["hp"]) / tonumber(v["info"]["mhp"]))
+               end
+               if thresh1active == 1 then
+                  if hpPercent < thresh1percent then
+                     hpColor1 = thresh1color
+                     hpColor2 = thresh1color
+                  end
+               end
+               if thresh2active == 1 then
+                  if hpPercent < thresh2percent then
+                     hpColor1 = thresh2color
+                     hpColor2 = thresh2color
+                  end
+               end
+               gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
+               txt = string.lpad(v["info"]["hp"], 5, ' ').."/"..string.rpad(v["info"]["mhp"],5,' ')
+               if overlay_numbers == 1 then
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
+               else
+                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
+               end
+               y = y + line_height + 1
             end
 
-			if show_mn == 1 then-- MANA BAR
-                x = baseX
-                WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
-                x = x + labels_width + GAP
-                gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, colorVals["Mana"][1], 0x000000, 0, 0x000000, colorVals["Mana"][2], nil, flat_gauges==1)
-                txt = string.lpad(v["info"]["mn"],5,' ').."/"..string.rpad(v["info"]["mmn"],5,' ')
-                if overlay_numbers == 1 then
-                    txtlen = WindowTextWidth(win,font_id,txt)
-                    outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
-                else
-                    WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
-                end
-                y = y + line_height + 1
-			end
+            if show_mn == 1 then-- MANA BAR
+               x = baseX
+               WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
+               x = x + labels_width + GAP
+               gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, colorVals["Mana"][1], 0x000000, 0, 0x000000, colorVals["Mana"][2], nil, flat_gauges==1)
+               txt = string.lpad(v["info"]["mn"],5,' ').."/"..string.rpad(v["info"]["mmn"],5,' ')
+               if overlay_numbers == 1 then
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
+               else
+                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
+               end
+               y = y + line_height + 1
+            end
 
-			if show_mv == 1 then -- MOVES BAR
-                x = baseX
-                WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
-                x = x + labels_width + GAP
-                gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, colorVals["Moves"][1], 0x000000, 0, 0x000000, colorVals["Moves"][2], nil, flat_gauges==1)
-                txt = string.lpad(v["info"]["mv"],5,' ').."/"..string.rpad(v["info"]["mmv"],5,' ')
-                if overlay_numbers == 1 then
-                    txtlen = WindowTextWidth(win,font_id,txt)
-                    outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
-                else
-                    WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
-                end
-			    y = y + line_height+1
-			end
+            if show_mv == 1 then -- MOVES BAR
+               x = baseX
+               WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
+               x = x + labels_width + GAP
+               gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, colorVals["Moves"][1], 0x000000, 0, 0x000000, colorVals["Moves"][2], nil, flat_gauges==1)
+               txt = string.lpad(v["info"]["mv"],5,' ').."/"..string.rpad(v["info"]["mmv"],5,' ')
+               if overlay_numbers == 1 then
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
+               else
+                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, 0xeeeeee, utf8)
+               end
+               y = y + line_height+1
+            end
             y = y + GAP - 2            
             WindowLine(win, baseX-GAP, y, baseX+column_width-GAP+1, y, 0xeeeeee, 0, 1) -- horizontal line
             WindowLine(win, baseX+column_width-GAP, baseY-GAP+2, baseX+column_width-GAP, y, 0xeeeeee, 0, 1) -- vertical line
-          end
+         end
       else
-          txt = "Your group is empty."
-          txtlen = WindowTextWidth(win,font_id, txt)
-          WindowText(win, font_id, txt, (width-txtlen)/2, (height+line_height)/2, 0, 0, 0xeeeeee, utf8)
+         txt = "Your group is empty."
+         txtlen = WindowTextWidth(win,font_id, txt)
+         WindowText(win, font_id, txt, (width-txtlen)/2, (height+line_height)/2, 0, 0, 0xeeeeee, utf8)
       end
    end
 
@@ -344,181 +344,180 @@ function DisplayGroupPage()
    WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
    WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
 
-   --Redraw()
    BroadcastPlugin (999, "repaint")
-                 
+
 end -- Display_Map
 
 function validate_percent(input)
-    if string.sub(input, -1) == "%" then
-        input = string.sub(input, 1,-2)
-    end
-    local inputNum = tonumber(input)
-    if not inputNum or inputNum < 1 or inputNum > 100 or inputNum % 1 ~= 0 then
-        ColourNote("white","red","'"..input.."' is not a whole number between 1 and 100. Try again.")
-        return false
-    end
-    return true
+   if string.sub(input, -1) == "%" then
+      input = string.sub(input, 1,-2)
+   end
+   local inputNum = tonumber(input)
+   if not inputNum or inputNum < 1 or inputNum > 100 or inputNum % 1 ~= 0 then
+      ColourNote("white","red","'"..input.."' is not a whole number between 1 and 100. Try again.")
+      return false
+   end
+   return true
 end
 
 function right_click_menu ()
 
-    menustring ="!Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|All Others|No Others|-|"
-    local member_count = 0
-    local member_names = {}
-    if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
-        for i,v in ipairs(full_group_data["members"]) do
-            if v["name"] ~= char_data["name"] then
-                menustring = menustring..(((hidden_members[v["name"]] == nil) and "+") or "")..v["name"].."|"
-                member_count = member_count + 1
-                table.insert(member_names, v["name"])
-            end
-        end
-    end
-    menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|-|Bring To Front|Send To Back|-|Reset Defaults"
-    result = WindowMenu (win,
-        WindowInfo (win, 14),  -- x position
-        WindowInfo (win, 15),   -- y position
-        menustring) -- content
-    
-    if result ~= "" then
-        local reload = false
-        numResult = tonumber(result)
-        if numResult == 1 then
-           -- change font
-           wanted_font = utils.fontpicker (font_name, font_size) --font dialog
-           if wanted_font then
-              font_name = wanted_font.name
-              font_size = wanted_font.size
-              reload = true
-           end
-        elseif numResult == 2 then
-           -- show/hide self
-           show_self = (((show_self == 0) and 1) or 0)
-           if (show_self == 0) then
-              ColourNote("yellow", "", "You will no longer see your own status in the group monitor.")
-           else
-              ColourNote("yellow", "", "You will now see your own status in the group monitor.")
-           end
-           reload = true
-        elseif numResult == 3 then
-           -- remove all from the hidden list
-           hidden_members = {}
-           reload = true
-        elseif numResult == 4 then
-           -- add all to the hidden list
-           hideAllMembers()
-           reload = true
-        elseif numResult >= 5 and numResult <= member_count+4 then
-           -- add/remove members in the hidden list
-           local adjustedNumResult = numResult - 4
-           hidden_members[member_names[adjustedNumResult]] = (((hidden_members[member_names[adjustedNumResult]]== nil) and true) or nil)
-           reload = true
-        elseif numResult >= member_count+5 and numResult <= member_count+12 then
-           -- change color settings
-           local adjustedNumResult = numResult-member_count-4
-           local colourIndex = 2
-           if (adjustedNumResult % 2 == 1) then
-              colourIndex = 1
-           end
-           local newcolour = PickColour (colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex])
-           if newcolour ~= -1 then
-              colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex] = newcolour
-           end
-           reload = true
-        elseif numResult == member_count+13 then
-           -- show/hide HP info
-           show_hp = (((show_hp == 0) and 1) or 0)
-           if (show_hp == 0) then
-              ColourNote("yellow", "", "You will no longer see HP info in the group monitor.")
-           else
-              ColourNote("yellow", "", "You will now see HP info in the group monitor.")
-           end
-           reload = true
-        elseif numResult == member_count+14   then
-           -- show/hide MANA info
-           show_mn = (((show_mn == 0) and 1) or 0)
-           if (show_mn == 0) then
-              ColourNote("yellow", "", "You will no longer see MN info in the group monitor.")
-           else
-              ColourNote("yellow", "", "You will now see MN info in the group monitor.")
-           end
-           reload = true
-        elseif numResult == member_count+15 then
-           -- show/hide MOVES info
-           show_mv = (((show_mv == 0) and 1) or 0)
-           if (show_mv == 0) then
-              ColourNote("yellow", "", "You will no longer see MV info in the group monitor.")
-           else
-              ColourNote("yellow", "", "You will now see MV info in the group monitor.")
-           end
-           reload = true
-        elseif numResult == member_count+16 then
-            -- use flat/shaded gauges
-            flat_gauges = (((flat_gauges == 0) and 1) or 0)
-            reload = true
-        elseif numResult == member_count+17 then
-            -- toggle overlay numbers on top of gauges
-            overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
-            reload = true
-        elseif numResult == member_count+18 then
-            thresh1active = (((thresh1active == 0) and 1) or 0)
-            reload = true
-        elseif numResult == member_count+19 then
-            local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
-            if perc then
-                if string.sub(perc, -1) == "%" then
-                    perc = string.sub(perc, 1,-2)
-                end
-                thresh1percent = perc
-                reload = true
-            end
-        elseif numResult == member_count+20 then
-            local newColor = PickColour (thresh1color)
-            if newcolor ~= -1 then
-                thresh1color = newColor
-                reload = true
-            end
-        elseif numResult == member_count+21 then
-            thresh2active = (((thresh2active == 0) and 1) or 0)
-            reload = true
-        elseif numResult == member_count+22 then
-            local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
-            if perc then
-                if string.sub(perc, -1) == "%" then
-                    perc = string.sub(perc, 1,-2)
-                end
-                thresh2percent = perc
-                reload = true
-            end
-        elseif numResult == member_count+23 then
-            local newColor = PickColour (thresh2color)
-            if newcolor ~= -1 then
-                thresh2color = newColor
-                reload = true
-            end
-        elseif numResult == member_count+24 then
-           -- bring to front
-           CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-        elseif numResult == member_count+25 then
-           -- send to back
-           CallPlugin("462b665ecb569efbf261422f","dropMe", win)        
-        elseif numResult == member_count+26 then
-           -- reset
-           font_name        = default_font_name
-           font_size        = default_font_size
-           height           = default_height
-           width            = default_width
-           show_coords      = 0
-           reload = true
-        end -- if
+   menustring ="!Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|All Others|No Others|-|"
+   local member_count = 0
+   local member_names = {}
+   if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
+      for i,v in ipairs(full_group_data["members"]) do
+         if v["name"] ~= char_data["name"] then
+            menustring = menustring..(((hidden_members[v["name"]] == nil) and "+") or "")..v["name"].."|"
+            member_count = member_count + 1
+            table.insert(member_names, v["name"])
+         end
+      end
+   end
+   menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|-|Bring To Front|Send To Back|-|Reset Defaults"
+   result = WindowMenu (win,
+      WindowInfo (win, 14),  -- x position
+      WindowInfo (win, 15),   -- y position
+      menustring) -- content
 
-       if reload then
-           -- save and reload
-           OnPluginSaveState()
-           OnPluginInstall()
-       end
-    end
+   if result ~= "" then
+      local reload = false
+      numResult = tonumber(result)
+      if numResult == 1 then
+         -- change font
+         wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+         if wanted_font then
+            font_name = wanted_font.name
+            font_size = wanted_font.size
+            reload = true
+         end
+      elseif numResult == 2 then
+         -- show/hide self
+         show_self = (((show_self == 0) and 1) or 0)
+         if (show_self == 0) then
+            ColourNote("yellow", "", "You will no longer see your own status in the group monitor.")
+         else
+            ColourNote("yellow", "", "You will now see your own status in the group monitor.")
+         end
+         reload = true
+      elseif numResult == 3 then
+         -- remove all from the hidden list
+         hidden_members = {}
+         reload = true
+      elseif numResult == 4 then
+         -- add all to the hidden list
+         hideAllMembers()
+         reload = true
+      elseif numResult >= 5 and numResult <= member_count+4 then
+         -- add/remove members in the hidden list
+         local adjustedNumResult = numResult - 4
+         hidden_members[member_names[adjustedNumResult]] = (((hidden_members[member_names[adjustedNumResult]]== nil) and true) or nil)
+         reload = true
+      elseif numResult >= member_count+5 and numResult <= member_count+12 then
+         -- change color settings
+         local adjustedNumResult = numResult-member_count-4
+         local colourIndex = 2
+         if (adjustedNumResult % 2 == 1) then
+            colourIndex = 1
+         end
+         local newcolour = PickColour (colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex])
+         if newcolour ~= -1 then
+            colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex] = newcolour
+         end
+         reload = true
+      elseif numResult == member_count+13 then
+         -- show/hide HP info
+         show_hp = (((show_hp == 0) and 1) or 0)
+         if (show_hp == 0) then
+            ColourNote("yellow", "", "You will no longer see HP info in the group monitor.")
+         else
+            ColourNote("yellow", "", "You will now see HP info in the group monitor.")
+         end
+         reload = true
+      elseif numResult == member_count+14   then
+         -- show/hide MANA info
+         show_mn = (((show_mn == 0) and 1) or 0)
+         if (show_mn == 0) then
+            ColourNote("yellow", "", "You will no longer see MN info in the group monitor.")
+         else
+            ColourNote("yellow", "", "You will now see MN info in the group monitor.")
+         end
+         reload = true
+      elseif numResult == member_count+15 then
+         -- show/hide MOVES info
+         show_mv = (((show_mv == 0) and 1) or 0)
+         if (show_mv == 0) then
+            ColourNote("yellow", "", "You will no longer see MV info in the group monitor.")
+         else
+            ColourNote("yellow", "", "You will now see MV info in the group monitor.")
+         end
+         reload = true
+      elseif numResult == member_count+16 then
+         -- use flat/shaded gauges
+         flat_gauges = (((flat_gauges == 0) and 1) or 0)
+         reload = true
+      elseif numResult == member_count+17 then
+         -- toggle overlay numbers on top of gauges
+         overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
+         reload = true
+      elseif numResult == member_count+18 then
+         thresh1active = (((thresh1active == 0) and 1) or 0)
+         reload = true
+      elseif numResult == member_count+19 then
+         local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
+         if perc then
+            if string.sub(perc, -1) == "%" then
+               perc = string.sub(perc, 1,-2)
+            end
+            thresh1percent = perc
+            reload = true
+         end
+      elseif numResult == member_count+20 then
+         local newColor = PickColour (thresh1color)
+         if newcolor ~= -1 then
+            thresh1color = newColor
+            reload = true
+         end
+      elseif numResult == member_count+21 then
+         thresh2active = (((thresh2active == 0) and 1) or 0)
+         reload = true
+      elseif numResult == member_count+22 then
+         local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
+         if perc then
+            if string.sub(perc, -1) == "%" then
+               perc = string.sub(perc, 1,-2)
+            end
+            thresh2percent = perc
+            reload = true
+         end
+      elseif numResult == member_count+23 then
+         local newColor = PickColour (thresh2color)
+         if newcolor ~= -1 then
+            thresh2color = newColor
+            reload = true
+         end
+      elseif numResult == member_count+24 then
+         -- bring to front
+         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      elseif numResult == member_count+25 then
+         -- send to back
+         CallPlugin("462b665ecb569efbf261422f","dropMe", win)        
+      elseif numResult == member_count+26 then
+         -- reset
+         font_name        = default_font_name
+         font_size        = default_font_size
+         height           = default_height
+         width            = default_width
+         show_coords      = 0
+         reload = true
+      end -- if
+
+      if reload then
+         -- save and reload
+         OnPluginSaveState()
+         OnPluginInstall()
+      end
+   end
 end -- right_click_menu
 
 --=================================================================================
@@ -547,11 +546,11 @@ function OnPluginBroadcast (msg, id, name, text)
             ColourNote("yellow","","Something may be wrong with the group monitor plugin. Please disconnect and reconnect to the MUD to correct this problem.")
          end
          if (full_group_data.groupname == "") then
-             leaveGroup()
+            leaveGroup()
          else
-             group_built = true
-             DisplayGroupPage()
-		 end
+            group_built = true
+            DisplayGroupPage()
+         end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
@@ -575,13 +574,13 @@ function ResizeMoveCallback()
    starty = posy
    local min_lines = 1
    if show_hp == 1 then
-     min_lines = min_lines + 1
+      min_lines = min_lines + 1
    end
    if show_mn == 1 then
-     min_lines = min_lines + 1
+      min_lines = min_lines + 1
    end
    if show_mv == 1 then
-     min_lines = min_lines + 1
+      min_lines = min_lines + 1
    end
    if (height < title_height+(min_lines*line_height)+(2*GAP)+min_lines-1) then
       height = title_height+(min_lines*line_height)+(2*GAP)+min_lines-1
@@ -610,60 +609,60 @@ function CancelMouseDown(flags, hotspot_id)
 end
 
 function MouseUp(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-       right_click_menu()
-    end
-    return true
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+   return true
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-        return true
-    end
-    return false
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   return false
 end
 
 function leaveGroup (name, line, wildcards, styles)
-    if (wildcards == nil) or (wildcards["leader"] == nil and wildcards["groupname"] == nil) or (wildcards["leader"] == group_data["leader"] or wildcards["groupname"] == strip_colours(group_data["groupname"])) then
-        group_built = false
-        full_group_data = {}
-        group_data = {}
-        DisplayGroupPage()
-    end
+   if (wildcards == nil) or (wildcards["leader"] == nil and wildcards["groupname"] == nil) or (wildcards["leader"] == group_data["leader"] or wildcards["groupname"] == strip_colours(group_data["groupname"])) then
+      group_built = false
+      full_group_data = {}
+      group_data = {}
+      DisplayGroupPage()
+   end
 end
 
 function OnPluginConnect()
-    Send_GMCP_Packet("rawcolor on")
-    Send_GMCP_Packet("group on")
-    Send_GMCP_Packet("request char")
-    Send_GMCP_Packet("request group")
+   Send_GMCP_Packet("rawcolor on")
+   Send_GMCP_Packet("group on")
+   Send_GMCP_Packet("request char")
+   Send_GMCP_Packet("request group")
 end
 
 function OnPluginSaveState ()
-  -- save window current location for next time  
-  movewindow.save_state (win)
+   -- save window current location for next time  
+   movewindow.save_state (win)
 
-  SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-  SetVariable ("background_colour", background_colour)
-  SetVariable ("title_colour", title_colour)  
-  SetVariable ("width", width)
-  SetVariable ("height", height)
-  SetVariable ("font_name", font_name)
-  SetVariable ("font_size", font_size)
-  SetVariable ("show_self", show_self)
-  SetVariable ("show_hp", show_hp)
-  SetVariable ("show_mn", show_mn)
-  SetVariable ("show_mv", show_mv)
-  SetVariable ("hidden", hidden)
-  SetVariable ("colorVals", serialize.save ("colorVals"))
-  SetVariable ("flat_gauges", flat_gauges)
-  SetVariable ("overlay_numbers", overlay_numbers)
-  SetVariable ("thresh1active", thresh1active)
-  SetVariable ("thresh2active", thresh2active)
-  SetVariable ("thresh1percent", thresh1percent)
-  SetVariable ("thresh2percent", thresh2percent)
-  SetVariable ("thresh1color", thresh1color)
-  SetVariable ("thresh2color", thresh2color)
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+   SetVariable ("background_colour", background_colour)
+   SetVariable ("title_colour", title_colour)  
+   SetVariable ("width", width)
+   SetVariable ("height", height)
+   SetVariable ("font_name", font_name)
+   SetVariable ("font_size", font_size)
+   SetVariable ("show_self", show_self)
+   SetVariable ("show_hp", show_hp)
+   SetVariable ("show_mn", show_mn)
+   SetVariable ("show_mv", show_mv)
+   SetVariable ("hidden", hidden)
+   SetVariable ("colorVals", serialize.save ("colorVals"))
+   SetVariable ("flat_gauges", flat_gauges)
+   SetVariable ("overlay_numbers", overlay_numbers)
+   SetVariable ("thresh1active", thresh1active)
+   SetVariable ("thresh2active", thresh2active)
+   SetVariable ("thresh1percent", thresh1percent)
+   SetVariable ("thresh2percent", thresh2percent)
+   SetVariable ("thresh1color", thresh1color)
+   SetVariable ("thresh2color", thresh2color)
 end -- OnPluginSaveState
 
 function OnPluginClose ()
@@ -671,15 +670,15 @@ function OnPluginClose ()
 end
 
 function HideIt()
-    WindowShow( win, false )
-    hidden = 1
-    OnPluginSaveState()
+   WindowShow( win, false )
+   hidden = 1
+   OnPluginSaveState()
 end
 
 function ShowIt()
-    WindowShow (win, true)
-    hidden = 0
-    OnPluginSaveState()
+   WindowShow (win, true)
+   hidden = 0
+   OnPluginSaveState()
 end
 
 function OnPluginDisable ()
@@ -713,8 +712,8 @@ function OnPluginInstall()
 
    -- if not there already, add it
    if not fonts.Dina then
-     AddFont (GetInfo (66) .. "\\Dina.fon")
-     fonts = utils.getfontfamilies ()
+      AddFont (GetInfo (66) .. "\\Dina.fon")
+      fonts = utils.getfontfamilies ()
    end -- if Dina not installed
 
    if fonts["Courier New"] then
@@ -743,7 +742,7 @@ function OnPluginInstall()
    windowinfo = movewindow.install (win, miniwin.pos_center, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
    
    if IsConnected() then
-     OnPluginConnect()
+      OnPluginConnect()
    end
    
    -- if disabled last time, stay disabled
@@ -760,5 +759,4 @@ end
 ]]>
 
 </script>
-
 </muclient>
