@@ -25,7 +25,6 @@ Aardwolf colour codes.
 To use: highlight text and then:
 
 Ctrl+D copy (like Ctrl+C but different)
-
 or: Ctrl + Left-click and select "Copy with Colour"
 
 </description>
@@ -41,10 +40,8 @@ or: Ctrl + Left-click and select "Copy with Colour"
     script="CopyScript"
     name="Copy_With_Colour"
     menu="y"
-  >
-  </alias>
+></alias>
 </aliases>
-
 
 <!--  Script  -->
 
@@ -63,47 +60,44 @@ require "tprint"
 
 function CopyScript(name, line, wildcs)
 
-  -- find selection in output window, if any
-  local first_line, last_line = GetSelectionStartLine(), 
-                                math.min (GetSelectionEndLine(), GetLinesInBufferCount ())
-
-  local first_column, last_column = GetSelectionStartColumn(), GetSelectionEndColumn()
+   -- find selection in output window, if any
+   local first_line, last_line = GetSelectionStartLine(), 
+                        math.min (GetSelectionEndLine(), GetLinesInBufferCount ())
+   local first_column, last_column = GetSelectionStartColumn(), GetSelectionEndColumn()
   
-  -- nothing selected, do normal copy
-  if first_line <= 0 then
-    DoCommand("copy")
-    return
-  end -- if nothing to copy from output window
+   -- nothing selected, do normal copy
+   if first_line <= 0 then
+      DoCommand("copy")
+      return
+   end -- if nothing to copy from output window
   
-  cpstr = ""
+   cpstr = ""
   
-  -- iterate to build up copy text
-  for line = first_line, last_line do
-    if line < last_line then
-      cpstr = cpstr..StylesToColoursOneLine (GetStyleInfo(line), first_column, GetLineInfo(line).length) 
-      first_column = 1
+   -- iterate to build up copy text
+   for line = first_line, last_line do
+      if line < last_line then
+         cpstr = cpstr..StylesToColoursOneLine (GetStyleInfo(line), first_column, GetLineInfo(line).length) 
+         first_column = 1
       
-      -- Is this a new line or merely the continuation of a paragraph?
-      if GetLineInfo (line, 3) then
-        cpstr = cpstr .. "\r\n"
-      end  -- new line
-      
-    else
-      cpstr = cpstr..StylesToColoursOneLine (GetStyleInfo(line), first_column, last_column)
-    end -- if
-        
-  end  -- for loop
+         -- Is this a new line or merely the continuation of a paragraph?
+         if GetLineInfo (line, 3) then
+            cpstr = cpstr .. "\r\n"
+         end  -- new line
+      else
+         cpstr = cpstr..StylesToColoursOneLine (GetStyleInfo(line), first_column, last_column)
+      end -- if
+   end  -- for loop
   
-  -- Get rid of a spurious extra new line at the start.
-  if cpstr:sub (1, 2) == "\r\n" then
-    cpstr = cpstr:sub (3)
-  end   -- if newline at start
+   -- Get rid of a spurious extra new line at the start.
+   if cpstr:sub (1, 2) == "\r\n" then
+      cpstr = cpstr:sub (3)
+   end
 
-  if cpstr:sub (-2) ~= "@w" then
-    cpstr = cpstr .. "@w"
-  end   -- if newline at start
+   -- make sure lines end in a white color code
+   if cpstr:sub (-2) ~= "@w" then
+      cpstr = cpstr .. "@w"
+   end
 
-  
   -- finally can set clipboard contents
   SetClipboard(cpstr)
   
@@ -113,6 +107,4 @@ AcceleratorTo ("Ctrl+D", "CallPlugin ('04d9e64f835452b045b427a7', 'CopyScript', 
 
 ]]>
 </script>
-
 </muclient>
-
