@@ -11,22 +11,22 @@
    date_written="2011-04-23 11:51:55"
    requires="4.72"
    version="1.0"
-   >
+>
 
 </plugin>
 <!--  Script  -->
 
 <aliases>
-  <alias
+<alias
    match="package update check"
    enabled="y"
    sequence="100"
    omit_from_output="y"
    ignore_case="y"
    script="manualCheck"
-  >
-  </alias>
-  </aliases>
+>
+</alias>
+</aliases>
   
 <script>
 <![CDATA[
@@ -39,133 +39,127 @@ ErrorMessage = ""
 -- converts special character codes in html source to their ascii 
 -- equivalents for display. Also specially escapes things that need to be.
 function convertHTMLcodesToStandardText(str)
-    if not str then
-        return nil
-    end
-    
-    local replacements = { -- minimal set. can add more later if needed.
-    {"&gt;",">"},
-    {"&lt;","<"},
-    {"&quot;","\""},
-    {"&#39;","'"},
-    {"&amp;","&"}
-    }
-    for i,v in ipairs(replacements) do
-        str = string.gsub(str, v[1],v[2])
-    end
-    return str
+   if not str then
+      return nil
+   end
+   
+   local replacements = { -- minimal set. can add more later if needed.
+      {"&gt;",">"},
+      {"&lt;","<"},
+      {"&quot;","\""},
+      {"&#39;","'"},
+      {"&amp;","&"}
+   }
+   for i,v in ipairs(replacements) do
+      str = string.gsub(str, v[1],v[2])
+   end
+   return str
 end
 
 -- Shows an editbox dialog detailing the posted differences between
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
-    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
-        OpenBrowser(download_url)
-    end
+   if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
+      OpenBrowser(download_url)
+   end
 end
 
 -- Something went wrong when trying to check for updates
 function errorMessage(msg)
    if utils.inputbox(msg,"ERROR: "..window_title,download_url,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
-       OpenBrowser(download_url)
+      OpenBrowser(download_url)
    end
 end
 
--- NOTE: The DoAfterSpecial(10... call is there because a race condition in 
--- MUSHclient 4.72 causes it to crash if editbox or inputbox are used 
--- immediately after a call to Connect() when the world is loaded automatically
--- With luck this will be found and fixed in 4.73.
-
 function OnPluginInstall()
-    DoAfterSpecial(10,"main()",sendto.script)
+   DoAfterSpecial(10,"main()",sendto.script)
 end
 
 function manualCheck()
-    DeleteTemporaryTimers()
-    main()
+   DeleteTemporaryTimers()
+   main()
 end
 
 function main()
-    SetStatus("Checking online for Aardwolf MUSHclient Package updates")
-    ErrorMessage = ""
-    if checkLocalFile() then
-        if checkRemoteFile() then
-            showUpdate()
-        end
-    end
-    checkErrors()
-    SetStatus("")
+   SetStatus("Checking online for Aardwolf MUSHclient Package updates")
+   ErrorMessage = ""
+   if checkLocalFile() then
+      if checkRemoteFile() then
+         showUpdate()
+      end
+   end
+   checkErrors()
+   SetStatus("")
 end
 
 function checkLocalFile()
-    -- open the local version file
-    version_file,err = io.open ("AardwolfPackageChanges.txt", "r")
-    if not version_file then -- the file is missing or unreadable
-       ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.\n\nThe system returned the error:\n"..err.."\n\nYou should download the latest development snapshot from:"
-       return false
-    end
-    --- read the snapshot revision from the third line
-    line = version_file:read ("*l") -- read one line
-    line = version_file:read ("*l") -- read one line
-    line = version_file:read ("*l") -- read one line
-    local_version = nil
-    if line then -- if we got something
-       local_version = tonumber(string.match(line, "r(%d+) snapshot"))
-    end
-    if not local_version then -- the file is messed up such that the third line doesn't contain "r<###> snapshot"
-       ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to have been modified (this is bad), so the version check cannot proceed. You should download the latest development snapshot from:"
-       return false
-    end
-    version_file:close ()
-    return true
+   -- open the local version file
+   version_file,err = io.open ("AardwolfPackageChanges.txt", "r")
+   if not version_file then -- the file is missing or unreadable
+      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.\n\nThe system returned the error:\n"..err.."\n\nYou should download the latest development snapshot from:"
+      return false
+   end
+   --- read the snapshot revision from the third line
+   line = version_file:read ("*l") -- read one line
+   line = version_file:read ("*l") -- read one line
+   line = version_file:read ("*l") -- read one line
+   local_version = nil
+   if line then -- if we got something
+      local_version = tonumber(string.match(line, "r(%d+) snapshot"))
+   end
+   if not local_version then -- the file is messed up such that the third line doesn't contain "r<###> snapshot"
+      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to have been modified (this is bad), so the version check cannot proceed. You should download the latest development snapshot from:"
+      return false
+   end
+   version_file:close ()
+   return true
 end
 
 function checkRemoteFile()
-    -- grab the download page
-    page, status, headers = http.request(download_url)
-    if status == 200 then -- 200 is the HTTP status code for "OK"
-        update_list, latest_version = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r(%d+) snapshot.*)")
-        -- extract the snapshot revision number
-        latest_version = tonumber(latest_version)
-    else -- http access error
-        ErrorMessage = "Could not access the Aardwolf MUSHclient Package download page to check for the latest version number. Please make sure that you are able to access the url below in your browser and then type \'PACKAGE UPDATE CHECK\' to try again..."
-        return false
-    end
-    
-    if not latest_version then -- string.match failed to find the right pattern above
-        ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package download page. Please send Fiendish an email about this."
-        return false
-    end
-    return true
+   -- grab the download page
+   page, status, headers = http.request(download_url)
+   if status == 200 then -- 200 is the HTTP status code for "OK"
+      update_list, latest_version = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r(%d+) snapshot.*)")
+      -- extract the snapshot revision number
+      latest_version = tonumber(latest_version)
+   else -- http access error
+      ErrorMessage = "Could not access the Aardwolf MUSHclient Package download page to check for the latest version number. Please make sure that you are able to access the url below in your browser and then type \'PACKAGE UPDATE CHECK\' to try again..."
+      return false
+   end
+   
+   if not latest_version then -- string.match failed to find the right pattern above
+      ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package download page. Please send Fiendish an email about this."
+      return false
+   end
+   return true
 end
 
 function showUpdate()
-    if local_version and latest_version then -- sanity check
-        if local_version < latest_version then
-            final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>\r\n").."\r\nGet it from: "..download_url
-            final_update_list = convertHTMLcodesToStandardText(final_update_list)
-            message = "There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
-            updateDialog(message,final_update_list)
-        elseif local_version > latest_version then
-            ErrorMessage = "Oh, dear...this is embarrassing. The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Go to the following url in your browser to get the latest package and contact Fiendish about this message, because clearly this situation is impossible. :/"
-            return false
-        end
-    else
-        ErrorMessage = "Impossible Error"
-        return false
-    end
-    return true
+   if local_version and latest_version then -- sanity check
+      if local_version < latest_version then
+         final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>\r\n").."\r\nGet it from: "..download_url
+         final_update_list = convertHTMLcodesToStandardText(final_update_list)
+         message = "There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
+         updateDialog(message,final_update_list)
+      elseif local_version > latest_version then
+         ErrorMessage = "Oh, dear...this is embarrassing. The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Go to the following url in your browser to get the latest package and contact Fiendish about this message, because clearly this situation is impossible. :/"
+         return false
+      end
+   else
+      ErrorMessage = "Impossible Error"
+      return false
+   end
+   return true
 end
 
 function checkErrors()
-    if ErrorMessage ~= "" then
-       errorMessage(ErrorMessage)
-       return true
-    end
-    return false
+   if ErrorMessage ~= "" then
+      errorMessage(ErrorMessage)
+      return true
+   end
+   return false
 end
 
 ]]>
-
 </script>
 </muclient>

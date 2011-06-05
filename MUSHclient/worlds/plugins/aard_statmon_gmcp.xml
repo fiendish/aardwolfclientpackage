@@ -14,13 +14,12 @@
    requires="4.73"
    version="2.0"
    save_state="y"
-   >
- <description trim="y">
+>
+<description trim="y">
 
-Aardwolf GCMP based statmon.
+Aardwolf GCMP based stats monitor.
 
 </description>
-
 </plugin>
 
 <!--  Script  -->
@@ -44,15 +43,15 @@ LEFT_MARGIN     = 10
 TOP_MARGIN      = 5
 
 -- Variables not saved.
-startx           = ""  
-starty           = ""
-posx             = "" 
-posy             = ""
-hotspot_id       = ""
-cstyles          = { }
-dstyles          = { }
-page_built       = false
-max_width         = 0
+startx     = ""  
+starty     = ""
+posx       = "" 
+posy       = ""
+hotspot_id = ""
+cstyles    = { }
+dstyles    = { }
+page_built = false
+max_width  = 0
 
 -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
@@ -61,165 +60,167 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
 function BuildStatsPage()
-   
+
    dstyles = { }
    cstyles = { }
 
    --- Check if we have data in each category, but only as much as necessary - once page built we can stop.
    if (page_built == false and (gmcpval("worth") == "" or gmcpval("vitals") == "" or gmcpval("stats") == "" or 
-       gmcpval("status") == "" or gmcpval("maxstats") == "" )) then return end
-    
+   gmcpval("status") == "" or gmcpval("maxstats") == "" )) then 
+      return
+   end
+   
    page_built = true
    if (stacked == 1) then
-       fstr = "@GStrength     : @C\[@W%3d@C/@W%-3d@C\]     @GHealth  : @C\[@W%6d@C/@W%6d@C\]@w"
-       s = fstr:format(gmcpval("stats.str"),gmcpval("maxstats.maxstr"),gmcpval("vitals.hp"),gmcpval("maxstats.maxhp"))
-       table.insert(cstyles,s)
+      fstr = "@GStrength     : @C\[@W%3d@C/@W%-3d@C\]     @GHealth  : @C\[@W%6d@C/@W%6d@C\]@w"
+      s = fstr:format(gmcpval("stats.str"),gmcpval("maxstats.maxstr"),gmcpval("vitals.hp"),gmcpval("maxstats.maxhp"))
+      table.insert(cstyles,s)
 
-       fstr = "@GIntelligence : @C\[@W%3d@C/@W%-3d@C\]     @GMana    : @C\[@W%6d@C/@W%6d@C\]@w"
-       s = fstr:format(gmcpval("stats.int"),gmcpval("maxstats.maxint"),gmcpval("vitals.mana"),gmcpval("maxstats.maxmana"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GWisdom       : @C\[@W%3d@C/@W%-3d@C\]     @GMoves   : @C\[@W%6d@C/@W%6d@C\]@w"
-       s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"),gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GDexterity    : @C\[@W%3d@C/@W%-3d@C\]     @GSaves   : @C\[@W%5d@C\]@W"
-       s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"),gmcpval("stats.saves"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GConstitution : @C\[@W%3d@C/@W%-3d@C\]     @GHitroll : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"),gmcpval("stats.hr"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GLuck         : @C\[@W%3d@C/@W%-3d@C\]     @GDamroll : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("stats.luck"),gmcpval("maxstats.maxluck"),gmcpval("stats.dr"))
-       table.insert(cstyles,s)
-       
-       s = ""
-       table.insert(cstyles,s)
-
-       fstr = "@GExp To Level : @C\[@W%5d@C\]       @GLevel   : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("status.tnl"),gmcpval("status.level"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GAlignment    : @C\[@W%5d@C\]       @GGold    : @C\[@Y%s@C\]@w"
-       s = fstr:format(gmcpval("status.align"),commas(gmcpval("worth.gold")))
-       table.insert(cstyles,s)
-       
-       fstr = "@GQuest Points : @C\[@W%8d@C\]    @GTrivia  : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("worth.qp"),gmcpval("worth.tp"))
-       table.insert(cstyles,s)
-
-       fstr = "@GTrains       : @C\[@W%5d@C\]       @GPracs   : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("worth.trains"),gmcpval("worth.pracs"))
-       table.insert(cstyles,s)
-       
-       fighting = gmcpval("status.enemy")
-
-       if fighting ~= "" and fighting ~= null then
-          fstr = "@RFighting     : @C\[@W%s@C\] @R(@W%s%%@R)@w"
-          s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
-          table.insert(cstyles,s)
-       else
-          table.insert(cstyles,"")
-       end
-    else
-       fstr = "@GStrength     : @C\[@W%3d@C/@W%-3d@C\]@w"
-       s = fstr:format(gmcpval("stats.str"),gmcpval("maxstats.maxstr"))
-       table.insert(cstyles,s)
-
-       fstr = "@GIntelligence : @C\[@W%3d@C/@W%-3d@C\]@w"
-       s = fstr:format(gmcpval("stats.int"),gmcpval("maxstats.maxint"))
-       table.insert(cstyles,s)
-   
-       fstr = "@GWisdom       : @C\[@W%3d@C/@W%-3d@C\]"
-       s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"))
-       table.insert(cstyles,s)
+      fstr = "@GIntelligence : @C\[@W%3d@C/@W%-3d@C\]     @GMana    : @C\[@W%6d@C/@W%6d@C\]@w"
+      s = fstr:format(gmcpval("stats.int"),gmcpval("maxstats.maxint"),gmcpval("vitals.mana"),gmcpval("maxstats.maxmana"))
+      table.insert(cstyles,s)
       
-       fstr = "@GDexterity    : @C\[@W%3d@C/@W%-3d@C\]"
-       s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GConstitution : @C\[@W%3d@C/@W%-3d@C\]"
-       s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"))
-       table.insert(cstyles,s)
+      fstr = "@GWisdom       : @C\[@W%3d@C/@W%-3d@C\]     @GMoves   : @C\[@W%6d@C/@W%6d@C\]@w"
+      s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"),gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GDexterity    : @C\[@W%3d@C/@W%-3d@C\]     @GSaves   : @C\[@W%5d@C\]@W"
+      s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"),gmcpval("stats.saves"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GConstitution : @C\[@W%3d@C/@W%-3d@C\]     @GHitroll : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"),gmcpval("stats.hr"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GLuck         : @C\[@W%3d@C/@W%-3d@C\]     @GDamroll : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("stats.luck"),gmcpval("maxstats.maxluck"),gmcpval("stats.dr"))
+      table.insert(cstyles,s)
+      
+      s = ""
+      table.insert(cstyles,s)
 
-       fstr = "@GLuck         : @C\[@W%3d@C/@W%-3d@C\]"
-       s = fstr:format(gmcpval("stats.luck"),gmcpval("maxstats.maxluck"))
-       table.insert(cstyles,s)
+      fstr = "@GExp To Level : @C\[@W%5d@C\]       @GLevel   : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("status.tnl"),gmcpval("status.level"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GAlignment    : @C\[@W%5d@C\]       @GGold    : @C\[@Y%s@C\]@w"
+      s = fstr:format(gmcpval("status.align"),commas(gmcpval("worth.gold")))
+      table.insert(cstyles,s)
+      
+      fstr = "@GQuest Points : @C\[@W%8d@C\]    @GTrivia  : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("worth.qp"),gmcpval("worth.tp"))
+      table.insert(cstyles,s)
 
-       table.insert(cstyles,"")
+      fstr = "@GTrains       : @C\[@W%5d@C\]       @GPracs   : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("worth.trains"),gmcpval("worth.pracs"))
+      table.insert(cstyles,s)
+      
+      fighting = gmcpval("status.enemy")
 
-       fstr = "@GHealth  : @C\[@W%6d@C/@W%6d@C\]@w"
-       s = fstr:format(gmcpval("vitals.hp"),gmcpval("maxstats.maxhp"))
-       table.insert(cstyles,s)
+      if fighting ~= "" and fighting ~= null then
+         fstr = "@RFighting     : @C\[@W%s@C\] @R(@W%s%%@R)@w"
+         s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
+         table.insert(cstyles,s)
+      else
+         table.insert(cstyles,"")
+      end
+   else
+      fstr = "@GStrength     : @C\[@W%3d@C/@W%-3d@C\]@w"
+      s = fstr:format(gmcpval("stats.str"),gmcpval("maxstats.maxstr"))
+      table.insert(cstyles,s)
 
-       fstr = "@GMana    : @C\[@W%6d@C/@W%6d@C\]@w"
-       s = fstr:format(gmcpval("vitals.mana"),gmcpval("maxstats.maxmana"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GMoves   : @C\[@W%6d@C/@W%6d@C\]@w"
-       s = fstr:format(gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
-       table.insert(cstyles,s)
+      fstr = "@GIntelligence : @C\[@W%3d@C/@W%-3d@C\]@w"
+      s = fstr:format(gmcpval("stats.int"),gmcpval("maxstats.maxint"))
+      table.insert(cstyles,s)
 
-       table.insert(cstyles,"")
-       
-       fstr = "@GSaves        : @C\[@W%5d@C\]@W"
-       s = fstr:format(gmcpval("stats.saves"))
-       table.insert(cstyles,s)
-              
-       fstr = "@GHitroll      : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("stats.hr"))
-       table.insert(cstyles,s)
+      fstr = "@GWisdom       : @C\[@W%3d@C/@W%-3d@C\]"
+      s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GDexterity    : @C\[@W%3d@C/@W%-3d@C\]"
+      s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GConstitution : @C\[@W%3d@C/@W%-3d@C\]"
+      s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"))
+      table.insert(cstyles,s)
 
-       fstr = "@GDamroll      : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("stats.dr"))
-       table.insert(cstyles,s)
-              
-       fstr = "@GAlignment    : @C\[@W%5d@C\]"
-       s = fstr:format(gmcpval("status.align"))
-       table.insert(cstyles,s)
+      fstr = "@GLuck         : @C\[@W%3d@C/@W%-3d@C\]"
+      s = fstr:format(gmcpval("stats.luck"),gmcpval("maxstats.maxluck"))
+      table.insert(cstyles,s)
 
-       table.insert(cstyles,"")
-       
-       fstr = "@GGold         : @C\[@Y%s@C\]@w"
-       s = fstr:format(commas(gmcpval("worth.gold")))
-       table.insert(cstyles,s)
-       
-       fstr = "@GQuest Points : @C\[@W%7d@C\]"
-       s = fstr:format(gmcpval("worth.qp"))
-       table.insert(cstyles,s)
-              
-       fstr = "@GTrivia       : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("worth.tp"))
-       table.insert(cstyles,s)
-              
-       fstr = "@GExp To Level : @C\[@W%5d@C\]"
-       s = fstr:format(gmcpval("status.tnl"))
-       table.insert(cstyles,s)
-              
-       fstr = "@GLevel        : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("status.level"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GTrains       : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("worth.trains"))
-       table.insert(cstyles,s)
-       
-       fstr = "@GPracs        : @C\[@W%5d@C\]@w"
-       s = fstr:format(gmcpval("worth.pracs"))
-       table.insert(cstyles,s)
-              
-       fighting = gmcpval("status.enemy")
+      table.insert(cstyles,"")
 
-       if fighting ~= "" and fighting ~= null then
-          fstr = "@RFighting     : @C\[@W%s@C\] @R(@W%s%%@R)@w"
-          s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
-          table.insert(cstyles,s)
-       else
-          table.insert(cstyles,"")
-       end
-    end
+      fstr = "@GHealth  : @C\[@W%6d@C/@W%6d@C\]@w"
+      s = fstr:format(gmcpval("vitals.hp"),gmcpval("maxstats.maxhp"))
+      table.insert(cstyles,s)
+
+      fstr = "@GMana    : @C\[@W%6d@C/@W%6d@C\]@w"
+      s = fstr:format(gmcpval("vitals.mana"),gmcpval("maxstats.maxmana"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GMoves   : @C\[@W%6d@C/@W%6d@C\]@w"
+      s = fstr:format(gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
+      table.insert(cstyles,s)
+
+      table.insert(cstyles,"")
+      
+      fstr = "@GSaves        : @C\[@W%5d@C\]@W"
+      s = fstr:format(gmcpval("stats.saves"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GHitroll      : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("stats.hr"))
+      table.insert(cstyles,s)
+
+      fstr = "@GDamroll      : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("stats.dr"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GAlignment    : @C\[@W%5d@C\]"
+      s = fstr:format(gmcpval("status.align"))
+      table.insert(cstyles,s)
+
+      table.insert(cstyles,"")
+      
+      fstr = "@GGold         : @C\[@Y%s@C\]@w"
+      s = fstr:format(commas(gmcpval("worth.gold")))
+      table.insert(cstyles,s)
+      
+      fstr = "@GQuest Points : @C\[@W%7d@C\]"
+      s = fstr:format(gmcpval("worth.qp"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GTrivia       : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("worth.tp"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GExp To Level : @C\[@W%5d@C\]"
+      s = fstr:format(gmcpval("status.tnl"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GLevel        : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("status.level"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GTrains       : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("worth.trains"))
+      table.insert(cstyles,s)
+      
+      fstr = "@GPracs        : @C\[@W%5d@C\]@w"
+      s = fstr:format(gmcpval("worth.pracs"))
+      table.insert(cstyles,s)
+      
+      fighting = gmcpval("status.enemy")
+
+      if fighting ~= "" and fighting ~= null then
+         fstr = "@RFighting     : @C\[@W%s@C\] @R(@W%s%%@R)@w"
+         s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
+         table.insert(cstyles,s)
+      else
+         table.insert(cstyles,"")
+      end
+   end
 end -- BuildStatsPage
 
 
@@ -263,7 +264,6 @@ function DisplayStatsPage()
 
    -- show it now (or refresh)
    WindowShow (win, true)
-   --Repaint()                 
    BroadcastPlugin (999, "repaint")
 end -- DisplayStatsPage
 
@@ -274,42 +274,60 @@ end
 
 -- returns the end of the line
 function Display_Styled_Line (win, font_id, styles, left, top)
-  for _, v in ipairs (styles) do
-    left = left + WindowText (win, font_id, v.text, left, top, 0, 0, v.textcolour)
-  end -- for each style run
-  return left                
+   for _, v in ipairs (styles) do
+      left = left + WindowText (win, font_id, v.text, left, top, 0, 0, v.textcolour)
+   end -- for each style run
+   return left                
 end -- Display_Styled_Line
 
 
 -- returns the end of the line
 function Display_ColourText_Line (win, font_id, msg, left, top)
-  styles = ColoursToStyles(msg)
-  return Display_Styled_Line(win, font_id, styles, left, top)
+   styles = ColoursToStyles(msg)
+   return Display_Styled_Line(win, font_id, styles, left, top)
 end -- Display_ColourText_Line
 
 
 -- right click menu
 function right_click_menu ()
 
-    menustring = "Flip Orientation|Change Font|-|Bring To Front|Send To Back|-|Reset Defaults"
+   menustring = "Flip Orientation|Change Font|-|Bring To Front|Send To Back|-|Reset Defaults"
 
-    result = WindowMenu (win,
-        WindowInfo (win, 14),  -- x position
-        WindowInfo (win, 15),   -- y position
-        menustring) -- content
+   result = WindowMenu (win,
+      WindowInfo (win, 14),  -- x position
+      WindowInfo (win, 15),   -- y position
+      menustring) -- content
 
    if result == "Flip Orientation" then
-       stacked = (((stacked == 1) and 0) or 1)
-       SetVariable("stacked", stacked)
-       height           = orig_height
-       width            = default_width
-       movewindow.save_state (win)
-       SetVariable("width",width)
-       SetVariable("height",height)
-       SetVariable("font_name",font_name)
-       SetVariable("font_size",font_size)
-       OnPluginInstall()
-       if (page_built) then
+      stacked = (((stacked == 1) and 0) or 1)
+      SetVariable("stacked", stacked)
+      height           = orig_height
+      width            = default_width
+      movewindow.save_state (win)
+      SetVariable("width",width)
+      SetVariable("height",height)
+      SetVariable("font_name",font_name)
+      SetVariable("font_size",font_size)
+      OnPluginInstall()
+      if (page_built) then
+         RefreshPage()
+         if (max_width ~= 0) then
+            width = max_width+LEFT_MARGIN
+            height = max_height+TOP_MARGIN
+            SetVariable ("width", width)
+            SetVariable("height",height)
+         end
+      end
+      OnPluginInstall()
+   elseif result == "Change Font" then
+      wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+      if wanted_font then
+         font_name = wanted_font.name
+         font_size = wanted_font.size
+         SetVariable("font_name", font_name)
+         SetVariable("font_size", font_size)
+         OnPluginInstall()
+         if (page_built) then
             RefreshPage()
             if (max_width ~= 0) then
                width = max_width+LEFT_MARGIN
@@ -317,56 +335,37 @@ function right_click_menu ()
                SetVariable ("width", width)
                SetVariable("height",height)
             end
-       end
-       OnPluginInstall()
-   elseif result == "Change Font" then
-       wanted_font = utils.fontpicker (font_name, font_size) --font dialog
-       if wanted_font then
-          font_name = wanted_font.name
-          font_size = wanted_font.size
-          SetVariable("font_name", font_name)
-          SetVariable("font_size", font_size)
-          OnPluginInstall()
-          if (page_built) then
-              RefreshPage()
-              if (max_width ~= 0) then
-                 width = max_width+LEFT_MARGIN
-                 height = max_height+TOP_MARGIN
-                 SetVariable ("width", width)
-                 SetVariable("height",height)
-              end
-          end
-          OnPluginInstall()
-       end
-    elseif result == "Bring To Front" then
-       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-    elseif result == "Send To Back" then
-       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-    elseif result == "Reset Defaults" then
-       font_name        = default_font_name
-       font_size        = default_font_size
-       height           = orig_height
-       width            = default_width
-       movewindow.save_state (win)
-       stacked = 1
-       SetVariable("stacked", stacked)
-       SetVariable("width",width)
-       SetVariable("height",height)
-       SetVariable("font_name",font_name)
-       SetVariable("font_size",font_size)
-       OnPluginInstall()
-       if (page_built) then
-           RefreshPage()
-           if (max_width ~= 0) then
-              width = max_width+LEFT_MARGIN
-              height = max_height+TOP_MARGIN
-              SetVariable ("width", width)
-              SetVariable("height",height)
-           end
-       end
+         end
+         OnPluginInstall()
+      end
+   elseif result == "Bring To Front" then
+      CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+   elseif result == "Send To Back" then
+      CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+   elseif result == "Reset Defaults" then
+      font_name        = default_font_name
+      font_size        = default_font_size
+      height           = orig_height
+      width            = default_width
+      movewindow.save_state (win)
+      stacked = 1
+      SetVariable("stacked", stacked)
+      SetVariable("width",width)
+      SetVariable("height",height)
+      SetVariable("font_name",font_name)
+      SetVariable("font_size",font_size)
       OnPluginInstall()
-    end -- if
-
+      if (page_built) then
+         RefreshPage()
+         if (max_width ~= 0) then
+            width = max_width+LEFT_MARGIN
+            height = max_height+TOP_MARGIN
+            SetVariable ("width", width)
+            SetVariable("height",height)
+         end
+      end
+      OnPluginInstall()
+   end -- if
 end -- right_click_menu
 
 --=================================================================================
@@ -428,7 +427,7 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-    SetUpHotspotsAndDraw()
+   SetUpHotspotsAndDraw()
 end
 
 ---------------------------------------------------------------------------------
@@ -438,7 +437,6 @@ function MouseDown(flags, hotspot_id)
    if (hotspot_id == "resize") then
       startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
    end
-
 end
 
 ---------------------------------------------------------------------------------
@@ -451,48 +449,45 @@ end
 -- Called when mouse button released on hotspot.
 ---------------------------------------------------------------------------------
 function MouseUp(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-       right_click_menu()
-    end
-    return true
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+   return true
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-        return true
-    end
-    return false
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   return false
 end
 
 ---------------------------------------------------------------------------------
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
-
-  -- save window current location for next time  
-  movewindow.save_state (win)
-  
-  SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-  SetVariable ("background_colour", background_colour)
-  SetVariable ("width", width)
-  SetVariable ("height", height)
-  SetVariable ("font_name", font_name)
-  SetVariable ("font_size", font_size)
-  SetVariable ("stacked", stacked)
-
-end -- OnPluginSaveState
+   -- save window current location for next time  
+   movewindow.save_state (win)
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+   SetVariable ("background_colour", background_colour)
+   SetVariable ("width", width)
+   SetVariable ("height", height)
+   SetVariable ("font_name", font_name)
+   SetVariable ("font_size", font_size)
+   SetVariable ("stacked", stacked)
+end
 
 function OnPluginClose ()
    OnPluginDisable()
 end
 
 function OnPluginDisable ()
-    WindowShow( win, false )
-end --  OnPluginDisable
+   WindowShow( win, false )
+end
 
 function OnPluginEnable ()
-    WindowShow( win, true)
-end -- OnPluginEnable
+   WindowShow( win, true)
+end
 
 function OnPluginConnect()
    TelnetOptionOff(TELOPT_STATMON)
@@ -505,7 +500,7 @@ function OnPluginListChanged ()
    do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
    do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
    do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-end -- OnPluginListChanged
+end
 
 
 function OnPluginInstall()
@@ -518,8 +513,8 @@ function OnPluginInstall()
 
    -- if not there already, add it
    if not fonts.Dina then
-     AddFont (GetInfo (66) .. "\\Dina.fon")
-     fonts = utils.getfontfamilies ()
+      AddFont (GetInfo (66) .. "\\Dina.fon")
+      fonts = utils.getfontfamilies ()
    end -- if Dina not installed
 
    if fonts["Courier New"] then
@@ -533,8 +528,8 @@ function OnPluginInstall()
       default_font_name = "Lucida Console"
    end -- if
 
-   font_name        = GetVariable("font_name") or default_font_name
-   font_size        = tonumber(GetVariable("font_size")) or default_font_size
+   font_name = GetVariable("font_name") or default_font_name
+   font_size = tonumber(GetVariable("font_size")) or default_font_size
 
    --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
@@ -548,13 +543,12 @@ function OnPluginInstall()
    default_height = max_height
    --- Pull some state variables.
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-   height            = tonumber (GetVariable ("height")) or default_height
+   height = tonumber (GetVariable ("height")) or default_height
    orig_height = height
-   width             = tonumber (GetVariable ("width")) or default_width
+   width = tonumber (GetVariable ("width")) or default_width
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
-
+   windowinfo = movewindow.install (win, miniwin.pos_top_right, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
 
    --- Setup the window.
    SetUpHotspotsAndDraw(true)
@@ -569,27 +563,27 @@ end
 --=================================================================================
 function SetUpHotspotsAndDraw(firstTime)
    if (firstTime == true) then
-       check (WindowCreate (win, 
-                 windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-                 width,     -- width
-                 height,  -- height
-                 windowinfo.window_mode,       -- auto-position: middle right
-                 windowinfo.window_flags,  -- flags
-                 background_colour) )                
+      check (WindowCreate (win, 
+         windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
+         width,     -- width
+         height,  -- height
+         windowinfo.window_mode,       -- auto-position: middle right
+         windowinfo.window_flags,  -- flags
+         background_colour) )                
 
-       -- Add handler for resizing
-       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
+      -- Add handler for resizing
+      WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
    else
-       -- everything has already been made
-       -- just move them back into place
-       WindowResize(win, width, height, background_colour)
-       WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
+      -- everything has already been made
+      -- just move them back into place
+      WindowResize(win, width, height, background_colour)
+      WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
    -- Add the drag handler so they can move the window around
    movewindow.add_drag_handler (win, 0, 0, 0, 0)
-       
+   
    -- draw edge frame.
    check (WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15))
    check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
@@ -601,15 +595,13 @@ end
 --- Calculate width of a line of styled text without drawing it.
 -------------------------------------------------------------------------------
 function styleWidth(styles) 
-    local s = ""
-    for _,w in ipairs (styles) do
-       s = s .. w.text
-    end
-    return WindowTextWidth(win,font_id,s)
-end -- styleWidth
+   local s = ""
+   for _,w in ipairs (styles) do
+      s = s .. w.text
+   end
+   return WindowTextWidth(win,font_id,s)
+end
 
 ]]>
-
-
 </script>
 </muclient>
