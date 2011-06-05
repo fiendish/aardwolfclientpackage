@@ -16,13 +16,12 @@
    requires="4.73"
    version="2.0"
    save_state="y"
-   >
- <description trim="y">
+>
+<description trim="y">
 
 Aardwolf GCMP based health bars
 
 </description>
-
 </plugin>
 
 <!--  Script  -->
@@ -52,32 +51,32 @@ local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Man
 showBar = defaultShowBar
 local barIndex = {"Health", "Mana", "Moves", "TNL", "Enemy", "Align"}
 -- Variables not saved.
-startx           = ""  
-starty           = ""
-posx             = "" 
-posy             = ""
-hotspot_id       = ""
-page_built       = false
+startx     = ""  
+starty     = ""
+posx       = "" 
+posy       = ""
+hotspot_id = ""
+page_built = false
 
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
 string.lpad = function(str, len, char)
-    str = tostring(str)
-    if char == nil then char = ' ' end
-    return string.rep(char, len - #str) .. str
+   str = tostring(str)
+   if char == nil then char = ' ' end
+   return string.rep(char, len - #str) .. str
 end
 
 string.rpad = function(str, len, char)
-    str = tostring(str)
-    if char == nil then char = ' ' end
-    return str .. string.rep(char, len - #str)
+   str = tostring(str)
+   if char == nil then char = ' ' end
+   return str .. string.rep(char, len - #str)
 end
 
 function DisplayStatsPage()
 
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
-  
+
    if not page_built then
       local txt = "Status bars will appear here"
       local txtlen = WindowTextWidth(win,font_id,txt)
@@ -85,8 +84,8 @@ function DisplayStatsPage()
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, false)
-   -- Only draw bars if we have data.
    else 
+      -- Only draw bars if we have data.
       local barTexts = ""
       local ypos = TOP_MARGIN
       local xpos = LEFT_MARGIN
@@ -100,213 +99,213 @@ function DisplayStatsPage()
       -- count up the bars we're going to use
 
       if stacked == 1 then
-          if showLabels == 1 then
-              label_width = WindowTextWidth(win,font_id,"WWWWWW:")
-          end
-          bar_width = math.max(1, width-label_width-LEFT_MARGIN*2)
+         if showLabels == 1 then
+            label_width = WindowTextWidth(win,font_id,"WWWWWW:")
+         end
+         bar_width = math.max(1, width-label_width-LEFT_MARGIN*2)
       else
-          for i,v in pairs(showBar) do
-             if (v[2] == true) then
-                 barTexts = barTexts..v[3]
-             end
-          end
-          if showLabels == 1 then
-             bar_width = math.max(1, (width-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
-          else
-             bar_width = math.max(1, (width-LEFT_MARGIN)/numBars-LEFT_MARGIN)
-          end
+         for i,v in pairs(showBar) do
+            if (v[2] == true) then
+               barTexts = barTexts..v[3]
+            end
+         end
+         if showLabels == 1 then
+            bar_width = math.max(1, (width-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+         else
+            bar_width = math.max(1, (width-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+         end
       end
       local bar = "Health"
       if (showBar[bar][2] == true) then
-          if showLabels == 1 then
-              if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
-              else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
-              end
-          end
-          if graphicalMode == 1 then
+         if showLabels == 1 then
+            if stacked == 1 then
+               WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+            else
+               xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+            end
+         end
+         if graphicalMode == 1 then
             gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers == 1 then
-                txt = string.lpad(gmcpval("vitals.hp"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxhp"),5,' ')
-                txtlen = WindowTextWidth(win,font_id,txt)
-                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+               txt = string.lpad(gmcpval("vitals.hp"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxhp"),5,' ')
+               txtlen = WindowTextWidth(win,font_id,txt)
+               outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
             end
-          else
+         else
             xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxhp")).."s",gmcpval("vitals.hp")).."/"..gmcpval("maxstats.maxhp").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-          end
-          if stacked == 1 then
-              ypos = ypos + line_height + 1
-          else
-              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-          end
+         end
+         if stacked == 1 then
+            ypos = ypos + line_height + 1
+         else
+            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+         end
       end
       bar = "Mana"
       if (showBar[bar][2] == true) then
-          if showLabels == 1 then
-              if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
-              else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
-              end
-          end
-          if graphicalMode == 1 then
+         if showLabels == 1 then
+            if stacked == 1 then
+               WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+            else
+               xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+            end
+         end
+         if graphicalMode == 1 then
             gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers == 1 then
-                txt = string.lpad(gmcpval("vitals.mana"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxmana"),5,' ')
-                txtlen = WindowTextWidth(win,font_id,txt)
-                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+               txt = string.lpad(gmcpval("vitals.mana"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxmana"),5,' ')
+               txtlen = WindowTextWidth(win,font_id,txt)
+               outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
             end
-          else
+         else
             xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxmana")).."s",gmcpval("vitals.mana")).."/"..gmcpval("maxstats.maxmana").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-          end
-          if stacked == 1 then
-              ypos = ypos + line_height + 1
-          else
-              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-          end
+         end
+         if stacked == 1 then
+            ypos = ypos + line_height + 1
+         else
+            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+         end
       end
       bar = "Moves"
       if (showBar[bar][2] == true) then
-          if showLabels == 1 then
-              if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
-              else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
-              end
-          end
-          if graphicalMode == 1 then
+         if showLabels == 1 then
+            if stacked == 1 then
+               WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+            else
+               xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+            end
+         end
+         if graphicalMode == 1 then
             gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers == 1 then
-                txt = string.lpad(gmcpval("vitals.moves"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxmoves"),5,' ')
-                txtlen = WindowTextWidth(win,font_id,txt)
-                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+               txt = string.lpad(gmcpval("vitals.moves"), 5, ' ').."/"..string.rpad(gmcpval("maxstats.maxmoves"),5,' ')
+               txtlen = WindowTextWidth(win,font_id,txt)
+               outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
             end
-          else
+         else
             xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("maxstats.maxmoves")).."s",gmcpval("vitals.moves")).."/"..gmcpval("maxstats.maxmoves").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-          end
-          if stacked == 1 then
-              ypos = ypos + line_height + 1
-          else
-              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-          end
+         end
+         if stacked == 1 then
+            ypos = ypos + line_height + 1
+         else
+            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+         end
       end
       bar = "TNL"
       if (showBar[bar][2] == true) then
-          if showLabels == 1 then
-              if stacked == 1 then
-                  -- switch title from "to next level" to "current level experience"
-                  WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][1]) or string.gsub(showBar[bar][1],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
-              else
-                  -- switch title from "to next level" to "current level experience"
-                  xpos = xpos + WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][3]) or string.gsub(showBar[bar][3],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
-              end
-          end
-          -- switch from "to next level" to "current level experience"
-          if (reverseTNL == 0) then
-             if graphicalMode == 1 then
-                 gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-                 if overlay_numbers == 1 then
-                    txt = string.lpad(gmcpval("status.tnl"), 5, ' ').."/"..string.rpad(gmcpval("base.perlevel"),5,' ')
-                    txtlen = WindowTextWidth(win,font_id,txt)
-                    outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-                 end
-             else
-                 xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("base.perlevel")).."s",gmcpval("status.tnl")).."/"..gmcpval("base.perlevel").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-             end
-          else
-             if graphicalMode == 1 then
-                 gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-                 if overlay_numbers == 1 then
-                    txt = string.lpad((tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0), 5, ' ').."/"..string.rpad(gmcpval("base.perlevel") or 0,5,' ')
-                    txtlen = WindowTextWidth(win,font_id,txt)
-                    outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-                 end
-             else
-                 xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("base.perlevel")).."s",(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0).."/"..(gmcpval("base.perlevel") or "0")).."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-             end
-          end
-          if stacked == 1 then
-              ypos = ypos + line_height + 1
-          else
-              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-          end
+         if showLabels == 1 then
+            if stacked == 1 then
+               -- switch title from "to next level" to "current level experience"
+               WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][1]) or string.gsub(showBar[bar][1],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
+            else
+               -- switch title from "to next level" to "current level experience"
+               xpos = xpos + WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][3]) or string.gsub(showBar[bar][3],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
+            end
+         end
+         -- switch from "to next level" to "current level experience"
+         if (reverseTNL == 0) then
+            if graphicalMode == 1 then
+               gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+               if overlay_numbers == 1 then
+                  txt = string.lpad(gmcpval("status.tnl"), 5, ' ').."/"..string.rpad(gmcpval("base.perlevel"),5,' ')
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+               end
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("base.perlevel")).."s",gmcpval("status.tnl")).."/"..gmcpval("base.perlevel").."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+            end
+         else
+            if graphicalMode == 1 then
+               gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+               if overlay_numbers == 1 then
+                  txt = string.lpad((tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0), 5, ' ').."/"..string.rpad(gmcpval("base.perlevel") or 0,5,' ')
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+               end
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%"..string.len(gmcpval("base.perlevel")).."s",(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0).."/"..(gmcpval("base.perlevel") or "0")).."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+            end
+         end
+         if stacked == 1 then
+            ypos = ypos + line_height + 1
+         else
+            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+         end
       end
       bar = "Enemy"
       if (showBar[bar][2] == true) then
-          fighting = gmcpval("status.enemy")
-          if fighting ~= "" and fighting ~= null then
-             enemypct = gmcpval("status.enemypct")
-             if enemypct ~= "" then
-                if showLabels == 1 then
-                    if stacked == 1 then
-                        WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
-                    else
-                        xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
-                    end
-                end
-             end
-             if graphicalMode == 1 then
-                 gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-                 if overlay_numbers == 1 then
-                    txt = string.lpad(enemypct.."%", 4, ' ')
-                    txtlen = WindowTextWidth(win,font_id,txt)
-                    outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-                 end
-             else
-                 xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-             end
-          else
-             if showLabels == 1 then
-                 if stacked == 1 then
-                    WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, false)
-                 else
-                    xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, false)
-                 end
-             end
-             if graphicalMode == 1 then
-                 gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1) 
-             else
-                 xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
-             end            
-          end
-          if stacked == 1 then
-              ypos = ypos + line_height + 1
-          else
-              xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-          end
+         fighting = gmcpval("status.enemy")
+         if fighting ~= "" and fighting ~= null then
+            enemypct = gmcpval("status.enemypct")
+            if enemypct ~= "" then
+               if showLabels == 1 then
+                  if stacked == 1 then
+                     WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+                  else
+                     xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+                  end
+               end
+            end
+            if graphicalMode == 1 then
+               gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+               if overlay_numbers == 1 then
+                  txt = string.lpad(enemypct.."%", 4, ' ')
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+               end
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+            end
+         else
+            if showLabels == 1 then
+               if stacked == 1 then
+                  WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, false)
+               else
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, false)
+               end
+            end
+            if graphicalMode == 1 then
+               gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1) 
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
+            end            
+         end
+         if stacked == 1 then
+            ypos = ypos + line_height + 1
+         else
+            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+         end
       end
       bar = "Align"
       if (showBar[bar][2] == true) then
-          alignment = tonumber(gmcpval("status.align"))
-          if alignment ~= nil then
-              zeroed_alignment = alignment+2500
-              bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
-              if showLabels == 1 then
-                  if stacked == 1 then
-                      WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
-                  else
-                      xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, false)
-                  end
-              end
-              if graphicalMode == 1 then
-                  WindowLine (win, xpos+label_width+line_height/2, math.ceil(ypos+line_height/2), xpos+label_width+bar_width-line_height/2, math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
-                  WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, bar_colour/2, 0, 2, bar_colour, 0)
+         alignment = tonumber(gmcpval("status.align"))
+         if alignment ~= nil then
+            zeroed_alignment = alignment+2500
+            bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
+            if showLabels == 1 then
+               if stacked == 1 then
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
+               else
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, false)
+               end
+            end
+            if graphicalMode == 1 then
+               WindowLine (win, xpos+label_width+line_height/2, math.ceil(ypos+line_height/2), xpos+label_width+bar_width-line_height/2, math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
+               WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, bar_colour/2, 0, 2, bar_colour, 0)
 
-                  -- add ticks at alignment change boundaries
-                  local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width);
-                  local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width);
-                  WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
-                  WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
-              else
-                  xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, 0, 0, bar_colour, false)
-              end
-              if stacked == 1 then
-                  ypos = ypos + line_height + 1
-              else
-                  xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-              end
-          end
+               -- add ticks at alignment change boundaries
+               local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width);
+               local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width);
+               WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
+               WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, 0, 0, bar_colour, false)
+            end
+            if stacked == 1 then
+               ypos = ypos + line_height + 1
+            else
+               xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+            end
+         end
       end
    end
 
@@ -322,104 +321,103 @@ function DisplayStatsPage()
 
    -- show it now (or refresh)
    WindowShow (win, true)
-   --Repaint()                 
    BroadcastPlugin (999, "repaint")
 end -- DisplayStatsPage
 
 -- right click menu
 function right_click_menu ()
-    menustring ="!Change Font|"
-    if showLabels == 1 then
-       menustring = menustring.."Hide Labels|"
-    else
-       menustring = menustring.."Show Labels|"
-    end
-    if stacked == 1 then
-       menustring = menustring.."Un-stack Bars|"
-    else
-       menustring = menustring.."Stack Bars|"
-    end
-    local activeBars = ""
-    for i,v in ipairs(barIndex) do
-        if (showBar[v][2] == true) then
-            activeBars = activeBars.."+"..v.."|"
-        else
-            activeBars = activeBars..""..v.."|"
-        end
-    end
-    menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
-    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|Send To Back|-|Reset Defaults"
+   menustring ="!Change Font|"
+   if showLabels == 1 then
+      menustring = menustring.."Hide Labels|"
+   else
+      menustring = menustring.."Show Labels|"
+   end
+   if stacked == 1 then
+      menustring = menustring.."Un-stack Bars|"
+   else
+      menustring = menustring.."Stack Bars|"
+   end
+   local activeBars = ""
+   for i,v in ipairs(barIndex) do
+      if (showBar[v][2] == true) then
+         activeBars = activeBars.."+"..v.."|"
+      else
+         activeBars = activeBars..""..v.."|"
+      end
+   end
+   menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
+   menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"..((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|-|Bring To Front|Send To Back|-|Reset Defaults"
 
-    result = WindowMenu (win,
-        WindowInfo (win, 14),  -- x position
-        WindowInfo (win, 15),   -- y position
-        menustring) -- content
+   result = WindowMenu (win,
+      WindowInfo (win, 14),  -- x position
+      WindowInfo (win, 15),   -- y position
+      menustring) -- content
    if result ~= "" then
-        numResult = tonumber(result)
-        if numResult == 1 then
-           -- change font
-           wanted_font = utils.fontpicker (font_name, font_size) --font dialog
-           if wanted_font then
-              font_name = wanted_font.name
-              font_size = wanted_font.size
-           end
-        elseif numResult == 2 then
-            -- show/hide labels
-            showLabels = (((showLabels == 0) and 1) or 0)
-        elseif numResult == 3 then
-            -- stack/unstack bars
-            if stacked == 1 then
-                stacked = 0
-                height = line_height+(TOP_MARGIN*2)
-            else
-                stacked = 1   
-                height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
-            end
-        elseif numResult >= 4 and numResult <= 9 then
-           -- activate/de-activate
-           showBar[barIndex[numResult-3]][2] = not showBar[barIndex[numResult-3]][2]
-        elseif numResult >= 10 and numResult <= 21 then
-           -- change colors
-           local colourIndex = 4
-           if (numResult % 2 == 1) then
-              colourIndex = 5
-           end
-           local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex])
-           if newcolour ~= -1 then
-              showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex] = newcolour
-           end
-        elseif numResult == 22 then
-           -- reverse tnl
-           reverseTNL = (((reverseTNL == 0) and 1) or 0)
-        elseif numResult == 23 then
-           -- text mode
-           graphicalMode = (((graphicalMode == 0) and 1) or 0)
-        elseif numResult == 24 then
-           flat_gauges = (((flat_gauges == 0) and 1) or 0)
-        elseif numResult == 25 then
-           overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
-        elseif numResult == 26 then
-           -- bring to front
-           CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-        elseif numResult == 27 then
-           -- send to back
-           CallPlugin("462b665ecb569efbf261422f","dropMe", win) 
-        elseif numResult == 28 then
-           -- reset defaults
-           font_name = default_font_name
-           font_size = default_font_size
-           numBars = 5
-           height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
-           width = default_width
-           stacked = 1
-           showLabels = 1
-           reverseTNL = 0
-           showBar = defaultShowBar
-        end -- if
-        
-        OnPluginSaveState()
-        OnPluginInstall()
-    end
+      numResult = tonumber(result)
+      if numResult == 1 then
+         -- change font
+         wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+         if wanted_font then
+            font_name = wanted_font.name
+            font_size = wanted_font.size
+         end
+      elseif numResult == 2 then
+         -- show/hide labels
+         showLabels = (((showLabels == 0) and 1) or 0)
+      elseif numResult == 3 then
+         -- stack/unstack bars
+         if stacked == 1 then
+            stacked = 0
+            height = line_height+(TOP_MARGIN*2)
+         else
+            stacked = 1   
+            height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
+         end
+      elseif numResult >= 4 and numResult <= 9 then
+         -- activate/de-activate
+         showBar[barIndex[numResult-3]][2] = not showBar[barIndex[numResult-3]][2]
+      elseif numResult >= 10 and numResult <= 21 then
+         -- change colors
+         local colourIndex = 4
+         if (numResult % 2 == 1) then
+            colourIndex = 5
+         end
+         local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex])
+         if newcolour ~= -1 then
+            showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex] = newcolour
+         end
+      elseif numResult == 22 then
+         -- reverse tnl
+         reverseTNL = (((reverseTNL == 0) and 1) or 0)
+      elseif numResult == 23 then
+         -- text mode
+         graphicalMode = (((graphicalMode == 0) and 1) or 0)
+      elseif numResult == 24 then
+         flat_gauges = (((flat_gauges == 0) and 1) or 0)
+      elseif numResult == 25 then
+         overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
+      elseif numResult == 26 then
+         -- bring to front
+         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      elseif numResult == 27 then
+         -- send to back
+         CallPlugin("462b665ecb569efbf261422f","dropMe", win) 
+      elseif numResult == 28 then
+         -- reset defaults
+         font_name = default_font_name
+         font_size = default_font_size
+         numBars = 5
+         height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
+         width = default_width
+         stacked = 1
+         showLabels = 1
+         reverseTNL = 0
+         showBar = defaultShowBar
+      end -- if
+      
+      OnPluginSaveState()
+      OnPluginInstall()
+   end
 end -- right_click_menu
 
 --=================================================================================
@@ -442,15 +440,15 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          if page_built ~= true then
-             -- draw edge frame again, just in case the text has overlapped the border
-             WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-             WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+            -- draw edge frame again, just in case the text has overlapped the border
+            WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
+            WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
          end
          page_built = true
          DisplayStatsPage()
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
-       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
    end
 end
 
@@ -479,7 +477,7 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-    SetUpHotspotsAndDraw()
+   SetUpHotspotsAndDraw()
 end
 
 ---------------------------------------------------------------------------------
@@ -489,7 +487,6 @@ function MouseDown(flags, hotspot_id)
    if (hotspot_id == "resize") then
       startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
    end
-
 end
 
 ---------------------------------------------------------------------------------
@@ -502,48 +499,47 @@ end
 -- Called when mouse button released on hotspot.
 ---------------------------------------------------------------------------------
 function MouseUp(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-       right_click_menu()
-    end
-    return true
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+   return true
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-        return true
-    end
-    return false
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   return false
 end
 
 ---------------------------------------------------------------------------------
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
-
-  -- save window current location for next time  
-  movewindow.save_state (win)
-  barTexts = ""
-  numBars = 0
-  for i,v in pairs(showBar) do
-     if (v[2] == true) then
-        barTexts = barTexts..v[3]
-        numBars = numBars+1
-     end
-  end
-  SetVariable ("stacked", stacked)
-  SetVariable ("showLabels", showLabels)
-  SetVariable ("reverseTNL", reverseTNL)
-  SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-  SetVariable ("background_colour", background_colour)
-  SetVariable ("width", width)
-  SetVariable ("height", height)
-  SetVariable ("font_name", font_name)
-  SetVariable ("font_size", font_size)
-  SetVariable ("numBars", numBars)
-  SetVariable ("showBar", serialize.save ("showBar"))
-  SetVariable ("graphicalMode", graphicalMode)
-  SetVariable ("flat_gauges", flat_gauges)
-  SetVariable ("overlay_numbers", overlay_numbers)
+   -- save window current location for next time  
+   movewindow.save_state (win)
+   barTexts = ""
+   numBars = 0
+   for i,v in pairs(showBar) do
+      if (v[2] == true) then
+         barTexts = barTexts..v[3]
+         numBars = numBars+1
+      end
+   end
+   SetVariable ("stacked", stacked)
+   SetVariable ("showLabels", showLabels)
+   SetVariable ("reverseTNL", reverseTNL)
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+   SetVariable ("background_colour", background_colour)
+   SetVariable ("width", width)
+   SetVariable ("height", height)
+   SetVariable ("font_name", font_name)
+   SetVariable ("font_size", font_size)
+   SetVariable ("numBars", numBars)
+   SetVariable ("showBar", serialize.save ("showBar"))
+   SetVariable ("graphicalMode", graphicalMode)
+   SetVariable ("flat_gauges", flat_gauges)
+   SetVariable ("overlay_numbers", overlay_numbers)
 end -- OnPluginSaveState
 
 function OnPluginClose()
@@ -575,14 +571,14 @@ function OnPluginInstall()
    -- make window so I can grab the font info
    WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
 
-   font_id        = "statmon_font"
+   font_id = "statmon_font"
 
    local fonts = utils.getfontfamilies ()
 
    -- if not there already, add it
    if not fonts.Dina then
-     AddFont (GetInfo (66) .. "\\Dina.fon")
-     fonts = utils.getfontfamilies ()
+      AddFont (GetInfo (66) .. "\\Dina.fon")
+      fonts = utils.getfontfamilies ()
    end -- if Dina not installed
 
    if fonts["Courier New"] then
@@ -596,8 +592,8 @@ function OnPluginInstall()
       default_font_name = "Lucida Console"
    end -- if
 
-   font_name        = GetVariable("font_name") or default_font_name
-   font_size        = tonumber(GetVariable("font_size")) or default_font_size
+   font_name = GetVariable("font_name") or default_font_name
+   font_size = tonumber(GetVariable("font_size")) or default_font_size
 
    --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
@@ -629,12 +625,12 @@ function OnPluginInstall()
       end
    end
    if stacked == 1 then
-       height = (TOP_MARGIN*2)+(numBars*(line_height+1))
+      height = (TOP_MARGIN*2)+(numBars*(line_height+1))
    else
-       if showLabels == 1 then
-           MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+LEFT_MARGIN*2)
-       end
-       height = TOP_MARGIN*2 + line_height
+      if showLabels == 1 then
+         MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+LEFT_MARGIN*2)
+      end
+      height = TOP_MARGIN*2 + line_height
    end
    width = math.max(width, MIN_WIDTH)
 
@@ -651,7 +647,6 @@ function OnPluginInstall()
    end -- they didn't enable us last time
    
    OnPluginSaveState()
-   
 end
 
 --=================================================================================
@@ -661,22 +656,22 @@ end
 --=================================================================================
 function SetUpHotspotsAndDraw(firstTime)
    if (firstTime == true) then
-       check (WindowCreate (win, 
-                 windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-                 width,     -- width
-                 height,  -- height
-                 windowinfo.window_mode,       -- auto-position: middle right
-                 windowinfo.window_flags,  -- flags
-                 background_colour) )                
-       -- Add handler for resizing
-       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
+      check (WindowCreate (win, 
+            windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
+            width,     -- width
+            height,  -- height
+            windowinfo.window_mode,       -- auto-position: middle right
+            windowinfo.window_flags,  -- flags
+            background_colour) )                
+      -- Add handler for resizing
+      WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
    else
-       -- everything has already been made
-       -- just move them back into place
-       WindowResize(win, width, height, background_colour)
-       WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
+      -- everything has already been made
+      -- just move them back into place
+      WindowResize(win, width, height, background_colour)
+      WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
    
    -- Add the drag handler so they can move the window around
@@ -693,15 +688,13 @@ end
 --- Calculate width of a line of styled text without drawing it.
 -------------------------------------------------------------------------------
 function styleWidth(styles) 
-    local s = ""
-    for _,w in ipairs (styles) do
-       s = s .. w.text
-    end
-    return WindowTextWidth(win,font_id,s)
+   local s = ""
+   for _,w in ipairs (styles) do
+      s = s .. w.text
+   end
+   return WindowTextWidth(win,font_id,s)
 end -- styleWidth
 
 ]]>
-
-
 </script>
 </muclient>
