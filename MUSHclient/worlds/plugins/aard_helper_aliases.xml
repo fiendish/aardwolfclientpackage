@@ -17,194 +17,193 @@
    date_written="2010-08-15 21:40:14"
    requires="4.51"
    version="1.0"
-   >
-</plugin>
+></plugin>
 
 <aliases>
 
-  <alias
+<alias
    match="checkversion"
    enabled="y"
    send_to="12"
    sequence="100"
-   >
-   <send>
+>
+<send>
    -- code taken from the package update checker
-    version_file,err = io.open ("AardwolfPackageChanges.txt", "r")
-    if not version_file then -- the file is missing or unreadable
-       ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.")
-       return
-    end
-    --- read the snapshot revision from the third line
-    line = version_file:read ("*l") -- read one line
-    line = version_file:read ("*l") -- read one line
-    line = version_file:read ("*l") -- read one line
-    local_version = nil
-    if line then -- if we got something
-       local_version = tonumber(string.match(line, "r(%d+) snapshot"))
-    end
-    if not local_version then -- the file is messed up such that the third line doesn't contain "r### snapshot"
-       ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to have been modified (this is bad), so the version check cannot proceed.")
-       return
-    end
-    ColourNote("white","blue","You are currently using Aardwolf MUSHclient Package version: r"..local_version)
-    </send>
-  </alias>
+   version_file,err = io.open ("AardwolfPackageChanges.txt", "r")
+   if not version_file then -- the file is missing or unreadable
+      ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.")
+      return
+   end
+   --- read the snapshot revision from the third line
+   line = version_file:read ("*l") -- read one line
+   line = version_file:read ("*l") -- read one line
+   line = version_file:read ("*l") -- read one line
+   local_version = nil
+   if line then -- if we got something
+      local_version = tonumber(string.match(line, "r(%d+) snapshot"))
+   end
+   if not local_version then -- the file is messed up such that the third line doesn't contain "r### snapshot"
+      ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to have been modified (this is bad), so the version check cannot proceed.")
+      return
+   end
+   ColourNote("white","blue","You are currently using Aardwolf MUSHclient Package version: r"..local_version)
+</send>
+</alias>
 
-  <alias
+<alias
    match="reload statmon"
    enabled="y"
    send_to="12"
    sequence="100"
-  >
-  <send>
-if ReloadPlugin ("ef4a86dbc9cd4dd6f4c69386") == error_code.eNoSuchPlugin then
-  Note "---- Plugin not loaded -----"
-  local dir = GetInfo(60)
-  local pfile = dir .. "aard_statmon_gmcp.xml"
-  check (LoadPlugin (pfile))
-else
-   Note "plugin aard_statmon_gmcp.xml reloaded"
-end
-  </send>
+>
+<send>
+   if ReloadPlugin ("ef4a86dbc9cd4dd6f4c69386") == error_code.eNoSuchPlugin then
+      Note "---- Plugin not loaded -----"
+      local dir = GetInfo(60)
+      local pfile = dir .. "aard_statmon_gmcp.xml"
+      check (LoadPlugin (pfile))
+   else
+      Note "plugin aard_statmon_gmcp.xml reloaded"
+   end
+</send>
 </alias>
 
-  <alias
+<alias
    match="reload handler"
    enabled="y"
    send_to="12"
    sequence="100"
-  >
-  <send>
-if ReloadPlugin ("3e7dedbe37e44942dd46d264") == error_code.eNoSuchPlugin then
-  Note "---- Plugin not loaded -----"
-  local dir = GetInfo(60)
-  local pfile = dir .. "aard_GMCP_handler.xml"
-  check (LoadPlugin (pfile))
-else
-   Note "plugin GMCPHAndler.xml reloaded"
-end
-  </send>
-  </alias>
+>
+<send>
+   if ReloadPlugin ("3e7dedbe37e44942dd46d264") == error_code.eNoSuchPlugin then
+      Note "---- Plugin not loaded -----"
+      local dir = GetInfo(60)
+      local pfile = dir .. "aard_GMCP_handler.xml"
+      check (LoadPlugin (pfile))
+   else
+      Note "plugin GMCPHAndler.xml reloaded"
+   end
+</send>
+</alias>
   
-  <alias
+<alias
    match="reload channels"
    enabled="y"
    send_to="12"
    sequence="100"
-  >
-  <send>
-if ReloadPlugin ("b555825a4a5700c35fa80780") == error_code.eNoSuchPlugin then
-  Note "---- Channel Plugin not loaded -----"
-  local dir = GetInfo(60)
-  local pfile = dir .. "aard_channels_fiendish.xml"
-  check (LoadPlugin (pfile))
-else
-   Note "plugin Fiendish Channels reloaded"
-end
-  </send>
-  </alias>
+>
+<send>
+   if ReloadPlugin ("b555825a4a5700c35fa80780") == error_code.eNoSuchPlugin then
+      Note "---- Channel Plugin not loaded -----"
+      local dir = GetInfo(60)
+      local pfile = dir .. "aard_channels_fiendish.xml"
+      check (LoadPlugin (pfile))
+   else
+      Note "plugin Fiendish Channels reloaded"
+   end
+</send>
+</alias>
 
-  <alias
+<alias
    match="reload layout"
    enabled="y"
    send_to="12"
    sequence="100"
-  >
-  <send>
-if ReloadPlugin ("c293f9e7f04dde889f65cb90") == error_code.eNoSuchPlugin then
-  Note "---- Layout Plugin not loaded -----"
-  local dir = GetInfo(60)
-  local pfile = dir .. "aard_layout.xml"
-  check (LoadPlugin (pfile))
-else
-   Note "Plugin Aard_Layout reloaded"
-end
-  </send>
-  </alias>
+>
+<send>
+   if ReloadPlugin ("c293f9e7f04dde889f65cb90") == error_code.eNoSuchPlugin then
+      Note "---- Layout Plugin not loaded -----"
+      local dir = GetInfo(60)
+      local pfile = dir .. "aard_layout.xml"
+      check (LoadPlugin (pfile))
+   else
+      Note "Plugin Aard_Layout reloaded"
+   end
+</send>
+</alias>
 
-  <alias
+<alias
    match="reload aardmapper"
    enabled="y"
    send_to="12"
    sequence="100"
-  >
-  <send>
-if ReloadPlugin ("3f498d929793c12cb70fb59e") == error_code.eNoSuchPlugin then
-  Note "---- Mapper Plugin not loaded -----"
-  local dir = GetInfo(60)
-  local pfile = dir .. "aard_ASCII_map.xml"
-  check (LoadPlugin (pfile))
-else
-   Note "Plugin Aard_Mapper reloaded"
-end
-  </send>
-  </alias>
+>
+<send>
+   if ReloadPlugin ("3f498d929793c12cb70fb59e") == error_code.eNoSuchPlugin then
+      Note "---- Mapper Plugin not loaded -----"
+      local dir = GetInfo(60)
+      local pfile = dir .. "aard_ASCII_map.xml"
+      check (LoadPlugin (pfile))
+   else
+      Note "Plugin Aard_Mapper reloaded"
+   end
+</send>
+</alias>
 
-  <alias
+<alias
    match="reload mapper"
    enabled="y"
    send_to="12"
    sequence="100"
-  >
-  <send>
-if ReloadPlugin ("b6eae87ccedd84f510b74714") == error_code.eNoSuchPlugin then
-  Note "---- GMCP Mapper Plugin not loaded -----"
-  local dir = GetInfo(60)
-  local pfile = dir .. "aard_GMCP_Mapper.xml"
-  check (LoadPlugin (pfile))
-else
-   Note "Plugin GMCP Mapper reloaded"
-end
-  </send>
-  </alias>
+>
+<send>
+   if ReloadPlugin ("b6eae87ccedd84f510b74714") == error_code.eNoSuchPlugin then
+      Note "---- GMCP Mapper Plugin not loaded -----"
+      local dir = GetInfo(60)
+      local pfile = dir .. "aard_GMCP_Mapper.xml"
+      check (LoadPlugin (pfile))
+   else
+      Note "Plugin GMCP Mapper reloaded"
+   end
+</send>
+</alias>
 
 -- xterm color demo from Bast
-  <alias
+<alias
    match="showxterm*"
    enabled="y"
    regexp="n"
    send_to="12"
    sequence="100"
-  >
-  <send>local nonum = "%1"
-  if nonum ~= "" and nonum ~= " compact" then
-    Note("SHOWXTERM Usage: Your options are 'showxterm' or 'showxterm compact'.")
-    return
-  end
-dofile(GetInfo (60) .. "aardwolf_colors.lua")
+>
+<send>local nonum = "%1"
+   if nonum ~= "" and nonum ~= " compact" then
+      Note("SHOWXTERM Usage: Your options are 'showxterm' or 'showxterm compact'.")
+      return
+   end
+   dofile(GetInfo (60) .. "aardwolf_colors.lua")
 
-for i=0,255 do
-  local text = string.format('@x%-d    @w', i)
-  if nonum ~= "" then
-    text = string.format('@x%-d  @w', i)
-  else
-    ColourTell("", "", string.format('%-3s : ', tostring(i)))
-  end
-  local newstyles = ColoursToStyles(text)
-  for i,v in ipairs(newstyles) do
-    ColourTell("", RGBColourToName(v.textcolour), v.text)
-  end
-  if nonum == "" then
-    ColourTell("", "", " ")
-  end
-  if i &lt; 16 then
-    if i == 7 or i == 15 then
-      ColourNote("", "", "")
-    end
-    if i == 15 then
-      ColourNote("", "", "")
-    end
-  else
-    if math.fmod(i - 21, 6) == 0 then
-      ColourNote("", "", "")
-    end
-    if math.fmod(i- 21 + 6, 36) == 0 then
-      ColourNote("", "", "")
-    end
-  end
-end
-ColourNote("", "", "")
+   for i=0,255 do
+      local text = string.format('@x%-d    @w', i)
+      if nonum ~= "" then
+         text = string.format('@x%-d  @w', i)
+      else
+         ColourTell("", "", string.format('%-3s : ', tostring(i)))
+      end
+      local newstyles = ColoursToStyles(text)
+      for i,v in ipairs(newstyles) do
+         ColourTell("", RGBColourToName(v.textcolour), v.text)
+      end
+      if nonum == "" then
+         ColourTell("", "", " ")
+      end
+      if i &lt; 16 then
+         if i == 7 or i == 15 then
+            ColourNote("", "", "")
+         end
+         if i == 15 then
+            ColourNote("", "", "")
+         end
+      else
+         if math.fmod(i - 21, 6) == 0 then
+            ColourNote("", "", "")
+         end
+         if math.fmod(i- 21 + 6, 36) == 0 then
+            ColourNote("", "", "")
+         end
+      end
+   end
+   ColourNote("", "", "")
 </send>
 </alias>
 
