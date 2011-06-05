@@ -2,7 +2,6 @@
 <!DOCTYPE muclient>
 
 <muclient>
-
 <plugin
    name="Aardwolf_New_Connection"
    author="Fiendish"
@@ -13,7 +12,7 @@
    requires="4.73"
    version="1.0"
    save_state="y"
-   >
+>
 </plugin>
 <script>
 <![CDATA[
@@ -41,10 +40,10 @@ WINDOW_TEXT_COLOUR = ColourNameToRGB ("white")
 win = "zzzzz_" .. GetPluginID ()  -- get a unique name
 
 function OnPluginSaveState ()
-    SetVariable("showGreeting", showGreeting)
-    if first_time2 ~= nil then
-        SetVariable("first_time2", first_time2)
-    end
+   SetVariable("showGreeting", showGreeting)
+   if first_time2 ~= nil then
+      SetVariable("first_time2", first_time2)
+   end
 end -- OnPluginSaveState
 
 function OnPluginInstall()
@@ -53,24 +52,24 @@ end
 require "checkplugin"
 loaded = false
 function OnPluginListChanged()
-    if not loaded then
-        -- Ask about loading the update checker
-        if GetVariable("first_time2") ~= "false" and not IsPluginInstalled("162bba4a5ecef2bb32b5652f") then
-            response = utils.msgbox ("The Aardwolf MUSHclient Package contains a plugin that can automatically check for new beta development releases every time you launch MUSHclient. If you choose to enable this plugin, you will get an alert when you launch MUSHclient if a newer development release is available. Would you like to enable this feature now and become an active beta tester for the package?\n\n(Note: You can always change your mind later by manually adding or removing the plugin)", "Aardwolf Package Beta Test Program", "yesno", "?", 3)
-            if response == "yes" then
-                do_plugin_check_now("162bba4a5ecef2bb32b5652f","aard_package_update_checker")
-            end
-            first_time2 = "false"
-        end
+   if not loaded then
+      -- Ask about loading the update checker
+      if GetVariable("first_time2") ~= "false" and not IsPluginInstalled("162bba4a5ecef2bb32b5652f") then
+         response = utils.msgbox ("The Aardwolf MUSHclient Package contains a plugin that can automatically check for new beta development releases every time you launch MUSHclient. If you choose to enable this plugin, you will get an alert when you launch MUSHclient if a newer development release is available. Would you like to enable this feature now and become an active beta tester for the package?\n\n(Note: You can always change your mind later by manually adding or removing the plugin)", "Aardwolf Package Beta Test Program", "yesno", "?", 3)
+         if response == "yes" then
+            do_plugin_check_now("162bba4a5ecef2bb32b5652f","aard_package_update_checker")
+         end
+         first_time2 = "false"
+      end
     
-        showGreeting = tonumber(GetVariable("showGreeting")) or showGreeting
-        if (showGreeting == 1) then
-            ShowGreeting(true)
-        else
-            Connect()
-        end
-    end
-    loaded = true
+      showGreeting = tonumber(GetVariable("showGreeting")) or showGreeting
+      if (showGreeting == 1) then
+         ShowGreeting(true)
+      else
+         Connect()
+      end
+   end
+   loaded = true
 end
 
 function hyperlink_close ()
@@ -88,47 +87,45 @@ function hyperlink_dont_show()
 end
 
 function MouseUp(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-       right_click_menu()
-    end
-    return true
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+   return true
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-        return true
-    end
-    return false
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   return false
 end
 
 -- right click menu
 function right_click_menu ()
+   menustring ="Hi there! Thanks for right-clicking!|-|This menu doesn't have anything important|>But OTHER plugins might let you do things like...|Change fonts|Customize colors|Or whatever else makes sense|-|>Or maybe the author just wants to send you a message|Like, \"Hi, I'm Avi.\"|<|<"
 
-    menustring ="Hi there! Thanks for right-clicking!|-|This menu doesn't have anything important|>But OTHER plugins might let you do things like...|Change fonts|Customize colors|Or whatever else makes sense|-|>Or maybe the author just wants to send you a message|Like, \"Hi, I'm Avi.\"|<|<"
-
-    result = WindowMenu (win,
-        WindowInfo (win, 14),  -- x position
-        WindowInfo (win, 15),   -- y position
-        menustring) -- content
-    
+   result = WindowMenu (win,
+      WindowInfo (win, 14),  -- x position
+      WindowInfo (win, 15),   -- y position
+      menustring) -- content
 end -- right_click_menu
 
 function ShowGreeting(firstTime)
+
+   require "getlines"
+   require "movewindow"
   
-  require "getlines"
-  require "movewindow"
+   -- left margin
+   x = GAP
+   -- top margin
+   y = GAP
   
-  -- left margin
-  x = GAP
-  -- top margin
-  y = GAP
-  
-  if (firstTime) then
+   if (firstTime) then
       -- make the window to get font info
       WindowCreate (win, 0, 0, 0, 0, -- very small
-                    miniwin.pos_center_all, 0, 
-                    WINDOW_BACKGROUND_COLOUR)  -- create window
-                     
+         miniwin.pos_center_all, 0, 
+         WINDOW_BACKGROUND_COLOUR)  -- create window
+         
       local Charset = miniwin.font_charset_default
       local PitchAndFamily = miniwin.font_family_swiss + miniwin.font_pitch_variable
       
@@ -142,17 +139,17 @@ function ShowGreeting(firstTime)
       line_height = font_height+1  
       
       -- install the window movement handler, get back the window position
-         windowinfo  = movewindow.install (win, miniwin.pos_center_all, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+      windowinfo  = movewindow.install (win, miniwin.pos_center_all, 2, true, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
       
       baselines = {"Welcome to the new Aardwolf MUSHclient package!", "IMPORTANT: If you find ANY bugs, PLEASE PLEASE PLEASE report them to ","Here are a few helpful tips for navigating this software...","1) If the main text area is ever off the edge of your screen, type \"RESETAARD\" to reset it.","2) We use miniwindow dialogs (this is a miniwindow) to enhance your experience.", "Most miniwindows in this package let you do the following:", "3) The miniwindows are just 'plugins' and can be removed if you want by going to File->Plugins..."}
       tablines = {"* DRAG the bottom-right corner to resize. (where you see this) -->","* DRAG anywhere else in the miniwindow to move it around (try it here).","   There are exceptions. When you can't drag everywhere (e.g. the main text area),","   you can at least drag along the top where the mouse cursor changes.","* RIGHT-CLICK in the miniwindow to bring up a menu of options (try it here).","* You might also see things like ","   You can usually interact with them by clicking or just moving the mouse over them."}
       
       local max_width = 0      
       for i,v in ipairs(baselines) do
-        max_width = math.max(max_width, WindowTextWidth(win, font_id, v))
+         max_width = math.max(max_width, WindowTextWidth(win, font_id, v))
       end
       for i,v in ipairs(tablines) do
-        max_width = math.max(max_width, 50+WindowTextWidth(win, font_id, v))
+         max_width = math.max(max_width, 50+WindowTextWidth(win, font_id, v))
       end
       
       local never_show_text = "Check (click) this box before closing (top-right) to never show this dialog again --> "
@@ -252,91 +249,91 @@ function ShowGreeting(firstTime)
       -- frame it                           
       WindowRectOp (win, miniwin.rect_frame, 0, 0, 0, 0, 0xffffff )
       WindowRectOp (win, miniwin.rect_frame, 1, 1, -1, -1, 0x696969 )
-  end
+   end
       
-  -- work out how high a font line is
-  font_height = WindowFontInfo (win, font_id, 1)   -- height of the font  
-  line_height = font_height+1  
+   -- work out how high a font line is
+   font_height = WindowFontInfo (win, font_id, 1)   -- height of the font  
+   line_height = font_height+1  
 
-  local box_size = line_height - 2
-  local box_colour = 0xffffff
--- left margin
-  x = GAP
-  -- top margin
-  y = GAP
+   local box_size = line_height - 2
+   local box_colour = 0xffffff
+   -- left margin
+   x = GAP
+   -- top margin
+   y = GAP
+   
+   -- close box
+   WindowRectOp (win, miniwin.rect_frame, 
+      x + window_width - box_size - GAP * 2, 
+      y, 
+      x + window_width - GAP * 2, 
+      y + box_size, 
+      box_colour)
+   WindowLine (win, x + window_width - box_size - GAP * 2 + 3, 
+      y + 3, 
+      x + window_width - GAP * 2 - 3, 
+      y - 3 + box_size, 
+      box_colour, 
+      miniwin.pen_solid, 1)
+   WindowLine (win, x - 4 + window_width - GAP * 2, 
+      y + 3, 
+      x - 1 + window_width - box_size - GAP * 2 + 3, 
+      y - 3 + box_size, 
+      box_colour, 
+      miniwin.pen_solid, 1)
   
-  -- close box
-  WindowRectOp (win, miniwin.rect_frame, 
-                x + window_width - box_size - GAP * 2, 
-                y, 
-                x + window_width - GAP * 2, 
-                y + box_size, 
-                box_colour)
-  WindowLine (win, x + window_width - box_size - GAP * 2 + 3, 
-                   y + 3, 
-                   x + window_width - GAP * 2 - 3, 
-                   y - 3 + box_size, 
-                   box_colour, 
-                   miniwin.pen_solid, 1)
-  WindowLine (win, x - 4 + window_width - GAP * 2, 
-                   y + 3, 
-                   x - 1 + window_width - box_size - GAP * 2 + 3, 
-                   y - 3 + box_size, 
-                   box_colour, 
-                   miniwin.pen_solid, 1)
-  
-  -- close configuration hotspot               
-  WindowAddHotspot(win, "close_box",  
-                   x + window_width - box_size - GAP * 2, 
-                   y, 
-                   x + window_width - GAP * 2, 
-                   y + box_size,   
-                   "", "", "", "", 
-                   "hyperlink_close",  -- mouseup
-                   "Click to close",
-                   miniwin.cursor_hand, 0)  -- hand cursor
+   -- close configuration hotspot               
+   WindowAddHotspot(win, "close_box",  
+      x + window_width - box_size - GAP * 2, 
+      y, 
+      x + window_width - GAP * 2, 
+      y + box_size,   
+      "", "", "", "", 
+      "hyperlink_close",  -- mouseup
+      "Click to close",
+      miniwin.cursor_hand, 0)  -- hand cursor
 
-  WindowRectOp (win, miniwin.rect_fill, 
-                x + window_width - box_size - GAP * 2, 
-                window_height - box_size - GAP, 
-                x + window_width - GAP * 2, 
-                window_height - GAP, 
-                0x000000)      
-  WindowRectOp (win, miniwin.rect_frame, 
-                x + window_width - box_size - GAP * 2, 
-                window_height - box_size - GAP, 
-                x + window_width - GAP * 2, 
-                window_height - GAP, 
-                0xffffff)
+   WindowRectOp (win, miniwin.rect_fill, 
+      x + window_width - box_size - GAP * 2, 
+      window_height - box_size - GAP, 
+      x + window_width - GAP * 2, 
+      window_height - GAP, 
+      0x000000)      
+   WindowRectOp (win, miniwin.rect_frame, 
+      x + window_width - box_size - GAP * 2, 
+      window_height - box_size - GAP, 
+      x + window_width - GAP * 2, 
+      window_height - GAP, 
+      0xffffff)
 
-  if showGreeting == 0 then
+   if showGreeting == 0 then
       WindowLine (win, x + window_width - box_size - GAP * 2 + 3, 
-                       window_height - box_size - GAP + 7, 
-                       x + window_width - (box_size/2) - GAP * 2 , 
-                       window_height - GAP - 3, 
-                       0xffffff, 
-                       miniwin.pen_solid, 1)
+         window_height - box_size - GAP + 7, 
+         x + window_width - (box_size/2) - GAP * 2 , 
+         window_height - GAP - 3, 
+         0xffffff, 
+         miniwin.pen_solid, 1)
       WindowLine (win, x + window_width - (box_size/2) - GAP * 2 , 
-                       window_height - GAP - 3,
-                       x + window_width - GAP * 2 - 3, 
-                       window_height - GAP - box_size, 
-                       0xffffff, 
-                       miniwin.pen_solid, 1)
-  end
-  
-  -- don't show again hotspot               
-  WindowAddHotspot(win, "dont_show_again_box",  
-                   x + window_width - box_size - GAP * 2, 
-                   window_height - box_size - GAP, 
-                   x + window_width - GAP * 2, 
-                   window_height - GAP, 
-                   "", "", "", "", 
-                   "hyperlink_dont_show",  -- mouseup
-                   "\nIf you don't check this box, you'll \nsee this message again next time.",
-                   miniwin.cursor_hand, 0)  -- hand cursor
+         window_height - GAP - 3,
+         x + window_width - GAP * 2 - 3, 
+         window_height - GAP - box_size, 
+         0xffffff, 
+         miniwin.pen_solid, 1)
+   end
+   
+   -- don't show again hotspot               
+   WindowAddHotspot(win, "dont_show_again_box",  
+      x + window_width - box_size - GAP * 2, 
+      window_height - box_size - GAP, 
+      x + window_width - GAP * 2, 
+      window_height - GAP, 
+      "", "", "", "", 
+      "hyperlink_dont_show",  -- mouseup
+      "\nIf you don't check this box, you'll \nsee this message again next time.",
+      miniwin.cursor_hand, 0)  -- hand cursor
 
-  -- show the window
-  WindowShow (win, true)
+   -- show the window
+   WindowShow (win, true)
 
 end -- ShowGreeting
 
