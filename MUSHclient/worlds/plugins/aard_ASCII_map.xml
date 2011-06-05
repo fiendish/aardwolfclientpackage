@@ -39,80 +39,77 @@ something -- wolf@aardwolf.com
 
 <triggers>
 
-  <trigger
+<trigger
    enabled="y"
    match="<MAPSTART>"
    script="map_redirect"
    omit_from_output="y"
    name="map_start"
    sequence="100"
-  >
-  </trigger>
+></trigger>
   
-  <trigger
+<trigger
    enabled="n"
    match="*"
    script="map_redirect"
    name="multi_line_map"
    omit_from_output="y"
    sequence="10"
-  >
-  </trigger>
+></trigger>
 
-  <trigger
+<trigger
    enabled="y"
    match="<MAPEND>"
    script="map_redirect"
    omit_from_output="y"
    name="map_end"
    sequence="5"
-  >
-  </trigger>
+></trigger>
 
-  <trigger
+<trigger
    enabled="y"
    match="You open *."
    sequence="100"
    send_to="12"
-  >
-  <send>SendNoEcho ("map")</send>
-  </trigger>
+>
+<send>SendNoEcho ("map")</send>
+</trigger>
   
-  <trigger
+<trigger
    enabled="y"
    match="You close *."
    sequence="100"
    send_to="12"
-  >
-  <send>SendNoEcho ("map")</send>
-  </trigger>
+>
+<send>SendNoEcho ("map")</send>
+</trigger>
 
-  <trigger
+<trigger
    enabled="y"
    match="* opens*."
    sequence="100"
    send_to="12"
-  >
-  <send>SendNoEcho ("map")</send>
-  </trigger>
+>
+<send>SendNoEcho ("map")</send>
+</trigger>
   
-  <trigger
+<trigger
    enabled="y"
    match="* closes*."
    sequence="100"
    send_to="12"
-  >
-  <send>SendNoEcho ("map")</send>
-  </trigger>
+>
+<send>SendNoEcho ("map")</send>
+</trigger>
   
-  <trigger
+<trigger
    enabled="y"
    match="You can now sense anger in your immediate area."
    sequence="100"
    send_to="12"
-  >
-  <send>SendNoEcho ("map")</send>
-  </trigger>
+>
+<send>SendNoEcho ("map")</send>
+</trigger>
   
 </triggers>
 
@@ -153,42 +150,42 @@ continents = { [0]="Mesolar", [1]="Southern Ocean", [2]="Gelidus", [3]="Abend", 
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 function map_redirect (name, line, wildcards, styles)
-	EnableTrigger ("multi_line_map", true)  -- capture subsequent lines
-	if name == "map_start" then   --- Setup the window.
-		map_lines = {} --reset ready for new map
-	elseif name == "map_end" then
-	   EnableTrigger ("multi_line_map", false)  -- no more lines to go
-       page_built = true
-	   DisplayMapPage () --end of map from MUD, display the window
-	else
-		table.insert (map_lines, styles)
-	end
+   EnableTrigger ("multi_line_map", true)  -- capture subsequent lines
+   if name == "map_start" then   --- Setup the window.
+      map_lines = {} --reset ready for new map
+   elseif name == "map_end" then
+      EnableTrigger ("multi_line_map", false)  -- no more lines to go
+      page_built = true
+      DisplayMapPage () --end of map from MUD, display the window
+   else
+      table.insert (map_lines, styles)
+   end
 end -- function map_redirect
 
 function SetUpHotspotsAndDraw(firstTime)
    if (firstTime == true) then
-       check (WindowCreate (win, 
-             windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-             width,     -- width
-             height,  -- height
-             windowinfo.window_mode,       -- auto-position: middle right
-             windowinfo.window_flags,  -- flags
-             background_colour) )
-       -- Add the drag handler so they can move the window around
-       movewindow.add_drag_handler (win, 0, 0, 0, 0)
-       -- Add legend-popup handler
-       WindowAddHotspot(win, "legend", 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
+      check (WindowCreate (win, 
+         windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
+         width,     -- width
+         height,  -- height
+         windowinfo.window_mode,       -- auto-position: middle right
+         windowinfo.window_flags,  -- flags
+         background_colour) )
+      -- Add the drag handler so they can move the window around
+      movewindow.add_drag_handler (win, 0, 0, 0, 0)
+      -- Add legend-popup handler
+      WindowAddHotspot(win, "legend", 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
 
-       -- Add handler for resizing
-       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
-       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
+      -- Add handler for resizing
+      WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
+      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
    else
-       -- everything has already been made
-       -- just move them back into place
-       WindowResize(win, width, height, background_colour)
-       WindowMoveHotspot(win, "legend", 5, height-font_height-2, 3*font_width, height)
-       WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
+      -- everything has already been made
+      -- just move them back into place
+      WindowResize(win, width, height, background_colour)
+      WindowMoveHotspot(win, "legend", 5, height-font_height-2, 3*font_width, height)
+      WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
    end
    DisplayMapPage()
 end
@@ -257,114 +254,114 @@ function DisplayMapPage()
 end -- Display_Map
 
 function process_coords ()
-  if (coord_data.id == "-1") then
-     coords = nil
-     return
-  end
+   if (coord_data.id == "-1") then
+      coords = nil
+      return
+   end
 
-  local tstyle = {}
-  local style = {}
-  style.text = "["
-  style.len = #style.text
-  style.textcolour = 0x00D600
-  style.style = 0
-  table.insert (tstyle, style)
+   local tstyle = {}
+   local style = {}
+   style.text = "["
+   style.len = #style.text
+   style.textcolour = 0x00D600
+   style.style = 0
+   table.insert (tstyle, style)
 
-  style = {}
-  style.text = " Coords: "
-  style.len = #style.text
-  style.textcolour = 0xF0FFFF
-  style.style = 0
-  table.insert (tstyle, style)
+   style = {}
+   style.text = " Coords: "
+   style.len = #style.text
+   style.textcolour = 0xF0FFFF
+   style.style = 0
+   table.insert (tstyle, style)
 
-  style = {}
-  tempval = tonumber(coord_data.id)
+   style = {}
+   tempval = tonumber(coord_data.id)
 
-  style.text = continents[tempval] .. " " .. coord_data.x .. " " .. coord_data.y
-  style.len = #style.text
-  style.textcolour = 0x00D600
-  style.style = 0
-  table.insert (tstyle, style)
+   style.text = continents[tempval] .. " " .. coord_data.x .. " " .. coord_data.y
+   style.len = #style.text
+   style.textcolour = 0x00D600
+   style.style = 0
+   table.insert (tstyle, style)
 
-  style = {}
-  style.text = "]"
-  style.len = #style.text
-  style.textcolour = 0x00D600
-  style.style = 0
-  table.insert (tstyle, style)  
-  coords = tstyle
+   style = {}
+   style.text = "]"
+   style.len = #style.text
+   style.textcolour = 0x00D600
+   style.style = 0
+   table.insert (tstyle, style)  
+   coords = tstyle
 end
 
 
 function Display_Line (line, styles)
-    local id = font_id
+   local id = font_id
 
-    -- first 2 lines in bold
-    if line < 3 then
+   -- first 2 lines in bold
+   if line < 3 then
       id = font_id_bold
-    end
+   end
 
-    local left = 10
-    local top =  (line - 1) * font_height + 5
+   local left = 10
+   local top =  (line - 1) * font_height + 5
 
-    for _, v in ipairs (styles) do
-        left = left + WindowText (win, id, v.text,
-                               left, top, 0, 0, v.textcolour)
-    end -- for each style run                 
+   for _, v in ipairs (styles) do
+      left = left + WindowText (win, id, v.text,
+               left, top, 0, 0, v.textcolour)
+   end -- for each style run                 
 end -- Display_Line
 
 -- right click menu
 function right_click_menu ()
 
-    menustring ="Change Font"
+   menustring ="Change Font"
 
-    if show_coords == 1 then
-        menustring = (menustring .."|Hide Coordinates")
-    else
-        menustring = (menustring.."|Show Coordinates")
-    end
+   if show_coords == 1 then
+      menustring = (menustring .."|Hide Coordinates")
+   else
+      menustring = (menustring.."|Show Coordinates")
+   end
 
-    menustring = (menustring .."|-|Bring To Front|Send To Back|-|Reset Defaults")
+   menustring = (menustring .."|-|Bring To Front|Send To Back|-|Reset Defaults")
 
-    result = WindowMenu (win,
-        WindowInfo (win, 14),  -- x position
-        WindowInfo (win, 15),   -- y position
-        menustring) -- content
+   result = WindowMenu (win,
+      WindowInfo (win, 14),  -- x position
+      WindowInfo (win, 15),   -- y position
+      menustring) -- content
 
-    if result == "Hide Coordinates" then
-       show_coords = 0
-       print("** Map coordinates off.")
-       coords = nil
-       SendNoEcho ("map")
-    elseif result == "Show Coordinates" then
-       show_coords = 1
-       coords = nil
-       print("** Map coordinates on.")
-       SendNoEcho ("map")
-       Send_GMCP_Packet("request room")
-    elseif result == "Change Font" then
-       wanted_font = utils.fontpicker (font_name, font_size) --font dialog
-       if wanted_font then
-          font_name = wanted_font.name
-          font_size = wanted_font.size
-          -- save and reload
-          OnPluginSaveState()
-          OnPluginInstall()
-       end
-    elseif result == "Bring To Front" then
-       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-    elseif result == "Send To Back" then
-       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-    elseif result == "Reset Defaults" then
-       font_name        = default_font_name
-       font_size        = default_font_size
-       height           = default_height
-       width            = default_width
-       show_coords      = 0
-       -- save and reload
-       OnPluginSaveState()
-       OnPluginInstall()
-    end -- if
+   if result == "Hide Coordinates" then
+      show_coords = 0
+      print("** Map coordinates off.")
+      coords = nil
+      SendNoEcho ("map")
+   elseif result == "Show Coordinates" then
+      show_coords = 1
+      coords = nil
+      print("** Map coordinates on.")
+      SendNoEcho ("map")
+      Send_GMCP_Packet("request room")
+   elseif result == "Change Font" then
+      wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+      if wanted_font then
+         font_name = wanted_font.name
+         font_size = wanted_font.size
+         -- save and reload
+         OnPluginSaveState()
+         OnPluginInstall()
+      end
+   elseif result == "Bring To Front" then
+      CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+   elseif result == "Send To Back" then
+      CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+   elseif result == "Reset Defaults" then
+      font_name = default_font_name
+      font_size = default_font_size
+      height = default_height
+      width = default_width
+      show_coords = 0
+      -- save and reload
+      OnPluginSaveState()
+      OnPluginInstall()
+   end -- if
 
 end -- right_click_menu
 
@@ -384,11 +381,11 @@ function OnPluginBroadcast (msg, id, name, text)
 
       if (text == "room.info") then
          if (show_coords == 1) then
-             res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info.coord")         
-             luastmt = "gmcpdata = " .. gmcparg
-             assert (loadstring (luastmt or "")) ()
-             coord_data = gmcpdata
-             process_coords()
+            res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info.coord")         
+            luastmt = "gmcpdata = " .. gmcparg
+            assert (loadstring (luastmt or "")) ()
+            coord_data = gmcpdata
+            process_coords()
          end
          if page_built == false then
             SendNoEcho("map")
@@ -432,7 +429,7 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-    SetUpHotspotsAndDraw(true)
+   SetUpHotspotsAndDraw(true)
 end
 
 ---------------------------------------------------------------------------------
@@ -453,67 +450,67 @@ function MouseOver (flags, hotspotid)
    local top =  WindowInfo (win, 11)
 
    -- what to say - one line per table entry, with imbedded colour codes  
-  info = {"@WMap Legend:@w",
-"",     
-"  @M#@w  - You                      --- - North/south wall",
-"  @R*@w  - Other players             |  - East/west wall",
-"  @Y!@w  - Mobiles                   +  - Door (closed)",
-"  @C!@w  - Pet/other charmed mob     @B+@w  - Door (locked)",
-"  @R!@w  - Angry mob (with Sense     >  - Up exit",
-"       Anger cast)               @y>@w  - Up exit (closed)",
-"  @G!@w  - Unkillable Mob            <  - Down exit",
-"  @G$@w  - Shopkeeper                @y<@w  - Down exit (closed)",
-"",
-" @C[@W?@C]@w - Area exit                 @R#@w  - PK-flagged room",
-" @G[@W?@G]@w - Clan public hall exit     @RD@w  - Donation room",
-"",
-"@WTerrains:@w",
-"",     
-" [ ]   Inside                   . .   City",
-" @g, `@w   Field                    @G; ;@w   Hills",
-" @y/ \\@w   Mountain                 @B~ ~@w   Water",
-" @B~ ~@w   Waternoswim              @c. .@w   Air",
-" @y~ ~@w   Desert                   @Y% %@w   Quicksand",
-" @b~ ~@w   Underwater               @C~ ~@w   Ice",
-" @B. .@w   Underground              - -   East/West road",
-" . .   North/South road         @C~ ~@w   River",
-" @R/@w     Volcano                  @b% %@w   Cave",
-" # #   Dungeon                  @g( *@w   Forest",
-}
+   info = {
+      "@WMap Legend:@w",
+      "",
+      "  @M#@w  - You                      --- - North/south wall",
+      "  @R*@w  - Other players             |  - East/west wall",
+      "  @Y!@w  - Mobiles                   +  - Door (closed)",
+      "  @C!@w  - Pet/other charmed mob     @B+@w  - Door (locked)",
+      "  @R!@w  - Angry mob (with Sense     >  - Up exit",
+      "       Anger cast)               @y>@w  - Up exit (closed)",
+      "  @G!@w  - Unkillable Mob            <  - Down exit",
+      "  @G$@w  - Shopkeeper                @y<@w  - Down exit (closed)",
+      "",
+      " @C[@W?@C]@w - Area exit                 @R#@w  - PK-flagged room",
+      " @G[@W?@G]@w - Clan public hall exit     @RD@w  - Donation room",
+      "",
+      "@WTerrains:@w",
+      "",     
+      " [ ]   Inside                   . .   City",
+      " @g, `@w   Field                    @G; ;@w   Hills",
+      " @y/ \\@w   Mountain                 @B~ ~@w   Water",
+      " @B~ ~@w   Waternoswim              @c. .@w   Air",
+      " @y~ ~@w   Desert                   @Y% %@w   Quicksand",
+      " @b~ ~@w   Underwater               @C~ ~@w   Ice",
+      " @B. .@w   Underground              - -   East/West road",
+      " . .   North/South road         @C~ ~@w   River",
+      " @R/@w     Volcano                  @b% %@w   Cave",
+      " # #   Dungeon                  @g( *@w   Forest",
+   }
                 
-  heading = ""
+   heading = ""
   
-  if windowinfo.window_left < 300 then
-     align_left = true
-     align_right = false
-     left = windowinfo.window_left + width + 10
-     top = windowinfo.window_top + 15
-    
-  else
-     align_right = true
-     align_left = false
-  end
+   if windowinfo.window_left < 300 then
+      align_left = true
+      align_right = false
+      left = windowinfo.window_left + width + 10
+      top = windowinfo.window_top + 15
+   else
+      align_right = true
+      align_left = false
+   end
 
-  align_bottom = false
-  capitalize = true
+   align_bottom = false
+   capitalize = true
 
-  -- show it  
-  mw.popup (infowin,           -- window name to use
-            heading_font_id,   -- font to use for the heading
-            popup_font_id,           -- font to use for each line
-            heading,           -- heading text
-            info,              -- table of lines to show (with colour codes)
-            left, top,         -- where to put it
-            0x008800,     -- colour for round rectangle line
-            background_colour, -- colour for background
-            capitalize,        -- if true, force the first letter to upper case
-            align_right,       -- if true, align right side on "Left" parameter
-            align_bottom)      -- if true, align bottom side on "Top" parameter
-            
+   -- show it  
+   mw.popup (infowin,           -- window name to use
+         heading_font_id,   -- font to use for the heading
+         popup_font_id,           -- font to use for each line
+         heading,           -- heading text
+         info,              -- table of lines to show (with colour codes)
+         left, top,         -- where to put it
+         0x008800,     -- colour for round rectangle line
+         background_colour, -- colour for background
+         capitalize,        -- if true, force the first letter to upper case
+         align_right,       -- if true, align right side on "Left" parameter
+         align_bottom)      -- if true, align bottom side on "Top" parameter
+         
 end -- mouseover
 
 function CancelMouseOver (flags, hotspotid)
-  WindowShow (infowin, false)
+   WindowShow (infowin, false)
 end -- cancelmouseover
 
 ---------------------------------------------------------------------------------
@@ -526,17 +523,17 @@ end
 -- Called when mouse button released on hotspot.
 ---------------------------------------------------------------------------------
 function MouseUp(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-       right_click_menu()
-    end
-    return true
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+   return true
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-        return true
-    end
-    return false
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   return false
 end
 
 function OnPluginConnect()
@@ -551,19 +548,15 @@ end
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
-
-  -- save window current location for next time  
-  movewindow.save_state (win)
-
-  SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-  SetVariable ("background_colour", background_colour)
-  SetVariable ("title_colour", title_colour)  
-  SetVariable ("width", width)
-  SetVariable ("height", height)
-  SetVariable ("showcoords", show_coords)
-  SetVariable ("font_name", font_name)
-  SetVariable ("font_size", font_size)
-
+   movewindow.save_state (win)   -- save window current location for next time  
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+   SetVariable ("background_colour", background_colour)
+   SetVariable ("title_colour", title_colour)  
+   SetVariable ("width", width)
+   SetVariable ("height", height)
+   SetVariable ("showcoords", show_coords)
+   SetVariable ("font_name", font_name)
+   SetVariable ("font_size", font_size)
 end -- OnPluginSaveState
 
 function OnPluginClose ()
@@ -571,20 +564,20 @@ function OnPluginClose ()
 end
 
 function OnPluginDisable ()
-    WindowShow( win, false )
-    if IsConnected() then
-       TelnetOptionOff(TELOPT_MAP)
-       TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
-    end
-    OnPluginSaveState()
+   WindowShow( win, false )
+   if IsConnected() then
+      TelnetOptionOff(TELOPT_MAP)
+      TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
+   end
+   OnPluginSaveState()
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-    WindowShow (win, true)
-    if IsConnected() then
-       OnPluginConnect()
-    end
-    OnPluginSaveState()
+   WindowShow (win, true)
+   if IsConnected() then
+      OnPluginConnect()
+   end
+   OnPluginSaveState()
 end -- OnPluginEnable
 
 win = GetPluginID()
@@ -598,10 +591,10 @@ end -- OnPluginListChanged
 function OnPluginInstall()
    --- Pull some state variables.
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-   title_colour      = tonumber (GetVariable ("title_colour")) or title_colour
-   height            = tonumber (GetVariable ("height")) or default_height
-   width             = tonumber (GetVariable ("width")) or default_width
-   show_coords       = tonumber (GetVariable ("showcoords")) or show_coords
+   title_colour = tonumber (GetVariable ("title_colour")) or title_colour
+   height = tonumber (GetVariable ("height")) or default_height
+   width = tonumber (GetVariable ("width")) or default_width
+   show_coords = tonumber (GetVariable ("showcoords")) or show_coords
 
    -- make window so I can grab the font info
    WindowCreate (win, 1, 1, width, height, 0, 0, background_colour) 
@@ -613,8 +606,8 @@ function OnPluginInstall()
 
    -- if not there already, add it
    if not fonts.Dina then
-     AddFont (GetInfo (66) .. "\\Dina.fon")
-     fonts = utils.getfontfamilies ()
+      AddFont (GetInfo (66) .. "\\Dina.fon")
+      fonts = utils.getfontfamilies ()
    end -- if Dina not installed
 
    if fonts["Courier New"] then
@@ -680,26 +673,19 @@ function OnPluginInstall()
 
 end
 
--- Added only so I can 'sendgmcp request char' to refresh char stats.
+-- Added only so I can 'sendgmcp request room'.
 local IAC, SB, SE, DO = 0xFF, 0xFA, 0xF0, 0xFD
 local GMCP      = 201
-
-
 ---------------------------------------------------------------------------------------------------
 -- Helper function to send GMCP data.
 ---------------------------------------------------------------------------------------------------
 function Send_GMCP_Packet (what)
    assert (what, "Send_GMCP_Packet passed a nil message.")
-
    SendPkt (string.char (IAC, SB, GMCP) .. 
-           (string.gsub (what, "\255", "\255\255")) ..  -- IAC becomes IAC IAC
-            string.char (IAC, SE))
+         (string.gsub (what, "\255", "\255\255")) ..  -- IAC becomes IAC IAC
+         string.char (IAC, SE))
 end -- Send_GMCP_Packet
 
-
 ]]>
-
-
 </script>
-
 </muclient>
