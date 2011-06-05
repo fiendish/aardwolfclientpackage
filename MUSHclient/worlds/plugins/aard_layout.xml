@@ -17,7 +17,7 @@
    requires="4.56"
    version="1.0"
    save_state="y"
-   >
+>
 </plugin>
 
 <aliases>
@@ -28,8 +28,8 @@
    regexp="y"
    sequence="100"
    ignore_case="y"
-  >
- </alias>
+>
+</alias>
 </aliases>
 
 <!--  Get our standard constants -->
@@ -60,11 +60,11 @@ function ResizeMainCallback()
    textrect_right = textrect_right + posx - startx
    startx = posx
    if ( textrect_right-textrect_left < MIN_SIZE) then
-         textrect_right = textrect_left+MIN_SIZE
-         startx = textrect_right
+      textrect_right = textrect_left+MIN_SIZE
+      startx = textrect_right
    elseif (textrect_right > GetInfo(281)-7) then
-         textrect_right = GetInfo(281)-7
-         startx = textrect_right
+      textrect_right = GetInfo(281)-7
+      startx = textrect_right
    end
    
    textrect_bottom = textrect_bottom + posy - starty
@@ -127,7 +127,7 @@ end
 -- Called when mouse button is pressed on hotspot.
 ---------------------------------------------------------------------------------
 function MouseDown(flags, hotspot_id)
-   if  (hotspot_id == "resizemain") then
+   if (hotspot_id == "resizemain") then
       startx, starty = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
    elseif (hotspot_id == "dragmain") then
       startx, starty = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
@@ -161,12 +161,12 @@ function OnPluginSaveState ()
       SetVariable("trright",textrect_right)
       SetVariable("trtop",textrect_top)
       SetVariable("trbottom",textrect_bottom)
-  else
+   else
       DeleteVariable("trleft")
       DeleteVariable("trright")
       DeleteVariable("trtop")
       DeleteVariable("trbottom")
-  end
+   end
 end -- OnPluginSaveState
 
 function resetaard() 
@@ -176,26 +176,26 @@ function resetaard()
 end
 
 function OnPluginClose()
-    OnPluginDisable()
+   OnPluginDisable()
 end
 
 function OnPluginDisable ()
-    OnPluginSaveState()
-    TextRectangle(0,0,0,0,
-              5,  -- BorderOffset, 
-              ColourNameToRGB ("darkgray"),    -- BorderColour, 
-              2,  -- BorderWidth, 
-              ColourNameToRGB ("darkslategray"),  -- OutsideFillColour, 
-              0) -- OutsideFillStyle (fine hatch)
-    SetBackgroundImage("",0)
-    WindowShow( textDragger, false )
-    WindowShow( textResizer, false )
-    WindowShow( bgwin, false)
+   OnPluginSaveState()
+   TextRectangle(0,0,0,0,
+      5,  -- BorderOffset, 
+      ColourNameToRGB ("darkgray"),    -- BorderColour, 
+      2,  -- BorderWidth, 
+      ColourNameToRGB ("darkslategray"),  -- OutsideFillColour, 
+      0) -- OutsideFillStyle (fine hatch)
+   SetBackgroundImage("",0)
+   WindowShow( textDragger, false )
+   WindowShow( textResizer, false )
+   WindowShow( bgwin, false)
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-    OnPluginSaveState()
-    OnPluginInstall()
+   OnPluginSaveState()
+   OnPluginInstall()
 end -- OnPluginEnable
 
 
@@ -239,58 +239,58 @@ function check_main_background()
       textrect_top    = 22
       textrect_right  = textrect_left + GetInfo(213) * 90 -- Sized for 90 chars
       textrect_bottom = GetInfo(280) - 90 -- Client window height - 90
-  end -- assume if textrec isn't default, it is set.
+   end -- assume if textrec isn't default, it is set.
 
-  draw_main_window()
+   draw_main_window()
 end
 
 function add_main_resizer()
    if WindowInfo(textResizer, 1) then -- if it already exists
-       --- Reposition the resize tag.
-       WindowPosition(textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 0, 6)
+      --- Reposition the resize tag.
+      WindowPosition(textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 0, 6)
    else
-       -- Add another mini-window in bottom right corner for resizer tag.
-       check (WindowCreate (textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 
-                    rstagsize, rstagsize,
-                    12  , 2, 0x000000))
+      -- Add another mini-window in bottom right corner for resizer tag.
+      check (WindowCreate (textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 
+         rstagsize, rstagsize,
+         12  , 2, 0x000000))
 
-       -- draw the resize widget bottom right corner.
-       WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, 0xffffff, 0, 2)
-       WindowLine(textResizer, rstagsize-2, rstagsize-0, rstagsize-0, rstagsize-2, 0x696969, 0, 1)
-       WindowLine(textResizer, rstagsize-4, rstagsize-0, rstagsize-0, rstagsize-4, 0xffffff, 0, 2)
-       WindowLine(textResizer, rstagsize-5, rstagsize-0, rstagsize-0, rstagsize-5, 0x696969, 0, 1)
-       WindowLine(textResizer, rstagsize-7, rstagsize-0, rstagsize-0, rstagsize-7, 0xffffff, 0, 2)
-       WindowLine(textResizer, rstagsize-8, rstagsize-0, rstagsize-0, rstagsize-8, 0x696969, 0, 1)
-       WindowLine(textResizer, rstagsize-10, rstagsize-0, rstagsize-0, rstagsize-10, 0xffffff, 0, 2)
-       WindowLine(textResizer, rstagsize-11, rstagsize-0, rstagsize-0, rstagsize-11, 0x696969, 0, 1)
-       WindowLine(textResizer, rstagsize-12, rstagsize-0, rstagsize-0, rstagsize-12, 0xffffff, 0, 1)
-       WindowLine(textResizer, rstagsize-13, rstagsize-0, rstagsize-0, rstagsize-13, 0xffffff, 0, 1)
+      -- draw the resize widget bottom right corner.
+      WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, 0xffffff, 0, 2)
+      WindowLine(textResizer, rstagsize-2, rstagsize-0, rstagsize-0, rstagsize-2, 0x696969, 0, 1)
+      WindowLine(textResizer, rstagsize-4, rstagsize-0, rstagsize-0, rstagsize-4, 0xffffff, 0, 2)
+      WindowLine(textResizer, rstagsize-5, rstagsize-0, rstagsize-0, rstagsize-5, 0x696969, 0, 1)
+      WindowLine(textResizer, rstagsize-7, rstagsize-0, rstagsize-0, rstagsize-7, 0xffffff, 0, 2)
+      WindowLine(textResizer, rstagsize-8, rstagsize-0, rstagsize-0, rstagsize-8, 0x696969, 0, 1)
+      WindowLine(textResizer, rstagsize-10, rstagsize-0, rstagsize-0, rstagsize-10, 0xffffff, 0, 2)
+      WindowLine(textResizer, rstagsize-11, rstagsize-0, rstagsize-0, rstagsize-11, 0x696969, 0, 1)
+      WindowLine(textResizer, rstagsize-12, rstagsize-0, rstagsize-0, rstagsize-12, 0xffffff, 0, 1)
+      WindowLine(textResizer, rstagsize-13, rstagsize-0, rstagsize-0, rstagsize-13, 0xffffff, 0, 1)
 
-       -- Add a drag handler to this window, effectively allows textrectangle to be resized.
-       WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-       WindowDragHandler(textResizer, "resizemain", "ResizeMainCallback", "ResizeReleaseMainCallback", 0)
+      -- Add a drag handler to this window, effectively allows textrectangle to be resized.
+      WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+      WindowDragHandler(textResizer, "resizemain", "ResizeMainCallback", "ResizeReleaseMainCallback", 0)
    end
    WindowShow(textResizer, true)
 end
 
 function add_title_dragger() 
    if WindowInfo(textDragger, 1) then -- if it already exists
-       --- Reposition the dragger tag.
-       WindowPosition(textDragger, GetInfo(272)-6, GetInfo(273)-7, 0, 6)
+      --- Reposition the dragger tag.
+      WindowPosition(textDragger, GetInfo(272)-6, GetInfo(273)-7, 0, 6)
    else
-       -- Add another mini-window at top for dragging bar.
-       dragsize = 10
+      -- Add another mini-window at top for dragging bar.
+      dragsize = 10
 
-       check (WindowCreate (textDragger, GetInfo(272)-6, GetInfo(273)-6, GetInfo(274)-GetInfo(272)+11, dragsize, 12, 2, 0x000000))
-       
-       WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
-       WindowDragHandler(textDragger, "dragmain", "DragMainCallback", "DragReleaseMainCallback", 0)
+      check (WindowCreate (textDragger, GetInfo(272)-6, GetInfo(273)-6, GetInfo(274)-GetInfo(272)+11, dragsize, 12, 2, 0x000000))
+      
+      WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
+      WindowDragHandler(textDragger, "dragmain", "DragMainCallback", "DragReleaseMainCallback", 0)
    end
    WindowShow(textDragger,true)
 end
 
 function OnPluginWorldOutputResized()
-    AddTimer("checkTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
+   AddTimer("checkTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
 end
    
 function draw_main_window()
@@ -300,19 +300,19 @@ function draw_main_window()
    local t_bottom = math.min(textrect_bottom, GetInfo(280)-7)
 
    TextRectangle(textrect_left, textrect_top, t_right, t_bottom,
-              5,  -- BorderOffset, 
-              ColourNameToRGB ("darkgray"),    -- BorderColour, 
-              2,  -- BorderWidth, 
-              ColourNameToRGB ("darkslategray"),  -- OutsideFillColour, 
-              0) -- OutsideFillStyle (fine hatch)
+      5,  -- BorderOffset, 
+      ColourNameToRGB ("darkgray"),    -- BorderColour, 
+      2,  -- BorderWidth, 
+      ColourNameToRGB ("darkslategray"),  -- OutsideFillColour, 
+      0) -- OutsideFillStyle (fine hatch)
 
    -- Add a mini-window under main text area so background won't mess it up.
    trwidth = GetInfo(274) - GetInfo(272)
    trheight = GetInfo(275) - GetInfo(273)
 
    WindowCreate (bgwin, textrect_left - 3, textrect_top - 3, 
-                math.max(0, trwidth + 6), math.max(0, trheight + 6),
-                12  , 3, 0x000000)
+      math.max(0, trwidth + 6), math.max(0, trheight + 6),
+      12  , 3, 0x000000)
    WindowShow(bgwin, true)
 
    local dir = GetInfo(66)
@@ -334,9 +334,6 @@ function draw_main_window()
    add_main_resizer()
 end
 
-
 ]]>
-
-
 </script>
 </muclient>
