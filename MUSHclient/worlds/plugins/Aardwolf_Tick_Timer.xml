@@ -17,20 +17,19 @@
    version="1.0"
    save_state="y"
    >
-
 </plugin>
 
 
 <!--  Timers  -->
 
 <timers>
-  <timer enabled="y" second="2.00" offset_second="0.00"    send_to="12"
+<timer enabled="y" second="2.00" offset_second="0.00"    send_to="12"
 >
-  <send>last_tick = last_tick or os.time ()
-
-SetStatus ("Time to tick: " .. (last_tick + 30) - os.time ())</send>
-
-  </timer>
+<send>
+   last_tick = last_tick or os.time ()
+   SetStatus ("Time to tick: " .. (last_tick + 30) - os.time ())
+</send>
+</timer>
 </timers>
 
 <script>
@@ -44,15 +43,12 @@ function OnPluginTelnetOption (option)
 end -- function
 
 function OnPluginInstall ()
-
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
       check (EnablePlugin(GetPluginID (), false))
       return
    end -- they didn't enable us last time  
-
-  
 end -- OnPluginInstall
 
 -- pull in telnet option handling
@@ -70,11 +66,6 @@ function OnPluginSaveState ()
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
 end -- OnPluginSaveState
 
-
 ]]>
 </script>
-
-
-
-
 </muclient>
