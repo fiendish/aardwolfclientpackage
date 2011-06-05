@@ -11,7 +11,7 @@
    date_written="2011-04-23 11:51:55"
    requires="4.73"
    version="2.0"
-   >
+>
 
 </plugin>
 <!--  Script  -->
@@ -44,19 +44,19 @@ end
 -- with one exception: the name may start with a number rather than a 
 -- letter (if the name is based on a plugin UID, for example)
 function registerMiniwindow(callerID)
-    if callerID == nil then
-        callerID = ""
-    end
-    local requestedZNumber = tonumber(GetVariable("a"..callerID))
-    -- If we were previously using a particular spot and nothing else is 
-    -- already using it go ahead and assign that one. Otherwise find another
-    -- spot for it.
-    if requestedZNumber == nil or (usedNumbers[requestedZNumber] ~= callerID and usedNumbers[requestedZNumber] ~= nil) then
-       requestedZNumber = (#usedNumbers)+1
-       SetVariable("a"..callerID, requestedZNumber)
-    end
-    usedNumbers[requestedZNumber] = callerID
-    WindowSetZOrder(callerID, requestedZNumber)
+   if callerID == nil then
+      callerID = ""
+   end
+   local requestedZNumber = tonumber(GetVariable("a"..callerID))
+   -- If we were previously using a particular spot and nothing else is 
+   -- already using it go ahead and assign that one. Otherwise find another
+   -- spot for it.
+   if requestedZNumber == nil or (usedNumbers[requestedZNumber] ~= callerID and usedNumbers[requestedZNumber] ~= nil) then
+      requestedZNumber = (#usedNumbers)+1
+      SetVariable("a"..callerID, requestedZNumber)
+   end
+   usedNumbers[requestedZNumber] = callerID
+   WindowSetZOrder(callerID, requestedZNumber)
 end
 
 -- Bump the calling miniwindow to the front.
@@ -113,7 +113,7 @@ end
 function OnPluginDisable()
    EnablePlugin(GetPluginID(), true)
    ColourNote("white", "blue", "You are not allowed to disable the "..
-      GetPluginInfo(GetPluginID(), 1).." plugin. It is necessary for other plugins.")
+   GetPluginInfo(GetPluginID(), 1).." plugin. It is necessary for other plugins.")
 end
 
 ]]>

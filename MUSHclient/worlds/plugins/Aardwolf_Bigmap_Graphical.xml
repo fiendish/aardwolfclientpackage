@@ -14,7 +14,7 @@
    requires="4.73"
    version="3.0"
    save_state="y"
-   >
+>
 <description trim="y">
 <![CDATA[
 
@@ -46,7 +46,7 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
 
 <triggers>
 
-  <trigger
+<trigger
    enabled="n"
    match="^\{bigmap\}(?<zone>\d+)\,(?<zonename>.+)$"
    script="map_redirect"
@@ -54,82 +54,74 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
    name="map_start"
    sequence="100"
    regexp="y"
-  >
-  </trigger>
+></trigger>
   
-  <trigger
+<trigger
    enabled="n"
    match="*"
    script="map_redirect"
    name="multi_line_map"
    omit_from_output="y"
    sequence="10"
-  >
-  </trigger>
+></trigger>
 
-  <trigger
+<trigger
    enabled="y"
    match="^\{bigmap\}(?<zone>\d+)\,(?<zonename>.+)$"
    omit_from_output="y"
    sequence="101"
    regexp="y"
-  >
-  </trigger>
-  <trigger
+></trigger>
+
+<trigger
    enabled="y"
    match="^\{\/bigmap\}$"
    omit_from_output="y"
    sequence="101"
    regexp="y"
-  >
-  </trigger>
+></trigger>
   
-  <trigger
+<trigger
    enabled="y"
    match="^\{coords\}(?<zone>\d+)\,(?<x>\d+)\,(?<y>\d+)$"
    omit_from_output="y"
    regexp="y"
    sequence="100"
-  >
-  </trigger>
+></trigger>
   
-  <trigger
+<trigger
    enabled="y"
    match="^\{coords\}-1$"
    omit_from_output="y"
    regexp="y"
    sequence="100"
-  >
-  </trigger>
+></trigger>
   
 </triggers>
 
 <aliases>
-  <alias
+<alias
    script="OnHelp"
    match="bigmap help"
    enabled="y"
-  >
-  </alias>
+></alias>
 
-  <alias
+<alias
    name="remove_alias"
    script="remove_cache"
    match="bigmap reset"
    enabled="y"
    sequence="100"
    ignore_case="y"
-  >
-  </alias>
+></alias>
 
-  <alias
+<alias
    script="update_map"
    match="bigmap update"
    enabled="y"
    sequence="100"
    ignore_case="y"
-  >
-  </alias>
+></alias>
   
 <alias
    script="map_on_off_alias"
@@ -138,14 +130,11 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
    regexp="y"
    sequence="100"
    ignore_case="y"
-  >
-  </alias>
+></alias>
 
 </aliases>
 
-
 <!--  Script  -->
-
 
 <script>
 <![CDATA[
@@ -171,13 +160,13 @@ in_continent = false
 use_gmcp_mapper = tonumber(GetVariable("use_gmcp_mapper")) or 1
 
 function OnHelp ()
-  Note (GetPluginInfo (GetPluginID (), 3))
+   Note (GetPluginInfo (GetPluginID (), 3))
 end
 
 function remove_cache ()
-  continents = {}
-  xref = {}
-  ColourNote ("white", "blue", "All bigmaps removed from cache.")
+   continents = {}
+   xref = {}
+   ColourNote ("white", "blue", "All bigmaps removed from cache.")
 end -- remove_cache
 
 function update_map()
@@ -187,31 +176,31 @@ function update_map()
 end
 
 function map_on_off_alias (name, line, wildcards)
-  if (wildcards[1]:lower() == " on") then
-    show_map = 1
-    ColourNote ("yellow", "", "Bigmap enabled.")
-    if (not (use_gmcp_mapper == 1)) then
-        WindowShow (mapwin, true)
-    else
-        CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true");
-    end
-  elseif (wildcards[1]:lower() == " off") then
-    show_map = 0
-    ColourNote ("yellow", "", "Bigmap DISABLED - type 'bigmap on' to re-enable.")
-    if (not (use_gmcp_mapper == 1)) then
-        WindowShow (mapwin, false)
-    else
-        CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
-    end
-  elseif (wildcards[1]:lower() == " merge") and (not (use_gmcp_mapper == 1)) then
-    use_gmcp_mapper = 1
-    WindowShow (mapwin, false)
-    CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
-  elseif (wildcards[1]:lower() == " unmerge") and (use_gmcp_mapper == 1) then
-    use_gmcp_mapper = 0
-    CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
-  end -- if
-  OnPluginInstall()
+   if (wildcards[1]:lower() == " on") then
+      show_map = 1
+      ColourNote ("yellow", "", "Bigmap enabled.")
+      if (not (use_gmcp_mapper == 1)) then
+         WindowShow (mapwin, true)
+      else
+         CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true");
+      end
+   elseif (wildcards[1]:lower() == " off") then
+      show_map = 0
+      ColourNote ("yellow", "", "Bigmap DISABLED - type 'bigmap on' to re-enable.")
+      if (not (use_gmcp_mapper == 1)) then
+         WindowShow (mapwin, false)
+      else
+         CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
+      end
+   elseif (wildcards[1]:lower() == " merge") and (not (use_gmcp_mapper == 1)) then
+      use_gmcp_mapper = 1
+      WindowShow (mapwin, false)
+      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
+   elseif (wildcards[1]:lower() == " unmerge") and (use_gmcp_mapper == 1) then
+      use_gmcp_mapper = 0
+      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
+   end -- if
+   OnPluginInstall()
 end -- map_on_off_alias
 
 brushes = {
@@ -219,72 +208,67 @@ brushes = {
   ["?"] = miniwin.brush_medium_pattern,
   ["^"] = miniwin.brush_waves_vertical,
   ["."] = miniwin.brush_hatch_backwards_diagonal,
-  }
+}
 
 function Display_Styled_Line (line, styles, id)
 
-local left = 0
-local top = (line - 1) * (rectangle_size-1)
+   local left = 0
+   local top = (line - 1) * (rectangle_size-1)
+   
+   for _, v in ipairs (styles) do
+      for i = 1, #v.text do
+         local char = string.sub (v.text, i, i)
+         local brush = brushes [char] or 8
+         local forecolour = v.textcolour
+         local backcolour = background_colour
+         if brush == 0 then
+            backcolour = v.textcolour
+         end -- if
+         if char == " " then
+            forecolour = background_colour -- invisible
+         end -- if
 
-  for _, v in ipairs (styles) do
+         WindowCircleOp(win, miniwin.circle_rectangle, left, top, left + rectangle_size, top + rectangle_size,
+            forecolour, miniwin.pen_null, 0,   -- pen colour, null pen, pen width
+            backcolour, brush)  -- brush colour, style
 
-    for i = 1, #v.text do
-      local char = string.sub (v.text, i, i)
-      local brush = brushes [char] or 8
-
-      local forecolour = v.textcolour
-      local backcolour = background_colour
-
-      if brush == 0 then
-        backcolour = v.textcolour
-      end -- if
-      if char == " " then
-        forecolour = background_colour -- invisible
-       end -- if
-
-      WindowCircleOp(win, miniwin.circle_rectangle, left, top, left + rectangle_size, top + rectangle_size,
-                    forecolour, miniwin.pen_null, 0,   -- pen colour, null pen, pen width
-                    backcolour, brush)  -- brush colour, style
-
-      -- special image for the zone entrance
-      if char == "?" then
-        WindowDrawImage (win, "zone", left-1, top-1, left + rectangle_size-1, top-1 + rectangle_size, 2)
-      end -- if
-      left = left + rectangle_size-1
-    end -- for each character
-
-  end -- for each style run
-
+         -- special image for the zone entrance
+         if char == "?" then
+            WindowDrawImage (win, "zone", left-1, top-1, left + rectangle_size-1, top-1 + rectangle_size, 2)
+         end -- if
+         left = left + rectangle_size-1
+      end -- for each character
+   end -- for each style run
 end -- Display_Styled_Line
 
 
 function ConstructMap()
-  if not map or #map == 0 then
-    return
-  end -- no map
+   if not map or #map == 0 then
+      return
+   end -- no map
 
-  local lines = #map
-  local columns = 0
-  for _, v in ipairs (map [1]) do
-    columns = columns + v.length
-  end -- for
-  window_width = columns * (rectangle_size-1)
-  window_height =  lines * (rectangle_size-1)
+   local lines = #map
+   local columns = 0
+   for _, v in ipairs (map [1]) do
+      columns = columns + v.length
+   end -- for
+   window_width = columns * (rectangle_size-1)
+   window_height =  lines * (rectangle_size-1)
 
    -- recreate the window the correct size
    WindowCreate (win,
-                 0,
-                 0,
-                 window_width,     -- width
-                 window_height,  -- height
-                 0,
-                 0,
-                 0x00)
+      0,
+      0,
+      window_width,     -- width
+      window_height,  -- height
+      0,
+      0,
+      0x00)
 
-  for i, v in ipairs (map) do
-    Display_Styled_Line (i, v, font_id)
-  end -- for
-  WindowImageFromWindow(mapwin, "bigmap_continent_"..zone, win)
+   for i, v in ipairs (map) do
+      Display_Styled_Line (i, v, font_id)
+   end -- for
+   WindowImageFromWindow(mapwin, "bigmap_continent_"..zone, win)
 end
 
 
@@ -292,8 +276,8 @@ function NoMap()
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
    local messages = {"To activate this continent map","walk onto the continent and type:","'bigmap update'"}
    for i,v in ipairs(messages) do
-     local messagewidth = WindowTextWidth (mapwin, font_id, v)
-     WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
+      local messagewidth = WindowTextWidth (mapwin, font_id, v)
+      WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
    end
    -- DrawEdge rectangle
    WindowRectOp (mapwin, 5, 0, 0, 0, 0, 10, 15)
@@ -306,23 +290,23 @@ function DrawMap ()
       local starty = (font_height*2)+15
       local image_name = "bigmap_continent_"..zone
       if (not (use_gmcp_mapper == 1)) then
-          local window_width =  WindowImageInfo(mapwin,image_name,2) + 10
-          local window_height =  WindowImageInfo(mapwin,image_name,3) + 20 + (font_height * 2)
-          if nil == WindowInfo(mapwin, 1) then
-              -- recreate the window the correct size
-              WindowCreate (mapwin,
-                           windowinfo.window_left,
-                           windowinfo.window_top,
-                           window_width,     -- width
-                           window_height,  -- height
-                           windowinfo.window_mode,
-                           windowinfo.window_flags,
-                           background_colour)
-              CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
-          else
-               WindowResize(mapwin, window_width, window_height, background_colour)
-          end
-          WindowShow (mapwin, true)
+         local window_width =  WindowImageInfo(mapwin,image_name,2) + 10
+         local window_height =  WindowImageInfo(mapwin,image_name,3) + 20 + (font_height * 2)
+         if nil == WindowInfo(mapwin, 1) then
+            -- recreate the window the correct size
+            WindowCreate (mapwin,
+               windowinfo.window_left,
+               windowinfo.window_top,
+               window_width,     -- width
+               window_height,  -- height
+               windowinfo.window_mode,
+               windowinfo.window_flags,
+               background_colour)
+            CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
+         else
+            WindowResize(mapwin, window_width, window_height, background_colour)
+         end
+         WindowShow (mapwin, true)
       end
       WindowDeleteAllHotspots (mapwin)
       movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
@@ -333,9 +317,9 @@ function DrawMap ()
       local correction_x = (WindowInfo(mapwin,3)-10)/WindowImageInfo(mapwin,image_name,2) -- stretch to x
       local correction_y = (WindowInfo(mapwin,4)-starty-5)/WindowImageInfo(mapwin,image_name,3) -- stretch to y
       if xdiff < ydiff then
-        correction_y = correction_x
+         correction_y = correction_x
       else
-        correction_x = correction_y
+         correction_x = correction_y
       end
       WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
       WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction_x*WindowImageInfo(mapwin,image_name,2)), starty + (correction_y*WindowImageInfo(mapwin,image_name,3)), 2)
@@ -350,36 +334,31 @@ function DrawMap ()
       local coordswidth = WindowTextWidth (mapwin, font_id, coords)
       WindowText (mapwin, font_id, coords, (WindowInfo(mapwin,3) - coordswidth) / 2, 10 + font_height, 0, 0, zone_name_colour)  -- coords
 
-      -- draw circle around us
-     
+      -- rounded rects around the player's position
       WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-                      startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
-                      startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
-                      ColourNameToRGB "cornflowerblue",  -- pen colour
-                      miniwin.pen_solid, -- solid pen
-                      3, -- pen width
-                      0, -- brush colour
-                      miniwin.brush_null, 25, 25 ) -- null brush
-
+         startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
+         startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
+         ColourNameToRGB "cornflowerblue",  -- pen colour
+         miniwin.pen_solid, -- solid pen
+         3, -- pen width
+         0, -- brush colour
+         miniwin.brush_null, 25, 25 ) -- null brush
       WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-                      startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
-                      startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
-                      ColourNameToRGB "cyan",  -- pen colour
-                      miniwin.pen_solid, -- solid pen
-                      1, -- pen width
-                      0, -- brush colour
-                      miniwin.brush_null, 25, 25 ) -- null brush
-
-     -- draw circle around us
-
+         startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
+         startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
+         ColourNameToRGB "cyan",  -- pen colour
+         miniwin.pen_solid, -- solid pen
+         1, -- pen width
+         0, -- brush colour
+         miniwin.brush_null, 25, 25 ) -- null brush
       WindowCircleOp (mapwin, miniwin.circle_rectangle,
-                      startx+(correction_x*(our_location_x - rectangle_size+4)), starty+(correction_y*(our_location_y - rectangle_size/2)),
-                      startx+(correction_x*(our_location_x + rectangle_size-4))-1, starty+(correction_y*(our_location_y + rectangle_size/2)) - 1,
-                      ColourNameToRGB "cyan",  -- pen colour
-                      miniwin.pen_solid, -- solid pen
-                      2, -- pen width
-                      0, -- brush colour
-                      miniwin.brush_null ) -- null brush
+         startx+(correction_x*(our_location_x - rectangle_size+4)), starty+(correction_y*(our_location_y - rectangle_size/2)),
+         startx+(correction_x*(our_location_x + rectangle_size-4))-1, starty+(correction_y*(our_location_y + rectangle_size/2)) - 1,
+         ColourNameToRGB "cyan",  -- pen colour
+         miniwin.pen_solid, -- solid pen
+         2, -- pen width
+         0, -- brush colour
+         miniwin.brush_null ) -- null brush
 
       -- DrawEdge rectangle
       WindowRectOp (mapwin, 5, 0, 0, 0, 0, 10, 15)
@@ -390,121 +369,119 @@ end -- DrawMap
 
 
 function table.contains(table, element)
-  for _, value in pairs(table) do
-    if value == element then
-      return true
-    end
-  end
-  return false
+   for _, value in pairs(table) do
+      if value == element then
+         return true
+      end
+   end
+   return false
 end
 
 
 function updatelocation ()
-  -- changed continent?
-  if (old_zone ~= zone) or (in_continent ~= (tonumber(oncont) == 1)) then
+   -- changed continent?
+   if (old_zone ~= zone) or (in_continent ~= (tonumber(oncont) == 1)) then
 
-    -- grab cached map
-    map = continents [zone]
-    continent = xref [zone]
+      -- grab cached map
+      map = continents [zone]
+      continent = xref [zone]
 
-    -- no cached map? better get it
-    if not map then
-      update_map()
-    end -- don't know this one
-    old_zone = zone
-  end -- need big map
+      -- no cached map? better get it
+      if not map then
+         update_map()
+      end -- don't know this one
+      old_zone = zone
+   end -- need big map
 
-  -- draw our location
-  if map then
-    -- just in case, check again for construction
-    if zone and ((WindowImageList(mapwin) == nil) or (table.contains(WindowImageList(mapwin),"bigmap_continent_"..zone) == false)) then
-       ConstructMap()
-    end
-    DrawMap ()
-  else
-    NoMap()
-  end -- if
+   -- draw our location
+   if map then
+      -- just in case, check again for construction
+      if zone and ((WindowImageList(mapwin) == nil) or (table.contains(WindowImageList(mapwin),"bigmap_continent_"..zone) == false)) then
+         ConstructMap()
+      end
+      DrawMap ()
+   else
+      NoMap()
+   end -- if
 end -- updatelocation
 
 
 -- map redirector
 function map_redirect (name, line, wildcards, styles)
-  EnableTrigger("map_start", false)
-  EnableTrigger("multi_line_map", true)  -- capture subsequent lines
+   EnableTrigger("map_start", false)
+   EnableTrigger("multi_line_map", true)  -- capture subsequent lines
 
-  if name == "map_start" then
-    map = {}  -- start new map
-    continent = wildcards.zonename
-    zone = tonumber (wildcards.zone)
-    xref [zone] = wildcards.zonename
-  elseif line == "{/bigmap}" then
-    EnableTrigger ("multi_line_map", false)  -- no more lines to go
+   if name == "map_start" then
+      map = {}  -- start new map
+      continent = wildcards.zonename
+      zone = tonumber (wildcards.zone)
+      xref [zone] = wildcards.zonename
+   elseif line == "{/bigmap}" then
+      EnableTrigger ("multi_line_map", false)  -- no more lines to go
 
-    table.remove (map, 1)  -- remove first line (the border)
-    map [#map] = nil  -- remove last line (the other border)
+      table.remove (map, 1)  -- remove first line (the border)
+      map [#map] = nil  -- remove last line (the other border)
 
-   for _, v in ipairs (map) do
+      for _, v in ipairs (map) do
+         if v [1].text == "|" then
+            table.remove (v, 1)
+         elseif string.match (v [1].text, "^|") then
+            v [1].text = string.sub (v [1].text, 2)
+            v [1].length = #v [1].text
+         end -- remove first border
 
-      if v [1].text == "|" then
-        table.remove (v, 1)
-      elseif string.match (v [1].text, "^|") then
-        v [1].text = string.sub (v [1].text, 2)
-        v [1].length = #v [1].text
-      end -- remove first border
+         if v [#v].text == "" then
+            v [#v] = nil
+         end
 
-     if v [#v].text == "" then
-        v [#v] = nil
-      end -- remove last border
+         if v [#v].text == "|" then
+            v [#v] = nil
+         elseif string.match (v [#v].text, "|$") then
+            v [#v].text = string.sub (v [#v].text, 1, -2)
+            v [#v].length = #v [#v].text
+         end -- remove last border
+      end -- for
 
-      if v [#v].text == "|" then
-        v [#v] = nil
-      elseif string.match (v [#v].text, "|$") then
-        v [#v].text = string.sub (v [#v].text, 1, -2)
-        v [#v].length = #v [#v].text
-      end -- remove last border
-
-    end -- for
-
-    if zone then
-      continents [zone] = map  -- cache it
-      ConstructMap()
-      ColourNote ("yellow", "", string.format("BIGMAP INFO: Constructed new continent bigmap for %s.", continent))
-    end -- we know the continent
-    if in_continent then
-       DrawMap ()
-    end
-  else
-    table.insert (map, styles)
-  end -- if
+      if zone then
+         continents [zone] = map  -- cache it
+         ConstructMap()
+         ColourNote ("yellow", "", string.format("BIGMAP INFO: Constructed new continent bigmap for %s.", continent))
+      end -- we know the continent
+      if in_continent then
+         DrawMap ()
+      end
+   else
+      table.insert (map, styles)
+   end -- if
 end -- function map_redirect
 
 
 function right_click_menu ()
-    menustring = "Bring To Front|Send To Back"
-    result = WindowMenu (mapwin,
-        WindowInfo (mapwin, 14),  -- x position
-        WindowInfo (mapwin, 15),   -- y position
-        menustring) -- content
+   menustring = "Bring To Front|Send To Back"
+   result = WindowMenu (mapwin,
+      WindowInfo (mapwin, 14),  -- x position
+      WindowInfo (mapwin, 15),   -- y position
+      menustring) -- content
 
-    if result == "Bring To Front" then
-       CallPlugin("462b665ecb569efbf261422f","boostMe", mapwin)
-    elseif result == "Send To Back" then
-       CallPlugin("462b665ecb569efbf261422f","dropMe", mapwin)
-    end -- if
+   if result == "Bring To Front" then
+      CallPlugin("462b665ecb569efbf261422f","boostMe", mapwin)
+   elseif result == "Send To Back" then
+      CallPlugin("462b665ecb569efbf261422f","dropMe", mapwin)
+   end -- if
 end -- right_click_menu
 
 function MouseUp(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-       right_click_menu()
-    end
-    return true
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+   return true
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-        return true
-    end
-    return false
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   return false
 end
 
 require "checkplugin"
@@ -512,69 +489,69 @@ function OnPluginListChanged ()
    do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
    do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
    do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-end -- OnPluginListChanged
+end
 
 function OnPluginInstall ()
-  assert (loadstring (GetVariable ("continents") or "")) ()
-  assert (loadstring (GetVariable ("xref") or "")) ()
+   assert (loadstring (GetVariable ("continents") or "")) ()
+   assert (loadstring (GetVariable ("xref") or "")) ()
 
-  win = GetPluginID ().."_offscreen_buffer"
-  mapwin = (((use_gmcp_mapper == 1) and "b6eae87ccedd84f510b74714_mapper") or GetPluginID().."_mapper")
+   win = GetPluginID ().."_offscreen_buffer"
+   mapwin = (((use_gmcp_mapper == 1) and "b6eae87ccedd84f510b74714_mapper") or GetPluginID().."_mapper")
 
-  local windows = WindowList()
-  local mapwin_found = false
-  if windows then
-    for _, v in ipairs (windows) do 
-      if v == mapwin then
-        mapwin_found = true
-        break
+   local windows = WindowList()
+   local mapwin_found = false
+   if windows then
+      for _, v in ipairs (windows) do 
+         if v == mapwin then
+            mapwin_found = true
+            break
+         end
       end
-    end
-  end -- if any
+   end -- if any
 
-  if not mapwin_found then
-    WindowCreate (mapwin, 0, 0, 0, 0, 0, 0, 0) -- dummy window just to load the font stuff
-  end
+   if not mapwin_found then
+      WindowCreate (mapwin, 0, 0, 0, 0, 0, 0, 0) -- dummy window just to load the font stuff
+   end
 
-  windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, 0, true, nil, {mouseup=MouseUp, 
-                    mousedown=LeftClickOnly, dragmove=LeftClickOnly, 
-                    dragrelease=LeftClickOnly})
-  
-  WindowCreate (win,
-                 0,
-                 0,
-                 100,     -- width
-                 100,  -- height
-                 0,
-                 0,
-                 0x00)
+   windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, 0, true, nil, {mouseup=MouseUp, 
+      mousedown=LeftClickOnly, dragmove=LeftClickOnly, 
+      dragrelease=LeftClickOnly})
+
+   WindowCreate (win,
+      0,
+      0,
+      100,     -- width
+      100,  -- height
+      0,
+      0,
+      0x00)
                  
-  local fonts = utils.getfontfamilies ()
-  if fonts.Dina then
-    font_size = 8
-    font_name = "Dina"    -- the actual font
-  else
-    font_size = 10
-    font_name = "Courier"
-  end -- if
+   local fonts = utils.getfontfamilies ()
+   if fonts.Dina then
+      font_size = 8
+      font_name = "Dina"    -- the actual font
+   else
+      font_size = 10
+      font_name = "Courier"
+   end -- if
 
-  font_id = "bigmap_font"  -- our internal name
-  font_id_bold = "bigmap_font_bold"  -- our internal name
+   font_id = "bigmap_font"  -- our internal name
+   font_id_bold = "bigmap_font_bold"  -- our internal name
 
-  check (WindowFont (mapwin, font_id, font_name, font_size, false, false, false, false, 0, 49))  -- normal
-  font_height = WindowFontInfo (mapwin, font_id, 1) -  WindowFontInfo (mapwin, font_id, 4) + 1 -- height
-  font_width = WindowFontInfo (mapwin, font_id, 6)  -- avg width
-  descent = WindowFontInfo (mapwin, font_id, 3)
+   check (WindowFont (mapwin, font_id, font_name, font_size, false, false, false, false, 0, 49))  -- normal
+   font_height = WindowFontInfo (mapwin, font_id, 1) -  WindowFontInfo (mapwin, font_id, 4) + 1 -- height
+   font_width = WindowFontInfo (mapwin, font_id, 6)  -- avg width
+   descent = WindowFontInfo (mapwin, font_id, 3)
 
- WindowCreateImage (win, "zone",
-        tonumber ("11111111", 2),  -- row 8
-        tonumber ("11000011", 2),  -- row 7
-        tonumber ("10000001", 2),  -- row 6
-        tonumber ("10000001", 2),  -- row 6
-        tonumber ("10000001", 2),  -- row 6
-        tonumber ("10000001", 2),  -- row 6
-        tonumber ("11000011", 2),  -- row 7
-        tonumber ("11111111", 2))  -- row 8
+   WindowCreateImage (win, "zone",
+      tonumber ("11111111", 2),  -- row 8
+      tonumber ("11000011", 2),  -- row 7
+      tonumber ("10000001", 2),  -- row 6
+      tonumber ("10000001", 2),  -- row 6
+      tonumber ("10000001", 2),  -- row 6
+      tonumber ("10000001", 2),  -- row 6
+      tonumber ("11000011", 2),  -- row 7
+      tonumber ("11111111", 2))  -- row 8
 
 
    -- if disabled last time, stay disabled
@@ -592,65 +569,64 @@ function OnPluginSaveState ()
    SetVariable("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    SetVariable ("continents",
       "continents = " .. serialize.save_simple (continents))
-
    SetVariable ("xref",
       "xref = " .. serialize.save_simple (xref))
    SetVariable("use_gmcp_mapper", tostring(use_gmcp_mapper))
    SetVariable("show_map", show_map)
-   if (not (use_gmcp_mapper == 1)) then             
+   if (not (use_gmcp_mapper == 1)) then
       movewindow.save_state (mapwin)
    end
 end -- function OnPluginSaveState
 
 function OnPluginBroadcast (msg, id, name, text)
-  if id == '3e7dedbe37e44942dd46d264' then
-    if not bigmap_enabled then
-      TelnetOptionOn(TELOPT_BIGMAP)
-      bigmap_enabled = true
-      if show_map == 1 and use_gmcp_mapper == 1 then
-          CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
+   if id == '3e7dedbe37e44942dd46d264' then
+      if not bigmap_enabled then
+         TelnetOptionOn(TELOPT_BIGMAP)
+         bigmap_enabled = true
+         if show_map == 1 and use_gmcp_mapper == 1 then
+            CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
+         end
       end
-    end
-    if text == "room.info" then
-      res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room")
-      room = assert (loadstring ('return ' .. gmcparg or ""))()
-      -- where we are
-      origx = tonumber (room.info.coord.x)
-      origy = tonumber (room.info.coord.y)
-      zone = tonumber (room.info.coord.id)
-      oncont = room.info.coord.cont
-      x = origx + 1  -- make 1-relative
-      y = origy + 1  -- ditto
+      if text == "room.info" then
+         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room")
+         room = assert (loadstring ('return ' .. gmcparg or ""))()
+         -- where we are
+         origx = tonumber (room.info.coord.x)
+         origy = tonumber (room.info.coord.y)
+         zone = tonumber (room.info.coord.id)
+         oncont = room.info.coord.cont
+         x = origx + 1  -- make 1-relative
+         y = origy + 1  -- ditto
 
-      if zone ~= -1 and ((not (use_gmcp_mapper == 1)) or (tonumber(oncont) == 1)) then
-        updatelocation()
-        in_continent = true
-      else
-        in_continent = false
+         if zone ~= -1 and ((not (use_gmcp_mapper == 1)) or (tonumber(oncont) == 1)) then
+            updatelocation()
+            in_continent = true
+         else
+            in_continent = false
+         end
       end
-    end
-  elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
-    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
-  end
+   elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
+   end
 end
 
 function OnPluginClose ()
-  -- if enabled
-  if GetPluginInfo (GetPluginID (), 17) then
-    OnPluginDisable()
-  end -- currently enabled
+   -- if enabled
+   if GetPluginInfo (GetPluginID (), 17) then
+      OnPluginDisable()
+   end -- currently enabled
 end -- OnPluginClose
 
 function OnPluginEnable ()
-    if (not (use_gmcp_mapper == 1)) then
-        WindowShow (mapwin, show_map)
-    else
-        CallPlugin("b6eae87ccedd84f510b74714", "override_continents", ((show_map == 1) and "true") or "false");
-    end
-    if IsConnected() then
-        Send_GMCP_Packet("request room")
-    end -- currently enabled
-    OnPluginSaveState()
+   if (not (use_gmcp_mapper == 1)) then
+      WindowShow (mapwin, show_map)
+   else
+      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", ((show_map == 1) and "true") or "false");
+   end
+   if IsConnected() then
+      Send_GMCP_Packet("request room")
+   end -- currently enabled
+   OnPluginSaveState()
 end -- OnPluginEnable
     
 function OnPluginDisable ()
