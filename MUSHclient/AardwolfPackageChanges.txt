@@ -1,5 +1,15 @@
 Aardwolf Client Package Major Changes List
 
+r990 snapshot
+- bug fix: removing the timestamps plugin will now deactivate the timestamps
+- misc change: the gmcp mapper now only uses one database file. if it ever finds a *_bookmarks.db file, it will merge that into the main db file and then delete it.
+- new feature: the database integrity check will also happen at startup now
+- misc change: (for scripters) the recommended use pattern for the z-order monitor has been simplified
+- bug fix: expanding the input bar to completely cover the main output will no longer cause an error
+- new feature: the gmcp mapper now does uncompressed backups by default which are much faster but take up more space
+- new feature: there are now 'mapper backups compressed' and 'mapper backups uncompressed' commands to toggle backup compression
+- bug fix: statmon and health bar updating made slightly more efficient
+
 r956 snapshot
 - misc change: 'bigmap update' will now typically happen automatically
 - misc change: setting mapper portal levels should be less of a hassle now
