@@ -2086,9 +2086,9 @@ function rotate_backups (manual)
       local olderer_exists = false
       local older_exists = false
       if t ~= nil then
-         local oldest_string = Trim(sanitize_filename(WorldName())).."_Automatic_oldest"
-         local olderer_string = Trim(sanitize_filename(WorldName())).."_Automatic_olderer"
-         local older_string = Trim(sanitize_filename(WorldName())).."_Automatic_older"
+         local oldest_string = Trim(sanitize_filename(WorldName()))..".db.Backup_Automatic_oldest"
+         local olderer_string = Trim(sanitize_filename(WorldName()))..".db.Backup_Automatic_olderer"
+         local older_string = Trim(sanitize_filename(WorldName()))..".db.Backup_Automatic_older"
          for k,v in pairs(t) do
             if string.find(k,oldest_string) then
                oldest_exists = true
