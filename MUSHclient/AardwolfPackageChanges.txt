@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r992 snapshot
+- bug fix: the gmcp mapper's 'mapper areas' will no longer show prepopulated area names that don't actually have any explored rooms in them
+- bug fix: the gmcp mapper will check first that the relevant tables exist in a _bookmarks.db file before trying to merge them
+
 r990 snapshot
 - bug fix: removing the timestamps plugin will now deactivate the timestamps
 - misc change: the gmcp mapper now only uses one database file. if it ever finds a *_bookmarks.db file, it will merge that into the main db file and then delete it.
