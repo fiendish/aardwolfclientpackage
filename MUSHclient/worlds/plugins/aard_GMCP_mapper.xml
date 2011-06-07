@@ -763,10 +763,10 @@ function map_areas (name, line, wildcards)
    local hl = "+------------+-----------------------------------------+"
    local fmt = "| %10.10s | %-39.39s |"
    if area == "" then
-      query = "SELECT uid, name FROM areas ORDER BY name;"
+      query = "SELECT uid, name FROM areas WHERE uid in (SELECT DISTINCT area FROM rooms) ORDER BY name;"
       intro = "The following areas have been mapped:"
    else
-      query = string.format("SELECT uid, name FROM areas WHERE name LIKE %s ORDER BY name;", fixsql("%"..area.."%"))
+      query = string.format("SELECT uid, name FROM areas WHERE name LIKE %s AND uid in (SELECT DISTINCT area FROM rooms) ORDER BY name;", fixsql("%"..area.."%"))
       intro = string.format("The following rooms in areas matching '%s' have been mapped:",area)
    end -- if area
   
@@ -2362,14 +2362,26 @@ function OnPluginInstall ()
       ColourNote("white", "blue", "Merging into the main database file.")
       ColourNote("white", "blue", Trim(sanitize_filename(WorldName())).."_bookmarks.db --> "..Trim(sanitize_filename(WorldName()))..".db")
       db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
-      
-      for row in db_bm:nrows("SELECT * FROM bookmarks;") do
-         dbcheck(db:execute(string.format("INSERT OR REPLACE INTO bookmarks (uid, notes, date_added) VALUES (%s, %s, DATETIME('NOW'));",
-         fixsql(row.uid),fixsql(row.notes))))
+
+      local bm_found = false
+      for row in db_bm:nrows("SELECT name FROM sqlite_master WHERE type='table' AND name='bookmarks';") do
+         bm_found = true
       end
-      for row in db_bm:nrows("SELECT * FROM terrain;") do
-         dbcheck(db:execute(string.format("INSERT OR REPLACE INTO terrain (name, color, date_added) VALUES (%s, %i, DATETIME('NOW'));",
-         fixsql(row.name),row.color)))
+      local tr_found = false
+      for row in db_bm:nrows("SELECT name FROM sqlite_master WHERE type='table' AND name='terrain';") do
+         tr_found = true
+      end
+      if bm_found then
+         for row in db_bm:nrows("SELECT * FROM bookmarks;") do
+            dbcheck(db:execute(string.format("INSERT OR REPLACE INTO bookmarks (uid, notes, date_added) VALUES (%s, %s, DATETIME('NOW'));",
+            fixsql(row.uid),fixsql(row.notes))))
+         end
+      end
+      if tr_found then
+         for row in db_bm:nrows("SELECT * FROM terrain;") do
+            dbcheck(db:execute(string.format("INSERT OR REPLACE INTO terrain (name, color, date_added) VALUES (%s, %i, DATETIME('NOW'));",
+            fixsql(row.name),row.color)))
+         end
       end
       
       db_bm:close()
