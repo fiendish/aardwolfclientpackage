@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r996 snapshot
+- misc change: the gmcp handler will now also report package version to the MUD
+
 r992 snapshot
 - bug fix: the gmcp mapper's 'mapper areas' will no longer show prepopulated area names that don't actually have any explored rooms in them
 - bug fix: the gmcp mapper will check first that the relevant tables exist in a _bookmarks.db file before trying to merge them
