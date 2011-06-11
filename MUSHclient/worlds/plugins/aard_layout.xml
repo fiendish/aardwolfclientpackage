@@ -120,7 +120,12 @@ end
 ---------------------------------------------------------------------------------
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
-function ResizeReleaseCallback()
+function ResizeReleaseMainCallback()
+   OnPluginSaveState()
+end
+
+function DragReleaseMainCallback()
+   OnPluginSaveState()
 end
 
 ---------------------------------------------------------------------------------
