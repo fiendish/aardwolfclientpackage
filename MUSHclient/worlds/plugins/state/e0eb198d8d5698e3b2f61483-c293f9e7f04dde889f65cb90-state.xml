@@ -17,9 +17,10 @@
    date_saved="2010-12-27 04:06:08"
   >
   <variable name="defaulttr">0</variable>
-  <variable name="trbottom">601</variable>
-  <variable name="trleft">265</variable>
-  <variable name="trright">825</variable>
-  <variable name="trtop">147</variable>
+  <variable name="enabled">true</variable>
+  <variable name="trbottom">544</variable>
+  <variable name="trleft">7</variable>
+  <variable name="trright">650</variable>
+  <variable name="trtop">140</variable>
 </variables>
 </muclient>

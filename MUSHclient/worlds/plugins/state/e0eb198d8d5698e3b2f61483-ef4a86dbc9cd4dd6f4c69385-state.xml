@@ -18,14 +18,18 @@
   >
   <variable name="background_colour">0</variable>
   <variable name="enabled">true</variable>
+  <variable name="flat_gauges">0</variable>
   <variable name="font_name">Courier New</variable>
   <variable name="font_size">9</variable>
-  <variable name="height">100</variable>
+  <variable name="graphicalMode">1</variable>
+  <variable name="height">24</variable>
   <variable name="mw_ef4a86dbc9cd4dd6f4c69385_windowflags">2</variable>
   <variable name="mw_ef4a86dbc9cd4dd6f4c69385_windowmode">0</variable>
-  <variable name="mw_ef4a86dbc9cd4dd6f4c69385_windowx">835</variable>
-  <variable name="mw_ef4a86dbc9cd4dd6f4c69385_windowy">330</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69385_windowx">0</variable>
+  <variable name="mw_ef4a86dbc9cd4dd6f4c69385_windowy">552</variable>
   <variable name="numBars">6</variable>
+  <variable name="overlay_numbers">0</variable>
+  <variable name="reverseTNL">0</variable>
   <variable name="showBar">showBar = {}
   showBar.Mana = {}
     showBar.Mana[1] = "Mana  :"
@@ -51,20 +55,20 @@
     showBar.Health[3] = "Health:"
     showBar.Health[4] = 65280
     showBar.Health[5] = 17408
-  showBar.TNL = {}
-    showBar.TNL[1] = "TNL   :"
-    showBar.TNL[2] = true
-    showBar.TNL[3] = "TNL:"
-    showBar.TNL[4] = 16777215
-    showBar.TNL[5] = 4473924
   showBar.Enemy = {}
     showBar.Enemy[1] = "Enemy :"
     showBar.Enemy[2] = true
     showBar.Enemy[3] = "Enemy:"
     showBar.Enemy[4] = 255
-    showBar.Enemy[5] = 68</variable>
+    showBar.Enemy[5] = 68
+  showBar.TNL = {}
+    showBar.TNL[1] = "TNL   :"
+    showBar.TNL[2] = true
+    showBar.TNL[3] = "TNL:"
+    showBar.TNL[4] = 16777215
+    showBar.TNL[5] = 4473924</variable>
   <variable name="showLabels">1</variable>
-  <variable name="stacked">1</variable>
-  <variable name="width">395</variable>
+  <variable name="stacked">0</variable>
+  <variable name="width">1137</variable>
 </variables>
 </muclient>
