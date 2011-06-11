@@ -31,18 +31,27 @@
     colorVals.Align[1] = 255
     colorVals.Align[2] = 65535</variable>
   <variable name="enabled">true</variable>
-  <variable name="font_name">Courier New</variable>
-  <variable name="font_size">9</variable>
-  <variable name="height">136</variable>
+  <variable name="flat_gauges">0</variable>
+  <variable name="font_name">Dina</variable>
+  <variable name="font_size">8</variable>
+  <variable name="height">215</variable>
+  <variable name="hidden">0</variable>
   <variable name="mw_f178e68512c685b3be1e9b07_windowflags">2</variable>
   <variable name="mw_f178e68512c685b3be1e9b07_windowmode">0</variable>
-  <variable name="mw_f178e68512c685b3be1e9b07_windowx">908</variable>
-  <variable name="mw_f178e68512c685b3be1e9b07_windowy">2</variable>
+  <variable name="mw_f178e68512c685b3be1e9b07_windowx">868</variable>
+  <variable name="mw_f178e68512c685b3be1e9b07_windowy">336</variable>
+  <variable name="overlay_numbers">0</variable>
   <variable name="show_hp">1</variable>
   <variable name="show_mn">1</variable>
   <variable name="show_mv">1</variable>
   <variable name="show_self">1</variable>
+  <variable name="thresh1active">0</variable>
+  <variable name="thresh1color">65535</variable>
+  <variable name="thresh1percent">40</variable>
+  <variable name="thresh2active">0</variable>
+  <variable name="thresh2color">255</variable>
+  <variable name="thresh2percent">20</variable>
   <variable name="title_colour">2697513</variable>
-  <variable name="width">322</variable>
+  <variable name="width">269</variable>
 </variables>
 </muclient>

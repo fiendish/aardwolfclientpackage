@@ -16,13 +16,13 @@
    world_file_version="15"
    date_saved="2010-12-27 04:06:08"
   >
-  <variable name="WINDOW_HEIGHT">135</variable>
-  <variable name="WINDOW_WIDTH">650</variable>
+  <variable name="WINDOW_HEIGHT">131</variable>
+  <variable name="WINDOW_WIDTH">657</variable>
   <variable name="date_format">[%d %b %H:%M:%S] </variable>
   <variable name="echo">1</variable>
   <variable name="enabled">true</variable>
-  <variable name="font_name">Lucida Console</variable>
-  <variable name="font_size">9</variable>
+  <variable name="font_name">Dina</variable>
+  <variable name="font_size">8</variable>
   <variable name="global_quest_on">0</variable>
   <variable name="info_on">0</variable>
   <variable name="log_colour_codes">1</variable>
@@ -32,8 +32,8 @@
   <variable name="show_donations">1</variable>
   <variable name="mw_b555825a4a5700c35fa80780_windowflags">2</variable>
   <variable name="mw_b555825a4a5700c35fa80780_windowmode">0</variable>
-  <variable name="mw_b555825a4a5700c35fa80780_windowx">257</variable>
-  <variable name="mw_b555825a4a5700c35fa80780_windowy">2</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowx">0</variable>
+  <variable name="mw_b555825a4a5700c35fa80780_windowy">0</variable>
   <variable name="timestamp">0</variable>
 </variables>
 </muclient>
