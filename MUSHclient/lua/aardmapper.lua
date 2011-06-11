@@ -836,7 +836,7 @@ function draw (uid)
          y = y + iheight
       end
    end
-
+   
    -- let them move it around                 
    movewindow.add_drag_handler (win, 0, 0, 0, font_height)
 
@@ -844,10 +844,10 @@ function draw (uid)
    WindowAddHotspot(win, 
       "zzz_zoom",  
       0, 0, 0, 0, 
-      "", "", "", "", "",
+      "", "", "", "", "mapper.MouseUp",
       "",  -- hint
-      miniwin.cursor_arrow, 0)  
-        
+      miniwin.cursor_arrow, 0)
+   
    WindowScrollwheelHandler (win, "zzz_zoom", "mapper.zoom_map")
    
    -- set up for initial room, in middle
