@@ -279,7 +279,7 @@ function DisplayGroupPage()
                      hpColor2 = thresh2color
                   end
                end
-               gauge(win, "HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
+               gauge(win, v["name"].."'s HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
                txt = string.lpad(v["info"]["hp"], 5, ' ').."/"..string.rpad(v["info"]["mhp"],5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
@@ -294,7 +294,7 @@ function DisplayGroupPage()
                x = baseX
                WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
                x = x + labels_width + GAP
-               gauge(win, "MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, colorVals["Mana"][1], 0x000000, 0, 0x000000, colorVals["Mana"][2], nil, flat_gauges==1)
+               gauge(win, v["name"].."'s MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, colorVals["Mana"][1], 0x000000, 0, 0x000000, colorVals["Mana"][2], nil, flat_gauges==1)
                txt = string.lpad(v["info"]["mn"],5,' ').."/"..string.rpad(v["info"]["mmn"],5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
@@ -309,7 +309,7 @@ function DisplayGroupPage()
                x = baseX
                WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
                x = x + labels_width + GAP
-               gauge(win, "MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, colorVals["Moves"][1], 0x000000, 0, 0x000000, colorVals["Moves"][2], nil, flat_gauges==1)
+               gauge(win, v["name"].."'s MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, colorVals["Moves"][1], 0x000000, 0, 0x000000, colorVals["Moves"][2], nil, flat_gauges==1)
                txt = string.lpad(v["info"]["mv"],5,' ').."/"..string.rpad(v["info"]["mmv"],5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
@@ -627,7 +627,7 @@ function leaveGroup (name, line, wildcards, styles)
       group_built = false
       full_group_data = {}
       group_data = {}
-      DisplayGroupPage()
+      SetUpHotspotsAndDraw(true)
    end
 end
 
