@@ -204,7 +204,7 @@ function map_on_off_alias (name, line, wildcards)
 end -- map_on_off_alias
 
 brushes = {
-  ["~"] = miniwin.e,
+  ["~"] = miniwin.brush_waves_horizontal,
   ["?"] = miniwin.brush_medium_pattern,
   ["^"] = miniwin.brush_waves_vertical,
   ["."] = miniwin.brush_hatch_backwards_diagonal,
@@ -218,7 +218,7 @@ function Display_Styled_Line (line, styles, id)
    for _, v in ipairs (styles) do
       for i = 1, #v.text do
          local char = string.sub (v.text, i, i)
-         local brush = brushes [char] or 8
+         local brush = brushes [char] or 0
          local forecolour = v.textcolour
          local backcolour = background_colour
          if brush == 0 then
