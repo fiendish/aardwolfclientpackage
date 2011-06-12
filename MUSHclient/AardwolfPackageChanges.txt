@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r1021 snapshot
+r1023 snapshot
 - new feature/bug fix: updated to MUSHclient 4.75
 - bug fix: main output position and size settings should save instantly now
 - bug fix: the bigmap should be less ugly now from aliasing artifacts when smaller than the ideal size
