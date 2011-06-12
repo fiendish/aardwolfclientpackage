@@ -1,5 +1,15 @@
 Aardwolf Client Package Major Changes List
 
+r1021 snapshot
+- new feature/bug fix: updated to MUSHclient 4.75
+- bug fix: main output position and size settings should save instantly now
+- bug fix: the bigmap should be less ugly now from aliasing artifacts when smaller than the ideal size
+- misc change: the z order right-click menu is accessible on the entire gmcp mapper background now
+- bug fix: group monitor gauge IDs are unique per player
+- bug fix: group monitor gauge hotspots should now clear out when leaving a group
+- misc change: default state files are updated so that the main output area has enough space to show the login banner
+- misc change: the new player greeting now shows a link to the online guide
+
 r996 snapshot
 - misc change: the gmcp handler will now also report package version to the MUD
 
