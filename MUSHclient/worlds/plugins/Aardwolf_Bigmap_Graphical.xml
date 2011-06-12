@@ -224,18 +224,16 @@ function Display_Styled_Line (line, styles, id)
          if brush == 0 then
             backcolour = v.textcolour
          end -- if
-         if char == " " then
-            forecolour = background_colour -- invisible
-         end -- if
+         if char ~= " " then
+            WindowCircleOp(win, miniwin.circle_rectangle, left, top, left + rectangle_size, top + rectangle_size,
+               forecolour, miniwin.pen_null, 0,   -- pen colour, null pen, pen width
+               backcolour, brush)  -- brush colour, style
 
-         WindowCircleOp(win, miniwin.circle_rectangle, left, top, left + rectangle_size, top + rectangle_size,
-            forecolour, miniwin.pen_null, 0,   -- pen colour, null pen, pen width
-            backcolour, brush)  -- brush colour, style
-
-         -- special image for the zone entrance
-         if char == "?" then
-            WindowDrawImage (win, "zone", left-1, top-1, left + rectangle_size-1, top-1 + rectangle_size, 2)
-         end -- if
+            -- special image for the zone entrance
+            if char == "?" then
+               WindowDrawImage (win, "zone", left-1, top-1, left + rectangle_size-1, top-1 + rectangle_size, 2)
+            end -- if
+         end
          left = left + rectangle_size-1
       end -- for each character
    end -- for each style run
