@@ -5,7 +5,7 @@
 <!-- Modifications for Aardwolf and a bunch of extra awesome sauce added by Fiendish with help from Orogan -->
 
 <muclient>
-   <plugin
+<plugin
    name="Aardwolf_Chat_Capture_Miniwindow"
    author="Fiendish"
    id="b555825a4a5700c35fa80780"
@@ -15,7 +15,7 @@
    requires="4.73"
    version="2.0"
    save_state="y"
-   >
+>
 
 <description trim="y">
 USAGE:
@@ -32,38 +32,35 @@ USAGE:
   
 </plugin>
 
-
 <triggers>
-   <trigger
+<trigger
    enabled="y"
    match="^{say}(?<msg>.*)"
    regexp="y"
    script="chats"
    omit_from_output="y"
    sequence="100"
-   ></trigger>
+></trigger>
    
-   <trigger
+<trigger
    enabled="y"
    match="^{chan ch=(?<channel>\w+)}(?<msg>.*)"
    regexp="y"
    script="chats"
    omit_from_output="y"
    sequence="100"
-   >
-   </trigger>
+></trigger>
     
-   <trigger
+<trigger
    enabled="y"
    match="^{tell}(?<msg>.*)"
    script="chats"
    omit_from_output="y"
    regexp="y"
    sequence="100"
-   >
-   </trigger>
+></trigger>
 
-   <trigger
+<trigger
    enabled="n"
    name="remort_auction"
    match="^Remort Auction:.+$"
@@ -71,10 +68,9 @@ USAGE:
    script="untagged_info"
    omit_from_output="y"
    sequence="100"
-   >
-   </trigger>
+></trigger>
 
-   <trigger
+<trigger
    enabled="n"
    name="global_quest"
    match="^Global Quest:.+$"
@@ -82,10 +78,9 @@ USAGE:
    script="untagged_info"
    omit_from_output="y"
    sequence="100"
-   >
-   </trigger>
+></trigger>
 
-   <trigger
+<trigger
    enabled="n"
    name="info"
    match="^INFO:.+$"
@@ -93,10 +88,9 @@ USAGE:
    script="untagged_info"
    omit_from_output="y"
    sequence="100"
-   >
-   </trigger>    
+></trigger>    
    
-   <trigger
+<trigger
    enabled="n"
    name="raidinfo"
    match="^RAIDINFO:.+$"
@@ -104,10 +98,9 @@ USAGE:
    script="untagged_info"
    omit_from_output="y"
    sequence="100"
-   >
-   </trigger>   
+></trigger>   
 
-   <trigger
+<trigger
    enabled="n"
    name="claninfo"
    match="^CLANINFO:.+$"
@@ -115,10 +108,9 @@ USAGE:
    script="untagged_info"
    omit_from_output="y"
    sequence="100"
-   >
-   </trigger>
+></trigger>
 
-   <trigger
+<trigger
    enabled="n"
    match="^$"
    regexp="y"
@@ -127,11 +119,13 @@ USAGE:
    omit_from_output="y"
    sequence="100"
    send_to="12"
-   ><send>
+>
+<send>
    EnableTriggerGroup("end_gag", false)
-   </send></trigger>
+</send>
+</trigger>
     
-   <trigger
+<trigger
    enabled="n"
    match=".*"
    regexp="y"
@@ -140,37 +134,39 @@ USAGE:
    omit_from_output="n"
    sequence="101"
    send_to="12"
-   ><send>
+>
+<send>
    EnableTriggerGroup("end_gag", false)
-   </send></trigger>
+</send>
+</trigger>
 
 </triggers>
 
 <aliases>
-   <alias
+<alias
    script="chat_echo"
    match="^chats echo( on| off)?$"
    enabled="y"
    regexp="y"
    sequence="100"
    ignore_case="y"
-   ></alias>
+></alias>
 
-   <alias
+<alias
    script="chat_show"
    match="chats show"
    enabled="y"
    sequence="100"
    ignore_case="y"
-   ></alias>
+></alias>
 
-   <alias
+<alias
    script="chat_hide"
    match="chats hide"
    enabled="y"
    sequence="100"
    ignore_case="y"
-   ></alias>
+></alias>
 
 </aliases>
 
@@ -188,10 +184,10 @@ SCROLL_BAR_HEIGHT = 45
 MAX_LINES = 10000 -- how many lines to store in scrollback
 TITLE_HEIGHT = 20
 
--- date_format = "[%d %b %H:%M:%S] "    -- [30 Aug 13:29:49]   date and time 24 hour
--- date_format = "[%d %b %I:%M:%S%p] "  -- [30 Aug 01:20:12PM]     date and time 12 hour
--- date_format = "[%H:%M:%S] "          -- [13:29:08]          time 24 hour
--- date_format = "[%X] "                -- [1:22:06 PM]            time 12 hour
+-- date_format = "[%d %b %H:%M:%S] "   -- [30 Aug 13:29:49]   date and time 24 hour
+-- date_format = "[%d %b %I:%M:%S%p] " -- [30 Aug 01:20:12PM] date and time 12 hour
+-- date_format = "[%H:%M:%S] "         -- [13:29:08]          time 24 hour
+-- date_format = "[%X] "               -- [1:22:06 PM]        time 12 hour
 
 timestamp = GetVariable("timestamp") or "1"
 echo = GetVariable("echo") or "1"
@@ -278,7 +274,7 @@ require "checkplugin"
 function OnPluginListChanged ()
    do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
    do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
+   do_plugin_check_now("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
 end -- OnPluginListChanged
 
 function OnPluginInstall ()
@@ -369,8 +365,8 @@ function init (firstTime)
 
       -- re-wrap buffered lines at the new size
       lines = {}
-      for _,styles in ipairs(rawlines) do 
-         fillBuffer(styles)
+      for _,styles in ipairs(rawlines) do
+         fillBuffer(styles[1],styles[2])
       end
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
    else
@@ -464,8 +460,9 @@ end --  OnPluginDisable
 -- display one line
 function Display_Line (line, styles, backfill_start, backfill_end)
    local left = TEXT_INSET
+   local top = TITLE_HEIGHT+(line*line_height)
    if (backfill_start ~= nil and backfill_end ~= nil) then
-      WindowRectOp(win, 2, backfill_start, TITLE_HEIGHT+(line*line_height)+1, backfill_end, TITLE_HEIGHT+(line*line_height)+line_height+1, 0x444444)
+      WindowRectOp(win, 2, backfill_start, top+1, backfill_end, top+line_height+1, 0x444444)
    end -- backfill
    if styles then
       for _, v in ipairs(styles) do
@@ -474,24 +471,60 @@ function Display_Line (line, styles, backfill_start, backfill_end)
          if string.sub(v.text,-1) == "\n" then
             t = string.sub(v.text,1,-2)
          end
-         left = left + WindowText(win, win_font, t, left, TITLE_HEIGHT+(line*line_height),  WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, v.textcolour)
+         left = left + WindowText(win, win_font, t, left, top,  WINDOW_WIDTH-SCROLL_BAR_WIDTH, 0, v.textcolour)
       end -- for each style run
    end
 end -- Display_Line
 
+-- Returns an array {start, end, text}
+function findURLs(text)
+   local URLs = {}
+   local start, position = 0, 0
+   -- "rex" is a table supplied by MUSHclient for PCRE functionality.
+   local re = rex.new("(?:https?://|mailto:)\\S*[\\w/=@#\\-\\?]")
+   re:gmatch(text,
+      function (link, _)
+         start, position = string.find(text, link, position, true)
+         table.insert(URLs, {start=start, stop=position, text=link})
+      end
+   )
+   return URLs
+end -- function findURL
+
 -- display all visible lines
+hyperlinks = {}
 function writeLines ()
    WindowRectOp(win, 2, 1, TITLE_HEIGHT, WINDOW_WIDTH-SCROLL_BAR_WIDTH, -1, WINDOW_BACKGROUND_COLOUR) -- clear
+   local ax = nil
+   local zx = nil
+   local line_no_colors = ""
    if #lines >= 1 then
       for count = lineStart, lineEnd do
-         local ax = nil
-         local zx = nil
+         ax = nil
+         zx = nil
+         line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[count][1]), 1, 99999))
+         
+         -- create clickable links for urls
+         for i,v in ipairs(lines[count][3]) do
+            local left = TEXT_INSET+WindowTextWidth(win, win_font, string.sub(line_no_colors, 1, v.start-1))
+            local right = left+WindowTextWidth(win, win_font, string.sub(line_no_colors, v.start-1, v.stop-1))
+            local top = TITLE_HEIGHT+((count-lineStart)*line_height)-1
+            local bottom = top+line_height+1
+            local link_name = table.concat({v.text,"   ",count,v.start,v.stop})
+            if not WindowHotspotInfo(win, link_name, 1) then
+               hyperlinks[link_name] = v.text
+               WindowAddHotspot(win, link_name, left, top, math.min(right, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1), bottom, "MouseOverLink", "CancelMouseOverLink", "MouseDown", "CancelMouseDown", "MouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
+               WindowDragHandler(win, link_name, "TextareaMoveCallback", "TextareaReleaseCallback", 0x10)
+            end
+         end
+         
+         -- create highlighting parameters when text is selected
          if copy_start_line ~= nil and copy_end_line ~= nil and count >= copy_start_line and count <= copy_end_line then
-            local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[count][1]), 1, 99999))
             ax = (((count == copy_start_line) and math.min(start_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or TEXT_INSET)
             -- end of highlight for this line
             zx = math.min(WINDOW_WIDTH-SCROLL_BAR_WIDTH,(((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET))
          end
+         
          Display_Line( count-lineStart, lines[count][1], ax, zx )
       end
    end
@@ -568,6 +601,12 @@ function drawStuff ()
    end
    WindowRectOp(win, 5, (WINDOW_WIDTH-SCROLL_BAR_WIDTH), barPos, WINDOW_WIDTH, barPos+barSize, 5, 15 + 0x800) -- scrollbar position indicator
 
+   -- reset hyperlinks if the text moves
+   for k,v in pairs(hyperlinks) do
+      WindowDeleteHotspot(win, k)
+   end
+   hyperlinks = {}
+
    writeLines()
 end
 
@@ -607,25 +646,26 @@ function ScrollerReleaseCallback(flags, hotspot_id)
    drawStuff()
 end
 
-function add_line ( line, is_beginning_of_message )
-    -- add new line
-    table.insert(lines, {[1]=line, [2]=false} )
-
-    -- advance the count
-    if #lines >= WINDOW_LINES then
-        lineStart = lineStart + 1
-    end -- if
-       
-    if #lines > 1 then
-        lineEnd = lineEnd + 1
-    end -- if
+function add_line ( line, is_beginning_of_message, urls )
+   -- add new line
+   table.insert(lines, {[1]=line, [2]=false, [3]=urls} )
+   -- advance the count
+   if #lines >= WINDOW_LINES then
+      lineStart = lineStart + 1
+   end -- if
+   
+   if #lines > 1 then
+      lineEnd = lineEnd + 1
+   end -- if
 end -- add_line
 
-function fillBuffer(rawstyles)
+function fillBuffer(rawstyles, rawurls)
    local avail = WINDOW_WIDTH - (TEXT_INSET * 2) - 9
    local line_styles = {}
    local beginning = true
-   local styles = copytable.deep (rawstyles)
+   local length = 0
+   local styles = copytable.deep(rawstyles)
+   local urls = copytable.deep(rawurls)
    
    -- It turns out you can reduce the function
    -- call time by instantiating functions as local.
@@ -637,7 +677,7 @@ function fillBuffer(rawstyles)
    while #styles > 0 do
       -- break off the next style
       local style = remove(styles, 1)
-      
+
       -- make this handle forced newlines like in the flickoff social
       -- by splitting off and sticking the next part back into the 
       -- styles list for the next pass
@@ -647,7 +687,8 @@ function fillBuffer(rawstyles)
          insert(styles, 1, {text = string.sub(style.text,newline+1), 
             length = style.length-newline+1, 
             textcolour = style.textcolour,
-            backcolour = style.backcolour})
+            backcolour = style.backcolour}
+         )
 -- we're leaving in the newline characters here because we need to be 
 -- able to copy them later. I'll clean up the buggy visual later when 
 -- actually displaying the lines.
@@ -655,12 +696,13 @@ function fillBuffer(rawstyles)
          style.text = string.sub(style.text,1,newline)
          foundbreak = true
       end
-        
+
       local width = WindowTextWidth(win, win_font, style.text)
 
       -- if it fits, copy whole style in
       if width <= avail then
          insert(line_styles, style)
+         length = length + style.length
          avail = avail - width
          if foundbreak then
             avail = 0
@@ -686,8 +728,8 @@ function fillBuffer(rawstyles)
          end -- while
          
          if split_col then
-         -- if we found a place to split, use old style and truncate it.
-         -- Also stick the rest back with the same styling back into the styles list
+            -- if we found a place to split, use old style and truncate it.
+            -- Also stick the rest back with the same styling back into the styles list
             insert(line_styles, style)
             local style_copy = copytable.shallow(style)
             style.text = style.text:sub(1, split_col)
@@ -695,17 +737,19 @@ function fillBuffer(rawstyles)
             style_copy.text = style_copy.text:sub(split_col + 1)
             style_copy.length = #style_copy.text
             insert(styles, 1, style_copy)
+            length = length + style.length
          elseif next(line_styles) == nil then
          -- Actually, I don't think this can ever happen. -Fiendish
             insert(line_styles, style)
+            length = length + style.length
          else
-         -- if we're about to start a new style and the
-         -- line is completely full, put it back in the list for later
+            -- if we're about to start a new style and the
+            -- line is completely full, put it back in the list for later
             insert(styles, 1, style)
          end -- if    
          avail = 0  -- now we need to wrap    
       end -- if could/not fit whole thing in
-      
+            
       -- out of styles or out of room? add a line for what we have so far
       if #styles == 0 or avail <= 0 then
          if #lines >= MAX_LINES then
@@ -714,93 +758,120 @@ function fillBuffer(rawstyles)
             lineStart = lineStart - 1
             lineEnd = lineEnd - 1
          end -- buffer full
-         add_line( line_styles, beginning )
+         
+         local line_urls = {}
+         while urls[1] and urls[1].stop <= length do
+            insert(line_urls, remove(urls, 1))
+         end
+         if urls[1] and urls[1].start < length then
+            local url = copytable.deep(urls[1])
+            url.stop = length + 1
+            urls[1].stop = urls[1].stop-1
+            urls[1].old = true
+            insert(line_urls, url)
+         end
+         for i,v in ipairs(urls) do
+            urls[i].start = urls[i].start - length
+            urls[i].stop = urls[i].stop - length
+            if urls[i].start <= 1 then
+               urls[i].start = 1
+               urls[i].stop = urls[i].stop+1
+            end
+         end
+        
+         add_line( line_styles, beginning, line_urls )
+
          avail = WINDOW_WIDTH - (TEXT_INSET * 2) - 9
          line_styles = {}
+         length = 0
          beginning = false
       end -- line full
-      
    end -- while we still have styles over
 end
 
 function stampAndStore(styles)
-
-    local log_text = ""
-    if (log_to_file == 1 and log_timestamps == 0) then
-        log_text = StylesToColoursOneLine(copytable.deep(styles), 1, 99999)
-    end
-    -- inject timestamp if wanted
-    if timestamp == "1" then
-    tstamp = os.date(date_format)
-    timestyle = {}
-    timestyle.text = tstamp
-    timestyle.length = #timestyle.text
-    timestyle.textcolour = 0xc0c0c0
-    table.insert(styles,1,timestyle)
-    end -- if
-    if (log_to_file == 1 and log_timestamps == 1) then
-        log_text = StylesToColoursOneLine(copytable.deep(styles), 1, 99999)
-    end
     
-    if (log_to_file == 1) then
-        if (log_colour_codes == 0) then
-            log_text = strip_colours(log_text)
-        end
-        local f = assert(io.open (GetInfo(58):gsub("^\.\\",GetInfo(56))..GetInfo(2).."ChatLog.txt", "a+")) -- handle to chat log file
-        f:write(log_text.."\n") -- write to it
-        f:close()  -- close that file now
-    end
-
-    -- store the raw lines for use during resizing
-    if #rawlines >= MAX_LINES then
-        table.remove(rawlines, 1)
-    end
-    table.insert(rawlines, styles)
+   local local_styles = copytable.deep(styles)
+   local text = ""
+   local log_text = ""
     
-    fillBuffer(styles)
-    drawStuff()
+   -- inject timestamp if wanted
+   if timestamp == "1" then
+      tstamp = os.date(date_format)
+      timestyle = {}
+      timestyle.text = tstamp
+      timestyle.length = #timestyle.text
+      timestyle.textcolour = 0xc0c0c0
+      table.insert(styles,1,timestyle)
+   end -- if
+   
+   text = StylesToColoursOneLine(copytable.deep(styles), 1, 99999)
+   
+   if (log_to_file == 1) then
+      if (log_timestamps == 0) then
+         log_text = StylesToColoursOneLine(local_styles, 1, 99999)
+      else
+         log_text = text
+      end
+      if (log_colour_codes == 0) then
+         log_text = strip_colours(log_text)
+      end
+      local f = assert(io.open (GetInfo(58):gsub("^\.\\",GetInfo(56))..GetInfo(2).."ChatLog.txt", "a+")) -- handle to chat log file
+      f:write(log_text.."\n") -- write to it
+      f:close()  -- close that file now
+   end
 
+   local urls = findURLs(strip_colours(text))
+   
+   -- store the raw lines for use during resizing
+   if #rawlines >= MAX_LINES then
+      table.remove(rawlines, 1)
+   end
+   table.insert(rawlines, {[1]=styles, [2]=urls})
+   
+   fillBuffer(styles, urls)
+   drawStuff()
 end
 
 function echoStyles (styles)
-    for _, v in ipairs(styles) do
-        ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
-    end -- for each style run
-    Note ("")  -- wrap up line
+   for _, v in ipairs(styles) do
+      ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
+   end -- for each style run
+   Note ("")  -- wrap up line
 end
 
 function chats (name, line, wildcards, styles)
-    if (echo == "0") then
-        EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
-    end
-    
-    -- echo in this world as well if the user wants
-    -- Note: as tempting as it might seem to move this block down to OnPluginBroadcast,
-    -- eliminating the need for stripping out the tag,
-    -- keep in mind that gmcp broadcasts through notes and this doesn't.
-    if echo == "1" then
-        -- strip out the tag
-        tag_length = string.find(styles[1].text,"}")
-        styles[1].text = string.sub(styles[1].text, tag_length+1)
-        styles[1].length = styles[1].length-tag_length
-        
-        -- display
-        echoStyles(styles)
-    end -- echo wanted
+   if (echo == "0") then
+      EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
+   end
+   
+   -- echo in this world as well if the user wants
+   -- Note: as tempting as it might seem to move this block down to OnPluginBroadcast,
+   -- eliminating the need for stripping out the tag,
+   -- keep in mind that gmcp broadcasts through notes and this doesn't.
+   if echo == "1" then
+      -- strip out the tag
+      tag_length = string.find(styles[1].text,"}")
+      styles[1].text = string.sub(styles[1].text, tag_length+1)
+      styles[1].length = styles[1].length-tag_length
+      
+      -- display
+      echoStyles(styles)
+   end -- echo wanted
 end -- chats
 
 function untagged_info (name, line, wildcards, styles)
-    
-    if (echo == "0") then
-        EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
-    end
-    
-    -- echo in this world as well if the user wants
-    if echo == "1" then
-        echoStyles(styles)
-    end -- echo wanted
-    
-    stampAndStore(styles)
+   
+   if (echo == "0") then
+      EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
+   end
+   
+   -- echo in this world as well if the user wants
+   if echo == "1" then
+      echoStyles(styles)
+   end -- echo wanted
+   
+   stampAndStore(styles)
 end -- chats
 
 function OnPluginBroadcast (msg, id, name, text)
@@ -826,206 +897,227 @@ keepscrolling = ""
 require "wait"
 
 function scrollbar()
-    wait.make (function()
-        while keepscrolling == "up" or keepscrolling == "down" do
-            if keepscrolling == "up" then
-                if (lineStart > 1) then
-
-                    lineStart = lineStart - 1
-                    lineEnd = lineEnd - 1
-                else
-                    keepscrolling = ""
-                end
-            elseif keepscrolling == "down" then
-                if (lineEnd < #lines) then
-                    lineStart = lineStart + 1
-                    lineEnd = lineEnd + 1
-                else
-                    keepscrolling = ""
-                end
+   wait.make(
+   function()
+      while keepscrolling == "up" or keepscrolling == "down" do
+         if keepscrolling == "up" then
+            if (lineStart > 1) then
+               lineStart = lineStart - 1
+               lineEnd = lineEnd - 1
+            else
+                 keepscrolling = ""
             end
-            wait.time(0.1)
-            drawStuff()
-        end
-    end)
+         elseif keepscrolling == "down" then
+            if (lineEnd < #lines) then
+               lineStart = lineStart + 1
+               lineEnd = lineEnd + 1
+            else
+               keepscrolling = ""
+            end
+         end
+         wait.time(0.1)
+         drawStuff()
+      end
+   end
+   )
 end
 
 function GetAllBufferedMessages()
-    local t = {}
-    for _,styles in ipairs(rawlines) do
-        table.insert(t, StylesToColoursOneLine(copytable.deep(styles), 1, 99999)) -- 99999 basically means don't truncate lines
-    end
-    SetClipboard(table.concat(t,"\n"))
+   local t = {}
+   for _,styles in ipairs(rawlines) do
+      table.insert(t, StylesToColoursOneLine(copytable.deep(styles[1]), 1, 99999)) -- 99999 basically means don't truncate lines
+   end
+   SetClipboard(table.concat(t,"\n"))
 end
 
 function MouseOver(flags, hotspot_id)
-    keepscrolling = ""
+   keepscrolling = ""
 end
 
 function CancelMouseOver(flags, hotspot_id)
-    keepscrolling = ""
+   keepscrolling = ""
+end
+
+function MouseOverLink(flags, hotspot_id)
+   local url = string.gsub(hotspot_id, "(.*)   .*", "%1")
+   local hotspots = WindowHotspotList(win)
+   for _, v in ipairs (hotspots) do
+      if string.find(v, url, 1, true) then
+         local left = WindowHotspotInfo(win, v, 1)
+         local right = WindowHotspotInfo(win, v, 3)
+         local bottom = WindowHotspotInfo(win, v, 4)
+         WindowLine(win, left, bottom, right, bottom, 0xffffff, 256, 1);
+      end
+   end
+   BroadcastPlugin(999, "repaint")
+end
+
+function CancelMouseOverLink(flags, hotspot_id)
+   local url = string.gsub(hotspot_id, "(.*)   .*", "%1")
+   if not string.find(WindowInfo(win, 19), url) then
+      writeLines()
+   end
 end
 
 temp_start_copying_x = 0
 start_copying_y = 0
 copied_text = ""
 function MouseDown(flags, hotspot_id)
-    if (hotspot_id == "resize") then
-        startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
-    elseif (hotspot_id == "scroller") then
-        clickdelta = WindowHotspotInfo(win, "scroller", 2)-WindowInfo (win, 15)
-        dragscrolling = true
-    elseif (hotspot_id == "textarea" and flags == 0x10) then
-        temp_start_copying_x = WindowInfo(win, 14)
-        start_copying_y = WindowInfo(win, 15)
-        copy_start_windowline = math.floor((start_copying_y-TITLE_HEIGHT)/line_height)
-        temp_start_line = copy_start_windowline+lineStart
-        copied_text = ""
-        copy_start_line = nil
-        copy_end_line = nil
-        writeLines()
-    else
-        keepscrolling = hotspot_id
-        scrollbar()
-    end
+   if (hotspot_id == "resize") then
+      startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
+   elseif (hotspot_id == "scroller") then
+      clickdelta = WindowHotspotInfo(win, "scroller", 2)-WindowInfo (win, 15)
+      dragscrolling = true
+   elseif (hotspot_id == "up" or hotspot_id == "down") then
+      keepscrolling = hotspot_id
+      scrollbar()
+   elseif (flags == 0x10) then
+      temp_start_copying_x = WindowInfo(win, 14)
+      start_copying_y = WindowInfo(win, 15)
+      copy_start_windowline = math.floor((start_copying_y-TITLE_HEIGHT)/line_height)
+      temp_start_line = copy_start_windowline+lineStart
+      copied_text = ""
+      copy_start_line = nil
+      copy_end_line = nil
+      writeLines()
+   end
 end
 
 function CancelMouseDown(flags, hotspot_id)
-    keepscrolling = ""
-    drawStuff()
+   keepscrolling = ""
+   drawStuff()
 end
 
 end_copying_x = 0
 end_copying_y = 0
 function MouseUp(flags, hotspot_id)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-        right_click_menu()
-    else
-        drawStuff()
-    end
-    keepscrolling = ""
-    return true
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu(hotspot_id)
+   else
+      drawStuff()
+   end
+   keepscrolling = ""
+   return true
 end
 
 function TextareaMoveCallback(flags, hotspot_id)
-    if bit.band (flags, miniwin.hotspot_got_lh_mouse) ~= 0 then -- only on left mouse button
-        copied_text = ""
-        end_copying_x = WindowInfo(win, 17)-WindowInfo(win, 1)
-        end_copying_y = WindowInfo(win, 18)-WindowInfo(win, 2)
-        local ypos = end_copying_y
-        end_copying_x = math.max(TEXT_INSET,math.min(end_copying_x, WINDOW_WIDTH-SCROLL_BAR_WIDTH))
-        end_copying_y = math.max(TITLE_HEIGHT+1,math.min(end_copying_y, TITLE_HEIGHT-1+(line_height*(WINDOW_LINES-1))))
-        copy_end_windowline = math.floor((end_copying_y-TITLE_HEIGHT)/line_height)
-        copy_end_line = copy_end_windowline+lineStart
-        copy_start_line = temp_start_line
-        start_copying_x = temp_start_copying_x
-        if (copy_start_line > #lines) then
-            start_copying_x = WINDOW_WIDTH-SCROLL_BAR_WIDTH
-        end
-        
-        -- the user is selecting backwards, so reverse the start/end orders
-        if copy_end_line < temp_start_line then
-           local temp = copy_end_line
-           copy_end_line = copy_start_line
-           copy_start_line = temp
-           temp = end_copying_x
-           end_copying_x = start_copying_x
-           start_copying_x = temp
-        end -- if        
-        if copy_end_line == copy_start_line and end_copying_x < start_copying_x then
-           local temp = end_copying_x
-           end_copying_x = start_copying_x
-           start_copying_x = temp
-        end -- if
-        
-        for copy_line=copy_start_line,copy_end_line do
-           if (lines[copy_line] ~= nil) then
-               local startpos = 1
-               local endpos = 99999
-               if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
-               
-                   -- snap to character boundaries instead of selecting arbitrary pixel widths
-                   local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), 1, 99999))
-                   startpos = 1
-                   endpos = #line_no_colors
-                   -- special deal for the first line
-                   if copy_line == copy_start_line then
-                       for pos=1,#line_no_colors do
-                          startpos = pos
-                          if WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos)) > start_copying_x then
-                            start_copying_x = WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
-                            break
-                          end
-                       end
-                   end
-                   -- special deal for the last line
-                   if copy_line == copy_end_line then
-                       local found = false
-                       endpos = 0
-                       for pos=1,#line_no_colors do
-                          if WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos)) > end_copying_x then
-                            end_copying_x = WindowTextWidth(win, win_font, string.sub(line_no_colors,1,endpos))+TEXT_INSET
-                            found = true
-                            break
-                          end
-                          endpos = pos
-                       end
-                   end
-               end -- if should show highlight
-       
-               -- store selected area for later
-               copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
-               if copy_line ~= copy_end_line and copy_line ~= #lines and lines[copy_line+1][2] == true then
-                  -- only put a line break if the next line is from a different message
-                  copied_part = copied_part.."@w\n"
-               elseif copy_line == copy_end_line or copy_line == #lines then
-                  -- tack a white code on to the very end
-                  copied_part = copied_part.."@w"
+   if bit.band (flags, miniwin.hotspot_got_lh_mouse) ~= 0 then -- only on left mouse button
+      copied_text = ""
+      end_copying_x = WindowInfo(win, 17)-WindowInfo(win, 1)
+      end_copying_y = WindowInfo(win, 18)-WindowInfo(win, 2)
+      local ypos = end_copying_y
+      end_copying_x = math.max(TEXT_INSET,math.min(end_copying_x, WINDOW_WIDTH-SCROLL_BAR_WIDTH))
+      end_copying_y = math.max(TITLE_HEIGHT+1,math.min(end_copying_y, TITLE_HEIGHT-1+(line_height*(WINDOW_LINES-1))))
+      copy_end_windowline = math.floor((end_copying_y-TITLE_HEIGHT)/line_height)
+      copy_end_line = copy_end_windowline+lineStart
+      copy_start_line = temp_start_line
+      start_copying_x = temp_start_copying_x
+      if (copy_start_line > #lines) then
+         start_copying_x = WINDOW_WIDTH-SCROLL_BAR_WIDTH
+      end
+      
+      -- the user is selecting backwards, so reverse the start/end orders
+      if copy_end_line < temp_start_line then
+         local temp = copy_end_line
+         copy_end_line = copy_start_line
+         copy_start_line = temp
+         temp = end_copying_x
+         end_copying_x = start_copying_x
+         start_copying_x = temp
+      end -- if        
+      if copy_end_line == copy_start_line and end_copying_x < start_copying_x then
+         local temp = end_copying_x
+         end_copying_x = start_copying_x
+         start_copying_x = temp
+      end -- if
+      
+      for copy_line=copy_start_line,copy_end_line do
+         if (lines[copy_line] ~= nil) then
+            local startpos = 1
+            local endpos = 99999
+            if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
+               -- snap to character boundaries instead of selecting arbitrary pixel widths
+               local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), 1, 99999))
+               startpos = 1
+               endpos = #line_no_colors
+               -- special deal for the first line
+               if copy_line == copy_start_line then
+                  for pos=1,#line_no_colors do
+                     startpos = pos
+                     if WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos)) > start_copying_x then
+                        start_copying_x = WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos-1))+TEXT_INSET
+                        break
+                     end
+                  end
                end
-               copied_text = copied_text..(((copied_part ~= nil) and copied_part) or "")
-           end -- if valid line
-        end -- for
+               -- special deal for the last line
+               if copy_line == copy_end_line then
+                  local found = false
+                  endpos = 0
+                  for pos=1,#line_no_colors do
+                     if WindowTextWidth(win, win_font, string.sub(line_no_colors,1,pos)) > end_copying_x then
+                        end_copying_x = WindowTextWidth(win, win_font, string.sub(line_no_colors,1,endpos))+TEXT_INSET
+                        found = true
+                        break
+                     end
+                     endpos = pos
+                  end
+               end
+            end -- if should show highlight
+       
+            -- store selected area for later
+            copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
+            if copy_line ~= copy_end_line and copy_line ~= #lines and lines[copy_line+1][2] == true then
+               -- only put a line break if the next line is from a different message
+               copied_part = copied_part.."@w\n"
+            elseif copy_line == copy_end_line or copy_line == #lines then
+               -- tack a white code on to the very end
+               copied_part = copied_part.."@w"
+            end
+            copied_text = copied_text..(((copied_part ~= nil) and copied_part) or "")
+         end -- if valid line
+      end -- for
 
-        if ypos < TITLE_HEIGHT then
-           keepscrolling = "up"
-           scrollbar()
-        elseif ypos > WINDOW_HEIGHT then
-           keepscrolling = "down"
-           scrollbar()
-        else
-           keepscrolling = ""
-           writeLines()
-        end
-    end -- if left mouse button
+      if ypos < TITLE_HEIGHT then
+         keepscrolling = "up"
+         scrollbar()
+      elseif ypos > WINDOW_HEIGHT then
+         keepscrolling = "down"
+         scrollbar()
+      else
+         keepscrolling = ""
+         writeLines()
+      end
+   end -- if left mouse button
 end -- function TextareaMoveCallback
 
 function TextareaReleaseCallback(flags, hotspot_id)
-    copy_start_line = math.min(#lines, copy_start_line or 0)
-    copy_end_line = math.min(#lines, copy_end_line or 0)
+   copy_start_line = math.min(#lines, copy_start_line or 0)
+   copy_end_line = math.min(#lines, copy_end_line or 0)
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-        return true
-    end
-    return false
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   return false
 end
 
 
 function chat_echo (name, line, wildcards)
-    if wildcards [1] == false then
-        echo = not echo
-    elseif wildcards [1]:lower () == " on" then
-        echo = "1"
-    elseif wildcards [1]:lower () == " off" then
-        echo = "0"
-    end -- if
+   if wildcards [1] == false then
+      echo = not echo
+   elseif wildcards [1]:lower () == " on" then
+      echo = "1"
+   elseif wildcards [1]:lower () == " off" then
+      echo = "0"
+   end -- if
 
-    if echo == "1" then
-        ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
-    else
-        ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
-    end -- if
+   if echo == "1" then
+      ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
+   else
+      ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
+   end -- if
 end -- chat_echo
 
 function chat_show (name, line, wildcards)
@@ -1039,135 +1131,153 @@ function chat_hide (name, line, wildcards)
 end -- function chat_hide
 
 -- right click menu
-function right_click_menu ()
-    menustring ="!Copy Selected Without Colors|Copy Selected|Copy All|-|Change Font"
-    if echo == "1" then
-        menustring = (menustring.."|Turn Echo Off")
-    else
-        menustring = (menustring.."|Turn Echo On")
-    end --if
-    menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
-    result = WindowMenu (win,
-        WindowInfo (win, 14),  -- x position
-        WindowInfo (win, 15),   -- y position
-        menustring) -- content
-    if result ~= "" then
-        numResult = tonumber(result)
-        
-        if numResult == 1 then
-            if #copied_text > 0 then
-                local declored_text = strip_colours(copied_text)
-                SetClipboard(declored_text)
-                ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
-                ColourNote("yellow","",declored_text)
-                ColourNote("cyan","","^---------------------------------------------------------^")
-            end
-        elseif numResult == 2 then
-            if #copied_text > 0 then
-                SetClipboard(copied_text)
-                ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
-                ColourNote("yellow","",copied_text)
-                ColourNote("cyan","","^---------------------------------------------------------^")  
-            end
-        elseif numResult == 3 then
-            GetAllBufferedMessages()
-            ColourNote ("yellow", "", "All chat messages copied to clipboard.")
-        elseif numResult == 4 then
-            wanted_font = utils.fontpicker (FONT_NAME, FONT_SIZE) --font dialog
-            if wanted_font then
-                FONT_NAME = wanted_font.name
-                FONT_SIZE = wanted_font.size
-                SetVariable ("font_name", FONT_NAME)
-                SetVariable ("font_size", FONT_SIZE)
-                OnPluginInstall()
-            end
-        elseif numResult == 5 then
-            if echo == "1" then
-                echo = "0"
-                ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
-            else
-                echo = "1"
-                ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
-            end
-        elseif numResult == 6 then
-            timestamp = "0"
-            date_format = ""
-            ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
-        elseif numResult == 7 then
-            timestamp = "1"
-            date_format = "[%d %b %H:%M:%S] "
-            ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
-        elseif numResult == 8 then
-            timestamp = "1"
-            date_format = "[%d %b %I:%M:%S%p] "
-            ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
-        elseif numResult == 9 then
-            timestamp = "1"
-            date_format = "[%H:%M:%S] "
-            ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
-        elseif numResult == 10 then
-            timestamp = "1"
-            date_format = "[%I:%M:%S%p] "
-            ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
-        elseif numResult == 11 then
-            if info_on == 0 then
-                ColourNote ("yellow", "", "INFO capturing is now ENABLED.")
-            else
-                ColourNote ("yellow", "", "INFO capturing is now DISABLED.")
-            end
-            EnableTrigger("info", 0 == info_on)
-            EnableTrigger("raidinfo", 0 == info_on)
-            EnableTrigger("claninfo", 0 == info_on)
-            info_on = GetTriggerOption("info","enabled")
-        elseif numResult == 12 then
-            if global_quest_on == 0 then
-                ColourNote ("yellow", "", "Global Quest capturing is now ENABLED.")
-            else
-                ColourNote ("yellow", "", "Global Quest capturing is now DISABLED.")
-            end
-            EnableTrigger("global_quest", 0 == global_quest_on)
-            global_quest_on = GetTriggerOption("global_quest","enabled")
-        elseif numResult == 13 then
-            if remort_auction_on == 0 then
-                ColourNote ("yellow", "", "Remort Auction capturing is now ENABLED.")
-            else
-                ColourNote ("yellow", "", "Remort Auction capturing is now DISABLED.")
-            end
-            EnableTrigger("remort_auction", 0 == remort_auction_on)
-            remort_auction_on = GetTriggerOption("remort_auction","enabled")
-        elseif numResult == 14 then
-            if show_donations == 0 then
-                ColourNote ("yellow", "", "Clan donation capturing is now ENABLED.")
-            else
-                ColourNote ("yellow", "", "Clan donation capturing is now DISABLED.")
-            end
-            show_donations = (((0 == show_donations) and 1) or 0)
-            SetVariable("show_donations", show_donations)
-        elseif numResult == 15 then
-            if show_mobsay == 0 then
-                ColourNote ("yellow", "", "Mob speech capturing is now ENABLED.")
-            else
-                ColourNote ("yellow", "", "Mob speech capturing is now DISABLED.")
-            end
-            show_mobsay = (((0 == show_mobsay) and 1) or 0)
-            SetVariable("show_mobsay", show_mobsay)
-        elseif numResult == 16 then
-           log_to_file = (((0 == log_to_file) and 1) or 0)
-           SetVariable("log_to_file", log_to_file)
-        elseif numResult == 17 then
-            log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
-            SetVariable("log_colour_codes", log_colour_codes)
-        elseif numResult == 18 then
-            log_timestamps = (((0 == log_timestamps) and 1) or 0)
-            SetVariable("log_timestamps", log_timestamps)
-        elseif numResult == 19 then
-            CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-        elseif numResult == 20 then
-            CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-        end
-    end
+function right_click_menu (hotspot_id)
+   hotspots = {scroller=true, resize=true, down=true, up=true, textarea=true}
+   menustring ="!"
+   local hyperlink_skip = 0
+   if not hotspots[hotspot_id] then
+      hyperlink_skip = 2
+      menustring = menustring.."Go to URL: "..hyperlinks[hotspot_id].."|Copy URL to Clipboard|-|"
+   end
+   menustring = menustring.."Copy Selected Without Colors|Copy Selected|Copy All|-|Change Font"
+   if echo == "1" then
+      menustring = (menustring.."|Turn Echo Off")
+   else
+      menustring = (menustring.."|Turn Echo On")
+   end --if
+   menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
+   result = WindowMenu (win,
+      WindowInfo (win, 14),  -- x position
+      WindowInfo (win, 15),   -- y position
+      menustring) -- content
+   if result ~= "" then
+      numResult = tonumber(result)
+      if numResult == hyperlink_skip-1 then
+         if OpenBrowser(hyperlinks[hotspot_id]) ~= 0 then
+            SetClipboard(hyperlinks[hotspot_id])
+            ColourNote("yellow", "red", "MUSHclient encountered an error trying to open the selected URL. It has been copied to the clipboard instead.")
+            ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
+            ColourNote("yellow","",hyperlinks[hotspot_id])
+            ColourNote("cyan","","^---------------------------------------------------------^")         
+         end
+      elseif numResult == hyperlink_skip then
+         SetClipboard(hyperlinks[hotspot_id])
+         ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
+         ColourNote("yellow","",hyperlinks[hotspot_id])
+         ColourNote("cyan","","^---------------------------------------------------------^")         
+      elseif numResult == 1+hyperlink_skip then
+         if #copied_text > 0 then
+            local declored_text = strip_colours(copied_text)
+            SetClipboard(declored_text)
+            ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
+            ColourNote("yellow","",declored_text)
+            ColourNote("cyan","","^---------------------------------------------------------^")
+         end
+      elseif numResult == 2+hyperlink_skip then
+         if #copied_text > 0 then
+            SetClipboard(copied_text)
+            ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
+            ColourNote("yellow","",copied_text)
+            ColourNote("cyan","","^---------------------------------------------------------^")  
+         end
+      elseif numResult == 3+hyperlink_skip then
+         GetAllBufferedMessages()
+         ColourNote ("yellow", "", "All chat messages copied to clipboard.")
+      elseif numResult == 4+hyperlink_skip then
+         wanted_font = utils.fontpicker (FONT_NAME, FONT_SIZE) --font dialog
+         if wanted_font then
+            FONT_NAME = wanted_font.name
+            FONT_SIZE = wanted_font.size
+            SetVariable ("font_name", FONT_NAME)
+            SetVariable ("font_size", FONT_SIZE)
+            OnPluginInstall()
+         end
+      elseif numResult == 5+hyperlink_skip then
+         if echo == "1" then
+            echo = "0"
+            ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
+         else
+            echo = "1"
+            ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
+         end
+      elseif numResult == 6+hyperlink_skip then
+         timestamp = "0"
+         date_format = ""
+         ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
+      elseif numResult == 7+hyperlink_skip then
+         timestamp = "1"
+         date_format = "[%d %b %H:%M:%S] "
+         ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
+      elseif numResult == 8+hyperlink_skip then
+         timestamp = "1"
+         date_format = "[%d %b %I:%M:%S%p] "
+         ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
+      elseif numResult == 9+hyperlink_skip then
+         timestamp = "1"
+         date_format = "[%H:%M:%S] "
+         ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
+      elseif numResult == 10+hyperlink_skip then
+         timestamp = "1"
+         date_format = "[%I:%M:%S%p] "
+         ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
+      elseif numResult == 11+hyperlink_skip then
+         if info_on == 0 then
+            ColourNote ("yellow", "", "INFO capturing is now ENABLED.")
+         else
+            ColourNote ("yellow", "", "INFO capturing is now DISABLED.")
+         end
+         EnableTrigger("info", 0 == info_on)
+         EnableTrigger("raidinfo", 0 == info_on)
+         EnableTrigger("claninfo", 0 == info_on)
+         info_on = GetTriggerOption("info","enabled")
+      elseif numResult == 12+hyperlink_skip then
+         if global_quest_on == 0 then
+            ColourNote ("yellow", "", "Global Quest capturing is now ENABLED.")
+         else
+            ColourNote ("yellow", "", "Global Quest capturing is now DISABLED.")
+         end
+         EnableTrigger("global_quest", 0 == global_quest_on)
+         global_quest_on = GetTriggerOption("global_quest","enabled")
+      elseif numResult == 13+hyperlink_skip then
+         if remort_auction_on == 0 then
+            ColourNote ("yellow", "", "Remort Auction capturing is now ENABLED.")
+         else
+            ColourNote ("yellow", "", "Remort Auction capturing is now DISABLED.")
+         end
+         EnableTrigger("remort_auction", 0 == remort_auction_on)
+         remort_auction_on = GetTriggerOption("remort_auction","enabled")
+      elseif numResult == 14+hyperlink_skip then
+         if show_donations == 0 then
+            ColourNote ("yellow", "", "Clan donation capturing is now ENABLED.")
+         else
+            ColourNote ("yellow", "", "Clan donation capturing is now DISABLED.")
+         end
+         show_donations = (((0 == show_donations) and 1) or 0)
+         SetVariable("show_donations", show_donations)
+      elseif numResult == 15+hyperlink_skip then
+         if show_mobsay == 0 then
+            ColourNote ("yellow", "", "Mob speech capturing is now ENABLED.")
+         else
+            ColourNote ("yellow", "", "Mob speech capturing is now DISABLED.")
+         end
+         show_mobsay = (((0 == show_mobsay) and 1) or 0)
+         SetVariable("show_mobsay", show_mobsay)
+      elseif numResult == 16+hyperlink_skip then
+         log_to_file = (((0 == log_to_file) and 1) or 0)
+         SetVariable("log_to_file", log_to_file)
+      elseif numResult == 17+hyperlink_skip then
+         log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
+         SetVariable("log_colour_codes", log_colour_codes)
+      elseif numResult == 18+hyperlink_skip then
+         log_timestamps = (((0 == log_timestamps) and 1) or 0)
+         SetVariable("log_timestamps", log_timestamps)
+      elseif numResult == 19+hyperlink_skip then
+         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      elseif numResult == 20+hyperlink_skip then
+         CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+      end
+   end
 end -- right_click_menu
-
 
 ]]>
 </script>
