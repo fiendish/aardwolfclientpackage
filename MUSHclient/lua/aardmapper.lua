@@ -1608,8 +1608,8 @@ function add_resize_tag(firstTime)
    WindowLine(win, width-14, height-2, width-2, height-14, 0x696969, 0, 1)
    
    -- Hotspot for resizer.                                                              
-   local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?", true) - 5
-   local y = config.WINDOW.height - 2 - font_height
+   local x = width - 14
+   local y = height - 14
    if (firstTime == true) then  
       WindowAddHotspot(win, "resize",  
          x, y, 0, 0,   -- rectangle
