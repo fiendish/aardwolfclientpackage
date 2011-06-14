@@ -12,7 +12,14 @@
    requires="4.72"
    version="1.0"
 >
+<description trim="y">
+This plugin checks for new beta development updates from the google code repository.
+https://code.google.com/p/aardwolfclientpackage/downloads/list
 
+It runs an automatic check every time you start up MUSHclient (or reinstall the plugin).
+
+You can also run a manual check by typing:    package update check
+</description>
 </plugin>
 <!--  Script  -->
 
