@@ -1153,9 +1153,10 @@ function right_click_menu (hotspot_id)
    if result ~= "" then
       numResult = tonumber(result)
       if numResult == hyperlink_skip-1 then
-         if OpenBrowser(hyperlinks[hotspot_id]) ~= 0 then
+         local res = OpenBrowser(hyperlinks[hotspot_id])
+         if res ~= 0 then
             SetClipboard(hyperlinks[hotspot_id])
-            ColourNote("yellow", "red", "MUSHclient encountered an error trying to open the selected URL. It has been copied to the clipboard instead.")
+            ColourNote("yellow", "red", "MUSHclient may have encountered an error trying to open the selected URL. It has been copied to the clipboard.")
             ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
             ColourNote("yellow","",hyperlinks[hotspot_id])
             ColourNote("cyan","","^---------------------------------------------------------^")         
