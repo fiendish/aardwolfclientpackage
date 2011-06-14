@@ -56,18 +56,29 @@ function convertHTMLcodesToStandardText(str)
    return str
 end
 
+function browse(url)
+   local res = OpenBrowser(url)
+   if res ~= 0 then
+      SetClipboard(url)
+      ColourNote("yellow", "red", "MUSHclient may have encountered an error trying to open the selected URL. It has been copied to the clipboard.")
+      ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
+      ColourNote("yellow","",url)
+      ColourNote("cyan","","^---------------------------------------------------------^")
+   end
+end
+
 -- Shows an editbox dialog detailing the posted differences between
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
-      OpenBrowser(download_url)
+      browse(download_url)
    end
 end
 
 -- Something went wrong when trying to check for updates
 function errorMessage(msg)
    if utils.inputbox(msg,"ERROR: "..window_title,download_url,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
-      OpenBrowser(download_url)
+      browse(download_url)
    end
 end
 
