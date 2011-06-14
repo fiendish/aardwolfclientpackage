@@ -309,14 +309,14 @@ function draw_main_window()
       ColourNameToRGB ("darkgray"),    -- BorderColour, 
       2,  -- BorderWidth, 
       ColourNameToRGB ("darkslategray"),  -- OutsideFillColour, 
-      0) -- OutsideFillStyle (fine hatch)
+      miniwin.brush_solid) -- OutsideFillStyle
 
    -- Add a mini-window under main text area so background won't mess it up.
-   trwidth = GetInfo(274) - GetInfo(272)
-   trheight = GetInfo(275) - GetInfo(273)
+   trwidth = t_right - textrect_left
+   trheight = t_bottom - textrect_top
 
-   WindowCreate (bgwin, textrect_left - 3, textrect_top - 3, 
-      math.max(0, trwidth + 6), math.max(0, trheight + 6),
+   WindowCreate (bgwin, textrect_left - 5, textrect_top - 5, 
+      math.max(0, trwidth + 10), math.max(0, trheight + 10),
       12  , 3, 0x000000)
    WindowShow(bgwin, true)
 
