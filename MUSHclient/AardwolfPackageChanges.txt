@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1040 snapshot
+- bug fix: the gmcp mapper merged bigmap can now be resized so you don't have to enter an area to resize the miniwindow
+- misc change: the info bar will now be hidden by default
+- misc change: the background texture (behind all miniwindows) is now brighter
+- new feature: the input area will now resize automatically as needed
+- new feature: the chat capture window now has actionable hyperlinks for urls
+
 r1026 snapshot
 - new feature/bug fix: updated to MUSHclient 4.75
 - bug fix: main output position and size settings should save instantly now
