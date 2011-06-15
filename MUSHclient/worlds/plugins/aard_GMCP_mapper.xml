@@ -2545,7 +2545,9 @@ end
 
 function got_gmcp_room()
    local room_number = gmcpval("num")
-   if not(room_number) then return end -- no room number.got_gmcp_room
+   if not(room_number) then 
+      return
+   end
    current_room = room_number
    if current_room_is_cont ~= (gmcpval("coord.cont") == "1") then
       current_room_is_cont = (gmcpval("coord.cont") == "1")
@@ -2666,7 +2668,7 @@ function OnPluginBroadcast (msg, id, name, text)
       return
    end
    if id == "3e7dedbe37e44942dd46d264" then 
-      -- gmcphandler.
+      -- gmcphandler
       if (text == "room.info") then
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
          luastmt = "gmcpdata = " .. gmcparg
