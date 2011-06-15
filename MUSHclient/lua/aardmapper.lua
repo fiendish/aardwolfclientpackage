@@ -811,6 +811,12 @@ function draw (uid)
 
    current_area = room.area
    
+   -- update dimensions and position here because the bigmap might have changed them
+   windowinfo.window_left = WindowInfo(win, 1) or windowinfo.window_left
+   windowinfo.window_top = WindowInfo(win, 2) or windowinfo.window_top
+   config.WINDOW.width = WindowInfo(win, 3) or config.WINDOW.width
+   config.WINDOW.height = WindowInfo(win, 4) or config.WINDOW.height
+   
    WindowCreate (win, 
       windowinfo.window_left, 
       windowinfo.window_top, 
@@ -819,7 +825,7 @@ function draw (uid)
       windowinfo.window_mode,   -- top right
       windowinfo.window_flags,
       config.BACKGROUND_COLOUR.colour) 
-
+   
    -- Handle background texture.
    if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
       local iwidth = WindowImageInfo(win,room.textimage,2)
