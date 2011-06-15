@@ -272,17 +272,19 @@ end
 
 function NoMap()
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
-   local messages = {"To activate this continent map","walk onto the continent and type:","'bigmap update'"}
+   local messages = {"If this continent map doesn't activate","walk onto the continent and type:","'bigmap update'"}
    for i,v in ipairs(messages) do
       local messagewidth = WindowTextWidth (mapwin, font_id, v)
       WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
    end
-   -- DrawEdge rectangle
-   WindowRectOp (mapwin, 5, 0, 0, 0, 0, 10, 15)
+   draw_edge() -- add border
+   if use_gmcp_mapper == 1 then
+      add_resize_tag() -- add resizer
+   end
 end
 
 
-function DrawMap ()
+function DrawMap()
    if show_map == 1 then
       local startx = 4
       local starty = (font_height*2)+15
@@ -306,7 +308,6 @@ function DrawMap ()
          end
          WindowShow (mapwin, true)
       end
-      WindowDeleteAllHotspots (mapwin)
       movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
             
       local xdiff = (WindowInfo(mapwin,3)-10)-WindowImageInfo(mapwin,image_name,2)
@@ -358,12 +359,87 @@ function DrawMap ()
          0, -- brush colour
          miniwin.brush_null ) -- null brush
 
-      -- DrawEdge rectangle
-      WindowRectOp (mapwin, 5, 0, 0, 0, 0, 10, 15)
-
+      draw_edge() -- add border
+      if use_gmcp_mapper == 1 then
+         add_resize_tag() -- add resizer
+      end
       BroadcastPlugin (999, "repaint")
    end -- if
 end -- DrawMap
+
+function resize_mouse_down(flags, hotspot_id)
+   if (hotspot_id == "resize") then
+      startx, starty = WindowInfo(mapwin, 17), WindowInfo(mapwin, 18)
+   end
+end
+
+function resize_release_callback()
+   DrawMap()
+end
+
+function resize_move_callback()
+   local width  = WindowInfo(mapwin, 3)
+   local height = WindowInfo(mapwin, 4)   
+   local posx, posy = WindowInfo (mapwin, 17), WindowInfo (mapwin, 18)
+   
+   width = width + posx - startx
+   startx = posx
+   if (50 > width) then
+      width = 50
+      startx = windowinfo.window_left + width
+   elseif (windowinfo.window_left + width > GetInfo(281)) then
+      width = GetInfo(281) - windowinfo.window_left
+      startx = GetInfo(281)
+   end 
+   
+   height = height + posy - starty
+   starty = posy
+   if (50 > height) then
+      height = 50
+      starty = windowinfo.window_top + height
+   elseif (windowinfo.window_top + height > GetInfo(280)) then
+      height = GetInfo(280) - windowinfo.window_top
+      starty = GetInfo(280)
+   end
+
+   WindowResize(mapwin, width, height, 0x000000)
+   DrawMap()
+end
+
+function draw_edge()
+   -- draw edge frame.
+   check (WindowRectOp (mapwin, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
+   check (WindowRectOp (mapwin, 1, 1, 1, -1, -1, 0x777777, 15))
+end
+
+function add_resize_tag()
+   -- draw the resize widget bottom right corner.
+   local width  = WindowInfo(mapwin, 3)
+   local height = WindowInfo(mapwin, 4)
+   
+   WindowLine(mapwin, width-4, height-2, width-2, height-4, 0xffffff, 0, 2)
+   WindowLine(mapwin, width-5, height-2, width-2, height-5, 0x696969, 0, 1)
+   WindowLine(mapwin, width-7, height-2, width-2, height-7, 0xffffff, 0, 2)
+   WindowLine(mapwin, width-8, height-2, width-2, height-8, 0x696969, 0, 1)
+   WindowLine(mapwin, width-10, height-2, width-2, height-10, 0xffffff, 0, 2)
+   WindowLine(mapwin, width-11, height-2, width-2, height-11, 0x696969, 0, 1)
+   WindowLine(mapwin, width-13, height-2, width-2, height-13, 0xffffff, 0, 2)
+   WindowLine(mapwin, width-14, height-2, width-2, height-14, 0x696969, 0, 1)
+   
+   -- Hotspot for resizer
+   local x = width - 14
+   local y = height - 14
+   if (WindowHotspotInfo(mapwin, "resize", 1) == nil) then
+      WindowAddHotspot(mapwin, "resize",  
+         x, y, 0, 0,   -- rectangle
+         "", "", "resize_mouse_down", "", "",
+         "Drag to resize",
+         6, 0)  -- hand cursor
+      WindowDragHandler(mapwin, "resize", "resize_move_callback", "resize_release_callback", 0)
+   else
+      WindowMoveHotspot(mapwin, "resize", x, y,  0,  0)
+   end
+end -- draw resize tag
 
 
 function table.contains(table, element)
@@ -376,7 +452,7 @@ function table.contains(table, element)
 end
 
 
-function updatelocation ()
+function updatelocation()
    -- changed continent?
    if (old_zone ~= zone) or (in_continent ~= (tonumber(oncont) == 1)) then
 
@@ -397,7 +473,8 @@ function updatelocation ()
       if zone and ((WindowImageList(mapwin) == nil) or (table.contains(WindowImageList(mapwin),"bigmap_continent_"..zone) == false)) then
          ConstructMap()
       end
-      DrawMap ()
+      WindowDeleteAllHotspots(mapwin)
+      DrawMap()
    else
       NoMap()
    end -- if
@@ -446,7 +523,8 @@ function map_redirect (name, line, wildcards, styles)
          ColourNote ("yellow", "", string.format("BIGMAP INFO: Constructed new continent bigmap for %s.", continent))
       end -- we know the continent
       if in_continent then
-         DrawMap ()
+         WindowDeleteAllHotspots (mapwin)
+         DrawMap()
       end
    else
       table.insert (map, styles)
