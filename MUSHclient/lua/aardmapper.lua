@@ -970,7 +970,7 @@ function draw (uid)
    --draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
    draw_edge()
    
-   add_resize_tag(true)
+   add_resize_tag()
 
    -- make sure window visible
    WindowShow (win, not hidden)
@@ -1076,7 +1076,7 @@ function init (t)
    end -- for
 
    draw_edge()
-   add_resize_tag(true)
+   add_resize_tag()
    
    WindowShow (win, true)
    WindowShow (config_win, false)
@@ -1587,13 +1587,13 @@ function resize_move_callback()
 
    WindowResize(win,config.WINDOW.width,config.WINDOW.height,config.BACKGROUND_COLOUR.colour)
    draw_edge()
-   add_resize_tag(false)
+   add_resize_tag()
 
    WindowShow(win,true)
 end
 
 
-function add_resize_tag(firstTime)
+function add_resize_tag()
    -- draw the resize widget bottom right corner.
    local width  = config.WINDOW.width
    local height = config.WINDOW.height
@@ -1610,7 +1610,7 @@ function add_resize_tag(firstTime)
    -- Hotspot for resizer.                                                              
    local x = width - 14
    local y = height - 14
-   if (firstTime == true) then  
+   if (WindowHotspotInfo(win, "resize", 1) == nil) then
       WindowAddHotspot(win, "resize",  
          x, y, 0, 0,   -- rectangle
          "", "", "mapper.resize_mouse_down", "", "",
