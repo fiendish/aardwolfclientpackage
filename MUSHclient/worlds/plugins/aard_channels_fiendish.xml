@@ -1135,7 +1135,7 @@ function right_click_menu (hotspot_id)
    hotspots = {scroller=true, resize=true, down=true, up=true, textarea=true}
    menustring ="!"
    local hyperlink_skip = 0
-   if not hotspots[hotspot_id] then
+   if (WindowInfo(win, 15) > TITLE_HEIGHT) and not hotspots[hotspot_id] then
       hyperlink_skip = 2
       menustring = menustring.."Go to URL: "..hyperlinks[hotspot_id].."|Copy URL to Clipboard|-|"
    end
