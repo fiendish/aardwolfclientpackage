@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+    name="Tetris"
+    author="Fiendish"
+    id="db6e9ed958c05658b5d7d5ea"
+    language="Lua"
+    purpose="Play a game of Tetris"
+    date_written="2011-06-15 15:35:02"
+    requires="4.75"
+    version="1.0"
+    save_state="n"
+    >
+
+<description trim="y">
+Play a game of Tetris while you wait!
+</description>
+</plugin>
+<script>
+<![CDATA[
+
+require "movewindow"
+require "wait"
+
+local piece_set = { -- coordinates are y,x where x must be multiples of 2
+   {{{0,2},{0,4},{1,2},{1,4}}}, --- square
+   {{{0,0},{0,2},{0,4},{0,6}},{{0,2},{1,2},{2,2},{3,2}}}, --- line
+   {{{0,2},{0,4},{1,2},{2,2}},{{0,0},{0,2},{0,4},{1,4}},{{0,4},{1,4},{2,2},{2,4}},{{0,0},{1,0},{1,2},{1,4}}}, --- J
+   {{{0,2},{0,4},{1,4},{2,4}},{{0,4},{1,0},{1,2},{1,4}},{{0,2},{1,2},{2,2},{2,4}},{{0,0},{0,2},{0,4},{1,0}}}, --- L
+   {{{0,2},{0,4},{0,6},{1,4}},{{0,4},{1,2},{1,4},{2,4}},{{0,4},{1,2},{1,4},{1,6}},{{0,4},{1,4},{1,6},{2,4}}}, --- T
+   {{{0,2},{0,4},{1,4},{1,6}},{{0,4},{1,2},{1,4},{2,2}}}, --- left S
+   {{{0,2},{0,4},{1,0},{1,2}},{{0,2},{1,2},{1,4},{2,4}}} --- right S
+}
+ 
+local game_board = {}
+game_over = false
+HEIGHT = 20
+WIDTH = 20 --- must be a multiple of 2
+score = 0
+total_lines = 0
+GAP = 10
+RESIZE_TAG_SIZE = 10
+ 
+--- Initialize the board
+function init_board()
+   tick = 1
+   for j=1,HEIGHT do             --- for each row
+      game_board[j] = {}         --- make a new row
+      for i=1,WIDTH do            --- build the row
+         game_board[j][i] = " "
+      end
+   end
+end
+
+function OnPluginClose()
+   -- reset all temporary accelerators
+   AcceleratorTo("Ctrl+Left", leftAcc or "", sendto.script)
+   AcceleratorTo("Ctrl+Right", rightAcc or "", sendto.script)
+   AcceleratorTo("Ctrl+Up", upAcc or "", sendto.script)
+   AcceleratorTo("Ctrl+Down", downAcc or "", sendto.script)
+end
+
+function do_command(command)
+   if not game_over then
+      if command == 'left' or command == 'right' then
+         slide_piece(command)
+      elseif command == 'rotate' then
+         rotate_piece()
+      elseif command == 'drop' then
+         lower_piece()
+      end
+   end
+end
+
+function OnPluginEnable()
+   OnPluginInstall()
+end
+
+function OnPluginDisable()
+   OnPluginClose()
+end
+
+function OnPluginClose()
+   game_over = true
+   WindowShow(win, false)
+end
+
+win = GetPluginID()
+function OnPluginInstall()
+   -- set up temporary key accelerators
+   acc_list = AcceleratorList()
+   leftAcc = acc_list["Ctrl+Left"]
+   rightAcc = acc_list["Ctrl+Right"]
+   upAcc = acc_list["Ctrl+Up"]
+   downAcc = acc_list["Ctrl+Down"]
+   AcceleratorTo("Ctrl+Left", "CallPlugin('db6e9ed958c05658b5d7d5ea', 'do_command', 'left')", sendto.script)
+   AcceleratorTo("Ctrl+Right", "CallPlugin('db6e9ed958c05658b5d7d5ea', 'do_command', 'right')", sendto.script)
+   AcceleratorTo("Ctrl+Up", "CallPlugin('db6e9ed958c05658b5d7d5ea', 'do_command', 'rotate')", sendto.script)
+   AcceleratorTo("Ctrl+Down", "CallPlugin('db6e9ed958c05658b5d7d5ea', 'do_command', 'drop')", sendto.script)
+   
+   -- make window so I can grab the font info
+   WindowCreate (win, 1, 1, 0, 0, 0, 0, 0x000000) 
+
+   font_id        = "mapper_font"
+   font_id_bold   = "mapper_bold"
+
+   local fonts = utils.getfontfamilies ()
+
+   -- if not there already, add it
+   if not fonts.Dina then
+      AddFont (GetInfo (66) .. "\\Dina.fon")
+      fonts = utils.getfontfamilies ()
+   end -- if Dina not installed
+
+   if fonts["Dina"] then
+      default_font_size = 8
+      default_font_name = "Dina"
+   elseif fonts ["Courier"] then
+      default_font_size = 9
+      default_font_name = "Courier"    -- the actual font
+   else
+      default_font_size = 9
+      default_font_name = "Lucida Console"
+   end -- if
+
+   font_name        = GetVariable("font_name") or default_font_name
+   font_size        = tonumber(GetVariable("font_size")) or default_font_size
+
+   --- Load the fonts into the temp window.
+   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
+   WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false) -- bold font
+
+   --- Grab font size settings.
+   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
+   font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
+   line_height = font_height + 1
+
+   --- install the window movement handler, get back the window position.
+   windowinfo  = movewindow.install (win, miniwin.pos_center_all, 0, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+   
+   -- initialize game board
+   init_board()
+   
+   -- Draw the initial map window
+   SetUpHotspotsAndDraw()
+   
+   Note("")
+   Note("+------------------------------------+")
+   Note("|    Welcome to Miniwindow Tetris    |")
+   Note("+------------------------------------+")
+   Note("|  Controls are as follows:          |")
+   Note("|    Ctrl+Left    -    Move Left     |")
+   Note("|    Ctrl+Right   -    Move Right    |")
+   Note("|    Ctrl+Up      -    Rotate        |")
+   Note("|    Ctrl+Down    -    Drop Faster   |")
+   Note("+------------------------------------+")
+   Note("")
+   
+   main_loop()
+end
+
+function main_loop()
+   math.randomseed(os.time())
+   -- main loop
+   wait.make(
+      function()
+         new_piece()
+         while not game_over do
+            draw()
+            lower_piece()
+            wait.time(tick)
+         end
+         game_over_screen()
+      end
+   )
+end
+
+function MouseUp(flags, hotspot_id)
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+end
+
+function game_over_screen()
+   local text_width = WindowTextWidth(win, font_id, "GAME OVER")
+   WindowRectOp(win, 2, (width-text_width)/2 - GAP, (height-line_height)/2 - GAP, (width+text_width)/2 + GAP, (height+line_height)/2 + GAP, 0x000000) -- blank
+   WindowRectOp(win, 1, (width-text_width)/2 - GAP, (height-line_height)/2- GAP, (width+text_width)/2 + GAP, (height+line_height)/2 + GAP, 0x555555, 15)
+   WindowText(win, font_id, "GAME OVER", (width-text_width)/2, (height-line_height)/2, 0,0, 0xFFFFFF, false)
+   Redraw()
+end
+
+function SetUpHotspotsAndDraw()
+   width = font_width*(WIDTH+2) + 2*GAP
+   height = line_height*(HEIGHT+2) + 2*GAP
+   check (WindowCreate (win, 
+      windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
+      width,  -- width
+      height, -- height
+      windowinfo.window_mode,  -- auto-position: middle right
+      windowinfo.window_flags, -- flags
+      0x000000) 
+   )
+
+   -- Add the drag handler so they can move the window around
+   movewindow.add_drag_handler (win, 0, 0, 0, 0)
+   WindowSetZOrder(win, 999999);
+   draw()
+end
+
+function draw()
+   WindowRectOp(win, 2, 0, 0, 0, 0, 0x000000) -- blank
+   WindowRectOp (win, 1, 0, 0, 0, 0, 0x555555, 15) -- border
+   
+   local output_block = {}
+   table.insert(output_block, "Score: "..score.." - Lines: "..total_lines.."")
+   table.insert(output_block, "+--------------------+")
+   for j=1,HEIGHT do
+      line = "|"
+      for i=1,WIDTH do
+         line = line..game_board[j][i]
+      end
+      line = line.."|"
+      table.insert(output_block, line)
+   end
+   table.insert(output_block,"+--------------------+")
+   
+   for i,v in ipairs(output_block) do
+      WindowText(win, font_id, v, GAP, GAP + ((i-1)*line_height), width, height, 0xFFFFFF, false)
+   end
+   WindowShow(win, true)
+end
+ 
+function new_piece()
+   x_loc = 7
+   y_loc = 1
+   piece_index = math.random(7)
+   current_piece = piece_set[piece_index][1]
+   rotation_index = 1 
+   current_piece = {
+      {current_piece[1][1]+y_loc,current_piece[1][2]+x_loc},
+      {current_piece[2][1]+y_loc,current_piece[2][2]+x_loc},
+      {current_piece[3][1]+y_loc,current_piece[3][2]+x_loc},
+      {current_piece[4][1]+y_loc,current_piece[4][2]+x_loc},
+   }
+   for a=1,4 do
+      if (game_board[current_piece[a][1]][current_piece[a][2]] ~= " ") then
+         game_over = true
+         break
+      end
+      game_board[current_piece[a][1]][current_piece[a][2]] = "\["
+      game_board[current_piece[a][1]][current_piece[a][2]+1] = "\]"
+   end
+end
+ 
+function rotate_piece()
+   local temp_rotation
+   if (rotation_index == #piece_set[piece_index]) then
+      temp_rotation = 1
+   else
+      temp_rotation = rotation_index+1
+   end
+   for a=1,4 do
+      if game_board[current_piece[a][1]] and game_board[current_piece[a][1]][current_piece[a][2]] and game_board[current_piece[a][1]][current_piece[a][2]+1] then
+         game_board[current_piece[a][1]][current_piece[a][2]] = " "
+         game_board[current_piece[a][1]][current_piece[a][2]+1] = " "
+      end
+   end
+   local rotation_ok = true
+   for a=1,4 do
+      if (game_board[piece_set[piece_index][temp_rotation][a][1]+y_loc] == nil or game_board[piece_set[piece_index][temp_rotation][a][1]+y_loc][piece_set[piece_index][temp_rotation][a][2]+x_loc] ~= " ") then
+         rotation_ok = false
+         break
+      end      
+   end
+   if (rotation_ok) then
+      rotation_index = temp_rotation
+      current_piece = piece_set[piece_index][rotation_index]
+      current_piece = {
+         {current_piece[1][1]+y_loc,current_piece[1][2]+x_loc},
+         {current_piece[2][1]+y_loc,current_piece[2][2]+x_loc},
+         {current_piece[3][1]+y_loc,current_piece[3][2]+x_loc},
+         {current_piece[4][1]+y_loc,current_piece[4][2]+x_loc},
+      }
+   end
+   for a=1,4 do
+      game_board[current_piece[a][1]][current_piece[a][2]] = "\["
+      game_board[current_piece[a][1]][current_piece[a][2]+1] = "\]"
+   end
+   draw()
+   return rotation_ok
+end
+  
+function lower_piece()
+   local board_modified = true
+   for a=4,1,-1 do
+      if (current_piece[a][1]+1 <= HEIGHT and game_board[current_piece[a][1]+1][current_piece[a][2]] == " ") then 
+         game_board[current_piece[a][1]][current_piece[a][2]] = " "
+      else
+         board_modified = false
+         break
+      end
+   end
+   if (board_modified) then
+      y_loc = y_loc+1
+      for a=4,1,-1 do
+         game_board[current_piece[a][1]][current_piece[a][2]+1] = " "
+         game_board[current_piece[a][1]+1][current_piece[a][2]] = "\["
+         game_board[current_piece[a][1]+1][current_piece[a][2]+1] = "\]"
+         current_piece[a][1] = current_piece[a][1]+1
+      end
+   else
+      for a=4,1,-1 do
+         game_board[current_piece[a][1]][current_piece[a][2]] = "\["
+      end
+   end
+   if not board_modified then
+      check_for_full_lines()
+      draw()
+      new_piece()
+   end
+   draw()
+end
+ 
+function check_for_full_lines()
+   local temp_score = 1
+   for j=2,HEIGHT do
+      line_complete = true
+      for i=1,WIDTH do
+         if (game_board[j][i] == " ") then
+            line_complete = false
+            break
+         end
+      end
+      if (line_complete) then
+         total_lines = total_lines + 1
+         temp_score = temp_score * 3
+         table.remove(game_board,j)
+         table.insert(game_board,1,{})
+         for i=1,WIDTH do
+            game_board[1][i] = " "
+         end
+      end
+   end
+   if (temp_score > 1) then 
+      score = score + temp_score
+      tick = math.max(0.1,1-((total_lines/5)*.1))
+   end
+end
+
+function right_click_menu()
+   result = WindowMenu (win,
+      WindowInfo (win, 14),  -- x position
+      WindowInfo (win, 15),   -- y position
+      "New Game|-|Quit") -- content
+   if result == "New Game" then
+      init_board()
+      if game_over then
+         game_over = false
+         main_loop()
+      else
+         new_piece()
+      end
+   elseif result == "Quit" then
+      game_over = true
+   end
+end
+ 
+function slide_piece(direction)
+   local board_modified = true
+   local slidebegin, slideend, slidestep
+   if (direction == "left") then
+      slidebegin, slideend, slidestep = 1,4,1
+   else --- "right"
+      slidebegin, slideend, slidestep = 4,1,-1
+   end
+   local new_x
+   for a=slidebegin,slideend,slidestep do
+      new_x = current_piece[a][2]-(2*slidestep)
+      if (new_x < WIDTH and new_x > 0 and game_board[current_piece[a][1]][new_x] == " ") then 
+         game_board[current_piece[a][1]][current_piece[a][2]] = " "
+      else
+         board_modified = false
+         break
+      end
+   end
+   if (board_modified) then
+      x_loc = x_loc-(2*slidestep)
+      for a=slidebegin,slideend,slidestep do
+         new_x = current_piece[a][2]-(2*slidestep)
+         game_board[current_piece[a][1]][current_piece[a][2]+1] = " "
+         game_board[current_piece[a][1]][new_x] = "\["
+         game_board[current_piece[a][1]][new_x+1] = "\]"
+         current_piece[a][2] = new_x
+      end
+   else
+      for a=4,1,-1 do
+         game_board[current_piece[a][1]][current_piece[a][2]] = "\["
+      end
+   end
+   draw()
+   return board_modified
+end
+
+]]>
+</script>
+</muclient>
