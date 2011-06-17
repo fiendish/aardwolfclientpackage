@@ -55,11 +55,13 @@ function init_board()
 end
 
 function OnPluginClose()
+   game_over = true
+   WindowShow(win, false)
    -- reset all temporary accelerators
-   AcceleratorTo("Ctrl+Left", leftAcc or "", sendto.script)
-   AcceleratorTo("Ctrl+Right", rightAcc or "", sendto.script)
-   AcceleratorTo("Ctrl+Up", upAcc or "", sendto.script)
-   AcceleratorTo("Ctrl+Down", downAcc or "", sendto.script)
+   AcceleratorTo("Ctrl+Left", leftAcc[1] or "", leftAcc[2] or 0)
+   AcceleratorTo("Ctrl+Right", rightAcc[1] or "", rightAcc[2] or 0)
+   AcceleratorTo("Ctrl+Up", upAcc[1] or "", upAcc[2] or 0)
+   AcceleratorTo("Ctrl+Down", downAcc[1] or "", downAcc[2] or 0)
 end
 
 function do_command(command)
@@ -82,19 +84,35 @@ function OnPluginDisable()
    OnPluginClose()
 end
 
-function OnPluginClose()
-   game_over = true
-   WindowShow(win, false)
-end
-
 win = GetPluginID()
 function OnPluginInstall()
    -- set up temporary key accelerators
-   acc_list = AcceleratorList() or {}
-   leftAcc = acc_list["Ctrl+Left"]
-   rightAcc = acc_list["Ctrl+Right"]
-   upAcc = acc_list["Ctrl+Up"]
-   downAcc = acc_list["Ctrl+Down"]
+   accels = AcceleratorList()
+   leftAcc = {}
+   rightAcc = {}
+   upAcc = {}
+   downAcc = {}
+   if accels then
+      for _, v in ipairs (accels) do
+         local keystroke, what, where = string.match (v, "^(%S+) = (.*)%[(%d+)%]$")
+         if where then
+            where = tonumber (where)
+         else
+            keystroke, what = string.match (v, "^(%S+) = (.*)$")
+            where = sendto.execute
+         end -- if
+         if keystroke == "Ctrl+Left" then
+            leftAcc = {what, where}
+         elseif keystroke == "Ctrl+Right" then
+            rightAcc = {what, where}
+         elseif keystroke == "Ctrl+Up" then
+            upAcc = {what, where}
+         elseif keystroke == "Ctrl+Down" then
+            downAcc = {what, where}
+         end
+      end -- for
+   end -- if
+
    AcceleratorTo("Ctrl+Left", "CallPlugin('db6e9ed958c05658b5d7d5ea', 'do_command', 'left')", sendto.script)
    AcceleratorTo("Ctrl+Right", "CallPlugin('db6e9ed958c05658b5d7d5ea', 'do_command', 'right')", sendto.script)
    AcceleratorTo("Ctrl+Up", "CallPlugin('db6e9ed958c05658b5d7d5ea', 'do_command', 'rotate')", sendto.script)
