@@ -54,16 +54,6 @@ function init_board()
    end
 end
 
-function OnPluginClose()
-   game_over = true
-   WindowShow(win, false)
-   -- reset all temporary accelerators
-   AcceleratorTo("Ctrl+Left", leftAcc[1] or "", leftAcc[2] or 0)
-   AcceleratorTo("Ctrl+Right", rightAcc[1] or "", rightAcc[2] or 0)
-   AcceleratorTo("Ctrl+Up", upAcc[1] or "", upAcc[2] or 0)
-   AcceleratorTo("Ctrl+Down", downAcc[1] or "", downAcc[2] or 0)
-end
-
 function do_command(command)
    if not game_over then
       if command == 'left' or command == 'right' then
@@ -84,6 +74,16 @@ function OnPluginDisable()
    OnPluginClose()
 end
 
+function OnPluginClose()
+   game_over = true
+   WindowShow(win, false)
+   -- reset all temporary accelerators
+   AcceleratorTo("Ctrl+Left", leftAcc[1] or "", leftAcc[2] or 0)
+   AcceleratorTo("Ctrl+Right", rightAcc[1] or "", rightAcc[2] or 0)
+   AcceleratorTo("Ctrl+Up", upAcc[1] or "", upAcc[2] or 0)
+   AcceleratorTo("Ctrl+Down", downAcc[1] or "", downAcc[2] or 0)
+end
+
 win = GetPluginID()
 function OnPluginInstall()
    -- set up temporary key accelerators
@@ -93,10 +93,10 @@ function OnPluginInstall()
    upAcc = {}
    downAcc = {}
    if accels then
-      for _, v in ipairs (accels) do
-         local keystroke, what, where = string.match (v, "^(%S+) = (.*)%[(%d+)%]$")
+      for _, v in ipairs(accels) do
+         local keystroke, what, where = string.match(v, "^(%S+) = (.*)%[(%d+)%]$")
          if where then
-            where = tonumber (where)
+            where = tonumber(where)
          else
             keystroke, what = string.match (v, "^(%S+) = (.*)$")
             where = sendto.execute
