@@ -90,7 +90,7 @@ end
 win = GetPluginID()
 function OnPluginInstall()
    -- set up temporary key accelerators
-   acc_list = AcceleratorList()
+   acc_list = AcceleratorList() or {}
    leftAcc = acc_list["Ctrl+Left"]
    rightAcc = acc_list["Ctrl+Right"]
    upAcc = acc_list["Ctrl+Up"]
