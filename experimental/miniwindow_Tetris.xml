@@ -77,6 +77,7 @@ end
 function OnPluginClose()
    game_over = true
    WindowShow(win, false)
+   StopSound(7)
    -- reset all temporary accelerators
    AcceleratorTo("Ctrl+Left", leftAcc[1] or "", leftAcc[2] or 0)
    AcceleratorTo("Ctrl+Right", rightAcc[1] or "", rightAcc[2] or 0)
@@ -180,6 +181,7 @@ function OnPluginInstall()
 end
 
 function main_loop()
+   PlaySound(7, GetPluginInfo("db6e9ed958c05658b5d7d5ea", 20).."Tetris_theme.wav", true, 0, 0)
    math.randomseed(os.time())
    -- main loop
    wait.make(
@@ -202,6 +204,7 @@ function MouseUp(flags, hotspot_id)
 end
 
 function game_over_screen()
+   StopSound(7)
    local text_width = WindowTextWidth(win, font_id, "GAME OVER")
    WindowRectOp(win, 2, (width-text_width)/2 - GAP, (height-line_height)/2 - GAP, (width+text_width)/2 + GAP, (height+line_height)/2 + GAP, 0x000000) -- blank
    WindowRectOp(win, 1, (width-text_width)/2 - GAP, (height-line_height)/2- GAP, (width+text_width)/2 + GAP, (height+line_height)/2 + GAP, 0x555555, 15)
