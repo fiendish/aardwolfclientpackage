@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1051 snapshot
+- bug fix: fix a bug in the URL hyperlink that causes an error when right-clicking the communication log title bar
+
 r1040 snapshot
 - bug fix: the gmcp mapper merged bigmap can now be resized so you don't have to enter an area to resize the miniwindow
 - misc change: the info bar will now be hidden by default
