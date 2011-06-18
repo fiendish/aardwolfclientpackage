@@ -885,6 +885,7 @@ function show_this_room (name, line, wildcards)
       Note("Name: "..(room.name or ""))
       Note("ID: "..(current_room or ""))
       Note("Area: "..(room.area or ""))
+      Note("Coords: x="..(room.x or "null").." y="..(room.y or "null"))
       Note("Terrain: "..(room.terrain or ""))
       Note("Info: "..(room.info or ""))
       Note("Notes: "..(room.notes or ""))
@@ -2569,14 +2570,19 @@ function got_gmcp_room()
 
    local exits = gmcpval("exits")
    local room = rooms [room_number]
- 
    -- not cached - see if in database
    if not room then
       room = load_room_from_database (room_number)
    end -- not in cache
-
+   
    -- re-save if we got information that is different than before  
-   if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or nilToStr(room.area) ~= nilToStr(gmcproom.area) or nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or nilToStr(room.info) ~= nilToStr(gmcproom.info) or compareTables(gmcpdata.exits, room.exits)==false then
+   if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or 
+                  nilToStr(room.area) ~= nilToStr(gmcproom.area) or 
+                  nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or 
+                  nilToStr(room.info) ~= nilToStr(gmcproom.info) or
+                  nilToStr(room.x) ~= nilToStr(gmcproom.x) or
+                  nilToStr(room.y) ~= nilToStr(gmcproom.y) or 
+                  compareTables(gmcpdata.exits, room.exits)==false then
       db:exec ("BEGIN TRANSACTION;")
       room = gmcproom
       dirty_rooms[room_number] = room
