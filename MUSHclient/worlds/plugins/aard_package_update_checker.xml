@@ -89,8 +89,13 @@ function errorMessage(msg)
    end
 end
 
-function OnPluginInstall()
-   DoAfterSpecial(10,"main()",sendto.script)
+loaded = false
+function OnPluginListChanged()
+   if not loaded then
+      -- only fire on start after loading all plugins
+      loaded = true
+      DoAfterSpecial(10,"main()",sendto.script)
+   end
 end
 
 function manualCheck()
