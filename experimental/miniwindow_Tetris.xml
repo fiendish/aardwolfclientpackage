@@ -9,7 +9,7 @@
     language="Lua"
     purpose="Play a game of Tetris"
     date_written="2011-06-15 15:35:02"
-    requires="4.70"
+    requires="4.73"
     version="1.0"
     save_state="n"
     >
