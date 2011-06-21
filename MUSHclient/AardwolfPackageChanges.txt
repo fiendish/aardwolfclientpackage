@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1062 snapshot
+- bug fix: getting room info about a missing area should re-create that area entry in the gmcp mapper. This should fix some purgezone problems.
+- bug fix: single letter standard exits (n, e, s, w, u, d) can now be used as gmcp mapper cexits
+- bug fix: timestamps in the communication log window weren't always showing up
+
 r1054 snapshot
 - bug fix: re-save room in gmcp mapper if coordinate changes
 - misc change: don't start the update check timer until after all plugins are loaded
