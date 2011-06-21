@@ -1127,6 +1127,14 @@ end -- map_portal_list
 -- custom_exit function contributed by Spartacus
 function custom_exit (name, line, wildcards)
 
+   local remap = {
+      n = "north",
+      w = "west",
+      s = "south",
+      e = "east",
+      u = "up",
+      d = "down"
+   }
    local cexit_command = wildcards [1] or ""
    local cexit_start
   
@@ -1134,7 +1142,13 @@ function custom_exit (name, line, wildcards)
       world.Note("Nothing to do!")
       return
    end -- if cexit_command
-  
+   
+   -- the current system makes standard letter exit (n,e,s,w,d,u) cexits not usable, so remap them
+   -- to their long word forms
+   if remap[cexit_command] then
+      cexit_command = remap[cexit_command]
+   end
+
    if current_room then
       cexit_start = current_room
    else
