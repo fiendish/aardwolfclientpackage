@@ -2582,6 +2582,14 @@ function got_gmcp_room()
       exits = {} 
       }
 
+   local area_exists = false
+   for n in db:nrows (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
+      area_exists = true
+   end
+   if not area_exists then
+      Send_GMCP_Packet("request area")
+   end
+   
    local exits = gmcpval("exits")
    local room = rooms [room_number]
    -- not cached - see if in database
