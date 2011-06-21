@@ -189,8 +189,7 @@ TITLE_HEIGHT = 20
 -- date_format = "[%H:%M:%S] "         -- [13:29:08]          time 24 hour
 -- date_format = "[%X] "               -- [1:22:06 PM]        time 12 hour
 
-timestamp = GetVariable("timestamp") or "1"
-echo = GetVariable("echo") or "1"
+echo = tonumber(GetVariable("echo")) or 1
 date_format = GetVariable("date_format") or "[%d %b %H:%M:%S] "
 WINDOW_WIDTH = tonumber(GetVariable("WINDOW_WIDTH"))
 WINDOW_HEIGHT = tonumber(GetVariable("WINDOW_HEIGHT"))
@@ -435,7 +434,6 @@ function OnPluginSaveState ()
    movewindow.save_state(win)
    -- save echo/timestamp status
    SetVariable("echo", echo)
-   SetVariable("timestamp", timestamp)
    SetVariable("date_format", date_format)
    SetVariable("WINDOW_WIDTH", WINDOW_WIDTH)
    SetVariable("WINDOW_HEIGHT", WINDOW_HEIGHT)
@@ -796,7 +794,7 @@ function stampAndStore(styles)
    local log_text = ""
     
    -- inject timestamp if wanted
-   if timestamp == "1" then
+   if date_format ~= "" then
       tstamp = os.date(date_format)
       timestyle = {}
       timestyle.text = tstamp
@@ -841,7 +839,7 @@ function echoStyles (styles)
 end
 
 function chats (name, line, wildcards, styles)
-   if (echo == "0") then
+   if (echo == 0) then
       EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
    end
    
@@ -849,7 +847,7 @@ function chats (name, line, wildcards, styles)
    -- Note: as tempting as it might seem to move this block down to OnPluginBroadcast,
    -- eliminating the need for stripping out the tag,
    -- keep in mind that gmcp broadcasts through notes and this doesn't.
-   if echo == "1" then
+   if echo == 1 then
       -- strip out the tag
       tag_length = string.find(styles[1].text,"}")
       styles[1].text = string.sub(styles[1].text, tag_length+1)
@@ -862,12 +860,12 @@ end -- chats
 
 function untagged_info (name, line, wildcards, styles)
    
-   if (echo == "0") then
+   if (echo == 0) then
       EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
    end
    
    -- echo in this world as well if the user wants
-   if echo == "1" then
+   if echo == 1 then
       echoStyles(styles)
    end -- echo wanted
    
@@ -1194,31 +1192,26 @@ function right_click_menu (hotspot_id)
             OnPluginInstall()
          end
       elseif numResult == 5+hyperlink_skip then
-         if echo == "1" then
-            echo = "0"
+         if echo == 1 then
+            echo = 0
             ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
          else
-            echo = "1"
+            echo = 1
             ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
          end
       elseif numResult == 6+hyperlink_skip then
-         timestamp = "0"
          date_format = ""
          ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
       elseif numResult == 7+hyperlink_skip then
-         timestamp = "1"
          date_format = "[%d %b %H:%M:%S] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
       elseif numResult == 8+hyperlink_skip then
-         timestamp = "1"
          date_format = "[%d %b %I:%M:%S%p] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
       elseif numResult == 9+hyperlink_skip then
-         timestamp = "1"
          date_format = "[%H:%M:%S] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
       elseif numResult == 10+hyperlink_skip then
-         timestamp = "1"
          date_format = "[%I:%M:%S%p] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
       elseif numResult == 11+hyperlink_skip then
