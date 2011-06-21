@@ -1106,12 +1106,12 @@ function chat_echo (name, line, wildcards)
    if wildcards [1] == false then
       echo = not echo
    elseif wildcards [1]:lower () == " on" then
-      echo = "1"
+      echo = 1
    elseif wildcards [1]:lower () == " off" then
-      echo = "0"
+      echo = 0
    end -- if
 
-   if echo == "1" then
+   if echo == 1 then
       ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
    else
       ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
@@ -1138,7 +1138,7 @@ function right_click_menu (hotspot_id)
       menustring = menustring.."Go to URL: "..hyperlinks[hotspot_id].."|Copy URL to Clipboard|-|"
    end
    menustring = menustring.."Copy Selected Without Colors|Copy Selected|Copy All|-|Change Font"
-   if echo == "1" then
+   if echo == 1 then
       menustring = (menustring.."|Turn Echo Off")
    else
       menustring = (menustring.."|Turn Echo On")
