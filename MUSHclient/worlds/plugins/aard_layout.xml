@@ -257,7 +257,7 @@ function add_main_resizer()
       -- Add another mini-window in bottom right corner for resizer tag.
       check (WindowCreate (textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 
          rstagsize, rstagsize,
-         12  , 2, 0x000000))
+         12  , 2, GetNormalColour(1)))
 
       -- draw the resize widget bottom right corner.
       WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, 0xffffff, 0, 2)
@@ -286,7 +286,7 @@ function add_title_dragger()
       -- Add another mini-window at top for dragging bar.
       dragsize = 10
 
-      check (WindowCreate (textDragger, GetInfo(272)-6, GetInfo(273)-6, GetInfo(274)-GetInfo(272)+11, dragsize, 12, 2, 0x000000))
+      check (WindowCreate (textDragger, GetInfo(272)-6, GetInfo(273)-6, GetInfo(274)-GetInfo(272)+11, dragsize, 12, 2, GetNormalColour(1)))
       
       WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
       WindowDragHandler(textDragger, "dragmain", "DragMainCallback", "DragReleaseMainCallback", 0)
@@ -317,7 +317,7 @@ function draw_main_window()
 
    WindowCreate (bgwin, textrect_left - 5, textrect_top - 5, 
       math.max(0, trwidth + 10), math.max(0, trheight + 10),
-      12  , 3, 0x000000)
+      12  , 3, GetNormalColour(1))
    WindowShow(bgwin, true)
 
    local dir = GetInfo(66)
