@@ -513,6 +513,7 @@ function writeLines ()
                hyperlinks[link_name] = v.text
                WindowAddHotspot(win, link_name, left, top, math.min(right, WINDOW_WIDTH-SCROLL_BAR_WIDTH-1), bottom, "MouseOverLink", "CancelMouseOverLink", "MouseDown", "CancelMouseDown", "MouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
                WindowDragHandler(win, link_name, "TextareaMoveCallback", "TextareaReleaseCallback", 0x10)
+               WindowScrollwheelHandler(win, link_name, "wheel_move")
             end
          end
          
