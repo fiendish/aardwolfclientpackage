@@ -647,7 +647,7 @@ end
 
 function add_line ( line, is_beginning_of_message, urls )
    -- add new line
-   table.insert(lines, {[1]=line, [2]=false, [3]=urls} )
+   table.insert(lines, {[1]=line, [2]=is_beginning_of_message, [3]=urls} )
    -- advance the count
    if #lines >= WINDOW_LINES then
       lineStart = lineStart + 1
