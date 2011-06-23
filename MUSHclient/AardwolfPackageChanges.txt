@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1065 snapshot
+- bug fix: wheelscrolling the communication log won't stop at hyperlinks anymore
+- bug fix: a regression in r930 broke newlines in copied text from the communication log
+
 r1062 snapshot
 - bug fix: getting room info about a missing area should re-create that area entry in the gmcp mapper. This should fix some purgezone problems.
 - bug fix: single letter standard exits (n, e, s, w, u, d) can now be used as gmcp mapper cexits
