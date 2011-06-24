@@ -666,7 +666,7 @@ local function draw_room (uid, path, x, y)
          -1, miniwin.brush_null)  -- opaque, no brush
       if room.notes ~= nil and room.notes ~= "" then
          WindowCircleOp (win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth, 
-            right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,config.MAPPER_NOTE_COLOUR.colour,
+            right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,config.ROOM_NOTE_COLOUR.colour,
             room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
       end
    end -- if 
