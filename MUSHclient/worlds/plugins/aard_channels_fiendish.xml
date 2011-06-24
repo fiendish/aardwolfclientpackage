@@ -287,10 +287,10 @@ function OnPluginInstall ()
       AddFont(GetInfo (66) .. "\\Dina.fon")
       fonts = utils.getfontfamilies()
    end -- if Dina not installed
-  
+
    header_font_name = "Lucida Console"
    header_font_size = 9
-
+      
    if fonts["Courier New"] then
       default_font_size = 9
       default_font_name = "Courier New"
@@ -634,7 +634,7 @@ function ScrollerMoveCallback(flags, hotspot_id)
       lineStart = math.max(1,#lines-WINDOW_LINES+2)
       lineEnd = #lines
    else
-      lineStart = math.floor((barPos-SCROLL_BAR_WIDTH-TITLE_HEIGHT)/(SCROLL_BAR_HEIGHT/totalSteps)+1)
+      lineStart = math.max(1,math.floor((barPos-SCROLL_BAR_WIDTH-TITLE_HEIGHT)/(SCROLL_BAR_HEIGHT/totalSteps)+1))
       lineEnd = math.min(lineStart + WINDOW_LINES-2, #lines)
    end
    drawStuff()
