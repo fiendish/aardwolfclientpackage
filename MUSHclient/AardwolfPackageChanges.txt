@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r1079 snapshot
+- bug fix: fix gmcp mapper note erasing problem (notes were not actually getting erased, it just looked that way)
+- bug fix: fix accidental re-saving of every mapper room
+- bug fix: the gmcp mapper will now use the right color for the note indicator
+- bug fix: some mapper background images were apparently missing from the repository
+- bug fix: it is now possible to change the main output background color (still need to remove or rename worlds/plugins/images/aardbg13.png). plugins that get ansi text from the MUD (i.e. the ascii map and communication log window) will also use the desired background color since changing the background also requires changing text colors
+- new feature: the health bars plugin now has options for percentage overlays
+
 r1065 snapshot
 - bug fix: wheelscrolling the communication log won't stop at hyperlinks anymore
 - bug fix: a regression in r930 broke newlines in copied text from the communication log
