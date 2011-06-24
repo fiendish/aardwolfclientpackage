@@ -200,7 +200,7 @@ show_donations = tonumber(GetVariable("show_donations")) or 1
 show_mobsay = tonumber(GetVariable("show_mobsay")) or 1
 
 -- colours
-WINDOW_BACKGROUND_COLOUR = 0x000000
+WINDOW_BACKGROUND_COLOUR = GetNormalColour(1)
 WINDOW_TEXT_COLOUR = 0xffffff
 SCROLL_BACKGROUND_COLOUR = 0xE8E8E8
 SCROLL_BAR_COLOUR = 0x111111
@@ -291,12 +291,14 @@ function OnPluginInstall ()
    header_font_name = "Lucida Console"
    header_font_size = 9
       
-   if fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   elseif fonts ["Dina"] then
+   if fonts["Dina"] then
       default_font_size = 8
-      default_font_name = "Dina"    -- the actual font
+      default_font_name = "Dina"
+      header_font_name = "Dina"
+      header_font_size = 8
+   elseif fonts ["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New" -- the actual font
    else
       default_font_size = 9
       default_font_name = "Lucida Console"
@@ -312,6 +314,7 @@ function OnPluginInstall ()
 
    font_height = WindowFontInfo(win, win_font, 1) -  WindowFontInfo(win, win_font, 4) + 1
    header_font_height = WindowFontInfo(win, win_head_font, 1) - WindowFontInfo(win, win_head_font, 4) + 1
+   TITLE_HEIGHT = header_font_height*1.8
    line_height = font_height+1
    font_width = WindowTextWidth(win, win_font, "W")
    
@@ -382,8 +385,8 @@ function init (firstTime)
     
    -- title rectangle
    header_width = WindowTextWidth(win, win_head_font, "Communication Log")
-   WindowGradient(win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, 0x111111, 0x333333, 2)
-   WindowText(win, win_head_font, "Communication Log", (WINDOW_WIDTH-header_width)/2, (TITLE_HEIGHT-header_font_height)/2, WINDOW_WIDTH, math.ceil((TITLE_HEIGHT+header_font_height)/2), 0xEEEEEE, false)     
+   WindowGradient(win, 1, 0, WINDOW_WIDTH, TITLE_HEIGHT, WINDOW_BACKGROUND_COLOUR, 0x444444, 2)
+   WindowText(win, win_head_font, "Communication Log", (WINDOW_WIDTH-header_width)/2, ((TITLE_HEIGHT-header_font_height)/2)-1, WINDOW_WIDTH, TITLE_HEIGHT, 0xEEEEEE, false)     
    WindowLine(win, 0, TITLE_HEIGHT-1, WINDOW_WIDTH, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
    
    -- resize tag    

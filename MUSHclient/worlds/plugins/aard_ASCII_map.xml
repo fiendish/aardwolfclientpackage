@@ -119,11 +119,11 @@ something -- wolf@aardwolf.com
 require "movewindow"
 require "mw"
 
-background_colour     = 0x000000
+background_colour     = GetNormalColour(1)
 title_colour          = 0x292929
 border_color          = 0xdddddd
-title_gradient_col1   = 0x151515
-title_gradient_col2   = 0x333333
+title_gradient_col1   = GetNormalColour(1)
+title_gradient_col2   = 0x444444
 default_width         = 250
 default_height        = 300
 map_lines = {}
@@ -550,7 +550,6 @@ end
 function OnPluginSaveState ()
    movewindow.save_state (win)   -- save window current location for next time  
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   SetVariable ("background_colour", background_colour)
    SetVariable ("title_colour", title_colour)  
    SetVariable ("width", width)
    SetVariable ("height", height)
@@ -590,7 +589,6 @@ end -- OnPluginListChanged
 
 function OnPluginInstall()
    --- Pull some state variables.
-   background_colour = tonumber (GetVariable ("background_colour")) or background_colour
    title_colour = tonumber (GetVariable ("title_colour")) or title_colour
    height = tonumber (GetVariable ("height")) or default_height
    width = tonumber (GetVariable ("width")) or default_width
