@@ -73,6 +73,45 @@ string.rpad = function(str, len, char)
    return str .. string.rep(char, len - #str)
 end
 
+function DoNextSimpleBar(bar, val, maxval)
+   txt = ""
+   if (showBar[bar][2] == true) then
+      if showLabels == 1 then
+         if stacked == 1 then
+            WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+         else
+            xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+         end
+      end
+
+      if tonumber(maxval) and tonumber(val) then
+         if overlay_numbers == 1 or overlay_numbers == 3 then
+            maxlen = math.max(#maxval, #val)
+            txt = string.lpad(val, maxlen, ' ').."/"..string.rpad(maxval,maxlen,' ')
+         end
+         if overlay_numbers == 2 or overlay_numbers == 3 then
+            txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(val)/tonumber(maxval)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
+         end
+      end
+
+      if graphicalMode == 1 then
+         gauge(win,showBar[bar][3],tonumber(val),tonumber(maxval),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+         if overlay_numbers ~= 0 then
+            txtlen = WindowTextWidth(win,font_id,txt)
+            outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+         end
+      else
+         xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..txt.."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+      end
+      
+      if stacked == 1 then
+         ypos = ypos + line_height + 1
+      else
+         xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+      end
+   end
+end
+
 function DisplayStatsPage()
 
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
@@ -84,14 +123,14 @@ function DisplayStatsPage()
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, false)
-   else 
-      -- Only draw bars if we have data.
+   else -- Only draw bars if we have data.
+
       local barTexts = ""
-      local ypos = TOP_MARGIN
-      local xpos = LEFT_MARGIN
-      local label_width = 0
-      local bar_width = 0
-      local num_ticks = 3
+      ypos = TOP_MARGIN
+      xpos = LEFT_MARGIN
+      label_width = 0
+      bar_width = 0
+      num_ticks = 3
       if overlay_numbers ~= 0 then
          num_ticks = 0
       end
@@ -115,121 +154,17 @@ function DisplayStatsPage()
             bar_width = math.max(1, (width-LEFT_MARGIN)/numBars-LEFT_MARGIN)
          end
       end
-      local bar = "Health"
-      if (showBar[bar][2] == true) then
-         if showLabels == 1 then
-            if stacked == 1 then
-               WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
-            else
-               xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
-            end
-         end
-         
-         local txt = ""
-         local hp = gmcpval("vitals.hp") or ""
-         local maxhp = gmcpval("maxstats.maxhp") or ""
-         if tonumber(maxhp) and tonumber(hp) then
-            if overlay_numbers == 1 or overlay_numbers == 3 then
-               maxlen = math.max(#maxhp, #hp)
-               txt = string.lpad(hp, maxlen, ' ').."/"..string.rpad(maxhp,maxlen,' ')
-            end
-            if overlay_numbers == 2 or overlay_numbers == 3 then
-               txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(gmcpval("vitals.hp"))/tonumber(gmcpval("maxstats.maxhp"))).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
-            end
-         end
+      
+      DoNextSimpleBar("Health", gmcpval("vitals.hp") or "", gmcpval("maxstats.maxhp") or "")
 
-         if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(hp),tonumber(maxhp),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-            if overlay_numbers ~= 0 then
-               txtlen = WindowTextWidth(win,font_id,txt)
-               outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-            end
-         else
-            xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..txt.."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-         end
-         if stacked == 1 then
-            ypos = ypos + line_height + 1
-         else
-            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-         end
-      end
-      bar = "Mana"
-      if (showBar[bar][2] == true) then
-         if showLabels == 1 then
-            if stacked == 1 then
-               WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
-            else
-               xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
-            end
-         end
-         
-         txt = ""
-         local mana = gmcpval("vitals.mana") or ""
-         local maxmana = gmcpval("maxstats.maxmana") or ""
-         if tonumber(maxmana) and tonumber(mana) then
-            if overlay_numbers == 1 or overlay_numbers == 3 then
-               maxlen = math.max(#maxmana, #mana)
-               txt = string.lpad(mana, maxlen, ' ').."/"..string.rpad(maxmana,maxlen,' ')
-            end
-            if overlay_numbers == 2 or overlay_numbers == 3 then
-               txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(mana)/tonumber(maxmana)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
-            end
-         end
-         
-         if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(mana),tonumber(maxmana),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-            if overlay_numbers ~= 0 then
-               txtlen = WindowTextWidth(win,font_id,txt)
-               outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-            end
-         else
-            xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..txt.."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-         end
-         if stacked == 1 then
-            ypos = ypos + line_height + 1
-         else
-            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-         end
-      end
-      bar = "Moves"
-      if (showBar[bar][2] == true) then
-         if showLabels == 1 then
-            if stacked == 1 then
-               WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
-            else
-               xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
-            end
-         end
+      DoNextSimpleBar("Mana", gmcpval("vitals.mana") or "", gmcpval("maxstats.maxmana") or "")
 
-         txt = ""
-         local moves = gmcpval("vitals.moves") or ""
-         local maxmoves = gmcpval("maxstats.maxmoves") or ""
-         if tonumber(maxmoves) and tonumber(moves) then
-            if overlay_numbers == 1 or overlay_numbers == 3 then
-               maxlen = math.max(#maxmoves, #moves)
-               txt = string.lpad(moves, maxlen, ' ').."/"..string.rpad(maxmoves,maxlen,' ')
-            end
-            if overlay_numbers == 2 or overlay_numbers == 3 then
-               txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(moves)/tonumber(maxmoves)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
-            end
-         end
-         
-         if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(moves),tonumber(maxmoves),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-            if overlay_numbers ~= 0 then
-               txtlen = WindowTextWidth(win,font_id,txt)
-               outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-            end
-         else
-            xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..txt.."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-         end
-         if stacked == 1 then
-            ypos = ypos + line_height + 1
-         else
-            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-         end
-      end
+      DoNextSimpleBar("Moves", gmcpval("vitals.moves") or "", gmcpval("maxstats.maxmoves") or "")
+
       bar = "TNL"
+      txt = ""
+      local tnl = gmcpval("status.tnl") or ""
+      local perlevel = gmcpval("base.perlevel") or ""
       if (showBar[bar][2] == true) then
          if showLabels == 1 then
             if stacked == 1 then
@@ -240,10 +175,6 @@ function DisplayStatsPage()
                xpos = xpos + WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][3]) or string.gsub(showBar[bar][3],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
             end
          end
-
-         txt = ""
-         local tnl = gmcpval("status.tnl") or ""
-         local perlevel = gmcpval("base.perlevel") or ""
 
          -- switch from "to next level" to "current level experience"
          if (reverseTNL == 0) then
@@ -295,6 +226,7 @@ function DisplayStatsPage()
             xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
          end
       end
+      
       bar = "Enemy"
       if (showBar[bar][2] == true) then
          fighting = gmcpval("status.enemy")
@@ -339,6 +271,7 @@ function DisplayStatsPage()
             xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
          end
       end
+      
       bar = "Align"
       if (showBar[bar][2] == true) then
          alignment = tonumber(gmcpval("status.align"))
