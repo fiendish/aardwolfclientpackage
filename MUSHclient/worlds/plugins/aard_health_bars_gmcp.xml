@@ -125,11 +125,13 @@ function DisplayStatsPage()
             end
          end
          
-         txt = ""
-         if tonumber(gmcpval("maxstats.maxhp")) and tonumber(gmcpval("vitals.hp")) then
+         local txt = ""
+         local hp = gmcpval("vitals.hp") or ""
+         local maxhp = gmcpval("maxstats.maxhp") or ""
+         if tonumber(maxhp) and tonumber(hp) then
             if overlay_numbers == 1 or overlay_numbers == 3 then
-               maxlen = math.max(#tostring(gmcpval("maxstats.maxhp")), #tostring(gmcpval("vitals.hp")))
-               txt = string.lpad(gmcpval("vitals.hp"), maxlen, ' ').."/"..string.rpad(gmcpval("maxstats.maxhp"),maxlen,' ')
+               maxlen = math.max(#maxhp, #hp)
+               txt = string.lpad(hp, maxlen, ' ').."/"..string.rpad(maxhp,maxlen,' ')
             end
             if overlay_numbers == 2 or overlay_numbers == 3 then
                txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(gmcpval("vitals.hp"))/tonumber(gmcpval("maxstats.maxhp"))).."%",4,' ')..")"
@@ -137,7 +139,7 @@ function DisplayStatsPage()
          end
 
          if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.hp")),tonumber(gmcpval("maxstats.maxhp")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+            gauge(win,showBar[bar][3],tonumber(hp),tonumber(maxhp),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers ~= 0 then
                txtlen = WindowTextWidth(win,font_id,txt)
                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
@@ -162,18 +164,20 @@ function DisplayStatsPage()
          end
          
          txt = ""
-         if tonumber(gmcpval("maxstats.maxmana")) and tonumber(gmcpval("vitals.mana")) then
+         local mana = gmcpval("vitals.mana") or ""
+         local maxmana = gmcpval("maxstats.maxmana") or ""
+         if tonumber(maxmana) and tonumber(mana) then
             if overlay_numbers == 1 or overlay_numbers == 3 then
-               maxlen = math.max(#tostring(gmcpval("maxstats.maxmana")), #tostring(gmcpval("vitals.mana")))
-               txt = string.lpad(gmcpval("vitals.mana"), maxlen, ' ').."/"..string.rpad(gmcpval("maxstats.maxmana"),maxlen,' ')
+               maxlen = math.max(#maxmana, #mana)
+               txt = string.lpad(mana, maxlen, ' ').."/"..string.rpad(maxmana,maxlen,' ')
             end
             if overlay_numbers == 2 or overlay_numbers == 3 then
-               txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(gmcpval("vitals.mana"))/tonumber(gmcpval("maxstats.maxmana"))).."%",4,' ')..")"
+               txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(mana)/tonumber(maxmana)).."%",4,' ')..")"
             end
          end
          
          if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.mana")),tonumber(gmcpval("maxstats.maxmana")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+            gauge(win,showBar[bar][3],tonumber(mana),tonumber(maxmana),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers ~= 0 then
                txtlen = WindowTextWidth(win,font_id,txt)
                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
@@ -198,18 +202,20 @@ function DisplayStatsPage()
          end
 
          txt = ""
-         if tonumber(gmcpval("maxstats.maxmoves")) and tonumber(gmcpval("vitals.moves")) then
+         local moves = gmcpval("vitals.moves") or ""
+         local maxmoves = gmcpval("maxstats.maxmoves") or ""
+         if tonumber(maxmoves) and tonumber(moves) then
             if overlay_numbers == 1 or overlay_numbers == 3 then
-               maxlen = math.max(#tostring(gmcpval("maxstats.maxmoves")), #tostring(gmcpval("vitals.moves")))
-               txt = string.lpad(gmcpval("vitals.moves"), maxlen, ' ').."/"..string.rpad(gmcpval("maxstats.maxmoves"),maxlen,' ')
+               maxlen = math.max(#maxmoves, #moves)
+               txt = string.lpad(moves, maxlen, ' ').."/"..string.rpad(maxmoves,maxlen,' ')
             end
             if overlay_numbers == 2 or overlay_numbers == 3 then
-               txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(gmcpval("vitals.moves"))/tonumber(gmcpval("maxstats.maxmoves"))).."%",4,' ')..")"
+               txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(moves)/tonumber(maxmoves)).."%",4,' ')..")"
             end
          end
          
          if graphicalMode == 1 then
-            gauge(win,showBar[bar][3],tonumber(gmcpval("vitals.moves")),tonumber(gmcpval("maxstats.maxmoves")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+            gauge(win,showBar[bar][3],tonumber(moves),tonumber(maxmoves),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
             if overlay_numbers ~= 0 then
                txtlen = WindowTextWidth(win,font_id,txt)
                outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
@@ -234,22 +240,26 @@ function DisplayStatsPage()
                xpos = xpos + WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][3]) or string.gsub(showBar[bar][3],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
             end
          end
+
+         txt = ""
+         local tnl = gmcpval("status.tnl") or ""
+         local perlevel = gmcpval("base.perlevel") or ""
+
          -- switch from "to next level" to "current level experience"
          if (reverseTNL == 0) then
 
-            txt = ""
-            if tonumber(gmcpval("status.tnl")) and tonumber(gmcpval("base.perlevel")) then
+            if tonumber(tnl) and tonumber(perlevel) then
                if overlay_numbers == 1 or overlay_numbers == 3 then
-                  maxlen = math.max(#tostring(gmcpval("status.tnl")), #tostring(gmcpval("base.perlevel")))
-                  txt = string.lpad(gmcpval("status.tnl"), maxlen, ' ').."/"..string.rpad(gmcpval("base.perlevel"),maxlen,' ')
+                  maxlen = math.max(#tnl, #perlevel)
+                  txt = string.lpad(tnl, maxlen, ' ').."/"..string.rpad(perlevel,maxlen,' ')
                end
                if overlay_numbers == 2 or overlay_numbers == 3 then
-                  txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(gmcpval("status.tnl"))/tonumber(gmcpval("base.perlevel"))).."%",4,' ')..")"
+                  txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(tnl)/tonumber(perlevel)).."%",4,' ')..")"
                end
             end
             
             if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],tonumber(gmcpval("status.tnl")),tonumber(gmcpval("base.perlevel")),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+               gauge(win,showBar[bar][3],tonumber(tnl),tonumber(perlevel),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
                if overlay_numbers ~= 0 then
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
@@ -259,19 +269,18 @@ function DisplayStatsPage()
             end
          else
             
-            txt = ""
-            if tonumber(gmcpval("status.tnl")) and tonumber(gmcpval("base.perlevel")) then
+            if tonumber(tnl) and tonumber(perlevel) then
                if overlay_numbers == 1 or overlay_numbers == 3 then
-                  maxlen = math.max(#tostring(gmcpval("status.tnl")), #tostring(gmcpval("base.perlevel")))
-                  txt = string.lpad((tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0), maxlen, ' ').."/"..string.rpad(gmcpval("base.perlevel") or 0,maxlen,' ')
+                  maxlen = math.max(#tnl, #perlevel)
+                  txt = string.lpad(tonumber(perlevel)-tonumber(tnl),maxlen,' ').."/"..string.rpad(perlevel,maxlen,' ')
                end
                if overlay_numbers == 2 or overlay_numbers == 3 then
-                  txt = txt.." ("..string.lpad(string.format('%u',100*(tonumber(gmcpval("base.perlevel"))-tonumber(gmcpval("status.tnl")))/tonumber(gmcpval("base.perlevel"))).."%",4,' ')..")"
+                  txt = txt.." ("..string.lpad(string.format('%u',100*(tonumber(perlevel)-tonumber(tnl))/tonumber(perlevel)).."%",4,' ')..")"
                end
             end
             
             if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],(tonumber(gmcpval("base.perlevel")) or 0)-(tonumber(gmcpval("status.tnl")) or 0),(tonumber(gmcpval("base.perlevel")) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+               gauge(win,showBar[bar][3],(tonumber(perlevel) or 0)-(tonumber(tnl) or 0),(tonumber(perlevel) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
                if overlay_numbers ~= 0 then
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
