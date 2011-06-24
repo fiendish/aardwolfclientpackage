@@ -134,7 +134,7 @@ function DisplayStatsPage()
                txt = string.lpad(hp, maxlen, ' ').."/"..string.rpad(maxhp,maxlen,' ')
             end
             if overlay_numbers == 2 or overlay_numbers == 3 then
-               txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(gmcpval("vitals.hp"))/tonumber(gmcpval("maxstats.maxhp"))).."%",4,' ')..")"
+               txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(gmcpval("vitals.hp"))/tonumber(gmcpval("maxstats.maxhp"))).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
             end
          end
 
@@ -172,7 +172,7 @@ function DisplayStatsPage()
                txt = string.lpad(mana, maxlen, ' ').."/"..string.rpad(maxmana,maxlen,' ')
             end
             if overlay_numbers == 2 or overlay_numbers == 3 then
-               txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(mana)/tonumber(maxmana)).."%",4,' ')..")"
+               txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(mana)/tonumber(maxmana)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
             end
          end
          
@@ -210,7 +210,7 @@ function DisplayStatsPage()
                txt = string.lpad(moves, maxlen, ' ').."/"..string.rpad(maxmoves,maxlen,' ')
             end
             if overlay_numbers == 2 or overlay_numbers == 3 then
-               txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(moves)/tonumber(maxmoves)).."%",4,' ')..")"
+               txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(moves)/tonumber(maxmoves)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
             end
          end
          
@@ -254,12 +254,12 @@ function DisplayStatsPage()
                   txt = string.lpad(tnl, maxlen, ' ').."/"..string.rpad(perlevel,maxlen,' ')
                end
                if overlay_numbers == 2 or overlay_numbers == 3 then
-                  txt = txt.." ("..string.lpad(string.format('%u',100*tonumber(tnl)/tonumber(perlevel)).."%",4,' ')..")"
+                  txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(tnl)/tonumber(perlevel)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
                end
             end
             
             if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],tonumber(tnl),tonumber(perlevel),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+               gauge(win,showBar[bar][3],tonumber(tnl) or 0,tonumber(perlevel) or 0,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
                if overlay_numbers ~= 0 then
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
@@ -275,7 +275,7 @@ function DisplayStatsPage()
                   txt = string.lpad(tonumber(perlevel)-tonumber(tnl),maxlen,' ').."/"..string.rpad(perlevel,maxlen,' ')
                end
                if overlay_numbers == 2 or overlay_numbers == 3 then
-                  txt = txt.." ("..string.lpad(string.format('%u',100*(tonumber(perlevel)-tonumber(tnl))/tonumber(perlevel)).."%",4,' ')..")"
+                  txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*(tonumber(perlevel)-tonumber(tnl))/tonumber(perlevel)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
                end
             end
             
@@ -502,11 +502,12 @@ function OnPluginBroadcast (msg, id, name, text)
          return
       end
 
-      if (text == "char.vitals" or text == "char.status" or text == "char.maxstats") then
+      if (text == "char.base" or text == "char.vitals" or text == "char.status" or text == "char.maxstats") then
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char")
 
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
+
          if page_built ~= true then
             -- draw edge frame again, just in case the text has overlapped the border
             WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
