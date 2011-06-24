@@ -2605,9 +2605,11 @@ function got_gmcp_room()
                   nilToStr(room.x) ~= nilToStr(gmcproom.x) or
                   nilToStr(room.y) ~= nilToStr(gmcproom.y) or 
                   compareTables(gmcpdata.exits, room.exits)==false then
-      db:exec ("BEGIN TRANSACTION;")
+                  
+      gmcproom.notes = ((room and nilToStr(room.notes)) or "")
       room = gmcproom
       dirty_rooms[room_number] = room
+      db:exec ("BEGIN TRANSACTION;")
       local success = save_room_to_database(room_number,room)
       if success then
          rooms[room_number] = room
@@ -3236,7 +3238,7 @@ function process_exit (args)
 end -- process_exit
 
 function nilToStr(n)
-   return (((n ~= nil) and n) or "")
+   return (((n ~= nil) and tostring(n)) or "")
 end
 
 function ignore (args)
