@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1085 snapshot
+- bug fix: gmcp mapper pathfinding uses a different selection criterion for exits so that re-saved normal exits won't disable previously defined cexits
+- bug fix: the group monitor should no longer have rare cases where it asks you to reload mushclient
+
 r1082 snapshot
 - bug fix: keep the group monitor header text from getting muddled when the miniwindow is too narrow to show all of it
 - misc change: update the lua dll to LuaJIT 2.0.0-beta8 http://luajit.org/changes.html
