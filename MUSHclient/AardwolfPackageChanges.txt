@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1082 snapshot
+- bug fix: keep the group monitor header text from getting muddled when the miniwindow is too narrow to show all of it
+- misc change: update the lua dll to LuaJIT 2.0.0-beta8 http://luajit.org/changes.html
+
 r1079 snapshot
 - bug fix: fix gmcp mapper note erasing problem (notes were not actually getting erased, it just looked that way)
 - bug fix: fix accidental re-saving of every mapper room
