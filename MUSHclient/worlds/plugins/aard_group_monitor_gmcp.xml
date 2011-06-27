@@ -536,22 +536,29 @@ function OnPluginBroadcast (msg, id, name, text)
          return
       end
 
+      if (text=="char.base") then
+         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base")
+         luastmt = "char_data = " .. gmcparg
+         assert (loadstring (luastmt or "")) ()
+         self_built = true
+         if group_built then
+            DisplayGroupPage()
+         end
+      end
+
       if (text == "group") then
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","group")
          luastmt = "full_group_data = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base")
-         if gmcparg ~= "" then
-            luastmt = "char_data = " .. gmcparg
-            assert (loadstring (luastmt or "")) ()
-         else
-            ColourNote("yellow","","Something may be wrong with the group monitor plugin. Please disconnect and reconnect to the MUD to correct this problem.")
-         end
          if (full_group_data.groupname == "") then
             leaveGroup()
          else
             group_built = true
-            DisplayGroupPage()
+            if self_built then
+               DisplayGroupPage()
+            else
+               Send_GMCP_Packet("request char")
+            end
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
@@ -685,12 +692,15 @@ end
 
 function OnPluginDisable ()
    OnPluginSaveState()
-   WindowShow( win, false )
+   WindowShow(win, false)
 end --  OnPluginDisable
 
 function OnPluginEnable ()
    if hidden == 0 then
       WindowShow (win, true)
+   end
+   if IsConnected() then
+      OnPluginConnect()
    end
    OnPluginSaveState()
 end -- OnPluginEnable
