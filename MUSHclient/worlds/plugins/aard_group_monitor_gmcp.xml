@@ -203,14 +203,16 @@ function DisplayGroupPage()
       styles = ColoursToStyles(group_data["groupname"])
       x = GAP
       y = 2
-      x = x + WindowText(win, font_id, "Group: ", x, y, 0, 0, 0xeeeeee, utf8)
+      local statusBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, group_data["status"])-3*GAP)
+      WindowText(win, font_id, group_data["status"], statusBoundary+2*GAP, y, 0, 0, ((group_data["status"]=="Private" and 0x0000ff) or 0x00ff00), utf8)
+      x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, 0, 0xeeeeee, utf8)
       for _, v in ipairs (styles) do
-         x = x + WindowText (win, font_id, v.text, x, y, 0, 0, v.textcolour)
+         x = x + WindowText (win, font_id, v.text, x, y, statusBoundary, 0, v.textcolour)
       end -- for each style run
-      WindowText(win, font_id, group_data["status"], width-WindowTextWidth(win, font_id, group_data["status"])-GAP, y, 0, 0, ((group_data["status"]=="Private" and 0x0000ff) or 0x00ff00), utf8)
       y = y + line_height
-      WindowText(win, font_id, "Leader: "..group_data["leader"], GAP, y, 0, 0, 0xeeeeee, utf8)
-      WindowText(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"], width-WindowTextWidth(win, font_id, "Exp: "..group_data["exp"].." - Kills: "..group_data["kills"])-GAP, y, 0,0, 0xeeeeee, utf8)
+      local xpKillsBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, "XP:"..group_data["exp"].." K:"..group_data["kills"])-3*GAP)
+      WindowText(win, font_id, "XP:"..group_data["exp"].." K:"..group_data["kills"], xpKillsBoundary+2*GAP, y, 0,0, 0xeeeeee, utf8)
+      WindowText(win, font_id, "Leader: "..group_data["leader"], GAP, y, xpKillsBoundary, 0, 0xeeeeee, utf8)
       y = title_height
       
       RemoveMembersFromGroupDisplay()
