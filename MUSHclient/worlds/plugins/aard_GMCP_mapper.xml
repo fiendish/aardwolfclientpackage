@@ -2590,7 +2590,6 @@ function got_gmcp_room()
       Send_GMCP_Packet("request area")
    end
    
-   local exits = gmcpval("exits")
    local room = rooms [room_number]
    -- not cached - see if in database
    if not room then
@@ -2598,14 +2597,15 @@ function got_gmcp_room()
    end -- not in cache
    
    -- re-save if we got information that is different than before  
+   local same_exits = ((room and compareTables(gmcpdata.exits, room.exits)) or false)
    if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or 
                   nilToStr(room.area) ~= nilToStr(gmcproom.area) or 
                   nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or 
                   nilToStr(room.info) ~= nilToStr(gmcproom.info) or
                   nilToStr(room.x) ~= nilToStr(gmcproom.x) or
                   nilToStr(room.y) ~= nilToStr(gmcproom.y) or 
-                  compareTables(gmcpdata.exits, room.exits)==false then
-                  
+                  same_exits == false then
+      gmcproom.exits = ((room and room.exits) or {})
       gmcproom.notes = ((room and nilToStr(room.notes)) or "")
       room = gmcproom
       dirty_rooms[room_number] = room
@@ -2613,7 +2613,9 @@ function got_gmcp_room()
       local success = save_room_to_database(room_number,room)
       if success then
          rooms[room_number] = room
-         save_room_exits(room_number)
+         if not same_exits then
+            save_room_exits(room_number)
+         end
       end     
       db:exec ("COMMIT;") 
      
@@ -2669,8 +2671,6 @@ function save_room_exits(uid)
    if gmcpdata.exits ~= nil then
       for dir,touid in pairs(gmcpdata.exits) do
          if dir then
-            -- fix up in and out
-            dir = ({ ['i'] = "in", o = "out", }) [dir] or dir
       
             dbcheck (db:execute (string.format ([[
                INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
@@ -2684,7 +2684,7 @@ function save_room_exits(uid)
                mapper.mapprint ("Added exit: ", dir, "from room: ",uid, "to room: ", touid, " to database.")
             end -- if
 
-            room.exits [dir] = touid
+            room.exits[dir] = touid
          else
             mapper.maperror ("Cannot make sense of:", exit)
          end -- if can decode    
