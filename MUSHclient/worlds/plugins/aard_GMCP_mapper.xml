@@ -957,12 +957,40 @@ end -- show_known_unmapped_exits
 
 function map_portal_delete (name, line, wildcards)
    local keywords = wildcards[1]
+   local target_index = nil
+   if string.sub(keywords,1,1) == "#" and type(tonumber(string.sub(keywords,2)))=="number" then
+      target_index = tonumber(string.sub(keywords,2))
+      local q = "select area, touid, dir from exits,rooms where exits.touid=rooms.uid and exits.fromuid='*' order by area,touid"
+      local count = 0
+      for row in db:nrows(q) do
+         count = count + 1
+         if count == target_index then
+            keywords = row.dir
+            break
+         end
+      end
+      if target_index ~= count then
+         world.Note(string.format("\nDELETE FAILED: Did not find portal #%s in the list of portals. Try 'mapper portals' to see the list.\n", target_index))
+         return
+      end
+   end
+
+   local portal_exists = false
+   for n in db:nrows (string.format ("SELECT * FROM exits WHERE fromuid = %s AND dir = %s", fixsql("*"), fixsql(keywords))) do
+      portal_exists = true
+   end
+   
+   if portal_exists then
+      print (string.format("Deleted mapper portal"..(((target_index ~= nil) and " index #"..target_index) or "").." with keywords '%s'.", keywords))
+   else
+      print (string.format("DELETE FAILED: Did not find a mapper portal with keywords '%s'.", keywords))
+   end
+   
    query = string.format("DELETE FROM exits WHERE fromuid = %s AND dir = %s;",
       fixsql("*"),
       fixsql(keywords)
    )
    dbcheck (db:execute (query))
-   print (string.format("Deleted mapper hand-held exit '%s'.", keywords))
    if rooms["*"] then
       rooms["*"].exits[keywords] = {}
    end
