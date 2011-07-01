@@ -223,25 +223,22 @@ local function get_room (uid)
    room.borderpenwidth = room.borderpenwidth or 1
    room.fillcolour = room.fillcolour or 0x000000
    room.fillbrush = room.fillbrush or 1 -- no fill
-   room.texture = room.texture or nil -- no texture.
+   room.texture = room.texture or nil -- no texture
 
    room.textimage = nil
 
    if room.texture == nil or room.texture == "" then room.texture = "test5.png" end
-
-   if room.texture ~= nil then
-      if textures[room.texture] then
-         room.textimage = textures[room.texture] -- assign image
-      else
-         if textures[room.texture] ~= false then
-            local dir = GetInfo(66)
-            imgpath = dir .. "worlds\\plugins\\images\\" ..room.texture
-            if WindowLoadImage(win, room.texture, imgpath) ~= 0 then 
-               textures[room.texture] = false  -- just indicates not found
-            else
-               textures[room.texture] = room.texture -- imagename.
-               room.textimage = room.texture
-            end
+   if textures[room.texture] then
+      room.textimage = textures[room.texture] -- assign image
+   else
+      if textures[room.texture] ~= false then
+         local dir = GetInfo(66)
+         imgpath = dir .. "worlds\\plugins\\images\\" ..room.texture
+         if WindowLoadImage(win, room.texture, imgpath) ~= 0 then 
+            textures[room.texture] = false  -- just indicates not found
+         else
+            textures[room.texture] = room.texture -- imagename
+            room.textimage = room.texture
          end
       end
    end
@@ -664,6 +661,8 @@ local function draw_room (uid, path, x, y)
       WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
          room.bordercolour, room.borderpen, room.borderpenwidth,  -- pen
          -1, miniwin.brush_null)  -- opaque, no brush
+
+      -- mark rooms with notes
       if room.notes ~= nil and room.notes ~= "" then
          WindowCircleOp (win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth, 
             right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,config.ROOM_NOTE_COLOUR.colour,
