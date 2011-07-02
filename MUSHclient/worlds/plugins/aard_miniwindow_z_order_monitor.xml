@@ -11,6 +11,7 @@
    date_written="2011-04-23 11:51:55"
    requires="4.73"
    version="2.0"
+   save_state="y"
 >
 
 </plugin>
