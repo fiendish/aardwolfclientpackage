@@ -1311,125 +1311,6 @@ function load_room_from_database (uid)
     
 end -- load_room_from_database
 
-function generate_terrains ()
-   dbcheck (db:execute[[
-   BEGIN TRANSACTION;
-   INSERT OR REPLACE INTO environments VALUES(1,0,'inside',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(2,1,'city',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(3,2,'field',2,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(4,3,'forest',10,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(5,4,'hills',2,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(6,5,'mountain',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(7,6,'waterswim',12,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(8,7,'waternoswim',12,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(9,8,'unused',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(10,9,'air',14,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(11,10,'desert',11,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(12,11,'ocean',4,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(13,12,'quicksand',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(14,13,'underwater',4,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(15,14,'ice',15,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(16,15,'underground',4,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(17,16,'road_eastwest',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(18,17,'road',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(19,18,'river',4,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(20,19,'volcano',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(21,20,'cave',4,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(22,21,'dungeon',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(23,22,'road_crossroads',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(24,23,'Mudschool',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(25,24,'areaexit',5,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(26,25,'hellinside',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(27,26,'hellfountain',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(28,27,'hell1',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(29,28,'hell2',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(30,29,'hell3',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(31,30,'insideice',15,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(32,31,'hellhall',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(33,32,'hell4',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(34,33,'smallroad',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(35,34,'smallroad_ew',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(36,35,'trail_ew',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(37,36,'beach',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(38,37,'shore',6,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(39,38,'jungle',2,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(40,39,'swamp',2,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(41,40,'bridge',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(42,41,'plain',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(43,42,'ocean2',12,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(44,43,'ocean3',12,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(45,44,'ocean4',12,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(46,45,'field3',2,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(47,46,'field2',2,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(48,47,'field4',2,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(49,48,'rocks',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(50,49,'snow',15,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(51,50,'icemount',15,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(52,51,'icehills',15,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(53,52,'space1',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(54,53,'space2',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(55,54,'space3',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(56,55,'space4',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(57,56,'castle',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(58,57,'pillar',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(59,58,'dark',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(60,59,'crossroad_nw',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(61,60,'crossroad_se',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(62,61,'crossroad_ews',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(63,62,'mountain_cyan',6,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(64,63,'moon',4,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(65,64,'temple',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(66,65,'shop',2,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(67,66,'clanexit',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(68,67,'chessblack',4,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(69,68,'chesswhite',15,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(70,69,'lottery',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(71,70,'alley',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(72,71,'fountain',6,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(73,72,'archive',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(74,73,'bookshelves',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(75,74,'bookshelves_ns',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(76,75,'office',5,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(77,76,'electric',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(78,77,'well',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(79,78,'bloodyhall',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(80,79,'bloodyroom',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(81,80,'dead_forest',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(82,81,'dead_field',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(83,82,'graveyard',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(84,83,'palace_room',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(85,84,'crypt',4,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(86,85,'dead_jungle',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(87,86,'ship',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(88,87,'chaos_sea',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(89,88,'hut',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(90,89,'redcarpet',9,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(91,90,'city_underground',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(92,91,'mist',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(93,92,'ashen_field',3,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(94,93,'cabin',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(95,94,'hallway',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(96,95,'afountain',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(97,96,'flowers1',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(98,97,'flowers2',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(99,98,'stairs',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(100,99,'aylorcity',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(101,100,'ruins',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(102,101,'tornado',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(103,102,'dustdevil',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(104,103,'wind1',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(105,104,'wind2',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(106,105,'lightning',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(107,106,'rain',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(108,107,'sun',11,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(109,108,'cloud1',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(110,109,'cloud2',8,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(111,110,'cloud3',7,'2010-12-01 02:08:36');
-   INSERT OR REPLACE INTO environments VALUES(112,111,'rainbow',14,'2010-12-01 02:08:36');
-   COMMIT;
-   ]])
-end
-
 function create_tables ()
    -- create rooms table
    dbcheck (db:execute[[
@@ -1670,6 +1551,8 @@ function get_room (uid)
       elseif terrain_colours [environmentname] then
          room.fillcolour = colour_lookup [terrain_colours [environmentname]]
          room.fillbrush = 8  -- fine pattern
+      else
+         Send_GMCP_Packet("request sectors")
       end
    end -- if environmentname
 
@@ -2271,9 +2154,7 @@ function OnPluginInstall ()
       show_area_exits = show_area_exits,    -- want to see area exits?
       speedwalk_prefix = speedwalk_prefix,  -- how to speedwalk
    } 
-  
-   -- mapper.mapprint (string.format ("MUSHclient mapper installed, version %0.1f", mapper.VERSION))
-  
+    
    -- open databases on disk 
    worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
 
@@ -2292,9 +2173,11 @@ function OnPluginInstall ()
    if db_user_version < 2 then
       create_tables()
    end
-   if db_user_version < 3 then
-      generate_terrains()
-   end
+
+   -- Database version 3 used to preload terrains, but now we dynamically
+   -- request the terrains list from the server with sendgmcp request sectors
+   -- se we don't need it anymore. Now we just skip from 2 to 4.
+
    if db_user_version < 4 then
       -- add bookmarks and terrain tables to the main db since we're
       -- ditching the second db file
@@ -2642,6 +2525,23 @@ function save_room_exits(uid)
    end -- have exits.
 end -- save_room_exits
 
+function update_gmcp_sectors()
+   db:exec ("BEGIN TRANSACTION;")
+   dbcheck( db:execute ("DELETE FROM environments;"))
+   for i,v in pairs(gmcp_sectors_list.sectors) do
+      dbcheck( db:execute( string.format([[
+      INSERT OR REPLACE INTO environments VALUES (%s,%s,%s,%s,DATETIME('NOW'));
+      ]], i, v.id, fixsql(v.name), v.color)))
+   end
+   db:exec ("COMMIT;")
+   
+   for row in db:nrows("SELECT * FROM environments") do
+      environments [tonumber (row.uid)] = row.name
+      terrain_colours [row.name] = tonumber (row.color)
+   end -- finding environments
+   
+   mapper.draw (current_room)
+end
   
 function OnPluginBroadcast (msg, id, name, text)
    if in_backup == true then
@@ -2683,6 +2583,13 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          update_gmcp_area()
+      end
+      
+      if (text == "room.sectors") then
+         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.sectors")
+         luastmt = "gmcp_sectors_list = " .. gmcparg
+         assert (loadstring (luastmt or "")) ()
+         update_gmcp_sectors()
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapper.win)
