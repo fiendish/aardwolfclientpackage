@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1096 snapshot
+- bug fix: purged the old goblin path from the gmcp mapper database so that it doesn't screw up display of path of the believer
+- bug fix: the z order monitor will now save state
+- bug fix: if the gmcp mapper encounters a room with an unknown sector type it will now ask the MUD for the current list of sectors
+
 r1090 snapshot
 - new feature: gmcp mapper delete portal now accepts index numbers
 - bug fix: gmcp mapper now reports an error if the user tries to delete a portal that doesn't exist
