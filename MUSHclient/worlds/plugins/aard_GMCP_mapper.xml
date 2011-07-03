@@ -1428,7 +1428,7 @@ function create_tables ()
 end -- function create_tables
 
 function get_room (uid)
-
+   
    -- check we got room at all
    if not uid then
       -- return nil
@@ -1544,7 +1544,7 @@ function get_room (uid)
       end -- if
    end  
    -- use terrain colour
-   if environmentname and not special_room then
+   if environmentname and environmentname ~= "" and not special_room then
       if user_terrain_colour [environmentname] then
          room.fillcolour = user_terrain_colour [environmentname]
          room.fillbrush = 8  -- fine pattern
