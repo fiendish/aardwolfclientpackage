@@ -32,10 +32,6 @@
 </alias>
 </aliases>
 
-<!--  Get our standard constants -->
-
-<include name="constants.lua"/>
-
 <!--  Script  -->
 
 <script>
