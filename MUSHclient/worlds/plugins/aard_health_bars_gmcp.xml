@@ -479,7 +479,8 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-   SetUpHotspotsAndDraw()
+   orig_width = 0
+   SetUpHotspotsAndDraw(false)
 end
 
 ---------------------------------------------------------------------------------
@@ -533,7 +534,7 @@ function OnPluginSaveState ()
    SetVariable ("reverseTNL", reverseTNL)
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    SetVariable ("background_colour", background_colour)
-   SetVariable ("width", width)
+   SetVariable ("width", (((orig_width ~= 0) and orig_width) or width))
    SetVariable ("height", height)
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
@@ -567,6 +568,14 @@ function OnPluginListChanged ()
    do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
 end -- OnPluginListChanged
 
+orig_width = 0
+function OnPluginWorldOutputResized()
+   if installed == true then
+      orig_width = math.max(width, orig_width)
+      width = math.min(orig_width, GetInfo(281)-windowinfo.window_left)
+      SetUpHotspotsAndDraw(false)
+   end
+end
 
 function OnPluginInstall()
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
@@ -649,6 +658,7 @@ function OnPluginInstall()
    end -- they didn't enable us last time
    
    OnPluginSaveState()
+   installed = true
 end
 
 --=================================================================================
