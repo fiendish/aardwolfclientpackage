@@ -2708,7 +2708,9 @@ function map_find_special(which_ones)
       0,
       show_vnums,  -- show vnum?
       count,      -- how many to expect
-      false       -- don't auto-walk
+      false,       -- don't auto-walk
+      nil,
+      true
    )
 end -- map_find_special
             
