@@ -43,73 +43,76 @@ LH-click on a room to speed-walk to it. RH-click on a room for options.
 LH-click on the "*" button on the upper-left corner for configuration settings.
 (click again on the [x] to close configuration)
 
-===== ACTIONS ====================>
+===== ACTIONS ===================>
 
-mapper backup                   --> Create new archived backup of your map
-                                  > database in a db_backups directory,
-                                  > preserving a few prior backups
-mapper backups <off/on>         --> Turn off or on automatic database backups
-                                  > The default setting is on
-mapper backups [un]compressed   --> Turn off or on database backup compression
-                                  > The default setting is uncompressed (off)
-mapper help                     --> This help
-                                  > (or click the "?" button on the top right)
-mapper zoom out                 --> Zoom out
-mapper zoom in                  --> Zoom in
-mapper hide                     --> Hide map
-mapper show                     --> Show map
-mapper addnote                  --> Add a new note to the current room
-mapper purgezone <area>         --> Remove an area from the map database
+mapper backup                  --> Create new archived backup of your map
+                                 > database in a db_backups directory,
+                                 > preserving a few prior backups
+mapper backups <off/on>        --> Turn off or on automatic database backups
+                                 > The default setting is on
+mapper backups [un]compressed  --> Turn off or on database backup compression
+                                 > The default setting is uncompressed (off)
+mapper help                    --> This help
+                                 > (or click the "?" button on the top right)
+mapper zoom out                --> Zoom out
+mapper zoom in                 --> Zoom in
+mapper hide                    --> Hide map
+mapper show                    --> Show map
+mapper addnote                 --> Add a new note to the current room
+mapper purgezone <area>        --> Remove an area from the map database
 
-===== CUSTOM EXIT ACTIONS ========>
+===== CUSTOM EXIT ACTIONS =======>
 
-mapper cexits                   --> List known custom exits
-mapper cexits <here/area>       --> List known custom exits only in this or
-                                  > another area
-mapper cexit <command>          --> Follow and link a custom exit
-                                  > (ex: 'mapper cexit ride bucket')
-mapper delete cexits            --> Remove the custom exits from this room
-mapper purge cexits             --> Remove all custom exits
+mapper cexits                  --> List known custom exits
+mapper cexits <here/area>      --> List known custom exits only in this or
+                                 > another area
+mapper cexit <command>         --> Follow and link a custom exit
+                                 > (ex: 'mapper cexit ride bucket')
+mapper delete cexits           --> Remove the custom exits from this room
+mapper purge cexits            --> Remove all custom exits
+mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
+                                 > the standard 2 when constructing the next
+                                 > cexit (between 2 and 30)
 
-===== PORTAL ACTIONS =============>
+===== PORTAL ACTIONS ============>
 
-mapper portals                  --> List known hand-held portals
-mapper portal <command>         --> Link a hand-held portal alias to the
-                                  > current location as a custom exit 
-                                  > (ex: 'mapper portal recall' at recall)
-mapper portallevel <ind> <lvl>  --> Change the level lock on a stored portal
-                                  > Find the indices with 'mapper portals'
-                                  > Do not manually account for tiers
-mapper delete portal <command>  --> Remove the specified hand-held portal alias
-mapper delete portal #<index>   --> Remove a hand-held portal by its index
-                                  > Find the indices with 'mapper portals'
-mapper purge portals            --> Remove all hand-held portal aliases
+mapper portals                 --> List known hand-held portals
+mapper portal <command>        --> Link a hand-held portal alias to the
+                                 > current location as a custom exit 
+                                 > (ex: 'mapper portal recall' at recall)
+mapper portallevel <ind> <lvl> --> Change the level lock on a stored portal
+                                 > Find the indices with 'mapper portals'
+                                 > Do not manually account for tiers
+mapper delete portal <command> --> Remove the specified hand-held portal alias
+mapper delete portal #<index>  --> Remove a hand-held portal by its index
+                                 > Find the indices with 'mapper portals'
+mapper purge portals           --> Remove all hand-held portal aliases
 
-===== FINDING THINGS =============>
+===== FINDING THINGS ============>
 
-mapper notes                    --> Show nearby rooms that you marked with notes
-mapper area <text>              --> Full-text search limited to the current zone
-mapper find <text>              --> Full-text search the whole database
-mapper list <text>              --> Find rooms without the known-path limits
-                                  > of "area" and "find"
-mapper shop                     --> Show all shops/banks
-mapper train                    --> Show all trainers
-mapper quest                    --> Show all quest-givers
-mapper where <room id>          --> Show directions to a room number
+mapper notes                   --> Show nearby rooms that you marked with notes
+mapper area <text>             --> Full-text search limited to the current zone
+mapper find <text>             --> Full-text search the whole database
+mapper list <text>             --> Find rooms without the known-path limits
+                                 > of "area" and "find"
+mapper shop                    --> Show all shops/banks
+mapper train                   --> Show all trainers
+mapper quest                   --> Show all quest-givers
+mapper where <room id>         --> Show directions to a room number
 
-===== EXPLORING ==================>
+===== EXPLORING =================>
 
-mapper thisroom                 --> Show details about the current room
-mapper areas                    --> Show a list of all mapped areas
-mapper areas <name>             --> Show a list of mapped areas partially
-                                  > matching <name>
-mapper unmapped                 --> List unmapped exit counts for know areas
-mapper unmapped <here/area>     --> List unmapped exits in this or another area
+mapper thisroom                --> Show details about the current room
+mapper areas                   --> Show a list of all mapped areas
+mapper areas <name>            --> Show a list of mapped areas partially
+                                 > matching <name>
+mapper unmapped                --> List unmapped exit counts for know areas
+mapper unmapped <here/area>    --> List unmapped exits in this or another area
 
-===== MOVING =====================>
+===== MOVING ====================>
 
-mapper goto <room>              --> Walk to a room by its room number
-mapper resume                   --> Initiate a new run to the previous target
+mapper goto <room>             --> Walk to a room by its room number
+mapper resume                  --> Initiate a new run to the previous target
 
 ]]>
 </description>
@@ -467,7 +470,15 @@ mapper resume                   --> Initiate a new run to the previous target
    script="custom_exit"
    regexp="y"
 ></alias>
-  
+
+<alias
+   match="^mapper cexit_wait (.+)$"
+   enabled="y"
+   sequence="100"
+   script="change_cexit_delay"
+   regexp="y"
+></alias>
+
 <alias
    match="mapper areas"
    enabled="y"
@@ -1111,6 +1122,18 @@ function map_portal_list ()
    
 end -- map_portal_list
 
+BASE_CEXIT_DELAY = 2
+
+function change_cexit_delay(name, line, wildcards)
+   temp_cexit_delay = tonumber(wildcards[1])
+   Note("")
+   if temp_cexit_delay == nil or temp_cexit_delay < BASE_CEXIT_DELAY or temp_cexit_delay > 30 then
+      Note("CEXIT_DELAY FAILED: Invalid delay given ("..wildcards[1].."). Must be a number from 2 to 30.")
+      temp_cexit_delay = nil
+   end
+   Note("CEXIT_DELAY: The next mapper custom exit will have ".. (temp_cexit_delay or BASE_CEXIT_DELAY) .." seconds to complete.\n")
+end
+
 -- custom_exit function contributed by Spartacus
 function custom_exit (name, line, wildcards)
 
@@ -1150,8 +1173,9 @@ function custom_exit (name, line, wildcards)
   
    wait.make (function()
       Execute(cexit_command)
-      world.Note("CEXIT: WAIT FOR 2 SECONDS BEFORE MOVING")
-      wait.time(2)
+      world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING. THIS SHOULD TAKE ABOUT "..(temp_cexit_delay or BASE_CEXIT_DELAY).." SECONDS.")
+      wait.time(temp_cexit_delay or BASE_CEXIT_DELAY)
+      temp_cexit_delay = nil
       cexit_dest = current_room
       if cexit_dest then
          if cexit_dest == "-1" then
