@@ -1164,37 +1164,14 @@ end -- save_state
 
 
 -- generic room finder
-
 -- dests is a list of room/reason pairs where reason is either true (meaning generic) or a string to find
-
 -- show_uid is true if you want the room uid to be displayed
-
 -- expected_count is the number we expect to find (eg. the number found on a database)
-
 -- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
-
 -- if fcb is a function, it is called back after displaying each line
 
-function find (name, dests, max_paths, show_uid, expected_count, walk, fcb)
-   if not check_we_can_find () then
-      return
-   end -- if
-
-   if fcb then
-      assert (type (fcb) == "function")
-   end -- if
-
+function full_find (name, dests, show_uid, expected_count, walk, fcb)
    local paths = {}
-   if max_paths <= 0 then
-      max_paths = #dests
-   end
-   if not walk then
-      mapprint ("Found",#dests,"target"..(((#dests ~= 1) and "s") or "")..(((name ~= nil) and (" matching '"..name.."'")) or "")..".")
-   end
-   if #dests > max_paths then
-      mapprint(string.format("Your search returned more than %s results. Choose a more specific pattern.", max_paths))
-      return
-   end
    local notfound = {}
    for i,v in ipairs(dests) do
       SetStatus (string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
@@ -1298,6 +1275,84 @@ function find (name, dests, max_paths, show_uid, expected_count, walk, fcb)
    end
 
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
+end
+
+function quick_find(name, dests, show_uid, expected_count, walk, fcb)
+   Note("+------------------------------ START OF SEARCH -------------------------------+")
+   
+   for i,v in ipairs(dests) do
+      local uid = tonumber(v.uid)
+      if not rooms[uid] then
+         rooms[uid] = get_room(uid)
+      end -- if
+      local room = rooms[uid] -- ought to exist or wouldn't be in table
+      
+      assert (room, "Room " .. v.uid .. " is not in rooms table.")
+      
+      local room_name = room.name
+      room_name = room_name .. " (" .. room.area .. ")"
+      if show_uid then
+         room_name = room_name .. " (" .. v.uid .. ")"
+      end
+
+      if current_room ~= v.uid then
+         Hyperlink ("!!" .. GetPluginID () .. ":mapper.goto("..v.uid..")", 
+            room_name, "Click to speedwalk there", "", "", false)
+      else
+         ColourTell(RGBColourToName(config.MAPPER_NOTE_COLOUR.colour),"",room_name)
+      end
+      
+      local info = ""
+      if type (v.reason) == "string" and v.reason ~= "" then
+         info = " [" .. v.reason .. "]"
+         mapprint (" - " .. info) -- new line
+      else -- if
+         Note("")
+      end
+      
+      -- callback to display extra stuff (like find context, room description)
+      if fcb then
+         fcb (uid)
+      end -- if callback
+   end -- for each room
+   
+   Note("+-------------------------------- END OF SEARCH -------------------------------+")
+end
+
+function goto(uid)
+   find (nil,
+      {{uid=uid, reason=true}},
+      0,
+      false,  -- show vnum?
+      1,          -- how many to expect
+      true        -- just walk there
+   )
+end
+
+function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quick_list)
+   if not check_we_can_find () then
+      return
+   end -- if
+
+   if fcb then
+      assert (type (fcb) == "function")
+   end -- if
+
+   if max_paths <= 0 then
+      max_paths = #dests
+   end
+   if not walk then
+      mapprint ("Found",#dests,"target"..(((#dests ~= 1) and "s") or "")..(((name ~= nil) and (" matching '"..name.."'")) or "")..".")
+   end
+   if #dests > max_paths then
+      mapprint(string.format("Your search returned more than %s results. Choose a more specific pattern.", max_paths))
+      return
+   end
+   if quick_list == true then
+      quick_find(name, dests, show_uid, expected_count, walk, fcb)
+   else
+      full_find(name, dests, show_uid, expected_count, walk, fcb)
+   end
 end -- map_find_things
 
 -- executed when the mapper draws a hyperlink to a room
