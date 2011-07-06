@@ -230,7 +230,7 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>  
 
 <alias
-   match="mapper train( .+)?"
+   match="^mapper train( .+)?"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -238,7 +238,7 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>  
 
 <alias
-   match="mapper quest( .+)?"
+   match="^mapper quest( .+)?"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -246,7 +246,7 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>  
 
 <alias
-   match="mapper heal( .+)?"
+   match="^mapper heal( .+)?"
    regexp="y"
    enabled="y"
    sequence="100"
