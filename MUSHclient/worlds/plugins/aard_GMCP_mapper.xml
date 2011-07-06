@@ -95,9 +95,12 @@ mapper area <text>             --> Full-text search limited to the current zone
 mapper find <text>             --> Full-text search the whole database
 mapper list <text>             --> Find rooms without the known-path limits
                                  > of "area" and "find"
-mapper shop                    --> Show all shops/banks
+mapper shops                   --> Show all shops/banks
+mapper shops <here/area>       --> Ditto
 mapper train                   --> Show all trainers
+mapper train <here/area>       --> Ditto
 mapper quest                   --> Show all quest-givers
+mapper quest <here/area>       --> Ditto
 mapper where <room id>         --> Show directions to a room number
 
 ===== EXPLORING =================>
@@ -219,7 +222,7 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>
     
 <alias
-   match="^mapper shops?"
+   match="^mapper shops?( .+)?"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -227,21 +230,24 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>  
 
 <alias
-   match="mapper train"
+   match="mapper train( .+)?"
+   regexp="y"
    enabled="y"
    sequence="100"
    script="map_trainers"
 ></alias>  
 
 <alias
-   match="mapper quest"
+   match="mapper quest( .+)?"
+   regexp="y"
    enabled="y"
    sequence="100"
    script="map_quests"
 ></alias>  
 
 <alias
-   match="mapper heal"
+   match="mapper heal( .+)?"
+   regexp="y"
    enabled="y"
    sequence="100"
    script="map_healers"
@@ -879,7 +885,7 @@ function show_known_unmapped_exits (name, line, wildcards)
 
    res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
    luastmt = "gmcpdata = " .. gmcparg
-   if (gmcparg ~= "") then -- in case he user has an old gmcp handler that clears room on room.wrongdir
+   if (gmcparg ~= "") then -- in case the user has an old gmcp handler that clears room on room.wrongdir
       assert(loadstring (luastmt or "")) ()
    end
    local current_area = gmcpval("zone")
@@ -2697,7 +2703,7 @@ function map_find (name, line, wildcards)
 end -- map_find
 
 
-function map_find_special(which_ones)
+function map_find_special(which_ones, which_area)
 
    local wanted_items = {}
 
@@ -2708,8 +2714,23 @@ function map_find_special(which_ones)
    local rooms = {}
    local count = 0
   
+   res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
+   luastmt = "gmcpdata = " .. gmcparg
+   assert(loadstring (luastmt or "")) ()
+   local current_area = gmcpval("zone")
+
+   area = Trim(which_area or "")
+   if area == "here" then
+      area = current_area
+   end
+   if area == "" then
+      query = "SELECT uid, name, info FROM rooms WHERE rooms.info IS NOT NULL"
+   else
+      query = string.format("SELECT uid, name, info FROM rooms WHERE rooms.info IS NOT NULL AND lower(rooms.area) LIKE %s", fixsql("\%" .. area .. "\%"))
+   end -- if area
+
    -- build table of special places (with info in them)
-   for row in db:nrows(string.format ("SELECT uid, name, info FROM rooms WHERE info IS NOT NULL")) do
+   for row in db:nrows(query) do
       if row.info ~= "" then
          local wanted = false
          local t = {}
@@ -2734,24 +2755,24 @@ function map_find_special(which_ones)
       count,      -- how many to expect
       false,       -- don't auto-walk
       nil,
-      true
+      true         -- quick list
    )
 end -- map_find_special
             
 function map_shops (name, line, wildcards)
-   map_find_special { "shop", "bank", }
+   map_find_special ({ "shop", "bank", }, wildcards[1])
 end -- map_shops
 
 function map_trainers (name, line, wildcards)
-   map_find_special { "trainer", }
+   map_find_special ({ "trainer", }, wildcards[1])
 end -- map_trainers
 
 function map_quests (name, line, wildcards)
-   map_find_special { "questor", }
+   map_find_special ({ "questor", }, wildcards[1])
 end -- map_quests
 
 function map_healers (name, line, wildcards)
-   map_find_special { "healer", }
+   map_find_special ({ "healer", }, wildcards[1])
 end -- map_healers
 
 
