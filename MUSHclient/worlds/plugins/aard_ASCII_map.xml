@@ -462,10 +462,10 @@ function MouseOver (flags, hotspotid)
       "  @G!@w  - Unkillable Mob            <  - Down exit",
       "  @G$@w  - Shopkeeper                @y<@w  - Down exit (closed)",
       "",
-      " @C[@W?@C]@w - Area exit                 @R#@w  - PK-flagged room",
+      " @C[@W?@C]@w - Area exit                 @r#@w  - PK-flagged room",
       " @G[@W?@G]@w - Clan public hall exit     @RD@w  - Donation room",
       "",
-      "@WTerrains:@w",
+      "@WMajor Terrains:@w",
       "",     
       " [ ]   Inside                   . .   City",
       " @g, `@w   Field                    @G; ;@w   Hills",
@@ -475,7 +475,7 @@ function MouseOver (flags, hotspotid)
       " @b~ ~@w   Underwater               @C~ ~@w   Ice",
       " @B. .@w   Underground              - -   East/West road",
       " . .   North/South road         @C~ ~@w   River",
-      " @R/@w     Volcano                  @b% %@w   Cave",
+      " @R/ \\@w   Volcano                  @b% %@w   Cave",
       " # #   Dungeon                  @g( *@w   Forest",
    }
                 
