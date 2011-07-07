@@ -1162,14 +1162,6 @@ function save_state ()
    movewindow.save_state (win)
 end -- save_state
 
-
--- generic room finder
--- dests is a list of room/reason pairs where reason is either true (meaning generic) or a string to find
--- show_uid is true if you want the room uid to be displayed
--- expected_count is the number we expect to find (eg. the number found on a database)
--- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
--- if fcb is a function, it is called back after displaying each line
-
 function full_find (name, dests, show_uid, expected_count, walk, fcb)
    local paths = {}
    local notfound = {}
@@ -1278,6 +1270,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb)
 end
 
 function quick_find(name, dests, show_uid, expected_count, walk, fcb)
+   BroadcastPlugin (999, "repaint")
    Note("+------------------------------ START OF SEARCH -------------------------------+")
    
    for i,v in ipairs(dests) do
@@ -1314,6 +1307,8 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
       if fcb then
          fcb (uid)
       end -- if callback
+
+      BroadcastPlugin (999, "repaint")
    end -- for each room
    
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
@@ -1329,6 +1324,13 @@ function goto(uid)
    )
 end
 
+-- generic room finder
+-- dests is a list of room/reason pairs where reason is either true (meaning generic) or a string to find
+-- show_uid is true if you want the room uid to be displayed
+-- expected_count is the number we expect to find (eg. the number found on a database)
+-- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
+-- if fcb is a function, it is called back after displaying each line
+-- quick_list determines whether we pathfind every destination in advance to be able to sort by distance
 function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quick_list)
    if not check_we_can_find () then
       return
