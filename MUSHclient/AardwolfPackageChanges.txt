@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1109 snapshot
+- new feature: the gmcp mapper has a new quicklist command that makes searches display results much faster by not finding all the paths in advance and therefore does not list results in order by distance.
+- new feature: the gmcp mapper has a new cexit_wait command that customizes the time given for creating the next cexit
+- new feature: the gmcp mapper shops command now accepts 'here'/<area> options to restrict the set of results to a given area
+- new feature: the package update checker "not now" button has been replaced with an "ignore" button that silences future alerts until another snapshot has been released
+- misc change: the package update checker is less disruptive when an error occurs
+
 r1101 snapshot
 - bug fix: the health bar resizing widget won't fall off the edge of the screen anymore
 - bug fix: purged the old goblin path from the gmcp mapper database so that it doesn't screw up display of path of the believer
