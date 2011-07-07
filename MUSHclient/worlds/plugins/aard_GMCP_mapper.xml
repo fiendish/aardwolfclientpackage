@@ -90,6 +90,9 @@ mapper purge portals           --> Remove all hand-held portal aliases
 
 ===== FINDING THINGS ============>
 
+mapper quicklist [on/off]      --> ON will cause search results to display much
+                                 > faster, but the results will not be sorted
+                                 > by distance (default is off)
 mapper notes                   --> Show nearby rooms that you marked with notes
 mapper area <text>             --> Full-text search limited to the current zone
 mapper find <text>             --> Full-text search the whole database
@@ -188,6 +191,14 @@ mapper resume                  --> Initiate a new run to the previous target
    end
 </send>
 </alias>
+
+<alias
+   match="^mapper quicklist( (on|off))?$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   script="quick_mode_toggle"
+></alias>
   
 <alias
    match="mapper zoom out"
@@ -654,6 +665,7 @@ default_config = {
 mylevel = 0
 mytier = 0
 use_compression = tonumber(GetVariable("use_compression")) or 0
+quick_mode = (GetVariable("quick_mode") == "1")
 local rooms = {}
 local areas = {}
 local environments = {}
@@ -2357,7 +2369,8 @@ function OnPluginSaveState ()
    mapper.save_state ()
    SetVariable("config","") -- wipe out the old config table
    SetVariable ("configs", "configs = " .. serialize.save_simple (configs))
-  
+   SetVariable("quick_mode", (quick_mode and "1") or "0")
+   
    -- close and reopen database
    if db:isopen() then
       db:close()
@@ -2626,6 +2639,19 @@ function OnPluginBroadcast (msg, id, name, text)
    end
 end
 
+function quick_mode_toggle(name, line, wildcards)
+   if (wildcards[2] ~= "") then
+      quick_mode = (wildcards[2] == "on")
+   end
+   Note("")
+   if quick_mode then
+      Note("QUICKLIST is ON: Lists of found targets will display immediately without sorting by distance.")
+   else
+      Note("QUICKLIST is OFF: Lists of found targets will pathfind each result and sort them by distance.")
+   end
+   Note("")
+end
+
 function map_area (name, line, wildcards)
 
    uid = mapper.current_room
@@ -2670,7 +2696,9 @@ function map_area (name, line, wildcards)
       50,
       show_vnums,  -- show vnum?
       count,      -- how many to expect
-      false       -- don't auto-walk
+      false,       -- don't auto-walk
+      nil,
+      quick_mode
    )
 
 end -- map_area
@@ -2698,7 +2726,9 @@ function map_find (name, line, wildcards)
       50,
       show_vnums,  -- show vnum?
       count,      -- how many to expect
-      false       -- don't auto-walk
+      false,       -- don't auto-walk
+      nil,
+      quick_mode
    )
 end -- map_find
 
@@ -2877,7 +2907,9 @@ function map_notes (name, line, wildcards)
       0,  -- function
       show_vnums,  -- show vnum?
       count,       -- how many to expect
-      false        -- don't auto-walk
+      false,        -- don't auto-walk
+      nil,
+      quick_mode
    )
 end -- map_notes
 
