@@ -11,6 +11,7 @@
    date_written="2011-04-23 11:51:55"
    requires="4.72"
    version="1.0"
+   save_state="y"
 >
 <description trim="y">
 This plugin checks for new beta development updates from the google code repository.
@@ -77,16 +78,33 @@ end
 -- Shows an editbox dialog detailing the posted differences between
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
-   if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
+   if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Show Me", cancel_button="Ignore", read_only=true, no_default=true}) then
       browse(download_url)
+   else
+      Note("")
+      ColourNote("cyan", "", "+----------------------------------------------------------------+")
+      ColourNote("cyan", "", "|           Aardwolf MUSHclient Package Update Checker           |")
+      ColourNote("cyan", "", "+----------------------------------------------------------------+")
+      ColourNote("cyan", "", "|                                                                |")
+      ColourNote("cyan", "", "| You have chosen to ignore snapshot r"..latest_version.."."..string.rep(" ",65-string.len("| You have chosen to ignore snapshot r"..latest_version..".")).."|")
+      ColourNote("cyan", "", "| You will be alerted again when another snapshot is released.   |")
+      ColourNote("cyan", "", "|                                                                |")
+      ColourNote("cyan", "", "| Remember, you can always get the latest snapshot at:           |")
+      ColourNote("cyan", "", "| https://code.google.com/p/aardwolfclientpackage/downloads/list |")
+      ColourNote("cyan", "", "|                                                                |")
+      ColourNote("cyan", "", "+----------------------------------------------------------------+")
+      Note("")
+      SetVariable("ignore_before_version", latest_version)
    end
 end
 
 -- Something went wrong when trying to check for updates
 function errorMessage(msg)
-   if utils.inputbox(msg,"ERROR: "..window_title,download_url,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
-      browse(download_url)
-   end
+   -- if utils.inputbox(msg,"ERROR: "..window_title,download_url,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
+   --    browse(download_url)
+   -- end
+   ColourNote("white","red","Aardwolf MUSHclient Package Update Check Error:")
+   ColourNote("white","red",msg)
 end
 
 loaded = false
@@ -104,10 +122,11 @@ function manualCheck()
 end
 
 function main()
+   ignore_before_version = tonumber(GetVariable("ignore_before_version")) or 0
    SetStatus("Checking online for Aardwolf MUSHclient Package updates")
    ErrorMessage = ""
-   if checkLocalFile() then
-      if checkRemoteFile() then
+   if checkRemoteFile() then
+      if checkLocalFile() then
          showUpdate()
       end
    end
@@ -141,6 +160,7 @@ end
 function checkRemoteFile()
    -- grab the download page
    page, status, headers = http.request(download_url)
+   
    if status == 200 then -- 200 is the HTTP status code for "OK"
       update_list, latest_version = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r(%d+) snapshot.*)")
       -- extract the snapshot revision number
@@ -151,9 +171,14 @@ function checkRemoteFile()
    end
    
    if not latest_version then -- string.match failed to find the right pattern above
-      ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package download page. Please send Fiendish an email about this."
+      ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package download page. Please alert Fiendish about this."
       return false
    end
+
+   if latest_version <= ignore_before_version then
+      return false
+   end
+
    return true
 end
 
