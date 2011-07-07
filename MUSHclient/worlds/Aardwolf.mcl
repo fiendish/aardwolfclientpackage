@@ -76,6 +76,7 @@
    pixel_offset="1"
    port="4010"
    proxy_port="1080"
+   save_deleted_command="y"
    save_world_automatically="y"
    script_errors_to_output_window="y"
    send_file_delay_per_lines="1"
