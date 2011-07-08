@@ -17,6 +17,7 @@ It implements the following:
      nocheck: if true, don't check if offscreen  (boolean)
      friends: other windows to move with this one (table)
      preprocess: preprocessing for mousedown, mouseup etc. (table)
+     start_position: an initial position to be used instead of 0,0 if default_flags specify static positioning (table {x=coord, y=coord})
   
      Handler names for preprocess table:
   
@@ -40,7 +41,7 @@ It implements the following:
         return false   -- take normal movewindow behaviour
      end -- mousedown 
 
-  windowinfo = movewindow.install (win, default_position, default_flags, nocheck, friends, preprocess)
+  windowinfo = movewindow.install (win, default_position, default_flags, nocheck, friends, preprocess, start_position)
   
   movewindow.add_drag_handler (win, left, top, right, bottom, cursor)   -- add a drag handler for the nominated rectangle
   
