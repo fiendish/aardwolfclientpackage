@@ -186,7 +186,7 @@ function SetUpHotspotsAndDraw(firstTime)
    if (firstTime == true) then
       check (WindowCreate (win, 
          windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-         width,     -- width
+         width,   -- width
          height,  -- height
          windowinfo.window_mode,       -- auto-position: middle right
          windowinfo.window_flags,  -- flags
@@ -652,7 +652,7 @@ function OnPluginInstall()
    line_height = font_height + 1
 
    --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+   windowinfo  = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
 
    -- Draw the initial map window
    SetUpHotspotsAndDraw(true)

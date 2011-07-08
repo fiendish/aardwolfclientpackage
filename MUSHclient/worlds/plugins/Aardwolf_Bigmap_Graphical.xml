@@ -592,7 +592,7 @@ function OnPluginInstall ()
 
    windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, miniwin.create_absolute_location, true, nil, {mouseup=MouseUp, 
       mousedown=LeftClickOnly, dragmove=LeftClickOnly, 
-      dragrelease=LeftClickOnly})
+      dragrelease=LeftClickOnly},{x=default_x, y=default_y})
 
    WindowCreate (win,
       0,
