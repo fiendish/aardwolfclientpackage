@@ -622,11 +622,6 @@ require "wait"
 
 toConfirm = ""
 
-default_width = 268
-default_height = 335
-default_x = 868
-default_y = 0
-
 -- Mapper Variables --
 
 default_config = {
@@ -662,7 +657,7 @@ default_config = {
          } ,
          
    -- size of map window
-   WINDOW = { width = default_width, height = default_height },
+   WINDOW = { width = mapper.default_width, height = mapper.default_height },
   
    -- how far from where we are standing to draw (rooms)
    SCAN = { depth = 300 },
@@ -701,10 +696,7 @@ environmentcount = 0
 directions = {}
 
 function reset_aard()
-   mapper.configs.WINDOW.width = default_width
-   mapper.configs.WINDOW.height = default_height
-   mapper.windowinfo.window_left = default_x
-   mapper.windowinfo.window_top = default_y
+   mapper.reset_pos()
    OnPluginSaveState()
    OnPluginInstall()
 end
