@@ -357,7 +357,7 @@ function right_click_menu ()
       height           = default_height
       width            = default_width
       movewindow.save_state (win)
-      stacked = 1
+      stacked = 0
       SetVariable("stacked", stacked)
       SetVariable("width",width)
       SetVariable("height",height)
@@ -547,7 +547,7 @@ function OnPluginInstall()
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
    line_height = font_height + 1
-   stacked = tonumber(GetVariable("stacked")) or 1
+   stacked = tonumber(GetVariable("stacked")) or 0
    max_height = (line_height*(((stacked == 1) and 12) or 24))+(TOP_MARGIN*2)
 
    --- Pull some state variables.
