@@ -1018,7 +1018,7 @@ local credits = {
    "MUSHclient mapper",
    string.format ("Version %0.1f", VERSION),
    "Made for Aardwolf by Fiendish",
-   "Based on the original written by Nick Gammon",
+   "Based on work by Nick Gammon",
    "World: "..WorldName (),
    GetInfo (3),
 }
