@@ -22,14 +22,20 @@
 
 <aliases>
 <alias
-   script="resetaard"
-   match="^resetaard"
+   script="reset_aard"
+   match="resetmain"
    enabled="y"
-   regexp="y"
    sequence="100"
    ignore_case="y"
->
-</alias>
+></alias>
+
+<alias
+   script="reset_aard"
+   match="resetaard"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
 </aliases>
 
 <!--  Script  -->
@@ -40,6 +46,11 @@
 --title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10
 
+default_top = 140
+default_bottom = 544
+default_left = 7
+default_right = 650
+
 -- Variables not saved.
 startx           = ""  
 starty           = ""
@@ -47,7 +58,6 @@ posx             = ""
 posy             = ""
 hotspot_id       = ""
 orig_height      = 400  -- saves old height when we collapse window.
-default_textrect = 1    -- start with default textrec.
 MIN_SIZE         = 50
 rstagsize        = 15
 
@@ -73,7 +83,6 @@ function ResizeMainCallback()
       starty = textrect_bottom
    end
 
-   default_textrect = 0 -- we moved something, no longer on autopilot.
    draw_main_window()
 end
 
@@ -108,7 +117,6 @@ function DragMainCallback()
       starty = textrect_top
    end
 
-   default_textrect = 0 -- we moved something, no longer on autopilot.
    draw_main_window()
 end
 
@@ -151,27 +159,19 @@ end
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
-
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
 
-   --- Pull some state variables.
-   SetVariable("defaulttr",default_textrect)
-
-   if (default_textrect == 0) then
-      SetVariable("trleft",textrect_left)
-      SetVariable("trright",textrect_right)
-      SetVariable("trtop",textrect_top)
-      SetVariable("trbottom",textrect_bottom)
-   else
-      DeleteVariable("trleft")
-      DeleteVariable("trright")
-      DeleteVariable("trtop")
-      DeleteVariable("trbottom")
-   end
+   SetVariable("trleft",textrect_left)
+   SetVariable("trright",textrect_right)
+   SetVariable("trtop",textrect_top)
+   SetVariable("trbottom",textrect_bottom)
 end -- OnPluginSaveState
 
-function resetaard() 
-   default_textrect = 1
+function reset_aard() 
+   textrect_left = default_left
+   textrect_right = default_right
+   textrect_top = default_top
+   textrect_bottom = default_bottom
    OnPluginSaveState()
    check_main_background()
 end
@@ -216,8 +216,8 @@ function OnPluginInstall()
    SetBackgroundImage(imgpath,13)
 
    --- Pull some state variables.
-   default_textrect  = tonumber (GetVariable ("defaulttr")) or default_textrect
    check_main_background()
+
    -- give main world window time to stabilize its size and position
    AddTimer("checkTimer", 0, 0, 2, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
    
@@ -230,18 +230,10 @@ function OnPluginInstall()
 end
 
 function check_main_background()
-   if (default_textrect == 0) then
-      textrect_top = tonumber(GetVariable("trtop")) or 22
-      textrect_bottom = tonumber(GetVariable("trbottom")) or 400
-      textrect_left = tonumber(GetVariable("trleft")) or 200
-      textrect_right = tonumber(GetVariable("trright")) or 200 + GetInfo(213) * 90
-   elseif (default_textrect == 1) then
-      textrect_left   = 1
-      textrect_top    = 22
-      textrect_right  = textrect_left + GetInfo(213) * 90 -- Sized for 90 chars
-      textrect_bottom = GetInfo(280) - 90 -- Client window height - 90
-   end -- assume if textrec isn't default, it is set.
-
+   textrect_top = math.max(0, tonumber(GetVariable("trtop")) or default_top)
+   textrect_bottom = math.min(GetInfo(280), tonumber(GetVariable("trbottom")) or default_bottom)
+   textrect_left = math.max(0, tonumber(GetVariable("trleft")) or default_left)
+   textrect_right = math.min(GetInfo(281), tonumber(GetVariable("trright")) or default_right)
    draw_main_window()
 end
 

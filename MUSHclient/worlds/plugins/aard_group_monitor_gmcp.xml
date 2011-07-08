@@ -25,6 +25,15 @@ details captured through GMCP.
 </plugin>
 
 <aliases>
+
+<alias
+   match="resetaard"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   script="reset_aard"
+></alias>
+
 -- show the group window
 <alias
    match="groupon"
@@ -56,10 +65,10 @@ require "serialize"
 
 background_colour = tonumber (GetVariable ("background_colour")) or 0x000000
 title_colour = tonumber (GetVariable ("title_colour")) or 0x292929
-default_height = 100
-default_width = 100
-default_font_name = ""
-default_font_size = 0
+default_x = 868
+default_y = 336
+default_height = 215
+default_width = 269
 height = tonumber (GetVariable ("height")) or default_height
 width = tonumber (GetVariable ("width")) or default_width
 show_self = tonumber (GetVariable ("show_self")) or 1
@@ -107,6 +116,17 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
+function reset_aard()
+   width = default_width
+   height = default_height
+   font_name = default_font_name
+   font_size = default_font_size
+   windowinfo.window_left = default_x
+   windowinfo.window_top = default_y
+   OnPluginSaveState()
+   OnPluginInstall()
+end
 
 function SetUpHotspotsAndDraw(firstTime)
    -- don't use windowcreate after the first time, because it messes with hotspot handlers
@@ -728,12 +748,12 @@ function OnPluginInstall()
       fonts = utils.getfontfamilies ()
    end -- if Dina not installed
 
-   if fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   elseif fonts ["Dina"] then
+   if fonts ["Dina"] then
       default_font_size = 8
       default_font_name = "Dina"    -- the actual font
+   elseif fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
    else
       default_font_size = 9
       default_font_name = "Lucida Console"

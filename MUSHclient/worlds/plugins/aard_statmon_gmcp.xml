@@ -22,6 +22,16 @@ Aardwolf GCMP based stats monitor.
 </description>
 </plugin>
 
+<aliases>
+<alias
+   match="resetaard"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   script="reset_aard"
+></alias>
+</aliases>
+
 <!--  Script  -->
 
 <script>
@@ -34,9 +44,10 @@ require "gmcphelper"
 
 background_colour     = 0x000000
 border_colour          = 0xcccccc
-default_width         = 398
-default_height        = 200
-
+default_width         = 209
+default_height        = 307
+default_x             = 658
+default_y             = 244
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
 LEFT_MARGIN     = 10
@@ -58,6 +69,18 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
+function reset_aard()
+   stacked = 0
+   width = default_width
+   height = default_height
+   font_name = default_font_name
+   font_size = default_font_size
+   windowinfo.window_left = default_x
+   windowinfo.window_top = default_y
+   OnPluginSaveState()
+   OnPluginInstall()
+end
 
 function BuildStatsPage()
 
@@ -251,18 +274,6 @@ function DisplayStatsPage()
          Display_Styled_Line (win, font_id, {{text="Fighting :",textcolour=0x444444}}, left, top)           
       end
    end
-
-   -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
-
-   BroadcastPlugin (999, "repaint")
 end -- DisplayStatsPage
 
 function RefreshPage()
@@ -343,7 +354,7 @@ function right_click_menu ()
    elseif result == "Reset Defaults" then
       font_name        = default_font_name
       font_size        = default_font_size
-      height           = orig_height
+      height           = default_height
       width            = default_width
       movewindow.save_state (win)
       stacked = 1
@@ -515,12 +526,12 @@ function OnPluginInstall()
       fonts = utils.getfontfamilies ()
    end -- if Dina not installed
 
-   if fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   elseif fonts ["Dina"] then
+   if fonts ["Dina"] then
       default_font_size = 8
       default_font_name = "Dina"    -- the actual font
+   elseif fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
    else
       default_font_size = 9
       default_font_name = "Lucida Console"
@@ -538,7 +549,7 @@ function OnPluginInstall()
    line_height = font_height + 1
    stacked = tonumber(GetVariable("stacked")) or 1
    max_height = (line_height*(((stacked == 1) and 12) or 24))+(TOP_MARGIN*2)
-   default_height = max_height
+
    --- Pull some state variables.
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
    height = tonumber (GetVariable ("height")) or default_height
@@ -583,11 +594,23 @@ function SetUpHotspotsAndDraw(firstTime)
    -- Add the drag handler so they can move the window around
    movewindow.add_drag_handler (win, 0, 0, 0, 0)
    
+   DisplayStatsPage()
+
    -- draw edge frame.
    check (WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15))
    check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
 
-   DisplayStatsPage()
+   -- draw the resize widget bottom right corner.
+   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+
+   BroadcastPlugin (999, "repaint")
 end
 
 -------------------------------------------------------------------------------
