@@ -24,6 +24,16 @@ Aardwolf GCMP based health bars
 </description>
 </plugin>
 
+<aliases>
+<alias
+   match="resetaard"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   script="reset_aard"
+></alias>
+</aliases>
+
 <!--  Script  -->
 
 <script>
@@ -36,13 +46,15 @@ require "serialize"
 
 background_colour     = 0x000000
 border_color          = 0xcccccc
-default_width         = 398
+default_width         = 1137
+default_x             = 0
+default_y             = 552
 
 local RESIZE_TAG_SIZE = 10
 local MIN_WIDTH        = 40
 local LEFT_MARGIN     = 10
 local TOP_MARGIN      = 5
-local stacked = 1
+local stacked = 0
 local showLabels = 1
 local reverseTNL = 0
 graphicalMode = tonumber(GetVariable("graphicalMode") or 1)
@@ -72,6 +84,18 @@ string.rpad = function(str, len, char)
    if char == nil then char = ' ' end
    return str .. string.rep(char, len - #str)
 end
+
+function reset_aard()
+   width = default_width
+   font_name = default_font_name
+   font_size = default_font_size
+   windowinfo.window_left = default_x
+   windowinfo.window_top = default_y
+   stacked = 0
+   OnPluginSaveState()
+   OnPluginInstall()
+end
+
 
 function DoNextSimpleBar(bar, val, maxval)
    txt = ""
@@ -592,12 +616,12 @@ function OnPluginInstall()
       fonts = utils.getfontfamilies ()
    end -- if Dina not installed
 
-   if fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   elseif fonts ["Dina"] then
+   if fonts ["Dina"] then
       default_font_size = 8
       default_font_name = "Dina"    -- the actual font
+   elseif fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
    else
       default_font_size = 9
       default_font_name = "Lucida Console"
