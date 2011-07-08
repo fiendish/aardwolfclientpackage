@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r1124 snapshot
+- new feature: (for scripters) movewindow accepts a new parameter for specifying an exact initial location. See comments in movewindow.lua for start_position
+- new feature: deleting state files will now put miniwindows in their default locations
+- new feature: 'resetaard' now resets all of the miniwindows instead of just main output. 'resetmain' is a new command that does just the main output.
+- bug fix: the not being at the top when maximized bug should now be fixed
+- misc change: save_deleted_command is now enabled by default so you can use up arrow to recall accidentally deleted input
+- bug fix: mistakes in the ascii map legend have been corrected
+
 r1109 snapshot
 - new feature: the gmcp mapper has a new quicklist command that makes searches display results much faster by not finding all the paths in advance and therefore does not list results in order by distance.
 - new feature: the gmcp mapper has a new cexit_wait command that customizes the time given for creating the next cexit
