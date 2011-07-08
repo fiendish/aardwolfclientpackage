@@ -108,7 +108,7 @@ local textures = {}
 -- other locals
 local HALF_ROOM, connectors, half_connectors, arrows
 local plan_to_draw, drawn, drawn_coords
-local last_drawn, depth, windowinfo, font_height 
+local last_drawn, depth, font_height 
 local walk_to_room_name
 local total_times_drawn = 0
 local total_time_taken = 0
