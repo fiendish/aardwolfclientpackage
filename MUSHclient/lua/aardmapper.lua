@@ -113,6 +113,18 @@ local walk_to_room_name
 local total_times_drawn = 0
 local total_time_taken = 0
 
+default_width = 268
+default_height = 335
+default_x = 868
+default_y = 0
+
+function reset_pos()
+   config.WINDOW.width = default_width
+   config.WINDOW.height = default_height
+   windowinfo.window_left = default_x
+   windowinfo.window_top = default_y
+end
+
 local function build_room_info ()
 
    HALF_ROOM   = ROOM_SIZE / 2
@@ -186,7 +198,7 @@ local default_config = {
    } ,
    
    -- size of map window
-   WINDOW = { width = 400, height = 400 },
+   WINDOW = { width = default_width, height = default_height },
    
    -- how far from where we are standing to draw (rooms)
    SCAN = { depth = 30 },
@@ -1052,7 +1064,7 @@ function init (t)
    font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
    
    -- find where window was last time
-   windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , nil, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+   windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , nil, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, {x=default_x, y=default_y})
    
    -- calculate box sizes, arrows, connecting lines etc.
    build_room_info ()
