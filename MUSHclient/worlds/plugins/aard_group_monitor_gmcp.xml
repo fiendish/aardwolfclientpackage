@@ -491,7 +491,7 @@ function right_click_menu ()
             if string.sub(perc, -1) == "%" then
                perc = string.sub(perc, 1,-2)
             end
-            thresh1percent = perc
+            thresh1percent = tonumber(perc)
             reload = true
          end
       elseif numResult == member_count+20 then
@@ -509,7 +509,7 @@ function right_click_menu ()
             if string.sub(perc, -1) == "%" then
                perc = string.sub(perc, 1,-2)
             end
-            thresh2percent = perc
+            thresh2percent = tonumber(perc)
             reload = true
          end
       elseif numResult == member_count+23 then
