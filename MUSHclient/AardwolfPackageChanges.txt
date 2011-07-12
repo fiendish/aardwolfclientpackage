@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1126 snapshot
+- bug fix: group monitor thresholds will properly set as numbers instead of strings without having to reload the plugin
+
 r1124 snapshot
 - new feature: (for scripters) movewindow accepts a new parameter for specifying an exact initial location. See comments in movewindow.lua for start_position
 - new feature: deleting state files will now put miniwindows in their default locations
