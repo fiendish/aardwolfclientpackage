@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Saturday, 16 July 2011 at 11:19:22
+-- Written: Wednesday, 20 July 2011 at 06:34:20
 
 -- Static messages
 
@@ -1690,7 +1690,7 @@ messages = {
   ["Never"] =
     "",
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:619
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:620
   ["Loading plugins ..."] =
     "",
   } -- end messages
@@ -5101,25 +5101,25 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:635
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:637
   ["Loading plugin: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:931
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:933
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:997
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:999
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1028
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1030
   ["option '%s' not set"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:2243
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:2245
   ["%s loading plugin %s ..."] =
     function (a, b)
      
