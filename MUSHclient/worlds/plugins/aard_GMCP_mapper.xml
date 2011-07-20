@@ -737,7 +737,7 @@ function fixbool (b)
 end -- fixbool
 
 function findpathfast(name, line, wildcards)
-   db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
+   db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    local foundpath = findpath(tonumber(wildcards[1]),tonumber(wildcards[2]))
    if foundpath == nil then
       mapper.mapprint (string.format ("Path from %s to %s not found.", wildcards[1], wildcards[2]))
@@ -1991,9 +1991,9 @@ function rotate_backups (manual)
       local olderer_exists = false
       local older_exists = false
       if t ~= nil then
-         local oldest_string = Trim(sanitize_filename(WorldName()))..".db.Backup_Automatic_oldest"
-         local olderer_string = Trim(sanitize_filename(WorldName()))..".db.Backup_Automatic_olderer"
-         local older_string = Trim(sanitize_filename(WorldName()))..".db.Backup_Automatic_older"
+         local oldest_string = sanitize_filename(WorldName())..".db.Backup_Automatic_oldest"
+         local olderer_string = sanitize_filename(WorldName())..".db.Backup_Automatic_olderer"
+         local older_string = sanitize_filename(WorldName())..".db.Backup_Automatic_older"
          for k,v in pairs(t) do
             if string.find(k,oldest_string) then
                oldest_exists = true
@@ -2052,7 +2052,7 @@ end
 
 function sanitize_filename(str)
    str = string.gsub(str, "[^%w%s()_-]", "")
-   return str
+   return Trim(str)
 end
 
 function quote(str)
@@ -2096,7 +2096,7 @@ function backup_databases(manual)
    Note("BACKING UP DATABASES")
    Repaint()
    
-   backupPath = GetInfo(66).."db_backups\\"..Trim(sanitize_filename(WorldName()))
+   backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
    firstBackup = backupPath..".db.Backup"
    
    local ffi = require("ffi")
@@ -2212,7 +2212,7 @@ function OnPluginInstall ()
    } 
     
    -- open databases on disk 
-   worldPath = GetInfo(66)..Trim(sanitize_filename(WorldName()))
+   worldPath = GetInfo(66)..sanitize_filename(WorldName())
 
    db = assert (sqlite3.open(worldPath..".db"))
 
@@ -2263,9 +2263,9 @@ function OnPluginInstall ()
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
    if b_b ~= nil then
       io.close(b_b)
-      ColourNote("white", "blue", "Found obsolete bookmarks file "..Trim(sanitize_filename(WorldName())).."_bookmarks.db.")
+      ColourNote("white", "blue", "Found obsolete bookmarks file "..sanitize_filename(WorldName()).."_bookmarks.db.")
       ColourNote("white", "blue", "Merging into the main database file.")
-      ColourNote("white", "blue", Trim(sanitize_filename(WorldName())).."_bookmarks.db --> "..Trim(sanitize_filename(WorldName()))..".db")
+      ColourNote("white", "blue", sanitize_filename(WorldName()).."_bookmarks.db --> "..sanitize_filename(WorldName())..".db")
       db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
 
       local bm_found = false
@@ -2352,7 +2352,7 @@ end -- OnPluginInstall
 function OnPluginEnable ()
    mapper.show ()
    if not db:isopen() then
-      db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    end
    OnPluginSaveState()
 end -- OnPluginEnable
@@ -2388,7 +2388,7 @@ function OnPluginSaveState ()
    -- close and reopen database
    if db:isopen() then
       db:close()
-      db = assert (sqlite3.open(GetInfo (66) .. Trim (sanitize_filename(WorldName ())) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    end
 end -- OnPluginSaveState
  
