@@ -56,7 +56,7 @@ local LEFT_MARGIN     = 10
 local TOP_MARGIN      = 5
 local stacked = 0
 local showLabels = 1
-local reverseTNL = 0
+local reverseTNL = 1
 graphicalMode = tonumber(GetVariable("graphicalMode") or 1)
 local numBars = 6
 local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Mana={"Mana  :",true,"Mana:",0xff5500,0x442200}, Moves={"Moves :",true,"Moves:",0x00ffff,0x004444}, TNL={"TNL   :",true,"TNL:",0xffffff,0x444444}, Enemy={"Enemy :",true,"Enemy:",0x0000ff,0x000044}, Align={"Align :",true, "Alignment:",0x0000ff,0x00ffff}}
@@ -436,7 +436,7 @@ function right_click_menu ()
          width = default_width
          stacked = 1
          showLabels = 1
-         reverseTNL = 0
+         reverseTNL = 1
          showBar = defaultShowBar
       end -- if
       
