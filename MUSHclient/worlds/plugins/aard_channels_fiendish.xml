@@ -834,7 +834,7 @@ function stampAndStore(styles)
       if (log_colour_codes == 0) then
          log_text = strip_colours(log_text)
       end
-      local f = assert(io.open (GetInfo(58):gsub("^\.\\",GetInfo(56))..sanitize_filename(GetInfo(2)).."ChatLog.txt", "a+")) -- handle to chat log file
+      local f = assert(io.open (GetInfo(58):gsub("^.\\",GetInfo(56))..sanitize_filename(GetInfo(2)).."ChatLog.txt", "a+")) -- handle to chat log file
       f:write(log_text.."\n") -- write to it
       f:close()  -- close that file now
    end
