@@ -856,7 +856,7 @@ function custom_exit_list (name, line, wildcards)
       area = current_area
    end
 
-   query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid <> '*' order by area, uid", fixsql("\%" .. area .. "\%"))
+   query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid <> '*' order by area, uid", fixsql("%" .. area .. "%"))
    hr = "| area       | room name            | rm uid  | dir            | to uid  |"
    hl = "+------------+----------------------+---------+----------------+---------+"
    intro = string.format("The following rooms in areas matching '%s' have custom exits:",area)
@@ -928,7 +928,7 @@ function show_known_unmapped_exits (name, line, wildcards)
       intro = "The following areas have unmapped exits:"
       fmt = "| %10.10s | %5d |"
    else
-      query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and touid not in (select uid from rooms) order by area, uid", fixsql("\%" .. area .. "\%"))
+      query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and touid not in (select uid from rooms) order by area, uid", fixsql("%" .. area .. "%"))
       hr = "| area       | room name            | rm uid  | dir | to uid  |"
       hl = "+------------+----------------------+---------+-----+---------+"
       intro = string.format("The following rooms in areas matching '%s' have unmapped exits:",area)
@@ -2770,7 +2770,7 @@ function map_find_special(which_ones, which_area)
    if area == "" then
       query = "SELECT uid, name, info FROM rooms WHERE rooms.info IS NOT NULL"
    else
-      query = string.format("SELECT uid, name, info FROM rooms WHERE rooms.info IS NOT NULL AND lower(rooms.area) LIKE %s", fixsql("\%" .. area .. "\%"))
+      query = string.format("SELECT uid, name, info FROM rooms WHERE rooms.info IS NOT NULL AND lower(rooms.area) LIKE %s", fixsql("%" .. area .. "%"))
    end -- if area
 
    -- build table of special places (with info in them)
