@@ -1326,6 +1326,7 @@ function right_click_menu (hotspot_id)
       elseif numResult == 21+hyperlink_skip then
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       end
+      OnPluginSaveState()
    end
 end -- right_click_menu
 
