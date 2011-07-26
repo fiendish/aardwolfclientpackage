@@ -440,6 +440,7 @@ function OnPluginEnable ()
    OnPluginSaveState()
 end -- OnPluginEnable
 
+require "serialize"
 function OnPluginSaveState()
    -- save window current location for next time  
    SetVariable("enabled", tostring (GetPluginInfo (GetPluginID(), 17)))
@@ -459,6 +460,8 @@ function OnPluginSaveState()
    SetVariable("log_timestamps", log_timestamps)
    SetVariable("show_donations", show_donations)
    SetVariable("show_mobsay", show_mobsay)
+   
+   SetVariable("channels_table", serialize.save("channels_table"))
 end --  OnPluginSaveState
 
 function OnPluginDisable()
@@ -903,7 +906,9 @@ function OnPluginBroadcast (msg, id, name, text)
          msg = gmcpval("msg") or ""
          chan = gmcpval("chan") or ""
          if (show_mobsay == 1 or chan ~= "mobsay") and (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
-            stampAndStore(ColoursToStyles(msg))
+            if not (channels_table[chan] and not channels_table[chan]["capture"]) then
+               stampAndStore(ColoursToStyles(msg))
+            end
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
@@ -1121,7 +1126,6 @@ function LeftClickOnly(flags, hotspot_id, win)
    return false
 end
 
-
 function chat_echo (name, line, wildcards)
    if wildcards [1] == false then
       echo = not echo
@@ -1148,6 +1152,21 @@ function chat_hide (name, line, wildcards)
    ColourNote ("yellow", "", "Chats window now hidden. Type 'chats show' to see it again.")
 end -- function chat_hide
 
+channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pokerinfo","question","quote","racetalk","rauction","rp","sports","spouse","tech","tiertalk","wangrp","wardrums"}
+loadstring(GetVariable("channels_table") or "")()
+
+function addNewChannel(name)
+   channels_table[name] = channels_table[name] or {capture=true, echo=true}
+end
+
+function constructDefaultChannels()
+   for i,v in ipairs(channel_names) do
+      addNewChannel(v)
+   end
+end
+
+constructDefaultChannels()
+
 -- right click menu
 function right_click_menu (hotspot_id)
    hotspots = {scroller=true, resize=true, down=true, up=true, textarea=true}
@@ -1163,7 +1182,11 @@ function right_click_menu (hotspot_id)
    else
       menustring = (menustring.."|Turn Echo On")
    end --if
-   menustring = menustring.."|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
+   menustring = menustring .. "|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<"
+
+   menustring = menustring .. "|Customize Channels"
+   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<"
+   menustring = menustring .. "|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
@@ -1235,6 +1258,19 @@ function right_click_menu (hotspot_id)
          date_format = "[%I:%M:%S%p] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
       elseif numResult == 11+hyperlink_skip then
+         tbl = {}
+         defaults = {}
+         for i,v in ipairs(channel_names) do
+            tbl[i] = v
+            defaults[i] = channels_table[v]["capture"]
+         end
+         local capture_result = utils.multilistbox ("Choose which channels to capture to this communication log window.", "Communication Log Channel Selection", tbl, defaults)
+         if capture_result and #capture_result > 0 then
+            for i,v in ipairs(channel_names) do
+               channels_table[v]["capture"] = capture_result[i]
+            end
+         end
+      elseif numResult == 12+hyperlink_skip then
          if info_on == 0 then
             ColourNote ("yellow", "", "INFO capturing is now ENABLED.")
          else
@@ -1244,7 +1280,7 @@ function right_click_menu (hotspot_id)
          EnableTrigger("raidinfo", 0 == info_on)
          EnableTrigger("claninfo", 0 == info_on)
          info_on = GetTriggerOption("info","enabled")
-      elseif numResult == 12+hyperlink_skip then
+      elseif numResult == 13+hyperlink_skip then
          if global_quest_on == 0 then
             ColourNote ("yellow", "", "Global Quest capturing is now ENABLED.")
          else
@@ -1252,7 +1288,7 @@ function right_click_menu (hotspot_id)
          end
          EnableTrigger("global_quest", 0 == global_quest_on)
          global_quest_on = GetTriggerOption("global_quest","enabled")
-      elseif numResult == 13+hyperlink_skip then
+      elseif numResult == 14+hyperlink_skip then
          if remort_auction_on == 0 then
             ColourNote ("yellow", "", "Remort Auction capturing is now ENABLED.")
          else
@@ -1260,7 +1296,7 @@ function right_click_menu (hotspot_id)
          end
          EnableTrigger("remort_auction", 0 == remort_auction_on)
          remort_auction_on = GetTriggerOption("remort_auction","enabled")
-      elseif numResult == 14+hyperlink_skip then
+      elseif numResult == 15+hyperlink_skip then
          if show_donations == 0 then
             ColourNote ("yellow", "", "Clan donation capturing is now ENABLED.")
          else
@@ -1268,7 +1304,7 @@ function right_click_menu (hotspot_id)
          end
          show_donations = (((0 == show_donations) and 1) or 0)
          SetVariable("show_donations", show_donations)
-      elseif numResult == 15+hyperlink_skip then
+      elseif numResult == 16+hyperlink_skip then
          if show_mobsay == 0 then
             ColourNote ("yellow", "", "Mob speech capturing is now ENABLED.")
          else
@@ -1276,18 +1312,18 @@ function right_click_menu (hotspot_id)
          end
          show_mobsay = (((0 == show_mobsay) and 1) or 0)
          SetVariable("show_mobsay", show_mobsay)
-      elseif numResult == 16+hyperlink_skip then
+      elseif numResult == 17+hyperlink_skip then
          log_to_file = (((0 == log_to_file) and 1) or 0)
          SetVariable("log_to_file", log_to_file)
-      elseif numResult == 17+hyperlink_skip then
+      elseif numResult == 18+hyperlink_skip then
          log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
          SetVariable("log_colour_codes", log_colour_codes)
-      elseif numResult == 18+hyperlink_skip then
+      elseif numResult == 19+hyperlink_skip then
          log_timestamps = (((0 == log_timestamps) and 1) or 0)
          SetVariable("log_timestamps", log_timestamps)
-      elseif numResult == 19+hyperlink_skip then
-         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
       elseif numResult == 20+hyperlink_skip then
+         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      elseif numResult == 21+hyperlink_skip then
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       end
    end
