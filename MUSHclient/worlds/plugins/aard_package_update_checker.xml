@@ -172,7 +172,7 @@ function checkRemoteFile()
    end
    
    if not latest_version then -- string.match failed to find the right pattern above
-      ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package download page. Please alert Fiendish about this."
+      ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package download page (below). Please alert Fiendish about this."
       return false
    end
 
