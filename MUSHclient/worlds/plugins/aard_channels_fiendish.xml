@@ -1153,6 +1153,7 @@ function chat_hide (name, line, wildcards)
 end -- function chat_hide
 
 channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pokerinfo","question","quote","racetalk","rauction","rp","sports","spouse","tech","tiertalk","wangrp","wardrums"}
+channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
 function addNewChannel(name)
