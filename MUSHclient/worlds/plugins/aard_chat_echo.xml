@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="Aardwolf_Chat_Echo"
+   author="Fiendish"
+   id="55616ea13339bc68e963e1f8"
+   language="Lua"
+   purpose="Control whether certain channels get hidden from main output"
+   date_written="2011-07-27 01:00:00"
+   requires="4.75"
+   version="1.0"
+>
+</plugin>
+
+<triggers>
+<trigger
+   enabled="y"
+   match="^{say}(?<msg>.*)"
+   regexp="y"
+   script="chats"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+   
+<trigger
+   enabled="y"
+   match="^{chan ch=(?<channel>\w+)}(?<msg>.*)"
+   regexp="y"
+   script="chats"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+    
+<trigger
+   enabled="y"
+   match="^{tell}(?<msg>.*)"
+   script="chats"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   name="remort_auction"
+   match="^Remort Auction:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   name="global_quest"
+   match="^Global Quest:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   name="info"
+   match="^INFO:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+></trigger>    
+   
+<trigger
+   enabled="n"
+   name="raidinfo"
+   match="^RAIDINFO:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+></trigger>   
+
+<trigger
+   enabled="n"
+   name="claninfo"
+   match="^CLANINFO:.+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   match="^$"
+   regexp="y"
+   name="end_gag_omit"
+   group="end_gag"
+   omit_from_output="y"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   EnableTriggerGroup("end_gag", false)
+</send>
+</trigger>
+    
+<trigger
+   enabled="n"
+   match=".*"
+   regexp="y"
+   name="end_gag_keep"
+   group="end_gag"
+   omit_from_output="n"
+   sequence="101"
+   send_to="12"
+>
+<send>
+   EnableTriggerGroup("end_gag", false)
+</send>
+</trigger>
+
+</triggers>
+
+<aliases>
+<alias
+   script="chat_echo"
+   match="^chats? echo( on| off)?$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
+</aliases>
+
+<!--  Script  -->
+
+<script>
+<![CDATA[
+echo = tonumber(GetVariable("echo")) or 1
+
+function echoStyles(styles)
+   for _, v in ipairs(styles) do
+      ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
+   end -- for each style run
+   Note ("")  -- wrap up line
+end
+
+function chats (name, line, wildcards, styles)
+   local tag_channel = string.match(styles[1].text, "chan ch=(%a+)")
+   
+   -- echo in this world only if the user wants
+   if (echo == 0) then
+      EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
+   else
+      -- strip out the tag
+      tag_length = string.find(styles[1].text,"}")
+      styles[1].text = string.sub(styles[1].text, tag_length+1)
+      styles[1].length = styles[1].length-tag_length
+      
+      -- display
+      echoStyles(styles)
+   end -- echo wanted
+end -- chats
+
+function untagged_info (name, line, wildcards, styles)
+   -- echo in this world only if the user wants
+   if (echo == 0) then
+      EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
+   else
+      echoStyles(styles)
+   end -- echo wanted
+   
+end -- untagged info
+
+function chat_echo (name, line, wildcards)
+   if wildcards [1] == "" then
+      echo = ((echo == 1 and 0) or 1)
+   elseif wildcards [1]:lower () == " on" then
+      echo = 1
+   elseif wildcards [1]:lower () == " off" then
+      echo = 0
+   end -- if
+
+   if echo == 1 then
+      ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
+   else
+      ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
+   end -- if
+   
+   OnPluginSaveState()
+end -- chat_echo
+
+function OnPluginSaveState()
+   SetVariable("echo", echo)
+end
+
+]]>
+</script>
+</muclient>
