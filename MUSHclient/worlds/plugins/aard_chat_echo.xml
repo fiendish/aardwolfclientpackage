@@ -13,6 +13,15 @@
    version="1.0"
    save_state="y"
 >
+
+<description trim="y">
+USAGE:
+
+   chats echo on      : show all chats in main window
+   chats echo off     : do not show any chats in main window
+   chats echo custom  : select a custom list of chats to show in the main window
+</description>
+
 </plugin>
 
 <triggers>
