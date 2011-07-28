@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1156 snapshot
+- bug fix: a small typo was blocking "chats echo off"
+
 r1154 snapshot
 - bug fix: pressing "enter" when asked about checking for updates was not activating the update checker as players expected. now fixed.
 - new feature: the chat capture window has a new option for customizing which channels get captured. this makes the creation of multiple chat capture windows as simple as copying the plugin and changing the ID.
