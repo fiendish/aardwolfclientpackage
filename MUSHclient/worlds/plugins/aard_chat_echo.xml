@@ -11,6 +11,7 @@
    date_written="2011-07-27 01:00:00"
    requires="4.75"
    version="1.0"
+   save_state="y"
 >
 </plugin>
 
@@ -127,7 +128,7 @@
 <aliases>
 <alias
    script="chat_echo"
-   match="^chats? echo( on| off)?$"
+   match="^chats? echo( on| off | custom)?$"
    enabled="y"
    regexp="y"
    sequence="100"
@@ -139,7 +140,22 @@
 
 <script>
 <![CDATA[
-echo = tonumber(GetVariable("echo")) or 1
+
+channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pokerinfo","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","wangrp","wardrums"}
+channels_table = {}
+loadstring(GetVariable("channels_table") or "")()
+
+function addNewChannel(name)
+   channels_table[name] = channels_table[name] or {echo=true}
+end
+
+function constructDefaultChannels()
+   for i,v in ipairs(channel_names) do
+      addNewChannel(v)
+   end
+end
+
+constructDefaultChannels()
 
 function echoStyles(styles)
    for _, v in ipairs(styles) do
@@ -149,12 +165,18 @@ function echoStyles(styles)
 end
 
 function chats (name, line, wildcards, styles)
-   local tag_channel = string.match(styles[1].text, "chan ch=(%a+)")
+   local tag = string.match(styles[1].text, "chan ch=(%a+)")
+   if not tag then
+      tag = string.match(styles[1].text, "{(say)}")
+   end
+   if not tag then
+      tag = string.match(styles[1].text, "{(tell)}")
+   end
    
    -- echo in this world only if the user wants
    if (echo == 0) then
       EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
-   else
+   elseif channels_table[tag] and channels_table[tag]["echo"] then
       -- strip out the tag
       tag_length = string.find(styles[1].text,"}")
       styles[1].text = string.sub(styles[1].text, tag_length+1)
@@ -176,25 +198,43 @@ function untagged_info (name, line, wildcards, styles)
 end -- untagged info
 
 function chat_echo (name, line, wildcards)
-   if wildcards [1] == "" then
-      echo = ((echo == 1 and 0) or 1)
-   elseif wildcards [1]:lower () == " on" then
-      echo = 1
-   elseif wildcards [1]:lower () == " off" then
-      echo = 0
-   end -- if
-
-   if echo == 1 then
-      ColourNote ("yellow", "", "Echoing chats in main window ENABLED.")
-   else
-      ColourNote ("yellow", "", "Echoing chats in main window DISABLED.")
+   if wildcards[1] == "" then
+      ColourNote("yellow", "", "Current channel echo status: ")
+      for i,v in ipairs(channel_names) do
+         ColourTell("yellow", "", tostring(v).." ")
+         ColourNote((channels_table[v]["echo"] and "lime") or "red", "", tostring(channels_table[v]["echo"] or "false"))
+      end
+   elseif wildcards[1]:lower() == " on" then
+      for k,v in pairs(channels_table) do
+         channels_table[k]["echo"] = true
+      end
+      ColourNote ("yellow", "", "All chats are now SHOWN in the main window.")
+   elseif wildcards[1]:lower() == " off" then
+      for k,v in pairs(channels_table) do
+         channels_table[k]["echo"] = nil
+      end
+      ColourNote ("yellow", "", "All chats are now HIDDEN in the main window.")
+   elseif wildcards[1]:lower() == " custom" then
+      tbl = {}
+      defaults = {}
+      for i,v in ipairs(channel_names) do
+         tbl[i] = v
+         defaults[i] = channels_table[v]["echo"]
+      end
+      local echo_result = utils.multilistbox ("Choose which channels to show in the main window.", "Main Output Echo Channel Selection", tbl, defaults)
+      if echo_result then
+         for i,v in ipairs(channel_names) do
+            channels_table[v]["echo"] = echo_result[i]
+         end
+      end
    end -- if
    
    OnPluginSaveState()
 end -- chat_echo
 
+require "serialize"
 function OnPluginSaveState()
-   SetVariable("echo", echo)
+   SetVariable("channels_table", serialize.save("channels_table"))
 end
 
 ]]>
