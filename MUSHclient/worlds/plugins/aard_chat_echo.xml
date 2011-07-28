@@ -137,7 +137,7 @@ USAGE:
 <aliases>
 <alias
    script="chat_echo"
-   match="^chats? echo( on| off | custom)?$"
+   match="^chats? echo( on| off| custom)?$"
    enabled="y"
    regexp="y"
    sequence="100"
