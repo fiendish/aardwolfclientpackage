@@ -323,6 +323,11 @@ function draw_main_window()
       ypos = (trheight - 500) / 2
    end
    WindowDrawImage (bgwin, "wolf_logo", xpos, ypos, 0, 0, miniwin.image_copy)  -- straight copy
+
+   WindowFilter (bgwin, xpos, ypos, xpos+WindowImageInfo(bgwin, "wolf_logo", 2), ypos+WindowImageInfo(bgwin, "wolf_logo", 3), miniwin.filter_red_brightness, bit.band(GetNormalColour(1), 0xFF))
+   WindowFilter (bgwin, xpos, ypos, xpos+WindowImageInfo(bgwin, "wolf_logo", 2), ypos+WindowImageInfo(bgwin, "wolf_logo", 3), miniwin.filter_green_brightness, bit.band(bit.shr(GetNormalColour(1),8), 0xFF))
+   WindowFilter (bgwin, xpos, ypos, xpos+WindowImageInfo(bgwin, "wolf_logo", 2), ypos+WindowImageInfo(bgwin, "wolf_logo", 3), miniwin.filter_blue_brightness, bit.band(bit.shr(GetNormalColour(1),16), 0xFF))
+
    add_title_dragger()
    add_main_resizer()
 end
