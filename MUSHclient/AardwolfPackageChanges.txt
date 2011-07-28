@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r1150 snapshot
+r1152 snapshot
 - new feature: the chat capture window has a new option for customizing which channels get captured. this makes the creation of multiple chat capture windows as simple as copying the plugin and changing the ID.
 - new feature: the "echo on/off" feature of the chat capture window has been spun off into its own plugin. commands are "chats echo on", "chats echo off", and "chats echo custom". The right-click option "Turn Echo Off" has thus been removed from the chat capture window.
 - bug fix: package updater errors should show the download url again
