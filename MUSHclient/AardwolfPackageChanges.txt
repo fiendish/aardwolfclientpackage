@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1162 snapshot
+- bug fix: you can now customize whether the trivia channel gets captured to the communication log
+- bug fix: the new chat echo mechanism will no longer always hide the trivia channel
+- misc change: added the chat echo plugin to the default plugins list
+- new feature: re-added right-click options to the chat capture window for "chats echo <on/off/custom>" commands to make this more discoverable for users
+- bug fix: the main output background image is now filtered appropriately if the user wants to change to a different color scheme like dark on light
+
 r1156 snapshot
 - bug fix: a small typo was blocking "chats echo off"
 
