@@ -82,10 +82,10 @@ local CONFIG_FONT_ID = "cfn"
 local CONFIG_FONT_ID_UL = "cfnu"
 
 -- size of room box
-local ROOM_SIZE = 12
+local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 12
 
 -- how far away to draw rooms from each other
-local DISTANCE_TO_NEXT_ROOM = 8
+local DISTANCE_TO_NEXT_ROOM = tonumber(GetVariable("DISTANCE_TO_NEXT_ROOM")) or 8
 
 -- supplied in init
 local config  -- configuration table 
@@ -1171,6 +1171,8 @@ function hide ()
 end -- hide
 
 function save_state ()
+   SetVariable("ROOM_SIZE", ROOM_SIZE)
+   SetVariable("DISTANCE_TO_NEXT_ROOM", DISTANCE_TO_NEXT_ROOM)
    movewindow.save_state (win)
 end -- save_state
 
