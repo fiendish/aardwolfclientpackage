@@ -185,7 +185,7 @@ function chats (name, line, wildcards, styles)
    -- echo in this world only if the user wants
    if (echo == 0) then
       EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
-   elseif channels_table[tag] and channels_table[tag]["echo"] then
+   elseif not (channels_table[tag] and not channels_table[chan]["echo"]) then
       -- strip out the tag
       tag_length = string.find(styles[1].text,"}")
       styles[1].text = string.sub(styles[1].text, tag_length+1)
