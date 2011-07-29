@@ -191,7 +191,7 @@ function chats (name, line, wildcards, styles)
       
       -- display
       echoStyles(styles)
-   else then
+   else
       EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
    end -- echo wanted
 end -- chats
