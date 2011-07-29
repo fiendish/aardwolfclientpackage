@@ -210,11 +210,25 @@ function OnPluginInstall()
    textDragger = "      "..win.."txtdragger"
    textResizer = "      "..win.."txtresize"
    bgwin = "      "..win.."text_background"
-      
+   bgoffscreen = "      "..win.."text_background_offscreen"
+   
    local dir = GetInfo(66)
    local imgpath = dir .. "worlds\\plugins\\images\\bg1.png"
    SetBackgroundImage(imgpath,13)
 
+   WindowCreate (bgwin, 0, 0, 0, 0, 12, 3, GetNormalColour(1))
+   WindowCreate (bgoffscreen, 0, 0, 0, 0, 12, 3, GetNormalColour(1))
+
+   local logopath = dir .. "worlds\\plugins\\images\\aardbg13.png"
+   if WindowLoadImage (bgoffscreen, "wolf_logo", logopath) == 0 then
+      WindowResize (bgoffscreen, WindowImageInfo(bgoffscreen, "wolf_logo", 2), WindowImageInfo(bgoffscreen, "wolf_logo", 3), GetNormalColour(1))
+      WindowDrawImage (bgoffscreen, "wolf_logo", 0, 0, 0, 0, miniwin.image_copy)
+      WindowFilter (bgoffscreen, 0, 0, 0, 0, miniwin.filter_red_brightness, bit.band(GetNormalColour(1), 0xFF))
+      WindowFilter (bgoffscreen, 0, 0, 0, 0, miniwin.filter_green_brightness, bit.band(bit.shr(GetNormalColour(1),8), 0xFF))
+      WindowFilter (bgoffscreen, 0, 0, 0, 0, miniwin.filter_blue_brightness, bit.band(bit.shr(GetNormalColour(1),16), 0xFF))
+      WindowImageFromWindow(bgwin, "wolf_logo", bgoffscreen)
+   end
+      
    --- Pull some state variables.
    check_main_background()
 
@@ -307,11 +321,7 @@ function draw_main_window()
       math.max(0, trwidth + 10), math.max(0, trheight + 10),
       12  , 3, GetNormalColour(1))
    WindowShow(bgwin, true)
-
-   local dir = GetInfo(66)
-   imgpath = dir .. "worlds\\plugins\\images\\aardbg13.png"
-   WindowLoadImage(bgwin, "wolf_logo", imgpath)
-
+   
    xpos = 0 
    ypos = 0
 
@@ -322,12 +332,8 @@ function draw_main_window()
    if trheight > 500 then
       ypos = (trheight - 500) / 2
    end
-   WindowDrawImage (bgwin, "wolf_logo", xpos, ypos, 0, 0, miniwin.image_copy)  -- straight copy
-
-   WindowFilter (bgwin, xpos, ypos, xpos+WindowImageInfo(bgwin, "wolf_logo", 2), ypos+WindowImageInfo(bgwin, "wolf_logo", 3), miniwin.filter_red_brightness, bit.band(GetNormalColour(1), 0xFF))
-   WindowFilter (bgwin, xpos, ypos, xpos+WindowImageInfo(bgwin, "wolf_logo", 2), ypos+WindowImageInfo(bgwin, "wolf_logo", 3), miniwin.filter_green_brightness, bit.band(bit.shr(GetNormalColour(1),8), 0xFF))
-   WindowFilter (bgwin, xpos, ypos, xpos+WindowImageInfo(bgwin, "wolf_logo", 2), ypos+WindowImageInfo(bgwin, "wolf_logo", 3), miniwin.filter_blue_brightness, bit.band(bit.shr(GetNormalColour(1),16), 0xFF))
-
+   WindowDrawImage (bgwin, "wolf_logo", xpos, ypos, 0, 0, miniwin.image_copy)
+   
    add_title_dragger()
    add_main_resizer()
 end
