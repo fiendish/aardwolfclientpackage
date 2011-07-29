@@ -1047,6 +1047,7 @@ function right_click_menu (hotspot_id)
    hotspots = {scroller=true, resize=true, down=true, up=true, textarea=true}
    menustring ="!"
    local hyperlink_skip = 0
+   local echo_skip = 0
    if (WindowInfo(win, 15) > TITLE_HEIGHT) and not hotspots[hotspot_id] then
       hyperlink_skip = 2
       menustring = menustring.."Go to URL: "..hyperlinks[hotspot_id].."|Copy URL to Clipboard|-|"
@@ -1055,8 +1056,14 @@ function right_click_menu (hotspot_id)
    menustring = menustring .. "|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<"
 
    menustring = menustring .. "|Customize Channels"
-   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<"
-   menustring = menustring .. "|-|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
+   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-"
+   
+   if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
+      menustring = menustring .. "|>Echo Channels In Main Window|Echo All|Echo None|Custom Echo List|<"
+      echo_skip = 3
+   end
+   
+   menustring = menustring .. "|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
@@ -1174,18 +1181,30 @@ function right_click_menu (hotspot_id)
          end
          show_mobsay = (((0 == show_mobsay) and 1) or 0)
          SetVariable("show_mobsay", show_mobsay)
-      elseif numResult == 16+hyperlink_skip then
+      end
+      
+      if echo_skip ~= 0 then
+         if numResult == 16+hyperlink_skip then
+            Execute("chats echo on")
+         elseif numResult == 16+hyperlink_skip+1 then
+            Execute("chats echo off")
+         elseif numResult == 16+hyperlink_skip+2 then
+            Execute("chats echo custom")
+         end
+      end
+      
+      if numResult == 16+hyperlink_skip+echo_skip then
          log_to_file = (((0 == log_to_file) and 1) or 0)
          SetVariable("log_to_file", log_to_file)
-      elseif numResult == 17+hyperlink_skip then
+      elseif numResult == 17+hyperlink_skip+echo_skip then
          log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
          SetVariable("log_colour_codes", log_colour_codes)
-      elseif numResult == 18+hyperlink_skip then
+      elseif numResult == 18+hyperlink_skip+echo_skip then
          log_timestamps = (((0 == log_timestamps) and 1) or 0)
          SetVariable("log_timestamps", log_timestamps)
-      elseif numResult == 19+hyperlink_skip then
+      elseif numResult == 19+hyperlink_skip+echo_skip then
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == 20+hyperlink_skip then
+      elseif numResult == 20+hyperlink_skip+echo_skip then
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       end
       OnPluginSaveState()
