@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1168 snapshot
+- bug fix: the gmcp mapper will now save the zoom level (room size) value
+- bug fix: the main output window plugin won't assume that the logo image exists anymore. this was a bug in r1157
+
 r1165 snapshot
 - bug fix: fixed a logical error in whether to gag the next blank line in the new echo customizing
 - bug fix: arglebargle. code typos in the 1162 snapshot causing errors. I hope nobody downloaded it in the 60 seconds it was up. :p
