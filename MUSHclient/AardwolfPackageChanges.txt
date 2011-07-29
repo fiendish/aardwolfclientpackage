@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1165 snapshot
+- bug fix: fixed a logical error in whether to gag the next blank line in the new echo customizing
+- bug fix: arglebargle. code typos in the 1162 snapshot causing errors. I hope nobody downloaded it in the 60 seconds it was up. :p
+
 r1162 snapshot
 - bug fix: you can now customize whether the trivia channel gets captured to the communication log
 - bug fix: the new chat echo mechanism will no longer always hide the trivia channel
