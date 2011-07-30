@@ -433,7 +433,7 @@ function right_click_menu ()
          font_size = default_font_size
          numBars = 5
          height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
-         width = default_width
+         width = MIN_WIDTH
          stacked = 1
          showLabels = 1
          reverseTNL = 1
