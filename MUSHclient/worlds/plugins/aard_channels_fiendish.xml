@@ -132,8 +132,6 @@ height = tonumber(GetVariable("WINDOW_HEIGHT")) or default_height
 log_to_file = tonumber(GetVariable("log_to_file")) or 0
 log_colour_codes = tonumber(GetVariable("log_colour_codes")) or 1
 log_timestamps = tonumber(GetVariable("log_timestamps")) or 1
-show_donations = tonumber(GetVariable("show_donations")) or 1
-show_mobsay = tonumber(GetVariable("show_mobsay")) or 1
 
 -- colours
 WINDOW_BACKGROUND_COLOUR = GetNormalColour(1)
@@ -166,6 +164,7 @@ windowinfo = ""
 startx = ""
 starty = ""
 
+show_donations = tonumber(GetVariable("show_donations")) or 1
 info_on = tonumber(GetVariable("info_on")) or 0
 global_quest_on = tonumber(GetVariable("global_quest_on")) or 0
 remort_auction_on = tonumber(GetVariable("remort_auction_on")) or 0
@@ -795,7 +794,7 @@ function OnPluginBroadcast (msg, id, name, text)
 
          msg = gmcpval("msg") or ""
          chan = gmcpval("chan") or ""
-         if (show_mobsay == 1 or chan ~= "mobsay") and (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+         if (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if not channels_table[chan] then
                addNewChannel(chan)
             end
@@ -1031,7 +1030,7 @@ end -- function chat_hide
 
 require "pairsbykeys"
 
-local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
+local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","mobsay","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
@@ -1063,7 +1062,7 @@ function right_click_menu (hotspot_id)
    menustring = menustring .. "|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<"
 
    menustring = menustring .. "|Customize Channels"
-   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((show_mobsay==1 and "+") or "").."Mob Speech|".."<|-"
+   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|".."<|-"
    
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
       menustring = menustring .. "|>Echo Channels In Main Window|Echo All|Echo None|Custom Echo List|<"
@@ -1182,38 +1181,45 @@ function right_click_menu (hotspot_id)
          end
          show_donations = (((0 == show_donations) and 1) or 0)
          SetVariable("show_donations", show_donations)
-      elseif numResult == 15+hyperlink_skip then
-         if show_mobsay == 0 then
-            ColourNote ("yellow", "", "Mob speech capturing is now ENABLED.")
-         else
-            ColourNote ("yellow", "", "Mob speech capturing is now DISABLED.")
-         end
-         show_mobsay = (((0 == show_mobsay) and 1) or 0)
-         SetVariable("show_mobsay", show_mobsay)
       end
       
       if echo_skip ~= 0 then
-         if numResult == 16+hyperlink_skip then
+         if numResult == 15+hyperlink_skip then
             Execute("chats echo on")
-         elseif numResult == 16+hyperlink_skip+1 then
+         elseif numResult == 15+hyperlink_skip+1 then
             Execute("chats echo off")
-         elseif numResult == 16+hyperlink_skip+2 then
+         elseif numResult == 15+hyperlink_skip+2 then
             Execute("chats echo custom")
          end
       end
       
-      if numResult == 16+hyperlink_skip+echo_skip then
+      if numResult == 15+hyperlink_skip+echo_skip then
          log_to_file = (((0 == log_to_file) and 1) or 0)
          SetVariable("log_to_file", log_to_file)
-      elseif numResult == 17+hyperlink_skip+echo_skip then
+         if log_to_file == 0 then
+            ColourNote ("yellow", "", "Logging to file is now DISABLED.")
+         else
+            ColourNote ("yellow", "", "Logging to file is now ENABLED.")
+         end
+      elseif numResult == 16+hyperlink_skip+echo_skip then
          log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
          SetVariable("log_colour_codes", log_colour_codes)
-      elseif numResult == 18+hyperlink_skip+echo_skip then
+         if log_colour_codes == 0 then
+            ColourNote ("yellow", "", "Color codes will be stripped from the log file.")
+         else
+            ColourNote ("yellow", "", "Color codes will be included in the log file.")
+         end
+      elseif numResult == 17+hyperlink_skip+echo_skip then
          log_timestamps = (((0 == log_timestamps) and 1) or 0)
          SetVariable("log_timestamps", log_timestamps)
-      elseif numResult == 19+hyperlink_skip+echo_skip then
+         if log_timestamps == 0 then
+            ColourNote ("yellow", "", "Timestamps will not be included in the log file.")
+         else
+            ColourNote ("yellow", "", "Timestamps will be included in the log file.")
+         end
+      elseif numResult == 18+hyperlink_skip+echo_skip then
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == 20+hyperlink_skip+echo_skip then
+      elseif numResult == 19+hyperlink_skip+echo_skip then
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       end
       OnPluginSaveState()
