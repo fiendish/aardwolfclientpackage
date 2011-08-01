@@ -1,7 +1,7 @@
 Aardwolf Client Package Major Changes List
 
 r1171 snapshot
-- bug fix: channel capture and chat echo plugins will now update themselves with newly discovered channels so that there isn't a repeat of missing channel bugs
+- new feature: channel capture and chat echo plugins will now update themselves with newly discovered channels so that there isn't a repeat of missing channel bugs
 - bug fix: add missing channels to the capture and echo plugins
 - bug fix: don't treat the channel capture customization result list as empty (cancel) just because the first item isn't captured
 - bug fix: fix the emergency shrink size on the health bars to actually be small instead of just the default size
