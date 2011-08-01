@@ -150,16 +150,20 @@ USAGE:
 <script>
 <![CDATA[
 
-channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pokerinfo","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
+require "pairsbykeys"
+
+local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
 function addNewChannel(name)
-   channels_table[name] = channels_table[name] or {echo=true}
+   if not channels_table[name] then
+      channels_table[name] = {echo=true}
+   end
 end
 
 function constructDefaultChannels()
-   for i,v in ipairs(channel_names) do
+   for i,v in ipairs(init_channel_names) do
       addNewChannel(v)
    end
 end
@@ -182,8 +186,11 @@ function chats (name, line, wildcards, styles)
       tag = string.match(styles[1].text, "{(tell)}")
    end
    
+   if not channels_table[tag] then
+      addNewChannel(tag)
+   end
    -- echo in this world only if the user wants
-   if not (channels_table[tag] and not channels_table[tag]["echo"]) then
+   if channels_table[tag]["echo"] then
       -- strip out the tag
       tag_length = string.find(styles[1].text,"}")
       styles[1].text = string.sub(styles[1].text, tag_length+1)
@@ -203,9 +210,9 @@ end
 function chat_echo (name, line, wildcards)
    if wildcards[1] == "" then
       ColourNote("yellow", "", "Current channel echo status: ")
-      for i,v in ipairs(channel_names) do
-         ColourTell("yellow", "", tostring(v).." ")
-         ColourNote((channels_table[v]["echo"] and "lime") or "red", "", tostring(channels_table[v]["echo"] or "false"))
+      for k,v in pairsByKeys(channels_table) do
+         ColourTell("yellow", "", tostring(k).." ")
+         ColourNote((v["echo"] and "lime") or "red", "", tostring(v["echo"] or "false"))
       end
    elseif wildcards[1]:lower() == " on" then
       for k,v in pairs(channels_table) do
@@ -218,15 +225,17 @@ function chat_echo (name, line, wildcards)
       end
       ColourNote ("yellow", "", "All chats are now HIDDEN in the main window.")
    elseif wildcards[1]:lower() == " custom" then
-      tbl = {}
-      defaults = {}
-      for i,v in ipairs(channel_names) do
-         tbl[i] = v
-         defaults[i] = channels_table[v]["echo"]
+      local tbl = {}
+      local defaults = {}
+      local i = 1
+      for k,v in pairsByKeys(channels_table) do
+         tbl[i] = k
+         defaults[i] = v["echo"]
+         i = i+1
       end
       local echo_result = utils.multilistbox ("Choose which channels to show in the main window.", "Main Output Echo Channel Selection", tbl, defaults)
       if echo_result then
-         for i,v in ipairs(channel_names) do
+         for i,v in ipairs(tbl) do
             channels_table[v]["echo"] = echo_result[i]
          end
       end
