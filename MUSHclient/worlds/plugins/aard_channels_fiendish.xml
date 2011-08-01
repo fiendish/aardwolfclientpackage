@@ -796,7 +796,10 @@ function OnPluginBroadcast (msg, id, name, text)
          msg = gmcpval("msg") or ""
          chan = gmcpval("chan") or ""
          if (show_mobsay == 1 or chan ~= "mobsay") and (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
-            if not (channels_table[chan] and not channels_table[chan]["capture"]) then
+            if not channels_table[chan] then
+               addNewChannel(chan)
+            end
+            if channels_table[chan]["capture"] then
                stampAndStore(ColoursToStyles(msg))
             end
          end
@@ -1026,16 +1029,20 @@ function chat_hide (name, line, wildcards)
    ColourNote ("yellow", "", "Chats window now hidden. Type 'chats show' to see it again.")
 end -- function chat_hide
 
-channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pokerinfo","question","quote","racetalk","rauction","rp","sports","spouse","tech","tiertalk","trivia","wangrp","wardrums"}
+require "pairsbykeys"
+
+local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
 function addNewChannel(name)
-   channels_table[name] = channels_table[name] or {capture=true}
+   if not channels_table[name] then
+      channels_table[name] = {capture=true}
+   end
 end
 
 function constructDefaultChannels()
-   for i,v in ipairs(channel_names) do
+   for i,v in ipairs(init_channel_names) do
       addNewChannel(v)
    end
 end
@@ -1127,15 +1134,17 @@ function right_click_menu (hotspot_id)
          date_format = "[%I:%M:%S%p] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
       elseif numResult == 10+hyperlink_skip then
-         tbl = {}
-         defaults = {}
-         for i,v in ipairs(channel_names) do
-            tbl[i] = v
-            defaults[i] = channels_table[v]["capture"]
+         local tbl = {}
+         local defaults = {}
+         local i = 1
+         for k,v in pairsByKeys(channels_table) do
+            tbl[i] = k
+            defaults[i] = v["capture"]
+            i = i+1
          end
          local capture_result = utils.multilistbox ("Choose which channels to capture to this communication log window.", "Communication Log Channel Selection", tbl, defaults)
-         if capture_result and #capture_result > 0 then
-            for i,v in ipairs(channel_names) do
+         if capture_result and next(capture_result) then -- cancel if the list is empty
+            for i,v in ipairs(tbl) do
                channels_table[v]["capture"] = capture_result[i]
             end
          end
