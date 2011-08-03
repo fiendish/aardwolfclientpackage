@@ -104,6 +104,16 @@ USAGE:
 
 <trigger
    enabled="n"
+   name="donations"
+   match="^CLAN ANNOUNCEMENT: \a+ has donated "
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
    match="^$"
    regexp="y"
    name="end_gag_omit"
@@ -152,7 +162,35 @@ USAGE:
 
 require "pairsbykeys"
 
-local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
+function hideEchos(info, global_quest, remort_auction, donations)
+   if info ~= nil then
+      EnableTrigger("info", info)
+      EnableTrigger("raidinfo", info)
+      EnableTrigger("claninfo", info)
+   end
+   if global_quest ~= nil then
+      EnableTrigger("global_quest", global_quest)
+   end
+   if remort_auction ~= nil then
+      EnableTrigger("remort_auction", remort_auction)
+   end
+   if donations ~= nil then
+      EnableTrigger("donations", donations)
+   end
+end
+
+local echo_info = GetVariable("echo_info")
+local echo_global_quest = GetVariable("echo_global_quest")
+local echo_remort_auction = GetVariable("echo_remort_auction")
+local echo_donations = GetVariable("echo_donations")
+echo_info = ((echo_info ~= nil) and echo_info) or false
+echo_global_quest = ((echo_global_quest ~= nil) and echo_global_quest) or false
+echo_remort_auction = ((echo_remort_auction ~= nil) and echo_remort_auction) or false
+echo_donations = ((echo_donations ~= nil) and echo_donations) or false
+
+hideEchos(echo_info, echo_global_quest, echo_remort_auction, echo_donations)
+
+local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","ltalk","market","mobsay","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
@@ -204,7 +242,7 @@ function chats (name, line, wildcards, styles)
 end -- chats
 
 function untagged_info (name, line, wildcards, styles)
-   echoStyles(styles)
+   EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
 end
 
 function chat_echo (name, line, wildcards)
