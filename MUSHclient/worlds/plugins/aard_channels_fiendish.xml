@@ -384,8 +384,6 @@ function OnPluginSaveState()
    SetVariable("log_colour_codes", log_colour_codes)
    SetVariable("log_timestamps", log_timestamps)
    SetVariable("show_donations", show_donations)
-   SetVariable("show_mobsay", show_mobsay)
-   
    SetVariable("channels_table", serialize.save("channels_table"))
 end --  OnPluginSaveState
 
@@ -1030,7 +1028,7 @@ end -- function chat_hide
 
 require "pairsbykeys"
 
-local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","market","mobsay","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
+local init_channel_names = {"advice","answer","auction","barter","claninfo","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","ltalk","market","mobsay","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
@@ -1065,8 +1063,12 @@ function right_click_menu (hotspot_id)
    menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|".."<|-"
    
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
-      menustring = menustring .. "|>Echo Channels In Main Window|Echo All|Echo None|Custom Echo List|<"
-      echo_skip = 3
+      info_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "info", 8)
+      remort_auction_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "remort_auction", 8)
+      global_quest_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "global_quest", 8)
+      donations_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "donations", 8)
+      menustring = menustring .. "|>Echo Channels In Main Window|Echo All|Echo None|Custom Echo List|-|>Echo Other Info|"..((info_echo and "+") or "").."INFO:|"..((global_quest_echo and "+") or "").."Global Quest:|"..((remort_auction_echo and "+") or "").."Remort Auction:|"..((donations_echo and "+") or "").."Clan Donations|<|<"
+      echo_skip = 7
    end
    
    menustring = menustring .. "|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
@@ -1190,6 +1192,14 @@ function right_click_menu (hotspot_id)
             Execute("chats echo off")
          elseif numResult == 15+hyperlink_skip+2 then
             Execute("chats echo custom")
+         elseif numResult == 15+hyperlink_skip+3 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", info_echo, nil, nil, nil)
+         elseif numResult == 15+hyperlink_skip+4 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, global_quest_echo, nil, nil)
+         elseif numResult == 15+hyperlink_skip+5 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, remort_auction_echo, nil)
+         elseif numResult == 15+hyperlink_skip+6 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, donations_echo)
          end
       end
       
