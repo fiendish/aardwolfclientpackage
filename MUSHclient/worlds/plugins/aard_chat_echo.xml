@@ -179,14 +179,10 @@ function hideEchos(info, global_quest, remort_auction, donations)
    end
 end
 
-local echo_info = GetVariable("echo_info")
-local echo_global_quest = GetVariable("echo_global_quest")
-local echo_remort_auction = GetVariable("echo_remort_auction")
-local echo_donations = GetVariable("echo_donations")
-echo_info = ((echo_info ~= nil) and echo_info) or false
-echo_global_quest = ((echo_global_quest ~= nil) and echo_global_quest) or false
-echo_remort_auction = ((echo_remort_auction ~= nil) and echo_remort_auction) or false
-echo_donations = ((echo_donations ~= nil) and echo_donations) or false
+local echo_info = GetVariable("echo_info") == "1"
+local echo_global_quest = GetVariable("echo_global_quest") == "1"
+local echo_remort_auction = GetVariable("echo_remort_auction") == "1"
+local echo_donations = GetVariable("echo_donations") == "1"
 
 hideEchos(echo_info, echo_global_quest, echo_remort_auction, echo_donations)
 
@@ -284,6 +280,10 @@ end -- chat_echo
 
 require "serialize"
 function OnPluginSaveState()
+   SetVariable("echo_info", GetTriggerOption("info", "enabled"))
+   SetVariable("echo_global_quest", GetTriggerOption("global_quest", "enabled"))
+   SetVariable("echo_remort_auction", GetTriggerOption("remort_auction", "enabled"))
+   SetVariable("echo_donations", GetTriggerOption("donations", "enabled"))
    SetVariable("channels_table", serialize.save("channels_table"))
 end
 
