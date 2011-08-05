@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1177 snapshot
+- new feature: new submenu added to the chat capture window for echoing other non-channel info messages to main output
+- bug fix: add some more channels to the initial capture/echo lists
+- bug fix: remove now obsolete extra mob speech capture toggle.
+
 r1171 snapshot
 - new feature: channel capture and chat echo plugins will now update themselves with newly discovered channels so that there isn't a repeat of missing channel bugs
 - bug fix: add missing channels to the capture and echo plugins
