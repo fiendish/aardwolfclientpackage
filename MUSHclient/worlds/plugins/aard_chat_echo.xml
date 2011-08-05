@@ -253,11 +253,13 @@ function chat_echo (name, line, wildcards)
          channels_table[k]["echo"] = true
       end
       ColourNote ("yellow", "", "All chats are now SHOWN in the main window.")
+      ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
    elseif wildcards[1]:lower() == " off" then
       for k,v in pairs(channels_table) do
          channels_table[k]["echo"] = nil
       end
       ColourNote ("yellow", "", "All chats are now HIDDEN in the main window.")
+      ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
    elseif wildcards[1]:lower() == " custom" then
       local tbl = {}
       local defaults = {}
