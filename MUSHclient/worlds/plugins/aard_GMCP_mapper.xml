@@ -815,7 +815,7 @@ function map_list (name, line, wildcards)
 end -- map_list
 
 function map_cexits_delete (name, line, wildcards)
-   local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", current_room)
+   local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", fixsql(current_room))
    dbcheck (db:execute (query))
    for k,v in pairs(rooms[current_room].exits) do
       if #k > 1 then
@@ -1023,9 +1023,9 @@ function map_portal (name, line, wildcards)
    res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
    luastmt = "gmcpdata = " .. gmcparg
    assert (loadstring (luastmt or "")) ()
-   local current_room = gmcpval("num")
-   if not(current_room) or current_room == "" or current_room == nil then
-      print ("PORTAL FAILED: No room number received from the mud yet.  Please try looking.")
+   
+   if not current_room then
+      print ("PORTAL FAILED: No room received from the mud yet.  Please try looking.")
       return
    end -- no room number.map_portal
   
