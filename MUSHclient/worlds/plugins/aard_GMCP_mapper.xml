@@ -1213,7 +1213,7 @@ function custom_exit (name, line, wildcards)
          if cexit_dest == "-1" then
             world.Note ("CEXIT FAILED: You cannot link custom exits to unmappable rooms.")
          elseif cexit_dest ~= cexit_start then
-            world.Note (string.format("Custom Exit: %d (%s) -> %d", cexit_start, cexit_command, cexit_dest))
+            world.Note (string.format("Custom Exit: %s (%s) -> %s", cexit_start, cexit_command, cexit_dest))
             dbcheck (db:execute (string.format ([[
                INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
                VALUES (%s, %s, %s, DATETIME('NOW'));
@@ -1233,7 +1233,7 @@ function custom_exit (name, line, wildcards)
 end -- custom_exit
 
 function save_room_to_database (uid,room) 
-  
+   
    assert (uid, "No UID supplied to save_room_to_database")
    local area_exists = false
    for n in db:nrows (string.format ("SELECT uid FROM areas where uid=%s", fixsql(room.area))) do
@@ -2454,7 +2454,7 @@ function got_gmcp_room()
    if not(room_number) then 
       return
    end
-   current_room = room_number
+   
    if current_room_is_cont ~= (gmcpval("coord.cont") == "1") then
       current_room_is_cont = (gmcpval("coord.cont") == "1")
       mapper.halt_drawing(bigmap_override and current_room_is_cont)
@@ -2472,7 +2472,15 @@ function got_gmcp_room()
       z = 0,
       exits = {} 
       }
-
+   
+   -- Try to accomodate closed clan rooms and other nomap rooms.
+   -- We'll have to make some other changes elsewhere as well.
+   if room_number == "-1" and compareTables(gmcpdata.exits, {}) then
+      room_number = "nomap_"..gmcproom.name.."_"..gmcproom.area
+   end
+   
+   current_room = room_number
+   
    local area_exists = false
    for n in db:nrows (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
       area_exists = true
@@ -2822,9 +2830,9 @@ end -- map_healers
 
 function map_goto (name, line, wildcards)
 
-   local wanted = tonumber(wildcards [1])
-   if not wanted or wanted < 0 then
-      mapper.mapprint ("The mapper goto command expects a room id number as input.")
+   local wanted = string.match(wildcards[1], "^(nomap_.+)$") or tonumber(wildcards [1])
+   if not wanted or (type(wanted) == "number" and  wanted < 0) then
+      mapper.mapprint ("The mapper goto command expects a room id as input.")
       return
    end
    if current_room and (wanted == current_room) then
@@ -2939,14 +2947,14 @@ function findpath(src, dst)
    local rcount = 0
    local next_room = 0
   
-   src = tonumber(src)
-   dst = tonumber(dst)
+   src = string.match(src, "^(nomap_.+)$") or tonumber(src)
+   dst = string.match(dst, "^(nomap_.+)$") or tonumber(dst)
 
    if src == dst or dst == nil then
       return {}
    end
   
-   table.insert(rooms_list, dst)
+   table.insert(rooms_list, fixsql(dst))
   
    local visited = ""
    local main_status = GetInfo(53)
@@ -2958,7 +2966,7 @@ function findpath(src, dst)
          ftd = room_sets[depth-1] or {}
          rooms_list = {}
          for k,v in pairs(ftd) do
-            table.insert(rooms_list, v.fromuid)
+            table.insert(rooms_list, fixsql(v.fromuid))
          end -- for from, to, dir      
       end -- if depth
 
