@@ -1025,7 +1025,7 @@ function map_portal (name, line, wildcards)
    assert (loadstring (luastmt or "")) ()
    
    if not current_room then
-      print ("PORTAL FAILED: No room received from the mud yet.  Please try looking.")
+      print ("PORTAL FAILED: No room received from the mud yet. Try using the 'LOOK' command first.")
       return
    end -- no room number.map_portal
   
@@ -1194,7 +1194,7 @@ function custom_exit (name, line, wildcards)
    if current_room then
       cexit_start = current_room
    else
-      world.Note("Need to know where we're starting out. Try typing 'LOOK' first.")
+      world.Note("CEXIT FAILED: No room received from the mud yet. Try using the 'LOOK' command first.")
       return
    end -- if current_room
 
