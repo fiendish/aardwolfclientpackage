@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1182 snapshot
+- new feature: the gmcp mapper now tries to handle rooms with uid -1 so that you can route through closed clan recall/portal rooms
+
 r1177 snapshot
 - new feature: new submenu added to the chat capture window for echoing other non-channel info messages to main output
 - bug fix: add some more channels to the initial capture/echo lists
