@@ -2475,7 +2475,7 @@ function got_gmcp_room()
    
    -- Try to accomodate closed clan rooms and other nomap rooms.
    -- We'll have to make some other changes elsewhere as well.
-   if room_number == "-1" and compareTables(gmcpdata.exits, {}) then
+   if room_number == "-1" then
       room_number = "nomap_"..gmcproom.name.."_"..gmcproom.area
    end
    
