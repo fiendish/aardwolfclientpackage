@@ -271,6 +271,9 @@ end
 
 
 function NoMap()
+   if show_map ~= 1 then
+      return
+   end
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
    local messages = {"If this continent map doesn't activate","walk onto the continent and type:","'bigmap update'"}
    for i,v in ipairs(messages) do
@@ -284,87 +287,91 @@ function NoMap()
 end
 
 
-function DrawMap()
-   if show_map == 1 then
-      local startx = 4
-      local starty = (font_height*2)+15
-      local image_name = "bigmap_continent_"..zone
-      if (not (use_gmcp_mapper == 1)) then
-         local window_width =  WindowImageInfo(mapwin,image_name,2) + 10
-         local window_height =  WindowImageInfo(mapwin,image_name,3) + 20 + (font_height * 2)
-         if nil == WindowInfo(mapwin, 1) then
-            -- recreate the window the correct size
-            WindowCreate (mapwin,
-               windowinfo.window_left,
-               windowinfo.window_top,
-               window_width,     -- width
-               window_height,  -- height
-               windowinfo.window_mode,
-               windowinfo.window_flags,
-               background_colour)
-            CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
-         else
-            WindowResize(mapwin, window_width, window_height, background_colour)
-         end
-         WindowShow (mapwin, true)
-      end
-      movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
-            
-      local xdiff = (WindowInfo(mapwin,3)-10)-WindowImageInfo(mapwin,image_name,2)
-      local ydiff = (WindowInfo(mapwin,4)-starty-6)-WindowImageInfo(mapwin,image_name,3)
-      
-      local correction_x = (WindowInfo(mapwin,3)-10)/WindowImageInfo(mapwin,image_name,2) -- stretch to x
-      local correction_y = (WindowInfo(mapwin,4)-starty-5)/WindowImageInfo(mapwin,image_name,3) -- stretch to y
-      if xdiff < ydiff then
-         correction_y = correction_x
+function DrawMap(clearHotspotsFirst)
+   if show_map ~= 1 then
+      return
+   end
+   if clearHotspotsFirst then
+      WindowDeleteAllHotspots(mapwin)
+   end
+   local startx = 4
+   local starty = (font_height*2)+15
+   local image_name = "bigmap_continent_"..zone
+   if (not (use_gmcp_mapper == 1)) then
+      local window_width =  WindowImageInfo(mapwin,image_name,2) + 10
+      local window_height =  WindowImageInfo(mapwin,image_name,3) + 20 + (font_height * 2)
+      if nil == WindowInfo(mapwin, 1) then
+         -- recreate the window the correct size
+         WindowCreate (mapwin,
+            windowinfo.window_left,
+            windowinfo.window_top,
+            window_width,     -- width
+            window_height,  -- height
+            windowinfo.window_mode,
+            windowinfo.window_flags,
+            background_colour)
+         CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
       else
-         correction_x = correction_y
+         WindowResize(mapwin, window_width, window_height, background_colour)
       end
-      WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
-      WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction_x*WindowImageInfo(mapwin,image_name,2)), starty + (correction_y*WindowImageInfo(mapwin,image_name,3)), 2)
-      local our_location_x = ((x - 1) * (rectangle_size-1) + (rectangle_size / 2) )
-      local our_location_y = ((y - 1) * (rectangle_size-1) + (rectangle_size / 2) )
+      WindowShow (mapwin, true)
+   end
+   movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
+         
+   local xdiff = (WindowInfo(mapwin,3)-10)-WindowImageInfo(mapwin,image_name,2)
+   local ydiff = (WindowInfo(mapwin,4)-starty-6)-WindowImageInfo(mapwin,image_name,3)
+   
+   local correction_x = (WindowInfo(mapwin,3)-10)/WindowImageInfo(mapwin,image_name,2) -- stretch to x
+   local correction_y = (WindowInfo(mapwin,4)-starty-5)/WindowImageInfo(mapwin,image_name,3) -- stretch to y
+   if xdiff < ydiff then
+      correction_y = correction_x
+   else
+      correction_x = correction_y
+   end
+   WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
+   WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction_x*WindowImageInfo(mapwin,image_name,2)), starty + (correction_y*WindowImageInfo(mapwin,image_name,3)), 2)
+   local our_location_x = ((x - 1) * (rectangle_size-1) + (rectangle_size / 2) )
+   local our_location_y = ((y - 1) * (rectangle_size-1) + (rectangle_size / 2) )
 
-      local name = continent or ""
-      local namewidth = WindowTextWidth (mapwin, font_id, name)
-      WindowText (mapwin, font_id, name, (WindowInfo(mapwin,3) - namewidth) / 2, 5, 0, 0, zone_name_colour)  -- title
+   local name = continent or ""
+   local namewidth = WindowTextWidth (mapwin, font_id, name)
+   WindowText (mapwin, font_id, name, (WindowInfo(mapwin,3) - namewidth) / 2, 5, 0, 0, zone_name_colour)  -- title
 
-      local coords = string.format ("Location: %2i, %2i", origx, origy)
-      local coordswidth = WindowTextWidth (mapwin, font_id, coords)
-      WindowText (mapwin, font_id, coords, (WindowInfo(mapwin,3) - coordswidth) / 2, 10 + font_height, 0, 0, zone_name_colour)  -- coords
+   local coords = string.format ("Location: %2i, %2i", origx, origy)
+   local coordswidth = WindowTextWidth (mapwin, font_id, coords)
+   WindowText (mapwin, font_id, coords, (WindowInfo(mapwin,3) - coordswidth) / 2, 10 + font_height, 0, 0, zone_name_colour)  -- coords
 
-      -- rounded rects around the player's position
-      WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-         startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
-         startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
-         ColourNameToRGB "cornflowerblue",  -- pen colour
-         miniwin.pen_solid, -- solid pen
-         3, -- pen width
-         0, -- brush colour
-         miniwin.brush_null, 25, 25 ) -- null brush
-      WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-         startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
-         startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
-         ColourNameToRGB "cyan",  -- pen colour
-         miniwin.pen_solid, -- solid pen
-         1, -- pen width
-         0, -- brush colour
-         miniwin.brush_null, 25, 25 ) -- null brush
-      WindowCircleOp (mapwin, miniwin.circle_rectangle,
-         startx+(correction_x*(our_location_x - rectangle_size+4)), starty+(correction_y*(our_location_y - rectangle_size/2)),
-         startx+(correction_x*(our_location_x + rectangle_size-4))-1, starty+(correction_y*(our_location_y + rectangle_size/2)) - 1,
-         ColourNameToRGB "cyan",  -- pen colour
-         miniwin.pen_solid, -- solid pen
-         2, -- pen width
-         0, -- brush colour
-         miniwin.brush_null ) -- null brush
+   -- rounded rects around the player's position
+   WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
+      startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
+      startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
+      ColourNameToRGB "cornflowerblue",  -- pen colour
+      miniwin.pen_solid, -- solid pen
+      3, -- pen width
+      0, -- brush colour
+      miniwin.brush_null, 25, 25 ) -- null brush
+   WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
+      startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
+      startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
+      ColourNameToRGB "cyan",  -- pen colour
+      miniwin.pen_solid, -- solid pen
+      1, -- pen width
+      0, -- brush colour
+      miniwin.brush_null, 25, 25 ) -- null brush
+   WindowCircleOp (mapwin, miniwin.circle_rectangle,
+      startx+(correction_x*(our_location_x - rectangle_size+4)), starty+(correction_y*(our_location_y - rectangle_size/2)),
+      startx+(correction_x*(our_location_x + rectangle_size-4))-1, starty+(correction_y*(our_location_y + rectangle_size/2)) - 1,
+      ColourNameToRGB "cyan",  -- pen colour
+      miniwin.pen_solid, -- solid pen
+      2, -- pen width
+      0, -- brush colour
+      miniwin.brush_null ) -- null brush
 
-      draw_edge() -- add border
-      if use_gmcp_mapper == 1 then
-         add_resize_tag() -- add resizer
-      end
-      BroadcastPlugin (999, "repaint")
-   end -- if
+   draw_edge() -- add border
+   if use_gmcp_mapper == 1 then
+      add_resize_tag() -- add resizer
+   end
+   BroadcastPlugin (999, "repaint")
 end -- DrawMap
 
 function resize_mouse_down(flags, hotspot_id)
@@ -473,8 +480,7 @@ function updatelocation()
       if zone and ((WindowImageList(mapwin) == nil) or (table.contains(WindowImageList(mapwin),"bigmap_continent_"..zone) == false)) then
          ConstructMap()
       end
-      WindowDeleteAllHotspots(mapwin)
-      DrawMap()
+      DrawMap(true)
    else
       NoMap()
    end -- if
@@ -696,7 +702,7 @@ end -- OnPluginClose
 
 function OnPluginEnable ()
    if (not (use_gmcp_mapper == 1)) then
-      WindowShow (mapwin, show_map)
+      WindowShow (mapwin, show_map == 1)
    else
       CallPlugin("b6eae87ccedd84f510b74714", "override_continents", ((show_map == 1) and "true") or "false");
    end
