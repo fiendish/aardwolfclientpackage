@@ -1942,7 +1942,7 @@ function room_click (uid, flags)
    if not room then
       return
    end -- if still not there
-  
+   
    local handlers = {
       { name = "Edit Note", func = room_edit_note} ,
       { name = "Edit Terrain Colour", func = room_edit_terrain_colour} ,
@@ -1959,6 +1959,17 @@ function room_click (uid, flags)
       tf [v.name] = v.func
    end -- for
       
+   rc, a, b, c = CallPlugin("60840c9013c7cc57777ae0ac", "getCurrentState")
+   if rc == 0 and a == true then
+      if b == 1 then
+         table.insert(t,"-")
+         table.insert(t,"Show Continent Bigmap")
+      elseif c == 1 then
+         table.insert(t,"-")
+         table.insert(t,"Merge Continent Bigmap Into GMCP Mapper")
+      end
+   end
+      
    local choice = WindowMenu (mapper.win, 
                         WindowInfo (mapper.win, 14), 
                         WindowInfo (mapper.win, 15), 
@@ -1968,6 +1979,10 @@ function room_click (uid, flags)
   
    if f then
       f (room, uid)
+   elseif choice == "Show Continent Bigmap" then
+      Execute("bigmap on")
+   elseif choice == "Merge Continent Bigmap Into GMCP Mapper" then
+      Execute("bigmap merge")
    end -- if handler found
                            
 end -- room_click

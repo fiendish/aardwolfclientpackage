@@ -159,6 +159,10 @@ rectangle_size = 8
 in_continent = false
 use_gmcp_mapper = tonumber(GetVariable("use_gmcp_mapper")) or 1
 
+function getCurrentState()
+   return in_continent, use_gmcp_mapper, show_map
+end
+
 function OnHelp ()
    Note (GetPluginInfo (GetPluginID (), 3))
 end
@@ -540,15 +544,26 @@ end -- function map_redirect
 
 function right_click_menu ()
    menustring = "Bring To Front|Send To Back"
+   if use_gmcp_mapper == 1 then
+      menustring = menustring.."|-|Hide Continent Bigmap|Unmerge Continent Bigmap From GMCP Mapper"
+   else
+      menustring = menustring.."|-|Hide Continent Bigmap|Merge Continent Bigmap Into GMCP Mapper"
+   end
    result = WindowMenu (mapwin,
-      WindowInfo (mapwin, 14),  -- x position
-      WindowInfo (mapwin, 15),   -- y position
+      WindowInfo (mapwin, 14), -- x position
+      WindowInfo (mapwin, 15), -- y position
       menustring) -- content
 
    if result == "Bring To Front" then
       CallPlugin("462b665ecb569efbf261422f","boostMe", mapwin)
    elseif result == "Send To Back" then
       CallPlugin("462b665ecb569efbf261422f","dropMe", mapwin)
+   elseif result == "Hide Continent Bigmap" then
+      Execute("bigmap off")
+   elseif result == "Merge Continent Bigmap Into GMCP Mapper" then
+      Execute("bigmap merge")
+   elseif result == "Unmerge Continent Bigmap From GMCP Mapper" then
+      Execute("bigmap unmerge")
    end -- if
 end -- right_click_menu
 

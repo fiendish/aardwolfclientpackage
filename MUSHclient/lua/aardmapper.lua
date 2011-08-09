@@ -1116,6 +1116,16 @@ end
 
 function right_click_menu()
    menustring = "Bring To Front|Send To Back"
+   
+   rc, a, b, c = CallPlugin("60840c9013c7cc57777ae0ac", "getCurrentState")
+   if rc == 0 and a == true then
+      if b == 1 then
+         menustring = menustring.."|-|Show Continent Bigmap"
+      elseif c == 1 then
+         menustring = menustring.."|-|Merge Continent Bigmap Into GMCP Mapper"
+      end
+   end
+   
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
@@ -1123,7 +1133,11 @@ function right_click_menu()
    if result == "Bring To Front" then
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == "Send To Back" then
-      CallPlugin("462b665ecb569efbf261422f","dropMe", win) 
+      CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+   elseif result == "Show Continent Bigmap" then
+      Execute("bigmap on")
+   elseif result == "Merge Continent Bigmap Into GMCP Mapper" then
+      Execute("bigmap merge")
    end
 end
 
