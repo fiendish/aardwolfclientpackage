@@ -9,7 +9,7 @@
 
 <plugin
    name="Aardwolf_Main_Layout"
-   author="Lasher"
+   author="Fiendish and Lasher"
    id="c293f9e7f04dde889f65cb90"
    language="Lua"
    purpose="Layout Aardwolf Main Screen"
@@ -21,6 +21,16 @@
 </plugin>
 
 <aliases>
+
+<alias
+   script="LayoutLock"
+   match="^aard layout( lock| unlock)?"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
+
 <alias
    script="reset_aard"
    match="resetmain"
@@ -61,6 +71,15 @@ orig_height      = 400  -- saves old height when we collapse window.
 MIN_SIZE         = 50
 rstagsize        = 15
 
+function LayoutLock(name, line, wildcards)
+   if wildcards[1] == " lock" then
+      SetVariable("lock_down_miniwindows", "1")
+   elseif wildcards[1] == " unlock" then
+      SetVariable("lock_down_miniwindows", "0")
+   end
+   print("\nCurrent layout lock status:", ((GetVariable("lock_down_miniwindows") == "1") and "LOCKED") or "UNLOCKED","\n")
+end
+
 function ResizeMainCallback()
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
    textrect_right = textrect_right + posx - startx
@@ -87,7 +106,9 @@ function ResizeMainCallback()
 end
 
 function DragMainCallback()
-
+   if GetVariable("lock_down_miniwindows") == "1" then
+      return
+   end
    posx, posy = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
    local height = GetInfo(293) - GetInfo(291)
    local width = GetInfo(292) - GetInfo(290)
