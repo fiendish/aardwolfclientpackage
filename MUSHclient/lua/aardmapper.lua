@@ -706,7 +706,6 @@ local function draw_room (uid, path, x, y)
 end -- draw_room
 
 local function changed_room (uid)
-   hyperlink_paths = nil  -- those hyperlinks are meaningless now
    if current_speedwalk then
       if uid ~= expected_room then
          local exp = rooms [expected_room]
@@ -1190,6 +1189,7 @@ function save_state ()
    movewindow.save_state (win)
 end -- save_state
 
+require "serialize"
 function full_find (name, dests, show_uid, expected_count, walk, fcb)
    local paths = {}
    local notfound = {}
@@ -1199,14 +1199,17 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb)
       local foundpath = findpath(current_room, v.uid)
       if not rooms [v.uid] then
          rooms [v.uid] = get_room (v.uid)
-      end -- if
+      end
       if foundpath ~= nil then
          paths[v.uid] = {path=foundpath, reason=v.reason}
-         -- get room if not already gotten
       else
          table.insert(notfound, {uid=v.uid, reason=v.reason})
       end
    end
+   
+   BroadcastPlugin(500, "found_paths = "..string.gsub(serialize.save_simple(paths),"%s+"," "))
+   BroadcastPlugin(501, "unfound_paths = "..string.gsub(serialize.save_simple(notfound),"%s+"," "))
+   
    local t = {}
    local found_count = 0
    for k in pairs (paths) do
@@ -1224,8 +1227,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb)
       start_speedwalk(path)
       return
    end -- if walking wanted
-   
-   hyperlink_paths = {}
+      
    Note("+------------------------------ START OF SEARCH -------------------------------+")  
    for _, uid in ipairs (t) do
       local room = rooms [uid] -- ought to exist or wouldn't be in table
@@ -1244,11 +1246,9 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb)
          room_name = room_name .. " (" .. uid .. ")"
       end -- if
       
-      -- in case the same UID shows up later, it is only valid from the same room
-      local hash = utils.tohex (utils.md5 (tostring (current_room) .. "<-->" .. tostring (uid)))
-      
       if current_room ~= uid then
-         Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")", 
+         table.insert(last_result_list, uid)
+         Hyperlink ("!!" .. GetPluginID () .. ":mapper.goto(" .. uid .. ")", 
             room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
       else
          Tell(room_name)
@@ -1263,7 +1263,6 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb)
       if fcb then
          fcb (uid)
       end -- if callback
-      hyperlink_paths [hash] = paths [uid].path
    end -- for each room
 
    if expected_count and found_count < expected_count then
@@ -1317,6 +1316,7 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
       end
 
       if current_room ~= v.uid then
+         table.insert(last_result_list, v.uid)
          Hyperlink ("!!" .. GetPluginID () .. ":mapper.goto("..v.uid..")", 
             room_name, "Click to speedwalk there", "", "", false)
       else
@@ -1340,6 +1340,19 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
    end -- for each room
    
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
+end
+
+function gotoNextResult()
+   if next_result_index ~= nil then
+      next_result_index = next_result_index+1
+      if next_result_index <= #last_result_list then
+         mapper.goto(last_result_list[next_result_index])
+         return
+      else
+         next_result_index = nil
+      end
+   end
+   ColourNote(RGBColourToName(config.MAPPER_NOTE_COLOUR.colour),"","NEXT ERROR: No more NEXT results left.")
 end
 
 function goto(uid)
@@ -1378,29 +1391,18 @@ function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quic
       mapprint(string.format("Your search returned more than %s results. Choose a more specific pattern.", max_paths))
       return
    end
+   
+   if not walk then
+      last_result_list = {}
+      next_result_index = 0
+   end
+   
    if quick_list == true then
       quick_find(name, dests, show_uid, expected_count, walk, fcb)
    else
       full_find(name, dests, show_uid, expected_count, walk, fcb)
    end
 end -- map_find_things
-
--- executed when the mapper draws a hyperlink to a room
-
-function do_hyperlink (hash)
-   if not check_connected () then
-      return
-   end -- if 
-   if not hyperlink_paths or not hyperlink_paths [hash] then
-      mapprint ("Hyperlink is no longer valid, as you have moved.")
-      return
-   end -- if
-   local path = hyperlink_paths [hash]
-   if #path > 0 then
-      last_hyperlink_uid = path [#path].uid
-   end -- if
-   start_speedwalk (path)
-end -- do_hyperlink
 
 -- build a speedwalk from a path into a string
 
@@ -1518,7 +1520,6 @@ function cancel_speedwalk ()
    end -- if
    current_speedwalk = nil
    expected_room = nil
-   hyperlink_paths = nil
    SetStatus ("Ready")
 end -- cancel_speedwalk
 
