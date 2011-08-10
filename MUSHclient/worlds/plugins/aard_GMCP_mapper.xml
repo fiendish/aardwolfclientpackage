@@ -120,7 +120,7 @@ mapper unmapped <here/area>    --> List unmapped exits in this or another area
 
 ===== MOVING ====================>
 
-mapper goto <room>             --> Walk to a room by its room number
+mapper goto <room id>          --> Walk to a room by its room number
 mapper resume                  --> Initiate a new run to the previous target
 
 ]]>
