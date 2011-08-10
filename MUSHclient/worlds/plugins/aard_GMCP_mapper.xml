@@ -106,6 +106,9 @@ mapper quest                   --> Show all quest-givers
 mapper quest <here/area>       --> Ditto
 mapper where <room id>         --> Show directions to a room number
 
+mapper next                    --> Visit the next room in the most recent
+                                 > list of results.
+
 ===== EXPLORING =================>
 
 mapper thisroom                --> Show details about the current room
@@ -379,6 +382,14 @@ mapper resume                  --> Initiate a new run to the previous target
    enabled="y"
    sequence="100"
    script="map_list"
+   regexp="n"
+></alias>
+
+<alias
+   match="mapper next"
+   enabled="y"
+   sequence="100"
+   script="mapper.gotoNextResult"
    regexp="n"
 ></alias>
 
