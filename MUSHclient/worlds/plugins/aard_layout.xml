@@ -81,6 +81,9 @@ function LayoutLock(name, line, wildcards)
 end
 
 function ResizeMainCallback()
+   if GetVariable("lock_down_miniwindows") == "1" then
+      return
+   end
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
    textrect_right = textrect_right + posx - startx
    startx = posx
