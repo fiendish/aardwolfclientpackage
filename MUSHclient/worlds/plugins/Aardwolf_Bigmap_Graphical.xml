@@ -389,6 +389,9 @@ function resize_release_callback()
 end
 
 function resize_move_callback()
+   if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
+      return
+   end
    local width  = WindowInfo(mapwin, 3)
    local height = WindowInfo(mapwin, 4)   
    local posx, posy = WindowInfo (mapwin, 17), WindowInfo (mapwin, 18)

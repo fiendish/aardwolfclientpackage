@@ -422,6 +422,9 @@ end
 -- only 'handlers' because they are set in WindowAddHotSpot
 ---------------------------------------------------------------------------------
 function ResizeMoveCallback()
+   if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
+      return
+   end
    posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
    width = width + posx - startx
    startx = posx

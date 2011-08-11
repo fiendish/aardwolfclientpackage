@@ -1656,6 +1656,9 @@ function resize_release_callback()
 end
 
 function resize_move_callback()
+   if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
+      return
+   end
    local posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
    config.WINDOW.width = config.WINDOW.width+posx-startx
    startx = posx
