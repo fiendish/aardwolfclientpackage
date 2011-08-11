@@ -1,12 +1,20 @@
 Aardwolf Client Package Major Changes List
 
+r1189 snapshot
+- new feature: there is now a mechanism ("aard layout", "aard layout lock", "aard layout unlock") for locking the miniwindow layout so that you can't accidentally move or resize participating miniwindows
+- new feature: gmcp mapper search result paths will get broadcasted as a plugin message. maybe useful, maybe not.
+- misc change: find result hyperlinks will no longer invalidate if the player moves
+- new feature: the gmcp mapper now has a "mapper next" command that runs to the next unvisited room in the previous search result list
+- new feature: the bigmap now has more right-click options for show/hide/merge/unmerge
+- bug fix: gmcp mapper hotspots were getting wiped if the player started the plugin on a continent and the bigmap view was off
+
 r1182 snapshot
 - new feature: the gmcp mapper now tries to handle rooms with uid -1 so that you can route through closed clan recall/portal rooms
 
 r1177 snapshot
 - new feature: new submenu added to the chat capture window for echoing other non-channel info messages to main output
 - bug fix: add some more channels to the initial capture/echo lists
-- bug fix: remove now obsolete extra mob speech capture toggle.
+- bug fix: remove now obsolete extra mob speech capture toggle
 
 r1171 snapshot
 - new feature: channel capture and chat echo plugins will now update themselves with newly discovered channels so that there isn't a repeat of missing channel bugs
