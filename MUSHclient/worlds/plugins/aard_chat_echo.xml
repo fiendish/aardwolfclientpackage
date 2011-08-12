@@ -54,6 +54,16 @@ USAGE:
 
 <trigger
    enabled="n"
+   name="pray"
+   match="^\[ \*\* \(Pray\) \*\* \].+$"
+   regexp="y"
+   script="untagged_info"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
    name="remort_auction"
    match="^Remort Auction:.+$"
    regexp="y"
@@ -162,7 +172,7 @@ USAGE:
 
 require "pairsbykeys"
 
-function hideEchos(info, global_quest, remort_auction, donations)
+function hideEchos(info, global_quest, remort_auction, donations, pray)
    if info ~= nil then
       EnableTrigger("info", info)
       EnableTrigger("raidinfo", info)
@@ -177,14 +187,17 @@ function hideEchos(info, global_quest, remort_auction, donations)
    if donations ~= nil then
       EnableTrigger("donations", donations)
    end
+   if pray ~= nil then
+      EnableTrigger("pray", pray)
+   end
 end
 
 local echo_info = GetVariable("echo_info") == "1"
 local echo_global_quest = GetVariable("echo_global_quest") == "1"
 local echo_remort_auction = GetVariable("echo_remort_auction") == "1"
 local echo_donations = GetVariable("echo_donations") == "1"
-
-hideEchos(echo_info, echo_global_quest, echo_remort_auction, echo_donations)
+local echo_pray = GetVariable("echo_pray") == "1"
+hideEchos(echo_info, echo_global_quest, echo_remort_auction, echo_donations, pray)
 
 local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","ltalk","market","mobsay","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
 channels_table = {}
@@ -287,6 +300,7 @@ function OnPluginSaveState()
    SetVariable("echo_remort_auction", GetTriggerOption("remort_auction", "enabled"))
    SetVariable("echo_donations", GetTriggerOption("donations", "enabled"))
    SetVariable("channels_table", serialize.save("channels_table"))
+   SetVariable("echo_pray", GetTriggerOption("pray", "enabled"))
 end
 
 ]]>
