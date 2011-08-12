@@ -1305,9 +1305,11 @@ end -- fix_up_exit
 function map_purgezone (name, line, wildcards)
    local zoneuid = string.gsub(wildcards[1], "^%s*(.-)%s*$", "%1")
    local found = false
-  
+   local zone_name = ""
    if #(wildcards[1]) > 1 and string.sub(wildcards[1], 1, 1) == " " then
-      for row in db:nrows(string.format("SELECT uid FROM areas WHERE uid = %s;", fixsql (zoneuid))) do
+   
+      for row in db:nrows(string.format("SELECT uid,name FROM areas WHERE uid = %s;", fixsql (zoneuid))) do
+         zone_name = row.name
          found = true
       end   -- finding area uid
    end
@@ -1321,11 +1323,13 @@ function map_purgezone (name, line, wildcards)
    dbcheck (db:execute (string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid))))
    dbcheck (db:execute (string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid))))
    dbcheck (db:execute (string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))))
+   dbcheck (db:execute (string.format ("delete from bookmarks where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))))
    dbcheck (db:execute (string.format ("delete from rooms where area = %s;", fixsql(zoneuid))))
    dbcheck (db:execute (string.format ("delete from areas where uid = %s;", fixsql(zoneuid))))
 
    rooms = {}
-   mapper.mapprint ("Purged " .. zoneuid .. " from the mapper database.")
+   mapper.mapprint ("Purged " .. zone_name .. " from the mapper database.")
+   Send_GMCP_Packet("request room")
 end 
 
 function map_clearcache() 
