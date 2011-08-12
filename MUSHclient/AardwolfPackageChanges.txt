@@ -1,7 +1,7 @@
 Aardwolf Client Package Major Changes List
 
-r1247 snapshot
--bug fix: mapper purgezone will now also clear old room notes
+r1248 snapshot
+- bug fix: mapper purgezone will now also clear old room notes
 
 r1189 snapshot
 - new feature: there is now a mechanism ("aard layout", "aard layout lock", "aard layout unlock") for locking the miniwindow layout so that you can't accidentally move or resize participating miniwindows
