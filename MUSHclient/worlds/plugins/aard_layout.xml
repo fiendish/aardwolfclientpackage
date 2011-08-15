@@ -338,25 +338,16 @@ function draw_main_window()
       miniwin.brush_solid) -- OutsideFillStyle
 
    -- Add a mini-window under main text area so background won't mess it up.
-   trwidth = t_right - textrect_left
-   trheight = t_bottom - textrect_top
+   local trwidth = t_right - textrect_left
+   local trheight = t_bottom - textrect_top
 
    WindowCreate (bgwin, textrect_left - 5, textrect_top - 5, 
       math.max(0, trwidth + 10), math.max(0, trheight + 10),
       12  , 3, GetNormalColour(1))
    WindowShow(bgwin, true)
    
-   xpos = 0 
-   ypos = 0
-
-   if trwidth > 500 then
-      xpos = (trwidth - 500) / 2
-   end
-
-   if trheight > 500 then
-      ypos = (trheight - 500) / 2
-   end
-   WindowDrawImage (bgwin, "wolf_logo", xpos, ypos, 0, 0, miniwin.image_copy)
+   local side = math.min(trwidth,trheight)
+   WindowDrawImage (bgwin, "wolf_logo", (trwidth-side)/2, (trheight-side)/2, (trwidth+side)/2, (trheight+side)/2, miniwin.image_stretch)
    
    add_title_dragger()
    add_main_resizer()
