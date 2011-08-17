@@ -251,6 +251,7 @@ function OnPluginInstall()
       WindowFilter (bgoffscreen, 0, 0, 0, 0, miniwin.filter_green_brightness, bit.band(bit.shr(GetNormalColour(1),8), 0xFF))
       WindowFilter (bgoffscreen, 0, 0, 0, 0, miniwin.filter_blue_brightness, bit.band(bit.shr(GetNormalColour(1),16), 0xFF))
       WindowImageFromWindow(bgwin, "wolf_logo", bgoffscreen)
+      image_ratio = WindowImageInfo(bgwin, "wolf_logo", 2)/WindowImageInfo(bgwin, "wolf_logo", 3)
    end
       
    --- Pull some state variables.
@@ -346,8 +347,16 @@ function draw_main_window()
       12  , 3, GetNormalColour(1))
    WindowShow(bgwin, true)
    
-   local side = math.min(trwidth,trheight)
-   WindowDrawImage (bgwin, "wolf_logo", (trwidth-side)/2, (trheight-side)/2, (trwidth+side)/2, (trheight+side)/2, miniwin.image_stretch)
+   local rect_ratio = trwidth/trheight
+   if rect_ratio > image_ratio then
+      image_height = trheight
+      image_width = trheight*image_ratio
+   else
+      image_height = trwidth/image_ratio
+      image_width = trwidth
+   end
+   
+   WindowDrawImage (bgwin, "wolf_logo", (trwidth-image_width)/2, (trheight-image_height)/2, (trwidth+image_width)/2, (trheight+image_height)/2, miniwin.image_stretch)
    
    add_title_dragger()
    add_main_resizer()
