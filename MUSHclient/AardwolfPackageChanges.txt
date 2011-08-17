@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r1309 snapshot
+- new feature: the ascii minimap now has a requested right-click option for also echoing the map in main output
+- bug fix: removed old down exit in the default gmcp map database left by daoine moving their clan hall entrance
+- misc change: the main output background image now scales appropriately to fill the space
+- bug fix: pray added to the channel capture/echo plugins
+
 r1248 snapshot
 - bug fix: mapper purgezone will now also clear old room notes
 
