@@ -172,6 +172,7 @@ end
 function map_redirect (name, line, wildcards, styles)
    EnableTrigger ("multi_line_map", true)  -- capture subsequent lines
    if name == "map_start" then   --- Setup the window.
+      line_count = 1
       map_lines = {} --reset ready for new map
    elseif name == "map_end" then
       EnableTrigger ("multi_line_map", false)  -- no more lines to go
@@ -179,6 +180,14 @@ function map_redirect (name, line, wildcards, styles)
       DisplayMapPage () --end of map from MUD, display the window
    else
       table.insert (map_lines, styles)
+      if also_echo_map == 1 then
+         line_count = line_count + 1
+         if line_count == 4 then
+            SetTriggerOption ("multi_line_map", "omit_from_output", "n")
+         elseif line_count == 20 then
+            SetTriggerOption ("multi_line_map", "omit_from_output", "y")
+         end
+      end
    end
 end -- function map_redirect
 
@@ -341,7 +350,7 @@ function right_click_menu ()
       menustring = (menustring.."|Show Coordinates")
    end
 
-   menustring = (menustring .."|-|Bring To Front|Send To Back|-|Reset Defaults")
+   menustring = (menustring .."|-|Bring To Front|Send To Back|-|"..(((also_echo_map == 1) and "+") or "").."Echo Map In Main Output|Reset Defaults")
 
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
@@ -372,12 +381,15 @@ function right_click_menu ()
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == "Send To Back" then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+   elseif result == "Echo Map In Main Output" then
+      also_echo_map = (((also_echo_map == 0) and 1) or 0)
    elseif result == "Reset Defaults" then
       font_name = default_font_name
       font_size = default_font_size
       height = default_height
       width = default_width
       show_coords = 0
+      also_echo_map = 0
       -- save and reload
       OnPluginSaveState()
       OnPluginInstall()
@@ -579,6 +591,7 @@ function OnPluginSaveState ()
    SetVariable ("showcoords", show_coords)
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
+   SetVariable ("also_echo_map", also_echo_map)
 end -- OnPluginSaveState
 
 function OnPluginClose ()
@@ -616,6 +629,7 @@ function OnPluginInstall()
    height = tonumber (GetVariable ("height")) or default_height
    width = tonumber (GetVariable ("width")) or default_width
    show_coords = tonumber (GetVariable ("showcoords")) or show_coords
+   also_echo_map = tonumber (GetVariable("also_echo_map")) or 0
 
    -- make window so I can grab the font info
    WindowCreate (win, 1, 1, width, height, 0, 0, background_colour) 
