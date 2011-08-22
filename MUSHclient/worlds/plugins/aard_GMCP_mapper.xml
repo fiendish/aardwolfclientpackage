@@ -1182,14 +1182,14 @@ end
 
 function ExecuteWithWaits(cexit_command)
    local partial_cexit_command = cexit_command
-   local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d+%);?")
+   local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d+.?%d*%);?")
    while strbegin do
-      strbegin,strend = string.find(partial_cexit_command,";?wait%(%d+%);?")
+      strbegin,strend = string.find(partial_cexit_command,";?wait%(%d+.?%d*%);?")
       if strbegin ~= nil and strbegin ~= 1 then
          Execute(string.sub(partial_cexit_command,1,strbegin-1))
       end
       if strend then
-         wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d+)%)"))
+         wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d+.?%d*)%)"))
          Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
          BroadcastPlugin(999, "repaint")
          wait.time(wait_time)
@@ -1239,7 +1239,7 @@ function custom_exit (name, line, wildcards)
    wait.make (function()
       local cexit_delay = temp_cexit_delay or BASE_CEXIT_DELAY
       local added_waits = 0
-      for wait_secs in string.gmatch(cexit_command, "wait%((%d+)%)") do
+      for wait_secs in string.gmatch(cexit_command, "wait%((%d+.?%d*)%)") do
          added_waits = added_waits + tonumber(wait_secs)
       end
       world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING.\nThis should take about "..cexit_delay+added_waits.." seconds"..(((added_waits ~= 0) and " (includes "..added_waits.." seconds in added waits)") or "")..".")
