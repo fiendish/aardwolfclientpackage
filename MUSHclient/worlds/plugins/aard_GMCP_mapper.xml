@@ -68,6 +68,9 @@ mapper cexits <here/area>      --> List known custom exits only in this or
                                  > another area
 mapper cexit <command>         --> Follow and link a custom exit
                                  > (ex: 'mapper cexit ride bucket')
+                                 > To insert a pause during execution
+                                 > of the cexit, use wait(<seconds>) as one
+                                 > or more of the cexit moves
 mapper delete cexits           --> Remove the custom exits from this room
 mapper purge cexits            --> Remove all custom exits
 mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
@@ -1177,6 +1180,25 @@ function change_cexit_delay(name, line, wildcards)
    Note("CEXIT_DELAY: The next mapper custom exit will have ".. (temp_cexit_delay or BASE_CEXIT_DELAY) .." seconds to complete.\n")
 end
 
+function ExecuteWithWaits(cexit_command)
+   local partial_cexit_command = cexit_command
+   local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d+%);?")
+   while strbegin do
+      strbegin,strend = string.find(partial_cexit_command,";?wait%(%d+%);?")
+      if strbegin ~= nil and strbegin ~= 1 then
+         Execute(string.sub(partial_cexit_command,1,strbegin-1))
+      end
+      if strend then
+         wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d+)%)"))
+         Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
+         BroadcastPlugin(999, "repaint")
+         wait.time(wait_time)
+         partial_cexit_command = string.sub(partial_cexit_command, strend+1)
+      end
+   end
+   Execute(partial_cexit_command)
+end
+
 -- custom_exit function contributed by Spartacus
 function custom_exit (name, line, wildcards)
 
@@ -1215,8 +1237,11 @@ function custom_exit (name, line, wildcards)
    end
   
    wait.make (function()
-      Execute(cexit_command)
-      world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING. THIS SHOULD TAKE ABOUT "..(temp_cexit_delay or BASE_CEXIT_DELAY).." SECONDS.")
+      
+      world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING. THIS SHOULD TAKE ABOUT "..(temp_cexit_delay or BASE_CEXIT_DELAY).." SECONDS (plus any additional waits you've added).")
+      BroadcastPlugin(999, "repaint")
+      ExecuteWithWaits(cexit_command)
+
       wait.time(temp_cexit_delay or BASE_CEXIT_DELAY)
       temp_cexit_delay = nil
       cexit_dest = current_room
