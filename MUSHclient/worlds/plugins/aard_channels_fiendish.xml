@@ -85,6 +85,15 @@ USAGE:
    sequence="100"
 ></trigger>
 
+<trigger
+   enabled="n"
+   name="warfare"
+   match="^WARFARE:.+$"
+   regexp="y"
+   script="untagged_info"
+   sequence="100"
+></trigger>
+
 </triggers>
 
 <aliases>
@@ -178,6 +187,8 @@ info_on = tonumber(GetVariable("info_on")) or 0
 global_quest_on = tonumber(GetVariable("global_quest_on")) or 0
 remort_auction_on = tonumber(GetVariable("remort_auction_on")) or 0
 pray_on = tonumber(GetVariable("pray_on")) or 1
+warfare_on = tonumber(GetVariable("warfare_on")) or 0
+SetTriggerOption("warfare", "enabled", warfare_on)
 SetTriggerOption("info", "enabled", info_on)
 SetTriggerOption("raidinfo", "enabled", info_on)
 SetTriggerOption("claninfo", "enabled", info_on)
@@ -394,6 +405,7 @@ function OnPluginSaveState()
    SetVariable("global_quest_on", global_quest_on)
    SetVariable("remort_auction_on", remort_auction_on)
    SetVariable("pray_on", pray_on)
+   SetVariable("warfare_on", warfare_on)
    SetVariable("log_to_file", log_to_file)
    SetVariable("log_colour_codes", log_colour_codes)
    SetVariable("log_timestamps", log_timestamps)
@@ -1074,16 +1086,17 @@ function right_click_menu (hotspot_id)
    menustring = menustring .. "|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<"
 
    menustring = menustring .. "|Customize Channels"
-   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((pray_on==1 and "+") or "").."Pray|".."<|-"
+   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((pray_on==1 and "+") or "").."Pray|"..((warfare_on==1 and "+") or "").."WARFARE:|".."<|-"
    
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
       info_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "info", 8)
       remort_auction_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "remort_auction", 8)
       pray_echo = not GetPluginTriggerInfo("55616ea13339bc68e963e1f8", "pray", 8)
+      warfare_echo = not GetPluginTriggerInfo("55616ea13339bc68e963e1f8", "warfare", 8)
       global_quest_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "global_quest", 8)
       donations_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "donations", 8)
-      menustring = menustring .. "|>Echo Channels In Main Window|Echo All|Echo None|Custom Echo List|-|>Echo Other Info|"..((info_echo and "+") or "").."INFO:|"..((global_quest_echo and "+") or "").."Global Quest:|"..((remort_auction_echo and "+") or "").."Remort Auction:|"..((donations_echo and "+") or "").."Clan Donations|"..((pray_echo and "+") or "").."Pray|".."<|<"
-      echo_skip = 8
+      menustring = menustring .. "|>Echo Channels In Main Window|Echo All|Echo None|Custom Echo List|-|>Echo Other Info|"..((info_echo and "+") or "").."INFO:|"..((global_quest_echo and "+") or "").."Global Quest:|"..((remort_auction_echo and "+") or "").."Remort Auction:|"..((donations_echo and "+") or "").."Clan Donations|"..((pray_echo and "+") or "").."Pray|"..((warfare_echo and "+") or "").."WARFARE:|".."<|<"
+      echo_skip = 9
    end
    
    menustring = menustring .. "|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
@@ -1206,29 +1219,39 @@ function right_click_menu (hotspot_id)
          end
          EnableTrigger("pray", 0 == pray_on)
          pray_on = GetTriggerOption("pray","enabled")      
+      elseif numResult == 16+hyperlink_skip then
+         if warfare_on == 0 then
+            ColourNote ("yellow", "", "Warfare capturing is now ENABLED.")
+         else
+            ColourNote ("yellow", "", "Warfare capturing is now DISABLED.")
+         end
+         EnableTrigger("warfare", 0 == warfare_on)
+         warfare_on = GetTriggerOption("warfare","enabled") 
       end
       
       if echo_skip ~= 0 then
-         if numResult == 16+hyperlink_skip then
+         if numResult == 17+hyperlink_skip then
             Execute("chats echo on")
-         elseif numResult == 16+hyperlink_skip+1 then
+         elseif numResult == 17+hyperlink_skip+1 then
             Execute("chats echo off")
-         elseif numResult == 16+hyperlink_skip+2 then
+         elseif numResult == 17+hyperlink_skip+2 then
             Execute("chats echo custom")
-         elseif numResult == 16+hyperlink_skip+3 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", info_echo, nil, nil, nil, nil)
-         elseif numResult == 16+hyperlink_skip+4 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, global_quest_echo, nil, nil, nil)
-         elseif numResult == 16+hyperlink_skip+5 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, remort_auction_echo, nil, nil)
-         elseif numResult == 16+hyperlink_skip+6 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, donations_echo, nil)
-         elseif numResult == 16+hyperlink_skip+7 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, nil, pray_echo)
+         elseif numResult == 17+hyperlink_skip+3 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", info_echo, nil, nil, nil, nil, nil)
+         elseif numResult == 17+hyperlink_skip+4 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, global_quest_echo, nil, nil, nil, nil)
+         elseif numResult == 17+hyperlink_skip+5 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, remort_auction_echo, nil, nil, nil)
+         elseif numResult == 17+hyperlink_skip+6 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, donations_echo, nil, nil)
+         elseif numResult == 17+hyperlink_skip+7 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, nil, pray_echo, nil)
+         elseif numResult == 17+hyperlink_skip+8 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, nil, nil, warfare_echo)
          end
       end
       
-      if numResult == 16+hyperlink_skip+echo_skip then
+      if numResult == 17+hyperlink_skip+echo_skip then
          log_to_file = (((0 == log_to_file) and 1) or 0)
          SetVariable("log_to_file", log_to_file)
          if log_to_file == 0 then
@@ -1236,7 +1259,7 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Logging to file is now ENABLED.")
          end
-      elseif numResult == 17+hyperlink_skip+echo_skip then
+      elseif numResult == 18+hyperlink_skip+echo_skip then
          log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
          SetVariable("log_colour_codes", log_colour_codes)
          if log_colour_codes == 0 then
@@ -1244,7 +1267,7 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Color codes will be included in the log file.")
          end
-      elseif numResult == 18+hyperlink_skip+echo_skip then
+      elseif numResult == 19+hyperlink_skip+echo_skip then
          log_timestamps = (((0 == log_timestamps) and 1) or 0)
          SetVariable("log_timestamps", log_timestamps)
          if log_timestamps == 0 then
@@ -1252,9 +1275,9 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Timestamps will be included in the log file.")
          end
-      elseif numResult == 19+hyperlink_skip+echo_skip then
-         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
       elseif numResult == 20+hyperlink_skip+echo_skip then
+         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      elseif numResult == 21+hyperlink_skip+echo_skip then
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       end
       OnPluginSaveState()
