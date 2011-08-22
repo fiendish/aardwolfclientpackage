@@ -775,15 +775,15 @@ function map_areas (name, line, wildcards)
    local area = wildcards[1] or ""
    local count = 0
     
-   local hr = "| keyword    | Area Name                               |"
-   local hl = "+------------+-----------------------------------------+"
-   local fmt = "| %10.10s | %-39.39s |"
+   local hr = "| keyword    | Area Name                               | Explored |"
+   local hl = "+------------+-----------------------------------------+----------+"
+   local fmt = "| %10.10s | %-39.39s | %8.8s |"
    if area == "" then
       query = "SELECT uid, name FROM areas WHERE uid in (SELECT DISTINCT area FROM rooms) ORDER BY name;"
       intro = "The following areas have been mapped:"
    else
       query = string.format("SELECT uid, name FROM areas WHERE name LIKE %s AND uid in (SELECT DISTINCT area FROM rooms) ORDER BY name;", fixsql("%"..area.."%"))
-      intro = string.format("The following rooms in areas matching '%s' have been mapped:",area)
+      intro = string.format("The following areas matching '%s' have been mapped:",area)
    end -- if area
   
    Note ("\n"..intro)
@@ -792,9 +792,13 @@ function map_areas (name, line, wildcards)
    Note (hl)
 
    for row in db:nrows(query) do
-      line = string.format(fmt,row.uid, row.name)
+      query2 = string.format("SELECT count(uid) as count FROM rooms WHERE area=%s;",fixsql(row.uid))
+      for row2 in db:nrows(query2) do
+         line = string.format(fmt,row.uid, row.name, row2.count)
+      end
       Note (line)
       count = count + 1
+      BroadcastPlugin(999, "repaint")
    end
   
    Note (hl)
