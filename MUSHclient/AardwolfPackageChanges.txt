@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1315 snapshot
+- new feature: the gmcp mapper now has the ability to stop and wait during the execution of custom exit sequences by using wait(<seconds>) as one or more movement steps. Example: wait(1.3) will pause for 1.3 seconds
+
 r1309 snapshot
 - new feature: the ascii minimap now has a requested right-click option for also echoing the map in main output
 - bug fix: removed old down exit in the default gmcp map database left by daoine moving their clan hall entrance
