@@ -1237,19 +1237,23 @@ function custom_exit (name, line, wildcards)
    end
   
    wait.make (function()
-      
-      world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING. THIS SHOULD TAKE ABOUT "..(temp_cexit_delay or BASE_CEXIT_DELAY).." SECONDS (plus any additional waits you've added).")
+      local cexit_delay = temp_cexit_delay or BASE_CEXIT_DELAY
+      local added_waits = 0
+      for wait_secs in string.gmatch(cexit_command, "wait%((%d+)%)") do
+         added_waits = added_waits + tonumber(wait_secs)
+      end
+      world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING.\nThis should take about "..cexit_delay+added_waits.." seconds"..(((added_waits ~= 0) and " (includes "..added_waits.." seconds in added waits)") or "")..".")
       BroadcastPlugin(999, "repaint")
       ExecuteWithWaits(cexit_command)
 
-      wait.time(temp_cexit_delay or BASE_CEXIT_DELAY)
+      wait.time(cexit_delay+added_waits)
       temp_cexit_delay = nil
       cexit_dest = current_room
       if cexit_dest then
          if cexit_dest == "-1" then
             world.Note ("CEXIT FAILED: You cannot link custom exits to unmappable rooms.")
          elseif cexit_dest ~= cexit_start then
-            world.Note (string.format("Custom Exit: %s (%s) -> %s", cexit_start, cexit_command, cexit_dest))
+            world.Note (string.format("Custom Exit CONFIRMED: %s (%s) -> %s", cexit_start, cexit_command, cexit_dest))
             dbcheck (db:execute (string.format ([[
                INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
                VALUES (%s, %s, %s, DATETIME('NOW'));
