@@ -1,7 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1319 snapshot
+- new feature: (for real this time) the gmcp mapper now has the ability to stop and wait during the execution of custom exit sequences by using wait(<seconds>) as one or more movement steps. Example: wait(1.3) will pause for 1.3 seconds
+- new feature: the communication log can now catch WARFARE messages
+- new feature: 'mapper areas' output will now display explored room counts
+
 r1315 snapshot
-- new feature: the gmcp mapper now has the ability to stop and wait during the execution of custom exit sequences by using wait(<seconds>) as one or more movement steps. Example: wait(1.3) will pause for 1.3 seconds
+- Nothing new. Doh.
 
 r1309 snapshot
 - new feature: the ascii minimap now has a requested right-click option for also echoing the map in main output
