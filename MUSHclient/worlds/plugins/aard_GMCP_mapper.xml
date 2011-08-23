@@ -1185,22 +1185,26 @@ function change_cexit_delay(name, line, wildcards)
 end
 
 function ExecuteWithWaits(cexit_command)
-   local partial_cexit_command = cexit_command
-   local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
-   while strbegin do
-      strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
-      if strbegin ~= nil and strbegin ~= 1 then
-         Execute(string.sub(partial_cexit_command,1,strbegin-1))
+   wait.make (function()
+      local partial_cexit_command = cexit_command
+      local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
+      while strbegin do
+         strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
+         if strbegin ~= nil and strbegin ~= 1 then
+            Execute(string.sub(partial_cexit_command,1,strbegin-1))
+         end
+         if strend then
+            local wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d*.?%d+)%)"))
+            SendNoEcho("echo {mapper_wait}wait("..wait_time..")")
+            line, wildcards = wait.regexp("^\\{mapper_wait\\}wait\\(([0-9]*\\.?[0-9]+)\\)",nil,trigger_flag.OmitFromOutput)
+            Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
+            BroadcastPlugin(999, "repaint")
+            wait.time(wait_time)
+            partial_cexit_command = string.sub(partial_cexit_command, strend+1)
+         end
       end
-      if strend then
-         wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d*.?%d+)%)"))
-         Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
-         BroadcastPlugin(999, "repaint")
-         wait.time(wait_time)
-         partial_cexit_command = string.sub(partial_cexit_command, strend+1)
-      end
-   end
-   Execute(partial_cexit_command)
+      Execute(partial_cexit_command)
+   end)
 end
 
 -- custom_exit function contributed by Spartacus

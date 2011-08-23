@@ -1492,9 +1492,7 @@ function start_speedwalk (path)
             else
                s = p:sub(2)
             end
-            wait.make (function()
-               ExecuteWithWaits(s:gsub(";","\r\n"))
-            end)
+            ExecuteWithWaits(s:gsub(";","\r\n"))
             current_speedwalk = nil
             return  
          end -- if
