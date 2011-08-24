@@ -890,6 +890,7 @@ function custom_exit_list (name, line, wildcards)
       Hyperlink(string.format("mapper goto %s",row.uid), line, "Click to attempt to walk here", "", "", false)
       print("")
       count = count + 1
+      BroadcastPlugin(999, "repaint")
    end -- custom exits query
    world.Note (hl)
    line = string.format ("Found %s custom exits.", count)
