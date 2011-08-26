@@ -80,9 +80,13 @@ mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
 ===== PORTAL ACTIONS ============>
 
 mapper portals                 --> List known hand-held portals
+                                 > Recall-flagged portals (below) show in red
 mapper portal <command>        --> Link a hand-held portal alias to the
                                  > current location as a custom exit 
                                  > (ex: 'mapper portal recall' at recall)
+mapper portalrecall <index>    --> Flag/unflag a portal as using the recall or
+                                 > home features, to avoid using it in 
+                                 > identified norecall rooms
 mapper portallevel <ind> <lvl> --> Change the level lock on a stored portal
                                  > Find the indices with 'mapper portals'
                                  > Do not manually account for tiers
@@ -421,6 +425,14 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>
   
 <alias
+   match="mapper portalrecall *"
+   enabled="y"
+   sequence="100"
+   script="map_portal_recall"
+   regexp="n"
+></alias>
+
+<alias
    match="mapper portallevel *"
    enabled="y"
    sequence="100"
@@ -612,7 +624,25 @@ mapper resume                  --> Initiate a new run to the previous target
    script="mapper.cancel_speedwalk"
    sequence="100"
 ></trigger>   
-  
+
+  <trigger
+   enabled="y"
+   match="^Magic walls bounce you back\.$"
+   regexp="y"
+   script="noportal_room"
+   sequence="100"
+  >
+  </trigger>
+
+  <trigger
+   enabled="y"
+   match="^You cannot (recall|return home) from this room\.$"
+   regexp="y"
+   script="norecall_room"
+   sequence="100"
+  >
+  </trigger>
+
 </triggers>
 
 <script>
@@ -874,7 +904,7 @@ function custom_exit_list (name, line, wildcards)
       area = current_area
    end
 
-   query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid <> '*' order by area, uid", fixsql("%" .. area .. "%"))
+   query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by area, uid", fixsql("%" .. area .. "%"))
    hr = "| area       | room name            | rm uid  | dir            | to uid  |"
    hl = "+------------+----------------------+---------+----------------+---------+"
    intro = string.format("The following rooms in areas matching '%s' have custom exits:",area)
@@ -910,6 +940,14 @@ function show_this_room (name, line, wildcards)
       Note("Terrain: "..(room.terrain or ""))
       Note("Info: "..(room.info or ""))
       Note("Notes: "..(room.notes or ""))
+      local flags = ''
+      if rooms[current_room].noportal == 1 then 
+         flags = flags .. ' noportal' 
+      end
+      if rooms[current_room].norecall == 1 then 
+         flags = flags .. ' norecall' 
+      end
+      Note("Flags:", flags)
       Note("Exits: ")
       tprint(room.exits)
       Note("+---------------------------+\n")
@@ -981,7 +1019,7 @@ function map_portal_delete (name, line, wildcards)
    local target_index = nil
    if string.sub(keywords,1,1) == "#" and type(tonumber(string.sub(keywords,2)))=="number" then
       target_index = tonumber(string.sub(keywords,2))
-      local q = "select area, touid, dir from exits,rooms where exits.touid=rooms.uid and exits.fromuid='*' order by area,touid"
+      local q = "select area, touid, dir from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
       local count = 0
       for row in db:nrows(q) do
          count = count + 1
@@ -997,7 +1035,7 @@ function map_portal_delete (name, line, wildcards)
    end
 
    local portal_exists = false
-   for n in db:nrows (string.format ("SELECT * FROM exits WHERE fromuid = %s AND dir = %s", fixsql("*"), fixsql(keywords))) do
+   for n in db:nrows (string.format ("SELECT * FROM exits WHERE fromuid in ('*','**') AND dir = %s", fixsql(keywords))) do
       portal_exists = true
    end
    
@@ -1007,24 +1045,14 @@ function map_portal_delete (name, line, wildcards)
       print (string.format("DELETE FAILED: Did not find a mapper portal with keywords '%s'.", keywords))
    end
    
-   query = string.format("DELETE FROM exits WHERE fromuid = %s AND dir = %s;",
-      fixsql("*"),
-      fixsql(keywords)
-   )
+   query = string.format("DELETE FROM exits WHERE fromuid in ('*','**') AND dir = %s;", fixsql(keywords))
    dbcheck (db:execute (query))
-   if rooms["*"] then
-      rooms["*"].exits[keywords] = {}
-   end
 end -- map_portal_delete
 
-
 function map_portal_purge(name, line, wildcards)
-   query = string.format("DELETE FROM exits WHERE fromuid = %s;", fixsql("*"))
+   query = "DELETE FROM exits WHERE fromuid in ('*','**');"
    dbcheck (db:execute (query))
    print ("Purged all mapper hand-held exits.")
-   if rooms["*"] then
-      rooms["*"].exits = {}
-   end
 end
 
 function level_check(input)
@@ -1035,6 +1063,51 @@ function level_check(input)
       return true
    end
 end
+
+function map_portal_recall (name, line, wildcards)
+   -- flag a portal as using "recall"   
+   local query = "INSERT OR REPLACE INTO rooms (uid, name, area, date_added) VALUES ('**', '___HERE___', '___EVERYWHERE___', DATETIME('NOW'))"
+   dbcheck(db:execute(query))
+   
+   local pnum = tonumber(wildcards[1])
+   
+   if pnum==nil then
+      world.Note("\nPORTALRECALL FAILED: The required parameter for mapper portalrecall is <portal_index>. Current portal indexes can be found in the 'mapper portals' output.\n")
+      return
+   end
+   
+   local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
+   local count = 1
+   for row in db:nrows(q) do
+      if count == pnum then
+         query = string.format ([[
+            INSERT OR REPLACE INTO exits (dir, fromuid, touid, level, date_added) 
+            VALUES (%s, %s, %s, %s, %s);
+            ]], 
+            fixsql(row.dir),  -- direction (eg. "n")
+            fixsql(((row.fromuid == "*") and "**") or "*"),  -- toggle between '*' and '**'
+            fixsql(row.touid),    -- destination room
+            fixsql(row.level),
+            fixsql(row.date_added)
+         )
+         dbcheck (db:execute (query))
+         query = string.format ([[
+            DELETE FROM exits WHERE dir=%s AND fromuid=%s AND touid=%s AND level=%s;
+            ]], 
+            fixsql(row.dir),  -- direction (eg. "n")
+            fixsql(row.fromuid),  -- remove the old pre-toggle entry
+            fixsql(row.touid),    -- destination room
+            fixsql(row.level)
+         )
+         dbcheck (db:execute (query))
+         
+         world.Note(string.format("\nPORTALRECALL: Recall flag %s portal '%s' to '%s'.\n",((row.fromuid == "*") and "added to") or "removed from",row.dir,row.name))
+         return
+      end
+      count = count + 1
+   end
+   world.Note(string.format("\nPORTALRECALL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+end -- map_recall
 
 -- map_portal function contributed by Spartacus
 function map_portal (name, line, wildcards)
@@ -1052,22 +1125,7 @@ function map_portal (name, line, wildcards)
       print("PORTAL FAILED: Cannot link portals to unmappable rooms.")
       return
    end
-  
-   if rooms["*"] == nil then
-      rooms["*"] = {
-         name = "*",
-         area = "*",
-         building = 0,
-         terrain = "*",
-         info = "*",
-         notes = nil,
-         x = "*",
-         y = "*",
-         z = 0,
-         exits = {} 
-      }
-   end
-    
+      
 	local level = tonumber(utils.inputbox ("Please enter the level of this portal, or leave at 0 for the default", "Portal Level", "0", "Courier", 9, {validate=level_check}))
 	
 	if not level then
@@ -1081,8 +1139,10 @@ function map_portal (name, line, wildcards)
    for row in db:nrows("select * from rooms where uid='*'") do
       hhp_room_exists = hhp_room_exists + 1
    end
-   query = "INSERT OR REPLACE INTO rooms (uid, name, area, date_added) VALUES ('*', '___HERE___', '___EVERYWHERE___', DATETIME('NOW'))"
-   dbcheck(db:execute(query))
+   if hhp_room_exists == 0 then
+      query = "INSERT OR REPLACE INTO rooms (uid, name, area, date_added) VALUES ('*', '___HERE___', '___EVERYWHERE___', DATETIME('NOW'))"
+      dbcheck(db:execute(query))
+   end
    print (string.format("Storing %s as a portal to %s.", wildcards [1], current_room))
    print (string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",wildcards [1], current_room,level))
    query = string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added, level) VALUES (%s, %s, %s, DATETIME('NOW'), %s);", 
@@ -1093,7 +1153,6 @@ function map_portal (name, line, wildcards)
    )
    dbcheck (db:execute (query))
 
-   rooms["*"].exits[wildcards[1]] = current_room
 end -- map_portal
 
 function string:split(sep)
@@ -1118,7 +1177,7 @@ function map_portal_level (name, line, wildcards)
       level = 0
    end
  
-   local q = "select area, name, touid, dir, exits.date_added from exits,rooms where exits.touid=rooms.uid and exits.fromuid='*' order by area,touid"
+   local q = "select area, name, touid, fromuid, dir, exits.date_added from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
    for row in db:nrows(q) do
       if count == pnum then
@@ -1127,7 +1186,7 @@ function map_portal_level (name, line, wildcards)
             VALUES (%s, %s, %s, %s, %s);
             ]], 
             fixsql(row.dir),  -- direction (eg. "n")
-            fixsql("*"),         -- from current room
+            fixsql(row.fromuid),  -- from '*' or '**'
             fixsql(row.touid),    -- destination room
             fixsql(level),
             fixsql(row.date_added)
@@ -1154,7 +1213,7 @@ function map_portal_list ()
    world.Note (hr)
    world.Note (hl)
 
-   local q = "select area, name, touid, dir,level from exits, rooms where exits.touid=rooms.uid and exits.fromuid='*' order by area,touid"
+   local q = "select area, name, fromuid, touid, dir,level from exits, rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 0
    for row in db:nrows(q) do
       count = count + 1
@@ -1163,8 +1222,8 @@ function map_portal_list ()
          -- make the whole line click-able
          cmd = "mapper goto " .. row.touid
          txt = "click here to run to " .. row.name
-         world.Hyperlink(cmd, line, txt, "", "", false)
-         world.Note ()
+         Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false)
+         Note ()
       else
          world.Note(line)
       end -- if row.level
@@ -1292,14 +1351,18 @@ function save_room_to_database (uid,room)
       Send_GMCP_Packet("request area")
       return false
    end
+   if room.noportal == nil then room.noportal = 0 end
+   if room.norecall == nil then room.norecall = 0 end
    dbcheck (db:execute (string.format (
-      "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, date_added) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, DATETIME('NOW'));",
-      fixsql (uid), 
-      fixsql (room.name),
-      fixsql (room.terrain), 
-      fixsql (room.info),
-      room.x, room.y, room.z, fixsql(room.area)
-   )))
+         "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, noportal, norecall, date_added) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, %d, %d, DATETIME('NOW'));",
+            fixsql (uid), 
+            fixsql (room.name),
+            fixsql (room.terrain), 
+            fixsql (room.info),
+            room.x, room.y, room.z, fixsql(room.area),
+            room.noportal,
+            room.norecall
+         )))
 
    local exists = false      
    for n in db:nrows(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s", fixsql(uid))) do 
@@ -1395,6 +1458,8 @@ function load_room_from_database (uid)
       x = row.x,
       y = row.y,
       z = row.z,
+      noportal = row.noportal,
+      norecall = row.norecall,
       exits = {} }
       
       for exitrow in db:nrows(string.format ("SELECT * FROM exits WHERE fromuid = %s", fixsql (uid))) do
@@ -1535,6 +1600,23 @@ function create_tables ()
    COMMIT;
    ]])
 end -- function create_tables
+
+function check_rooms_flags()
+   local flag_exists = { noportal = false,
+                         norecall = false }
+   for a in db:nrows "PRAGMA table_info('rooms')" do
+      if flag_exists[a.name] ~= nil then
+         flag_exists[a.name] = true
+      end
+   end
+   
+   for k, v in pairs(flag_exists) do
+      if not v then
+         local sql = 'ALTER TABLE rooms ADD ' .. k .. ' INTEGER'
+         dbcheck(db:execute(sql))
+      end
+   end
+end -- function check_rooms_flags
 
 function get_room (uid)
    
@@ -2322,10 +2404,14 @@ function OnPluginInstall ()
       );
       ]])
    end
+   
+    if db_user_version < 5 then
+        check_rooms_flags()
+   end
 
    -- update db version
    dbcheck (db:execute [[
-      PRAGMA user_version = 4;
+      PRAGMA user_version = 5;
    ]])
   
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
@@ -2515,6 +2601,30 @@ function override_continents(override)
       bigmap_override = false
    end
    mapper.halt_drawing(bigmap_override and current_room_is_cont)
+end
+
+function noportal_room()
+   if current_room ~= nil then
+      if rooms[current_room] ~= nil then
+         if rooms[current_room].noportal ~= 1 then
+            Note('marking room ', current_room, ' noportal')
+            rooms[current_room].noportal = 1
+            save_room_to_database(current_room, rooms[current_room])
+         end
+      end
+   end
+end
+
+function norecall_room()
+   if current_room ~= nil then
+      if rooms[current_room] ~= nil then
+         if rooms[current_room].norecall ~= 1 then
+            Note('marking room ', current_room, ' norecall')
+            rooms[current_room].norecall = 1
+            save_room_to_database(current_room, rooms[current_room])
+         end
+      end
+   end
 end
 
 function got_gmcp_room()
@@ -3041,8 +3151,14 @@ function findpath(src, dst)
       -- prune the search space
       if visited ~= "" then 
          visited = visited..","..table.concat(rooms_list, ",")
-      else 
-         visited = table.concat(rooms_list, ",")
+      else
+         if rooms[current_room].noportal == 1 then
+            visited = visited..fixsql("*")..","
+         end   
+         if rooms[current_room].norecall == 1 then
+            visited = visited..fixsql("**")..","
+         end
+         visited = visited..table.concat(rooms_list, ",")
       end
     
       -- get all exits to any room in the previous set
@@ -3055,7 +3171,7 @@ function findpath(src, dst)
          -- ensures that custom exits (always longer than 1 char) get used preferentially to normal ones (1 char). An alternative solution is to order by length(dir) asc
          -- and remove the break from the if block below.
          room_sets[depth][row.fromuid] = room_sets[depth][row.fromuid] or {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
-         if row.fromuid == src or row.fromuid == "*" then
+         if row.fromuid == src or row.fromuid == "*" or row.fromuid == "**" then
             f = row.fromuid
             found = true
             found_depth = depth
@@ -3074,7 +3190,7 @@ function findpath(src, dst)
   
    -- We've gotten back to the starting room from our destination. Now reconstruct the path.
    local path = {}
-   -- set ftd to the first from,to,dir set where from was either our start room or *
+   -- set ftd to the first from,to,dir set where from was either our start room or * or **
    ftd = room_sets[found_depth][f]
    table.insert(path, {dir=ftd.dir, uid=ftd.touid})
 
