@@ -951,6 +951,12 @@ function TextareaMoveCallback(flags, hotspot_id)
       copy_end_line = copy_end_windowline+lineStart
       copy_start_line = temp_start_line
       start_copying_x = temp_start_copying_x
+      
+      if not copy_start_line then
+         -- OS bug causing errors for me. hack around stupid mouse click tracking mess
+         return
+      end
+      
       if (copy_start_line > #lines) then
          start_copying_x = width-SCROLL_BAR_WIDTH
       end
