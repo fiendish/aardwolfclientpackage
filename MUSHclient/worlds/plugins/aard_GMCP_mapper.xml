@@ -1062,9 +1062,18 @@ function map_portal_purge(name, line, wildcards)
    print ("Purged all mapper hand-held exits.")
 end
 
+function positive_integer_check(input)
+   input = tonumber(input)
+   if input == nil or input < 0 or input % 1 ~= 0 then
+      return false
+   else
+      return true
+   end
+end
+
 function level_check(input)
    input = tonumber(input)
-   if input == nil or input < 0 or input > 291 or input % 1 ~= 0 then
+   if positive_integer_check(input) == false or input > 291 then
       return false
    else
       return true
@@ -2098,7 +2107,7 @@ function room_lock_exit (room, uid)
       return
    end -- cancelled
 
-   exit_level = utils.inputbox ("Enter level lock for " .. available [chosen_exit], room.name, room.exit_locks[chosen_exit])
+   exit_level = tostring(tonumber(utils.inputbox ("Enter level lock for " .. available [chosen_exit], room.name, room.exit_locks[chosen_exit],nil,nil,{validate=positive_integer_check}))) -- use tonumber to strip off any ".0"
 
    if not exit_level then
       return
@@ -2112,7 +2121,7 @@ function room_lock_exit (room, uid)
       fixsql (uid) -- from current room
    )))
       
-   mapper.mapprint ("Set level lock on exit", available [chosen_exit], "from room", uid, "to be ", exit_level, "in database.")
+   mapper.mapprint ("Set level lock on exit", available [chosen_exit], "from room", uid, "to be", exit_level, "in database.")
   
    -- update in-memory table
    if not rooms [uid].exit_locks then
