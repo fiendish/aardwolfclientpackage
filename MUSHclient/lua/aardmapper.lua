@@ -1200,6 +1200,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb)
          table.insert(notfound, {uid=v.uid, reason=v.reason})
       end
    end
+   SetStatus ("")
    
    BroadcastPlugin(500, "found_paths = "..string.gsub(serialize.save_simple(paths),"%s+"," "))
    BroadcastPlugin(501, "unfound_paths = "..string.gsub(serialize.save_simple(notfound),"%s+"," "))
