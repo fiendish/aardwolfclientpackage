@@ -97,18 +97,21 @@ function reset_aard()
 end
 
 
-function DoNextSimpleBar(bar, val, maxval)
+function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
    txt = ""
    if (showBar[bar][2] == true) then
       if showLabels == 1 then
          if stacked == 1 then
-            WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+            WindowText(win, font_id, stacked_label or showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
          else
-            xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+            xpos = xpos + WindowText(win, font_id, unstacked_label or showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
          end
       end
 
       if tonumber(maxval) and tonumber(val) then
+         if flip then
+            val = tostring(tonumber(maxval)-tonumber(val))
+         end
          if overlay_numbers == 1 or overlay_numbers == 3 then
             maxlen = math.max(#maxval, #val)
             txt = string.lpad(val, maxlen, ' ').."/"..string.rpad(maxval,maxlen,' ')
@@ -180,75 +183,18 @@ function DisplayStatsPage()
       end
       
       DoNextSimpleBar("Health", gmcpval("vitals.hp") or "", gmcpval("maxstats.maxhp") or "")
-
+      
       DoNextSimpleBar("Mana", gmcpval("vitals.mana") or "", gmcpval("maxstats.maxmana") or "")
-
+      
       DoNextSimpleBar("Moves", gmcpval("vitals.moves") or "", gmcpval("maxstats.maxmoves") or "")
-
-      bar = "TNL"
-      txt = ""
+      
       local tnl = gmcpval("status.tnl") or ""
       local perlevel = gmcpval("base.perlevel") or ""
-      if (showBar[bar][2] == true) then
-         if showLabels == 1 then
-            if stacked == 1 then
-               -- switch title from "to next level" to "current level experience"
-               WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][1]) or string.gsub(showBar[bar][1],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
-            else
-               -- switch title from "to next level" to "current level experience"
-               xpos = xpos + WindowText(win, font_id, ((reverseTNL==0 and showBar[bar][3]) or string.gsub(showBar[bar][3],"TNL","Exp")), xpos,  ypos, 0, 0, showBar[bar][4], false)
-            end
-         end
-
-         -- switch from "to next level" to "current level experience"
-         if (reverseTNL == 0) then
-
-            if tonumber(tnl) and tonumber(perlevel) then
-               if overlay_numbers == 1 or overlay_numbers == 3 then
-                  maxlen = math.max(#tnl, #perlevel)
-                  txt = string.lpad(tnl, maxlen, ' ').."/"..string.rpad(perlevel,maxlen,' ')
-               end
-               if overlay_numbers == 2 or overlay_numbers == 3 then
-                  txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(tnl)/tonumber(perlevel)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
-               end
-            end
-            
-            if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],tonumber(tnl) or 0,tonumber(perlevel) or 0,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-               if overlay_numbers ~= 0 then
-                  txtlen = WindowTextWidth(win,font_id,txt)
-                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-               end
-            else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..txt.."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-            end
-         else
-            
-            if tonumber(tnl) and tonumber(perlevel) then
-               if overlay_numbers == 1 or overlay_numbers == 3 then
-                  maxlen = math.max(#tnl, #perlevel)
-                  txt = string.lpad(tonumber(perlevel)-tonumber(tnl),maxlen,' ').."/"..string.rpad(perlevel,maxlen,' ')
-               end
-               if overlay_numbers == 2 or overlay_numbers == 3 then
-                  txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*(tonumber(perlevel)-tonumber(tnl))/tonumber(perlevel)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
-               end
-            end
-            
-            if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],(tonumber(perlevel) or 0)-(tonumber(tnl) or 0),(tonumber(perlevel) or 0),xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-               if overlay_numbers ~= 0 then
-                  txtlen = WindowTextWidth(win,font_id,txt)
-                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-               end
-            else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..txt.."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-            end
-         end
-         if stacked == 1 then
-            ypos = ypos + line_height + 1
-         else
-            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-         end
+      -- switch from "to next level" to "current level experience"
+      if (reverseTNL == 0) then
+         DoNextSimpleBar("TNL", tnl, perlevel)
+      else
+         DoNextSimpleBar("TNL", tnl, perlevel, true, "Exp   :", "Exp:")
       end
       
       bar = "Enemy"
@@ -267,7 +213,7 @@ function DisplayStatsPage()
             end
             if graphicalMode == 1 then
                gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
-               if overlay_numbers == 1 then
+               if overlay_numbers ~= 0 then
                   txt = string.lpad(enemypct.."%", 4, ' ')
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
