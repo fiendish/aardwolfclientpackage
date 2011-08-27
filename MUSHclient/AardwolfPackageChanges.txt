@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1326 snapshot
+- new feature: the gmcp mapper now accepts level locks on standard exits. this is useful for blocking undesirable short paths through aggressive mobs and difficult doors. you can edit exit level locks by right-clicking on a room and choosing the menu option.
+- new feature: gmcp mapper will now automatically flag rooms as norecall/noportal when you bounce off the barriers. these flags will be partially taken into account when finding paths (pathfinding will not bounce through multiple portal exits, so no "home->enter" combos). to aid in this, there is a new command "mapper portalrecall <index>" which flags a mapper portal as specifically being a recall/home type. flagged portals will show red in the portals listing.
+- bug fix: health bars should now also show the enemy hp numeric overlay in modes other than "Standard"
+
 r1319 snapshot
 - new feature: (for real this time) the gmcp mapper now has the ability to stop and wait during the execution of custom exit sequences by using wait(<seconds>) as one or more movement steps. Example: wait(1.3) will pause for 1.3 seconds
 - new feature: the communication log can now catch WARFARE messages
