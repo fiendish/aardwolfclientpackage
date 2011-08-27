@@ -130,18 +130,19 @@ local function build_room_info ()
    HALF_ROOM   = ROOM_SIZE / 2
    local THIRD_WAY   = DISTANCE_TO_NEXT_ROOM / 3
    local DISTANCE_LESS1 = DISTANCE_TO_NEXT_ROOM - 1
+   local HALF_WAY = DISTANCE_TO_NEXT_ROOM / 2
    
    -- how to draw a line from this room to the next one (relative to the center of the room)
    connectors = {
-      n =  { x1 = 0,            y1 = - HALF_ROOM, x2 = 0,                             y2 = - HALF_ROOM - DISTANCE_LESS1, at = { 0, -1 } }, 
-      s =  { x1 = 0,            y1 =   HALF_ROOM, x2 = 0,                             y2 =   HALF_ROOM + DISTANCE_LESS1, at = { 0,  1 } }, 
-      e =  { x1 =   HALF_ROOM,  y1 = 0,           x2 =   HALF_ROOM + DISTANCE_LESS1,  y2 = 0,                            at = {  1,  0 }}, 
-      w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - DISTANCE_LESS1,  y2 = 0,                            at = { -1,  0 }}, 
+      n =  { x1 = 0,            y1 = - HALF_ROOM, x2 = 0,                             y2 = - HALF_ROOM - HALF_WAY, at = { 0, -1 } }, 
+      s =  { x1 = 0,            y1 =   HALF_ROOM, x2 = 0,                             y2 =   HALF_ROOM + HALF_WAY, at = { 0,  1 } }, 
+      e =  { x1 =   HALF_ROOM,  y1 = 0,           x2 =   HALF_ROOM + HALF_WAY,  y2 = 0,                            at = {  1,  0 }}, 
+      w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - HALF_WAY,  y2 = 0,                            at = { -1,  0 }}, 
    
-      ne = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + DISTANCE_LESS1 , y2 = - HALF_ROOM - DISTANCE_LESS1, at = { 1, -1 } }, 
-      se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + DISTANCE_LESS1 , y2 =   HALF_ROOM + DISTANCE_LESS1, at = { 1,  1 } }, 
-      nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - DISTANCE_LESS1 , y2 = - HALF_ROOM - DISTANCE_LESS1, at = {-1, -1 } }, 
-      sw = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - DISTANCE_LESS1 , y2 =   HALF_ROOM + DISTANCE_LESS1, at = {-1,  1 } }, 
+      ne = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + HALF_WAY , y2 = - HALF_ROOM - HALF_WAY, at = { 1, -1 } }, 
+      se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + HALF_WAY , y2 =   HALF_ROOM + HALF_WAY, at = { 1,  1 } }, 
+      nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - HALF_WAY , y2 = - HALF_ROOM - HALF_WAY, at = {-1, -1 } }, 
+      sw = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - HALF_WAY , y2 =   HALF_ROOM + HALF_WAY, at = {-1,  1 } }, 
    
    } -- end connectors
    
@@ -153,8 +154,8 @@ local function build_room_info ()
       w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - THIRD_WAY,  y2 = 0,                       at = { -1,  0 }}, 
   
       ne = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = { 1, -1 } }, 
-      se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY, at = { 1,  1 } }, 
-      nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = {-1, -1 } }, 
+      se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + HALF_WAY - 1 , y2 =   HALF_ROOM + HALF_WAY - 1, at = { 1,  1 } }, 
+      nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - HALF_WAY, y2 = - HALF_ROOM - HALF_WAY, at = {-1, -1 } }, 
       sw = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY, at = {-1,  1 } }, 
   
    } -- end half_connectors
@@ -553,7 +554,8 @@ local function draw_room (uid, path, x, y)
       table.insert (texits, dir)
       local exit_info = connectors [dir]
       local stub_exit_info = half_connectors [dir]
-      local exit_line_colour = config.EXIT_COLOUR.colour
+      local locked_exit = not (room.exit_locks == nil or room.exit_locks[dir] == nil or room.exit_locks[dir] == "0")
+      local exit_line_colour = (locked_exit and 0x0000FF) or config.EXIT_COLOUR.colour
       local arrow = arrows [dir]
       
       -- draw up in the ne/nw position if not already an exit there at this level
@@ -561,17 +563,17 @@ local function draw_room (uid, path, x, y)
          exit_info = connectors.nw
          stub_exit_info = half_connectors.nw
          arrow = arrows.nw
-         exit_line_colour = config.EXIT_COLOUR_UP_DOWN.colour
+         exit_line_colour = (locked_exit and 0x0000FF) or config.EXIT_COLOUR_UP_DOWN.colour
       elseif dir == "d" then
          exit_info = connectors.se
          stub_exit_info = half_connectors.se
          arrow = arrows.se
-         exit_line_colour = config.EXIT_COLOUR_UP_DOWN.colour
+         exit_line_colour = (locked_exit and 0x0000FF) or config.EXIT_COLOUR_UP_DOWN.colour
       end -- if down
       
       if exit_info then
          local linetype = miniwin.pen_solid -- unbroken
-         local linewidth = 1 -- not recent
+         local linewidth = (locked_exit and 2) or 1 -- not recent
          
          -- try to cache room
          if not rooms [exit_uid] then
@@ -633,7 +635,7 @@ local function draw_room (uid, path, x, y)
             end -- if
          end -- if drawn on this spot
 
-         WindowLine (win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype, linewidth)
+         WindowLine (win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
          
          -- one-way exit?
          
@@ -666,10 +668,12 @@ local function draw_room (uid, path, x, y)
          config.UNKNOWN_ROOM_COLOUR.colour, miniwin.pen_dot, 1,  --  dotted single pixel pen
          -1, miniwin.brush_null)  -- opaque, no brush
    else
+      -- room fill
       WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
          0, miniwin.pen_null, 0,  -- no pen
          room.fillcolour, room.fillbrush)  -- brush
       
+      -- room border
       WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
          room.bordercolour, room.borderpen, room.borderpenwidth,  -- pen
          -1, miniwin.brush_null)  -- opaque, no brush
@@ -681,16 +685,6 @@ local function draw_room (uid, path, x, y)
             room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
       end
    end -- if 
-   
-   
-   -- show up and down in case we can't get a line in
-   
-   if room.exits.u then  -- line at top
-      WindowLine (win, left, top, left + ROOM_SIZE, top, config.EXIT_COLOUR_UP_DOWN.colour, miniwin.pen_solid, 1)
-   end -- if
-   if room.exits.d then  -- line at bottom
-      WindowLine (win, left, bottom, left + ROOM_SIZE, bottom, config.EXIT_COLOUR_UP_DOWN.colour, miniwin.pen_solid, 1)
-   end -- if
    
    WindowAddHotspot(win, uid,  
       left, top, right, bottom,   -- rectangle
