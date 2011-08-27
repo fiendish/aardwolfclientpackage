@@ -950,6 +950,13 @@ function show_this_room (name, line, wildcards)
       Note("Flags:", flags)
       Note("Exits: ")
       tprint(room.exits)
+      Tell("Exit locks: ")
+      if room.exit_locks then
+         Note("")
+         tprint(room.exit_locks)
+      else
+         Note("none")
+      end
       Note("+---------------------------+\n")
    else
       Note("THISROOM ERROR: You need to type 'LOOK' first to initialize the mapper before trying to get room information.")
@@ -1460,11 +1467,15 @@ function load_room_from_database (uid)
       z = row.z,
       noportal = row.noportal,
       norecall = row.norecall,
-      exits = {} }
+      exits = {},
+      exit_locks = {}
+      }
       
       for exitrow in db:nrows(string.format ("SELECT * FROM exits WHERE fromuid = %s", fixsql (uid))) do
          room.exits [exitrow.dir] = tostring (exitrow.touid)
+         room.exit_locks [exitrow.dir] = tostring(exitrow.level)
       end -- for each exit
+      
    end   -- finding room
 
    if room then
@@ -1749,12 +1760,12 @@ function get_room (uid)
 
    if uid == current_room then
       room.bordercolour = configs.OUR_ROOM_COLOUR.colour
-      room.borderpenwidth = 2
+      room.borderpenwidth = 3
    elseif room.area ~= current_area then
       room.bordercolour = configs.DIFFERENT_AREA_COLOUR.colour
    elseif room.info and string.match(room.info, "pk") then
       room.bordercolour = configs.PK_BORDER_COLOUR.colour
-      room.borderpenwidth = 2
+      room.borderpenwidth = 3
    end -- not in this area
   
    return room      
@@ -2057,6 +2068,60 @@ function room_change_exit (room, uid)
    
 end -- room_change_exit
 
+function room_lock_exit (room, uid)
+
+   local available =  {
+   n = "North",
+   s = "South",
+   e = "East",
+   w = "West",
+   u = "Up",
+   d = "Down",
+   }  -- end of available
+
+   -- remove non-existent exits
+   for k in pairs (available) do
+      if room.exits [k] then
+         available [k] = available [k] .. " --> " .. room.exits [k] .. " ( " .. room.exit_locks[k] .. " )"
+      else
+         available [k] = nil
+      end -- if not a room exit
+   end -- for
+  
+   if next (available) == nil then
+      utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
+      return
+   end -- not known
+  
+   local chosen_exit = utils.listbox ("Choose exit to lock:", "Exits ...", available )
+   if not chosen_exit then
+      return
+   end -- cancelled
+
+   exit_level = utils.inputbox ("Enter level lock for " .. available [chosen_exit], room.name, room.exit_locks[chosen_exit])
+
+   if not exit_level then
+      return
+   end -- cancelled
+  
+   dbcheck (db:execute (string.format ([[
+      UPDATE exits SET level = %s WHERE dir = %s AND fromuid = %s;
+      ]], 
+      fixsql (exit_level),
+      fixsql (chosen_exit), -- direction (eg. "n")
+      fixsql (uid) -- from current room
+   )))
+      
+   mapper.mapprint ("Set level lock on exit", available [chosen_exit], "from room", uid, "to be ", exit_level, "in database.")
+  
+   -- update in-memory table
+   if not rooms [uid].exit_locks then
+      rooms [uid].exit_locks = {}
+   end
+   rooms[uid].exit_locks[chosen_exit] = exit_level
+   mapper.draw (current_room)
+   
+end -- room_lock_exit
 
 function room_click (uid, flags)
 
@@ -2084,6 +2149,8 @@ function room_click (uid, flags)
       { name = "-", } ,
       { name = "Add Exit", func = room_add_exit} ,
       { name = "Change Exit", func = room_change_exit} ,
+      { name = "Change Exit Level Lock", func = room_lock_exit} ,
+      { name = "-", },
       { name = "Delete Exit", func = room_delete_exit} ,
 --      { name = "-", } ,
       } -- handlers
@@ -2648,7 +2715,8 @@ function got_gmcp_room()
       x = gmcpval("coord.x"),
       y = gmcpval("coord.y"),
       z = 0,
-      exits = {} 
+      exits = {},
+      exit_locks = {}
       }
    
    -- Try to accomodate closed clan rooms and other nomap rooms.
@@ -2683,6 +2751,7 @@ function got_gmcp_room()
                   nilToStr(room.y) ~= nilToStr(gmcproom.y) or 
                   same_exits == false then
       gmcproom.exits = ((room and room.exits) or {})
+      gmcproom.exit_locks = ((room and room.exit_locks) or {})
       gmcproom.notes = ((room and nilToStr(room.notes)) or "")
       room = gmcproom
       db:exec ("BEGIN TRANSACTION;")
