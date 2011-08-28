@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r1335 snapshot
+- new feature: typing 'package update check' when the update checking plugin is not currently loaded will now offer a chance to load the plugin
+- misc change: the question about loading the update checker plugin will ask a bit more consistently now
+- bug fix: gmcp mapper exit level lock inputs are now sanitized
+- bug fix: clear the status bar after finished gmcp mapper pathfinding
+
 r1326 snapshot
 - new feature: the gmcp mapper now accepts level locks on standard exits. this is useful for blocking undesirable short paths through aggressive mobs and difficult doors. you can edit exit level locks by right-clicking on a room and choosing the menu option.
 - new feature: gmcp mapper will now automatically flag rooms as norecall/noportal when you bounce off the barriers. these flags will be partially taken into account when finding paths (pathfinding will not bounce through multiple portal exits, so no "home->enter" combos). to aid in this, there is a new command "mapper portalrecall <index>" which flags a mapper portal as specifically being a recall/home type. flagged portals will show red in the portals listing.
