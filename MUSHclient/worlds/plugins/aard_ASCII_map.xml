@@ -576,6 +576,7 @@ function OnPluginConnect()
    TelnetOptionOff(TELOPT_SHORTMAP)
    TelnetOptionOn(TELOPT_ROOM_NAMES)
    TelnetOptionOn(TELOPT_EXIT_NAMES)
+   TelnetOptionOff(TELOPT_QUIET)
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
 end
 
