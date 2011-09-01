@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1340 snapshot
+- bug fix: (maybe) I can't remember if I applied hotfix #1 to luajit b8 or not, so here it is (possibly again)
+- bug fix: reloading the ascii map plugin should now turn tags back on if they were disabled
+- bug fix: the gmcp handler will now happily continue past malformed json data
+
 r1335 snapshot
 - new feature: typing 'package update check' when the update checking plugin is not currently loaded will now offer a chance to load the plugin
 - misc change: the question about loading the update checker plugin will ask a bit more consistently now
