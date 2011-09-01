@@ -368,10 +368,6 @@ end
 function OnPluginConnect ()
    -- first time after connect, get tags right
    Send_GMCP_Packet("rawcolor on")
-   TelnetOptionOff(TELOPT_QUIET)
-   TelnetOptionOn(TELOPT_CHANNELS)
-   TelnetOptionOn(TELOPT_TELLS)
-   TelnetOptionOn(TELOPT_SAYS)
 end --  OnPluginConnect
 
 function OnPluginClose ()
