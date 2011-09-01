@@ -318,6 +318,27 @@ function OnPluginSaveState()
    SetVariable("echo_warfare", GetTriggerOption("warfare", "enabled"))
 end
 
+function OnPluginInstall()
+   OnPluginEnable()
+end
+
+function OnPluginEnable ()
+   -- if we are connected when the plugin loads, it must have been reloaded while playing
+   if IsConnected() then
+      OnPluginConnect()
+   end -- if already connected
+end -- OnPluginEnable
+
+-- pull in telnet option handling
+dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
+
+function OnPluginConnect()
+   TelnetOptionOff(TELOPT_QUIET)
+   TelnetOptionOn(TELOPT_CHANNELS)
+   TelnetOptionOn(TELOPT_TELLS)
+   TelnetOptionOn(TELOPT_SAYS)
+end
+
 ]]>
 </script>
 </muclient>
