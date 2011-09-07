@@ -73,7 +73,7 @@ mapper cexit <command>         --> Follow and link a custom exit
                                  > or more of the cexit moves
                                  > To stack commands use ;; as separator
                                  > to get around the line break parser
-                                 > (ex: mapper cexit open south;;south)
+                                 > (ex: 'mapper cexit open south;;south')
 mapper delete cexits           --> Remove the custom exits from this room
 mapper purge cexits            --> Remove all custom exits
 mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
@@ -89,7 +89,7 @@ mapper portal <command>        --> Link a hand-held portal alias to the
                                  > (ex: 'mapper portal recall' at recall)
                                  > To stack commands use ;; as separator
                                  > to get around the line break parser
-                                 > (ex: mapper portal hold amulet;;enter)
+                                 > (ex: 'mapper portal hold amulet;;enter')
 mapper portalrecall <index>    --> Flag/unflag a portal as using the recall or
                                  > home features, to avoid using it in 
                                  > identified norecall rooms
