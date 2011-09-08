@@ -2487,13 +2487,20 @@ function OnPluginInstall ()
       ]])
    end
    
-    if db_user_version < 5 then
-        check_rooms_flags()
+   if db_user_version < 5 then
+      check_rooms_flags()
    end
 
+   if db_user_version < 6 then
+      -- original database name for wayhouse was missing the apostrophe
+      dbcheck (db:execute [[
+      update areas set name="The Adventurers' Wayhouse" where uid="wayhouse";
+      ]])
+   end
+   
    -- update db version
    dbcheck (db:execute [[
-      PRAGMA user_version = 5;
+      PRAGMA user_version = 6;
    ]])
   
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
