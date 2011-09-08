@@ -2963,7 +2963,8 @@ function map_area (name, line, wildcards)
    end -- not in cache
 
    if not ourroom then
-      print("I could not look up your room!")
+      print("AREA ERROR: The area has not been initialized yet. Please try again in a second.")
+      return
    end -- if
 
    local area = rooms[uid].area
