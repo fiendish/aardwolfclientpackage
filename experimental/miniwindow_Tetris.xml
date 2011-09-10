@@ -71,18 +71,19 @@ function OnPluginEnable()
 end
 
 function OnPluginDisable()
-   OnPluginClose()
-end
-
-function OnPluginClose()
-   game_over = true
    WindowShow(win, false)
+   game_over = true
    StopSound(7)
    -- reset all temporary accelerators
    AcceleratorTo("Ctrl+Left", leftAcc[1] or "", leftAcc[2] or 0)
    AcceleratorTo("Ctrl+Right", rightAcc[1] or "", rightAcc[2] or 0)
    AcceleratorTo("Ctrl+Up", upAcc[1] or "", upAcc[2] or 0)
    AcceleratorTo("Ctrl+Down", downAcc[1] or "", downAcc[2] or 0)
+end
+
+function OnPluginClose()
+   OnPluginDisable()
+   WindowDelete(win)
 end
 
 win = GetPluginID()
