@@ -717,6 +717,9 @@ function OnPluginClose ()
    if GetPluginInfo (GetPluginID (), 17) then
       OnPluginDisable()
    end -- currently enabled
+   if (not (use_gmcp_mapper == 1)) then
+      WindowDelete(mapwin)
+   end
 end -- OnPluginClose
 
 function OnPluginEnable ()

@@ -490,6 +490,7 @@ end
 
 function OnPluginClose ()
    OnPluginDisable()
+   WindowDelete(win)
 end
 
 function OnPluginDisable ()
