@@ -2615,6 +2615,7 @@ function OnPluginClose ()
    if GetPluginInfo(GetPluginID(), 17) then
       OnPluginDisable()
    end -- if enabled
+   WindowDelete(mapper.win)
 end -- OnPluginClose
 
 function OnPluginSaveState ()

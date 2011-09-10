@@ -375,6 +375,7 @@ function OnPluginClose ()
    if GetPluginInfo(GetPluginID(), 17) then
       OnPluginDisable()
    end -- if enabled
+   WindowDelete(win)
 end -- OnPluginClose
 
 function OnPluginEnable ()

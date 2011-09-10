@@ -519,6 +519,7 @@ end -- OnPluginSaveState
 
 function OnPluginClose()
    OnPluginDisable()
+   WindowDelete(win)
 end
 
 function OnPluginDisable ()
