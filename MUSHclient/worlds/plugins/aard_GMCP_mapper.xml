@@ -127,6 +127,7 @@ mapper quicklist [on/off]      --> ON will cause search results to display much
                                  > faster, but the results will not be sorted
                                  > by distance (default is off)
 mapper notes                   --> Show nearby rooms that you marked with notes
+mapper notes <here/area>       --> Ditto
 mapper area <text>             --> Full-text search limited to the current zone
 mapper find <text>             --> Full-text search the whole database
 mapper list <text>             --> Find rooms without the known-path limits
@@ -347,8 +348,9 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>
  
 <alias
-   match="mapper notes"
+   match="mapper notes( (.+))?"
    enabled="y"
+   regexp="y"
    sequence="100"
    script="map_notes"
 ></alias>
@@ -3165,8 +3167,10 @@ function map_find_special(which_ones, which_area)
       area = current_area
    end
    if area == "" then
+      mapper.mapprint("Searching all areas")
       query = "SELECT uid, name, info FROM rooms WHERE rooms.info IS NOT NULL"
    else
+      mapper.mapprint("Searching areas that partially match %"..area.."%")
       query = string.format("SELECT uid, name, info FROM rooms WHERE rooms.info IS NOT NULL AND lower(rooms.area) LIKE %s", fixsql("%" .. area .. "%"))
    end -- if area
 
@@ -3189,7 +3193,7 @@ function map_find_special(which_ones, which_area)
    end   -- finding room
   
    -- find such places
-   mapper.find (nil,
+   mapper.find (table.concat(which_ones,","),
       rooms,
       0,
       show_vnums,  -- show vnum?
@@ -3305,9 +3309,25 @@ function map_notes (name, line, wildcards)
 
    local rooms = {}
    local count = 0
-  
+   local area = wildcards[2] or ""
+
+   local q = string.format ("SELECT bookmarks.uid as uid, bookmarks.notes as notes FROM bookmarks")
+
+   if area == "here" then
+      res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
+      luastmt = "gmcpdata = " .. gmcparg
+      assert(loadstring (luastmt or "")) ()
+      area = gmcpval("zone")
+   end
+   if area ~= "" then
+      q = q..",rooms where bookmarks.uid=rooms.uid and rooms.area like "..fixsql("%"..area.."%")
+      mapper.mapprint("Searching areas that partially match %"..area.."%")
+   else
+      mapper.mapprint("Searching all areas")
+   end
+   
    -- build table of special places (with info in them)
-   for row in db:nrows(string.format ("SELECT uid, notes FROM bookmarks")) do
+   for row in db:nrows(q) do
       table.insert(rooms,{uid=row.uid, reason=row.notes})
       count = count + 1
    end   -- finding room
@@ -3320,7 +3340,7 @@ function map_notes (name, line, wildcards)
       count,       -- how many to expect
       false,        -- don't auto-walk
       nil,
-      quick_mode
+      true  -- quick list
    )
 end -- map_notes
 
