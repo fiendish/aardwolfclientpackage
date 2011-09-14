@@ -90,9 +90,29 @@ mapper portal <command>        --> Link a hand-held portal alias to the
                                  > To stack commands use ;; as separator
                                  > to get around the line break parser
                                  > (ex: 'mapper portal hold amulet;;enter')
-mapper portalrecall <index>    --> Flag/unflag a portal as using the recall or
-                                 > home features, to avoid using it in 
+
++---- NORECALL/NOPORTAL ROOM ASSISTANCE -------------------------------------+
+mapper portalrecall <index>    --> Flag/unflag a portal as using a recall or
+                                 > home command, to avoid using it in
                                  > identified norecall rooms
+mapper bounceportal <index>    --> Specifies which non-recall mapper portal
+                                 > to bounce through when the path calculation
+                                 > wants to recall or home from a
+                                 > portal-friendly norecall room. For this to
+                                 > work properly you must indicate which mapper
+                                 > portals use recall or home with the 
+                                 > portalrecall command listed above.
+mapper bouncerecall <index>    --> Specifies which home/recall mapper portal to
+                                 > bounce through when the path calculation
+                                 > wants to portal from a recall-friendly
+                                 > noportal room. You may only choose a portal
+                                 > that has been marked as being a recall
+                                 > portal using the portalrecall command listed
+                                 > above.
+mapper bounceportal            --> Display the current bounce portal
+mapper bouncerecall            --> Display the current bounce recall
++----------------------------------------------------------------------------+
+
 mapper portallevel <ind> <lvl> --> Change the level lock on a stored portal
                                  > Find the indices with 'mapper portals'
                                  > Do not manually account for tiers
@@ -556,7 +576,23 @@ mapper resume                  --> Initiate a new run to the previous target
    sequence="100"
    script="map_add_note"
 ></alias>
-  
+
+<alias
+   match="mapper bounceportal( (.*))?"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   script="map_bounceportal"
+></alias>
+
+<alias
+   match="mapper bouncerecall( (.*))?"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   script="map_bouncerecall"
+></alias>
+
 <alias
    match="mapper help"
    enabled="y"
@@ -733,6 +769,14 @@ local in_backup = false
 room_not_in_database = {}
 room_in_database = {}
 
+--~    bounce_recall = {dir="home",uid=21335}
+--~    bounce_portal = {dir="enter",uid=26151}
+
+bounce_recall = nil
+loadstring(GetVariable("bounce_recall") or "")()
+bounce_portal = nil
+loadstring(GetVariable("bounce_portal") or "")()
+
 -- Create Database Variables --
 
 count = 0
@@ -803,6 +847,76 @@ function findpathfast(name, line, wildcards)
    else
       mapper.mapprint ("Pick different start and end rooms.")
    end
+end
+
+function map_bounceportal (name, line, wildcards)
+   if wildcards[2]=="" then
+      if bounce_portal and bounce_portal.dir then
+         Note("\nBOUNCEPORTAL: Currently set to '"..bounce_portal.dir.."'")
+      else
+         Note("\nBOUNCEPORTAL: Not currently set.")
+      end
+      return
+   end
+   
+   local pnum = tonumber(wildcards[1])
+   
+   if pnum==nil then
+      Note("\nBOUNCEPORTAL FAILED: The required parameter for mapper bounceportal is <portal_index>. Current portal indexes can be found in the 'mapper portals' output.\n")
+      return
+   end
+   
+   local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
+   local count = 1
+   for row in db:nrows(q) do
+      if count == pnum then
+         if row.fromuid == "*" then
+            bounce_portal = {dir=row.dir, uid=row.touid}
+            Note("\nBOUNCEPORTAL: Set portal #"..count.." ("..row.dir..") as the bounce portal for portal-friendly norecall rooms.")
+            SetVariable("bounce_portal", serialize.save("bounce_portal"))
+         else
+            Note("\nBOUNCEPORTAL FAILED: Portal #"..pnum.." is a recall portal. You must choose a mapper portal that does not use either the recall or home commands for the bounce portal.")
+         end
+         return
+      end
+      count = count + 1
+   end
+   Note(string.format("\BOUNCEPORTAL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+end
+
+function map_bouncerecall (name, line, wildcards)
+   if wildcards[2]=="" then
+      if bounce_recall and bounce_recall.dir then
+         Note("\BOUNCERECALL: Currently set to '"..bounce_recall.dir.."'")
+      else
+         Note("\BOUNCERECALL: Not currently set.")
+      end
+      return
+   end
+   
+   local pnum = tonumber(wildcards[1])
+   
+   if pnum==nil then
+      Note("\nBOUNCERECALL FAILED: The required parameter for mapper bouncerecall is <recall_portal_index>. Current portal indexes can be found in the 'mapper portals' output.\n")
+      return
+   end
+   
+   local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
+   local count = 1
+   for row in db:nrows(q) do
+      if count == pnum then
+         if row.fromuid == "**" then
+            bounce_recall = {dir=row.dir, uid=row.touid}
+            Note("\nBOUNCERECALL: Set recall portal #"..pnum.." ("..row.dir..") as the bounce recall for recall-friendly noportal rooms.")
+            SetVariable("bounce_recall", serialize.save("bounce_recall"))
+         else
+            Note("\nBOUNCERECALL FAILED: Portal #"..pnum.." is not a recall portal. You must choose a mapper portal that uses either the recall or home commands for the bounce recall.")
+         end
+         return
+      end
+      count = count + 1
+   end
+   world.Note(string.format("\BOUNCERECALL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
 end
 
 function map_areas (name, line, wildcards)
@@ -947,10 +1061,10 @@ function show_this_room (name, line, wildcards)
       Note("Info: "..(room.info or ""))
       Note("Notes: "..(room.notes or ""))
       local flags = ''
-      if rooms[current_room].noportal == 1 then 
+      if room.noportal == 1 then 
          flags = flags .. ' noportal' 
       end
-      if rooms[current_room].norecall == 1 then 
+      if room.norecall == 1 then 
          flags = flags .. ' norecall' 
       end
       Note("Flags:", flags)
@@ -2699,7 +2813,9 @@ function noportal_room()
          if rooms[current_room].noportal ~= 1 then
             Note('marking room ', current_room, ' noportal')
             rooms[current_room].noportal = 1
+            db:exec ("BEGIN TRANSACTION;")
             save_room_to_database(current_room, rooms[current_room])
+            db:exec ("COMMIT;")
          end
       end
    end
@@ -2711,7 +2827,9 @@ function norecall_room()
          if rooms[current_room].norecall ~= 1 then
             Note('marking room ', current_room, ' norecall')
             rooms[current_room].norecall = 1
+            db:exec ("BEGIN TRANSACTION;")
             save_room_to_database(current_room, rooms[current_room])
+            db:exec ("COMMIT;")
          end
       end
    end
@@ -3206,8 +3324,10 @@ function map_notes (name, line, wildcards)
    )
 end -- map_notes
 
+local bit = require("bit")
+
 -- original findpath function idea contributed by Spartacus
-function findpath(src, dst)
+function findpath(src, dst, noportals, norecalls)
    local depth = 0
    local max_depth = mapper.configs.SCAN.depth
    local room_sets = {}
@@ -3215,13 +3335,16 @@ function findpath(src, dst)
    local found = false
    local ftd = {}
    local f = ""
-   local rcount = 0
    local next_room = 0
   
-   src = string.match(src, "^(nomap_.+)$") or tonumber(src)
-   dst = string.match(dst, "^(nomap_.+)$") or tonumber(dst)
-
-   if src == dst or dst == nil then
+   if type(src) ~= "number" then
+      src = string.match(src, "^(nomap_.+)$") or tonumber(src)
+   end
+   if type(dst) ~= "number" then
+      dst = string.match(dst, "^(nomap_.+)$") or tonumber(dst)
+   end
+   
+   if src == dst or src == nil or dst == nil then
       return {}
    end
   
@@ -3245,10 +3368,10 @@ function findpath(src, dst)
       if visited ~= "" then 
          visited = visited..","..table.concat(rooms_list, ",")
       else
-         if rooms[current_room].noportal == 1 then
+         if noportals then
             visited = visited..fixsql("*")..","
-         end   
-         if rooms[current_room].norecall == 1 then
+         end
+         if norecalls then
             visited = visited..fixsql("**")..","
          end
          visited = visited..table.concat(rooms_list, ",")
@@ -3264,14 +3387,14 @@ function findpath(src, dst)
          -- ensures that custom exits (always longer than 1 char) get used preferentially to normal ones (1 char). An alternative solution is to order by length(dir) asc
          -- and remove the break from the if block below.
          room_sets[depth][row.fromuid] = room_sets[depth][row.fromuid] or {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
-         if row.fromuid == src or row.fromuid == "*" or row.fromuid == "**" then
+         if row.fromuid == "*" or row.fromuid == "**" or row.fromuid == src then
             f = row.fromuid
             found = true
             found_depth = depth
             break
          end -- if src
       end -- for select
-      rcount = rcount + dcount
+
       if dcount == 0 then
          return -- there is no path from here to there
       end -- if dcount
@@ -3285,6 +3408,36 @@ function findpath(src, dst)
    local path = {}
    -- set ftd to the first from,to,dir set where from was either our start room or * or **
    ftd = room_sets[found_depth][f]
+   
+   rooms[src] = load_room_from_database(src)
+   
+   if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
+      if rooms[src].norecall ~= 1 then
+         if bounce_recall ~= nil then
+            table.insert(path, bounce_recall)
+         end
+      elseif rooms[src].noportal ~= 1 then
+         if bounce_portal ~= nil then
+            table.insert(path, bounce_portal)
+         end
+      else
+         local jump_room, type = findNearestJumpRoom(src, dst)
+         if not jump_room then
+            return
+         end
+         local path, first_depth = findpath(src,jump_room, true, true)
+         if bit.band(type, 1) ~= 0 then
+            return path, first_depth
+         else
+            local second_path, second_depth = findpath(jump_room, dst)
+            for i,v in ipairs(second_path) do
+               table.insert(path, v)
+            end
+            return path, first_depth+second_depth
+         end
+      end
+   end
+
    table.insert(path, {dir=ftd.dir, uid=ftd.touid})
 
    next_room = ftd.touid
@@ -3297,10 +3450,65 @@ function findpath(src, dst)
       end
       table.insert(path, {dir=ftd.dir, uid=ftd.touid})
    end -- while
-  
-   return path, count, found_depth
+   return path, found_depth
 end -- function findpath
 
+-- Very similar to findpath, but looks forwards instead of backwards (so only walks)
+-- and stops at the nearest portalable or recallable room
+function findNearestJumpRoom(src, dst)
+   local depth = 0
+   local max_depth = mapper.configs.SCAN.depth
+   local room_sets = {}
+   local rooms_list = {}
+   local found = false
+   local ftd = {}
+   local destination = ""
+   local next_room = 0
+   local visited = ""
+   local type = ""
+
+   table.insert(rooms_list, fixsql(src))  
+ 
+   while not found and depth < max_depth do
+      BroadcastPlugin (999, "repaint")
+
+      -- prune the search space
+      if visited ~= "" then 
+         visited = visited..","..table.concat(rooms_list, ",")
+      else
+         visited = table.concat(rooms_list, ",")
+      end
+    
+      -- get all exits to any room in the previous set
+      local q = string.format ("select fromuid, touid, dir, norecall, noportal from exits,rooms where rooms.uid = exits.touid and exits.fromuid in (%s) and exits.touid not in (%s) and exits.level <= %s order by length(exits.dir) desc",
+                  table.concat(rooms_list,","), visited, mylevel+(mytier*10))
+      local dcount = 0
+      for row in db:nrows(q) do
+         dcount = dcount + 1
+         table.insert(rooms_list, fixsql(row.touid))
+         -- ordering by length(dir) and then checking here to see if we've already found a connection from a particular room
+         -- ensures that custom exits (always longer than 1 char) get used preferentially to normal ones (1 char). An alternative solution is to order by length(dir) asc
+         -- and remove the break from the if block below.
+         if row.noportal ~= 1 or row.norecall ~= 1 or row.touid == dst then
+            type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
+            destination = row.touid
+            found = true
+            found_depth = depth
+            break
+         end -- if src
+      end -- for select
+
+      if dcount == 0 then
+         return -- there is no path to a portalable or recallable room
+      end -- if dcount
+   end -- while
+   
+   if found == false then
+      return
+   end
+  
+   return destination, type, found_depth
+end
 
 valid_direction = {
    n = "n",
