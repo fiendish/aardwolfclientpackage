@@ -1296,7 +1296,7 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
    Note("+------------------------------ START OF SEARCH -------------------------------+")
    
    for i,v in ipairs(dests) do
-      local uid = tonumber(v.uid)
+      local uid = v.uid
       if not rooms[uid] then
          rooms[uid] = get_room(uid)
       end -- if
