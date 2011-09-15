@@ -94,7 +94,8 @@ mapper portal <command>        --> Link a hand-held portal alias to the
 +---- NORECALL/NOPORTAL ROOM ASSISTANCE -------------------------------------+
 mapper portalrecall <index>    --> Flag/unflag a portal as using a recall or
                                  > home command, to avoid using it in
-                                 > identified norecall rooms
+                                 > identified norecall rooms.
+                                 > Find the indices with 'mapper portals'
 mapper bounceportal <index>    --> Specifies which non-recall mapper portal
                                  > to bounce through when the path calculation
                                  > wants to recall or home from a
@@ -102,6 +103,7 @@ mapper bounceportal <index>    --> Specifies which non-recall mapper portal
                                  > work properly you must indicate which mapper
                                  > portals use recall or home with the 
                                  > portalrecall command listed above.
+                                 > Find the indices with 'mapper portals'
 mapper bouncerecall <index>    --> Specifies which home/recall mapper portal to
                                  > bounce through when the path calculation
                                  > wants to portal from a recall-friendly
@@ -109,6 +111,7 @@ mapper bouncerecall <index>    --> Specifies which home/recall mapper portal to
                                  > that has been marked as being a recall
                                  > portal using the portalrecall command listed
                                  > above.
+                                 > Find the indices with 'mapper portals'
 mapper bounceportal            --> Display the current bounce portal
 mapper bouncerecall            --> Display the current bounce recall
 +----------------------------------------------------------------------------+
