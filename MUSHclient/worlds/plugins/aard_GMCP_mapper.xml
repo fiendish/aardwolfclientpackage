@@ -149,6 +149,8 @@ mapper next                    --> Visit the next room in the most recent
 ===== EXPLORING =================>
 
 mapper thisroom                --> Show details about the current room
+mapper showroom <room id>      --> Draw the map as if you were standing in
+                                 > a different room
 mapper areas                   --> Show a list of all mapped areas
 mapper areas <name>            --> Show a list of mapped areas partially
                                  > matching <name>
@@ -177,6 +179,14 @@ mapper resume                  --> Initiate a new run to the previous target
 </timers>
 
 <aliases>
+
+<alias
+   match="mapper showroom *"
+   enabled="y"
+   script="draw_other"
+   sequence="100"
+></alias>
+
 <alias
    match="mapper backup"
    enabled="y"
@@ -2838,6 +2848,11 @@ function norecall_room()
          end
       end
    end
+end
+
+function draw_other(name, line, wildcards)
+   current_room = wildcards[1]
+   mapper.draw(current_room)
 end
 
 function got_gmcp_room()
