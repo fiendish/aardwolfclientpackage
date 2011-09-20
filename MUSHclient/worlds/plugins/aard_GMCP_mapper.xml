@@ -593,7 +593,7 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>
 
 <alias
-   match="mapper bounceportal( (.*))?"
+   match="^mapper bounceportal( (.*))?$"
    enabled="y"
    regexp="y"
    sequence="100"
@@ -601,7 +601,7 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>
 
 <alias
-   match="mapper bouncerecall( (.*))?"
+   match="^mapper bouncerecall( (.*))?$"
    enabled="y"
    regexp="y"
    sequence="100"
