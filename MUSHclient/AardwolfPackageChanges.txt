@@ -1,5 +1,18 @@
 Aardwolf Client Package Major Changes List
 
+r1414 snapshot
+- new feature: the group monitor miniwindow will now list pending group invitations
+- new feature: added hp thresholds to the health bars plugin like the group monitor already has
+- new feature: there is a new 'mapper showroom <id>' command that lets you draw the map as if standing in another room
+- bug fix: mapper quicklist mode will no longer error when listing nomap rooms
+- new feature: I hate doing this for various reasons, but mapper noportal and norecall handling is now much more powerful. There's a special circle of hell for you if you suddenly start winning GQs faster.
+- new feature: 'mapper notes' command now accepts <area> and here parameters
+- misc change: miniwindows will clean up after themselves better when their respective plugins close
+- bug fix: mousing from one part to another part of a line-wrapped hyperlink that has percent signs in it will no longer abort the channel capture plugin
+- bug fix: block a race condition on 'mapper area' when entering a brand new area
+- bug fix: added an apostrophe in the title of Adventurer's Wayhouse to the mapper database
+- misc change: add comment about using ;; to avoid splitting lines while stacking commands in mapper help
+
 r1340 snapshot
 - bug fix: (maybe) I can't remember if I applied hotfix #1 to luajit b8 or not, so here it is (possibly again)
 - bug fix: reloading the ascii map plugin should now turn tags back on if they were disabled
