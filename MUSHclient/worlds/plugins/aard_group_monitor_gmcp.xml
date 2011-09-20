@@ -53,6 +53,24 @@ details captured through GMCP.
 ></alias>
 </aliases>
 
+<triggers>
+<trigger
+   enabled="y"
+   match="^(\w+) has invited you to join group: (.*)\.$"
+   script="group_invite"
+   regexp="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="y"
+   match="^(\w+) has cancelled your invitation to join group: (.*)\.$"
+   script="group_cancel"
+   regexp="y"
+   sequence="100"
+></trigger>
+</triggers>
+
 <script>
 <![CDATA[
 
@@ -210,15 +228,28 @@ function DisplayGroupPage()
    WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
 
    if not group_built then
-      txt = "No Group To Display"
-      txtlen = WindowTextWidth(win,font_id, txt)
-      WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, 0xeeeeee, utf8)
-      txt = "Group info will appear here"
-      txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
-      txt = "once you create or join one."
-      txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee, utf8)
+      if next(invitations) == nil then
+         txt = "No Group To Display"
+         txtlen = WindowTextWidth(win,font_id, txt)
+         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, 0xeeeeee, utf8)
+         txt = "Group info will appear here"
+         txtlen = WindowTextWidth(win,font_id,txt)
+         WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
+         txt = "once you create or join one."
+         txtlen = WindowTextWidth(win,font_id,txt)
+         WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee, utf8)
+      else
+         local lines = {}
+         txt = "Pending Group Invitations"
+         txtlen = WindowTextWidth(win, font_id, txt)
+         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, 0xeeeeee, utf8)
+         for k,v in pairs(invitations) do
+            table.insert(lines, k.." wants you to join: "..v)
+         end
+         for i,v in ipairs(lines) do
+            WindowText(win, font_id, v, GAP*4, (title_height) + (i*line_height), 0, 0, 0xeeeeee, utf8)
+         end
+      end
    else
       styles = ColoursToStyles(group_data["groupname"])
       x = GAP
@@ -542,6 +573,18 @@ function right_click_menu ()
    end
 end -- right_click_menu
 
+invitations = {}
+
+function group_invite(name, line, wildcards, styles)
+   invitations[wildcards[1]]=wildcards[2]
+   DisplayGroupPage()
+end
+
+function group_cancel(name, line, wildcards, styles)
+   invitations[wildcards[1]] = nil
+   DisplayGroupPage()
+end
+
 --=================================================================================
 -- Called when plugin receives telnet data - main entry point for actually running
 -- the plugin.
@@ -571,6 +614,7 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "full_group_data = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          if (full_group_data.groupname == "") then
+            invitations = {}
             leaveGroup()
          else
             group_built = true
