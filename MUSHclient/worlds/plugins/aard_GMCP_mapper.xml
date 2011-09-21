@@ -2098,24 +2098,13 @@ end -- room_add_exit
 
 function room_delete_exit (room, uid)
 
-   local available =  {
-   n = "North",
-   s = "South",
-   e = "East",
-   w = "West",
-   u = "Up",
-   d = "Down",
-   }  -- end of available
+   local available =  {}  -- end of available
 
-   -- remove non-existent exits
-   for k in pairs (available) do
-      if room.exits [k] then
-         available [k] = available [k] .. " --> " .. room.exits [k] 
-      else
-         available [k] = nil
-      end -- if not a room exit
+   -- construct available exits list for display
+   for k,v in pairs (room.exits) do
+      available [k] = k .. " --> " .. room.exits [k] 
    end -- for
-  
+   
    if next (available) == nil then
       utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
       return
@@ -2132,9 +2121,7 @@ function room_delete_exit (room, uid)
       fixsql (chosen_exit),  -- direction (eg. "n")
       fixsql (uid)  -- from current room
    )))
-   if show_database_mods then
-      mapper.mapprint ("Deleted exit", available [chosen_exit], "from room", uid, "from database.")
-   end -- if
+   mapper.mapprint ("Deleted exit '"..chosen_exit.."' from room "..uid.." from database.")
   
    -- update in-memory table
    rooms [uid].exits [chosen_exit] = nil
@@ -2146,22 +2133,11 @@ end -- room_delete_exit
 
 function room_change_exit (room, uid)
 
-   local available =  {
-   n = "North",
-   s = "South",
-   e = "East",
-   w = "West",
-   u = "Up",
-   d = "Down",
-   }  -- end of available
+   local available =  {}  -- end of available
 
-   -- remove non-existent exits
-   for k in pairs (available) do
-      if room.exits [k] then
-         available [k] = available [k] .. " --> " .. room.exits [k] 
-      else
-         available [k] = nil
-      end -- if not a room exit
+   -- construct available exits list for display
+   for k,v in pairs (room.exits) do
+      available [k] = k .. " --> " .. room.exits [k] 
    end -- for
   
    if next (available) == nil then
@@ -2174,7 +2150,7 @@ function room_change_exit (room, uid)
       return
    end
 
-   exit_destination = utils.inputbox ("Enter destination room identifier (number) for " .. available [chosen_exit], room.name, "")
+   exit_destination = utils.inputbox ("Enter destination room identifier (number) for " .. chosen_exit, room.name, room.exits[chosen_exit])
 
    if not exit_destination then
       return
@@ -2193,43 +2169,34 @@ function room_change_exit (room, uid)
       utils.msgbox ("Room " .. exit_destination .. " does not exist.", "Room does not exist!", "ok", "!", 1)
       return
    end -- if still not there
-    
-   dbcheck (db:execute (string.format ([[
-      UPDATE exits SET touid = %s WHERE dir = %s AND fromuid = %s;
-      ]], 
-      fixsql (exit_destination),
-      fixsql (chosen_exit),  -- direction (eg. "n")
-      fixsql (uid)  -- from current room
-   )))
-      
-   if show_database_mods then
-      mapper.mapprint ("Modified exit", available [chosen_exit], "from room", uid, "to be to room", exit_destination, "in database.")
-   end -- if
-  
-   -- update in-memory table
-   rooms [uid].exits [chosen_exit] = exit_destination
-   mapper.draw (current_room)
    
+   if exit_destination ~= room.exits[chosen_exit] then
+      dbcheck (db:execute (string.format ([[
+         UPDATE exits SET touid = %s WHERE dir = %s AND fromuid = %s;
+         ]], 
+         fixsql (exit_destination),
+         fixsql (chosen_exit),  -- direction (eg. "n")
+         fixsql (uid)  -- from current room
+      )))
+         
+      mapper.mapprint ("Modified exit", chosen_exit, "from room", uid, "to be to room", exit_destination, "in database.")
+     
+      -- update in-memory table
+      rooms [uid].exits [chosen_exit] = exit_destination
+      mapper.draw (current_room)
+   else
+      mapper.mapprint ("Destination unchanged for exit '"..chosen_exit.."'.")
+   end
+      
 end -- room_change_exit
 
 function room_lock_exit (room, uid)
 
-   local available =  {
-   n = "North",
-   s = "South",
-   e = "East",
-   w = "West",
-   u = "Up",
-   d = "Down",
-   }  -- end of available
+   local available =  {}  -- end of available
 
-   -- remove non-existent exits
-   for k in pairs (available) do
-      if room.exits [k] then
-         available [k] = available [k] .. " --> " .. room.exits [k] .. " ( " .. room.exit_locks[k] .. " )"
-      else
-         available [k] = nil
-      end -- if not a room exit
+   -- construct available exits list for display
+   for k,v in pairs (room.exits) do
+      available [k] = k .. " --> " .. room.exits [k] 
    end -- for
   
    if next (available) == nil then
@@ -2242,26 +2209,31 @@ function room_lock_exit (room, uid)
       return
    end -- cancelled
 
-   exit_level = tostring(tonumber(utils.inputbox ("Enter level lock for " .. available [chosen_exit], room.name, room.exit_locks[chosen_exit],nil,nil,{validate=positive_integer_check}))) -- use tonumber to strip off any ".0"
+   exit_level = tostring(tonumber(utils.inputbox ("Enter level lock for " .. chosen_exit, room.name, room.exit_locks[chosen_exit],nil,nil,{validate=positive_integer_check}))) -- use tonumber to strip off any ".0"
 
    if not exit_level then
       return
    end -- cancelled
-  
-   dbcheck (db:execute (string.format ([[
-      UPDATE exits SET level = %s WHERE dir = %s AND fromuid = %s;
-      ]], 
-      fixsql (exit_level),
-      fixsql (chosen_exit), -- direction (eg. "n")
-      fixsql (uid) -- from current room
-   )))
-      
-   mapper.mapprint ("Set level lock on exit", available [chosen_exit], "from room", uid, "to be", exit_level, "in database.")
-  
-   -- update in-memory table
+   
    if not rooms [uid].exit_locks then
       rooms [uid].exit_locks = {}
    end
+
+   if exit_level ~= rooms[uid].exit_locks[chosen_exit] then
+      dbcheck (db:execute (string.format ([[
+         UPDATE exits SET level = %s WHERE dir = %s AND fromuid = %s;
+         ]], 
+         fixsql (exit_level),
+         fixsql (chosen_exit), -- direction (eg. "n")
+         fixsql (uid) -- from current room
+      )))
+         
+      mapper.mapprint ("Set level lock on exit", available [chosen_exit], "from room", uid, "to be", exit_level, "in database.")
+   else
+      mapper.mapprint ("Level lock unchanged for exit '"..chosen_exit.."'.")
+   end
+
+   -- update in-memory table
    rooms[uid].exit_locks[chosen_exit] = exit_level
    mapper.draw (current_room)
    
