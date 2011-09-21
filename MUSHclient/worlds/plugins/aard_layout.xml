@@ -349,18 +349,20 @@ function draw_main_window()
       math.max(0, trwidth + 10), math.max(0, trheight + 10),
       12  , 3, GetNormalColour(1))
    WindowShow(bgwin, true)
-   
-   local rect_ratio = trwidth/trheight
-   if rect_ratio > image_ratio then
-      image_height = trheight
-      image_width = trheight*image_ratio
-   else
-      image_height = trwidth/image_ratio
-      image_width = trwidth
+
+   if image_ratio ~= nil then
+      local rect_ratio = trwidth/trheight
+      if rect_ratio > image_ratio then
+         image_height = trheight
+         image_width = trheight*image_ratio
+      else
+         image_height = trwidth/image_ratio
+         image_width = trwidth
+      end
+      
+      WindowDrawImage (bgwin, "wolf_logo", (trwidth-image_width)/2, (trheight-image_height)/2, (trwidth+image_width)/2, (trheight+image_height)/2, miniwin.image_stretch)
    end
-   
-   WindowDrawImage (bgwin, "wolf_logo", (trwidth-image_width)/2, (trheight-image_height)/2, (trwidth+image_width)/2, (trheight+image_height)/2, miniwin.image_stretch)
-   
+
    add_title_dragger()
    add_main_resizer()
 end
