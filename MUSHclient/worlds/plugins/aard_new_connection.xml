@@ -24,6 +24,16 @@
    script="activateUpdate"
 >
 </alias>
+
+<alias
+   match="connect to aardwolf"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   ignore_case="y"
+   script="vi_close"
+>
+</alias>
 </aliases>
 <script>
 <![CDATA[
@@ -94,6 +104,13 @@ function hyperlink_close ()
    WindowShow (win, false)
    Connect()
 end -- hyperlink_close 
+
+function vi_close()
+   showGreeting2 = 0
+   OnPluginSaveState()
+   ShowGreeting(false)
+   hyperlink_close()
+end
 
 function hyperlink_dont_show()
    if showGreeting2 == 1 then
