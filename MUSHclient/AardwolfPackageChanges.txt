@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1418 snapshot
+- new feature: right-click menu options for modifying exits in the mapper window now affect custom exits as well
+- bug fix: removing/renaming the aardwolf logo image produced errors on startup
+
 r1414 snapshot
 - new feature: the group monitor miniwindow will now list pending group invitations
 - new feature: added hp thresholds to the health bars plugin like the group monitor already has
