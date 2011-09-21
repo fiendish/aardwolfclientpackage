@@ -1,8 +1,8 @@
 Aardwolf Client Package Major Changes List
 
-r1418 snapshot
+r1419 snapshot
 - new feature: right-click menu options for modifying exits in the mapper window now affect custom exits as well
-- bug fix: removing/renaming the aardwolf logo image produced errors on startup
+- bug fix: removing/renaming the aardwolf logo background image used in the main output produced errors on startup
 
 r1414 snapshot
 - new feature: the group monitor miniwindow will now list pending group invitations
