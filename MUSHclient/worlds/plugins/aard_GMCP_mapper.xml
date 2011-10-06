@@ -3421,6 +3421,13 @@ function findpath(src, dst, noportals, norecalls)
    
    rooms[src] = load_room_from_database(src)
    
+   if not rooms[src] then
+      -- Under normal operation this probably should never happen. Maybe there was a disk access issue?
+      -- I don't know. Problem reported, problem tentatively worked around. But I can't reproduce it.
+      mapper.mapprint("FINDPATH ERROR: could not load room "..src.." from database.")
+      return
+   end
+   
    if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
       if rooms[src].norecall ~= 1 then
          if bounce_recall ~= nil then
