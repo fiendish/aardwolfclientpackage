@@ -159,7 +159,9 @@ mapper unmapped <here/area>    --> List unmapped exits in this or another area
 
 ===== MOVING ====================>
 
-mapper goto <room id>          --> Walk to a room by its room number
+mapper goto <room id>          --> Run to a room by its room number
+mapper walkto <room id>        --> Run to a room by its room number without 
+                                 > using any mapper portals
 mapper resume                  --> Initiate a new run to the previous target
 
 ]]>
@@ -327,7 +329,14 @@ mapper resume                  --> Initiate a new run to the previous target
    enabled="y"
    sequence="100"
    script="map_goto"
-></alias>  
+></alias>
+
+<alias
+   match="mapper walkto *"
+   enabled="y"
+   sequence="100"
+   script="map_goto"
+></alias>
 
 <alias
    match="mapper where *"
@@ -3215,7 +3224,7 @@ function map_goto (name, line, wildcards)
 
    local wanted = string.match(wildcards[1], "^(nomap_.+)$") or tonumber(wildcards [1])
    if not wanted or (type(wanted) == "number" and  wanted < 0) then
-      mapper.mapprint ("The mapper goto command expects a room id as input.")
+      mapper.mapprint ("The mapper "..(((string.match(line, "^mapper walkto") ~= nil) and "walkto") or "goto").." command expects a room id as input.")
       return
    end
    if current_room and (wanted == current_room) then
@@ -3229,7 +3238,10 @@ function map_goto (name, line, wildcards)
       0,
       show_vnums,  -- show vnum?
       1,          -- how many to expect
-      true        -- just walk there
+      true,        -- just walk there
+      nil,
+      nil,
+      string.match(line, "^mapper walkto") ~= nil
    )
 end -- map_goto
 

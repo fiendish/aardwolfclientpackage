@@ -1184,13 +1184,13 @@ function save_state ()
 end -- save_state
 
 require "serialize"
-function full_find (name, dests, show_uid, expected_count, walk, fcb)
+function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals)
    local paths = {}
    local notfound = {}
    for i,v in ipairs(dests) do
       SetStatus (string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
       BroadcastPlugin (999, "repaint")
-      local foundpath = findpath(current_room, v.uid)
+      local foundpath = findpath(current_room, v.uid, no_portals, no_portals)
       if not rooms [v.uid] then
          rooms [v.uid] = get_room (v.uid)
       end
@@ -1367,7 +1367,7 @@ end
 -- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
 -- if fcb is a function, it is called back after displaying each line
 -- quick_list determines whether we pathfind every destination in advance to be able to sort by distance
-function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quick_list)
+function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quick_list, no_portals)
    if not check_we_can_find () then
       return
    end -- if
@@ -1395,7 +1395,7 @@ function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quic
    if quick_list == true then
       quick_find(name, dests, show_uid, expected_count, walk, fcb)
    else
-      full_find(name, dests, show_uid, expected_count, walk, fcb)
+      full_find(name, dests, show_uid, expected_count, walk, fcb, no_portals)
    end
 end -- map_find_things
 
