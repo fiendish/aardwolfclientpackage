@@ -174,7 +174,9 @@ function right_click_menu ()
 end -- right_click_menu
 
 function ShowGreeting(firstTime, highlight_url)
-
+   Note("")
+   Note("A message to users of screen readers:\nRight now there is a 'welcome' screen being shown that probably does not play nicely with screen readers. The screen talks about how to interact with visual elements of the package via clicking and dragging and stuff. To bypass the welcome screen and connect to the game, type \"connect to aardwolf\" without the quotation marks and then press enter.\nFor more information about the package be sure to check out http://tinyurl.com/aardclientmanual")
+   Note("")
    require "getlines"
    require "movewindow"
   
