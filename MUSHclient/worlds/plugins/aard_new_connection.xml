@@ -174,9 +174,6 @@ function right_click_menu ()
 end -- right_click_menu
 
 function ShowGreeting(firstTime, highlight_url)
-   Note("")
-   Note("A message to users of screen readers:\nRight now there is a 'welcome' screen being shown that probably does not play nicely with screen readers. The screen talks about how to interact with visual elements of the package via clicking and dragging and stuff. To bypass the welcome screen and connect to the game, type \"connect to aardwolf\" without the quotation marks and then press enter.\nFor more information about the package be sure to check out http://tinyurl.com/aardclientmanual")
-   Note("")
    require "getlines"
    require "movewindow"
   
@@ -186,6 +183,11 @@ function ShowGreeting(firstTime, highlight_url)
    y = GAP
   
    if (firstTime) then
+   
+      Note("")
+      Note("Screen reader users: To bypass the welcome screen and connect to the game, type \"connect to aardwolf\" without the quotation marks and then press enter.\nFor more information about the package be sure to check out http://tinyurl.com/aardclientmanual")
+      Note("")
+   
       -- make the window to get font info
       WindowCreate (win, 0, 0, 0, 0, -- very small
          miniwin.pos_center_all, 0, 
@@ -222,7 +224,7 @@ function ShowGreeting(firstTime, highlight_url)
       max_width = math.max(text_width, max_width)
       
       window_width = max_width + 2*GAP
-      window_height = 28*line_height
+      window_height = 26*line_height
       -- make the "real" window
       WindowCreate (win, 0, 0, window_width, window_height, miniwin.pos_center_all, 0, 
                                WINDOW_BACKGROUND_COLOUR)  -- create window
@@ -231,8 +233,6 @@ function ShowGreeting(firstTime, highlight_url)
       -- add the drag handler so they can move the window around
       movewindow.add_drag_handler (win, 0, 0, 0, 0)
       
-      WindowText(win, font_id, never_show_text, window_width-text_width - line_height - GAP, window_height-line_height+1 - GAP, 0, 0, 0xffffff)
-
       title = "Aardwolf MUSHclient Package: Getting Started"
       title_width = WindowTextWidth(win, font_id_bold, title)
 
@@ -252,20 +252,20 @@ function ShowGreeting(firstTime, highlight_url)
          "Go to the online guide!",
          miniwin.cursor_hand, 0)  -- hand cursor
 
-      y = y + line_height*2
+      y = y + line_height*1.5
       tx = WindowText (win, font_id, baselines[2], x, y, 0, 0, WINDOW_TEXT_COLOUR )
-      y = y + line_height*2
+      y = y + line_height*1.5
       WindowText (win, font_id, baselines[3], x, y, 0, 0, WINDOW_TEXT_COLOUR )
-      y = y + line_height*2
+      y = y + line_height*1.5
       WindowText (win, font_id, baselines[4], x, y, 0, 0, WINDOW_TEXT_COLOUR )
-      y = y + line_height*2
+      y = y + line_height*1.5
       WindowText (win, font_id, baselines[5], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       y = y + line_height
       x = x+50
       local mx = WindowText (win, font_id, tablines[1], x, y, 0, 0, WINDOW_TEXT_COLOUR) + x + 15
       my = y + line_height
       
-      -- draw the resize widget bottom right corner.
+      -- draw the resize widget
       WindowLine(win, mx-3, my-2, mx-2, my-3, 0xffffff, 0, 2)
       WindowLine(win, mx-4, my-2, mx-2, my-4, 0x696969, 0, 1)
       WindowLine(win, mx-6, my-2, mx-2, my-6, 0xffffff, 0, 2)
@@ -275,16 +275,16 @@ function ShowGreeting(firstTime, highlight_url)
       WindowLine(win, mx-12, my-2, mx-2, my-12, 0xffffff, 0, 2)
       WindowLine(win, mx-13, my-2, mx-2, my-13, 0x696969, 0, 1)
       
-      y = y + line_height*1.6
+      y = y + line_height*1.5
       WindowText (win, font_id, tablines[2], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       y = y + line_height
       WindowText (win, font_id, tablines[3], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       y = y + line_height
       WindowText (win, font_id, tablines[4], x, y, 0, 0, WINDOW_TEXT_COLOUR)
-      y = y + line_height*1.6
+      y = y + line_height*1.5
       WindowText (win, font_id, tablines[5], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       
-      y = y + line_height*1.6
+      y = y + line_height*1.5
       mx = WindowText (win, font_id, tablines[6], x, y, 0, 0, WINDOW_TEXT_COLOUR) + x
 
       -- show the widget for the legend popup
@@ -303,15 +303,18 @@ function ShowGreeting(firstTime, highlight_url)
       y = y + line_height
       WindowText(win, font_id, tablines[7], x, y, 0, 0, WINDOW_TEXT_COLOUR)
       
-      y = y + line_height*2
+      y = y + line_height*1.5
       WindowText (win, font_id, baselines[6], x-50, y, 0, 0, WINDOW_TEXT_COLOUR)
       
       -- frame the tips
-      WindowRectOp(win, 1,GAP/2, line_height*7 + (GAP/2), window_width-(GAP/2),y+line_height+GAP/2,0x777777,0x0000ff) -- border
+      WindowRectOp(win, 1,GAP/2, line_height*6 + (GAP/2), window_width-(GAP/2),y+line_height+GAP/2,0x777777,0x0000ff) -- border
 
       y = y + line_height*2
       WindowText (win, font_id, "OK? Well, that's all for now. Have fun playing Aardwolf!", 20, y, 0, 0, WINDOW_TEXT_COLOUR)
       y = y + line_height
+      
+      WindowText(win, font_id, never_show_text, window_width-text_width - line_height - GAP, window_height-(2*line_height)+1 - GAP, 0, 0, 0xffffff)
+      WindowText(win, font_id, "Screen reader users: type \"connect to aardwolf\" without quotation marks.", GAP, window_height-line_height+1 - GAP, 0, 0, 0xffffff)
       
       WindowResize(win, window_width, window_height, 0x000000)
 
@@ -367,30 +370,33 @@ function ShowGreeting(firstTime, highlight_url)
       "Click to close",
       miniwin.cursor_hand, 0)  -- hand cursor
 
+   -- don't show again box
    WindowRectOp (win, miniwin.rect_fill, 
       x + window_width - box_size - GAP * 2, 
-      window_height - box_size - GAP, 
+      window_height - box_size - GAP - line_height, 
       x + window_width - GAP * 2, 
-      window_height - GAP, 
+      window_height - GAP - line_height, 
       0x000000)      
    WindowRectOp (win, miniwin.rect_frame, 
       x + window_width - box_size - GAP * 2, 
-      window_height - box_size - GAP, 
+      window_height - box_size - GAP - line_height, 
       x + window_width - GAP * 2, 
-      window_height - GAP, 
+      window_height - GAP - line_height, 
       0xffffff)
 
    if showGreeting2 == 0 then
-      WindowLine (win, x + window_width - box_size - GAP * 2 + 3, 
-         window_height - box_size - GAP + 7, 
+      WindowLine (win, 
+         x + window_width - box_size - GAP * 2 + 3, 
+         window_height - box_size - GAP + 7 - line_height, 
          x + window_width - (box_size/2) - GAP * 2 , 
-         window_height - GAP - 3, 
+         window_height - GAP - 3 - line_height, 
          0xffffff, 
          miniwin.pen_solid, 1)
-      WindowLine (win, x + window_width - (box_size/2) - GAP * 2 , 
-         window_height - GAP - 3,
+      WindowLine (win, 
+         x + window_width - (box_size/2) - GAP * 2 , 
+         window_height - GAP - 3 - line_height,
          x + window_width - GAP * 2 - 3, 
-         window_height - GAP - box_size, 
+         window_height - GAP - box_size - line_height, 
          0xffffff, 
          miniwin.pen_solid, 1)
    end
@@ -398,9 +404,9 @@ function ShowGreeting(firstTime, highlight_url)
    -- don't show again hotspot               
    WindowAddHotspot(win, "dont_show_again_box",  
       x + window_width - box_size - GAP * 2, 
-      window_height - box_size - GAP, 
+      window_height - box_size - GAP - line_height, 
       x + window_width - GAP * 2, 
-      window_height - GAP, 
+      window_height - GAP - line_height, 
       "", "", "", "", 
       "hyperlink_dont_show",  -- mouseup
       "\nIf you don't check this box, you'll \nsee this message again next time.",
