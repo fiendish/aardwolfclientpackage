@@ -129,23 +129,24 @@ mapper purge portals           --> Remove all hand-held portal aliases
 mapper quicklist [on/off]      --> ON will cause search results to display much
                                  > faster, but the results will not be sorted
                                  > by distance (default is off)
-mapper notes                   --> Show nearby rooms that you marked with notes
-mapper notes <here/area>       --> Ditto
+
 mapper area <text>             --> Full-text search limited to the current zone
 mapper find <text>             --> Full-text search the whole database
 mapper list <text>             --> Find rooms without the known-path limits
                                  > of "area" and "find"
+
+mapper notes                   --> Show nearby rooms that you marked with notes
+mapper notes <here/area>       --> Ditto
 mapper shops                   --> Show all shops/banks
 mapper shops <here/area>       --> Ditto
 mapper train                   --> Show all trainers
 mapper train <here/area>       --> Ditto
 mapper quest                   --> Show all quest-givers
 mapper quest <here/area>       --> Ditto
-mapper where <room id>         --> Show directions to a room number
 
 mapper next                    --> Visit the next room in the most recent
                                  > list of results.
-
+mapper where <room id>         --> Show directions to a room number
 ===== EXPLORING =================>
 
 mapper thisroom                --> Show details about the current room
