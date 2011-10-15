@@ -1503,6 +1503,7 @@ function custom_exit (name, line, wildcards)
                fixsql  (cexit_dest) -- destination room 
             )))
             rooms[cexit_start].exits[cexit_command] = cexit_dest
+            rooms[cexit_start].exit_locks[cexit_command] = "0"
             mapper.draw (current_room)
          else
             world.Note (string.format("CEXIT FAILED: Custom Exit %s leads back here!", cexit_command))
@@ -2146,7 +2147,7 @@ function room_delete_exit (room, uid)
    mapper.mapprint ("Deleted exit '"..chosen_exit.."' from room "..uid.." from database.")
   
    -- update in-memory table
-   rooms [uid].exits [chosen_exit] = nil
+   rooms[uid] = load_room_from_database(uid)
   
    mapper.draw (current_room)
    
@@ -2233,7 +2234,7 @@ function room_lock_exit (room, uid)
 
    exit_level = tostring(tonumber(utils.inputbox ("Enter level lock for " .. chosen_exit, room.name, room.exit_locks[chosen_exit],nil,nil,{validate=positive_integer_check}))) -- use tonumber to strip off any ".0"
 
-   if not exit_level then
+   if exit_level == "nil" then
       return
    end -- cancelled
    
@@ -2985,6 +2986,7 @@ function save_room_exits(uid)
             end -- if
 
             room.exits[dir] = touid
+            room.exit_locks[dir] = "0"
          else
             mapper.maperror ("Cannot make sense of:", exit)
          end -- if can decode    
