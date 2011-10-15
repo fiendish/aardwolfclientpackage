@@ -1,6 +1,13 @@
 Aardwolf Client Package Major Changes List
 
-r1419 snapshot
+r1429 snapshot
+- bug fix: mapper exit locks should now update properly when cancelled or the exits are removed and re-added
+- bug fix: old antharia area entrance is removed from the default database
+- new feature: there's a new note for users of screen readers in the welcome window informing them of a new command "connect to aardwolf" that bypasses the need to click unfriendly checkboxes
+- bug fix: mapper find inputs will have extra white space trimmed off the ends before matching
+- bug fix: mapper aliases will now be anchored properly so that it's no longer trivial to accidentally activate them
+- bug fix: when using mapper options that accept "here" as a keyword (mapper notes/shops/etc), the area key will be a strict match rather than an inclusive one
+- new feature: the mapper now has a "walkto" command which will calculate paths without using any mapper portals 
 - new feature: right-click menu options for modifying exits in the mapper window now affect custom exits as well
 - bug fix: removing/renaming the aardwolf logo background image used in the main output produced errors on startup
 
