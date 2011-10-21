@@ -794,13 +794,8 @@ local in_backup = false
 room_not_in_database = {}
 room_in_database = {}
 
---~    bounce_recall = {dir="home",uid=21335}
---~    bounce_portal = {dir="enter",uid=26151}
-
 bounce_recall = nil
-loadstring(GetVariable("bounce_recall") or "")()
 bounce_portal = nil
-loadstring(GetVariable("bounce_portal") or "")()
 
 -- Create Database Variables --
 
@@ -898,7 +893,7 @@ function map_bounceportal (name, line, wildcards)
          if row.fromuid == "*" then
             bounce_portal = {dir=row.dir, uid=row.touid}
             Note("\nBOUNCEPORTAL: Set portal #"..count.." ("..row.dir..") as the bounce portal for portal-friendly norecall rooms.")
-            SetVariable("bounce_portal", serialize.save("bounce_portal"))
+            dbcheck(db:execute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal")))))
          else
             Note("\nBOUNCEPORTAL FAILED: Portal #"..pnum.." is a recall portal. You must choose a mapper portal that does not use either the recall or home commands for the bounce portal.")
          end
@@ -933,7 +928,7 @@ function map_bouncerecall (name, line, wildcards)
          if row.fromuid == "**" then
             bounce_recall = {dir=row.dir, uid=row.touid}
             Note("\nBOUNCERECALL: Set recall portal #"..pnum.." ("..row.dir..") as the bounce recall for recall-friendly noportal rooms.")
-            SetVariable("bounce_recall", serialize.save("bounce_recall"))
+            dbcheck(db:execute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_recall"), fixsql(serialize.save("bounce_recall")))))
          else
             Note("\nBOUNCERECALL FAILED: Portal #"..pnum.." is not a recall portal. You must choose a mapper portal that uses either the recall or home commands for the bounce recall.")
          end
@@ -1550,9 +1545,9 @@ function save_room_to_database (uid,room)
       dbcheck (db:execute (string.format ("DELETE FROM rooms_lookup WHERE uid = %s",fixsql(uid))))
       dbcheck (db:execute (string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name))))
    end
-  
-   room_not_in_database [uid] = false
-  
+   
+   room_not_in_database [uid] = nil
+   
    if show_database_mods then
       mapper.mapprint ("Added room", uid, "to database. Name:", room.name)
    end -- if
@@ -1615,14 +1610,15 @@ end
 
 function load_room_from_database (uid)
    local room
+   local u = tostring(uid)
    assert (uid, "No UID supplied to load_room_from_database")
   
    -- if not in database, don't look again
-   if room_not_in_database [uid] then
+   if room_not_in_database [u] then
       return nil
    end -- no point looking
-  
-   for row in db:nrows(string.format ("SELECT * FROM rooms WHERE uid = %s", fixsql (uid))) do
+   
+   for row in db:nrows(string.format ("SELECT * FROM rooms WHERE uid = %s", fixsql (u))) do
       room = {
       name = row.name,
       area = row.area,
@@ -1639,7 +1635,7 @@ function load_room_from_database (uid)
       exit_locks = {}
       }
       
-      for exitrow in db:nrows(string.format ("SELECT * FROM exits WHERE fromuid = %s", fixsql (uid))) do
+      for exitrow in db:nrows(string.format ("SELECT * FROM exits WHERE fromuid = %s", fixsql (u))) do
          room.exits [exitrow.dir] = tostring (exitrow.touid)
          room.exit_locks [exitrow.dir] = tostring(exitrow.level)
       end -- for each exit
@@ -1651,15 +1647,16 @@ function load_room_from_database (uid)
          -- this shouldn't even be possible. what the hell.
          rooms = {}
       end
-      rooms [uid] = room
-      for row in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
-         rooms [uid].notes = row.notes
+      rooms [u] = room
+      for row in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (u))) do
+         rooms [u].notes = row.notes
       end   -- finding room
         
       return room
    end -- if found
   
-   room_not_in_database [uid] = true
+   -- room not found in database
+   room_not_in_database [u] = true
    return nil
     
 end -- load_room_from_database
@@ -1715,8 +1712,8 @@ function create_tables ()
 
    CREATE TABLE IF NOT EXISTS exits (
       dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
-      fromuid     STRING  NOT NULL, -- exit from which room (in rooms table)
-      touid       STRING  NOT NULL, -- exit to which room (in rooms table)
+      fromuid     TEXT    NOT NULL, -- exit from which room (in rooms table)
+      touid       TEXT    NOT NULL, -- exit to which room (in rooms table)
       level       STRING  NOT NULL DEFAULT '0', -- minimum level to make use of this exit
       date_added  DATE,             -- date added to database
       PRIMARY KEY(fromuid, dir),
@@ -1724,44 +1721,6 @@ function create_tables ()
    );
    CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
    CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);
-   ]])
-  
-   -- The original database implementation was naive. We want to fix it up here.
-   -- Unfortunately, sqlite requires a little dance of table dropping for this to happen.
-   local bad_exits1 = false
-   local bad_exits2 = true
-   for a in db:nrows "PRAGMA table_info('exits')" do
-      if a["name"] == "exitid" then
-         bad_exits1 = true
-      end
-      if a["name"] == "level" then
-         bad_exits2 = false
-      end
-   end
-   if bad_exits1 == true or bad_exits2 == true then
-      dbcheck (db:execute [[
-      BEGIN TRANSACTION;
-      CREATE TEMPORARY TABLE exits_backup(dir, fromuid, touid, date_added);
-      INSERT OR REPLACE INTO exits_backup SELECT dir, fromuid, touid, date_added FROM exits;
-      DROP TABLE exits;
-      CREATE TABLE exits (
-         dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
-         fromuid     STRING  NOT NULL, -- exit from which room (in rooms table)
-         touid       STRING  NOT NULL, -- exit to which room (in rooms table)
-         level       STRING  NOT NULL DEFAULT '0', -- minimum level to make use of this exit
-         date_added  DATE,             -- date added to database
-         PRIMARY KEY(fromuid, dir),
-         FOREIGN KEY(fromuid) REFERENCES rooms(uid)
-      );
-      INSERT OR REPLACE INTO exits(dir,fromuid,touid,date_added) SELECT dir, fromuid, touid, date_added FROM exits_backup;
-      DROP TABLE exits_backup;
-      COMMIT;
-      ]])
-   end
-
-   dbcheck (db:execute [[
-      CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
-      CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);
    ]])
   
    -- Since the MUD sends terrain as a string and not as an integer,
@@ -2534,6 +2493,40 @@ function getkeyword(area)
    return table.concat(keys, ",")
 end
 
+function fix_exits_table()
+   -- The original database implementation for exits was naive and broken. We want to fix it up here.
+   -- Unfortunately, sqlite requires a little dance of table dropping for this to happen.
+   local level_column_exists = false
+   for a in db:nrows "PRAGMA table_info('exits')" do
+      if a["name"] == "level" then
+         level_column_exists = true
+      end
+   end
+   
+   local query = [[
+   BEGIN TRANSACTION;
+   
+   ALTER TABLE exits RENAME TO exits_backup;
+   
+   CREATE TABLE exits (
+      dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
+      fromuid     TEXT    NOT NULL, -- exit from which room (in rooms table)
+      touid       TEXT    NOT NULL, -- exit to which room (in rooms table)
+      level       STRING  NOT NULL DEFAULT '0', -- minimum level to make use of this exit
+      date_added  DATE,             -- date added to database
+      PRIMARY KEY(fromuid, dir),
+      FOREIGN KEY(fromuid) REFERENCES rooms(uid)
+   );
+
+   INSERT OR REPLACE INTO exits(dir,fromuid,touid,date_added]]..(((level_column_exists == false) and "") or ",level")..[[) SELECT dir, fromuid, touid, date_added]]..(((level_column_exists == false) and "") or ", level")..[[ FROM exits_backup;
+   DROP TABLE exits_backup;
+   CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
+   CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);
+
+   COMMIT;
+   ]]
+   dbcheck (db:execute(query))
+end
 
 function OnPluginInstall ()
   
@@ -2594,7 +2587,7 @@ function OnPluginInstall ()
    if db_user_version < 4 then
       -- add bookmarks and terrain tables to the main db since we're
       -- ditching the second db file
-      dbcheck (db:execute[[  
+      dbcheck (db:execute([[  
       CREATE TABLE IF NOT EXISTS bookmarks (
          id          INTEGER PRIMARY KEY AUTOINCREMENT,
          uid         TEXT    NOT NULL,   -- vnum of room
@@ -2609,7 +2602,7 @@ function OnPluginInstall ()
          date_added  DATE,               -- date added to database
          UNIQUE (name)
       );
-      ]])
+      ]]))
    end
    
    if db_user_version < 5 then
@@ -2618,14 +2611,33 @@ function OnPluginInstall ()
 
    if db_user_version < 6 then
       -- original database name for wayhouse was missing the apostrophe
-      dbcheck (db:execute [[
+      dbcheck (db:execute([[
       update areas set name="The Adventurers' Wayhouse" where uid="wayhouse";
-      ]])
+      ]]))
+   end
+   
+   if db_user_version < 7 then
+      fix_exits_table()
+      dbcheck (db:execute([[
+      CREATE TABLE IF NOT EXISTS storage (
+         name        TEXT NOT NULL,
+         data        TEXT NOT NULL,
+         PRIMARY KEY (name)
+      );
+      ]]))
+      loadstring(GetVariable("bounce_recall") or "")()
+      loadstring(GetVariable("bounce_portal") or "")()
+      if bounce_recall then
+         dbcheck(db:execute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_recall"), fixsql(serialize.save("bounce_recall")))))
+      end
+      if bounce_portal then
+         dbcheck(db:execute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal")))))
+      end
    end
    
    -- update db version
    dbcheck (db:execute [[
-      PRAGMA user_version = 6;
+      PRAGMA user_version = 7;
    ]])
   
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
@@ -2685,7 +2697,15 @@ function OnPluginInstall ()
       terrain_colours [row.name] = tonumber (row.color)
    end -- finding environments
   
-   if IsConnected() then
+   --~    bounce_recall = {dir="home",uid=21335}
+   --~    bounce_portal = {dir="enter",uid=26151}
+   for row in db:nrows("SELECT * FROM storage") do
+      if row.name == "bounce_portal" or row.name == "bounce_recall" then
+         loadstring(row.data or "")()
+      end
+   end
+  
+  if IsConnected() then
       OnPluginConnect()
    end
   
@@ -3247,6 +3267,7 @@ function map_goto (name, line, wildcards)
       mapper.mapprint ("The mapper "..(((string.match(line, "^mapper walkto") ~= nil) and "walkto") or "goto").." command expects a room id as input.")
       return
    end
+   wanted = tostring(wanted)
    if current_room and (wanted == current_room) then
       mapper.mapprint ("You are already in that room.")
       return
@@ -3316,7 +3337,8 @@ function map_resume (name, line, wildcards)
       mapper.print "No outstanding speedwalks or hyperlinks."
       return
    end -- if nothing to do
-  
+   
+   wanted = tostring(wanted)
    -- find desired room
    mapper.find (nil,
       {{uid=wanted,reason=true}},
@@ -3392,7 +3414,10 @@ function findpath(src, dst, noportals, norecalls)
    if src == dst or src == nil or dst == nil then
       return {}
    end
-  
+   
+   src = tostring(src)
+   dst = tostring(dst)
+   
    table.insert(rooms_list, fixsql(dst))
   
    local visited = ""
@@ -3455,13 +3480,6 @@ function findpath(src, dst, noportals, norecalls)
    ftd = room_sets[found_depth][f]
    
    rooms[src] = load_room_from_database(src)
-   
-   if not rooms[src] then
-      -- Under normal operation this probably should never happen. Maybe there was a disk access issue?
-      -- I don't know. Problem reported, problem tentatively worked around. But I can't reproduce it.
-      mapper.mapprint("FINDPATH ERROR: could not load room "..src.." from database.")
-      return
-   end
    
    if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
       if rooms[src].norecall ~= 1 then
@@ -3558,7 +3576,7 @@ function findNearestJumpRoom(src, dst)
    if found == false then
       return
    end
-  
+   
    return destination, type, found_depth
 end
 
