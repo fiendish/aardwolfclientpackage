@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1431 snapshot
+- bug fix: this should fix those FINDPATH ERROR "could not load room" problems
+- bug fix: the mapper database structure is updated to use TEXT instead of the erroneous STRING column types where useful
+- new feature: bouncerecall/bounceportal storage has been moved from the plugin state file into the map database for easier portability. other configs may also move in the future.
+
 r1429 snapshot
 - bug fix: mapper exit locks should now update properly when cancelled or the exits are removed and re-added
 - bug fix: old antharia area entrance is removed from the default database
