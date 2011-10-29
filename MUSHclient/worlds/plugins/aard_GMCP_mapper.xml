@@ -2524,8 +2524,8 @@ function fix_exits_table()
    DROP TABLE exits_backup;
    CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
    CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);
-   VACUUM;
    COMMIT;
+   VACUUM;
    ]]
    dbcheck (db:execute(query))
 end
