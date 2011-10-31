@@ -1068,7 +1068,7 @@ function custom_exit_list (name, line, wildcards)
    world.Note (hl)
    for row in db:nrows(query) do
       line = string.format(fmt,row.area, row.name, row.uid, row.dir, row.touid)
-      Hyperlink(string.format("mapper goto %s",row.uid), line, "Click to attempt to walk here", "", "", false)
+      Hyperlink(string.format("mapper goto %s",row.uid), line, string.format("%s",row.dir), "", "", false)
       print("")
       count = count + 1
       BroadcastPlugin(999, "repaint")
@@ -2567,7 +2567,8 @@ function OnPluginInstall ()
    worldPath = GetInfo(66)..sanitize_filename(WorldName())
 
    db = assert (sqlite3.open(worldPath..".db"))
-
+   db:busy_timeout(100)
+   
    if not checkDatabaseIntegrity() then
       return
    end
@@ -2746,6 +2747,24 @@ function OnPluginEnable ()
    end
    OnPluginSaveState()
 end -- OnPluginEnable
+
+function dbCheckExecute(query)
+   local code = db:execute(query)
+   if code == 5 then -- SQLITE_BUSY
+      wait.make (function()
+         local code = 5
+         local count = 0
+         while code == 5 and count < 20 do
+            wait.time(.1)
+            code = db:execute(query)
+            count = count + 1
+         end
+         dbcheck(code)
+      end)
+   else
+      dbcheck(code)
+   end
+end
 
 -- hide window on removal
 function OnPluginDisable ()
