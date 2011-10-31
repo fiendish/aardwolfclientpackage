@@ -893,7 +893,7 @@ function map_bounceportal (name, line, wildcards)
          if row.fromuid == "*" then
             bounce_portal = {dir=row.dir, uid=row.touid}
             Note("\nBOUNCEPORTAL: Set portal #"..count.." ("..row.dir..") as the bounce portal for portal-friendly norecall rooms.")
-            dbcheck(db:execute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal")))))
+            dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal"))))
          else
             Note("\nBOUNCEPORTAL FAILED: Portal #"..pnum.." is a recall portal. You must choose a mapper portal that does not use either the recall or home commands for the bounce portal.")
          end
@@ -928,7 +928,7 @@ function map_bouncerecall (name, line, wildcards)
          if row.fromuid == "**" then
             bounce_recall = {dir=row.dir, uid=row.touid}
             Note("\nBOUNCERECALL: Set recall portal #"..pnum.." ("..row.dir..") as the bounce recall for recall-friendly noportal rooms.")
-            dbcheck(db:execute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_recall"), fixsql(serialize.save("bounce_recall")))))
+            dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_recall"), fixsql(serialize.save("bounce_recall"))))
          else
             Note("\nBOUNCERECALL FAILED: Portal #"..pnum.." is not a recall portal. You must choose a mapper portal that uses either the recall or home commands for the bounce recall.")
          end
@@ -1004,7 +1004,7 @@ end -- map_list
 
 function map_cexits_delete (name, line, wildcards)
    local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", fixsql(current_room))
-   dbcheck (db:execute (query))
+   dbCheckExecute(query)
    for k,v in pairs(rooms[current_room].exits) do
       if #k > 1 then
          rooms[current_room].exits[k] = nil
@@ -1017,7 +1017,7 @@ end
 
 function map_cexits_purge (name, line, wildcards)
    local query = "delete from exits where dir not in ('n','s','e','w','d','u');"
-   dbcheck (db:execute (query))
+   dbCheckExecute(query)
    for k,v in pairs(rooms) do
       for l,w in pairs(v.exits) do
          if #l > 1 then
@@ -1208,12 +1208,12 @@ function map_portal_delete (name, line, wildcards)
    end
    
    query = string.format("DELETE FROM exits WHERE fromuid in ('*','**') AND dir = %s;", fixsql(keywords))
-   dbcheck (db:execute (query))
+   dbCheckExecute(query)
 end -- map_portal_delete
 
 function map_portal_purge(name, line, wildcards)
    query = "DELETE FROM exits WHERE fromuid in ('*','**');"
-   dbcheck (db:execute (query))
+   dbCheckExecute(query)
    print ("Purged all mapper hand-held exits.")
 end
 
@@ -1238,7 +1238,7 @@ end
 function map_portal_recall (name, line, wildcards)
    -- flag a portal as using "recall"   
    local query = "INSERT OR REPLACE INTO rooms (uid, name, area, date_added) VALUES ('**', '___HERE___', '___EVERYWHERE___', DATETIME('NOW'))"
-   dbcheck(db:execute(query))
+   dbCheckExecute(query)
    
    local pnum = tonumber(wildcards[1])
    
@@ -1261,7 +1261,7 @@ function map_portal_recall (name, line, wildcards)
             fixsql(row.level),
             fixsql(row.date_added)
          )
-         dbcheck (db:execute (query))
+         dbCheckExecute(query)
          query = string.format ([[
             DELETE FROM exits WHERE dir=%s AND fromuid=%s AND touid=%s AND level=%s;
             ]], 
@@ -1270,7 +1270,7 @@ function map_portal_recall (name, line, wildcards)
             fixsql(row.touid),    -- destination room
             fixsql(row.level)
          )
-         dbcheck (db:execute (query))
+         dbCheckExecute(query)
          
          world.Note(string.format("\nPORTALRECALL: Recall flag %s portal '%s' to '%s'.\n",((row.fromuid == "*") and "added to") or "removed from",row.dir,row.name))
          return
@@ -1312,7 +1312,7 @@ function map_portal (name, line, wildcards)
    end
    if hhp_room_exists == 0 then
       query = "INSERT OR REPLACE INTO rooms (uid, name, area, date_added) VALUES ('*', '___HERE___', '___EVERYWHERE___', DATETIME('NOW'))"
-      dbcheck(db:execute(query))
+      dbCheckExecute(query)
    end
    print (string.format("Storing %s as a portal to %s.", wildcards [1], current_room))
    print (string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",wildcards [1], current_room,level))
@@ -1322,7 +1322,7 @@ function map_portal (name, line, wildcards)
       fixsql  (current_room),    -- destination room
       fixsql(level) -- minimum level of the portal
    )
-   dbcheck (db:execute (query))
+   dbCheckExecute(query)
 
 end -- map_portal
 
@@ -1362,7 +1362,7 @@ function map_portal_level (name, line, wildcards)
             fixsql(level),
             fixsql(row.date_added)
          )
-         dbcheck (db:execute (query))
+         dbCheckExecute(query)
          world.Note(string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",row.dir,row.name,level))
          return
       end
@@ -1493,13 +1493,13 @@ function custom_exit (name, line, wildcards)
             world.Note ("CEXIT FAILED: You cannot link custom exits to unmappable rooms.")
          elseif cexit_dest ~= cexit_start then
             world.Note (string.format("Custom Exit CONFIRMED: %s (%s) -> %s", cexit_start, cexit_command, cexit_dest))
-            dbcheck (db:execute (string.format ([[
+            dbCheckExecute(string.format ([[
                INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
                VALUES (%s, %s, %s, DATETIME('NOW'));
                ]], fixsql  (string.lower(cexit_command)),  -- direction (eg. "n")
                fixsql  (cexit_start),  -- from current room
                fixsql  (cexit_dest) -- destination room 
-            )))
+            ))
             rooms[cexit_start].exits[cexit_command] = cexit_dest
             rooms[cexit_start].exit_locks[cexit_command] = "0"
             mapper.draw (current_room)
@@ -1525,7 +1525,7 @@ function save_room_to_database (uid,room)
    end
    if room.noportal == nil then room.noportal = 0 end
    if room.norecall == nil then room.norecall = 0 end
-   dbcheck (db:execute (string.format (
+   dbCheckExecute(string.format (
          "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, noportal, norecall, date_added) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, %d, %d, DATETIME('NOW'));",
             fixsql (uid), 
             fixsql (room.name),
@@ -1534,7 +1534,7 @@ function save_room_to_database (uid,room)
             room.x, room.y, room.z, fixsql(room.area),
             room.noportal,
             room.norecall
-         )))
+         ))
 
    local exists = false      
    for n in db:nrows(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s", fixsql(uid))) do 
@@ -1542,10 +1542,10 @@ function save_room_to_database (uid,room)
    end
    -- don't add multiple times, maintaining backwards database compatibility (there's no uniqueness constraint on rooms_lookup.uid)
    if not exists then
-      dbcheck (db:execute (string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name))))
+      dbCheckExecute(string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name)))
    else
-      dbcheck (db:execute (string.format ("DELETE FROM rooms_lookup WHERE uid = %s",fixsql(uid))))
-      dbcheck (db:execute (string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name))))
+      dbCheckExecute(string.format ("DELETE FROM rooms_lookup WHERE uid = %s",fixsql(uid)))
+      dbCheckExecute(string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name)))
    end
    
    room_not_in_database [uid] = nil
@@ -1559,11 +1559,11 @@ end -- function save_room_to_database
 function fix_up_exit ()
    local room = rooms [from_room]
 
-   dbcheck (db:execute (string.format ("UPDATE exits SET touid = %s WHERE fromuid = %s AND dir = %s;", 
+   dbCheckExecute(string.format ("UPDATE exits SET touid = %s WHERE fromuid = %s AND dir = %s;", 
         fixsql  (current_room),     -- destination room
         fixsql  (from_room),       -- from previous room
         fixsql  (last_direction_moved)  -- direction (eg. "n")
-   )))
+   ))
         
 --   if show_database_mods then
       mapper.mapprint ("Fixed exit", last_direction_moved, "from room", from_room, "to be to", current_room)
@@ -1593,12 +1593,12 @@ function map_purgezone (name, line, wildcards)
    end
 
    -- Delete the exit links or we get foreign key constraint errors.
-   dbcheck (db:execute (string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid))))
-   dbcheck (db:execute (string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid))))
-   dbcheck (db:execute (string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))))
-   dbcheck (db:execute (string.format ("delete from bookmarks where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))))
-   dbcheck (db:execute (string.format ("delete from rooms where area = %s;", fixsql(zoneuid))))
-   dbcheck (db:execute (string.format ("delete from areas where uid = %s;", fixsql(zoneuid))))
+   dbCheckExecute(string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from bookmarks where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from rooms where area = %s;", fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from areas where uid = %s;", fixsql(zoneuid)))
 
    rooms = {}
    mapper.mapprint ("Purged " .. zone_name .. " from the mapper database.")
@@ -1665,7 +1665,7 @@ end -- load_room_from_database
 
 function create_tables ()
    -- create rooms table
-   dbcheck (db:execute[[
+   dbCheckExecute([[
    PRAGMA foreign_keys = ON;
    PRAGMA journal_mode=WAL;
 
@@ -1729,10 +1729,10 @@ function create_tables ()
    -- it was wrong to originally produce rooms with integer terrains.
    -- Or maybe it's wrong for the MUD to send strings. Either way, we now
    -- have databases with inconsistent data. So let's make it consistent.
-   dbcheck (db:execute "UPDATE OR IGNORE rooms SET terrain = ifnull((SELECT name FROM environments WHERE environments.uid = rooms.terrain), rooms.terrain);")
+   dbCheckExecute("UPDATE OR IGNORE rooms SET terrain = ifnull((SELECT name FROM environments WHERE environments.uid = rooms.terrain), rooms.terrain);")
   
    -- check if rooms_lookup table exists
-   dbcheck (db:execute [[
+   dbCheckExecute([[
    BEGIN TRANSACTION;
    DROP TABLE IF EXISTS rooms_lookup;
    CREATE VIRTUAL TABLE rooms_lookup USING FTS3(uid, name);
@@ -1753,7 +1753,7 @@ function check_rooms_flags()
    for k, v in pairs(flag_exists) do
       if not v then
          local sql = 'ALTER TABLE rooms ADD ' .. k .. ' INTEGER'
-         dbcheck(db:execute(sql))
+         dbCheckExecute(sql)
       end
    end
 end -- function check_rooms_flags
@@ -1929,10 +1929,10 @@ function room_edit_note (room, uid)
          mapper.mapprint ("No comment entered, note not saved.")
          return
       else
-         dbcheck (db:execute (string.format (
+         dbCheckExecute(string.format (
          "DELETE FROM bookmarks WHERE uid = %s;",
          fixsql (uid)
-         )))
+         ))
          mapper.mapprint ("Note for room", uid, "deleted. Was previously:", notes)
          rooms [uid].notes = nil   
          mapper.draw (current_room)
@@ -1945,18 +1945,18 @@ function room_edit_note (room, uid)
    end -- if
   
    if found then
-      dbcheck (db:execute (string.format (
+      dbCheckExecute(string.format (
       "UPDATE bookmarks SET notes = %s, date_added = DATETIME('NOW') WHERE uid = %s;",
       fixsql (newnotes),
       fixsql (uid)
-      )))
+      ))
       mapper.mapprint ("Note for room", uid, "changed to:", newnotes)
    else
-      dbcheck (db:execute (string.format (
+      dbCheckExecute(string.format (
       "INSERT INTO bookmarks (uid, notes, date_added) VALUES (%s, %s, DATETIME('NOW'));",
       fixsql (uid), 
       fixsql (newnotes)
-      )))
+      ))
       mapper.mapprint ("Note added to room", uid, ":", newnotes)
    end -- if    
    
@@ -1994,18 +1994,18 @@ function room_edit_terrain_colour (room, uid)
    end -- cancelled
   
    if user_terrain_colour [environmentname] then
-      dbcheck (db:execute (string.format (
+      dbCheckExecute(string.format (
       "UPDATE terrain SET color = %s, date_added = DATETIME('NOW') WHERE name = %s;",
       fixsql (newcolour),
       fixsql (environmentname)
-      )))
+      ))
       mapper.mapprint ("Colour for terrain '" .. environmentname .. "' changed to:", RGBColourToName (newcolour))
    else
-      dbcheck (db:execute (string.format (
+      dbCheckExecute(string.format (
       "INSERT INTO terrain (name, color, date_added) VALUES (%s, %s, DATETIME('NOW'));",
       fixsql (environmentname), 
       fixsql (newcolour)
-      )))
+      ))
       mapper.mapprint ("Colour for terrain '" .. environmentname .. "' is now", RGBColourToName (newcolour))
    end -- if    
    
@@ -2061,14 +2061,14 @@ function room_add_exit (room, uid)
       return
    end -- if still not there
 
-   dbcheck (db:execute (string.format ([[
+   dbCheckExecute(string.format ([[
       INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
       VALUES (%s, %s, %s, DATETIME('NOW'));
       ]], 
       fixsql(chosen_exit),  -- direction (eg. "n")
       fixsql(uid),  -- from current room
       fixsql(exit_destination) -- destination room 
-      )))
+      ))
    if show_database_mods then
       mapper.mapprint ("Added exit", available [chosen_exit], "from room", uid, "to room", exit_destination, "to database.")
    end -- if
@@ -2100,12 +2100,12 @@ function room_delete_exit (room, uid)
       return
    end
 
-   dbcheck (db:execute (string.format ([[
+   dbCheckExecute(string.format ([[
       DELETE FROM exits WHERE dir = %s AND fromuid = %s;
       ]], 
       fixsql (chosen_exit),  -- direction (eg. "n")
       fixsql (uid)  -- from current room
-   )))
+   ))
    mapper.mapprint ("Deleted exit '"..chosen_exit.."' from room "..uid.." from database.")
   
    -- update in-memory table
@@ -2156,13 +2156,13 @@ function room_change_exit (room, uid)
    end -- if still not there
    
    if exit_destination ~= room.exits[chosen_exit] then
-      dbcheck (db:execute (string.format ([[
+      dbCheckExecute(string.format ([[
          UPDATE exits SET touid = %s WHERE dir = %s AND fromuid = %s;
          ]], 
          fixsql (exit_destination),
          fixsql (chosen_exit),  -- direction (eg. "n")
          fixsql (uid)  -- from current room
-      )))
+      ))
          
       mapper.mapprint ("Modified exit", chosen_exit, "from room", uid, "to be to room", exit_destination, "in database.")
      
@@ -2205,13 +2205,13 @@ function room_lock_exit (room, uid)
    end
 
    if exit_level ~= rooms[uid].exit_locks[chosen_exit] then
-      dbcheck (db:execute (string.format ([[
+      dbCheckExecute(string.format ([[
          UPDATE exits SET level = %s WHERE dir = %s AND fromuid = %s;
          ]], 
          fixsql (exit_level),
          fixsql (chosen_exit), -- direction (eg. "n")
          fixsql (uid) -- from current room
-      )))
+      ))
          
       mapper.mapprint ("Set level lock on exit", available [chosen_exit], "from room", uid, "to be", exit_level, "in database.")
    else
@@ -2382,7 +2382,7 @@ function checkDatabaseIntegrity()
    Repaint()
    -- If needed, force wal_checkpoint databases to make sure everything gets written out
    -- this is a harmless no-op if not using journal_mode=WAL
-   db:exec("PRAGMA wal_checkpoint;")
+   dbCheckExecute("PRAGMA wal_checkpoint;")
    local integrityCheck = true
    for row in db:nrows("PRAGMA quick_check;") do
       tprint(row)
@@ -2527,7 +2527,7 @@ function fix_exits_table()
    COMMIT;
    VACUUM;
    ]]
-   dbcheck (db:execute(query))
+   dbCheckExecute(query)
 end
 
 function OnPluginInstall ()
@@ -2590,7 +2590,7 @@ function OnPluginInstall ()
    if db_user_version < 4 then
       -- add bookmarks and terrain tables to the main db since we're
       -- ditching the second db file
-      dbcheck (db:execute([[  
+      dbCheckExecute([[  
       CREATE TABLE IF NOT EXISTS bookmarks (
          id          INTEGER PRIMARY KEY AUTOINCREMENT,
          uid         TEXT    NOT NULL,   -- vnum of room
@@ -2605,7 +2605,7 @@ function OnPluginInstall ()
          date_added  DATE,               -- date added to database
          UNIQUE (name)
       );
-      ]]))
+      ]])
    end
    
    if db_user_version < 5 then
@@ -2614,34 +2614,32 @@ function OnPluginInstall ()
 
    if db_user_version < 6 then
       -- original database name for wayhouse was missing the apostrophe
-      dbcheck (db:execute([[
+      dbCheckExecute([[
       update areas set name="The Adventurers' Wayhouse" where uid="wayhouse";
-      ]]))
+      ]])
    end
    
    if db_user_version < 7 then
       fix_exits_table()
-      dbcheck (db:execute([[
+      dbCheckExecute([[
       CREATE TABLE IF NOT EXISTS storage (
          name        TEXT NOT NULL,
          data        TEXT NOT NULL,
          PRIMARY KEY (name)
       );
-      ]]))
+      ]])
       loadstring(GetVariable("bounce_recall") or "")()
       loadstring(GetVariable("bounce_portal") or "")()
       if bounce_recall then
-         dbcheck(db:execute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_recall"), fixsql(serialize.save("bounce_recall")))))
+         dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_recall"), fixsql(serialize.save("bounce_recall"))))
       end
       if bounce_portal then
-         dbcheck(db:execute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal")))))
+         dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal"))))
       end
    end
    
    -- update db version
-   dbcheck (db:execute [[
-      PRAGMA user_version = 7;
-   ]])
+   dbCheckExecute("PRAGMA user_version = 7;")
   
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
    if b_b ~= nil then
@@ -2661,14 +2659,14 @@ function OnPluginInstall ()
       end
       if bm_found then
          for row in db_bm:nrows("SELECT * FROM bookmarks;") do
-            dbcheck(db:execute(string.format("INSERT OR REPLACE INTO bookmarks (uid, notes, date_added) VALUES (%s, %s, DATETIME('NOW'));",
-            fixsql(row.uid),fixsql(row.notes))))
+            dbCheckExecute(string.format("INSERT OR REPLACE INTO bookmarks (uid, notes, date_added) VALUES (%s, %s, DATETIME('NOW'));",
+            fixsql(row.uid),fixsql(row.notes)))
          end
       end
       if tr_found then
          for row in db_bm:nrows("SELECT * FROM terrain;") do
-            dbcheck(db:execute(string.format("INSERT OR REPLACE INTO terrain (name, color, date_added) VALUES (%s, %i, DATETIME('NOW'));",
-            fixsql(row.name),row.color)))
+            dbCheckExecute(string.format("INSERT OR REPLACE INTO terrain (name, color, date_added) VALUES (%s, %i, DATETIME('NOW'));",
+            fixsql(row.name),row.color))
          end
       end
       
@@ -2749,14 +2747,14 @@ function OnPluginEnable ()
 end -- OnPluginEnable
 
 function dbCheckExecute(query)
-   local code = db:execute(query)
+   local code = db:exec(query)
    if code == 5 then -- SQLITE_BUSY
       wait.make (function()
          local code = 5
          local count = 0
          while code == 5 and count < 20 do
             wait.time(.1)
-            code = db:execute(query)
+            code = db:exec(query)
             count = count + 1
          end
          dbcheck(code)
@@ -2865,9 +2863,9 @@ function noportal_room()
          if rooms[current_room].noportal ~= 1 then
             Note('marking room ', current_room, ' noportal')
             rooms[current_room].noportal = 1
-            db:exec ("BEGIN TRANSACTION;")
+            dbCheckExecute("BEGIN TRANSACTION;")
             save_room_to_database(current_room, rooms[current_room])
-            db:exec ("COMMIT;")
+            dbCheckExecute("COMMIT;")
          end
       end
    end
@@ -2879,9 +2877,9 @@ function norecall_room()
          if rooms[current_room].norecall ~= 1 then
             Note('marking room ', current_room, ' norecall')
             rooms[current_room].norecall = 1
-            db:exec ("BEGIN TRANSACTION;")
+            dbCheckExecute("BEGIN TRANSACTION;")
             save_room_to_database(current_room, rooms[current_room])
-            db:exec ("COMMIT;")
+            dbCheckExecute("COMMIT;")
          end
       end
    end
@@ -2952,7 +2950,7 @@ function got_gmcp_room()
       gmcproom.exit_locks = ((room and room.exit_locks) or {})
       gmcproom.notes = ((room and nilToStr(room.notes)) or "")
       room = gmcproom
-      db:exec ("BEGIN TRANSACTION;")
+      dbCheckExecute("BEGIN TRANSACTION;")
       local success = save_room_to_database(room_number,room)
       if success then
          rooms[room_number] = room
@@ -2960,7 +2958,7 @@ function got_gmcp_room()
             save_room_exits(room_number)
          end
       end     
-      db:exec ("COMMIT;") 
+      dbCheckExecute("COMMIT;") 
      
       if not success then
          return
@@ -2984,13 +2982,13 @@ function update_gmcp_area()
    local color = gmcpval("col")
    local x,y,z = gmcpval("x"),gmcpval("y"),gmcpval("z")
 
-   dbcheck (db:execute (string.format (
+   dbCheckExecute (string.format (
       "REPLACE INTO areas (uid, name, date_added, texture, color) VALUES (%s, %s, DATETIME('NOW'), %s, %s);",
       fixsql (areaid), 
       fixsql (areaname),
       fixsql (texture),
       fixsql (color)
-   )))
+   ))
 
    area = {
       name = areaname,
@@ -3015,13 +3013,13 @@ function save_room_exits(uid)
       for dir,touid in pairs(gmcpdata.exits) do
          if dir then
       
-            dbcheck (db:execute (string.format ([[
+            dbCheckExecute (string.format ([[
                INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
                VALUES (%s, %s, %s, DATETIME('NOW'));
                ]], fixsql  (dir),  -- direction (eg. "n")
                fixsql  (uid),  -- from current room
                fixsql  (touid) -- destination room 
-            )))
+            ))
 
             if show_database_mods then
                mapper.mapprint ("Added exit: ", dir, "from room: ",uid, "to room: ", touid, " to database.")
@@ -3037,14 +3035,14 @@ function save_room_exits(uid)
 end -- save_room_exits
 
 function update_gmcp_sectors()
-   db:exec ("BEGIN TRANSACTION;")
-   dbcheck( db:execute ("DELETE FROM environments;"))
+   dbCheckExecute("BEGIN TRANSACTION;")
+   dbCheckExecute ("DELETE FROM environments;")
    for i,v in pairs(gmcp_sectors_list.sectors) do
-      dbcheck( db:execute( string.format([[
+      dbCheckExecute( string.format([[
       INSERT OR REPLACE INTO environments VALUES (%s,%s,%s,%s,DATETIME('NOW'));
-      ]], i, v.id, fixsql(v.name), v.color)))
+      ]], i, v.id, fixsql(v.name), v.color))
    end
-   db:exec ("COMMIT;")
+   dbCheckExecute("COMMIT;")
    
    for row in db:nrows("SELECT * FROM environments") do
       environments [tonumber (row.uid)] = row.name
