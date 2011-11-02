@@ -60,6 +60,9 @@ details captured through GMCP.
    script="group_invite"
    regexp="y"
    sequence="100"
+   custom_colour="17"
+   other_text_colour="#FFFFFF"
+   other_back_colour="#0000FF"
 ></trigger>
 
 <trigger
@@ -68,6 +71,20 @@ details captured through GMCP.
    script="group_cancel"
    regexp="y"
    sequence="100"
+   custom_colour="17"
+   other_text_colour="#FFFFFF"
+   other_back_colour="#FF0000"
+></trigger>
+
+<trigger
+   enabled="y"
+   match="^Your group invite from (\w+) is cancelled because the group has been disbanded\.$"
+   script="group_cancel"
+   regexp="y"
+   sequence="100"
+   custom_colour="17"
+   other_text_colour="#FFFFFF"
+   other_back_colour="#FF0000"
 ></trigger>
 </triggers>
 
