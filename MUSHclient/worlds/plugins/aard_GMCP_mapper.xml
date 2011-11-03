@@ -828,12 +828,10 @@ function dbcheck (code, query)
    if code ~= sqlite3.OK and    -- no error
       code ~= sqlite3.ROW and   -- completed OK with another row of data
       code ~= sqlite3.DONE then -- completed OK, no more rows
-      local err = db:errmsg ()  -- the rollback will change the error message
-      if err ~= "cannot commit - no transaction is active" then
+         local err = db:errmsg ()  -- the rollback will change the error message
          err = err.."\n\nCODE: "..code.."\nQUERY: "..query.."\n"
          db:exec ("ROLLBACK")      -- rollback any transaction to unlock the database
          error (err, 3)            -- show error in caller's context
-      end
    end -- if
 end -- dbcheck 
 
@@ -2751,21 +2749,22 @@ end -- OnPluginEnable
 
 function dbCheckExecute(query)
    local code = db:exec(query)
-   if code == 5 or code == 6 then -- SQLITE_BUSY or SQLITE_LOCKED (oops?)
-      wait.make (function()
-         local code = 5
-         local count = 0
-         while ((code == 5 or code == 6) and count < 20) do
-            db:exec ("ROLLBACK")
-            wait.time(.1)
-            code = db:exec(query)
-            count = count + 1
-         end
-         dbcheck(code, query)
-      end)
-   else
+--~ failed attempt to make concurrent sessions viable
+--~    if code == 5 or code == 6 then -- SQLITE_BUSY or SQLITE_LOCKED (oops?)
+--~       wait.make (function()
+--~          local code = 5
+--~          local count = 0
+--~          while ((code == 5 or code == 6) and count < 20) do
+--~             db:exec ("ROLLBACK")
+--~             wait.time(.1)
+--~             code = db:exec(query)
+--~             count = count + 1
+--~          end
+--~          dbcheck(code, query)
+--~       end)
+--~    else
       dbcheck(code, query)
-   end
+--~    end
 end
 
 -- hide window on removal
@@ -2867,7 +2866,9 @@ function noportal_room()
          if rooms[current_room].noportal ~= 1 then
             Note('marking room ', current_room, ' noportal')
             rooms[current_room].noportal = 1
+            dbCheckExecute("BEGIN TRANSACTION;")
             save_room_to_database(current_room, rooms[current_room])
+            dbCheckExecute("COMMIT;")
          end
       end
    end
@@ -2879,7 +2880,9 @@ function norecall_room()
          if rooms[current_room].norecall ~= 1 then
             Note('marking room ', current_room, ' norecall')
             rooms[current_room].norecall = 1
+            dbCheckExecute("BEGIN TRANSACTION;")
             save_room_to_database(current_room, rooms[current_room])
+            dbCheckExecute("COMMIT;")
          end
       end
    end
@@ -2950,6 +2953,7 @@ function got_gmcp_room()
       gmcproom.exit_locks = ((room and room.exit_locks) or {})
       gmcproom.notes = ((room and nilToStr(room.notes)) or "")
       room = gmcproom
+      dbCheckExecute("BEGIN TRANSACTION;")
       local success = save_room_to_database(room_number,room)
       if success then
          rooms[room_number] = room
@@ -2957,6 +2961,7 @@ function got_gmcp_room()
             save_room_exits(room_number)
          end
       end     
+      dbCheckExecute("COMMIT;") 
      
       if not success then
          return
@@ -3033,12 +3038,14 @@ function save_room_exits(uid)
 end -- save_room_exits
 
 function update_gmcp_sectors()
+   dbCheckExecute("BEGIN TRANSACTION;")
    dbCheckExecute ("DELETE FROM environments;")
    for i,v in pairs(gmcp_sectors_list.sectors) do
       dbCheckExecute( string.format([[
       INSERT OR REPLACE INTO environments VALUES (%s,%s,%s,%s,DATETIME('NOW'));
       ]], i, v.id, fixsql(v.name), v.color))
    end
+   dbCheckExecute("COMMIT;")
    
    for row in db:nrows("SELECT * FROM environments") do
       environments [tonumber (row.uid)] = row.name
