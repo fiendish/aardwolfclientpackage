@@ -3517,8 +3517,9 @@ function findpath(src, dst, noportals, norecalls)
          if not jump_room then
             return
          end
-         local path, first_depth = findpath(src,jump_room, true, true)
+         local path, first_depth = findpath(src,jump_room, true, true) -- this could be optimized away by building the path in findNearestJumpRoom, but the gain would be negligible
          if bit.band(type, 1) ~= 0 then
+            -- type 1 means just walk to the destination
             return path, first_depth
          else
             local second_path, second_depth = findpath(jump_room, dst)
@@ -3583,6 +3584,10 @@ function findNearestJumpRoom(src, dst)
          -- and remove the break from the if block below.
          if row.noportal ~= 1 or row.norecall ~= 1 or row.touid == dst then
             type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
+            -- type 1 means walking to the destination is closer than bouncing
+            -- type 2 means the bounce room allows recalling but not portalling
+            -- type 4 means the bounce room allows portalling but not recalling
+            -- type 0 means the bounce room allows both portalling and recalling
             destination = row.touid
             found = true
             found_depth = depth
