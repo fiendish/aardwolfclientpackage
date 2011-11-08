@@ -1813,6 +1813,17 @@ function get_room (uid)
    if room.notes and room.notes ~= "" then
       notes = "\nNote: " .. room.notes
    end -- if notes
+
+   local flags = ""
+   if room.norecall == 1 then
+         flags = flags.."norecall "
+   end
+   if room.noportal == 1 then
+         flags = flags.."noportal"
+   end
+   if flags ~= "" then
+      flags = "\nFlags: "..string.gsub(flags," ",", ")
+   end
   
    local texits = {}
    for dir in pairs (room.exits) do
@@ -1826,14 +1837,15 @@ function get_room (uid)
    end -- convert to name
     
    room.hovermessage = string.format (
-      "%s\tExits: %s\nRoom: %s\nArea: %s%s%s%s",
+      "%s\tExits: %s\nRoom: %s\nArea: %s%s%s%s%s",
       room.name, 
       table.concat (texits, ", "),
       uid,
       areaname,
       terrain,
       info,
-      notes
+      notes,
+      flags
       -- depth,
       -- table.concat (path, ",")
       )
