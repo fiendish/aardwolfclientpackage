@@ -990,16 +990,17 @@ function map_list (name, line, wildcards)
       name = string.sub(wildcards[1],2,-2)
    end
    for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE name LIKE %s", fixsql (name))) do
-      if count > 100 then
-         mapper.mapprint(string.format("More than 100 search results found. Aborting query. Try a more specific search phrase than '%s'.",wildcards[1]))
-         break
+      if count < 100 then
+         for a in db:nrows(string.format ("SELECT area FROM rooms WHERE uid = %s", row.uid)) do
+            area = a.area
+         end -- for
+         print (string.format("(%s) %s is in area \"%s\"",row.uid, row.name, area))
       end
       count = count + 1
-      for a in db:nrows(string.format ("SELECT area FROM rooms WHERE uid = %s", row.uid)) do
-         area = a.area
-      end -- for
-      print (string.format("(%s) %s is in area \"%s\"",row.uid, row.name, area))
    end   -- finding room
+   if count >= 100 then
+      mapper.mapprint(string.format("More than 100 search results found. Aborting query. Try a more specific search phrase than '%s'.",wildcards[1]))
+   end
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end -- map_list
 
@@ -1184,14 +1185,15 @@ function map_portal_delete (name, line, wildcards)
       target_index = tonumber(string.sub(keywords,2))
       local q = "select area, touid, dir from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
       local count = 0
+      local found = false
       for row in db:nrows(q) do
          count = count + 1
          if count == target_index then
             keywords = row.dir
-            break
+            found = true
          end
       end
-      if target_index ~= count then
+      if found == false then
          world.Note(string.format("\nDELETE FAILED: Did not find portal #%s in the list of portals. Try 'mapper portals' to see the list.\n", target_index))
          return
       end
@@ -2395,7 +2397,7 @@ function checkDatabaseIntegrity()
    Repaint()
    -- If needed, force wal_checkpoint databases to make sure everything gets written out
    -- this is a harmless no-op if not using journal_mode=WAL
-   dbCheckExecute("PRAGMA wal_checkpoint;")
+   dbCheckExecute("PRAGMA wal_checkpoint(FULL);")
    local integrityCheck = true
    for row in db:nrows("PRAGMA quick_check;") do
       tprint(row)
@@ -3482,20 +3484,18 @@ function findpath(src, dst, noportals, norecalls)
       end
     
       -- get all exits to any room in the previous set
-      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and level <= %s order by length(dir) desc",table.concat(rooms_list,","), visited, mylevel+(mytier*10))
+      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and level <= %s order by length(dir) asc",table.concat(rooms_list,","), visited, mylevel+(mytier*10))
       local dcount = 0
       room_sets[depth] = {}
       for row in db:nrows(q) do
          dcount = dcount + 1
-         -- ordering by length(dir) and then checking here to see if we've already found a connection from a particular room
-         -- ensures that custom exits (always longer than 1 char) get used preferentially to normal ones (1 char). An alternative solution is to order by length(dir) asc
-         -- and remove the break from the if block below.
-         room_sets[depth][row.fromuid] = room_sets[depth][row.fromuid] or {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
+         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
+         -- used preferentially to normal ones (1 char)
+         room_sets[depth][row.fromuid] = {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
          if row.fromuid == "*" or row.fromuid == "**" or row.fromuid == src then
             f = row.fromuid
             found = true
             found_depth = depth
-            break
          end -- if src
       end -- for select
 
@@ -3585,15 +3585,14 @@ function findNearestJumpRoom(src, dst)
       end
     
       -- get all exits to any room in the previous set
-      local q = string.format ("select fromuid, touid, dir, norecall, noportal from exits,rooms where rooms.uid = exits.touid and exits.fromuid in (%s) and exits.touid not in (%s) and exits.level <= %s order by length(exits.dir) desc",
+      local q = string.format ("select fromuid, touid, dir, norecall, noportal from exits,rooms where rooms.uid = exits.touid and exits.fromuid in (%s) and exits.touid not in (%s) and exits.level <= %s order by length(exits.dir) asc",
                   table.concat(rooms_list,","), visited, mylevel+(mytier*10))
       local dcount = 0
       for row in db:nrows(q) do
          dcount = dcount + 1
          table.insert(rooms_list, fixsql(row.touid))
-         -- ordering by length(dir) and then checking here to see if we've already found a connection from a particular room
-         -- ensures that custom exits (always longer than 1 char) get used preferentially to normal ones (1 char). An alternative solution is to order by length(dir) asc
-         -- and remove the break from the if block below.
+         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
+         -- used preferentially to normal ones (1 char)
          if row.noportal ~= 1 or row.norecall ~= 1 or row.touid == dst then
             type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
             -- type 1 means walking to the destination is closer than bouncing
@@ -3603,7 +3602,6 @@ function findNearestJumpRoom(src, dst)
             destination = row.touid
             found = true
             found_depth = depth
-            break
          end -- if src
       end -- for select
 
