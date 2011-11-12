@@ -889,6 +889,7 @@ function map_bounceportal (name, line, wildcards)
    
    local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
+   local found = false
    for row in db:nrows(q) do
       if count == pnum then
          if row.fromuid == "*" then
@@ -898,11 +899,13 @@ function map_bounceportal (name, line, wildcards)
          else
             Note("\nBOUNCEPORTAL FAILED: Portal #"..pnum.." is a recall portal. You must choose a mapper portal that does not use either the recall or home commands for the bounce portal.")
          end
-         return
+         found = true
       end
       count = count + 1
    end
-   Note(string.format("\BOUNCEPORTAL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+   if found == false then
+      Note(string.format("\BOUNCEPORTAL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+   end
 end
 
 function map_bouncerecall (name, line, wildcards)
@@ -924,6 +927,7 @@ function map_bouncerecall (name, line, wildcards)
    
    local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
+   local found = false
    for row in db:nrows(q) do
       if count == pnum then
          if row.fromuid == "**" then
@@ -933,11 +937,13 @@ function map_bouncerecall (name, line, wildcards)
          else
             Note("\nBOUNCERECALL FAILED: Portal #"..pnum.." is not a recall portal. You must choose a mapper portal that uses either the recall or home commands for the bounce recall.")
          end
-         return
+         found = true
       end
       count = count + 1
    end
-   world.Note(string.format("\BOUNCERECALL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+   if found == false then
+      world.Note(string.format("\BOUNCERECALL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+   end
 end
 
 function map_areas (name, line, wildcards)
@@ -1252,6 +1258,7 @@ function map_portal_recall (name, line, wildcards)
    
    local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
+   local found = false
    for row in db:nrows(q) do
       if count == pnum then
          query = string.format ([[
@@ -1276,11 +1283,13 @@ function map_portal_recall (name, line, wildcards)
          dbCheckExecute(query)
          
          world.Note(string.format("\nPORTALRECALL: Recall flag %s portal '%s' to '%s'.\n",((row.fromuid == "*") and "added to") or "removed from",row.dir,row.name))
-         return
+         found = true
       end
       count = count + 1
    end
-   world.Note(string.format("\nPORTALRECALL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+   if found == false then
+      world.Note(string.format("\nPORTALRECALL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+   end
 end -- map_recall
 
 -- map_portal function contributed by Spartacus
@@ -1353,6 +1362,7 @@ function map_portal_level (name, line, wildcards)
  
    local q = "select area, name, touid, fromuid, dir, exits.date_added from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
+   local found = false
    for row in db:nrows(q) do
       if count == pnum then
          query = string.format ([[
@@ -1367,11 +1377,13 @@ function map_portal_level (name, line, wildcards)
          )
          dbCheckExecute(query)
          world.Note(string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",row.dir,row.name,level))
-         return
+         found = true
       end
       count = count + 1
    end
-   world.Note(string.format("\nPORTALLEVEL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+   if found == false then
+      world.Note(string.format("\nPORTALLEVEL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+   end
 end -- map_portal_level
 
 -- map_portal_list function contributed by Spartacus
