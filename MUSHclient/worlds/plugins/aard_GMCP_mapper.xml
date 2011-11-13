@@ -2978,6 +2978,8 @@ function got_gmcp_room()
       gmcproom.exits = ((room and room.exits) or {})
       gmcproom.exit_locks = ((room and room.exit_locks) or {})
       gmcproom.notes = ((room and nilToStr(room.notes)) or "")
+      gmcproom.noportal = ((room and room.noportal) or 0)
+      gmcproom.norecall = ((room and room.norecall) or 0)
       room = gmcproom
       dbCheckExecute("BEGIN TRANSACTION;")
       local success = save_room_to_database(room_number,room)
