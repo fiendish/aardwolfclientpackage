@@ -1774,12 +1774,7 @@ function check_rooms_flags()
 end -- function check_rooms_flags
 
 function get_room (uid)
-   
-   -- check we got room at all
-   if not uid then
-      -- return nil
-   end -- if
-  
+     
    -- look it up
    local ourroom = rooms [uid]
 
@@ -2975,11 +2970,15 @@ function got_gmcp_room()
                   nilToStr(room.x) ~= nilToStr(gmcproom.x) or
                   nilToStr(room.y) ~= nilToStr(gmcproom.y) or 
                   same_exits == false then
+--       if room then 
+--          print("ROOM")
+--          tprint(room) 
+--       end
+--       print("GMCPROOM")
+--       tprint(gmcproom)
       gmcproom.exits = ((room and room.exits) or {})
       gmcproom.exit_locks = ((room and room.exit_locks) or {})
       gmcproom.notes = ((room and nilToStr(room.notes)) or "")
-      gmcproom.noportal = ((room and room.noportal) or 0)
-      gmcproom.norecall = ((room and room.norecall) or 0)
       room = gmcproom
       dbCheckExecute("BEGIN TRANSACTION;")
       local success = save_room_to_database(room_number,room)
@@ -3527,7 +3526,9 @@ function findpath(src, dst, noportals, norecalls)
    -- set ftd to the first from,to,dir set where from was either our start room or * or **
    ftd = room_sets[found_depth][f]
    
-   rooms[src] = load_room_from_database(src)
+   if not rooms[src] then
+      rooms[src] = load_room_from_database(src)
+   end
    
    if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
       if rooms[src].norecall ~= 1 then
@@ -3564,9 +3565,10 @@ function findpath(src, dst, noportals, norecalls)
       depth = depth - 1
       ftd = room_sets[depth][next_room]
       next_room = ftd.touid
-      if not rooms[ftd.touid] then -- if not in memory yet, get it
-         rooms[ftd.touid] = get_room (ftd.touid)
-      end
+-- this caching is probably not noticeably useful, so disable it for now
+--      if not rooms[ftd.touid] then -- if not in memory yet, get it
+--         rooms[ftd.touid] = load_room_from_database (ftd.touid)
+--      end
       table.insert(path, {dir=ftd.dir, uid=ftd.touid})
    end -- while
    return path, found_depth
