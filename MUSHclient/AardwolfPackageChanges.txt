@@ -1,7 +1,8 @@
 Aardwolf Client Package Major Changes List
 
-r1475
+r1476 snapshot
 - new feature: updated to MUSHclient 4.79 (skipped 4.78 due to bugs)
+- bug fix: the gmcp mapper should no longer lag when walking over some rooms just because they have new coordinate data. coordinate information isn't particularly useful, so it doesn't need to trigger sqlite inserts.
 - bug fix: the gmcp mapper should no longer forget noportal/norecall data
 - bug fix: gmcp mapper database tables were being left locked which caused errors. You should never return or break from inside a db:nrows loop. now fixed.
 - misc change: group invitation and cancel messages are now a little harder to miss
