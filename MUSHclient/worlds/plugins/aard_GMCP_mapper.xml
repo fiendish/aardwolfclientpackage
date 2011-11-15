@@ -3539,7 +3539,7 @@ function findpath(src, dst, noportals, norecalls)
          -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
          -- used preferentially to normal ones (1 char)
          room_sets[depth][row.fromuid] = {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
-         if row.fromuid == "*" or row.fromuid == "**" or row.fromuid == src then
+         if row.fromuid == "*" or (row.fromuid == "**" and f ~= "*" and f ~= src) or row.fromuid == src then
             f = row.fromuid
             found = true
             found_depth = depth
