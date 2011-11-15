@@ -1,5 +1,14 @@
 Aardwolf Client Package Major Changes List
 
+r1475
+- new feature: updated to MUSHclient 4.79 (skipped 4.78 due to bugs)
+- bug fix: the gmcp mapper should no longer forget noportal/norecall data
+- bug fix: gmcp mapper database tables were being left locked which caused errors. You should never return or break from inside a db:nrows loop. now fixed.
+- misc change: group invitation and cancel messages are now a little harder to miss
+- bug fix: the group monitor will now catch when an invitation is cancelled by disbanding
+- misc change: the VACUUM command now runs after the gmcp mapper upgrades the database schema
+- bug fix: mapper delete/purge of cexits now clears exit locks from temporary cache
+
 r1431 snapshot
 - bug fix: this should fix those FINDPATH ERROR "could not load room" problems
 - bug fix: the mapper database structure is updated to use TEXT instead of the erroneous STRING column types where useful
