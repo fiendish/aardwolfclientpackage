@@ -30,11 +30,11 @@
 <description trim="y">
 <![CDATA[
 
-AUTOMATIC MAPPER ... Originally by Nick Gammon
+AUTOMATIC MAPPER by Fiendish
 ** This plugin is a significantly improved GMCP version of the original ATCP mapper by Nick Gammon.
 ** Some GMCP specific code added by Lasher.
-** A few major new features contributed by Spartacus.
-** Many bugs squashed and improvements made by Fiendish.
+** A few new features contributed by Spartacus.
+** Many bugs squashed and major improvements made to the original design by Fiendish.
 
 The window can be dragged to a new location by dragging the room name.
 Your current room is always in the center with a bolder border.
@@ -1095,7 +1095,6 @@ function show_this_room (name, line, wildcards)
       Note("Name: "..(room.name or ""))
       Note("ID: "..(current_room or ""))
       Note("Area: "..(room.area or ""))
-      Note("Coords: x="..(room.x or "null").." y="..(room.y or "null"))
       Note("Terrain: "..(room.terrain or ""))
       Note("Info: "..(room.info or ""))
       Note("Notes: "..(room.notes or ""))
@@ -1538,17 +1537,16 @@ function save_room_to_database (uid,room)
       Send_GMCP_Packet("request area")
       return false
    end
-   if room.noportal == nil then room.noportal = 0 end
-   if room.norecall == nil then room.norecall = 0 end
+   
    dbCheckExecute(string.format (
          "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, noportal, norecall, date_added) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, %d, %d, DATETIME('NOW'));",
             fixsql (uid), 
             fixsql (room.name),
             fixsql (room.terrain), 
             fixsql (room.info),
-            room.x, room.y, room.z, fixsql(room.area),
-            room.noportal,
-            room.norecall
+            room.x or 0, room.y or 0, room.z or 0, fixsql(room.area),
+            room.noportal or 0,
+            room.norecall or 0
          ))
 
    local exists = false      
@@ -1607,7 +1605,6 @@ function map_purgezone (name, line, wildcards)
       return
    end
 
-   -- Delete the exit links or we get foreign key constraint errors.
    dbCheckExecute(string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
    dbCheckExecute(string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
    dbCheckExecute(string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
@@ -1616,9 +1613,23 @@ function map_purgezone (name, line, wildcards)
    dbCheckExecute(string.format ("delete from areas where uid = %s;", fixsql(zoneuid)))
 
    rooms = {}
+   areas[zoneuid] = nil
    mapper.mapprint ("Purged " .. zone_name .. " from the mapper database.")
    Send_GMCP_Packet("request room")
-end 
+end
+
+function purgeroom (uid, new_area)
+   if new_area then
+      dbCheckExecute(string.format ("delete from exits where touid = %s and fromuid not in (select uid from rooms where area = %s);",fixsql(uid),fixsql(new_area)))
+   else
+      dbCheckExecute(string.format ("delete from exits where touid = %s;",fixsql(uid)))
+   end
+   dbCheckExecute(string.format ("delete from exits where fromuid = %s;",fixsql(uid)))
+   dbCheckExecute(string.format ("delete from rooms_lookup where uid = %s;", fixsql(uid)))
+   dbCheckExecute(string.format ("delete from bookmarks where uid = %s;", fixsql(uid)))
+   dbCheckExecute(string.format ("delete from rooms where uid = %s;", fixsql(uid)))
+   rooms[uid] = nil
+end
 
 function map_clearcache() 
    rooms = {}
@@ -1643,9 +1654,9 @@ function load_room_from_database (uid)
       terrain = row.terrain,
       info = row.info,
       notes = row.notes,
-      x = row.x,
-      y = row.y,
-      z = row.z,
+      x = row.x or 0,
+      y = row.y or 0,
+      z = row.z or 0,
       noportal = row.noportal,
       norecall = row.norecall,
       exits = {},
@@ -2547,7 +2558,6 @@ function fix_exits_table()
    CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
    CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);
    COMMIT;
-   VACUUM;
    ]]
    dbCheckExecute(query)
 end
@@ -2658,11 +2668,13 @@ function OnPluginInstall ()
       if bounce_portal then
          dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal"))))
       end
+      
+      dbCheckExecute("VACUUM;")
    end
    
    -- update db version
    dbCheckExecute("PRAGMA user_version = 7;")
-  
+   
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
    if b_b ~= nil then
       io.close(b_b)
@@ -2963,33 +2975,57 @@ function got_gmcp_room()
    
    -- re-save if we got information that is different than before  
    local same_exits = ((room and compareTables(gmcpdata.exits, room.exits)) or false)
-   if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or 
-                  nilToStr(room.area) ~= nilToStr(gmcproom.area) or 
-                  nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or 
+   local same_area = ((room and (nilToStr(room.area) == nilToStr(gmcproom.area))) or false)
+   if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or
+                  nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or
                   nilToStr(room.info) ~= nilToStr(gmcproom.info) or
-                  nilToStr(room.x) ~= nilToStr(gmcproom.x) or
-                  nilToStr(room.y) ~= nilToStr(gmcproom.y) or 
+                  same_area == false or
                   same_exits == false then
---       if room then 
---          print("ROOM")
---          tprint(room) 
---       end
---       print("GMCPROOM")
---       tprint(gmcproom)
-      gmcproom.exits = ((room and room.exits) or {})
-      gmcproom.exit_locks = ((room and room.exit_locks) or {})
-      gmcproom.notes = ((room and nilToStr(room.notes)) or "")
-      room = gmcproom
+      if same_area then
+--          print("same area")
+--          if room then 
+--             print("ROOM")
+--             tprint(room) 
+--          end
+--          print("GMCPROOM")
+--          tprint(gmcproom)
+         
+         gmcproom.exits = (room.exits or {})
+         gmcproom.exit_locks = (room.exit_locks or {})
+         gmcproom.notes = nilToStr(room.notes)
+         gmcproom.noportal = (room.noportal or 0)
+         gmcproom.norecall = (room.norecall or 0)
+      elseif room and nilToStr(room.area) ~= "" and areas[nilToStr(room.area)] then
+         -- replacement area
+--         print("different area")
+--         if room then 
+--            print("ROOM")
+--            tprint(room) 
+--         end
+--         print("GMCPROOM")
+--         tprint(gmcproom)
+
+         mapper.mapprint("This room has moved areas. You should 'mapper purgezone "..nilToStr(room.area).."' if this new area replaces it.")
+         purgeroom (nilToStr(room_number), gmcproom.area)
+      else
+         -- brand new area
+--         print("new area")
+         gmcproom.exits = {}
+         gmcproom.exit_locks = {}
+         gmcproom.notes = ""
+         gmcproom.noportal = 0
+         gmcproom.norecall = 0
+      end
       dbCheckExecute("BEGIN TRANSACTION;")
-      local success = save_room_to_database(room_number,room)
+      local success = save_room_to_database(room_number, gmcproom)
       if success then
-         rooms[room_number] = room
-         if not same_exits then
+         rooms[room_number] = gmcproom
+         if not same_exits or not same_area then
             save_room_exits(room_number)
          end
       end     
       dbCheckExecute("COMMIT;") 
-     
+      
       if not success then
          return
       end
@@ -3033,16 +3069,12 @@ end
 
 
 function save_room_exits(uid) 
-
-   local room = rooms[uid]
-   if room == nil then
+   if rooms[uid] == nil then
       return
    end
-
    if gmcpdata.exits ~= nil then
       for dir,touid in pairs(gmcpdata.exits) do
          if dir then
-      
             dbCheckExecute (string.format ([[
                INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
                VALUES (%s, %s, %s, DATETIME('NOW'));
@@ -3055,8 +3087,10 @@ function save_room_exits(uid)
                mapper.mapprint ("Added exit: ", dir, "from room: ",uid, "to room: ", touid, " to database.")
             end -- if
 
-            room.exits[dir] = touid
-            room.exit_locks[dir] = "0"
+            if rooms[uid].exits[dir] ~= touid then
+               rooms[uid].exit_locks[dir] = "0"
+            end
+            rooms[uid].exits[dir] = touid
          else
             mapper.maperror ("Cannot make sense of:", exit)
          end -- if can decode    
@@ -3677,7 +3711,6 @@ end -- OnPluginConnect
 
 function OnHelp ()
    print("")
-   mapper.mapprint (string.format ("[MUSHclient mapper, version %0.1f]", mapper.VERSION))
    mapper.mapprint (world.GetPluginInfo (world.GetPluginID (), 3))
    print("")
 end
