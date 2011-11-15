@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1479 snapshot
+- new feature: all other things being equal, the gmcp mapper will now prefer to use a regular portal instead of a recall-flagged one
+
 r1476 snapshot
 - new feature: updated to MUSHclient 4.79 (skipped 4.78 due to bugs)
 - bug fix: the gmcp mapper should no longer lag when walking over some rooms just because they have new coordinate data. coordinate information isn't particularly useful, so it doesn't need to trigger sqlite inserts.
