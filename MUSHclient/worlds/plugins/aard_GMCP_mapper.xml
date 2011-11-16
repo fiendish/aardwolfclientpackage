@@ -2390,11 +2390,16 @@ function rotate_backups (manual)
 end
 
 function automatic_backup()
-   AddTimer("backup_timer", 23, 59, 59, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
-   auto_backup_count = auto_backup_count + 1
-   backup_databases(false)
-   SetVariable("auto_backup_count",auto_backup_count)
-   SetVariable("last_auto_backup", os.time())
+   if fighting_state == true then
+      AddTimer("backup_timer", 0, 0, 5, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
+      print("Mapper database automatic backup delayed due to combat. Will try again in 5 seconds.")
+   else
+      AddTimer("backup_timer", 23, 59, 59, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
+      auto_backup_count = auto_backup_count + 1
+      backup_databases(false)
+      SetVariable("auto_backup_count",auto_backup_count)
+      SetVariable("last_auto_backup", os.time())
+   end
 end
 
 function manual_backup()
@@ -3151,6 +3156,11 @@ function OnPluginBroadcast (msg, id, name, text)
             activate_running(true)
          elseif running == true and gmcpdata.state ~= "12" then
             activate_running(false)
+         end
+         if gmcpdata.state == "8" then
+            fighting_state = true
+         else
+            fighting_state = false
          end
       end -- running
     
