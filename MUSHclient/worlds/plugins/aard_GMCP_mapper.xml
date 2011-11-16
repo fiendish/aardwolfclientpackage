@@ -2668,12 +2668,15 @@ function OnPluginInstall ()
       if bounce_portal then
          dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal"))))
       end
-      
+   end
+   
+   -- this should always be the last stage in db schema updates
+   if db_user_version < 8 then
       dbCheckExecute("VACUUM;")
    end
    
    -- update db version
-   dbCheckExecute("PRAGMA user_version = 7;")
+   dbCheckExecute("PRAGMA user_version = 8;")
    
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
    if b_b ~= nil then
