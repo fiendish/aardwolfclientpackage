@@ -182,6 +182,9 @@ USAGE:
 
 require "pairsbykeys"
 
+-- functions for handling Aardwolf color codes
+dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
+
 function hideEchos(info, global_quest, remort_auction, donations, pray, warfare)
    if info ~= nil then
       EnableTrigger("info", info)
@@ -232,10 +235,11 @@ end
 constructDefaultChannels()
 
 function echoStyles(styles)
-   for _, v in ipairs(styles) do
-      ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
-   end -- for each style run
-   Note ("")  -- wrap up line
+   Simulate(stylesToANSI(styles).."\r\n")
+--   for _, v in ipairs(styles) do
+--      ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
+--   end -- for each style run
+--   Note ("")  -- wrap up line
 end
 
 function chats (name, line, wildcards, styles)
