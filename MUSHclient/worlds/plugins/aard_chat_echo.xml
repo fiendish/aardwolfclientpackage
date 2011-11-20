@@ -65,7 +65,7 @@ USAGE:
 <trigger
    enabled="n"
    name="warfare"
-   match="^WARFARE:.+$"
+   match="^(WARFARE|GENOCIDE):.+$"
    regexp="y"
    script="untagged_info"
    omit_from_output="y"
