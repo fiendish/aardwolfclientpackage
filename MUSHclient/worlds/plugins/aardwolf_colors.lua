@@ -73,6 +73,8 @@ end
 
 -- convert a line of style runs into color codes
 function StylesToColoursOneLine (styles, startcol, endcol)
+   local startcol = startcol or 1
+   local endcol = endcol or 99999
    copystring = ""
    -- remove unneeded style runs at the start
    while next (styles) and startcol > styles [1].length do
