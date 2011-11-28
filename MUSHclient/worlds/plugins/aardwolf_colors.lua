@@ -51,8 +51,7 @@ colour_conversion = {
    W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
 }  -- end conversion table
 
--- Set up xterm color conversions
-xterm_intensities = {0x00, 0x33, 0x66, 0x99, 0xCC, 0xFF}
+-- Set up xterm color conversions using the extended_colours global array
 for i = 1,8 do
    colour_conversion[string.format("x%03d",i-1)] = GetNormalColour(i)
    colour_conversion[string.format("x%02d",i-1)] = GetNormalColour(i)
@@ -67,8 +66,16 @@ for i = 16,255 do
    local xterm_colour = extended_colours[i]
    conversion_colours[xterm_colour] = (conversion_colours[xterm_colour] or string.format("@x%03d",i))
    colour_conversion[string.format("x%03d",i)] = xterm_colour
-   colour_conversion[string.format("x%02d",i)] = xterm_colour
    colour_conversion[string.format("x%d",i)] = xterm_colour
+end
+
+-- Aardwolf bumps a few very dark xterm colors to brighter values to improve visibility
+for i = 232,237 do
+   colour_conversion[string.format("x%d",i)] = extended_colours[238]
+end
+for i = 17,19 do
+   colour_conversion[string.format("x%03d",i)] = extended_colours[19]
+   colour_conversion[string.format("x%d",i)] = extended_colours[19]
 end
 
 -- convert a line of style runs into color codes
