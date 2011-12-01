@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1486 snapshot
+- misc change: all gmcp mapper databases will now get vacuumed on first load to reduce space overhead and fragmentation.
+- bug fix: some very dark xterm 256 colors get brightened by Aardwolf. The client's text colorization in places like the communication log window now reflects this.
+- new feature: the communication log "echo" now uses Simulate instead of ColourNote to display lines. This means it should be possible to add your own replacement triggers for channels as long as you know what you're doing.
+- bug fix: the chat capture option for capturing WARFARE now includes the genocide message as well.
+- new feature: the gmcp mapper will no longer backup in the middle of combat. it will alert you and wait until combat is over.
+
 r1479 snapshot
 - new feature: all other things being equal, the gmcp mapper will now prefer to use a regular portal instead of a recall-flagged one
 
