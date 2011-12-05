@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1489 snapshot
+- new feature: mapper bounceportal and bouncerecall can now be un-set
+
 r1486 snapshot
 - misc change: all gmcp mapper databases will now get vacuumed on first load to reduce space overhead and fragmentation.
 - bug fix: some very dark xterm 256 colors get brightened by Aardwolf. The client's text colorization in places like the communication log window now reflects this.
