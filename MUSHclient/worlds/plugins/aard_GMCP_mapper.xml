@@ -114,6 +114,8 @@ mapper bouncerecall <index>    --> Specifies which home/recall mapper portal to
                                  > Find the indices with 'mapper portals'
 mapper bounceportal            --> Display the current bounce portal
 mapper bouncerecall            --> Display the current bounce recall
+mapper bounceportal clear      --> Clear the current bounce portal
+mapper bouncerecall clear      --> Clear the current bounce recall
 +----------------------------------------------------------------------------+
 
 mapper portallevel <ind> <lvl> --> Change the level lock on a stored portal
@@ -603,7 +605,7 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>
 
 <alias
-   match="^mapper bounceportal( (.*))?$"
+   match="^mapper bounceportal( .*)?$"
    enabled="y"
    regexp="y"
    sequence="100"
@@ -611,7 +613,7 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>
 
 <alias
-   match="^mapper bouncerecall( (.*))?$"
+   match="^mapper bouncerecall( .*)?$"
    enabled="y"
    regexp="y"
    sequence="100"
@@ -871,12 +873,18 @@ function findpathfast(name, line, wildcards)
 end
 
 function map_bounceportal (name, line, wildcards)
-   if wildcards[2]=="" then
+   wildcards[1] = Trim(wildcards[1])
+   if wildcards[1]=="" then
       if bounce_portal and bounce_portal.dir then
          Note("\nBOUNCEPORTAL: Currently set to '"..bounce_portal.dir.."'")
       else
          Note("\nBOUNCEPORTAL: Not currently set.")
       end
+      return
+   elseif wildcards[1]=="clear" then
+      bounce_portal = nil
+      Note("\nBOUNCEPORTAL: cleared.")
+      dbCheckExecute(string.format("DELETE from storage where name is %s;", fixsql("bounce_portal")))
       return
    end
    
@@ -909,14 +917,21 @@ function map_bounceportal (name, line, wildcards)
 end
 
 function map_bouncerecall (name, line, wildcards)
-   if wildcards[2]=="" then
+   wildcards[1] = Trim(wildcards[1])
+   if wildcards[1]=="" then
       if bounce_recall and bounce_recall.dir then
-         Note("\BOUNCERECALL: Currently set to '"..bounce_recall.dir.."'")
+         Note("\nBOUNCERECALL: Currently set to '"..bounce_recall.dir.."'")
       else
-         Note("\BOUNCERECALL: Not currently set.")
+         Note("\nBOUNCERECALL: Not currently set.")
       end
       return
+   elseif wildcards[1]=="clear" then
+      bounce_recall = nil
+      Note("\nBOUNCERECALL: cleared.")
+      dbCheckExecute(string.format("DELETE from storage where name is %s;", fixsql("bounce_recall")))
+      return
    end
+
    
    local pnum = tonumber(wildcards[1])
    
@@ -942,7 +957,7 @@ function map_bouncerecall (name, line, wildcards)
       count = count + 1
    end
    if found == false then
-      world.Note(string.format("\BOUNCERECALL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+      world.Note(string.format("\nBOUNCERECALL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
    end
 end
 
