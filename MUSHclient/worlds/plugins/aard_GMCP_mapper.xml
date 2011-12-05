@@ -912,7 +912,7 @@ function map_bounceportal (name, line, wildcards)
       count = count + 1
    end
    if found == false then
-      Note(string.format("\BOUNCEPORTAL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
+      Note(string.format("\nBOUNCEPORTAL FAILED: Did not find index %s in the list of portals. Try 'mapper portals' to see the list.\n", pnum))
    end
 end
 
