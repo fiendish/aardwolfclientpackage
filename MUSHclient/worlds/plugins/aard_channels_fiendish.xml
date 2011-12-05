@@ -801,6 +801,14 @@ function stampAndStore(styles)
    drawStuff()
 end
 
+-- Takes input as a string with embedded Aardwolf color codes.
+-- You can use the function StylesToColoursOneLine(styles_table) from aardwolf_colors.lua
+-- or manually embed your own colors to push any colorized line you want to the log window.
+-- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO")
+function storeFromOutside(string)
+   stampAndStore(ColoursToStyles(string))
+end
+
 function untagged_info (name, line, wildcards, styles)
    stampAndStore(styles)
 end -- untagged info
