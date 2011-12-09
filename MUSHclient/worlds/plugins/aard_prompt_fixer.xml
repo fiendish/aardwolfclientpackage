@@ -4,7 +4,7 @@
 <plugin
    name="Aardwolf_Prompt_Fixer"
    author="Fiendish"
-   id="1b55534ef093aaa6d1fa021c"
+   id="1b55534e1fa021cf093aaa6d"
    language="Lua"
    purpose="Fixes prompt at startup so triggers work consistently"
    date_written="2011-12-07"
