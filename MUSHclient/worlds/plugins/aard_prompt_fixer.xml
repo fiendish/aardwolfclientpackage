@@ -215,7 +215,7 @@ function prompt_rec (name, line, wildcards, styles)
 end
 
 function OnPluginBroadcast (msg, id, name, text)
-   if id == "3e7dedbe37e44942dd46d264" and text == "char.status" and docheck then
+   if docheck and id == "3e7dedbe37e44942dd46d264" and text == "char.status" then
       res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", "char")
       stats = assert (loadstring ("return " .. gmcparg or ""))()
       checkprompt()
