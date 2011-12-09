@@ -492,4 +492,5 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <include name="aard_repaint_buffer.xml" plugin="y" />
 <include name="aard_new_connection.xml" plugin="y" />
 <include name="aard_chat_echo.xml" plugin="y" />
+<include name="aard_prompt_fixer.xml" plugin="y" />
 </muclient>
