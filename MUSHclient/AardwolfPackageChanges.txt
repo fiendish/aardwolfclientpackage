@@ -1,14 +1,20 @@
 Aardwolf Client Package Major Changes List
 
+r1499 snapshot
+- new feature: there's a new plugin added to the default list of plugins that fixes prompts that don't already end in %c
+- bug fix: fix a crash under MUSHclient 4.79 when a room has acute accents (and possibly other symbols) in the name
+- misc change: the default beep sound path is now generic
+- new feature: messages can be pushed to the communication log from external sources
+
 r1489 snapshot
 - new feature: mapper bounceportal and bouncerecall can now be un-set
 
 r1486 snapshot
-- misc change: all gmcp mapper databases will now get vacuumed on first load to reduce space overhead and fragmentation.
-- bug fix: some very dark xterm 256 colors get brightened by Aardwolf. The client's text colorization in places like the communication log window now reflects this.
-- new feature: the communication log "echo" now uses Simulate instead of ColourNote to display lines. This means it should be possible to add your own replacement triggers for channels as long as you know what you're doing.
-- bug fix: the chat capture option for capturing WARFARE now includes the genocide message as well.
-- new feature: the gmcp mapper will no longer backup in the middle of combat. it will alert you and wait until combat is over.
+- misc change: all gmcp mapper databases will now get vacuumed on first load to reduce space overhead and fragmentation
+- bug fix: some very dark xterm 256 colors get brightened by Aardwolf (text colorization in places like the communication log window now reflects this)
+- new feature: the communication log "echo" now uses Simulate instead of ColourNote to display lines (this means it should be possible to add your own replacement triggers for channels as long as you know what you're doing)
+- bug fix: the chat capture option for capturing WARFARE now includes the genocide message as well
+- new feature: the gmcp mapper will alert you and wait until combat is over before doing a backup
 
 r1479 snapshot
 - new feature: all other things being equal, the gmcp mapper will now prefer to use a regular portal instead of a recall-flagged one
