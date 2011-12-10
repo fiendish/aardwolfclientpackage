@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Thursday, 20 October 2011 at 10:47:40
+-- Written: Saturday, 10 December 2011 at 15:35:41
 
 -- Static messages
 
@@ -1771,14 +1771,14 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:568
+-- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:569
   ["Previous line had a bad UTF-8 sequence at column %i, and was not evaluated for trigger matches"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:1088
+-- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:1089
   ["Trigger: %s"] =
     function (a)
      
