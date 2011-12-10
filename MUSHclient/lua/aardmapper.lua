@@ -323,7 +323,7 @@ local function draw_configuration ()
    
    for k, v in pairs (config) do
       if v.colour then
-         width = math.max (width, WindowTextWidth (config_win, CONFIG_FONT_ID, v.name))
+         width = math.max (width, WindowTextWidth (config_win, CONFIG_FONT_ID, v.name, true))
          lines = lines + 1
       end -- a colour item
    end -- for each config item
@@ -349,7 +349,7 @@ local function draw_configuration ()
    x = x + GAP
   
    -- title
-   WindowText (config_win, CONFIG_FONT_ID, "Configuration", ((frame_width-WindowTextWidth(config_win,CONFIG_FONT_ID,"Configuration"))/2), y, 0, 0, 0x808080)
+   WindowText   (config_win, CONFIG_FONT_ID, "Configuration", ((frame_width-WindowTextWidth(config_win,CONFIG_FONT_ID,"Configuration", true))/2), y, 0, 0, 0x808080, true)
   
    -- close box
    WindowRectOp (config_win, 
@@ -389,7 +389,7 @@ local function draw_configuration ()
    if not suppress_colours then
       for k, v in pairsByKeys (config) do
          if v.colour then
-            WindowText (config_win, CONFIG_FONT_ID, v.name, x, y, 0, 0, 0x000000)
+            WindowText   (config_win, CONFIG_FONT_ID, v.name, x, y, 0, 0, 0x000000, true)
             WindowRectOp (config_win, 
                miniwin.rect_fill, 
                x + width + rh_size / 2, 
@@ -421,8 +421,8 @@ local function draw_configuration ()
    end -- if
 
    -- depth
-   WindowText(config_win, CONFIG_FONT_ID, "Depth", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID_UL,   tostring (config.SCAN.depth), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.SCAN.depth)/2, y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID, "Depth", x, y, 0, 0, 0x000000, true)
+   WindowText(config_win, CONFIG_FONT_ID_UL,   tostring (config.SCAN.depth), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.SCAN.depth, true)/2, y, 0, 0, 0x808080, true)
    
    -- depth hotspot
    WindowAddHotspot(config_win, 
@@ -437,8 +437,8 @@ local function draw_configuration ()
    y = y + font_height
     
    -- font
-   WindowText(config_win, CONFIG_FONT_ID, "Font", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID_UL,  config.FONT.name .. " " .. config.FONT.size, x + width + GAP, y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID, "Font", x, y, 0, 0, 0x000000, true)
+   WindowText(config_win, CONFIG_FONT_ID_UL,  config.FONT.name .. " " .. config.FONT.size, x + width + GAP, y, 0, 0, 0x808080, true)
    
    -- colour font hotspot               
    WindowAddHotspot(config_win, 
@@ -453,8 +453,8 @@ local function draw_configuration ()
    y = y + font_height
   
    -- area textures
-   WindowText(config_win, CONFIG_FONT_ID, "Area Textures", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"))/2, y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID, "Area Textures", x, y, 0, 0, 0x000000, true)
+   WindowText(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"), true)/2, y, 0, 0, 0x808080, true)
 
    -- area textures hotspot
    WindowAddHotspot(config_win, 
@@ -469,17 +469,17 @@ local function draw_configuration ()
    y = y + font_height
    
    -- room size
-   WindowText(config_win, CONFIG_FONT_ID, "Room size", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Room size "), y, 0, 0, 0x808080)
-   WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
-   WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID, "Room size", x, y, 0, 0, 0x000000, true)
+   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Room size ", true), y, 0, 0, 0x808080, true)
+   WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), y, 0, 0, 0x808080, true)
+   WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080, true)
                                   
    -- room size hotspots
    WindowAddHotspot(config_win, 
       "$<room_size_down>",  
-      width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), 
+      width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), 
       y, 
-      width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), 
+      width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-", true), 
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.zoom_out",  -- mouseup
       "Click to zoom out",
@@ -488,7 +488,7 @@ local function draw_configuration ()
       "$<room_size_up>",  
       width + rh_size / 2 + box_size + GAP, 
       y, 
-      width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"), 
+      width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+", true), 
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.zoom_in",  -- mouseup
       "Click to zoom in",
@@ -881,7 +881,7 @@ function draw (uid)
    end -- for
    
    local room_name = room.name
-   local name_width = WindowTextWidth (win, FONT_ID, room_name)
+   local name_width = WindowTextWidth (win, FONT_ID, room_name, true)
    local add_dots = false
    
    -- truncate name if too long
@@ -892,7 +892,7 @@ function draw (uid)
          break
       end
       room_name = room_name:sub (1, - (#s - 2))  -- except the last 3 dots but add the space
-      name_width = WindowTextWidth (win, FONT_ID, room_name .. " ...")
+      name_width = WindowTextWidth (win, FONT_ID, room_name .. " ...", true)
       add_dots = true
    end -- while
    
@@ -903,9 +903,9 @@ function draw (uid)
    -- room name
    
    draw_text_box (win, FONT_ID, 
-      (config.WINDOW.width - WindowTextWidth (win, FONT_ID, room_name)) / 2,   -- left
+      (config.WINDOW.width - WindowTextWidth (win, FONT_ID, room_name, true)) / 2,   -- left
       3,    -- top
-      room_name, false,             -- what to draw, utf8
+      room_name, true,             -- what to draw, utf8
       config.ROOM_NAME_TEXT.colour,   -- text colour
       config.ROOM_NAME_FILL.colour,   -- fill colour   
       config.ROOM_NAME_BORDER.colour)     -- border colour
@@ -916,9 +916,9 @@ function draw (uid)
    
    if areaname then
       draw_text_box (win, FONT_ID, 
-         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname)) / 2,   -- left
+         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname, true)) / 2,   -- left
          config.WINDOW.height - 3 - font_height,    -- top
-         areaname:gsub("^%l", string.upper), false, 
+         areaname:gsub("^%l", string.upper), true, 
          config.AREA_NAME_TEXT.colour,   -- text colour
          config.AREA_NAME_FILL.colour,   -- fill colour   
          config.AREA_NAME_BORDER.colour)     -- border colour
@@ -935,7 +935,7 @@ function draw (uid)
       local width = draw_text_box (win, FONT_ID, 
          x,   -- left
          y,    -- top (ie. at bottom)
-         "*", false,                   -- what to draw, utf8
+         "*", true,                   -- what to draw, utf8
          config.AREA_NAME_TEXT.colour,   -- text colour
          config.AREA_NAME_FILL.colour,   -- fill colour   
          config.AREA_NAME_BORDER.colour)     -- border colour
@@ -952,14 +952,14 @@ function draw (uid)
    end -- if
                
    if type (show_help) == "function" then
-      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 5
+      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?", true) - 5
 --    local y = config.WINDOW.height - 2 - font_height
       local y = 0
       local width = draw_text_box (win, FONT_ID, 
          x,   -- left
          2,
          --config.WINDOW.height - 2 - font_height,    -- top (ie. at bottom)
-         "?", false,                   -- what to draw, utf8
+         "?", true,                   -- what to draw, utf8
          config.AREA_NAME_TEXT.colour,   -- text colour
          config.AREA_NAME_FILL.colour,   -- fill colour   
          config.AREA_NAME_BORDER.colour)     -- border colour
@@ -1079,9 +1079,9 @@ function init (t)
    local top = (config.WINDOW.height - #credits * font_height) /2
    
    for _, v in ipairs (credits) do
-      local width = WindowTextWidth (win, FONT_ID, v)
+      local width = WindowTextWidth (win, FONT_ID, v, true)
       local left = (config.WINDOW.width - width) / 2
-      WindowText (win, FONT_ID, v, left, top, 0, 0, config.ROOM_COLOUR.colour)
+      WindowText   (win, FONT_ID, v, left, top, 0, 0, config.ROOM_COLOUR.colour, true)  
       top = top + font_height 
    end -- for
 
