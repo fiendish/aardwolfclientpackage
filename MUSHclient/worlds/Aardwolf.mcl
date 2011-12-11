@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Wednesday, December 07, 2011, 1:05 AM -->
-<!-- MuClient version 4.79 -->
+<!-- Saved on Sunday, December 11, 2011, 2:18 PM -->
+<!-- MuClient version 4.80 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
 
    auto_say_override_prefix="-"
    beep_sound="sounds\beep-01.wav"
@@ -63,7 +63,6 @@
    input_font_weight="400"
    input_text_colour="black"
    keypad_enable="y"
-   line_information="n"
    log_output="y"
    max_output_lines="9999"
    mud_can_change_link_colour="y"
@@ -105,20 +104,21 @@
 <!-- triggers -->
 
 <triggers
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
   >
 </triggers>
 
 <!-- aliases -->
 
 <aliases
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
   >
   <alias
+   name="special_convenience_alias_maker"
    match="#alias {*} {*}"
    enabled="y"
    group="special_convenience_aliases"
@@ -143,6 +143,7 @@ ColourNote ("white", "green", "Added alias to match on '%1', sending '%2'")
   </send>
   </alias>
   <alias
+   name="special_convenience_trigger_maker"
    match="#trigger {*} {*}"
    enabled="y"
    group="special_convenience_aliases"
@@ -170,18 +171,18 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- timers -->
 
 <timers
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
   >
 </timers>
 
 <!-- macros -->
 
 <macros
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
   >
 
   <macro name="up" type="send_now" >
@@ -273,18 +274,18 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- variables -->
 
 <variables
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
   >
 </variables>
 
 <!-- colours -->
 
 <colours
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
   >
 
 <ansi>
@@ -339,9 +340,9 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- keypad -->
 
 <keypad
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
   >
 
   <key name="0" >
@@ -449,9 +450,9 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- printing -->
 
 <printing
-   muclient_version="4.79"
+   muclient_version="4.80"
    world_file_version="15"
-   date_saved="2011-12-07 01:05:48"
+   date_saved="2011-12-11 14:18:30"
   >
 
 <ansi>
