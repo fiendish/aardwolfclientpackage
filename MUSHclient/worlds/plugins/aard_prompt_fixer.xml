@@ -55,22 +55,8 @@ Bast and WinkleWinkle.
    match="^(.*)$"
    sequence="101"
    name="gags"
-   group="gags"
 >
 </trigger>
-  
-<trigger
-   enabled="n"
-   omit_from_output="y"
-   match="*Use the Channels command to see communication toggles.*"
-   sequence="99"
-   name="config_end"
-   script="gags_off"
-   send_to="12"
-   group="gags"
->
-</trigger>
-
 
 <trigger
    enabled="n"
@@ -170,7 +156,7 @@ pagesize = nil
 function catch_pagesize (name, line, wildcards)
    EnableTrigger("catch_pagesize", false)
    EnableTriggerGroup("prompts", true)
-   EnableTriggerGroup("gags", true)
+   EnableTrigger("gags", true)
    pagesize = tonumber(wildcards[2])
    if pagesize ~= nil then
       SendNoEcho("pagesize 0")
@@ -180,10 +166,13 @@ end
 
 function cleanup_gags (name, line, wildcards)
    EnableTrigger(name, false)
+   if name == "last_line_gag" then
+      gags_off()
+   end
 end
 
 function gags_off (name, line, wildcards)
-   EnableTriggerGroup("gags", false)
+   EnableTrigger("gags", false)
    if pagesize ~= nil then
       -- had to temporarily set pagesize 0 before, so now undo
       EnableTrigger("gag_pagesize_message", true)
