@@ -3598,9 +3598,16 @@ function findpath(src, dst, noportals, norecalls)
       elseif rooms[src].noportal ~= 1 and bounce_portal ~= nil then
          table.insert(path, bounce_portal)
       else
-         local jump_room, type = findNearestJumpRoom(src, dst)
-         if not jump_room then
-            return
+         local jump_room, type
+         if bounce_recall ~= nil or bounce_portal ~= nil then
+            jump_room, type = findNearestJumpRoom(src, dst)
+            if not jump_room then
+               return
+            end
+         else
+            SetStatus(main_status.." (searching depth stuck at "..depth..") No bounces defined. Trying again without portals... ")
+            jump_room = dst
+            type = 1
          end
          local path, first_depth = findpath(src,jump_room, true, true) -- this could be optimized away by building the path in findNearestJumpRoom, but the gain would be negligible
          if bit.band(type, 1) ~= 0 then
@@ -3647,9 +3654,11 @@ function findNearestJumpRoom(src, dst)
    local type = ""
 
    table.insert(rooms_list, fixsql(src))  
- 
+   local main_status = GetInfo(53)
    while not found and depth < max_depth do
+      SetStatus(main_status.." (searching bounce depth "..depth..")")
       BroadcastPlugin (999, "repaint")
+      depth = depth + 1
 
       -- prune the search space
       if visited ~= "" then 
