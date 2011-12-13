@@ -3593,14 +3593,10 @@ function findpath(src, dst, noportals, norecalls)
    end
    
    if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
-      if rooms[src].norecall ~= 1 then
-         if bounce_recall ~= nil then
-            table.insert(path, bounce_recall)
-         end
-      elseif rooms[src].noportal ~= 1 then
-         if bounce_portal ~= nil then
-            table.insert(path, bounce_portal)
-         end
+      if rooms[src].norecall ~= 1 and bounce_recall ~= nil then
+         table.insert(path, bounce_recall)
+      elseif rooms[src].noportal ~= 1 and bounce_portal ~= nil then
+         table.insert(path, bounce_portal)
       else
          local jump_room, type = findNearestJumpRoom(src, dst)
          if not jump_room then
@@ -3671,7 +3667,7 @@ function findNearestJumpRoom(src, dst)
          table.insert(rooms_list, fixsql(row.touid))
          -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
          -- used preferentially to normal ones (1 char)
-         if row.noportal ~= 1 or row.norecall ~= 1 or row.touid == dst then
+         if (bounce_portal ~= nil and row.noportal ~= 1) or (bounce_recall ~= nil and row.norecall ~= 1) or row.touid == dst then
             type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
             -- type 1 means walking to the destination is closer than bouncing
             -- type 2 means the bounce room allows recalling but not portalling
