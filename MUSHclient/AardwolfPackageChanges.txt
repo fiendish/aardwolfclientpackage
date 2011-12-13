@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1508 snapshot
+- new feature: updated to MUSHclient 4.80 (fixes a crash discovered in 4.79)
+- bug fix: fixes main output gagging caused by the prompt fixer if you had nohelp toggled
+
 r1499 snapshot
 - new feature: there's a new plugin added to the default list of plugins that fixes prompts that don't already end in %c
 - bug fix: fix a crash under MUSHclient 4.79 when a room has acute accents (and possibly other symbols) in the name
