@@ -3598,16 +3598,9 @@ function findpath(src, dst, noportals, norecalls)
       elseif rooms[src].noportal ~= 1 and bounce_portal ~= nil then
          table.insert(path, bounce_portal)
       else
-         local jump_room, type
-         if bounce_recall ~= nil or bounce_portal ~= nil then
-            jump_room, type = findNearestJumpRoom(src, dst)
-            if not jump_room then
-               return
-            end
-         else
-            SetStatus(main_status.." (searching depth stuck at "..depth..") No bounces defined. Trying again without portals... ")
-            jump_room = dst
-            type = 1
+         local jump_room, type = findNearestJumpRoom(src, dst, f)
+         if not jump_room then
+            return
          end
          local path, first_depth = findpath(src,jump_room, true, true) -- this could be optimized away by building the path in findNearestJumpRoom, but the gain would be negligible
          if bit.band(type, 1) ~= 0 then
@@ -3641,7 +3634,7 @@ end -- function findpath
 
 -- Very similar to findpath, but looks forwards instead of backwards (so only walks)
 -- and stops at the nearest portalable or recallable room
-function findNearestJumpRoom(src, dst)
+function findNearestJumpRoom(src, dst, target_type)
    local depth = 0
    local max_depth = mapper.configs.SCAN.depth
    local room_sets = {}
@@ -3656,7 +3649,7 @@ function findNearestJumpRoom(src, dst)
    table.insert(rooms_list, fixsql(src))  
    local main_status = GetInfo(53)
    while not found and depth < max_depth do
-      SetStatus(main_status.." (searching bounce depth "..depth..")")
+      SetStatus(main_status.." (searching jump depth "..depth..")")
       BroadcastPlugin (999, "repaint")
       depth = depth + 1
 
@@ -3676,7 +3669,7 @@ function findNearestJumpRoom(src, dst)
          table.insert(rooms_list, fixsql(row.touid))
          -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
          -- used preferentially to normal ones (1 char)
-         if (bounce_portal ~= nil and row.noportal ~= 1) or (bounce_recall ~= nil and row.norecall ~= 1) or row.touid == dst then
+         if ((bounce_portal ~= nil or target_type == "*") and row.noportal ~= 1) or ((bounce_recall ~= nil or target_type == "**") and row.norecall ~= 1) or row.touid == dst then
             type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
             -- type 1 means walking to the destination is closer than bouncing
             -- type 2 means the bounce room allows recalling but not portalling
@@ -3696,7 +3689,7 @@ function findNearestJumpRoom(src, dst)
    if found == false then
       return
    end
-   
+   print(destination, type, found_depth)
    return destination, type, found_depth
 end
 
