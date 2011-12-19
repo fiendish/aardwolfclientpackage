@@ -60,6 +60,7 @@ mapper hide                    --> Hide map
 mapper show                    --> Show map
 mapper addnote                 --> Add a new note to the current room
 mapper purgezone <area>        --> Remove an area from the map database
+mapper purgeroom               --> Purge the current room from the map database
 
 ===== CUSTOM EXIT ACTIONS =======>
 
@@ -393,6 +394,21 @@ mapper resume                  --> Initiate a new run to the previous target
    sequence="100"
    script="map_purgezone"
 ></alias>  
+
+<alias
+   match="mapper purgeroom"
+   enabled="y"
+   sequence="100"
+   send_to="12"
+><send>
+   if not current_room then
+      print ("PURGEROOM FAILED: No room received from the mud yet. Try using the 'LOOK' command first.")
+   else
+      map_purgeroom(current_room)
+      mapper.draw (current_room)
+   end
+</send>
+</alias>
 
 <alias
    match="mapper clearcache"
@@ -1633,7 +1649,12 @@ function map_purgezone (name, line, wildcards)
    Send_GMCP_Packet("request room")
 end
 
-function purgeroom (uid, new_area)
+function room_purgeroom (room, uid)
+   map_purgeroom(uid)
+   mapper.draw(current_room)
+end
+
+function map_purgeroom (uid, new_area)
    if new_area then
       dbCheckExecute(string.format ("delete from exits where touid = %s and fromuid not in (select uid from rooms where area = %s);",fixsql(uid),fixsql(new_area)))
    else
@@ -1644,6 +1665,13 @@ function purgeroom (uid, new_area)
    dbCheckExecute(string.format ("delete from bookmarks where uid = %s;", fixsql(uid)))
    dbCheckExecute(string.format ("delete from rooms where uid = %s;", fixsql(uid)))
    rooms[uid] = nil
+   for k,v in pairs(rooms) do
+      for j,u in pairs(v.exits) do
+         if u == uid then
+            v.exits[j] = nil
+         end
+      end   
+   end
 end
 
 function map_clearcache() 
@@ -2300,7 +2328,8 @@ function room_click (uid, flags)
       { name = "Change Exit", func = room_change_exit} ,
       { name = "Change Exit Level Lock", func = room_lock_exit} ,
       { name = "-", },
-      { name = "Delete Exit", func = room_delete_exit} ,
+      { name = "Delete Exit", func = room_delete_exit},
+      { name = "Delete Room", func = room_purgeroom}
 --      { name = "-", } ,
       } -- handlers
       
@@ -3029,7 +3058,7 @@ function got_gmcp_room()
 --         tprint(gmcproom)
 
          mapper.mapprint("This room has moved areas. You should 'mapper purgezone "..nilToStr(room.area).."' if this new area replaces it.")
-         purgeroom (nilToStr(room_number), gmcproom.area)
+         map_purgeroom (nilToStr(room_number), gmcproom.area)
       else
          -- brand new area
 --         print("new area")
