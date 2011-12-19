@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r1541 snapshot
+- new feature: the gmcp mapper has a 'mapper purgeroom' command for purging the current room from the database (can also right-click on any room to get this option)
+- new feature: (for developers) StylesToColoursOneLine in aardwolf_colors.lua is now non-destructive and now accepts negative column indices for counting back from the end
+- new feature: LuaJIT updated to 2.0b9 (see luajit.org for details)
+- bug fix: mapper pathfinding should now work in all situations for noportal/norecall rooms even if you don't have bouncerecall or bounceportal configured
+
 r1508 snapshot
 - new feature: updated to MUSHclient 4.80 (fixes a crash discovered in 4.79)
 - bug fix: fixes main output gagging caused by the prompt fixer if you had nohelp toggled
