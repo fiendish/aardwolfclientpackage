@@ -78,64 +78,76 @@ for i = 17,19 do
    colour_conversion[string.format("x%d",i)] = extended_colours[19]
 end
 
--- convert a line of style runs into color codes
+-- Convert a line of style runs into color codes.
+-- The caller may optionally choose to start and stop at arbitrary character indices.
+-- Negative indices are measured back from the end.
+-- The order of start and end columns does not matter, since the start will always be lower than the end.
 function StylesToColoursOneLine (styles, startcol, endcol)
    local startcol = startcol or 1
-   local endcol = endcol or 99999
-   copystring = ""
-   -- remove unneeded style runs at the start
-   while next (styles) and startcol > styles [1].length do
-      startcol = startcol - styles [1].length
-      endcol = endcol - styles [1].length
-      table.remove (styles, 1)
-   end -- do
+   local endcol = endcol or 99999 -- 99999 is assumed to be long enough to cover ANY style run
    
-   -- nothing left? uh oh
-   if not next (styles) then 
+   -- negative column indices are used to measure back from the end
+   if startcol < 0 or endcol < 0 then
+      local total_chars = 0
+      for k,v in ipairs(styles) do
+         total_chars = total_chars + v.length
+      end
+      if startcol < 0 then
+         startcol = total_chars + startcol + 1
+      end
+      if endcol < 0 then
+         endcol = total_chars + endcol + 1
+      end
+   end
+
+   -- start/end order does not matter when calling this function
+   if startcol > endcol then
+      startcol, endcol = endcol, startcol
+   end
+
+   local copystring = ""
+   
+   -- skip unused style runs at the start
+   local style_start = 0
+   local first_style = 0
+   local last_style = 0
+   for k,v in ipairs(styles) do
+      if startcol <= style_start+v.length then
+         first_style = k
+         startcol = startcol - style_start
+         break
+      end
+      style_start = style_start+v.length
+   end
+      
+   -- startcol larger than the sum length of all styles? return empty string
+   if first_style == 0 then 
       return copystring 
    end
    
-   -- discard unwanted part of first good style
-   if startcol > 1 then
-      styles [1].length = styles [1].length - startcol + 1
-      endcol = endcol - startcol + 1
-      styles [1].text =  styles [1].text:sub (startcol)   
-      startcol = 1
-   end -- if
-   
-   -- copy appropriate styles and codes into the output
-   while next (styles) do
-      local len = endcol - startcol + 1
+   for i = first_style,#styles do
+      local v = styles[i]
+      local text = string.sub(v.text, startcol, endcol - style_start)
+
+      -- fixup string: change @ to @@ and ~ to @-
+      text = string.gsub(string.gsub(text, "@", "@@"),"~", "@-")
       
-      if len < 1 or endcol < 1 then
-         break
-      end -- done
-      
-      -- last style?
-      if len < styles [1].length then
-         styles [1].length = len
-         styles [1].text = styles [1].text:sub (1, len)
-      end -- if last style
-      
-      -- fixup string first - change @ to @@ and ~ to @-
-      local text = string.gsub (styles [1].text, "@", "@@")
-      text = string.gsub (text, "~", "@-")
-   
-      -- put code in front, if we can find one
-      local code = conversion_colours [styles[1].textcolour]
-   
+      local code = conversion_colours[v.textcolour]
       if code then
-         copystring = copystring .. code
-      end -- if code found
+         copystring = copystring..code..text
+      else
+         copystring = copystring..text
+      end
       
-      -- now the text
-      copystring = copystring .. text
-      -- less to go now
-      endcol = endcol - styles [1].length
+      -- stopping here before the end?
+      if endcol <= style_start + v.length then
+         break
+      end
       
-      -- done this style
-      table.remove (styles, 1)
-   end -- while
+      -- all styles after the first one have startcol of 1
+      startcol = 1
+      style_start = style_start + v.length
+   end
    return copystring
 end -- StylesToColoursOneLine
 
