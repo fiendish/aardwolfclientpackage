@@ -464,7 +464,7 @@ function writeLines ()
       for count = lineStart, lineEnd do
          ax = nil
          zx = nil
-         line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[count][1]), 1, 99999))
+         line_no_colors = strip_colours(StylesToColoursOneLine(lines[count][1]))
          
          -- create clickable links for urls
          for i,v in ipairs(lines[count][3]) do
@@ -759,25 +759,21 @@ end
 
 function stampAndStore(styles)
     
-   local local_styles = copytable.deep(styles)
    local text = ""
    local log_text = ""
     
    -- inject timestamp if wanted
-   if date_format ~= "" then
-      tstamp = os.date(date_format)
-      timestyle = {}
-      timestyle.text = tstamp
-      timestyle.length = #timestyle.text
-      timestyle.textcolour = 0xc0c0c0
-      table.insert(styles,1,timestyle)
-   end -- if
+   tstamp = os.date(date_format)
+   timestyle = {text=tstamp, length=string.len(tstamp), textcolour=0xc0c0c0}
+   table.insert(styles,1,timestyle)
    
-   text = StylesToColoursOneLine(copytable.deep(styles), 1, 99999)
+   text = StylesToColoursOneLine(styles)
    
    if (log_to_file == 1) then
       if (log_timestamps == 0) then
-         log_text = StylesToColoursOneLine(local_styles, 1, 99999)
+         local local_styles = copytable.deep(styles)
+         table.remove(local_styles, 1)
+         log_text = StylesToColoursOneLine(local_styles)
       else
          log_text = text
       end
@@ -870,7 +866,7 @@ end
 function GetAllBufferedMessages()
    local t = {}
    for _,styles in ipairs(rawlines) do
-      table.insert(t, StylesToColoursOneLine(copytable.deep(styles[1]), 1, 99999)) -- 99999 basically means don't truncate lines
+      table.insert(t, StylesToColoursOneLine(styles[1]))
    end
    SetClipboard(table.concat(t,"\n"))
 end
@@ -988,7 +984,7 @@ function TextareaMoveCallback(flags, hotspot_id)
             local endpos = 99999
             if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
                -- snap to character boundaries instead of selecting arbitrary pixel widths
-               local line_no_colors = strip_colours(StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), 1, 99999))
+               local line_no_colors = strip_colours(StylesToColoursOneLine(lines[copy_line][1]))
                startpos = 1
                endpos = #line_no_colors
                -- special deal for the first line
@@ -1017,7 +1013,7 @@ function TextareaMoveCallback(flags, hotspot_id)
             end -- if should show highlight
        
             -- store selected area for later
-            copied_part = StylesToColoursOneLine(copytable.deep(lines[copy_line][1]), startpos, endpos)
+            copied_part = StylesToColoursOneLine(lines[copy_line][1], startpos, endpos)
             if copy_line ~= copy_end_line and copy_line ~= #lines and lines[copy_line+1][2] == true then
                -- only put a line break if the next line is from a different message
                copied_part = copied_part.."@w\n"
