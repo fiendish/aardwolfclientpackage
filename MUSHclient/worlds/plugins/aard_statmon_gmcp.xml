@@ -95,149 +95,149 @@ function BuildStatsPage()
    
    page_built = true
    if (stacked == 1) then
-      fstr = "@GStrength     : @C\[@W%3d@C/@W%-3d@C\]     @GHealth  : @C\[@W%6d@C/@W%6d@C\]@w"
+      fstr = "@GStrength     : @C[@W%3d@C/@W%-3d@C]     @GHealth  : @C[@W%6d@C/@W%6d@C]@w"
       s = fstr:format(gmcpval("stats.str"),gmcpval("maxstats.maxstr"),gmcpval("vitals.hp"),gmcpval("maxstats.maxhp"))
       table.insert(cstyles,s)
 
-      fstr = "@GIntelligence : @C\[@W%3d@C/@W%-3d@C\]     @GMana    : @C\[@W%6d@C/@W%6d@C\]@w"
+      fstr = "@GIntelligence : @C[@W%3d@C/@W%-3d@C]     @GMana    : @C[@W%6d@C/@W%6d@C]@w"
       s = fstr:format(gmcpval("stats.int"),gmcpval("maxstats.maxint"),gmcpval("vitals.mana"),gmcpval("maxstats.maxmana"))
       table.insert(cstyles,s)
       
-      fstr = "@GWisdom       : @C\[@W%3d@C/@W%-3d@C\]     @GMoves   : @C\[@W%6d@C/@W%6d@C\]@w"
+      fstr = "@GWisdom       : @C[@W%3d@C/@W%-3d@C]     @GMoves   : @C[@W%6d@C/@W%6d@C]@w"
       s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"),gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
       table.insert(cstyles,s)
       
-      fstr = "@GDexterity    : @C\[@W%3d@C/@W%-3d@C\]     @GSaves   : @C\[@W%5d@C\]@W"
+      fstr = "@GDexterity    : @C[@W%3d@C/@W%-3d@C]     @GSaves   : @C[@W%5d@C]@W"
       s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"),gmcpval("stats.saves"))
       table.insert(cstyles,s)
       
-      fstr = "@GConstitution : @C\[@W%3d@C/@W%-3d@C\]     @GHitroll : @C\[@W%5d@C\]@w"
+      fstr = "@GConstitution : @C[@W%3d@C/@W%-3d@C]     @GHitroll : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"),gmcpval("stats.hr"))
       table.insert(cstyles,s)
       
-      fstr = "@GLuck         : @C\[@W%3d@C/@W%-3d@C\]     @GDamroll : @C\[@W%5d@C\]@w"
+      fstr = "@GLuck         : @C[@W%3d@C/@W%-3d@C]     @GDamroll : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("stats.luck"),gmcpval("maxstats.maxluck"),gmcpval("stats.dr"))
       table.insert(cstyles,s)
       
       s = ""
       table.insert(cstyles,s)
 
-      fstr = "@GExp To Level : @C\[@W%5d@C\]       @GLevel   : @C\[@W%5d@C\]@w"
+      fstr = "@GExp To Level : @C[@W%5d@C]       @GLevel   : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("status.tnl"),gmcpval("status.level"))
       table.insert(cstyles,s)
       
-      fstr = "@GAlignment    : @C\[@W%5d@C\]       @GGold    : @C\[@Y%s@C\]@w"
+      fstr = "@GAlignment    : @C[@W%5d@C]       @GGold    : @C[@Y%s@C]@w"
       s = fstr:format(gmcpval("status.align"),commas(gmcpval("worth.gold")))
       table.insert(cstyles,s)
       
-      fstr = "@GQuest Points : @C\[@W%8d@C\]    @GTrivia  : @C\[@W%5d@C\]@w"
+      fstr = "@GQuest Points : @C[@W%8d@C]    @GTrivia  : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("worth.qp"),gmcpval("worth.tp"))
       table.insert(cstyles,s)
 
-      fstr = "@GTrains       : @C\[@W%5d@C\]       @GPracs   : @C\[@W%5d@C\]@w"
+      fstr = "@GTrains       : @C[@W%5d@C]       @GPracs   : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("worth.trains"),gmcpval("worth.pracs"))
       table.insert(cstyles,s)
       
       fighting = gmcpval("status.enemy")
 
       if fighting ~= "" and fighting ~= null then
-         fstr = "@RFighting     : @C\[@W%s@C\] @R(@W%s%%@R)@w"
+         fstr = "@RFighting : @W%s @R(@W%s%%@R)@w"
          s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
          table.insert(cstyles,s)
       else
          table.insert(cstyles,"")
       end
    else
-      fstr = "@GStrength     : @C\[@W%3d@C/@W%-3d@C\]@w"
+      fstr = "@GStrength     : @C[@W%3d@C/@W%-3d@C]@w"
       s = fstr:format(gmcpval("stats.str"),gmcpval("maxstats.maxstr"))
       table.insert(cstyles,s)
 
-      fstr = "@GIntelligence : @C\[@W%3d@C/@W%-3d@C\]@w"
+      fstr = "@GIntelligence : @C[@W%3d@C/@W%-3d@C]@w"
       s = fstr:format(gmcpval("stats.int"),gmcpval("maxstats.maxint"))
       table.insert(cstyles,s)
 
-      fstr = "@GWisdom       : @C\[@W%3d@C/@W%-3d@C\]"
+      fstr = "@GWisdom       : @C[@W%3d@C/@W%-3d@C]"
       s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"))
       table.insert(cstyles,s)
       
-      fstr = "@GDexterity    : @C\[@W%3d@C/@W%-3d@C\]"
+      fstr = "@GDexterity    : @C[@W%3d@C/@W%-3d@C]"
       s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"))
       table.insert(cstyles,s)
       
-      fstr = "@GConstitution : @C\[@W%3d@C/@W%-3d@C\]"
+      fstr = "@GConstitution : @C[@W%3d@C/@W%-3d@C]"
       s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"))
       table.insert(cstyles,s)
 
-      fstr = "@GLuck         : @C\[@W%3d@C/@W%-3d@C\]"
+      fstr = "@GLuck         : @C[@W%3d@C/@W%-3d@C]"
       s = fstr:format(gmcpval("stats.luck"),gmcpval("maxstats.maxluck"))
       table.insert(cstyles,s)
 
       table.insert(cstyles,"")
 
-      fstr = "@GHealth  : @C\[@W%6d@C/@W%6d@C\]@w"
+      fstr = "@GHealth  : @C[@W%6d@C/@W%6d@C]@w"
       s = fstr:format(gmcpval("vitals.hp"),gmcpval("maxstats.maxhp"))
       table.insert(cstyles,s)
 
-      fstr = "@GMana    : @C\[@W%6d@C/@W%6d@C\]@w"
+      fstr = "@GMana    : @C[@W%6d@C/@W%6d@C]@w"
       s = fstr:format(gmcpval("vitals.mana"),gmcpval("maxstats.maxmana"))
       table.insert(cstyles,s)
       
-      fstr = "@GMoves   : @C\[@W%6d@C/@W%6d@C\]@w"
+      fstr = "@GMoves   : @C[@W%6d@C/@W%6d@C]@w"
       s = fstr:format(gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
       table.insert(cstyles,s)
 
       table.insert(cstyles,"")
       
-      fstr = "@GSaves        : @C\[@W%5d@C\]@W"
+      fstr = "@GSaves        : @C[@W%5d@C]@W"
       s = fstr:format(gmcpval("stats.saves"))
       table.insert(cstyles,s)
       
-      fstr = "@GHitroll      : @C\[@W%5d@C\]@w"
+      fstr = "@GHitroll      : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("stats.hr"))
       table.insert(cstyles,s)
 
-      fstr = "@GDamroll      : @C\[@W%5d@C\]@w"
+      fstr = "@GDamroll      : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("stats.dr"))
       table.insert(cstyles,s)
       
-      fstr = "@GAlignment    : @C\[@W%5d@C\]"
+      fstr = "@GAlignment    : @C[@W%5d@C]"
       s = fstr:format(gmcpval("status.align"))
       table.insert(cstyles,s)
 
       table.insert(cstyles,"")
       
-      fstr = "@GGold         : @C\[@Y%s@C\]@w"
+      fstr = "@GGold         : @C[@Y%s@C]@w"
       s = fstr:format(commas(gmcpval("worth.gold")))
       table.insert(cstyles,s)
       
-      fstr = "@GQuest Points : @C\[@W%7d@C\]"
+      fstr = "@GQuest Points : @C[@W%7d@C]"
       s = fstr:format(gmcpval("worth.qp"))
       table.insert(cstyles,s)
       
-      fstr = "@GTrivia       : @C\[@W%5d@C\]@w"
+      fstr = "@GTrivia       : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("worth.tp"))
       table.insert(cstyles,s)
       
-      fstr = "@GExp To Level : @C\[@W%5d@C\]"
+      fstr = "@GExp To Level : @C[@W%5d@C]"
       s = fstr:format(gmcpval("status.tnl"))
       table.insert(cstyles,s)
       
-      fstr = "@GLevel        : @C\[@W%5d@C\]@w"
+      fstr = "@GLevel        : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("status.level"))
       table.insert(cstyles,s)
       
-      fstr = "@GTrains       : @C\[@W%5d@C\]@w"
+      fstr = "@GTrains       : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("worth.trains"))
       table.insert(cstyles,s)
       
-      fstr = "@GPracs        : @C\[@W%5d@C\]@w"
+      fstr = "@GPracs        : @C[@W%5d@C]@w"
       s = fstr:format(gmcpval("worth.pracs"))
       table.insert(cstyles,s)
       
       fighting = gmcpval("status.enemy")
 
       if fighting ~= "" and fighting ~= null then
-         fstr = "@RFighting     : @C\[@W%s@C\] @R(@W%s%%@R)@w"
+         fstr = "@RFighting : @W%s @R(@W%s%%@R)@w"
          s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
          table.insert(cstyles,s)
       else
