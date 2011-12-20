@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1543 snapshot
+- bug fix: the statmon plugin still had invalid escape sequences (ignored in Lua 5.1, but are now invalid in Lua 5.2)
+
 r1541 snapshot
 - new feature: the gmcp mapper has a 'mapper purgeroom' command for purging the current room from the database (can also right-click on any room to get this option)
 - new feature: (for developers) StylesToColoursOneLine in aardwolf_colors.lua is now non-destructive and now accepts negative column indices for counting back from the end
