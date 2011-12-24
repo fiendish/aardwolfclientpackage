@@ -1183,6 +1183,16 @@ function save_state ()
    movewindow.save_state (win)
 end -- save_state
 
+function hyperlinkGoto(uid)
+   mapper.goto(uid)
+   for i,v in ipairs(last_result_list) do
+      if uid == v then
+         next_result_index = i
+         break
+      end
+   end
+end
+
 require "serialize"
 function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals)
    local paths = {}
@@ -1243,7 +1253,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
       
       if current_room ~= uid then
          table.insert(last_result_list, uid)
-         Hyperlink ("!!" .. GetPluginID () .. ":mapper.goto(" .. uid .. ")", 
+         Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. uid .. ")", 
             room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
       else
          Tell(room_name)
@@ -1312,7 +1322,7 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
 
       if current_room ~= v.uid then
          table.insert(last_result_list, v.uid)
-         Hyperlink ("!!" .. GetPluginID () .. ":mapper.goto("..v.uid..")", 
+         Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto("..v.uid..")", 
             room_name, "Click to speedwalk there", "", "", false)
       else
          ColourTell(RGBColourToName(config.MAPPER_NOTE_COLOUR.colour),"",room_name)
