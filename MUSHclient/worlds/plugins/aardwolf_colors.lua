@@ -234,13 +234,13 @@ ANSI_colours = {
 function stylesToANSI (styles)
    line = {}
    for _,v in ipairs (styles) do
-      if colours_extended[v.textcolour] then -- use 256 color xterm ansi when available
-         table.insert(line, ANSI(38,5,colours_extended[v.textcolour]))
-      else -- the user may have customized their standard 16 colors
+      if ANSI_colours[v.textcolour] then
          local ansi_tab = ANSI_colours[v.textcolour]
          if ansi_tab then
             table.insert(line, ANSI(ansi_tab[1],ansi_tab[2]))
          end
+      else -- use 256 color xterm ansi when necessary
+         table.insert(line, ANSI(38,5,colours_extended[v.textcolour]))
       end
       table.insert(line, v.text)
    end
