@@ -128,7 +128,7 @@ function displayInventory()
    for k,v in ipairs(invsorted) do
       local num = #v[1]
       local count = string.format("@W(%2d) @w",num)
-      local line = string.format("%-5s",num > 1 and count or "     ")..table.concat(v[2]).." "..v[3].." @W(@G"..v[4].."@W)@w   ["..((#v[1] < 4 and table.concat(v[1],",")) or "many").."]\r\n"
+      local line = string.format("%-5s",num > 1 and count or "     ")..table.concat(v[2]).." "..v[3].."  ["..((#v[1] < 4 and table.concat(v[1],",")) or "many").."]  ".."@W(@G"..v[4].."@W)@w\r\n"
       Simulate(stylesToANSI(ColoursToStyles(line)))
    end
    invsorted = {}
