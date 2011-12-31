@@ -9,7 +9,7 @@
     language="Lua"
     purpose="Play a game of Tetris"
     date_written="2011-06-15 15:35:02"
-    requires="4.73"
+    requires="4.75"
     version="1.0"
     save_state="n"
     >
@@ -271,8 +271,8 @@ function new_piece()
          game_over = true
          break
       end
-      game_board[current_piece[a][1]][current_piece[a][2]] = "\["
-      game_board[current_piece[a][1]][current_piece[a][2]+1] = "\]"
+      game_board[current_piece[a][1]][current_piece[a][2]] = "["
+      game_board[current_piece[a][1]][current_piece[a][2]+1] = "]"
    end
 end
  
@@ -307,8 +307,8 @@ function rotate_piece()
       }
    end
    for a=1,4 do
-      game_board[current_piece[a][1]][current_piece[a][2]] = "\["
-      game_board[current_piece[a][1]][current_piece[a][2]+1] = "\]"
+      game_board[current_piece[a][1]][current_piece[a][2]] = "["
+      game_board[current_piece[a][1]][current_piece[a][2]+1] = "]"
    end
    draw()
    return rotation_ok
@@ -328,13 +328,13 @@ function lower_piece()
       y_loc = y_loc+1
       for a=4,1,-1 do
          game_board[current_piece[a][1]][current_piece[a][2]+1] = " "
-         game_board[current_piece[a][1]+1][current_piece[a][2]] = "\["
-         game_board[current_piece[a][1]+1][current_piece[a][2]+1] = "\]"
+         game_board[current_piece[a][1]+1][current_piece[a][2]] = "["
+         game_board[current_piece[a][1]+1][current_piece[a][2]+1] = "]"
          current_piece[a][1] = current_piece[a][1]+1
       end
    else
       for a=4,1,-1 do
-         game_board[current_piece[a][1]][current_piece[a][2]] = "\["
+         game_board[current_piece[a][1]][current_piece[a][2]] = "["
       end
    end
    if not board_modified then
@@ -412,13 +412,13 @@ function slide_piece(direction)
       for a=slidebegin,slideend,slidestep do
          new_x = current_piece[a][2]-(2*slidestep)
          game_board[current_piece[a][1]][current_piece[a][2]+1] = " "
-         game_board[current_piece[a][1]][new_x] = "\["
-         game_board[current_piece[a][1]][new_x+1] = "\]"
+         game_board[current_piece[a][1]][new_x] = "["
+         game_board[current_piece[a][1]][new_x+1] = "]"
          current_piece[a][2] = new_x
       end
    else
       for a=4,1,-1 do
-         game_board[current_piece[a][1]][current_piece[a][2]] = "\["
+         game_board[current_piece[a][1]][current_piece[a][2]] = "["
       end
    end
    draw()
