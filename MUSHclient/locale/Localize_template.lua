@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Saturday, 10 December 2011 at 15:35:41
+-- Written: Tuesday, 03 January 2012 at 09:18:23
 
 -- Static messages
 
@@ -50,7 +50,7 @@ messages = {
 
 -- /cygdrive/c/source/mushclient/sendvw.cpp:339
 
--- /cygdrive/c/source/mushclient/sendvw.cpp:2261
+-- /cygdrive/c/source/mushclient/sendvw.cpp:2265
   ["Spell check ..."] =
     "",
 
@@ -426,7 +426,7 @@ messages = {
   ["Edit alias 'match' text"] =
     "",
 
--- /cygdrive/c/source/mushclient/dialogs/world_prefs/configuration.cpp:1681
+-- /cygdrive/c/source/mushclient/dialogs/world_prefs/configuration.cpp:1683
   ["Only the Lua script language is available with the /wine option"] =
     "",
 
@@ -1090,41 +1090,41 @@ messages = {
   ["Unable to open the plugins web page: "] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:3734
+-- /cygdrive/c/source/mushclient/mushview.cpp:3739
   ["Printing world..."] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:3920
+-- /cygdrive/c/source/mushclient/mushview.cpp:3925
   ["Printing cancelled"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4411
+-- /cygdrive/c/source/mushclient/mushview.cpp:4416
   ["No URL selected"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4413
+-- /cygdrive/c/source/mushclient/mushview.cpp:4418
   ["URL too long"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4453
+-- /cygdrive/c/source/mushclient/mushview.cpp:4458
   ["No email address selected"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4455
+-- /cygdrive/c/source/mushclient/mushview.cpp:4460
   ["Email address too long"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5169
+-- /cygdrive/c/source/mushclient/mushview.cpp:5174
   ["Cannot find style of this character"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5604
+-- /cygdrive/c/source/mushclient/mushview.cpp:5609
   ["@ must be followed by a variable name"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:6190
+-- /cygdrive/c/source/mushclient/mushview.cpp:6195
 
--- /cygdrive/c/source/mushclient/mushview.cpp:6274
+-- /cygdrive/c/source/mushclient/mushview.cpp:6279
   ["Cannot compile regular expression"] =
     "",
 
@@ -1690,7 +1690,7 @@ messages = {
   ["Never"] =
     "",
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:620
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:722
   ["Loading plugins ..."] =
     "",
   } -- end messages
@@ -1805,9 +1805,9 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/doc.cpp:5735
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5273
+-- /cygdrive/c/source/mushclient/mushview.cpp:5278
 
--- /cygdrive/c/source/mushclient/sendvw.cpp:2321
+-- /cygdrive/c/source/mushclient/sendvw.cpp:2325
   ["Notepad: %s"] =
     function (a)
      
@@ -3036,7 +3036,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/doc.cpp:5096
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5326
+-- /cygdrive/c/source/mushclient/mushview.cpp:5331
   ["Recall: %s"] =
     function (a)
      
@@ -3117,7 +3117,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/evaluate.cpp:925
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5712
+-- /cygdrive/c/source/mushclient/mushview.cpp:5717
   ["Alias: %s"] =
     function (a)
      
@@ -3126,7 +3126,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/evaluate.cpp:956
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5642
+-- /cygdrive/c/source/mushclient/mushview.cpp:5647
   ["processing alias \"%s\""] =
     function (a)
      
@@ -3140,74 +3140,74 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2193
+-- /cygdrive/c/source/mushclient/mushview.cpp:2194
   ["Plugin \"%s\" is not installed"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2198
+-- /cygdrive/c/source/mushclient/mushview.cpp:2199
   ["Script routine \"%s\" is not in plugin %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2205
+-- /cygdrive/c/source/mushclient/mushview.cpp:2206
   ["An error occurred calling plugin %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2258
+-- /cygdrive/c/source/mushclient/mushview.cpp:2259
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5450
+-- /cygdrive/c/source/mushclient/mushview.cpp:5455
   ["Hyperlink action \"%s\" - permission denied."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2263
+-- /cygdrive/c/source/mushclient/mushview.cpp:2264
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5455
+-- /cygdrive/c/source/mushclient/mushview.cpp:5460
   ["Unable to open the hyperlink \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4326
+-- /cygdrive/c/source/mushclient/mushview.cpp:4331
   ["Line %ld, %s%s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4423
+-- /cygdrive/c/source/mushclient/mushview.cpp:4428
   ["Unable to open the URL \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4457
+-- /cygdrive/c/source/mushclient/mushview.cpp:4462
   ["Email address \"%s\" invalid - does not contain a \"@\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4465
+-- /cygdrive/c/source/mushclient/mushview.cpp:4470
   ["Unable to send mail to \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5614
+-- /cygdrive/c/source/mushclient/mushview.cpp:5619
   ["Variable '%s' is not defined."] =
     function (a)
      
@@ -4261,28 +4261,28 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/sendvw.cpp:1318
+-- /cygdrive/c/source/mushclient/sendvw.cpp:1322
   ["Replace your typing of\n\n\"%s\"\n\nwith\n\n\"%s\"?"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/sendvw.cpp:2142
+-- /cygdrive/c/source/mushclient/sendvw.cpp:2146
   ["Are you SURE you want to clear all %i commands you have typed?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/sendvw.cpp:2228
+-- /cygdrive/c/source/mushclient/sendvw.cpp:2232
   ["No replacements made for \"%s\"."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/sendvw.cpp:2553
+-- /cygdrive/c/source/mushclient/sendvw.cpp:2557
   ["Accelerator: %s"] =
     function (a)
      
@@ -5080,46 +5080,46 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:502
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:604
   ["Line %4i: %s (%s)%s"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:553
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:655
   ["Attribute not used: %s=\"%s\""] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:569
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:671
   ["Tag not used: <%s>"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:637
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:739
   ["Loading plugin: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:933
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1035
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:999
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1101
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1030
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1132
   ["option '%s' not set"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:2245
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:2404
   ["%s loading plugin %s ..."] =
     function (a, b)
      
@@ -5141,7 +5141,7 @@ times = {
 
 -- /cygdrive/c/source/mushclient/doc.cpp:6789
 
--- /cygdrive/c/source/mushclient/mushview.cpp:3784
+-- /cygdrive/c/source/mushclient/mushview.cpp:3789
 
 -- /cygdrive/c/source/mushclient/plugins.cpp:993
 
@@ -5159,7 +5159,7 @@ times = {
   ["--- Connected on %A, %B %d, %Y, %#I:%M %p ---"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4318
+-- /cygdrive/c/source/mushclient/mushview.cpp:4323
   ["%A, %B %d, %#I:%M:%S %p"] =
     "",
 
