@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1557 snapshot
+- new feature: updated to MUSHclient 4.81 (fixes import duplication issues and other things)
+- misc change: clicking an entry in a gmcp mapper results listing now updates the 'mapper next' pointer so that it doesn't always start at the first entry anyway
+
 r1543 snapshot
 - bug fix: the statmon plugin still had invalid escape sequences (ignored in Lua 5.1, but are now invalid in Lua 5.2)
 
