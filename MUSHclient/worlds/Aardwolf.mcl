@@ -73,7 +73,7 @@
    output_font_charset="1"
    paste_delay_per_lines="1"
    pixel_offset="1"
-   port="4010"
+   port="23"
    proxy_port="1080"
    save_deleted_command="y"
    save_world_automatically="y"
