@@ -235,12 +235,11 @@ function stylesToANSI (styles)
    line = {}
    for _,v in ipairs (styles) do
       if ANSI_colours[v.textcolour] then
-         local ansi_tab = ANSI_colours[v.textcolour]
-         if ansi_tab then
-            table.insert(line, ANSI(ansi_tab[1],ansi_tab[2]))
-         end
-      else -- use 256 color xterm ansi when necessary
+         table.insert(line, ANSI(ANSI_colours[v.textcolour][1],ANSI_colours[v.textcolour][2]))
+      elseif colours_extended[v.textcolour] then -- use 256 color xterm ansi when necessary
          table.insert(line, ANSI(38,5,colours_extended[v.textcolour]))
+      else
+         print("It looks like you changed your ANSI color settings. Please restart MUSHclient for these changes to take full effect.")
       end
       table.insert(line, v.text)
    end
