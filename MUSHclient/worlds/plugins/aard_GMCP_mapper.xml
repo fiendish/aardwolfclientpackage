@@ -2473,8 +2473,8 @@ function checkDatabaseIntegrity()
       end
    end
    if not integrityCheck then
-      Note("FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE.")
-      utils.msgbox("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE IMMEDIATELY.", "Error!", "ok", "!", 1)
+      Note("FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.")
+      utils.msgbox("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.", "Error!", "ok", "!", 1)
       return false
    end
    Note("INTEGRITY CHECK PASSED")
@@ -2491,9 +2491,10 @@ function backup_databases(manual)
       Repaint()   
       db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
       in_backup = false
+      CorruptionAlert()
       return
    end
-   Note("BACKING UP DATABASES")
+   Note("BACKING UP DATABASE")
    Repaint()
    
    backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
@@ -2559,12 +2560,20 @@ function backup_databases(manual)
       rotate_backups(manual) -- rotate backup folders (obviously)
       Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
    else
-      Note("ABORTING BACKUP. REPORT THIS ERROR TO FIENDISH.")
+      Note("ABORTING BACKUP.")
+      CorruptionAlert()
    end
    Note("")
    db = assert (sqlite3.open(worldPath..".db")) -- re-open database 
    Repaint()
    in_backup = false
+end
+
+function CorruptionAlert()
+   Note("")
+   Note("WARNING, PLEASE READ: http://code.google.com/p/aardwolfclientpackage/wiki/GMCPmapper#Database_Corruption")
+   Note("If the information there does not help you 100%, then try asking on the Tech channel and report this error to Fiendish.")
+   Note("")
 end
 
 -- ec, areaKeys = CallPlugin("b6eae87ccedd84f510b74714", "getkeyword", "The Broken Halls of Horath") puts "horath" into areaKeys
@@ -2651,6 +2660,7 @@ function OnPluginInstall ()
    db:busy_timeout(100)
    
    if not checkDatabaseIntegrity() then
+      CorruptionAlert()
       return
    end
   
