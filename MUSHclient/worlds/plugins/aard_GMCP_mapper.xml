@@ -80,6 +80,8 @@ mapper purge cexits            --> Remove all custom exits
 mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
                                  > the standard 2 when constructing the next
                                  > cexit (between 2 and 30)
+mapper lockexit                --> Bring up the exit level-locking dialog
+                                 > for the current room.
 
 ===== PORTAL ACTIONS ============>
 
@@ -279,7 +281,18 @@ mapper resume                  --> Initiate a new run to the previous target
    omit_from_output="y"
    script="mapper.zoom_in"
 ></alias>  
-    
+
+<alias
+   match="mapper lockexit"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   send_to="12"
+><send>
+   room_lock_exit()
+</send>
+</alias>
+
 <alias
    match="mapper findpath * *"
    enabled="y"
@@ -2252,8 +2265,17 @@ function room_change_exit (room, uid)
 end -- room_change_exit
 
 function room_lock_exit (room, uid)
-
-   local available =  {}  -- end of available
+   if uid == nil and current_room ~= nil then
+      uid = current_room
+      room = rooms[uid]
+   end
+   
+   if uid == nil then -- still nothing? abort!
+      print("No room received from the mud yet. Try using the 'LOOK' command first.")
+      return
+   end
+   
+   local available = {}
 
    -- construct available exits list for display
    for k,v in pairs (room.exits) do
