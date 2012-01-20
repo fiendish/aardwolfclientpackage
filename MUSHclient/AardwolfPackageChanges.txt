@@ -1,6 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r1580 snapshot
+- new feature: there is now a gmcp mapper command 'mapper lockexit' to bring up the level-lock dialog for the current room
+- new feature: if ansi color customization is detected, alert the player that they'll have to restart MUSHclient
+- misc change: better message shown if mapper database backup or integrity check fails
+- misc change: the default world file now connects on port 23 instead of 4010
+
 r1557 snapshot
+(January 2012 release)
 - new feature: updated to MUSHclient 4.81 (fixes import duplication issues and other things)
 - misc change: clicking an entry in a gmcp mapper results listing now updates the 'mapper next' pointer so that it doesn't always start at the first entry anyway
 
