@@ -59,6 +59,7 @@ mapper zoom in                 --> Zoom in
 mapper hide                    --> Hide map
 mapper show                    --> Show map
 mapper addnote                 --> Add a new note to the current room
+mapper addnote <note>          --> Ditto, but skips the dialog
 mapper purgezone <area>        --> Remove an area from the map database
 mapper purgeroom               --> Purge the current room from the map database
 
