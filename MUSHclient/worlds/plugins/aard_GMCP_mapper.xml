@@ -627,11 +627,16 @@ mapper resume                  --> Initiate a new run to the previous target
 ></alias>
   
 <alias
-   match="mapper addnote"
+   match="^mapper addnote( .*)?$"
+   regexp="y"
    enabled="y"
    sequence="100"
-   script="map_add_note"
-></alias>
+   send_to="12"
+>
+<send>
+   room_edit_note(nil,nil,Trim("%1"))
+</send>
+</alias>
 
 <alias
    match="^mapper bounceportal( .*)?$"
@@ -1990,11 +1995,17 @@ function get_room (uid)
       
 end -- get_room
 
-function map_add_note ()
-   room_edit_note(rooms[current_room], current_room)
-end -- map_add_note
+function room_edit_note (room, uid, newnotes)
 
-function room_edit_note (room, uid)
+   if uid == nil and current_room ~= nil then 
+      uid = current_room
+      room = rooms[current_room]
+   end
+   
+   if uid == nil then -- still nothing?
+      print("No room received from the mud yet. Try using the 'LOOK' command first.")
+      return
+   end
 
    local notes, found
   
@@ -2003,12 +2014,14 @@ function room_edit_note (room, uid)
       found = true
    end   -- finding room
   
-   if found then  
-      newnotes = utils.inputbox ("Modify room comment (clear it to delete from database)", room.name, notes)
-   else
-      newnotes = utils.inputbox ("Enter room comment (creates a note for this room)", room.name, notes)
-   end -- if
-  
+   if newnotes == nil or newnotes == "" then
+      if found then  
+         newnotes = utils.inputbox ("Modify room comment (clear it to delete from database)", room.name, notes)
+      else
+         newnotes = utils.inputbox ("Enter room comment (creates a note for this room)", room.name, notes)
+      end -- if
+   end
+   
    if not newnotes then
       return
    end -- if cancelled 
