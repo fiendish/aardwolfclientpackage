@@ -12,7 +12,7 @@
    purpose="Disables aliases/triggers/timers for the duration of note writing"
    save_state="y"
    date_written="2012-01-23 12:15:44"
-   requires="4.81"
+   requires="4.75"
    version="1.0"
    >
 <description trim="y">
