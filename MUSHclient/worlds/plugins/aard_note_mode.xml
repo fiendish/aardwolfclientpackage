@@ -26,7 +26,7 @@ Turns off all aliases, triggers and timers while in note writing mode.
 <script>
 <![CDATA[
 
--- motivation and mechanism for this plugin based on a contribution by Cizra
+-- motivation and mechanism for this plugin based on contributions by Cizra
 
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
@@ -82,7 +82,7 @@ function OnPluginBroadcast(msg, id, name, text)
 
          assert (loadstring (luastmt or "")) ()
 
-         local state = gmcpdata.state
+         state = gmcpdata.state
          if previous_state == "5" and state ~= "5" then
             toggleStuff(true)
          elseif previous_state ~= "5" and state == "5" then
