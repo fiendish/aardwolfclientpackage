@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="Reminder"
+   author="Fiendish"
+   id="229e4047725d717d6292a680"
+   language="Lua"
+   purpose="Reminds you to do things at defined levels"
+   date_written="2008-07-05 16:46:02"
+   requires="4.81"
+   version="1.0"
+   save_state="y"
+   >
+</plugin>
+
+<aliases>
+<alias
+   match="^remind (\d+) (.*)$"
+   enabled="y"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+>
+<send>
+    table.insert(reminders, {"%1", "%2"})
+    SetVariable ("reminders", "reminders = " .. serialize.save_simple (reminders))
+</send>
+</alias>
+
+<alias
+   match="^reminders show$"
+   enabled="y"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+>
+<send>
+   for i,v in ipairs(reminders) do
+      print(v[1].." - "..v[2])
+   end
+</send>
+</alias>
+
+<alias
+   match="^reminders clear$"
+   enabled="y"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+>
+<send>
+   reminders = {}
+   SetVariable ("reminders", "reminders = " .. serialize.save_simple (reminders))
+</send>
+</alias>
+
+</aliases>
+
+<script>
+<![CDATA[
+require "serialize"
+require "copytable"
+
+reminders = {}
+assert (loadstring (GetVariable ("reminders") or "")) ()
+
+function OnPluginBroadcast (msg, id, name, text)
+   if id == "3e7dedbe37e44942dd46d264" and text == "char.status" then
+      res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status")
+      luastmt = "gmcpdata = " .. gmcparg
+      assert (loadstring (luastmt or "")) ()
+      mylevel = gmcpdata.level
+      local temp = {}
+      local changed = false
+      for i,v in ipairs(reminders) do
+         if v[1] == mylevel then
+            print("")
+            print("LEVEL "..v[1].." REMINDER")
+            print(string.rep("*", #v[2]+4))
+            print("* "..v[2].." *")
+            print(string.rep("*", #v[2]+4))
+            print("")
+            changed = true
+         else
+            table.insert(temp, v)
+         end
+      end
+      if changed then
+         reminders = copytable.deep(temp) -- only remind once
+         SetVariable ("reminders", "reminders = " .. serialize.save_simple (reminders))
+      end
+   end -- level info
+end
+
+]]>
+</script>
+</muclient>
