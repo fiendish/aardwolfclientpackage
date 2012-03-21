@@ -26,7 +26,7 @@ Bast and WinkleWinkle.
    enabled="n"
    regexp="y"
    omit_from_output="y"
-   match="^Your game prompt is  : (.*)"
+   match="^Rawcolor Game Prompt   : (.*)$"
    sequence="100"
    name="prompt"
    send_to="12"
@@ -39,7 +39,7 @@ Bast and WinkleWinkle.
    enabled="n"
    regexp="y"
    omit_from_output="y"
-   match="^Your battle prompt is: (.*)"
+   match="^Rawcolor Battle Prompt : (.*)$"
    sequence="100"
    send_to="12"
    name="bprompt"
@@ -50,44 +50,21 @@ Bast and WinkleWinkle.
   
 <trigger
    enabled="n"
-   omit_from_output="y"
    regexp="y"
-   match="^(.*)$"
-   sequence="101"
-   name="gags"
+   omit_from_output="y"
+   match="^Regular Game Prompt    : .*$"
+   sequence="100"
+   group="prompts"
 >
 </trigger>
 
 <trigger
    enabled="n"
+   regexp="y"
    omit_from_output="y"
-   match="-----------------------------------------------------------------------"
+   match="^Regular Battle Prompt  : .*$"
    sequence="100"
-   send_to="12"
-   name="last_line_gag"
-   script="cleanup_gags"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   omit_from_output="y"
-   match="*Prompt set to*"
-   sequence="100"
-   send_to="12"
-   name="prompt_set_gag"
-   script="cleanup_gags"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   omit_from_output="y"
-   match="Use the 'bprompt' to set a separate battle prompt."
-   sequence="100"
-   send_to="12"
-   name="use_bprompt_msg_gag"
-   script="cleanup_gags"
+   group="prompts"
 >
 </trigger>
 
@@ -97,104 +74,51 @@ Bast and WinkleWinkle.
    match="Battle prompt set to*"
    sequence="100"
    send_to="12"
-   name="bprompt_set_gag"
-   script="cleanup_gags"
+   group="prompt_set_gags"
+   script="finish"
 >
 </trigger>
 
 <trigger
    enabled="n"
-   omit_from_output="y"
-   match="(You currently display (\d+) lines per page.|You do not page long messages.)"
    regexp="y"
-   sequence="100"
-   send_to="12"
-   name="catch_pagesize"
-   script="catch_pagesize"
+   omit_from_output="y"
+   match="^.*$"
+   sequence="200"
+   group="prompt_set_gags"
 >
 </trigger>
-
-<trigger
-   enabled="n"
-   omit_from_output="y"
-   regexp="y"
-   match="^Page size set to (\d+) lines.$"
-   sequence="100"
-   send_to="12"
-   name="gag_pagesize_message"
-   script="cleanup_gags"
->
-</trigger>
-
 </triggers>
 
 <script>
 <![CDATA[
 
-rprompt = ""
-bprompt = ""
 stats = nil
 docheck = true
 
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
--- The action begins here
-function checkprompt()
-   if stats and stats.status and stats.status.state and
-      (tonumber(stats.status.state) == 3 or
-      tonumber(stats.status.state) == 9 or
-      tonumber(stats.status.state) == 11) then
-         EnableTrigger("catch_pagesize", true)
-         SendNoEcho("pagesize")
-   end
-end
-
-pagesize = nil
--- see if we need to temporarily adjust pagesize to prevent paging during
--- config output
-function catch_pagesize (name, line, wildcards)
-   EnableTrigger("catch_pagesize", false)
-   EnableTriggerGroup("prompts", true)
-   EnableTrigger("gags", true)
-   pagesize = tonumber(wildcards[2])
-   if pagesize ~= nil then
-      SendNoEcho("pagesize 0")
-   end
-   SendNoEcho("config")
-end
-
-function cleanup_gags (name, line, wildcards)
-   EnableTrigger(name, false)
-   if name == "last_line_gag" then
-      gags_off()
-   end
-end
-
-function gags_off (name, line, wildcards)
-   EnableTrigger("gags", false)
-   if pagesize ~= nil then
-      -- had to temporarily set pagesize 0 before, so now undo
-      EnableTrigger("gag_pagesize_message", true)
-      SendNoEcho("pagesize "..pagesize)
-   end
+function finish (name, line, wildcards)
+   EnableTriggerGroup("prompt_set_gags", false)
 end
 
 adjusted = {}
 -- received a prompt line in the config output
 function prompt_rec (name, line, wildcards, styles)
-   -- StylesToColoursOneLine gets the color codes without resorting to the hideous
-   -- rawcolors server setting that can break other scripts
-   prompt = Trim(string.gsub(Trim(StylesToColoursOneLine(styles,24)),"^(.-)@w$","%1")) -- eliminates a trailing @w and dangling white space
+   -- remove trailing '@w's and dangling white space
+   re = rex.new("^(.*?)(@w)*$")
+   st, en, substrings = re:match(Trim(wildcards[1]))
+   prompt = Trim(substrings[1])
+
    if prompt:sub(-2) ~= "%c" then
       table.insert(adjusted, name)
-      EnableTrigger(name.."_set_gag", true)
-      EnableTrigger("use_bprompt_msg_gag", true)
-      SendNoEcho(name.." ".. prompt .. "%c")
+      prompt = prompt .. "%c"
    end
+   SendNoEcho(name.." ".. prompt)
    if name == "bprompt" then
-      EnableTrigger("last_line_gag", true)
       EnableTriggerGroup("prompts", false)
+      EnableTriggerGroup("prompt_set_gags", true)
       docheck = false
       if #adjusted ~= 0 then
          print("\nThe Aardwolf MUSHclient Package has adjusted your "..string.gsub(table.concat(adjusted," and "),"bprompt","battleprompt").." to end in '%c'.\nThis is necessary for triggers to work consistently.")
@@ -207,7 +131,14 @@ function OnPluginBroadcast (msg, id, name, text)
    if docheck and id == "3e7dedbe37e44942dd46d264" and text == "char.status" then
       res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", "char")
       stats = assert (loadstring ("return " .. gmcparg or ""))()
-      checkprompt()
+
+      if stats and stats.status and stats.status.state and
+      (tonumber(stats.status.state) == 3 or
+      tonumber(stats.status.state) == 9 or
+      tonumber(stats.status.state) == 11) then
+         EnableTriggerGroup("prompts", true)
+         SendNoEcho("p data")
+      end
    end
 end
 
