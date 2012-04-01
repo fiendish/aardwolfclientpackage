@@ -41,9 +41,10 @@ require "serialize"
 require "movewindow"
 require "commas"
 require "gmcphelper"
+require "copytable"
 
 background_colour     = 0x000000
-border_colour          = 0xcccccc
+border_colour         = 0xcccccc
 default_width         = 209
 default_height        = 307
 default_x             = 658
@@ -60,7 +61,6 @@ posx       = ""
 posy       = ""
 hotspot_id = ""
 cstyles    = { }
-dstyles    = { }
 page_built = false
 max_width  = 0
 
@@ -69,6 +69,18 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
+
+color_indices = {"Strength","Intelligence","Wisdom","Dexterity","Constitution","Luck","Health","Mana","Moves","Saves","Hitroll","Damroll","Alignment","Gold","Quest Points","Trivia","Exp To Level","Level","Trains","Pracs"}
+
+primary_color_defaults = {["Strength"]=0x00FF00,["Intelligence"]=0x00FF00,["Wisdom"]=0x00FF00,["Dexterity"]=0x00FF00,["Constitution"]=0x00FF00,["Luck"]=0x00FF00, ["Health"]=0x00FF00,["Mana"]=0x00FF00,["Moves"]=0x00FF00,["Saves"]=0x00FF00,["Hitroll"]=0x00FF00,["Damroll"]=0x00FF00,["Alignment"]=0x00FF00,["Gold"]=0x00FF00,["Quest Points"]=0x00FF00,["Trivia"]=0x00FF00,["Exp To Level"]=0x00FF00,["Level"]=0x00FF00,["Trains"]=0x00FF00,["Pracs"]=0x00FF00}
+
+secondary_color_defaults = {["Strength"]=0xFFFFFF,["Intelligence"]=0xFFFFFF,["Wisdom"]=0xFFFFFF,["Dexterity"]=0xFFFFFF,["Constitution"]=0xFFFFFF,["Luck"]=0xFFFFFF, ["Health"]=0xFFFFFF,["Mana"]=0xFFFFFF,["Moves"]=0xFFFFFF,["Saves"]=0xFFFFFF,["Hitroll"]=0xFFFFFF,["Damroll"]=0xFFFFFF,["Alignment"]=0xFFFFFF,["Gold"]=0x00FFFF,["Quest Points"]=0xFFFFFF,["Trivia"]=0xFFFFFF,["Exp To Level"]=0xFFFFFF,["Level"]=0xFFFFFF,["Trains"]=0xFFFFFF,["Pracs"]=0xFFFFFF}
+
+primary_colors = copytable.deep(primary_color_defaults)
+secondary_colors = copytable.deep(secondary_color_defaults)
+assert (loadstring (GetVariable ("primary_colors") or "")) ()
+assert (loadstring (GetVariable ("secondary_colors") or "")) ()
 
 function reset_aard()
    stacked = 0
@@ -82,178 +94,345 @@ function reset_aard()
    OnPluginInstall()
 end
 
+bracket = {text="[",textcolour=0xFFFF00}
+slash = {text="/",textcolour=0xFFFF00}
+endbracket = {text="]",textcolour=0xFFFF00}
+
 function BuildStatsPage()
 
-   dstyles = { }
-   cstyles = { }
+   max_width = 0
+   cstyles = {}
 
    --- Check if we have data in each category, but only as much as necessary - once page built we can stop.
-   if (page_built == false and (gmcpval("worth") == "" or gmcpval("vitals") == "" or gmcpval("stats") == "" or 
+   if (not gmcpdata or (gmcpval("worth") == "" or gmcpval("vitals") == "" or gmcpval("stats") == "" or 
    gmcpval("status") == "" or gmcpval("maxstats") == "" )) then 
       return
    end
-   
-   page_built = true
+
    if (stacked == 1) then
-      fstr = "@GStrength     : @C[@W%3d@C/@W%-3d@C]     @GHealth  : @C[@W%6d@C/@W%6d@C]@w"
-      s = fstr:format(gmcpval("stats.str"),gmcpval("maxstats.maxstr"),gmcpval("vitals.hp"),gmcpval("maxstats.maxhp"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Strength     : ",textcolour=primary_colors["Strength"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.str")),textcolour=secondary_colors["Strength"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxstr")),textcolour=secondary_colors["Strength"]},
+            endbracket,
+            {text="     Health  : ",textcolour=primary_colors["Health"]},
+            bracket,
+            {text=string.format("%6d",gmcpval("vitals.hp")), textcolour=secondary_colors["Health"]},
+            slash,
+            {text=string.format("%6d",gmcpval("maxstats.maxhp")),textcolour=secondary_colors["Health"]},
+            endbracket
+            })
 
-      fstr = "@GIntelligence : @C[@W%3d@C/@W%-3d@C]     @GMana    : @C[@W%6d@C/@W%6d@C]@w"
-      s = fstr:format(gmcpval("stats.int"),gmcpval("maxstats.maxint"),gmcpval("vitals.mana"),gmcpval("maxstats.maxmana"))
-      table.insert(cstyles,s)
-      
-      fstr = "@GWisdom       : @C[@W%3d@C/@W%-3d@C]     @GMoves   : @C[@W%6d@C/@W%6d@C]@w"
-      s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"),gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
-      table.insert(cstyles,s)
-      
-      fstr = "@GDexterity    : @C[@W%3d@C/@W%-3d@C]     @GSaves   : @C[@W%5d@C]@W"
-      s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"),gmcpval("stats.saves"))
-      table.insert(cstyles,s)
-      
-      fstr = "@GConstitution : @C[@W%3d@C/@W%-3d@C]     @GHitroll : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"),gmcpval("stats.hr"))
-      table.insert(cstyles,s)
-      
-      fstr = "@GLuck         : @C[@W%3d@C/@W%-3d@C]     @GDamroll : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("stats.luck"),gmcpval("maxstats.maxluck"),gmcpval("stats.dr"))
-      table.insert(cstyles,s)
-      
-      s = ""
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Intelligence : ",textcolour=primary_colors["Intelligence"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.int")),textcolour=secondary_colors["Intelligence"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxint")),textcolour=secondary_colors["Intelligence"]},
+            endbracket,
+            {text="     Mana    : ",textcolour=primary_colors["Mana"]},
+            bracket,
+            {text=string.format("%6d",gmcpval("vitals.mana")), textcolour=secondary_colors["Mana"]},
+            slash,
+            {text=string.format("%6d",gmcpval("maxstats.maxmana")),textcolour=secondary_colors["Mana"]},
+            endbracket
+            })
 
-      fstr = "@GExp To Level : @C[@W%5d@C]       @GLevel   : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("status.tnl"),gmcpval("status.level"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Wisdom       : ",textcolour=primary_colors["Wisdom"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.wis")),textcolour=secondary_colors["Wisdom"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxwis")),textcolour=secondary_colors["Wisdom"]},
+            endbracket,
+            {text="     Moves   : ",textcolour=primary_colors["Moves"]},
+            bracket,
+            {text=string.format("%6d",gmcpval("vitals.moves")), textcolour=secondary_colors["Moves"]},
+            slash,
+            {text=string.format("%6d",gmcpval("maxstats.maxmoves")),textcolour=secondary_colors["Moves"]},
+            endbracket
+            })
       
-      fstr = "@GAlignment    : @C[@W%5d@C]       @GGold    : @C[@Y%s@C]@w"
-      s = fstr:format(gmcpval("status.align"),commas(gmcpval("worth.gold")))
-      table.insert(cstyles,s)
-      
-      fstr = "@GQuest Points : @C[@W%8d@C]    @GTrivia  : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("worth.qp"),gmcpval("worth.tp"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Dexterity    : ",textcolour=primary_colors["Dexterity"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.dex")),textcolour=secondary_colors["Dexterity"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxdex")),textcolour=secondary_colors["Dexterity"]},
+            endbracket,
+            {text="     Saves   : ",textcolour=primary_colors["Saves"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("stats.saves")), textcolour=secondary_colors["Saves"]},
+            endbracket
+            })
 
-      fstr = "@GTrains       : @C[@W%5d@C]       @GPracs   : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("worth.trains"),gmcpval("worth.pracs"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Constitution : ",textcolour=primary_colors["Constitution"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.con")),textcolour=secondary_colors["Constitution"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxcon")),textcolour=secondary_colors["Constitution"]},
+            endbracket,
+            {text="     Hitroll : ",textcolour=primary_colors["Hitroll"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("stats.hr")), textcolour=secondary_colors["Hitroll"]},
+            endbracket
+            })
       
+      table.insert(cstyles, {
+            {text="Luck         : ",textcolour=primary_colors["Luck"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.luck")),textcolour=secondary_colors["Luck"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxluck")),textcolour=secondary_colors["Luck"]},
+            endbracket,
+            {text="     Damroll : ",textcolour=primary_colors["Damroll"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("stats.dr")), textcolour=secondary_colors["Damroll"]},
+            endbracket
+            })
+      
+      table.insert(cstyles, {})
+
+      table.insert(cstyles, {
+            {text="Exp To Level : ",textcolour=primary_colors["Exp To Level"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("status.tnl")), textcolour=secondary_colors["Exp To Level"]},
+            endbracket,
+            {text="       Level   : ",textcolour=primary_colors["Level"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("status.level")), textcolour=secondary_colors["Level"]},
+            endbracket,
+            })
+      
+      table.insert(cstyles, {
+            {text="Alignment    : ",textcolour=primary_colors["Alignment"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("status.align")), textcolour=secondary_colors["Alignment"]},
+            endbracket,
+            {text="       Gold    : ",textcolour=primary_colors["Gold"]},
+            bracket,
+            {text=string.format("%s",gmcpval("worth.gold")), textcolour=secondary_colors["Gold"]},
+            endbracket,
+            })
+
+      table.insert(cstyles, {
+            {text="Quest Points : ",textcolour=primary_colors["Quest Points"]},
+            bracket,
+            {text=string.format("%7d",gmcpval("worth.qp")), textcolour=secondary_colors["Quest Points"]},
+            endbracket,
+            {text="     Trivia  : ",textcolour=primary_colors["Trivia"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("worth.tp")), textcolour=secondary_colors["Trivia"]},
+            endbracket,
+            })
+
+      table.insert(cstyles, {
+            {text="Trains       : ",textcolour=primary_colors["Trains"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("worth.trains")), textcolour=secondary_colors["Trains"]},
+            endbracket,
+            {text="       Pracs   : ",textcolour=primary_colors["Pracs"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("worth.pracs")), textcolour=secondary_colors["Pracs"]},
+            endbracket,
+            })
+
       fighting = gmcpval("status.enemy")
 
       if fighting ~= "" and fighting ~= null then
-         fstr = "@RFighting : @W%s @R(@W%s%%@R)@w"
-         s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
-         table.insert(cstyles,s)
+         fstr = string.format("@RFighting : @W%s @R(@W%s%%@R)@w",gmcpval("status.enemy"),gmcpval("status.enemypct"))
+         table.insert(cstyles,ColoursToStyles(fstr))
       else
-         table.insert(cstyles,"")
+         table.insert(cstyles,{text=""})
       end
    else
-      fstr = "@GStrength     : @C[@W%3d@C/@W%-3d@C]@w"
-      s = fstr:format(gmcpval("stats.str"),gmcpval("maxstats.maxstr"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Strength     : ",textcolour=primary_colors["Strength"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.str")),textcolour=secondary_colors["Strength"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxstr")),textcolour=secondary_colors["Strength"]},
+            endbracket
+      })
 
-      fstr = "@GIntelligence : @C[@W%3d@C/@W%-3d@C]@w"
-      s = fstr:format(gmcpval("stats.int"),gmcpval("maxstats.maxint"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Intelligence : ",textcolour=primary_colors["Intelligence"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.int")),textcolour=secondary_colors["Intelligence"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxint")),textcolour=secondary_colors["Intelligence"]},
+            endbracket
+      })
 
-      fstr = "@GWisdom       : @C[@W%3d@C/@W%-3d@C]"
-      s = fstr:format(gmcpval("stats.wis"),gmcpval("maxstats.maxwis"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Wisdom       : ",textcolour=primary_colors["Wisdom"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.wis")),textcolour=secondary_colors["Wisdom"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxwis")),textcolour=secondary_colors["Wisdom"]},
+            endbracket
+      })
       
-      fstr = "@GDexterity    : @C[@W%3d@C/@W%-3d@C]"
-      s = fstr:format(gmcpval("stats.dex"),gmcpval("maxstats.maxdex"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Dexterity    : ",textcolour=primary_colors["Dexterity"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.dex")),textcolour=secondary_colors["Dexterity"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxdex")),textcolour=secondary_colors["Dexterity"]},
+            endbracket
+      })
       
-      fstr = "@GConstitution : @C[@W%3d@C/@W%-3d@C]"
-      s = fstr:format(gmcpval("stats.con"),gmcpval("maxstats.maxcon"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Constitution : ",textcolour=primary_colors["Constitution"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.con")),textcolour=secondary_colors["Constitution"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxcon")),textcolour=secondary_colors["Constitution"]},
+            endbracket
+      })
 
-      fstr = "@GLuck         : @C[@W%3d@C/@W%-3d@C]"
-      s = fstr:format(gmcpval("stats.luck"),gmcpval("maxstats.maxluck"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Luck         : ",textcolour=primary_colors["Luck"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("stats.luck")),textcolour=secondary_colors["Luck"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxluck")),textcolour=secondary_colors["Luck"]},
+            endbracket
+      })
 
-      table.insert(cstyles,"")
+      table.insert(cstyles,{})
 
-      fstr = "@GHealth  : @C[@W%6d@C/@W%6d@C]@w"
-      s = fstr:format(gmcpval("vitals.hp"),gmcpval("maxstats.maxhp"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Health  : ",textcolour=primary_colors["Health"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("vitals.hp")),textcolour=secondary_colors["Health"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxhp")),textcolour=secondary_colors["Health"]},
+            endbracket
+      })
 
-      fstr = "@GMana    : @C[@W%6d@C/@W%6d@C]@w"
-      s = fstr:format(gmcpval("vitals.mana"),gmcpval("maxstats.maxmana"))
-      table.insert(cstyles,s)
-      
-      fstr = "@GMoves   : @C[@W%6d@C/@W%6d@C]@w"
-      s = fstr:format(gmcpval("vitals.moves"),gmcpval("maxstats.maxmoves"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Mana    : ",textcolour=primary_colors["Mana"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("vitals.mana")),textcolour=secondary_colors["Mana"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxmana")),textcolour=secondary_colors["Mana"]},
+            endbracket
+      })
 
-      table.insert(cstyles,"")
+      table.insert(cstyles, {
+            {text="Moves   : ",textcolour=primary_colors["Moves"]},
+            bracket,
+            {text=string.format("%3d",gmcpval("vitals.moves")),textcolour=secondary_colors["Moves"]},
+            slash,
+            {text=string.format("%-3d",gmcpval("maxstats.maxmoves")),textcolour=secondary_colors["Moves"]},
+            endbracket
+      })
       
-      fstr = "@GSaves        : @C[@W%5d@C]@W"
-      s = fstr:format(gmcpval("stats.saves"))
-      table.insert(cstyles,s)
+      table.insert(cstyles,{})
       
-      fstr = "@GHitroll      : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("stats.hr"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Saves        : ",textcolour=primary_colors["Saves"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("stats.saves")), textcolour=secondary_colors["Saves"]},
+            endbracket
+      })
 
-      fstr = "@GDamroll      : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("stats.dr"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Hitroll      : ",textcolour=primary_colors["Hitroll"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("stats.hr")), textcolour=secondary_colors["Hitroll"]},
+            endbracket
+      })
       
-      fstr = "@GAlignment    : @C[@W%5d@C]"
-      s = fstr:format(gmcpval("status.align"))
-      table.insert(cstyles,s)
 
-      table.insert(cstyles,"")
+      table.insert(cstyles, {
+            {text="Damroll      : ",textcolour=primary_colors["Damroll"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("stats.dr")), textcolour=secondary_colors["Damroll"]},
+            endbracket
+      })
       
-      fstr = "@GGold         : @C[@Y%s@C]@w"
-      s = fstr:format(commas(gmcpval("worth.gold")))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Alignment    : ",textcolour=primary_colors["Alignment"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("status.align")), textcolour=secondary_colors["Alignment"]},
+            endbracket
+      })
+
+      table.insert(cstyles,{})
       
-      fstr = "@GQuest Points : @C[@W%7d@C]"
-      s = fstr:format(gmcpval("worth.qp"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Gold         : ",textcolour=primary_colors["Gold"]},
+            bracket,
+            {text=string.format("%s",gmcpval("worth.gold")), textcolour=secondary_colors["Gold"]},
+            endbracket
+      })
       
-      fstr = "@GTrivia       : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("worth.tp"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Quest Points : ",textcolour=primary_colors["Quest Points"]},
+            bracket,
+            {text=string.format("%7d",gmcpval("worth.qp")), textcolour=secondary_colors["Quest Points"]},
+            endbracket
+      })
       
-      fstr = "@GExp To Level : @C[@W%5d@C]"
-      s = fstr:format(gmcpval("status.tnl"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Trivia       : ",textcolour=primary_colors["Trivia"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("worth.tp")), textcolour=secondary_colors["Trivia"]},
+            endbracket
+      })
       
-      fstr = "@GLevel        : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("status.level"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Exp To Level : ",textcolour=primary_colors["Exp To Level"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("status.tnl")), textcolour=secondary_colors["Exp To Level"]},
+            endbracket
+      })
       
-      fstr = "@GTrains       : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("worth.trains"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Level        : ",textcolour=primary_colors["Level"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("status.level")), textcolour=secondary_colors["Level"]},
+            endbracket
+      })
       
-      fstr = "@GPracs        : @C[@W%5d@C]@w"
-      s = fstr:format(gmcpval("worth.pracs"))
-      table.insert(cstyles,s)
+      table.insert(cstyles, {
+            {text="Trains       : ",textcolour=primary_colors["Trains"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("worth.trains")), textcolour=secondary_colors["Trains"]},
+            endbracket
+      })
+
+      table.insert(cstyles, {
+            {text="Pracs        : ",textcolour=primary_colors["Pracs"]},
+            bracket,
+            {text=string.format("%5d",gmcpval("worth.pracs")), textcolour=secondary_colors["Pracs"]},
+            endbracket
+      })
       
       fighting = gmcpval("status.enemy")
 
       if fighting ~= "" and fighting ~= null then
-         fstr = "@RFighting : @W%s @R(@W%s%%@R)@w"
-         s = fstr:format(gmcpval("status.enemy"),gmcpval("status.enemypct"))
-         table.insert(cstyles,s)
+         fstr = string.format("@RFighting : @W%s @R(@W%s%%@R)@w",gmcpval("status.enemy"),gmcpval("status.enemypct"))
+         table.insert(cstyles,ColoursToStyles(fstr))
       else
-         table.insert(cstyles,"")
+         table.insert(cstyles,{text=""})
       end
+   end -- if stacked
+
+   for i,v in ipairs(cstyles) do
+      max_width = math.max(max_width, styleWidth(v)+LEFT_MARGIN)
    end
+   page_built = true
 end -- BuildStatsPage
 
-
-function DisplayStatsPage()
-
-   styles = cstyles
-   max_width = 0
-
+function Print()
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
-     
+   
    if not page_built then
       txt = "Stats will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
@@ -261,24 +440,39 @@ function DisplayStatsPage()
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
-      max_width = default_width    
    else
-      -- display each line    
+      -- display each line
       local left = LEFT_MARGIN
       local top = 0
-      for i, v in ipairs (styles) do
+      for i, v in ipairs (cstyles) do
          top = TOP_MARGIN + (i - 1) * line_height
-         max_width = math.max(max_width, Display_ColourText_Line (win, font_id, v, left, top))
+         Display_Styled_Line (win, font_id, v, left, top)
       end -- for
-      if styles[#styles].text == "" then
+      if cstyles[#cstyles].text == "" then
          Display_Styled_Line (win, font_id, {{text="Fighting :",textcolour=0x444444}}, left, top)           
       end
    end
-end -- DisplayStatsPage
+
+   -- draw edge frame.
+   WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15)
+   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+
+   -- draw the resize widget bottom right corner.
+   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+
+   BroadcastPlugin (999, "repaint")
+end
 
 function RefreshPage()
    BuildStatsPage()
-   SetUpHotspotsAndDraw()
+   Print()
 end
 
 -- returns the end of the line
@@ -289,18 +483,15 @@ function Display_Styled_Line (win, font_id, styles, left, top)
    return left                
 end -- Display_Styled_Line
 
-
--- returns the end of the line
-function Display_ColourText_Line (win, font_id, msg, left, top)
-   styles = ColoursToStyles(msg)
-   return Display_Styled_Line(win, font_id, styles, left, top)
-end -- Display_ColourText_Line
-
-
 -- right click menu
 function right_click_menu ()
 
-   menustring = "Flip Orientation|Change Font|-|Bring To Front|Send To Back|-|Reset Defaults"
+   colorstring = ""
+   for k,v in pairs(color_indices) do
+      colorstring = colorstring..">"..v.."|"..v.." Primary ("..RGBColourToName(primary_colors[v])..")|"..v.." Secondary ("..RGBColourToName(secondary_colors[v])..")|<|"
+   end
+
+   menustring = "Flip Orientation|Change Font|>Colors|"..colorstring.."<|-|Bring To Front|Send To Back|-|Reset Defaults"
 
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
@@ -312,22 +503,22 @@ function right_click_menu ()
       SetVariable("stacked", stacked)
       height           = orig_height
       width            = default_width
-      movewindow.save_state (win)
+      movewindow.save_state(win)
       SetVariable("width",width)
       SetVariable("height",height)
       SetVariable("font_name",font_name)
       SetVariable("font_size",font_size)
       OnPluginInstall()
+      BuildStatsPage()
       if (page_built) then
-         RefreshPage()
          if (max_width ~= 0) then
             width = max_width+LEFT_MARGIN
             height = max_height+TOP_MARGIN
             SetVariable ("width", width)
             SetVariable("height",height)
          end
+         SetUpHotspotsAndDraw()
       end
-      OnPluginInstall()
    elseif result == "Change Font" then
       wanted_font = utils.fontpicker (font_name, font_size) --font dialog
       if wanted_font then
@@ -336,16 +527,32 @@ function right_click_menu ()
          SetVariable("font_name", font_name)
          SetVariable("font_size", font_size)
          OnPluginInstall()
+         BuildStatsPage()
          if (page_built) then
-            RefreshPage()
             if (max_width ~= 0) then
                width = max_width+LEFT_MARGIN
                height = max_height+TOP_MARGIN
-               SetVariable ("width", width)
+               SetVariable("width", width)
                SetVariable("height",height)
             end
+            SetUpHotspotsAndDraw()
          end
-         OnPluginInstall()
+      end
+   elseif string.find(result,"Primary") then
+      local item = string.sub(result,1,string.find(result,"Primary")-2)
+      local newcolour = PickColour(primary_colors[item])
+      if newcolour ~= -1 then
+         primary_colors[item] = newcolour
+         BuildStatsPage()
+         Print()
+      end
+   elseif string.find(result,"Secondary") then
+      local item = string.sub(result,1,string.find(result,"Secondary")-2)
+      local newcolour = PickColour(secondary_colors[item])
+      if newcolour ~= -1 then
+         secondary_colors[item] = newcolour
+         BuildStatsPage()
+         Print()
       end
    elseif result == "Bring To Front" then
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
@@ -356,16 +563,15 @@ function right_click_menu ()
       font_size        = default_font_size
       height           = default_height
       width            = default_width
-      movewindow.save_state (win)
       stacked = 0
-      SetVariable("stacked", stacked)
-      SetVariable("width",width)
-      SetVariable("height",height)
-      SetVariable("font_name",font_name)
-      SetVariable("font_size",font_size)
+      primary_colors = copytable.deep(primary_color_defaults)
+      secondary_colors = copytable.deep(secondary_color_defaults)
+      movewindow.save_state(win)
+      OnPluginSaveState()
       OnPluginInstall()
       if (page_built) then
-         RefreshPage()
+         BuildStatsPage()
+         SetUpHotspotsAndDraw()
          if (max_width ~= 0) then
             width = max_width+LEFT_MARGIN
             height = max_height+TOP_MARGIN
@@ -486,6 +692,8 @@ function OnPluginSaveState ()
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
    SetVariable ("stacked", stacked)
+   SetVariable ("primary_colors", serialize.save("primary_colors"))
+   SetVariable ("secondary_colors", serialize.save("secondary_colors"))
 end
 
 function OnPluginClose ()
@@ -596,30 +804,14 @@ function SetUpHotspotsAndDraw(firstTime)
    end
    -- Add the drag handler so they can move the window around
    movewindow.add_drag_handler (win, 0, 0, 0, 0)
-   
-   DisplayStatsPage()
 
-   -- draw edge frame.
-   check (WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15))
-   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
-
-   -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
-
-   BroadcastPlugin (999, "repaint")
+   Print()
 end
 
 -------------------------------------------------------------------------------
 --- Calculate width of a line of styled text without drawing it.
 -------------------------------------------------------------------------------
-function styleWidth(styles) 
+function styleWidth(styles)
    local s = ""
    for _,w in ipairs (styles) do
       s = s .. w.text
