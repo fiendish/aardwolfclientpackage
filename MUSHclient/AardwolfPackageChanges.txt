@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r1598 snapshot
+- new feature: added custom colorization to the statmon miniwindow plugin
+- misc change: the prompt fixer plugin no longer needs to check/set pagesize or scroll through the config output
+- misc change: applied luajit 2.0 b9 hotfix 1
+- new feature: there is a new plugin (not loaded by default) aard_inventory_mod.xml that appends object UIDs to the inventory readout. This does not affect inside containers for now.
+- new feature: there is a new plugin (not loaded by default) aard_note_mode.xml that disables world triggers, aliases, and timers while writing notes
+- new feature: gmcp mapper command 'mapper addnote' now accepts a parameter
+
 r1580 snapshot
 - new feature: there is now a gmcp mapper command 'mapper lockexit' to bring up the level-lock dialog for the current room
 - new feature: if ansi color customization is detected, alert the player that they'll have to restart MUSHclient
