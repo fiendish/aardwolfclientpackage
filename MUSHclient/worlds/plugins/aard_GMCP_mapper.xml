@@ -3242,12 +3242,13 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          mylevel = tonumber(gmcpdata.level)
-         if running == false and gmcpdata.state == "12" then
+         myState = tonumber(gmcpdata.state)
+         if running == false and myState == 12 then
             activate_running(true)
-         elseif running == true and gmcpdata.state ~= "12" then
+         elseif running == true and myState ~= 12 then
             activate_running(false)
          end
-         if gmcpdata.state == "8" then
+         if myState == 8 then
             fighting_state = true
          else
             fighting_state = false
