@@ -1,6 +1,7 @@
 Aardwolf Client Package Major Changes List
 
-r1598 snapshot
+r1600 snapshot
+- new feature: mapper will make you stand before running if you are sleeping or sitting. the case where this could cause a problem is to my knowledge not currently existent
 - new feature: added custom colorization to the statmon miniwindow plugin
 - misc change: the prompt fixer plugin no longer needs to check/set pagesize or scroll through the config output
 - misc change: applied luajit 2.0 b9 hotfix 1
