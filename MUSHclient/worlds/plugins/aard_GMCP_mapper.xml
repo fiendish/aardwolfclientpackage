@@ -136,6 +136,14 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    sequence="100"
    script="quick_mode_toggle"
 ></alias>
+
+<alias
+   match="^mapper shownotes( (on|off))?$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   script="shownote_toggle"
+></alias>
   
 <alias
    match="mapper zoom out"
@@ -693,6 +701,7 @@ mylevel = 0
 mytier = 0
 use_compression = tonumber(GetVariable("use_compression")) or 0
 quick_mode = (GetVariable("quick_mode") == "1")
+shownotes = (GetVariable("shownotes") == "1")
 local rooms = {}
 local areas = {}
 local environments = {}
@@ -2797,6 +2806,7 @@ function OnPluginSaveState ()
    SetVariable("config","") -- wipe out the old config table
    SetVariable ("configs", "configs = " .. serialize.save_simple (configs))
    SetVariable("quick_mode", (quick_mode and "1") or "0")
+   SetVariable("shownotes", (shownotes and "1") or "0")
    
    -- close and reopen database
    if db:isopen() then
@@ -2942,6 +2952,10 @@ function got_gmcp_room()
       room = load_room_from_database (room_number)
    end -- not in cache
    
+   if shownotes and room and room.notes and room.notes ~= "" then
+      print("*** MAPPER NOTE *** ->",room.notes)
+   end
+
    -- re-save if we got information that is different than before  
    local same_exits = ((room and compareTables(gmcpdata.exits, room.exits)) or false)
    local same_area = ((room and (nilToStr(room.area) == nilToStr(gmcproom.area))) or false)
@@ -3153,6 +3167,19 @@ function quick_mode_toggle(name, line, wildcards)
       Note("QUICKLIST is ON: Lists of found targets will display immediately without sorting by distance.")
    else
       Note("QUICKLIST is OFF: Lists of found targets will pathfind each result and sort them by distance.")
+   end
+   Note("")
+end
+
+function shownote_toggle(name, line, wildcards)
+   if (wildcards[2] ~= "") then
+      shownotes = (wildcards[2] == "on")
+   end
+   Note("")
+   if shownotes then
+      Note("SHOWNOTES is ON: Notes added to rooms will display automatically upon entrance.")
+   else
+      Note("SHOWNOTES is OFF: Notes added to rooms will NOT display automatically.")
    end
    Note("")
 end
@@ -3696,6 +3723,7 @@ function OnHelp (name, line, wildcards)
  mapper help searching     --> Commands for finding rooms
  mapper help exploring     --> Commands to aid exploring
  mapper help moving        --> Commands for moving between rooms
+ mapper help utils         --> Other utilitarian commands
 =============================================================================
 ]]
 
@@ -3706,9 +3734,8 @@ local help_config = [[
 mapper quicklist [on/off]      --> ON will cause search results to display much
                                  > faster, but the results will not be sorted
                                  > by distance (default is off)
-mapper backup                  --> Create new archived backup of your map
-                                 > database in a db_backups directory,
-                                 > preserving a few prior backups
+mapper shownotes [on/off]      --> ON will cause any notes in a room to display
+                                 > automatically upon entering (default is off)
 mapper backups <off/on>        --> Turn off or on automatic database backups
                                  > The default setting is on
 mapper backups [un]compressed  --> Turn off or on database backup compression
@@ -3718,7 +3745,16 @@ mapper help                    --> This help
 mapper zoom out                --> Zoom out
 mapper zoom in                 --> Zoom in
 mapper hide                    --> Hide map
-mapper show                    --> Show map
+mapper show                    --> Show map]]
+
+local help_utils = [[
+
+===== UTILITIES =================>
+
+mapper backup                  --> Create new archived backup of your map
+
+                                 > database in a db_backups directory,
+                                 > preserving a few prior backups
 mapper addnote                 --> Add a new note to the current room
 mapper addnote <note>          --> Ditto, but skips the dialog
 mapper purgezone <area>        --> Remove an area from the map database
@@ -3850,6 +3886,7 @@ mapper resume                  --> Initiate a new run to the previous target]]
          print(help_searching)
          print(help_exploring)
          print(help_moving)
+         print(help_utils)
       elseif wildcards[2] == "config" then
          print(help_config)
       elseif wildcards[2] == "exits" then
@@ -3862,6 +3899,8 @@ mapper resume                  --> Initiate a new run to the previous target]]
          print(help_exploring)
       elseif wildcards[2] == "moving" then
          print(help_moving)
+      elseif wildcards[2] == "utils" then
+         print(help_utils)      
       end
    else
       print("")
