@@ -788,7 +788,9 @@ function OnPluginInstall()
    --- Setup the window.
    SetUpHotspotsAndDraw(true)
    
-   Send_GMCP_Packet("request char")
+   if IsConnected() then
+      Send_GMCP_Packet("request char")
+   end
 end
 
 --=================================================================================
