@@ -2718,8 +2718,10 @@ function OnPluginInstall ()
       end
    end
   
-  if IsConnected() then
+   if IsConnected() then
       OnPluginConnect()
+      Send_GMCP_Packet("request char")
+      Send_GMCP_Packet("request room")
    end
   
    -- if disabled last time, stay disabled
@@ -3698,8 +3700,6 @@ end -- function
 
 function OnPluginConnect ()
    Send_GMCP_Packet("rawcolor on")
-   Send_GMCP_Packet("request char")
-   Send_GMCP_Packet("request room")
    mapper.cancel_speedwalk ()
    -- DoAfter (3, "look")  -- force mapper update
 end -- OnPluginConnect

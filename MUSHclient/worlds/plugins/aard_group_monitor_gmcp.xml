@@ -726,8 +726,6 @@ end
 function OnPluginConnect()
    Send_GMCP_Packet("rawcolor on")
    Send_GMCP_Packet("group on")
-   Send_GMCP_Packet("request char")
-   Send_GMCP_Packet("request group")
 end
 
 function OnPluginSaveState ()
@@ -839,6 +837,7 @@ function OnPluginInstall()
    
    if IsConnected() then
       OnPluginConnect()
+      Send_GMCP_Packet("request group")
    end
    
    -- if disabled last time, stay disabled
