@@ -180,14 +180,14 @@ function SetUpHotspotsAndDraw(firstTime)
       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
+      if hidden == 0 then
+         WindowShow (win, true)
+      end
    else
       -- everything has already been made
       -- just move them back into place
       WindowResize(win, width, height, background_colour)
       WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
-   end
-   if hidden == 0 then
-      WindowShow (win, true)
    end
    DisplayGroupPage()
 end
@@ -203,6 +203,8 @@ string.rpad = function(str, len, char)
 end
 
 function RemoveMembersFromGroupDisplay()
+   group_data = copytable.deep(full_group_data)
+
    -- hide self if applicable
    if (show_self == 0) and (char_data ~= nil) then
       for i,v in ipairs(group_data["members"]) do
@@ -225,6 +227,7 @@ end
 
 -- put all current group members into the hidden_members list
 function hideAllMembers()
+   hidden_members = {}
    if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
       for i,v in ipairs(full_group_data["members"]) do
          if v["name"] ~= char_data["name"] then
@@ -232,15 +235,14 @@ function hideAllMembers()
          end
       end
    end
+   RemoveMembersFromGroupDisplay()
 end
 
 -- build and draw the group display
 function DisplayGroupPage()
-   group_data = copytable.deep(full_group_data)
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
    
    -- title rectangle
-   title_height = line_height*2+2
    WindowGradient(win, 2, 2, -2, title_height, title_gradient_col1, title_gradient_col2, 2)
    WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
 
@@ -269,8 +271,8 @@ function DisplayGroupPage()
       end
    else
       styles = ColoursToStyles(group_data["groupname"])
-      x = GAP
-      y = 2
+      local x = GAP
+      local y = 2
       local statusBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, group_data["status"])-3*GAP)
       WindowText(win, font_id, group_data["status"], statusBoundary+2*GAP, y, 0, 0, ((group_data["status"]=="Private" and 0x0000ff) or 0x00ff00), utf8)
       x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, 0, 0xeeeeee, utf8)
@@ -283,7 +285,6 @@ function DisplayGroupPage()
       WindowText(win, font_id, "Leader: "..group_data["leader"], GAP, y, xpKillsBoundary, 0, 0xeeeeee, utf8)
       y = title_height
       
-      RemoveMembersFromGroupDisplay()
       if #group_data["members"] > 0 then
          -- MAIN DISPLAY BODY
          baseX = GAP
@@ -416,7 +417,7 @@ function DisplayGroupPage()
 
    BroadcastPlugin (999, "repaint")
 
-end -- Display_Map
+end -- Display_Group_Page
 
 function validate_percent(input)
    if string.sub(input, -1) == "%" then
@@ -451,7 +452,6 @@ function right_click_menu ()
       menustring) -- content
 
    if result ~= "" then
-      local reload = false
       numResult = tonumber(result)
       if numResult == 1 then
          -- change font
@@ -459,7 +459,6 @@ function right_click_menu ()
          if wanted_font then
             font_name = wanted_font.name
             font_size = wanted_font.size
-            reload = true
          end
       elseif numResult == 2 then
          -- show/hide self
@@ -469,20 +468,16 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see your own status in the group monitor.")
          end
-         reload = true
       elseif numResult == 3 then
          -- remove all from the hidden list
          hidden_members = {}
-         reload = true
       elseif numResult == 4 then
          -- add all to the hidden list
          hideAllMembers()
-         reload = true
       elseif numResult >= 5 and numResult <= member_count+4 then
          -- add/remove members in the hidden list
          local adjustedNumResult = numResult - 4
          hidden_members[member_names[adjustedNumResult]] = (((hidden_members[member_names[adjustedNumResult]]== nil) and true) or nil)
-         reload = true
       elseif numResult >= member_count+5 and numResult <= member_count+12 then
          -- change color settings
          local adjustedNumResult = numResult-member_count-4
@@ -494,7 +489,6 @@ function right_click_menu ()
          if newcolour ~= -1 then
             colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex] = newcolour
          end
-         reload = true
       elseif numResult == member_count+13 then
          -- show/hide HP info
          show_hp = (((show_hp == 0) and 1) or 0)
@@ -503,7 +497,6 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see HP info in the group monitor.")
          end
-         reload = true
       elseif numResult == member_count+14   then
          -- show/hide MANA info
          show_mn = (((show_mn == 0) and 1) or 0)
@@ -512,7 +505,6 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see MN info in the group monitor.")
          end
-         reload = true
       elseif numResult == member_count+15 then
          -- show/hide MOVES info
          show_mv = (((show_mv == 0) and 1) or 0)
@@ -521,18 +513,14 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see MV info in the group monitor.")
          end
-         reload = true
       elseif numResult == member_count+16 then
          -- use flat/shaded gauges
          flat_gauges = (((flat_gauges == 0) and 1) or 0)
-         reload = true
       elseif numResult == member_count+17 then
          -- toggle overlay numbers on top of gauges
          overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
-         reload = true
       elseif numResult == member_count+18 then
          thresh1active = (((thresh1active == 0) and 1) or 0)
-         reload = true
       elseif numResult == member_count+19 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
          if perc then
@@ -540,17 +528,14 @@ function right_click_menu ()
                perc = string.sub(perc, 1,-2)
             end
             thresh1percent = tonumber(perc)
-            reload = true
          end
       elseif numResult == member_count+20 then
          local newColor = PickColour (thresh1color)
          if newcolor ~= -1 then
             thresh1color = newColor
-            reload = true
          end
       elseif numResult == member_count+21 then
          thresh2active = (((thresh2active == 0) and 1) or 0)
-         reload = true
       elseif numResult == member_count+22 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
          if perc then
@@ -558,13 +543,11 @@ function right_click_menu ()
                perc = string.sub(perc, 1,-2)
             end
             thresh2percent = tonumber(perc)
-            reload = true
          end
       elseif numResult == member_count+23 then
          local newColor = PickColour (thresh2color)
          if newcolor ~= -1 then
             thresh2color = newColor
-            reload = true
          end
       elseif numResult == member_count+24 then
          -- bring to front
@@ -579,14 +562,12 @@ function right_click_menu ()
          height           = default_height
          width            = default_width
          show_coords      = 0
-         reload = true
       end -- if
 
-      if reload then
-         -- save and reload
-         OnPluginSaveState()
-         OnPluginInstall()
-      end
+      RemoveMembersFromGroupDisplay()
+      -- save and reload
+      OnPluginSaveState()
+      OnPluginInstall()
    end
 end -- right_click_menu
 
@@ -594,11 +575,13 @@ invitations = {}
 
 function group_invite(name, line, wildcards, styles)
    invitations[wildcards[1]]=wildcards[2]
+   RemoveMembersFromGroupDisplay()
    DisplayGroupPage()
 end
 
 function group_cancel(name, line, wildcards, styles)
    invitations[wildcards[1]] = nil
+   RemoveMembersFromGroupDisplay()
    DisplayGroupPage()
 end
 
@@ -622,6 +605,7 @@ function OnPluginBroadcast (msg, id, name, text)
          assert (loadstring (luastmt or "")) ()
          self_built = true
          if group_built then
+            RemoveMembersFromGroupDisplay()
             DisplayGroupPage()
          end
       end
@@ -636,6 +620,7 @@ function OnPluginBroadcast (msg, id, name, text)
          else
             group_built = true
             if self_built then
+               RemoveMembersFromGroupDisplay()
                DisplayGroupPage()
             else
                Send_GMCP_Packet("request char")
@@ -685,7 +670,7 @@ function ResizeMoveCallback()
 end
 
 function ResizeReleaseCallback()
-    SetUpHotspotsAndDraw(true)
+    SetUpHotspotsAndDraw(false)
 end
 
 function MouseDown(flags, hotspot_id)
@@ -719,7 +704,7 @@ function leaveGroup (name, line, wildcards, styles)
       group_built = false
       full_group_data = {}
       group_data = {}
-      SetUpHotspotsAndDraw(true)
+      SetUpHotspotsAndDraw(false)
    end
 end
 
@@ -831,6 +816,7 @@ function OnPluginInstall()
    --- Grab font size settings.
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
    line_height = font_height + 1
+   title_height = line_height*2+2
 
    --- install the window movement handler, get back the window position.
    windowinfo = movewindow.install (win, miniwin.pos_center, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
