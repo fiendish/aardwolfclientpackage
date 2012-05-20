@@ -287,8 +287,8 @@ function DisplayGroupPage()
       
       if #group_data["members"] > 0 then
          -- MAIN DISPLAY BODY
-         baseX = GAP
-         baseY = y+GAP
+         local baseX = GAP
+         local baseY = y+GAP
          column_width = WindowTextWidth(win, font_id, "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW")+GAP*4
          if overlay_numbers == 0 then
             column_width = column_width+WindowTextWidth(win, font_id, "WWWW")
@@ -632,6 +632,8 @@ function OnPluginBroadcast (msg, id, name, text)
    end
 end
 
+lastRefresh = 0
+
 function ResizeMoveCallback()
    if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
       return
@@ -666,17 +668,18 @@ function ResizeMoveCallback()
       height = GetInfo(280)-windowinfo.window_top
       starty = GetInfo(280)
    end
-   SetUpHotspotsAndDraw(false)
+   if (utils.timer() - lastRefresh > 0.1) then
+      SetUpHotspotsAndDraw(false)
+      lastRefresh = utils.timer()
+   end
 end
 
 function ResizeReleaseCallback()
-    flat_gauges = tonumber(GetVariable("flat_gauges")) or 0
     SetUpHotspotsAndDraw(false)
 end
 
 function MouseDown(flags, hotspot_id)
    if (hotspot_id == "resize") then
-      flat_gauges = 1
       startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
    end
 end
