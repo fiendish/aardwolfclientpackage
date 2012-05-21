@@ -515,8 +515,13 @@ function ResizeMoveCallback()
       startx = GetInfo(281)
    end 
 
-   SetUpHotspotsAndDraw(false)
+   if (utils.timer() - lastRefresh > 0.02) then
+      SetUpHotspotsAndDraw(false)
+      lastRefresh = utils.timer()
+   end
 end
+
+lastRefresh = 0
 
 ---------------------------------------------------------------------------------
 -- Called after the resize widget is released.
