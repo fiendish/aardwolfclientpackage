@@ -632,8 +632,6 @@ function OnPluginBroadcast (msg, id, name, text)
    end
 end
 
-lastRefresh = 0
-
 function ResizeMoveCallback()
    if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
       return
@@ -668,11 +666,13 @@ function ResizeMoveCallback()
       height = GetInfo(280)-windowinfo.window_top
       starty = GetInfo(280)
    end
-   if (utils.timer() - lastRefresh > 0.1) then
+   if (utils.timer() - lastRefresh > 0.02) then
       SetUpHotspotsAndDraw(false)
       lastRefresh = utils.timer()
    end
 end
+
+lastRefresh = 0
 
 function ResizeReleaseCallback()
     SetUpHotspotsAndDraw(false)

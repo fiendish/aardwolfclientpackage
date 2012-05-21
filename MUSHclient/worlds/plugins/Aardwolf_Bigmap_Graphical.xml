@@ -417,9 +417,14 @@ function resize_move_callback()
       starty = GetInfo(280)
    end
 
-   WindowResize(mapwin, width, height, 0x000000)
-   DrawMap()
+   if (utils.timer() - lastRefresh > 0.02) then
+      WindowResize(mapwin, width, height, 0x000000)
+      DrawMap()
+      lastRefresh = utils.timer()
+   end
 end
+
+lastRefresh = 0
 
 function draw_edge()
    -- draw edge frame.

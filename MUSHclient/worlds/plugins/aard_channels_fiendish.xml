@@ -195,6 +195,7 @@ SetTriggerOption("claninfo", "enabled", info_on)
 SetTriggerOption("global_quest", "enabled", global_quest_on)
 SetTriggerOption("remort_auction", "enabled", remort_auction_on)
 SetTriggerOption("pray", "enabled", pray_on)
+
 function reset_aard()
    width = default_width
    height = default_height
@@ -229,8 +230,13 @@ function ResizeMoveCallback ()
       height = GetInfo(280)-windowinfo.window_top
       starty = GetInfo(280)
    end 
-   init(false)
+   if (utils.timer() - lastRefresh > 0.02) then
+      init(false)
+      lastRefresh = utils.timer()
+   end
 end
+
+lastRefresh = 0
 
 function ResizeReleaseCallback ()
    height = TITLE_HEIGHT+(line_height*(WINDOW_LINES-1))+3 -- snap height down to not have dead space after last line
