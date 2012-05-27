@@ -457,7 +457,7 @@ function ResizeMoveCallback()
       height = GetInfo(280)-windowinfo.window_top
       starty = GetInfo(280)
    end
-   if (utils.timer() - lastRefresh > 0.02) then
+   if (utils.timer() - lastRefresh > 0.0333) then
       SetUpHotspotsAndDraw(false)
       lastRefresh = utils.timer()
    end
