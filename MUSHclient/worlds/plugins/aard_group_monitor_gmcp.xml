@@ -675,7 +675,7 @@ end
 lastRefresh = 0
 
 function ResizeReleaseCallback()
-    SetUpHotspotsAndDraw(false)
+    SetUpHotspotsAndDraw(true)
 end
 
 function MouseDown(flags, hotspot_id)
