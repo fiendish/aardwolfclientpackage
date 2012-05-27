@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1627 snapshot
+- bug fix: rate-limit all miniwindow redraws during resizing. this makes the group monitor not lag so hard with large groups
+- bug fix: group monitor had a display glitch while resizing
+- misc change: LuaJIT updated to 2.0b10 (see luajit.org for details)
+- misc change: the gmcp mapper help is now compartmentalized into subsections for better display organization
+- new feature: the gmcp mapper has a new "shownotes" toggle to automatically shows room notes upon entering the room
+
 r1602 snapshot
 - misc change: remove spell.sqlite from the default package because it gets automatically generated if you enable spell-checking
 - new feature: mapper will make you stand before running if you are sleeping or sitting. the case where this could cause a problem is to my knowledge not currently existent
@@ -27,7 +34,7 @@ r1543 snapshot
 r1541 snapshot
 - new feature: the gmcp mapper has a 'mapper purgeroom' command for purging the current room from the database (can also right-click on any room to get this option)
 - new feature: (for developers) StylesToColoursOneLine in aardwolf_colors.lua is now non-destructive and now accepts negative column indices for counting back from the end
-- new feature: LuaJIT updated to 2.0b9 (see luajit.org for details)
+- misc change: LuaJIT updated to 2.0b9 (see luajit.org for details)
 - bug fix: mapper pathfinding should now work in all situations for noportal/norecall rooms even if you don't have bouncerecall or bounceportal configured
 
 r1508 snapshot
