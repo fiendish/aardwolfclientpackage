@@ -241,7 +241,9 @@ function OnPluginInstall()
    
    local dir = GetInfo(66)
    local imgpath = dir .. "worlds\\plugins\\images\\bg1.png"
-   SetBackgroundImage(imgpath,13)
+   if 0 ~= SetBackgroundImage(imgpath,13) then
+      ColourNote("yellow","red","Error loading background image.")
+   end
 
    WindowCreate (bgwin, 0, 0, 0, 0, 12, 3, GetNormalColour(1))
    WindowCreate (bgoffscreen, 0, 0, 0, 0, 12, 3, GetNormalColour(1))
@@ -338,7 +340,7 @@ function draw_main_window()
       5,  -- BorderOffset, 
       ColourNameToRGB ("darkgray"),    -- BorderColour, 
       2,  -- BorderWidth, 
-      ColourNameToRGB ("darkslategray"),  -- OutsideFillColour, 
+      0x333333,  -- OutsideFillColour, 
       miniwin.brush_solid) -- OutsideFillStyle
 
    -- Add a mini-window under main text area so background won't mess it up.
