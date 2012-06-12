@@ -699,9 +699,9 @@ default_config = {
 
 mylevel = 0
 mytier = 0
-use_compression = tonumber(GetVariable("use_compression")) or 0
+use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = (GetVariable("quick_mode") == "1")
-shownotes = (GetVariable("shownotes") == "1")
+shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
 local rooms = {}
 local areas = {}
 local environments = {}
