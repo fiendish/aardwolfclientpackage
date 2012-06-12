@@ -127,10 +127,9 @@ end
 
 local function build_room_info ()
 
-   HALF_ROOM   = ROOM_SIZE / 2
-   local THIRD_WAY   = DISTANCE_TO_NEXT_ROOM / 3
-   local DISTANCE_LESS1 = DISTANCE_TO_NEXT_ROOM - 1
-   local HALF_WAY = DISTANCE_TO_NEXT_ROOM / 2
+   HALF_ROOM   = math.ceil(ROOM_SIZE / 2)
+   local THIRD_WAY   = math.ceil(DISTANCE_TO_NEXT_ROOM / 3)
+   local HALF_WAY = math.ceil(DISTANCE_TO_NEXT_ROOM / 2)
    
    -- how to draw a line from this room to the next one (relative to the center of the room)
    connectors = {
@@ -154,8 +153,8 @@ local function build_room_info ()
       w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - THIRD_WAY,  y2 = 0,                       at = { -1,  0 }}, 
   
       ne = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = { 1, -1 } }, 
-      se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + HALF_WAY - 1 , y2 =   HALF_ROOM + HALF_WAY - 1, at = { 1,  1 } }, 
-      nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - HALF_WAY, y2 = - HALF_ROOM - HALF_WAY, at = {-1, -1 } }, 
+      se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY, y2 =   HALF_ROOM + THIRD_WAY, at = { 1,  1 } }, 
+      nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY, y2 = - HALF_ROOM - THIRD_WAY, at = {-1, -1 } }, 
       sw = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY, at = {-1,  1 } }, 
   
    } -- end half_connectors
@@ -560,14 +559,14 @@ local function draw_room (uid, path, x, y)
       
       -- draw up in the ne/nw position if not already an exit there at this level
       if dir == "u" then
-         exit_info = connectors.nw
-         stub_exit_info = half_connectors.nw
-         arrow = arrows.nw
+         exit_info = connectors.ne
+         stub_exit_info = half_connectors.ne
+         arrow = arrows.ne
          exit_line_colour = (locked_exit and 0x0000FF) or config.EXIT_COLOUR_UP_DOWN.colour
       elseif dir == "d" then
-         exit_info = connectors.se
-         stub_exit_info = half_connectors.se
-         arrow = arrows.se
+         exit_info = connectors.sw
+         stub_exit_info = half_connectors.sw
+         arrow = arrows.sw
          exit_line_colour = (locked_exit and 0x0000FF) or config.EXIT_COLOUR_UP_DOWN.colour
       end -- if down
       
