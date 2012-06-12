@@ -3789,12 +3789,12 @@ mapper lockexit                --> Bring up the exit level-locking dialog
 
 mapper portals                 --> List known hand-held portals
                                  > Recall-flagged portals (below) show in red
-mapper portal <command>        --> Link a hand-held portal alias to the
-                                 > current location as a custom exit 
-                                 > (ex: 'mapper portal recall' at recall)
+mapper portal <command>        --> Link a hand-held portal alias to the current
+                                 > room as a special exit from everwhere else
+                                 > (ex: 'mapper portal recall' at recall).
                                  > To stack commands use ;; as separator
                                  > to get around the line break parser
-                                 > (ex: 'mapper portal hold amulet;;enter')
+                                 > (ex: 'mapper portal hold amulet;;enter').
 
 +---- NORECALL/NOPORTAL ROOM ASSISTANCE -------------------------------------+
 mapper portalrecall <index>    --> Flag/unflag a portal as using a recall or
