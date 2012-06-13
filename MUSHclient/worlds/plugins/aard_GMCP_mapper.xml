@@ -3535,7 +3535,7 @@ function findpath(src, dst, noportals, norecalls)
       end
     
       -- get all exits to any room in the previous set
-      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and level <= %s order by length(dir) asc",table.concat(rooms_list,","), visited, mylevel+(mytier*10))
+      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc",table.concat(rooms_list,","), visited,mylevel,mylevel+(mytier*10))
       local dcount = 0
       room_sets[depth] = {}
       for row in db:nrows(q) do
