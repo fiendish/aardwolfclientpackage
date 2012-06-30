@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r1658 snapshot
+- new feature: make exit locks work differently from portal locks. portals still account for tiers, exits will not.
+- misc change: mapper diagonal lines for up/down exits are now on the same side as the markers in the ascii map
+- misc change: mapper shownotes should default true instead of false
+- misc change: if background texture fails to load use a nicer color than the funny greenish one
+
 r1627 snapshot
 - bug fix: rate-limit all miniwindow redraws during resizing. this makes the group monitor not lag so hard with large groups
 - bug fix: group monitor had a display glitch while resizing
