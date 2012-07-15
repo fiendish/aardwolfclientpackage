@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1667 snapshot
+- bug fix: don't abort mapper run attempts when gmcp data may be slow
+
 r1658 snapshot
 - new feature: make exit locks work differently from portal locks. portals still account for tiers, exits will not.
 - misc change: mapper diagonal lines for up/down exits are now on the same side as the markers in the ascii map
