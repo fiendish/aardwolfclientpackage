@@ -1478,9 +1478,6 @@ function start_speedwalk (path)
 
    if myState == 9 or myState == 11 then
       Send("stand")
-   elseif myState ~= 3 then
-      Note("Cannot run now.")
-      return
    end
 
    if current_speedwalk and #current_speedwalk > 0 then
