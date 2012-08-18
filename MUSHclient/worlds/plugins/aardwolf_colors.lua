@@ -8,60 +8,84 @@ local CYAN = 7
 local WHITE = 8
 local DEFAULT_COLOUR = "@w"
 
--- map from color values to aardwolf color codes
-conversion_colours = {
-   [GetNormalColour (BLACK)]   = "@x000",
-   [GetNormalColour (RED)]     = "@r",
-   [GetNormalColour (GREEN)]   = "@g",
-   [GetNormalColour (YELLOW)]  = "@y",
-   [GetNormalColour (BLUE)]    = "@b",
-   [GetNormalColour (MAGENTA)] = "@m",
-   [GetNormalColour (CYAN)]    = "@c",
-   [GetNormalColour (WHITE)]   = "@w",
-   [GetBoldColour   (BLACK)]   = "@D", -- gray
-   [GetBoldColour   (RED)]     = "@R",
-   [GetBoldColour   (GREEN)]   = "@G",
-   [GetBoldColour   (YELLOW)]  = "@Y",
-   [GetBoldColour   (BLUE)]    = "@B",
-   [GetBoldColour   (MAGENTA)] = "@M",
-   [GetBoldColour   (CYAN)]    = "@C",
-   [GetBoldColour   (WHITE)]   = "@W",
-}  -- end conversion table
-  
--- This table uses the colours as defined in the MUSHclient ANSI tab, however the
--- defaults are shown on the right if you prefer to use those.
+function init_ansi()
+   -- map from color values to aardwolf color codes
+   conversion_colours = {
+      [GetNormalColour (BLACK)]   = "@x000",
+      [GetNormalColour (RED)]     = "@r",
+      [GetNormalColour (GREEN)]   = "@g",
+      [GetNormalColour (YELLOW)]  = "@y",
+      [GetNormalColour (BLUE)]    = "@b",
+      [GetNormalColour (MAGENTA)] = "@m",
+      [GetNormalColour (CYAN)]    = "@c",
+      [GetNormalColour (WHITE)]   = "@w",
+      [GetBoldColour   (BLACK)]   = "@D", -- gray
+      [GetBoldColour   (RED)]     = "@R",
+      [GetBoldColour   (GREEN)]   = "@G",
+      [GetBoldColour   (YELLOW)]  = "@Y",
+      [GetBoldColour   (BLUE)]    = "@B",
+      [GetBoldColour   (MAGENTA)] = "@M",
+      [GetBoldColour   (CYAN)]    = "@C",
+      [GetBoldColour   (WHITE)]   = "@W",
+   }  -- end conversion table
+     
+   -- This table uses the colours as defined in the MUSHclient ANSI tab, however the
+   -- defaults are shown on the right if you prefer to use those.
 
--- map from aardwolf color codes to color values
-colour_conversion = {
-   k = GetNormalColour (BLACK)   ,   -- 0x000000 
-   r = GetNormalColour (RED)     ,   -- 0x000080 
-   g = GetNormalColour (GREEN)   ,   -- 0x008000 
-   y = GetNormalColour (YELLOW)  ,   -- 0x008080 
-   b = GetNormalColour (BLUE)    ,   -- 0x800000 
-   m = GetNormalColour (MAGENTA) ,   -- 0x800080 
-   c = GetNormalColour (CYAN)    ,   -- 0x808000 
-   w = GetNormalColour (WHITE)   ,   -- 0xC0C0C0 
-   D = GetBoldColour   (BLACK)   ,   -- 0x808080 
-   R = GetBoldColour   (RED)     ,   -- 0x0000FF 
-   G = GetBoldColour   (GREEN)   ,   -- 0x00FF00 
-   Y = GetBoldColour   (YELLOW)  ,   -- 0x00FFFF 
-   B = GetBoldColour   (BLUE)    ,   -- 0xFF0000 
-   M = GetBoldColour   (MAGENTA) ,   -- 0xFF00FF 
-   C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00 
-   W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
-}  -- end conversion table
+   -- map from aardwolf color codes to color values
+   colour_conversion = {
+      k = GetNormalColour (BLACK)   ,   -- 0x000000 
+      r = GetNormalColour (RED)     ,   -- 0x000080 
+      g = GetNormalColour (GREEN)   ,   -- 0x008000 
+      y = GetNormalColour (YELLOW)  ,   -- 0x008080 
+      b = GetNormalColour (BLUE)    ,   -- 0x800000 
+      m = GetNormalColour (MAGENTA) ,   -- 0x800080 
+      c = GetNormalColour (CYAN)    ,   -- 0x808000 
+      w = GetNormalColour (WHITE)   ,   -- 0xC0C0C0 
+      D = GetBoldColour   (BLACK)   ,   -- 0x808080 
+      R = GetBoldColour   (RED)     ,   -- 0x0000FF 
+      G = GetBoldColour   (GREEN)   ,   -- 0x00FF00 
+      Y = GetBoldColour   (YELLOW)  ,   -- 0x00FFFF 
+      B = GetBoldColour   (BLUE)    ,   -- 0xFF0000 
+      M = GetBoldColour   (MAGENTA) ,   -- 0xFF00FF 
+      C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00 
+      W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
+   }  -- end conversion table
 
--- Set up xterm color conversions using the extended_colours global array
-for i = 1,8 do
-   colour_conversion[string.format("x%03d",i-1)] = GetNormalColour(i)
-   colour_conversion[string.format("x%02d",i-1)] = GetNormalColour(i)
-   colour_conversion[string.format("x%d",i-1)] = GetNormalColour(i)
+   -- Set up xterm color conversions using the extended_colours global array
+   for i = 1,8 do
+      colour_conversion[string.format("x%03d",i-1)] = GetNormalColour(i)
+      colour_conversion[string.format("x%02d",i-1)] = GetNormalColour(i)
+      colour_conversion[string.format("x%d",i-1)] = GetNormalColour(i)
+   end
+   for i = 8,15 do
+      colour_conversion[string.format("x%03d",i)] = GetBoldColour(i-7)
+      colour_conversion[string.format("x%02d",i)] = GetBoldColour(i-7)
+      colour_conversion[string.format("x%d",i)] = GetBoldColour(i-7)
+   end
+
+   ANSI_colours = {
+      [GetNormalColour (BLACK)]   = ANSI(0,30),
+      [GetNormalColour (RED)]     = ANSI(0,31),
+      [GetNormalColour (GREEN)]   = ANSI(0,32),
+      [GetNormalColour (YELLOW)]  = ANSI(0,33),
+      [GetNormalColour (BLUE)]    = ANSI(0,34),
+      [GetNormalColour (MAGENTA)] = ANSI(0,35),
+      [GetNormalColour (CYAN)]    = ANSI(0,36),
+      [GetNormalColour (WHITE)]   = ANSI(0,37),
+      [GetBoldColour   (BLACK)]   = ANSI(1,30),
+      [GetBoldColour   (RED)]     = ANSI(1,31),
+      [GetBoldColour   (GREEN)]   = ANSI(1,32),
+      [GetBoldColour   (YELLOW)]  = ANSI(1,33),
+      [GetBoldColour   (BLUE)]    = ANSI(1,34),
+      [GetBoldColour   (MAGENTA)] = ANSI(1,35),
+      [GetBoldColour   (CYAN)]    = ANSI(1,36),
+      [GetBoldColour   (WHITE)]   = ANSI(1,37)
+   }  -- end conversion table
 end
-for i = 9,16 do
-   colour_conversion[string.format("x%03d",i-1)] = GetBoldColour(i-8)
-   colour_conversion[string.format("x%02d",i-1)] = GetBoldColour(i-8)
-   colour_conversion[string.format("x%d",i-1)] = GetBoldColour(i-8)
-end
+
+init_ansi()
+
 for i = 16,255 do
    local xterm_colour = extended_colours[i]
    conversion_colours[xterm_colour] = (conversion_colours[xterm_colour] or string.format("@x%03d",i))
@@ -76,6 +100,12 @@ end
 for i = 17,19 do
    colour_conversion[string.format("x%03d",i)] = extended_colours[19]
    colour_conversion[string.format("x%d",i)] = extended_colours[19]
+end
+
+-- also provide the reverse of the extended_colours global table
+colours_extended = {}
+for i,v in ipairs(extended_colours) do
+   colours_extended[v] = i
 end
 
 -- Convert a line of style runs into color codes.
@@ -205,41 +235,18 @@ function strip_colours (s)
    return (s:gsub ("%z", "@")) -- put @ back
 end -- strip_colours
 
--- also provide the reverse of the extended_colours global table
-colours_extended = {}
-for i,v in ipairs(extended_colours) do
-   colours_extended[v] = i
-end
-
-ANSI_colours = {
-   [GetNormalColour (BLACK)]   = {0,30},
-   [GetNormalColour (RED)]     = {0,31},
-   [GetNormalColour (GREEN)]   = {0,32},
-   [GetNormalColour (YELLOW)]  = {0,33},
-   [GetNormalColour (BLUE)]    = {0,34},
-   [GetNormalColour (MAGENTA)] = {0,35},
-   [GetNormalColour (CYAN)]    = {0,36},
-   [GetNormalColour (WHITE)]   = {0,37},
-   [GetBoldColour   (BLACK)]   = {1,30},
-   [GetBoldColour   (RED)]     = {1,31},
-   [GetBoldColour   (GREEN)]   = {1,32},
-   [GetBoldColour   (YELLOW)]  = {1,33},
-   [GetBoldColour   (BLUE)]    = {1,34},
-   [GetBoldColour   (MAGENTA)] = {1,35},
-   [GetBoldColour   (CYAN)]    = {1,36},
-   [GetBoldColour   (WHITE)]   = {1,37}
-}  -- end conversion table
-
 -- returns a string with embedded ansi codes
 function stylesToANSI (styles)
-   line = {}
+   local line = {}
+   local reinit = true
    for _,v in ipairs (styles) do
       if ANSI_colours[v.textcolour] then
-         table.insert(line, ANSI(ANSI_colours[v.textcolour][1],ANSI_colours[v.textcolour][2]))
+         table.insert(line, ANSI_colours[v.textcolour])
       elseif colours_extended[v.textcolour] then -- use 256 color xterm ansi when necessary
          table.insert(line, ANSI(38,5,colours_extended[v.textcolour]))
-      else
-         print("It looks like you changed your ANSI color settings. Please restart MUSHclient for these changes to take full effect.")
+      elseif reinit then -- limit performance damage
+         reinit = false
+         init_ansi()
       end
       table.insert(line, v.text)
    end
