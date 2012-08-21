@@ -303,8 +303,8 @@ function DrawMap(clearHotspotsFirst)
    local starty = (font_height*2)+15
    local image_name = "bigmap_continent_"..zone
    if (not (use_gmcp_mapper == 1)) then
-      local window_width =  WindowImageInfo(mapwin,image_name,2) + 10
-      local window_height =  WindowImageInfo(mapwin,image_name,3) + 20 + (font_height * 2)
+      local window_width =  WindowImageInfo(mapwin,image_name,2) + (startx*2)
+      local window_height =  WindowImageInfo(mapwin,image_name,3) + starty + startx
       if nil == WindowInfo(mapwin, 1) then
          -- recreate the window the correct size
          WindowCreate (mapwin,
@@ -322,19 +322,19 @@ function DrawMap(clearHotspotsFirst)
       WindowShow (mapwin, true)
    end
    movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
-         
-   local xdiff = (WindowInfo(mapwin,3)-10)-WindowImageInfo(mapwin,image_name,2)
-   local ydiff = (WindowInfo(mapwin,4)-starty-6)-WindowImageInfo(mapwin,image_name,3)
-   
-   local correction_x = (WindowInfo(mapwin,3)-10)/WindowImageInfo(mapwin,image_name,2) -- stretch to x
-   local correction_y = (WindowInfo(mapwin,4)-starty-5)/WindowImageInfo(mapwin,image_name,3) -- stretch to y
-   if xdiff < ydiff then
-      correction_y = correction_x
+      
+   local x_correction = (WindowInfo(mapwin,3) - startx - startx) / WindowImageInfo(mapwin,image_name,2) -- stretch to x   
+   local y_correction = (WindowInfo(mapwin,4) - starty - startx) / WindowImageInfo(mapwin,image_name,3) -- stretch to y
+   local correction = 1
+
+   if x_correction < y_correction then
+      correction = x_correction
    else
-      correction_x = correction_y
+      correction = y_correction
    end
+
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
-   WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction_x*WindowImageInfo(mapwin,image_name,2)), starty + (correction_y*WindowImageInfo(mapwin,image_name,3)), 2)
+   WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction*WindowImageInfo(mapwin,image_name,2)), starty + (correction*WindowImageInfo(mapwin,image_name,3)), 2)
    local our_location_x = ((x - 1) * (rectangle_size-1) + (rectangle_size / 2) )
    local our_location_y = ((y - 1) * (rectangle_size-1) + (rectangle_size / 2) )
 
@@ -348,24 +348,24 @@ function DrawMap(clearHotspotsFirst)
 
    -- rounded rects around the player's position
    WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-      startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
-      startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
+      startx+(correction*(our_location_x - (3*rectangle_size))), starty+(correction*(our_location_y - (3*rectangle_size)-1)),
+      startx+(correction*(our_location_x + (3*rectangle_size)))-1, starty+(correction*(our_location_y + (3*rectangle_size))),
       ColourNameToRGB "cornflowerblue",  -- pen colour
       miniwin.pen_solid, -- solid pen
       3, -- pen width
       0, -- brush colour
       miniwin.brush_null, 25, 25 ) -- null brush
    WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-      startx+(correction_x*(our_location_x - (3*rectangle_size))), starty+(correction_y*(our_location_y - (3*rectangle_size)-1)),
-      startx+(correction_x*(our_location_x + (3*rectangle_size)))-1, starty+(correction_y*(our_location_y + (3*rectangle_size))),
+      startx+(correction*(our_location_x - (3*rectangle_size))), starty+(correction*(our_location_y - (3*rectangle_size)-1)),
+      startx+(correction*(our_location_x + (3*rectangle_size)))-1, starty+(correction*(our_location_y + (3*rectangle_size))),
       ColourNameToRGB "cyan",  -- pen colour
       miniwin.pen_solid, -- solid pen
       1, -- pen width
       0, -- brush colour
       miniwin.brush_null, 25, 25 ) -- null brush
    WindowCircleOp (mapwin, miniwin.circle_rectangle,
-      startx+(correction_x*(our_location_x - rectangle_size+4)), starty+(correction_y*(our_location_y - rectangle_size/2)),
-      startx+(correction_x*(our_location_x + rectangle_size-4))-1, starty+(correction_y*(our_location_y + rectangle_size/2)) - 1,
+      startx+(correction*(our_location_x - rectangle_size+4)), starty+(correction*(our_location_y - rectangle_size/2)),
+      startx+(correction*(our_location_x + rectangle_size-4))-1, starty+(correction*(our_location_y + rectangle_size/2)) - 1,
       ColourNameToRGB "cyan",  -- pen colour
       miniwin.pen_solid, -- solid pen
       2, -- pen width
@@ -393,11 +393,9 @@ function resize_move_callback()
    if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
       return
    end
-   local width  = WindowInfo(mapwin, 3)
-   local height = WindowInfo(mapwin, 4)   
    local posx, posy = WindowInfo (mapwin, 17), WindowInfo (mapwin, 18)
-   
-   width = width + posx - startx
+
+   local width = WindowInfo(mapwin, 3) + posx - startx
    startx = posx
    if (50 > width) then
       width = 50
@@ -407,7 +405,7 @@ function resize_move_callback()
       startx = GetInfo(281)
    end 
    
-   height = height + posy - starty
+   local height = WindowInfo(mapwin, 4) + posy - starty
    starty = posy
    if (50 > height) then
       height = 50
@@ -417,14 +415,10 @@ function resize_move_callback()
       starty = GetInfo(280)
    end
 
-   if (utils.timer() - lastRefresh > 0.0333) then
-      WindowResize(mapwin, width, height, 0x000000)
-      DrawMap()
-      lastRefresh = utils.timer()
-   end
-end
+   WindowResize(mapwin, width, height, 0x000000)
 
-lastRefresh = 0
+   DrawMap()
+end
 
 function draw_edge()
    -- draw edge frame.
