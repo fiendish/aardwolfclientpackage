@@ -974,9 +974,6 @@ function draw (uid)
          miniwin.cursor_hand, 0)  -- hand cursor
    end -- if
 
-   -- 3D box around whole thing
-
-   --draw_3d_box (win, 0, 0, config.WINDOW.width, config.WINDOW.height)
    draw_edge()
    
    add_resize_tag()
@@ -1056,7 +1053,7 @@ function init (t)
    font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
    
    -- find where window was last time
-   windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , nil, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, {x=default_x, y=default_y})
+   windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , true, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, {x=default_x, y=default_y})
    
    -- calculate box sizes, arrows, connecting lines etc.
    build_room_info ()
@@ -1660,6 +1657,8 @@ function resize_mouse_down(flags, hotspot_id)
 end
 
 function resize_release_callback()
+   config.WINDOW.width = WindowInfo(win, 3)
+   config.WINDOW.height = WindowInfo(win, 4)
    draw(current_room)
 end
 
@@ -1668,26 +1667,28 @@ function resize_move_callback()
       return
    end
    local posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
-   config.WINDOW.width = config.WINDOW.width+posx-startx
+
+   local width = WindowInfo(win, 3) + posx - startx
    startx = posx
-   if (50 > config.WINDOW.width) then
-      config.WINDOW.width = 50
-      startx = windowinfo.window_left+config.WINDOW.width
-   elseif (windowinfo.window_left+config.WINDOW.width > GetInfo(281)) then
-      config.WINDOW.width = GetInfo(281)-windowinfo.window_left
+   if (50 > width) then
+      width = 50
+      startx = windowinfo.window_left + width
+   elseif (windowinfo.window_left + width > GetInfo(281)) then
+      width = GetInfo(281) - windowinfo.window_left
       startx = GetInfo(281)
    end 
-   config.WINDOW.height = config.WINDOW.height+posy-starty
-   starty=posy
-   if (50 > config.WINDOW.height) then
-      config.WINDOW.height = 50
-      starty = windowinfo.window_top+config.WINDOW.height
-   elseif (windowinfo.window_top+config.WINDOW.height > GetInfo(280)) then
-      config.WINDOW.height = GetInfo(280)-windowinfo.window_top
+
+   local height = WindowInfo(win, 4) + posy - starty
+   starty = posy
+   if (50 > height) then
+      height = 50
+      starty = windowinfo.window_top + height
+   elseif (windowinfo.window_top + height > GetInfo(280)) then
+      height = GetInfo(280) - windowinfo.window_top
       starty = GetInfo(280)
    end
 
-   WindowResize(win,config.WINDOW.width,config.WINDOW.height,config.BACKGROUND_COLOUR.colour)
+   WindowResize(win, width, height, config.BACKGROUND_COLOUR.colour)
    draw_edge()
    add_resize_tag()
 
@@ -1697,8 +1698,8 @@ end
 
 function add_resize_tag()
    -- draw the resize widget bottom right corner.
-   local width  = config.WINDOW.width
-   local height = config.WINDOW.height
+   local width  = WindowInfo(win, 3)
+   local height = WindowInfo(win, 4)
    
    WindowLine(win, width-4, height-2, width-2, height-4, 0xffffff, 0, 2)
    WindowLine(win, width-5, height-2, width-2, height-5, 0x696969, 0, 1)
