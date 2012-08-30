@@ -393,6 +393,8 @@ function movewindow.save_state (win)
   end -- no such window
   
   -- remember where the window was
+  SetVariable ("mw_" .. win .. "_windowx",      mwi.window_left)
+  SetVariable ("mw_" .. win .. "_windowy",      mwi.window_top)
   if WindowInfo(win, 10) then
     SetVariable ("mw_" .. win .. "_windowx",    WindowInfo(win, 10))
   end
