@@ -1176,7 +1176,9 @@ end -- hide
 function save_state ()
    SetVariable("ROOM_SIZE", ROOM_SIZE)
    SetVariable("DISTANCE_TO_NEXT_ROOM", DISTANCE_TO_NEXT_ROOM)
-   movewindow.save_state (win)
+   if WindowInfo(win,1) then
+      movewindow.save_state (win)
+   end
 end -- save_state
 
 function hyperlinkGoto(uid)
