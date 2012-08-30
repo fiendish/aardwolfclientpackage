@@ -1324,15 +1324,15 @@ function map_portal_list ()
    local hl = "+-----+------------+----------------------+-------+----------------------+-----+"
    local hr = "|   # | area       | room name            |  vnum | portal keywords      | lvl |"
 
-   world.Note ("\n"..hl)
-   world.Note (hr)
-   world.Note (hl)
+   Note ("\n"..hl)
+   Note (hr)
+   Note (hl)
 
    local q = "select area, name, fromuid, touid, dir,level from exits, rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 0
    for row in db:nrows(q) do
       count = count + 1
-      line = string.format("| %+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area, row.name, row.touid, row.dir, row.level)
+      line = string.format("|"..((((row.dir==bounce_portal.dir) or (row.dir==bounce_recall.dir)) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area, row.name, row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
          -- make the whole line click-able
          cmd = "mapper goto " .. row.touid
@@ -1340,10 +1340,12 @@ function map_portal_list ()
          Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false)
          Note ()
       else
-         world.Note(line)
+         Note(line)
       end -- if row.level
    end -- for row (portals query)
-   world.Note (hl.."\n")
+   Note (hl)
+   Note ("|* Indicates designated bouncerecall/bounceportal |")
+   Note ("+-------------------------------------------------+\n")
    
 end -- map_portal_list
 
@@ -3571,8 +3573,14 @@ function findpath(src, dst, noportals, norecalls)
    if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
       if rooms[src].norecall ~= 1 and bounce_recall ~= nil then
          table.insert(path, bounce_recall)
+         if dst == bounce_recall.uid then
+            return path, found_depth
+         end
       elseif rooms[src].noportal ~= 1 and bounce_portal ~= nil then
          table.insert(path, bounce_portal)
+         if dst == bounce_portal.uid then
+            return path, found_depth
+         end
       else
          local jump_room, type = findNearestJumpRoom(src, dst, f)
          if not jump_room then
