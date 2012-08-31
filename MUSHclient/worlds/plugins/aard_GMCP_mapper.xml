@@ -1332,7 +1332,7 @@ function map_portal_list ()
    local count = 0
    for row in db:nrows(q) do
       count = count + 1
-      line = string.format("|"..((((row.dir==bounce_portal.dir) or (row.dir==bounce_recall.dir)) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area, row.name, row.touid, row.dir, row.level)
+      line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area, row.name, row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
          -- make the whole line click-able
          cmd = "mapper goto " .. row.touid
