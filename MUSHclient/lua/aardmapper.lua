@@ -123,6 +123,8 @@ function reset_pos()
    config.WINDOW.height = default_height
    windowinfo.window_left = default_x
    windowinfo.window_top = default_y
+   WindowPosition(win, default_x, default_y, 0, 18)
+   Repaint() -- hack because WindowPosition doesn't immediately update coordinates
 end
 
 local function build_room_info ()
