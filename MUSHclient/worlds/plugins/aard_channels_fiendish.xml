@@ -888,7 +888,7 @@ function CancelMouseOver(flags, hotspot_id)
 end
 
 function MouseOverLink(flags, hotspot_id)
-   local url = string.gsub(hotspot_id, "(.*)   .*", "%1")
+   local url = string.gsub(hotspot_id, "(.*   ).*", "%1")
    local hotspots = WindowHotspotList(win)
    for _, v in ipairs (hotspots) do
       if string.find(v, url, 1, true) then
@@ -902,7 +902,7 @@ function MouseOverLink(flags, hotspot_id)
 end
 
 function CancelMouseOverLink(flags, hotspot_id)
-   local url = string.gsub(hotspot_id, "(.*)   .*", "%1")
+   local url = string.gsub(hotspot_id, "(.*   ).*", "%1")
    if not string.find(WindowInfo(win, 19), url, 1, true) then
       writeLines()
    end
