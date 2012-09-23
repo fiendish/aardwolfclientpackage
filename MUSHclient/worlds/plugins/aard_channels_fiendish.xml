@@ -1094,9 +1094,11 @@ function right_click_menu (hotspot_id)
    menustring ="!"
    local hyperlink_skip = 0
    local echo_skip = 0
+   local url = ""
    if (WindowInfo(win, 15) > TITLE_HEIGHT) and not hotspots[hotspot_id] then
       hyperlink_skip = 2
       menustring = menustring.."Go to URL: "..hyperlinks[hotspot_id].."|Copy URL to Clipboard|-|"
+      url = hyperlinks[hotspot_id]
    end
    menustring = menustring.."Copy Selected Without Colors|Copy Selected|Copy All|-|Change Font"
    menustring = menustring .. "|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<"
@@ -1123,18 +1125,18 @@ function right_click_menu (hotspot_id)
    if result ~= "" then
       numResult = tonumber(result)
       if numResult == hyperlink_skip-1 then
-         local res = OpenBrowser(hyperlinks[hotspot_id])
+         local res = OpenBrowser(url)
          if res ~= 0 then
-            SetClipboard(hyperlinks[hotspot_id])
+            SetClipboard(url)
             ColourNote("yellow", "red", "MUSHclient may have encountered an error trying to open the selected URL. It has been copied to the clipboard.")
             ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
-            ColourNote("yellow","",hyperlinks[hotspot_id])
+            ColourNote("yellow","",url)
             ColourNote("cyan","","^---------------------------------------------------------^")         
          end
       elseif numResult == hyperlink_skip then
-         SetClipboard(hyperlinks[hotspot_id])
+         SetClipboard(url)
          ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
-         ColourNote("yellow","",hyperlinks[hotspot_id])
+         ColourNote("yellow","",url)
          ColourNote("cyan","","^---------------------------------------------------------^")         
       elseif numResult == 1+hyperlink_skip then
          if #copied_text > 0 then
