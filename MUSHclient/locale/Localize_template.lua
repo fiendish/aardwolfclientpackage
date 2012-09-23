@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Tuesday, 03 January 2012 at 09:18:23
+-- Written: Saturday, 22 September 2012 at 16:31:32
 
 -- Static messages
 
@@ -1114,17 +1114,17 @@ messages = {
   ["Email address too long"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5174
+-- /cygdrive/c/source/mushclient/mushview.cpp:5176
   ["Cannot find style of this character"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5609
+-- /cygdrive/c/source/mushclient/mushview.cpp:5611
   ["@ must be followed by a variable name"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:6195
+-- /cygdrive/c/source/mushclient/mushview.cpp:6197
 
--- /cygdrive/c/source/mushclient/mushview.cpp:6279
+-- /cygdrive/c/source/mushclient/mushview.cpp:6281
   ["Cannot compile regular expression"] =
     "",
 
@@ -1805,7 +1805,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/doc.cpp:5735
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5278
+-- /cygdrive/c/source/mushclient/mushview.cpp:5280
 
 -- /cygdrive/c/source/mushclient/sendvw.cpp:2325
   ["Notepad: %s"] =
@@ -3036,7 +3036,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/doc.cpp:5096
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5331
+-- /cygdrive/c/source/mushclient/mushview.cpp:5333
   ["Recall: %s"] =
     function (a)
      
@@ -3117,7 +3117,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/evaluate.cpp:925
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5717
+-- /cygdrive/c/source/mushclient/mushview.cpp:5719
   ["Alias: %s"] =
     function (a)
      
@@ -3126,7 +3126,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/evaluate.cpp:956
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5647
+-- /cygdrive/c/source/mushclient/mushview.cpp:5649
   ["processing alias \"%s\""] =
     function (a)
      
@@ -3163,7 +3163,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:2259
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5455
+-- /cygdrive/c/source/mushclient/mushview.cpp:5457
   ["Hyperlink action \"%s\" - permission denied."] =
     function (a)
      
@@ -3172,7 +3172,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:2264
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5460
+-- /cygdrive/c/source/mushclient/mushview.cpp:5462
   ["Unable to open the hyperlink \"%s\""] =
     function (a)
      
@@ -3207,7 +3207,7 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5619
+-- /cygdrive/c/source/mushclient/mushview.cpp:5621
   ["Variable '%s' is not defined."] =
     function (a)
      
