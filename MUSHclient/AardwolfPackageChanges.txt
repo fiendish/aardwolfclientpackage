@@ -1,5 +1,19 @@
 Aardwolf Client Package Major Changes List
 
+r1693 snapshot
+- new feature: updated to MUSHclient 4.82 (see release notes www.gammon.com.au/scripts/showrelnote.php?version=4.82 )
+- bug fix: some cruft accidentally got into the default recent file list
+- misc change: styles to ansi conversion avoids spamming the user when doing stupid things like trying to change channel colors via trigger instead of colorset (seriously? come on)
+- bug fix: resizing the embedded bigmap was horribly broken
+- bug fix: mapper resizing should now stop at minimum size greater than 0
+- bug fix: moving the embedded bigmap display was not properly saving the coordinates for the position of the mapper window which caused the window to jump back when reloading the mapper plugin
+- bug fix: gmcp mapper portal/recall overlap could cause unnecessary extra step to be taken to get to the portal/recall destination in a noportal/norecall room
+- new feature: added an indicator of designated bouncerecall and bounceportal in the gmcp mapper portals list
+- bug fix: in the communication log window, right-clicking a url but then "going to" it only after the log had scrolled from new chats would cause an error
+- bug fix: unrelated but visually similar URLs in the communication log window would get highlighted together
+- misc change: the gmcp mapper should be a bit more efficient about displaying newly entered areas by collapsing many small database queries into one large one
+- new feature: new gmcp mapper command fullportal takes <keywords> <destination id> <level> parameters up front
+
 r1667 snapshot
 - bug fix: don't abort mapper run attempts when gmcp data may be slow
 
