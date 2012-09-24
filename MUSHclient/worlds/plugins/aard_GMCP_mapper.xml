@@ -1580,6 +1580,46 @@ function map_clearcache()
    mapper.mapprint ("Cleared local room cache.")
 end
 
+function load_area_from_database (area)
+   assert (area, "No area supplied to load_area_from_database")
+   if not rooms then
+      -- this shouldn't even be possible. what the hell.
+      rooms = {}
+   end
+
+   local lastuid = -1
+   local newrooms = {}
+   for row in db:nrows(string.format("SELECT rooms.*,exits.dir,exits.touid,exits.level FROM rooms,exits where rooms.area=%s and rooms.uid=exits.fromuid;", fixsql(area))) do
+      if lastuid ~= row.uid then
+         table.insert(newrooms, row.uid)
+         rooms[row.uid] = {
+         name = row.name,
+         area = row.area,
+         building = row.building,
+         terrain = row.terrain,
+         info = row.info,
+         notes = row.notes,
+         x = row.x or 0,
+         y = row.y or 0,
+         z = row.z or 0,
+         noportal = row.noportal,
+         norecall = row.norecall,
+         exits = {[row.dir]=tostring(row.touid)},
+         exit_locks = {[row.dir]=tostring(row.level)}
+         }
+      else
+         rooms[row.uid].exits[row.dir] = tostring(row.touid)
+         rooms[row.uid].exit_locks[row.dir] = tostring(row.level)
+      end
+      lastuid = row.uid
+   end   -- finding room
+  
+   for bmrow in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid in ('%s')", table.concat(newrooms,"','"))) do
+      rooms[bmrow.uid].notes = bmrow.notes
+   end   -- finding room
+
+end -- load_area_from_database
+
 function load_room_from_database (uid)
    local room
    local u = tostring(uid)
@@ -1737,13 +1777,15 @@ function get_room (uid)
    if not ourroom then
       ourroom = load_room_from_database (uid)
       rooms [uid] = ourroom -- cache for later
-   end -- not in cache
   
-   if not ourroom then
-      return nil
-   end -- if
+      if not ourroom then
+         return nil
+      end -- if
 
-   local room = copytable.deep (ourroom)
+      load_area_from_database(ourroom.area)
+   end -- not in cache
+
+   local room = copytable.deep(ourroom)
    room.bordercolour = configs.ROOM_COLOUR.colour
    if areas[room.area] then
       room.texture = areas[room.area].texture
