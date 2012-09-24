@@ -378,6 +378,15 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 ></alias>
 
 <alias
+   match="^mapper fullportal (.+) (.+) (\d+)$"
+   enabled="y"
+   sequence="100"
+   script="map_portal"
+   regexp="y"
+></alias>
+
+
+<alias
    match="^mapper delete portal (.+)$"
    enabled="y"
    sequence="100"
@@ -1221,7 +1230,7 @@ function map_portal_recall (name, line, wildcards)
    end
 end -- map_recall
 
--- map_portal function contributed by Spartacus
+-- first map_portal function was contributed by Spartacus.
 function map_portal (name, line, wildcards)
    -- store portal as an exit from anywhere to the current room
    res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
@@ -1237,17 +1246,25 @@ function map_portal (name, line, wildcards)
       print("PORTAL FAILED: Cannot link portals to unmappable rooms.")
       return
    end
-      
-	local level = tonumber(utils.inputbox ("Please enter the level of this portal, or leave at 0 for the default", "Portal Level", "0", "Courier", 9, {validate=level_check}))
+   
+   local destination = wildcards[2] or current_room
+   local level = (level_check(wildcards[3]) and wildcards[3]) or tonumber(utils.inputbox (string.format("Please enter the level of your portal to %s, or leave at 0 for the default",destination), "Portal Level", "0", "Courier", 9, {validate=level_check}))
 	
 	if not level then
 		Note("Portal creation cancelled.")
 		return
 	end
 	  
+   create_portal(wildcards[1], destination, level)
+
+end -- map_portal
+
+function create_portal(keyword, destination, level)
+   print(keyword,"-",destination,"-",level)
+   if true then return end
    local hhp_room_exists = 0
    local query = ""
-   -- first check to see if our special room exists...
+   -- first check to see if our special 'from anywhere' room exists...
    for row in db:nrows("select * from rooms where uid='*'") do
       hhp_room_exists = hhp_room_exists + 1
    end
@@ -1255,17 +1272,16 @@ function map_portal (name, line, wildcards)
       query = "INSERT OR REPLACE INTO rooms (uid, name, area, date_added) VALUES ('*', '___HERE___', '___EVERYWHERE___', DATETIME('NOW'))"
       dbCheckExecute(query)
    end
-   print (string.format("Storing %s as a portal to %s.", wildcards [1], current_room))
-   print (string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",wildcards [1], current_room,level))
+   print (string.format("Storing %s as a portal to %s.", keyword, destination))
+   print (string.format("\nPortal given minimum level lock of %s.\n", level))
    query = string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added, level) VALUES (%s, %s, %s, DATETIME('NOW'), %s);", 
-      fixsql  (wildcards [1]),  -- direction (eg. "n")
-      fixsql  ("*"),         -- from current room
-      fixsql  (current_room),    -- destination room
+      fixsql  (keyword),
+      fixsql  ("*"),           -- from anywhere
+      fixsql  (destination),
       fixsql(level) -- minimum level of the portal
    )
    dbCheckExecute(query)
-
-end -- map_portal
+end
 
 function string:split(sep)
    local sep, fields = sep or ":", {}
