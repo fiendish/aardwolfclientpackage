@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Saturday, 22 September 2012 at 16:31:32
+-- Written: Sunday, 30 September 2012 at 16:49:29
 
 -- Static messages
 
@@ -456,13 +456,13 @@ messages = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/prefspropertypages.cpp:168
 
--- /cygdrive/c/source/mushclient/doc.cpp:1012
+-- /cygdrive/c/source/mushclient/doc.cpp:1013
   ["The proxy server address cannot be blank."] =
     "",
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/prefspropertypages.cpp:175
 
--- /cygdrive/c/source/mushclient/doc.cpp:1018
+-- /cygdrive/c/source/mushclient/doc.cpp:1019
   ["The proxy server port must be specified."] =
     "",
 
@@ -542,7 +542,7 @@ messages = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/prefspropertypages.cpp:5183
 
--- /cygdrive/c/source/mushclient/doc.cpp:3683
+-- /cygdrive/c/source/mushclient/doc.cpp:3684
   ["Unable to open or read the requested file"] =
     "",
 
@@ -566,7 +566,7 @@ messages = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/prefspropertypages.cpp:7388
 
--- /cygdrive/c/source/mushclient/doc.cpp:7711
+-- /cygdrive/c/source/mushclient/doc.cpp:7712
   ["Unable to edit the script file."] =
     "",
 
@@ -626,363 +626,363 @@ messages = {
   ["(n/a)"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:772
+-- /cygdrive/c/source/mushclient/doc.cpp:773
   ["Written by Nick Gammon."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:784
+-- /cygdrive/c/source/mushclient/doc.cpp:785
   ["For information and assistance about MUSHclient visit our forum at:"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:786
+-- /cygdrive/c/source/mushclient/doc.cpp:787
   ["MUSHclient forum"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:789
+-- /cygdrive/c/source/mushclient/doc.cpp:790
   ["Can you trust your plugins?  See: "] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:790
+-- /cygdrive/c/source/mushclient/doc.cpp:791
   ["How to trust plugins"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:985
+-- /cygdrive/c/source/mushclient/doc.cpp:986
   ["Cannot connect. World name not specified"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:1428
+-- /cygdrive/c/source/mushclient/doc.cpp:1429
   ["Insufficient memory in buffer to decompress text"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:1496
+-- /cygdrive/c/source/mushclient/doc.cpp:1497
   ["Insufficient memory to decompress MCCP text."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:2516
+-- /cygdrive/c/source/mushclient/doc.cpp:2517
   ["Ran out of memory. The world has been closed."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:2686
+-- /cygdrive/c/source/mushclient/doc.cpp:2687
   ["processing hotspot callback"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3255
+-- /cygdrive/c/source/mushclient/doc.cpp:3256
 
--- /cygdrive/c/source/mushclient/doc.cpp:3325
+-- /cygdrive/c/source/mushclient/doc.cpp:3326
   ["Unable to allocate memory for screen font"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3470
+-- /cygdrive/c/source/mushclient/doc.cpp:3471
   ["An error occurred calculating amount to send to world"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3503
+-- /cygdrive/c/source/mushclient/doc.cpp:3504
   ["Sending to world..."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3505
+-- /cygdrive/c/source/mushclient/doc.cpp:3506
   ["Sending..."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3622
+-- /cygdrive/c/source/mushclient/doc.cpp:3623
   ["An error occurred when sending/pasting to this world"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3706
+-- /cygdrive/c/source/mushclient/doc.cpp:3707
 
--- /cygdrive/c/source/mushclient/doc.cpp:3793
+-- /cygdrive/c/source/mushclient/doc.cpp:3794
   ["Cannot open the Clipboard"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3738
+-- /cygdrive/c/source/mushclient/doc.cpp:3739
   ["Unable to get Clipboard data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3750
+-- /cygdrive/c/source/mushclient/doc.cpp:3751
 
--- /cygdrive/c/source/mushclient/doc.cpp:3862
+-- /cygdrive/c/source/mushclient/doc.cpp:3863
   ["Unable to lock memory for Clipboard data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3808
+-- /cygdrive/c/source/mushclient/doc.cpp:3809
   ["Unable to allocate memory for Clipboard data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3819
+-- /cygdrive/c/source/mushclient/doc.cpp:3820
   ["Unable to lock memory for Clipboard text data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3834
+-- /cygdrive/c/source/mushclient/doc.cpp:3835
   ["Unable to set Clipboard text data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3851
+-- /cygdrive/c/source/mushclient/doc.cpp:3852
   ["Unable to allocate memory for Clipboard Unicode data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3879
+-- /cygdrive/c/source/mushclient/doc.cpp:3880
   ["Unable to set Clipboard Unicode data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3998
+-- /cygdrive/c/source/mushclient/doc.cpp:3999
 
--- /cygdrive/c/source/mushclient/doc.cpp:4011
+-- /cygdrive/c/source/mushclient/doc.cpp:4012
   ["For assistance with connection problems see: "] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4002
+-- /cygdrive/c/source/mushclient/doc.cpp:4003
   ["How to resolve network connection problems"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4014
+-- /cygdrive/c/source/mushclient/doc.cpp:4015
   ["This message can be suppressed, or displayed in the main window."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4016
+-- /cygdrive/c/source/mushclient/doc.cpp:4017
   ["See the File menu -> Global Preferences -> General to do this."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4150
+-- /cygdrive/c/source/mushclient/doc.cpp:4151
   ["Unexpected phase in HostNameResolved function"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4256
+-- /cygdrive/c/source/mushclient/doc.cpp:4257
   ["Recalculating line positions"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4612
+-- /cygdrive/c/source/mushclient/doc.cpp:4613
   ["Permission denied"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4613
+-- /cygdrive/c/source/mushclient/doc.cpp:4614
   ["Address already in use"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4614
+-- /cygdrive/c/source/mushclient/doc.cpp:4615
   ["Cannot assign requested address"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4615
+-- /cygdrive/c/source/mushclient/doc.cpp:4616
   ["Address family not supported by protocol family"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4616
+-- /cygdrive/c/source/mushclient/doc.cpp:4617
   ["Operation already in progress. "] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4617
+-- /cygdrive/c/source/mushclient/doc.cpp:4618
   ["Software caused connection abort"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4618
+-- /cygdrive/c/source/mushclient/doc.cpp:4619
   ["Connection refused"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4619
+-- /cygdrive/c/source/mushclient/doc.cpp:4620
   ["Connection reset by peer"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4620
+-- /cygdrive/c/source/mushclient/doc.cpp:4621
   ["Destination address required"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4621
+-- /cygdrive/c/source/mushclient/doc.cpp:4622
   ["Bad address"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4622
+-- /cygdrive/c/source/mushclient/doc.cpp:4623
   ["Host is down"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4623
+-- /cygdrive/c/source/mushclient/doc.cpp:4624
   ["No route to host"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4624
+-- /cygdrive/c/source/mushclient/doc.cpp:4625
   ["Operation now in progress"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4625
+-- /cygdrive/c/source/mushclient/doc.cpp:4626
   ["Interrupted function call"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4626
+-- /cygdrive/c/source/mushclient/doc.cpp:4627
   ["Invalid argument"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4627
+-- /cygdrive/c/source/mushclient/doc.cpp:4628
   ["Socket is already connected"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4628
+-- /cygdrive/c/source/mushclient/doc.cpp:4629
   ["Too many open files"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4629
+-- /cygdrive/c/source/mushclient/doc.cpp:4630
   ["Message too long"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4630
+-- /cygdrive/c/source/mushclient/doc.cpp:4631
   ["Network is down"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4631
+-- /cygdrive/c/source/mushclient/doc.cpp:4632
   ["Network dropped connection on reset"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4632
+-- /cygdrive/c/source/mushclient/doc.cpp:4633
   ["Network is unreachable"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4633
+-- /cygdrive/c/source/mushclient/doc.cpp:4634
   ["No buffer space available"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4634
+-- /cygdrive/c/source/mushclient/doc.cpp:4635
   ["Bad protocol option"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4635
+-- /cygdrive/c/source/mushclient/doc.cpp:4636
   ["Socket is not connected"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4636
+-- /cygdrive/c/source/mushclient/doc.cpp:4637
   ["Socket operation on non-socket"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4637
+-- /cygdrive/c/source/mushclient/doc.cpp:4638
   ["Operation not supported"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4638
+-- /cygdrive/c/source/mushclient/doc.cpp:4639
   ["Protocol family not supported"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4639
+-- /cygdrive/c/source/mushclient/doc.cpp:4640
   ["Too many processes"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4640
+-- /cygdrive/c/source/mushclient/doc.cpp:4641
   ["Protocol not supported"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4641
+-- /cygdrive/c/source/mushclient/doc.cpp:4642
   ["Protocol wrong type for socket"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4642
+-- /cygdrive/c/source/mushclient/doc.cpp:4643
   ["Cannot send after socket shutdown"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4643
+-- /cygdrive/c/source/mushclient/doc.cpp:4644
   ["Socket type not supported"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4644
+-- /cygdrive/c/source/mushclient/doc.cpp:4645
   ["Connection timed out"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4645
+-- /cygdrive/c/source/mushclient/doc.cpp:4646
   ["Resource temporarily unavailable"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4646
+-- /cygdrive/c/source/mushclient/doc.cpp:4647
   ["Host not found"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4647
+-- /cygdrive/c/source/mushclient/doc.cpp:4648
   ["Specified event object handle is invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4648
+-- /cygdrive/c/source/mushclient/doc.cpp:4649
   ["One or more parameters are invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4649
+-- /cygdrive/c/source/mushclient/doc.cpp:4650
   ["Invalid procedure table from service provider"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4650
+-- /cygdrive/c/source/mushclient/doc.cpp:4651
   ["Invalid service provider version number"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4651
+-- /cygdrive/c/source/mushclient/doc.cpp:4652
   ["Overlapped operations will complete later"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4652
+-- /cygdrive/c/source/mushclient/doc.cpp:4653
   ["Overlapped I/O event object not in signaled state"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4653
+-- /cygdrive/c/source/mushclient/doc.cpp:4654
   ["Insufficient memory available"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4654
+-- /cygdrive/c/source/mushclient/doc.cpp:4655
   ["Successful WSAStartup not yet performed"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4655
+-- /cygdrive/c/source/mushclient/doc.cpp:4656
   ["Valid name, no data record of requested type"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4656
+-- /cygdrive/c/source/mushclient/doc.cpp:4657
   ["This is a non-recoverable error"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4657
+-- /cygdrive/c/source/mushclient/doc.cpp:4658
   ["Unable to initialize a service provider"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4658
+-- /cygdrive/c/source/mushclient/doc.cpp:4659
   ["System call failure"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4659
+-- /cygdrive/c/source/mushclient/doc.cpp:4660
   ["Network subsystem is unavailable"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4660
+-- /cygdrive/c/source/mushclient/doc.cpp:4661
   ["Non-authoritative host not found"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4661
+-- /cygdrive/c/source/mushclient/doc.cpp:4662
   ["WINSOCK.DLL version out of range"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4662
+-- /cygdrive/c/source/mushclient/doc.cpp:4663
   ["Graceful shutdown in progress"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4663
+-- /cygdrive/c/source/mushclient/doc.cpp:4664
   ["Overlapped operation aborted"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4667
+-- /cygdrive/c/source/mushclient/doc.cpp:4668
   ["Unknown error code"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4889
+-- /cygdrive/c/source/mushclient/doc.cpp:4890
   ["Recalling..."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:6442
+-- /cygdrive/c/source/mushclient/doc.cpp:6443
 
--- /cygdrive/c/source/mushclient/doc.cpp:6464
+-- /cygdrive/c/source/mushclient/doc.cpp:6465
   ["Send-to-script cannot execute because scripting is not enabled."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:6533
+-- /cygdrive/c/source/mushclient/doc.cpp:6534
   ["Unable to allocate memory for host name lookup"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:6995
+-- /cygdrive/c/source/mushclient/doc.cpp:6996
 
--- /cygdrive/c/source/mushclient/doc.cpp:6997
+-- /cygdrive/c/source/mushclient/doc.cpp:6998
   ["Proxy server refused authentication"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:7155
+-- /cygdrive/c/source/mushclient/doc.cpp:7156
   ["Proxy server username or password lengths cannot be > 255 characters"] =
     "",
 
@@ -1090,41 +1090,41 @@ messages = {
   ["Unable to open the plugins web page: "] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:3739
+-- /cygdrive/c/source/mushclient/mushview.cpp:3742
   ["Printing world..."] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:3925
+-- /cygdrive/c/source/mushclient/mushview.cpp:3928
   ["Printing cancelled"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4416
+-- /cygdrive/c/source/mushclient/mushview.cpp:4419
   ["No URL selected"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4418
+-- /cygdrive/c/source/mushclient/mushview.cpp:4421
   ["URL too long"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4458
+-- /cygdrive/c/source/mushclient/mushview.cpp:4461
   ["No email address selected"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4460
+-- /cygdrive/c/source/mushclient/mushview.cpp:4463
   ["Email address too long"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5176
+-- /cygdrive/c/source/mushclient/mushview.cpp:5199
   ["Cannot find style of this character"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5611
+-- /cygdrive/c/source/mushclient/mushview.cpp:5634
   ["@ must be followed by a variable name"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:6197
+-- /cygdrive/c/source/mushclient/mushview.cpp:6220
 
--- /cygdrive/c/source/mushclient/mushview.cpp:6281
+-- /cygdrive/c/source/mushclient/mushview.cpp:6304
   ["Cannot compile regular expression"] =
     "",
 
@@ -1144,303 +1144,303 @@ messages = {
   ["Character name requested but none defined."] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7267
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7280
   ["No error"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7268
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7281
   ["The world is already open"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7269
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7282
   ["The world is closed, this action cannot be performed"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7270
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7283
   ["No name has been specified where one is required"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7271
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7284
   ["The sound file could not be played"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7272
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7285
   ["The specified trigger name does not exist"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7273
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7286
   ["Attempt to add a trigger that already exists"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7274
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7287
   ["The trigger \"match\" string cannot be empty"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7275
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7288
   ["The name of this object is invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7276
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7289
   ["Script name is not in the script file"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7277
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7290
   ["The specified alias name does not exist"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7278
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7291
   ["Attempt to add a alias that already exists"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7279
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7292
   ["The alias \"match\" string cannot be empty"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7280
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7293
   ["Unable to open requested file"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7281
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7294
   ["Log file was not open"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7282
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7295
   ["Log file was already open"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7283
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7296
   ["Bad write to log file"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7284
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7297
   ["The specified timer name does not exist"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7285
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7298
   ["Attempt to add a timer that already exists"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7286
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7299
   ["Attempt to delete a variable that does not exist"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7287
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7300
   ["Attempt to use SetCommand with a non-empty command window"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7288
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7301
   ["Bad regular expression syntax"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7289
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7302
   ["Time given to AddTimer is invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7290
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7303
   ["Direction given to AddToMapper is invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7291
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7304
   ["No items in mapper"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7292
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7305
   ["Option name not found"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7293
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7306
   ["New value for option is out of range"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7294
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7307
   ["Trigger sequence value invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7295
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7308
   ["Where to send trigger text to is invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7296
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7309
   ["Trigger label not specified/invalid for 'send to variable'"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7297
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7310
   ["File name specified for plugin not found"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7298
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7311
   ["There was a parsing or other problem loading the plugin"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7299
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7312
   ["Plugin is not allowed to set this option"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7300
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7313
   ["Plugin is not allowed to get this option"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7301
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7314
   ["Requested plugin is not installed"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7302
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7315
   ["Only a plugin can do this"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7303
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7316
   ["Plugin does not support that subroutine (subroutine not in script)"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7304
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7317
   ["Plugin does not support saving state"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7305
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7318
   ["Plugin could not save state (eg. no state directory)"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7306
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7319
   ["Plugin is currently disabled"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7307
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7320
   ["Could not call plugin routine"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7308
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7321
   ["Calls to \"Execute\" nested too deeply"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7309
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7322
   ["Unable to create socket for chat connection"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7310
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7323
   ["Unable to do DNS (domain name) lookup for chat connection"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7311
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7324
   ["No chat connections open"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7312
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7325
   ["Requested chat person not connected"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7313
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7326
   ["General problem with a parameter to a script call"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7314
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7327
   ["Already listening for incoming chats"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7315
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7328
   ["Chat session with that ID not found"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7316
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7329
   ["Already connected to that server/port"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7317
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7330
   ["Cannot get (text from the) clipboard"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7318
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7331
   ["Cannot open the specified file"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7319
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7332
   ["Already transferring a file"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7320
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7333
   ["Not transferring a file"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7321
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7334
   ["There is not a command of that name"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7322
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7335
   ["That array already exists"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7323
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7336
   ["That array does not exist"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7324
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7337
   ["Values to be imported into array are not in pairs"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7325
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7338
   ["Import succeeded, however some values were overwritten"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7326
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7339
   ["Import/export delimiter must be a single character, other than backslash"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7327
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7340
   ["Array element set, existing value overwritten"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7328
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7341
   ["Array key does not exist"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7329
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7342
   ["Cannot import because cannot find unused temporary character"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7330
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7343
   ["Cannot delete trigger/alias/timer because it is executing a script"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7331
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7344
   ["Spell checker is not active"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7332
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7345
   ["Cannot create requested font"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7333
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7346
   ["Invalid settings for pen parameter"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7334
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7347
   ["Bitmap image could not be loaded"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7335
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7348
   ["Image has not been loaded into window"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7336
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7349
   ["Number of points supplied is incorrect"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7337
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7350
   ["Point is not numeric"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7338
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7351
   ["Hotspot processing must all be in same plugin"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7339
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7352
   ["Hotspot has not been defined for this window"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7340
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7353
   ["Requested miniwindow does not exist"] =
     "",
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7341
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:7354
   ["Invalid settings for brush parameter"] =
     "",
 
@@ -1771,14 +1771,14 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:569
+-- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:575
   ["Previous line had a bad UTF-8 sequence at column %i, and was not evaluated for trigger matches"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:1089
+-- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:1095
   ["Trigger: %s"] =
     function (a)
      
@@ -1803,9 +1803,9 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/dialogs/cmdhist.cpp:246
 
--- /cygdrive/c/source/mushclient/doc.cpp:5735
+-- /cygdrive/c/source/mushclient/doc.cpp:5736
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5280
+-- /cygdrive/c/source/mushclient/mushview.cpp:5303
 
 -- /cygdrive/c/source/mushclient/sendvw.cpp:2325
   ["Notepad: %s"] =
@@ -2307,7 +2307,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/dialogs/plugins/PluginsDlg.cpp:524
 
--- /cygdrive/c/source/mushclient/doc.cpp:877
+-- /cygdrive/c/source/mushclient/doc.cpp:878
 
 -- /cygdrive/c/source/mushclient/evaluate.cpp:648
   ["Unable to open or read %s"] =
@@ -2583,7 +2583,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/dialogs/plugins/PluginsDlg.cpp:531
 
--- /cygdrive/c/source/mushclient/doc.cpp:884
+-- /cygdrive/c/source/mushclient/doc.cpp:885
   ["There was a problem loading the plugin %s. See the output window for more details"] =
     function (a)
      
@@ -2869,14 +2869,14 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:771
+-- /cygdrive/c/source/mushclient/doc.cpp:772
   ["Welcome to MUSHclient version %s!"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:775
+-- /cygdrive/c/source/mushclient/doc.cpp:776
 
 -- /cygdrive/c/source/mushclient/world_debug.cpp:974
   ["Compiled: %s."] =
@@ -2885,223 +2885,223 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:777
+-- /cygdrive/c/source/mushclient/doc.cpp:778
   ["Using: %s, PCRE %s, PNG %s, SQLite3 %s, Zlib %s"] =
     function (a, b, c, d, e)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:991
+-- /cygdrive/c/source/mushclient/doc.cpp:992
   ["Cannot connect to \"%s\", TCP/IP address not specified"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:998
+-- /cygdrive/c/source/mushclient/doc.cpp:999
   ["Cannot connect to \"%s\", port number not specified"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:1024
+-- /cygdrive/c/source/mushclient/doc.cpp:1025
   ["Unknown proxy server type: %d."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:1042
+-- /cygdrive/c/source/mushclient/doc.cpp:1043
   ["Connecting to %s, port %d"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:1064
+-- /cygdrive/c/source/mushclient/doc.cpp:1065
   ["Unable to create TCP/IP socket for \"%s\", code = %i (%s)"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:1516
+-- /cygdrive/c/source/mushclient/doc.cpp:1517
   ["Could not decompress text from MUD: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:1519
+-- /cygdrive/c/source/mushclient/doc.cpp:1520
   ["Could not decompress text from MUD: %i"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2560
+-- /cygdrive/c/source/mushclient/doc.cpp:2561
   ["%s function \"%s\" cannot execute - scripting disabled/parse error."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2572
+-- /cygdrive/c/source/mushclient/doc.cpp:2573
   ["%s function \"%s\" not found or had a previous error."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2591
+-- /cygdrive/c/source/mushclient/doc.cpp:2592
   ["processing trigger \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2750
+-- /cygdrive/c/source/mushclient/doc.cpp:2751
   ["Close log file %s?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2862
+-- /cygdrive/c/source/mushclient/doc.cpp:2863
   ["Unable to open log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:3141
+-- /cygdrive/c/source/mushclient/doc.cpp:3142
   ["An error occurred writing to log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:3971
+-- /cygdrive/c/source/mushclient/doc.cpp:3972
 
--- /cygdrive/c/source/mushclient/doc.cpp:6607
+-- /cygdrive/c/source/mushclient/doc.cpp:6608
   ["Unable to connect to \"%s\", code = %i (%s)\n\nError occurred during phase: %s"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4126
+-- /cygdrive/c/source/mushclient/doc.cpp:4127
   ["Unable to resolve host name for \"%s\", code = %i (%s)"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4452
+-- /cygdrive/c/source/mushclient/doc.cpp:4453
   ["This will end your %s session."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4482
+-- /cygdrive/c/source/mushclient/doc.cpp:4483
   ["World internal variables (only) have changed.\n\nSave changes to %s?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4843
+-- /cygdrive/c/source/mushclient/doc.cpp:4844
   ["Are you SURE you want to clear all %i lines in the output window?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4872
+-- /cygdrive/c/source/mushclient/doc.cpp:4873
   ["Recalling: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5035
+-- /cygdrive/c/source/mushclient/doc.cpp:5036
   ["The %s \"%s\" was not found"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5096
+-- /cygdrive/c/source/mushclient/doc.cpp:5097
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5333
+-- /cygdrive/c/source/mushclient/mushview.cpp:5356
   ["Recall: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5273
+-- /cygdrive/c/source/mushclient/doc.cpp:5274
   ["The connection to %s is currently being established."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5279
+-- /cygdrive/c/source/mushclient/doc.cpp:5280
   ["The connection to %s is not open. Attempt to reconnect?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5584
+-- /cygdrive/c/source/mushclient/doc.cpp:5585
   ["%s%s packet: %I64d (%i bytes) at %s%s%s"] =
     function (a, b, c, d, e, f, g)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:6548
+-- /cygdrive/c/source/mushclient/doc.cpp:6549
   ["Unable to initiate host name lookup for \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:6760
+-- /cygdrive/c/source/mushclient/doc.cpp:6761
   ["Could not open log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:6973
+-- /cygdrive/c/source/mushclient/doc.cpp:6974
   ["Proxy server cannot authenticate, reason: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:7039
+-- /cygdrive/c/source/mushclient/doc.cpp:7040
 
--- /cygdrive/c/source/mushclient/doc.cpp:7077
+-- /cygdrive/c/source/mushclient/doc.cpp:7078
   ["Proxy server refused connection, reason: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:7107
+-- /cygdrive/c/source/mushclient/doc.cpp:7108
   ["Unexpected proxy server response %i, expected %i"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:7681
+-- /cygdrive/c/source/mushclient/doc.cpp:7682
   ["Unable to edit file %s."] =
     function (a)
      
@@ -3117,7 +3117,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/evaluate.cpp:925
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5719
+-- /cygdrive/c/source/mushclient/mushview.cpp:5742
   ["Alias: %s"] =
     function (a)
      
@@ -3126,7 +3126,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/evaluate.cpp:956
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5649
+-- /cygdrive/c/source/mushclient/mushview.cpp:5672
   ["processing alias \"%s\""] =
     function (a)
      
@@ -3140,74 +3140,74 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2194
+-- /cygdrive/c/source/mushclient/mushview.cpp:2197
   ["Plugin \"%s\" is not installed"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2199
+-- /cygdrive/c/source/mushclient/mushview.cpp:2202
   ["Script routine \"%s\" is not in plugin %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2206
+-- /cygdrive/c/source/mushclient/mushview.cpp:2209
   ["An error occurred calling plugin %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2259
+-- /cygdrive/c/source/mushclient/mushview.cpp:2262
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5457
+-- /cygdrive/c/source/mushclient/mushview.cpp:5480
   ["Hyperlink action \"%s\" - permission denied."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:2264
+-- /cygdrive/c/source/mushclient/mushview.cpp:2267
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5462
+-- /cygdrive/c/source/mushclient/mushview.cpp:5485
   ["Unable to open the hyperlink \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4331
+-- /cygdrive/c/source/mushclient/mushview.cpp:4334
   ["Line %ld, %s%s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4428
+-- /cygdrive/c/source/mushclient/mushview.cpp:4431
   ["Unable to open the URL \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4462
+-- /cygdrive/c/source/mushclient/mushview.cpp:4465
   ["Email address \"%s\" invalid - does not contain a \"@\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4470
+-- /cygdrive/c/source/mushclient/mushview.cpp:4473
   ["Unable to send mail to \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mushview.cpp:5621
+-- /cygdrive/c/source/mushclient/mushview.cpp:5644
   ["Variable '%s' is not defined."] =
     function (a)
      
@@ -3710,7 +3710,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/plugins.cpp:616
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1127
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1139
 
 -- /cygdrive/c/source/mushclient/scripting/methods/methods_plugins.cpp:412
   ["Plugin %s"] =
@@ -3731,7 +3731,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/plugins.cpp:619
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1128
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1140
 
 -- /cygdrive/c/source/mushclient/scripting/methods/methods_plugins.cpp:413
   ["Executing plugin %s sub %s"] =
@@ -3782,42 +3782,42 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:996
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1008
   ["Plugin ID (%s) is not installed"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1006
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1018
   ["Plugin '%s' (%s) disabled"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1018
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1030
   ["Scripting not enabled in plugin '%s' (%s)"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1044
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1056
   ["No function '%s' in plugin '%s' (%s)"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1095
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1107
   ["Cannot pass argument #%i (%s type) to CallPlugin"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1148
+-- /cygdrive/c/source/mushclient/scripting/lua_methods.cpp:1160
   ["Runtime error in function '%s', plugin '%s' (%s)"] =
     function (a, b, c)
      
@@ -5137,11 +5137,11 @@ times = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/configuration.cpp:514
 
--- /cygdrive/c/source/mushclient/doc.cpp:2936
+-- /cygdrive/c/source/mushclient/doc.cpp:2937
 
--- /cygdrive/c/source/mushclient/doc.cpp:6789
+-- /cygdrive/c/source/mushclient/doc.cpp:6790
 
--- /cygdrive/c/source/mushclient/mushview.cpp:3789
+-- /cygdrive/c/source/mushclient/mushview.cpp:3792
 
 -- /cygdrive/c/source/mushclient/plugins.cpp:993
 
@@ -5151,15 +5151,15 @@ times = {
   ["%A, %B %d, %Y, %#I:%M %p"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:5578
+-- /cygdrive/c/source/mushclient/doc.cpp:5579
   ["%A, %B %d, %Y, %#I:%M:%S %p"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:6696
+-- /cygdrive/c/source/mushclient/doc.cpp:6697
   ["--- Connected on %A, %B %d, %Y, %#I:%M %p ---"] =
     "",
 
--- /cygdrive/c/source/mushclient/mushview.cpp:4323
+-- /cygdrive/c/source/mushclient/mushview.cpp:4326
   ["%A, %B %d, %#I:%M:%S %p"] =
     "",
 
