@@ -1,7 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1696 snapshot
+- new feature: updated to MUSHclient 4.84 (see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.84 )
+- misc change: if timers or triggers are disabled, invoking wait.lua methods should give friendlier error messages instead of assertion errors
+- misc change: mapper tooltip popups should stay up longer now
+
 r1693 snapshot
-- new feature: updated to MUSHclient 4.82 (see release notes www.gammon.com.au/scripts/showrelnote.php?version=4.82 )
+- new feature: updated to MUSHclient 4.82 (see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.82 )
 - bug fix: some cruft accidentally got into the default recent file list
 - misc change: styles to ansi conversion avoids spamming the user when doing stupid things like trying to change channel colors via trigger instead of colorset (seriously? come on)
 - bug fix: resizing the embedded bigmap was horribly broken
