@@ -2597,7 +2597,8 @@ function fix_exits_table()
 end
 
 function OnPluginInstall ()
-  
+   SetOption ("tool_tip_visible_time", 10000) -- prolong the tooltip display
+
    configs = {}  -- in case not found
 
    fonts = utils.getfontfamilies ()
