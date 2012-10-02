@@ -1350,7 +1350,7 @@ function map_portal_list ()
       if row.level <= mylevel+(mytier*10) then
          -- make the whole line click-able
          cmd = "mapper goto " .. row.touid
-         txt = "click here to run to " .. row.name
+         txt = "click here to run to " .. row.name .. "\n[ " .. row.dir .. " ]"
          Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false)
          Note ()
       else
