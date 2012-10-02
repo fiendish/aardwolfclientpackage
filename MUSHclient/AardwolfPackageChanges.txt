@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1700 snapshot
+- bug fix: I accidentally broke the mapper portal command in r1693 with some errant debug lines. Oops. Thanks Saerec.
+- misc change: the popup that shows when mousing over 'mapper portals' list entries now shows the complete command sequence in addition to the destination
+
 r1697 snapshot
 - new feature: updated to MUSHclient 4.84 (see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.84 )
 - misc change: if timers or triggers are disabled, invoking wait.lua methods should give friendlier error messages instead of assertion errors
