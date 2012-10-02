@@ -1260,8 +1260,6 @@ function map_portal (name, line, wildcards)
 end -- map_portal
 
 function create_portal(keyword, destination, level)
-   print(keyword,"-",destination,"-",level)
-   if true then return end
    local hhp_room_exists = 0
    local query = ""
    -- first check to see if our special 'from anywhere' room exists...
