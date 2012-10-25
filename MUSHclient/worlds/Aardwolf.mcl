@@ -158,6 +158,7 @@ addxml.trigger {
   send = "%2",
   sequence = 100,
   enabled = true,
+  send_to = 10,
   group = "command_line_triggers"
                }
 
