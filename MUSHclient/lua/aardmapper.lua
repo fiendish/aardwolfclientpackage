@@ -507,6 +507,10 @@ local inverse_direction = {
    w = "e",
    u = "d",
    d = "u",
+   ne = "sw",
+   se = "nw",
+   sw = "ne",
+   nw = "se"
 }  -- end of inverse_direction
   
 local function add_another_room (uid, path, x, y)
