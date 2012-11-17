@@ -796,6 +796,8 @@ function findpathfast(name, line, wildcards)
    end
 end
 
+PORTALS_QUERY = "select rooms.area,rooms.name,exits.touid,exits.fromuid,exits.dir,exits.date_added,exits.level from exits left outer join rooms on rooms.uid=exits.touid where exits.fromuid in ('*','**') order by rooms.area,exits.touid"
+
 function map_bounceportal (name, line, wildcards)
    wildcards[1] = Trim(wildcards[1])
    if wildcards[1]=="" then
@@ -819,10 +821,9 @@ function map_bounceportal (name, line, wildcards)
       return
    end
    
-   local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
    local found = false
-   for row in db:nrows(q) do
+   for row in db:nrows(PORTALS_QUERY) do
       if count == pnum then
          if row.fromuid == "*" then
             bounce_portal = {dir=row.dir, uid=row.touid}
@@ -864,10 +865,9 @@ function map_bouncerecall (name, line, wildcards)
       return
    end
    
-   local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
    local found = false
-   for row in db:nrows(q) do
+   for row in db:nrows(PORTALS_QUERY) do
       if count == pnum then
          if row.fromuid == "**" then
             bounce_recall = {dir=row.dir, uid=row.touid}
@@ -1127,10 +1127,9 @@ function map_portal_delete (name, line, wildcards)
    local target_index = nil
    if string.sub(keywords,1,1) == "#" and type(tonumber(string.sub(keywords,2)))=="number" then
       target_index = tonumber(string.sub(keywords,2))
-      local q = "select area, touid, dir from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
       local count = 0
       local found = false
-      for row in db:nrows(q) do
+      for row in db:nrows(PORTALS_QUERY) do
          count = count + 1
          if count == target_index then
             keywords = row.dir
@@ -1194,10 +1193,9 @@ function map_portal_recall (name, line, wildcards)
       return
    end
    
-   local q = "select area, name, touid, fromuid, dir, exits.date_added, exits.level from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
    local found = false
-   for row in db:nrows(q) do
+   for row in db:nrows(PORTALS_QUERY) do
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level, date_added) 
@@ -1220,7 +1218,7 @@ function map_portal_recall (name, line, wildcards)
          )
          dbCheckExecute(query)
          
-         world.Note(string.format("\nPORTALRECALL: Recall flag %s portal '%s' to '%s'.\n",((row.fromuid == "*") and "added to") or "removed from",row.dir,row.name))
+         world.Note(string.format("\nPORTALRECALL: Recall flag %s portal '%s' to '%s'.\n",((row.fromuid == "*") and "added to") or "removed from",row.dir,(row.name or "N/A")))
          found = true
       end
       count = count + 1
@@ -1247,6 +1245,10 @@ function map_portal (name, line, wildcards)
       return
    end
    
+   if wildcards[2] and not load_room_from_database(wildcards[2]) then 
+      print("PORTAL FAILED: The room "..wildcards[2].." does not exist.")
+      return
+   end
    local destination = wildcards[2] or current_room
    local level = (level_check(wildcards[3]) and wildcards[3]) or tonumber(utils.inputbox (string.format("Please enter the level of your portal to %s, or leave at 0 for the default",destination), "Portal Level", "0", "Courier", 9, {validate=level_check}))
 	
@@ -1303,10 +1305,9 @@ function map_portal_level (name, line, wildcards)
       level = 0
    end
  
-   local q = "select area, name, touid, fromuid, dir, exits.date_added from exits,rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 1
    local found = false
-   for row in db:nrows(q) do
+   for row in db:nrows(PORTALS_QUERY) do
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level, date_added) 
@@ -1342,17 +1343,16 @@ function map_portal_list ()
    Note (hr)
    Note (hl)
 
-   local q = "select area, name, fromuid, touid, dir,level from exits, rooms where exits.touid=rooms.uid and exits.fromuid in ('*','**') order by area,touid"
    local count = 0
-   for row in db:nrows(q) do
+   for row in db:nrows(PORTALS_QUERY) do
       count = count + 1
-      line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area, row.name, row.touid, row.dir, row.level)
+      line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
          -- make the whole line click-able
          cmd = "mapper goto " .. row.touid
-         txt = "click here to run to " .. row.name .. "\n[ " .. row.dir .. " ]"
+         txt = "click here to run to " .. (row.name or "N/A") .. "\n[ " .. row.dir .. " ]"
          Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false)
-         Note ()
+         Note()
       else
          Note(line)
       end -- if row.level
@@ -1603,6 +1603,7 @@ function load_area_from_database (area)
 
    local lastuid = -1
    local newrooms = {}
+
    for row in db:nrows(string.format("SELECT rooms.*,exits.dir,exits.touid,exits.level FROM rooms,exits where rooms.area=%s and rooms.uid=exits.fromuid;", fixsql(area))) do
       if lastuid ~= row.uid then
          table.insert(newrooms, row.uid)
