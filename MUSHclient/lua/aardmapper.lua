@@ -778,7 +778,7 @@ function check_we_can_find ()
       return false
    end
    if current_speedwalk then
-      mapprint ("No point doing this while you are speedwalking.")
+      mapprint ("The mapper has detected a speedwalk initiated inside another speedwalk. Aborting.")
       return false
    end -- if
    return true
