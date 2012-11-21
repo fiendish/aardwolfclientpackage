@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r1711 snapshot
+- bug fix: the gmcp mapper won't try to mark the room noportal/norecall if you are blinded or have moved away from the room
+- bug fix: the query collapsing function in the gmcp mapper from r1693 would throw an error if the area had nomap rooms with single quotes in their names
+- misc change: the error message shown by the gmcp mapper when a pathfind triggers another pathfind should be a bit less opaque
+- bug fix: the #trigger alias should now set up triggers to send to execute instead of world
+
 r1700 snapshot
 - bug fix: I accidentally broke the mapper portal command in r1693 with some errant debug lines. Oops. Thanks Saerec.
 - misc change: the popup that shows when mousing over 'mapper portals' list entries now shows the complete command sequence in addition to the destination
