@@ -635,6 +635,47 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
   >
   </trigger>
 
+  <trigger
+   enabled="n"
+   match="^Affect Flags: (.*)$"
+   regexp="y"
+   name="blindness_watch"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+  ><send>
+      EnableTrigger("blindness_watch_continued", true)
+      if string.find("%1","blindness") ~= nil then
+         blinded = true
+      end
+   </send>
+  </trigger>
+
+  <trigger
+   enabled="n"
+   match="^(.*)$"
+   regexp="y"
+   name="blindness_watch_continued"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+  ><send>
+      if "%1" == "" then
+         EnableTrigger("blindness_watch", false)
+         EnableTrigger("blindness_watch_continued", false)
+         if not blinded then
+            mark_prison_flag()
+         else
+            print("It looks like you are blinded.")
+            print("Norecall/noportal flags will not be added until you can see again.")
+         end
+      elseif string.find("%1","blindness") ~= nil then
+         blinded = true
+      end
+   </send>
+  </trigger>
+
+
 </triggers>
 
 <script>
@@ -2934,32 +2975,48 @@ function override_continents(override)
    mapper.halt_drawing(bigmap_override and current_room_is_cont)
 end
 
-function noportal_room()
-   if current_room ~= nil then
-      if rooms[current_room] ~= nil then
-         if rooms[current_room].noportal ~= 1 then
-            Note('marking room ', current_room, ' noportal')
-            rooms[current_room].noportal = 1
-            dbCheckExecute("BEGIN TRANSACTION;")
-            save_room_to_database(current_room, rooms[current_room])
-            dbCheckExecute("COMMIT;")
+flagType = nil
+function mark_prison_flag()
+   if (flagType ~= nil) and (room_at_bounceback ~= nil) and (rooms[room_at_bounceback] ~= nil) then
+      if (current_room == room_at_bounceback) then
+         if (flagType == "noportal") and (rooms[room_at_bounceback].noportal ~= 1) then
+            Note('Marking room (', room_at_bounceback, ') noportal')
+            rooms[room_at_bounceback].noportal = 1
          end
+         if (flagType == "norecall") and (rooms[room_at_bounceback].norecall ~= 1) then
+            Note('Marking room (', room_at_bounceback, ') norecall')
+            rooms[room_at_bounceback].norecall = 1
+         end
+         dbCheckExecute("BEGIN TRANSACTION;")
+         save_room_to_database(room_at_bounceback, rooms[room_at_bounceback])
+         dbCheckExecute("COMMIT;")
+      else
+         print("You were moving too quickly to safely flag room ("..room_at_bounceback..") as "..flagType..".")
       end
    end
+   flagType = nil
 end
 
 function norecall_room()
-   if current_room ~= nil then
-      if rooms[current_room] ~= nil then
-         if rooms[current_room].norecall ~= 1 then
-            Note('marking room ', current_room, ' norecall')
-            rooms[current_room].norecall = 1
-            dbCheckExecute("BEGIN TRANSACTION;")
-            save_room_to_database(current_room, rooms[current_room])
-            dbCheckExecute("COMMIT;")
-         end
-      end
+   if (current_room ~= nil) and (rooms[current_room] ~= nil) and (rooms[current_room].norecall ~= 1) then
+      flagType = "norecall"
+      check_blindness()
    end
+end
+
+function noportal_room()
+   if (current_room ~= nil) and (rooms[current_room] ~= nil) and (rooms[current_room].noportal ~= 1) then
+      flagType = "noportal"
+      check_blindness()
+   end
+end 
+
+function check_blindness()
+   room_at_bounceback = current_room
+   print("Checking for blindness flag before marking this room "..flagType.."...")
+   blinded = false
+   EnableTrigger("blindness_watch", true)
+   SendNoEcho("aflags")
 end
 
 function draw_other(name, line, wildcards)
