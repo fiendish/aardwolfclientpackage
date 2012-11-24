@@ -78,7 +78,40 @@ details captured through GMCP.
 
 <trigger
    enabled="y"
+   match="^You have declined the group invitation from (\w+)\.$"
+   script="group_cancel"
+   regexp="y"
+   sequence="100"
+   custom_colour="17"
+   other_text_colour="#FFFFFF"
+   other_back_colour="#FF0000"
+></trigger>
+
+<trigger
+   enabled="y"
+   match="^You have no invitation outstanding from (\w+)\.$"
+   script="group_cancel"
+   regexp="y"
+   sequence="100"
+   custom_colour="17"
+   other_text_colour="#FFFFFF"
+   other_back_colour="#FF0000"
+></trigger>
+
+<trigger
+   enabled="y"
    match="^Your group invite from (\w+) is cancelled because the group has been disbanded\.$"
+   script="group_cancel"
+   regexp="y"
+   sequence="100"
+   custom_colour="17"
+   other_text_colour="#FFFFFF"
+   other_back_colour="#FF0000"
+></trigger>
+
+<trigger
+   enabled="y"
+   match="^Your group invitation from (\w+) is cancelled because (\w+) has left that group\.$"
    script="group_cancel"
    regexp="y"
    sequence="100"
@@ -264,8 +297,10 @@ function DisplayGroupPage()
          txt = "Pending Group Invitations"
          txtlen = WindowTextWidth(win, font_id, txt)
          WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, 0xeeeeee, utf8)
+         table.insert(lines, "[ Leader     : Group Name ]")
+         table.insert(lines, "---------------------------")
          for k,v in pairs(invitations) do
-            table.insert(lines, k.." wants you to join: "..v)
+            table.insert(lines, string.rpad(k,12).." : "..v)
          end
          for i,v in ipairs(lines) do
             WindowText(win, font_id, v, GAP*4, (title_height) + (i*line_height), 0, 0, 0xeeeeee, utf8)
