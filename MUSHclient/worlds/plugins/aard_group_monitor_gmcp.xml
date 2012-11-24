@@ -119,6 +119,17 @@ details captured through GMCP.
    other_text_colour="#FFFFFF"
    other_back_colour="#FF0000"
 ></trigger>
+
+<trigger
+   enabled="y"
+   match="^Your group invitation from (\w+) is cancelled because (\w+) has left the game\.$"
+   script="group_cancel"
+   regexp="y"
+   sequence="100"
+   custom_colour="17"
+   other_text_colour="#FFFFFF"
+   other_back_colour="#FF0000"
+></trigger>
 </triggers>
 
 <script>
