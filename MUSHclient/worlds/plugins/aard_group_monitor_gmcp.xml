@@ -239,22 +239,23 @@ end
 
 function RemoveMembersFromGroupDisplay()
    group_data = copytable.deep(full_group_data)
-
-   -- hide self if applicable
-   if (show_self == 0) and (char_data ~= nil) then
-      for i,v in ipairs(group_data["members"]) do
-         if v["name"] == char_data["name"] then
-            table.remove(group_data["members"], i)
+   if (group_data ~= nil) and (group_data["members"] ~= nil) then
+      -- hide self if applicable
+      if (show_self == 0) and (char_data ~= nil) then
+         for i,v in ipairs(group_data["members"]) do
+            if v["name"] == char_data["name"] then
+               table.remove(group_data["members"], i)
+            end
          end
       end
-   end
-    
-   -- hide other hidden members (inefficient method, but who cares)
-   for k,v in pairs(hidden_members) do
-      for i,v in ipairs(group_data["members"]) do
-         if v["name"] == k then
-            table.remove(group_data["members"], i)
-            break
+       
+      -- hide other hidden members (inefficient method, but who cares)
+      for k,v in pairs(hidden_members) do
+         for i,v in ipairs(group_data["members"]) do
+            if v["name"] == k then
+               table.remove(group_data["members"], i)
+               break
+            end
          end
       end
    end
@@ -612,13 +613,11 @@ invitations = {}
 
 function group_invite(name, line, wildcards, styles)
    invitations[wildcards[1]]=wildcards[2]
-   RemoveMembersFromGroupDisplay()
    DisplayGroupPage()
 end
 
 function group_cancel(name, line, wildcards, styles)
    invitations[wildcards[1]] = nil
-   RemoveMembersFromGroupDisplay()
    DisplayGroupPage()
 end
 
@@ -652,7 +651,6 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "full_group_data = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          if (full_group_data.groupname == "") then
-            invitations = {}
             leaveGroup()
          else
             group_built = true
@@ -741,13 +739,12 @@ function LeftClickOnly(flags, hotspot_id, win)
    return false
 end
 
-function leaveGroup (name, line, wildcards, styles)
-   if (wildcards == nil) or (wildcards["leader"] == nil and wildcards["groupname"] == nil) or (wildcards["leader"] == group_data["leader"] or wildcards["groupname"] == strip_colours(group_data["groupname"])) then
-      group_built = false
-      full_group_data = {}
-      group_data = {}
-      SetUpHotspotsAndDraw(false)
-   end
+function leaveGroup ()
+   invitations = {}
+   group_built = false
+   full_group_data = {}
+   group_data = {}
+   SetUpHotspotsAndDraw(false)
 end
 
 function OnPluginConnect()
