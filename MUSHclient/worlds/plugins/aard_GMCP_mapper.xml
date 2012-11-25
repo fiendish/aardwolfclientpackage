@@ -1647,7 +1647,8 @@ function load_area_from_database (area)
 
    for row in db:nrows(string.format("SELECT rooms.*,exits.dir,exits.touid,exits.level FROM rooms,exits where rooms.area=%s and rooms.uid=exits.fromuid;", fixsql(area))) do
       if lastuid ~= row.uid then
-         table.insert(newrooms, row.uid)
+         local fixstr = string.gsub(row.uid,"'","''")
+         table.insert(newrooms, fixstr)
          rooms[row.uid] = {
          name = row.name,
          area = row.area,
@@ -1670,7 +1671,7 @@ function load_area_from_database (area)
       lastuid = row.uid
    end   -- finding room
   
-   for bmrow in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid in (%s)", fixsql(table.concat(newrooms,"','")))) do
+   for bmrow in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid in ('%s')", table.concat(newrooms,"','"))) do
       rooms[bmrow.uid].notes = bmrow.notes
    end   -- finding room
 
