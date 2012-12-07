@@ -1,6 +1,7 @@
 Aardwolf Client Package Major Changes List
 
-r1719 snapshot
+r1720 snapshot
+(December 2012 release)
 - misc change: LuaJIT updated to 2.0 (see luajit.org for details)
 - bug fix: group monitor had ghost mouseover hotspots left behind from old gauges after leaving a group
 
