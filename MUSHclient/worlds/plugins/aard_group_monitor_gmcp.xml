@@ -755,7 +755,7 @@ function leaveGroup ()
    group_built = false
    full_group_data = {}
    group_data = {}
-   SetUpHotspotsAndDraw(false)
+   SetUpHotspotsAndDraw(true)
 end
 
 function OnPluginConnect()
