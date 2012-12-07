@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1719 snapshot
+- misc change: LuaJIT updated to 2.0 (see luajit.org for details)
+- bug fix: group monitor had ghost mouseover hotspots left behind from old gauges after leaving a group
+
 r1716 snapshot
 - bug fix: gmcp mapper room notes missing since the last snapshot should now show up again
 - bug fix: group monitor was erroring upon group invitation if you'd previously left a group with hidden members
