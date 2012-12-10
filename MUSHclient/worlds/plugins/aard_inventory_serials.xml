@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Aardwolf_Inventory_Serials"
+   author="Fiendish"
+   id="0cbb10309587f0ee15ba78ce"
+   language="Lua"
+   purpose="Adds useful serial numbers to inventory command output"
+   date_written="2011-12-30 22:45:00"
+   requires="4.70"
+   version="1.0"
+   >
+<description trim="y">
+Makes inventory command slightly more useful by displaying UIDs
+</description>
+</plugin>
+
+<!--  Triggers  -->
+
+<triggers>
+
+<trigger
+   enabled="n"
+   match="{invdata}"
+   name="start_inv"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+>
+<send>
+   EnableTrigger("invdata", true)
+   EnableTrigger("end_inv", true)
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   match="{/invdata}"
+   name="end_inv"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+>
+<send>
+   displayInventory()
+   EnableTrigger("invdata", false)
+   EnableTrigger("end_inv", false)
+   if sent_count == 0 then
+      EnableTrigger("start_inv", false)
+   end
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   match="^(\d+),(\w*),(.+),(\d+),(\d+),([01]),(-?\d+),(-?\d+)"
+   name="invdata"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+   send_to="14"
+   script="parseInvdata"
+>
+</trigger>
+</triggers>
+
+<aliases>
+
+<alias
+   match="^(i|in|inv|inve|inven|invent|invento|inventor|inventory)$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+>
+<send>
+   sent_count = sent_count + 1
+   EnableTrigger("start_inv", true)
+   SendNoEcho("invdata")
+</send>
+</alias>
+
+</aliases>
+
+<script>
+<![CDATA[
+
+function OnPluginInstall()
+   if IsConnected() then
+      OnPluginConnect()
+   end
+end
+
+function OnPluginEnable()
+   OnPluginInstall()
+end
+
+function OnPluginConnect()
+   sent_count = 0
+end
+
+dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+inv = {}
+invsorted = {}
+
+function parseInvdata(name, line, wildcards, styles)
+   local hash = wildcards[2]..wildcards[3]..wildcards[4]
+   if not inv[hash] then
+      inv[hash] = {}
+      inv[hash][1] = {}
+      inv[hash][2] = {}
+      for i,v in ipairs({{"K","@R(K)@w"},{"M","@B(M)@w"},{"G","@W(G)@w"},{"H","@C(H)@w"},{"I","@w(I)"},{"T","@R(T)@w"}}) do
+         if wildcards[2]:find(v[1]) then
+            table.insert(inv[hash][2],v[2])
+         end
+      end
+      inv[hash][3] = wildcards[3]
+      inv[hash][4] = wildcards[4]
+      table.insert(invsorted, inv[hash])
+   end
+   table.insert(inv[hash][1], wildcards[1])
+end
+
+function displayInventory()
+   Simulate(stylesToANSI(ColoursToStyles("@wYou are carrying:\r\n")))
+   for k,v in ipairs(invsorted) do
+      local num = #v[1]
+      local count = string.format("@W(%2d) @w",num)
+      local line = string.format("%-5s",num > 1 and count or "     ")..table.concat(v[2]).." "..v[3].."  ["..((#v[1] < 4 and table.concat(v[1],",")) or "many").."]  ".."@W(@G"..v[4].."@W)@w\r\n"
+      Simulate(stylesToANSI(ColoursToStyles(line)))
+   end
+   invsorted = {}
+   inv = {}
+   sent_count = sent_count - 1
+end
+
+]]>
+</script>
+</muclient>
