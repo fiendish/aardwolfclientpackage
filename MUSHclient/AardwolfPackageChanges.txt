@@ -1,7 +1,10 @@
 Aardwolf Client Package Major Changes List
 
-r1720 snapshot
+r1723 snapshot
 (December 2012 release)
+- one last change before release, renamed aard_inventory_additions plugin to aard_inventory_serials
+
+r1720 snapshot
 - misc change: LuaJIT updated to 2.0 (see luajit.org for details)
 - bug fix: group monitor had ghost mouseover hotspots left behind from old gauges after leaving a group
 
