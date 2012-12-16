@@ -29,7 +29,7 @@
 >
 <send>
    -- code taken from the package update checker
-   version_file,err = io.open ("AardwolfPackageChanges.txt", "r")
+   version_file,err = io.open (GetInfo(56).."AardwolfPackageChanges.txt", "r")
    if not version_file then -- the file is missing or unreadable
       ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.")
       return

@@ -137,7 +137,7 @@ end
 
 function checkLocalFile()
    -- open the local version file
-   version_file,err = io.open ("AardwolfPackageChanges.txt", "r")
+   version_file,err = io.open (GetInfo(56).."AardwolfPackageChanges.txt", "r")
    if not version_file then -- the file is missing or unreadable
       ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.\n\nThe system returned the error:\n"..err.."\n\nYou should download the latest development snapshot from:"
       return false
