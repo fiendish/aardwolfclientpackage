@@ -58,7 +58,6 @@ local stacked = 0
 local showLabels = 1
 local reverseTNL = 1
 graphicalMode = tonumber(GetVariable("graphicalMode") or 1)
-local numBars = 6
 local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Mana={"Mana  :",true,"Mana:",0xff5500,0x442200}, Moves={"Moves :",true,"Moves:",0x00ffff,0x004444}, TNL={"TNL   :",true,"TNL:",0xffffff,0x444444}, Enemy={"Enemy :",true,"Enemy:",0x0000ff,0x000044}, Align={"Align :",true, "Alignment:",0x0000ff,0x00ffff}}
 showBar = defaultShowBar
 local barIndex = {"Health", "Mana", "Moves", "TNL", "Enemy", "Align"}
@@ -133,7 +132,7 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
          if flip then
             val = tostring(tonumber(maxval)-tonumber(val))
          end
-         if overlay_numbers == 1 or overlay_numbers == 3 then
+         if overlay_numbers == 1 or overlay_numbers == 3 or (graphicalMode == 0 and overlay_numbers ~= 2) then
             maxlen = math.max(#maxval, #val)
             txt = string.lpad(val, maxlen, ' ').."/"..string.rpad(maxval,maxlen,' ')
          end
@@ -182,15 +181,13 @@ end
 
 function DisplayStatsPage()
 
-   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
-
    if not page_built then
       local txt = "Status bars will appear here"
       local txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, 0, 0, 0xeeeeee, false)
+      WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height/2)-line_height, 0, 0, 0xeeeeee, false)
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, false)
+      WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, height/2, 0, 0, 0xeeeeee, false)
    else -- Only draw bars if we have data.
 
       local barTexts = ""
@@ -209,7 +206,7 @@ function DisplayStatsPage()
          if showLabels == 1 then
             label_width = WindowTextWidth(win,font_id,"WWWWWW:")
          end
-         bar_width = math.max(1, width-label_width-LEFT_MARGIN*2)
+         bar_width = math.max(1, effectiveWidth-label_width-LEFT_MARGIN*2)
       else
          for i,v in pairs(showBar) do
             if (v[2] == true) then
@@ -217,9 +214,9 @@ function DisplayStatsPage()
             end
          end
          if showLabels == 1 then
-            bar_width = math.max(1, (width-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+            bar_width = math.max(1, (effectiveWidth-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
          else
-            bar_width = math.max(1, (width-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+            bar_width = math.max(1, (effectiveWidth-LEFT_MARGIN)/numBars-LEFT_MARGIN)
          end
       end
       
@@ -297,7 +294,7 @@ function DisplayStatsPage()
                end
             end
             if graphicalMode == 1 then
-               WindowLine (win, xpos+label_width+line_height/2, math.ceil(ypos+line_height/2), xpos+label_width+bar_width-line_height/2, math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
+               WindowLine (win, xpos+label_width+math.max(0,line_height/2), math.ceil(ypos+line_height/2), xpos+label_width+math.max(0,bar_width-line_height/2), math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
                WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, bar_colour/2, 0, 2, bar_colour, 0)
 
                -- add ticks at alignment change boundaries
@@ -317,15 +314,18 @@ function DisplayStatsPage()
       end
    end
 
+   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
+   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+
    -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+   WindowLine(win, effectiveWidth-3, height-2, effectiveWidth-2, height-3, 0xffffff, 0, 2)
+   WindowLine(win, effectiveWidth-4, height-2, effectiveWidth-2, height-4, 0x696969, 0, 1)
+   WindowLine(win, effectiveWidth-6, height-2, effectiveWidth-2, height-6, 0xffffff, 0, 2)
+   WindowLine(win, effectiveWidth-7, height-2, effectiveWidth-2, height-7, 0x696969, 0, 1)
+   WindowLine(win, effectiveWidth-9, height-2, effectiveWidth-2, height-9, 0xffffff, 0, 2)
+   WindowLine(win, effectiveWidth-10, height-2, effectiveWidth-2, height-10, 0x696969, 0, 1)
+   WindowLine(win, effectiveWidth-12, height-2, effectiveWidth-2, height-12, 0xffffff, 0, 2)
+   WindowLine(win, effectiveWidth-13, height-2, effectiveWidth-2, height-13, 0x696969, 0, 1)
 
    BroadcastPlugin (999, "repaint")
 end -- DisplayStatsPage
@@ -354,7 +354,7 @@ function right_click_menu ()
    menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"
    menustring = menustring .. ">HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|"
-   menustring = menustring .. ((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|>Overlay Numbers|"..((overlay_numbers==0 and "+") or "").."None|"..((overlay_numbers==1 and "+") or "").."Standard|"..((overlay_numbers==2 and "+") or "").."Percentages|"..((overlay_numbers==3 and "+") or "").."Standard+Percentages|<|-|Bring To Front|Send To Back|-|>(In case of emergency)|Reduce Size|<|"
+   menustring = menustring .. ((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|>Overlay Numbers|"..((overlay_numbers==0 and "+") or "").."None"..(((graphicalMode==0) and " (Same as \"Standard\" in Text Mode)") or "").."|"..((overlay_numbers==1 and "+") or "").."Standard|"..((overlay_numbers==2 and "+") or "").."Percentages|"..((overlay_numbers==3 and "+") or "").."Standard+Percentages|<|-|Bring To Front|Send To Back|-|>(In case of emergency)|Reduce Size|<|"
 
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
@@ -450,13 +450,7 @@ function right_click_menu ()
          -- reduce size
          font_name = default_font_name
          font_size = default_font_size
-         numBars = 5
-         height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
          width = MIN_WIDTH
-         stacked = 1
-         showLabels = 1
-         reverseTNL = 1
-         showBar = defaultShowBar
       end -- if
       
       OnPluginSaveState()
@@ -486,8 +480,7 @@ function OnPluginBroadcast (msg, id, name, text)
 
          if page_built ~= true then
             -- draw edge frame again, just in case the text has overlapped the border
-            WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-            WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+            WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
          end
          page_built = true
          DisplayStatsPage()
@@ -529,7 +522,6 @@ lastRefresh = 0
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-   orig_width = 0
    SetUpHotspotsAndDraw(false)
 end
 
@@ -572,23 +564,15 @@ function OnPluginSaveState ()
    -- save window current location for next time  
    movewindow.save_state (win)
    barTexts = ""
-   numBars = 0
-   for i,v in pairs(showBar) do
-      if (v[2] == true) then
-         barTexts = barTexts..v[3]
-         numBars = numBars+1
-      end
-   end
    SetVariable ("stacked", stacked)
    SetVariable ("showLabels", showLabels)
    SetVariable ("reverseTNL", reverseTNL)
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    SetVariable ("background_colour", background_colour)
-   SetVariable ("width", (((orig_width ~= 0) and orig_width) or width))
+   SetVariable ("width", width)
    SetVariable ("height", height)
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
-   SetVariable ("numBars", numBars)
    SetVariable ("showBar", serialize.save ("showBar"))
    SetVariable ("graphicalMode", graphicalMode)
    SetVariable ("flat_gauges", flat_gauges)
@@ -625,11 +609,8 @@ function OnPluginListChanged ()
    do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
 end -- OnPluginListChanged
 
-orig_width = 0
 function OnPluginWorldOutputResized()
-   if installed == true then
-      orig_width = math.max(width, orig_width)
-      width = math.min(orig_width, GetInfo(281)-windowinfo.window_left)
+   if (installed == true) and (((GetInfo(281)-windowinfo.window_left) > effectiveWidth) or ((GetInfo(281)-windowinfo.window_left) < width)) then
       SetUpHotspotsAndDraw(false)
    end
 end
@@ -674,29 +655,30 @@ function OnPluginInstall()
    --- install the window movement handler, get back the window position.
    windowinfo  = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
 
-   MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWW:")+LEFT_MARGIN*2)
+   MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWWW:")+(LEFT_MARGIN*2))
 
    width      = tonumber(GetVariable("width")) or default_width
    stacked    = tonumber(GetVariable("stacked")) or stacked
    showLabels = tonumber(GetVariable("showLabels")) or showLabels
    reverseTNL = tonumber(GetVariable("reverseTNL")) or reverseTNL
-   numBars    = tonumber(GetVariable("numBars")) or numBars
    flat_gauges = tonumber(GetVariable("flat_gauges")) or 0
    overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 1
    showBar = defaultShowBar
    assert (loadstring (GetVariable ("showBar") or "")) ()
 
    barTexts = ""
+   numBars = 0
    for i,v in pairs(showBar) do
       if (v[2] == true) then
          barTexts = barTexts..v[3]
+         numBars = numBars + 1
       end
    end
    if stacked == 1 then
       height = (TOP_MARGIN*2)+(numBars*(line_height+1))
    else
       if showLabels == 1 then
-         MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+LEFT_MARGIN*2)
+         MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+(LEFT_MARGIN*(numBars+2)))
       end
       height = TOP_MARGIN*2 + line_height
    end
@@ -725,24 +707,25 @@ end
 -- to the main window.
 --=================================================================================
 function SetUpHotspotsAndDraw(firstTime)
+   effectiveWidth = math.min(width, GetInfo(281)-windowinfo.window_left)
    if (firstTime == true) then
       check (WindowCreate (win, 
             windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-            width,     -- width
+            effectiveWidth,     -- width
             height,  -- height
             windowinfo.window_mode,       -- auto-position: middle right
             windowinfo.window_flags,  -- flags
             background_colour) )                
       -- Add handler for resizing
-      WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+      WindowAddHotspot(win, "resize", effectiveWidth-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, effectiveWidth, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
       WindowShow (win, true)
    else
       -- everything has already been made
       -- just move them back into place
-      WindowResize(win, width, height, background_colour)
-      WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
+      WindowResize(win, effectiveWidth, height, background_colour)
+      WindowMoveHotspot(win, "resize", effectiveWidth-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, effectiveWidth, height)
    end
    
    -- Add the drag handler so they can move the window around
