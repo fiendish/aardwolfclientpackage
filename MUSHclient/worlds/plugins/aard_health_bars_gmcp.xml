@@ -181,6 +181,8 @@ end
 
 function DisplayStatsPage()
 
+   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
+
    if not page_built then
       local txt = "Status bars will appear here"
       local txtlen = WindowTextWidth(win,font_id,txt)
@@ -314,6 +316,7 @@ function DisplayStatsPage()
       end
    end
 
+   -- draw edge frame.
    WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
    WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
 
@@ -478,10 +481,6 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
 
-         if page_built ~= true then
-            -- draw edge frame again, just in case the text has overlapped the border
-            WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
-         end
          page_built = true
          DisplayStatsPage()
       end
@@ -731,10 +730,6 @@ function SetUpHotspotsAndDraw(firstTime)
    -- Add the drag handler so they can move the window around
    movewindow.add_drag_handler (win, 0, 0, 0, 0)
  
-   -- draw edge frame.
-   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
-   
    DisplayStatsPage()
 end
 
