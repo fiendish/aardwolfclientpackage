@@ -250,19 +250,11 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 ></alias>
   
 <alias
-   match="mapper unmapped *"
+   match="^mapper unmapped( .+)?$"
    enabled="y"
    sequence="100"
    script="show_known_unmapped_exits"
-   regexp="n"
-></alias>
-
-<alias
-   match="mapper unmapped"
-   enabled="y"
-   sequence="100"
-   script="show_known_unmapped_exits"
-   regexp="n"
+   regexp="y"
 ></alias>
  
 <alias
@@ -1121,7 +1113,7 @@ function show_known_unmapped_exits (name, line, wildcards)
    area = Trim(wildcards [1] or "")
    
    if area == "" then
-      query = "select area, count(dir) as cnt from rooms inner join exits on rooms.uid = fromuid where touid not in (select uid from rooms) group by area"
+      query = "select area, count(dir) as cnt from rooms inner join exits on rooms.uid = fromuid where touid not in (select uid from rooms) and touid != -1 group by area"
       hr = "| area       | count |"
       hl = "+------------+-------+"
       intro = "The following areas have unmapped exits:"
@@ -1134,7 +1126,7 @@ function show_known_unmapped_exits (name, line, wildcards)
          intro = string.format("The following rooms in areas matching '%s' have unmapped exits:",area)
          area = "%"..area.."%"
       end
-      query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and touid not in (select uid from rooms) order by area, uid", fixsql(area))
+      query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and touid not in (select uid from rooms) and touid != -1 order by area, uid", fixsql(area))
       hr = "| area       | room name            | rm uid  | dir | to uid  |"
       hl = "+------------+----------------------+---------+-----+---------+"
       -- area - room name - room uid - direction - destination uid
