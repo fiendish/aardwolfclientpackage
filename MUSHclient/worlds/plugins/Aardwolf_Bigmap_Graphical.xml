@@ -169,41 +169,75 @@ function OnHelp ()
 end
 
 function remove_cache ()
+   map = {}
    continents = {}
    xref = {}
-   ColourNote ("white", "blue", "All bigmaps removed from cache.")
+
+   SetVariable ("continents", "continents = " .. serialize.save_simple (continents))
+   SetVariable ("xref", "xref = " .. serialize.save_simple (xref))
+
+   ColourNote ("white", "blue", "All bigmap cache has been cleared.")
+   updatelocation()
 end -- remove_cache
 
 function update_map()
-   EnableTrigger("multi_line_map",false)
-   EnableTrigger("map_start",true)
-   SendNoEcho "bigmap noself" -- grab map
+   if (show_map == 1) then
+      EnableTrigger("multi_line_map",false)
+      EnableTrigger("map_start",true)
+      SendNoEcho "bigmap noself" -- grab map
+   end
 end
 
 function map_on_off_alias (name, line, wildcards)
    if (wildcards[1]:lower() == " on") then
-      show_map = 1
-      ColourNote ("yellow", "", "Bigmap enabled.")
-      if (not (use_gmcp_mapper == 1)) then
-         WindowShow (mapwin, true)
+      if (show_map == 1) then
+         ColourNote("yellow", "", "Bigmap already enabled.")      
       else
-         CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true");
+         show_map = 1
+         ColourNote ("yellow", "", "Bigmap enabled.")
+         if (not (use_gmcp_mapper == 1)) then
+            WindowShow (mapwin, true)
+         else
+            CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
+         end
+         force_update = true
+         Send_GMCP_Packet("request room")
       end
    elseif (wildcards[1]:lower() == " off") then
-      show_map = 0
-      ColourNote ("yellow", "", "Bigmap DISABLED - type 'bigmap on' to re-enable.")
-      if (not (use_gmcp_mapper == 1)) then
-         WindowShow (mapwin, false)
+      if (show_map == 0) then
+         ColourNote("yellow", "", "Bigmap already disabled.")
       else
-         CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
+         show_map = 0
+         ColourNote ("yellow", "", "Bigmap DISABLED - type 'bigmap on' to re-enable.")
+         if (not (use_gmcp_mapper == 1)) then
+            WindowShow (mapwin, false)
+         else
+            CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false")
+         end
       end
-   elseif (wildcards[1]:lower() == " merge") and (not (use_gmcp_mapper == 1)) then
-      use_gmcp_mapper = 1
-      WindowShow (mapwin, false)
-      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
-   elseif (wildcards[1]:lower() == " unmerge") and (use_gmcp_mapper == 1) then
-      use_gmcp_mapper = 0
-      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
+   elseif (wildcards[1]:lower() == " merge") then
+      if show_map == 0 then
+         ColourNote ("yellow", "", "Bigmap is currently disabled. You will have to type 'bigmap on' for any change to occur.")
+      end
+      if  use_gmcp_mapper == 1 then
+         ColourNote ("yellow", "", "Bigmap is already merged into the mapper display.")
+      else
+         use_gmcp_mapper = 1
+         WindowShow (mapwin, false)
+         CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "true")
+         ColourNote ("yellow", "", "Bigmap MERGED into the mapper display.")
+      end
+   elseif (wildcards[1]:lower() == " unmerge") then
+      if show_map == 0 then
+         ColourNote ("yellow", "", "Bigmap is currently disabled. You will have to type 'bigmap on' for any change to occur.")
+      end
+      if use_gmcp_mapper == 0 then
+         ColourNote ("yellow", "", "Bigmap is already unmerged from the mapper display.")
+      else
+         use_gmcp_mapper = 0
+         CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false")
+         ColourNote("yellow", "", "Bigmap UNMERGED from the mapper into its own window.")
+      end
    end -- if
    OnPluginInstall()
 end -- map_on_off_alias
@@ -280,7 +314,7 @@ function NoMap()
       return
    end
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
-   local messages = {"If this continent map doesn't activate","walk onto the continent and type:","'bigmap update'"}
+   local messages = {"If the continent map doesn't show,","type: 'bigmap update'"}
    for i,v in ipairs(messages) do
       local messagewidth = WindowTextWidth (mapwin, font_id, v)
       WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
@@ -468,8 +502,8 @@ end
 
 function updatelocation()
    -- changed continent?
-   if (old_zone ~= zone) or (in_continent ~= (tonumber(oncont) == 1)) then
-
+   if force_update or (old_zone ~= zone) or (in_continent ~= (tonumber(oncont) == 1)) then
+      force_update = false
       -- grab cached map
       map = continents [zone]
       continent = xref [zone]
@@ -482,7 +516,7 @@ function updatelocation()
    end -- need big map
 
    -- draw our location
-   if map then
+   if continents[zone] then
       -- just in case, check again for construction
       if zone and ((WindowImageList(mapwin) == nil) or (table.contains(WindowImageList(mapwin),"bigmap_continent_"..zone) == false)) then
          ConstructMap()
@@ -534,6 +568,8 @@ function map_redirect (name, line, wildcards, styles)
          continents [zone] = map  -- cache it
          ConstructMap()
          ColourNote ("yellow", "", string.format("BIGMAP INFO: Constructed new continent bigmap for %s.", continent))
+         SetVariable ("continents", "continents = " .. serialize.save_simple (continents))
+         SetVariable ("xref", "xref = " .. serialize.save_simple (xref))
       end -- we know the continent
       if in_continent then
          WindowDeleteAllHotspots (mapwin)
@@ -668,10 +704,8 @@ end -- OnPluginInstall
 
 function OnPluginSaveState ()
    SetVariable("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   SetVariable ("continents",
-      "continents = " .. serialize.save_simple (continents))
-   SetVariable ("xref",
-      "xref = " .. serialize.save_simple (xref))
+   SetVariable ("continents", "continents = " .. serialize.save_simple (continents))
+   SetVariable ("xref", "xref = " .. serialize.save_simple (xref))
    SetVariable("use_gmcp_mapper", tostring(use_gmcp_mapper))
    SetVariable("show_map", show_map)
    if (not (use_gmcp_mapper == 1)) then
