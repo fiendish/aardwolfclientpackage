@@ -193,6 +193,8 @@ function showUpdate()
       elseif local_version > latest_version then
          ErrorMessage = "Oh, dear...this is embarrassing. The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Go to the following url in your browser to get the latest package and contact Fiendish about this message, because clearly this situation is impossible. :/"
          return false
+      else
+         ColourNote("yellow", "", "Your package version r"..local_version.." appears to be up-to-date.")
       end
    else
       ErrorMessage = "Impossible Error"
