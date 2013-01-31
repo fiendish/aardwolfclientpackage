@@ -1567,6 +1567,30 @@ function fix_up_exit ()
    from_room = nil
 end -- fix_up_exit
 
+function purgezone(zoneuid)
+   dbCheckExecute(string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from bookmarks where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from rooms where area = %s;", fixsql(zoneuid)))
+   dbCheckExecute(string.format ("delete from areas where uid = %s;", fixsql(zoneuid)))
+   
+   for k,v in pairs(rooms) do
+      for j,u in pairs(v.exits) do
+         if (rooms[u] ~= nil) and (rooms[u].area == zoneuid) then
+            v.exits[j] = nil
+         end
+      end
+   end
+   for k,v in pairs(rooms) do
+      if v.area == zoneuid then
+         rooms[k] = nil
+      end
+   end
+   areas[zoneuid] = nil
+   Send_GMCP_Packet("request room")
+end
+
 function map_purgezone (name, line, wildcards)
    local zoneuid = string.gsub(wildcards[1], "^%s*(.-)%s*$", "%1")
    local found = false
@@ -1584,17 +1608,9 @@ function map_purgezone (name, line, wildcards)
       return
    end
 
-   dbCheckExecute(string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from bookmarks where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from rooms where area = %s;", fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from areas where uid = %s;", fixsql(zoneuid)))
+   purgezone(zoneuid)
 
-   rooms = {}
-   areas[zoneuid] = nil
    mapper.mapprint ("Purged " .. zone_name .. " from the mapper database.")
-   Send_GMCP_Packet("request room")
 end
 
 function room_purgeroom (room, uid)
@@ -3017,6 +3033,7 @@ function draw_other(name, line, wildcards)
    mapper.draw(current_room)
 end
 
+lastarea = ""
 function got_gmcp_room()
    local room_number = gmcpval("num")
    if not(room_number) then 
@@ -3041,7 +3058,13 @@ function got_gmcp_room()
       exits = {},
       exit_locks = {}
       }
-   
+   if gmcproom.area ~= lastarea then
+      if lastarea == "lasertwo" then
+         purgezone("lasertwo")
+      end
+      lastarea = gmcproom.area
+   end
+
    -- Try to accomodate closed clan rooms and other nomap rooms.
    -- We'll have to make some other changes elsewhere as well.
    if room_number == "-1" then
