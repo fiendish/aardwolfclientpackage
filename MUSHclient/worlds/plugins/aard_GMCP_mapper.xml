@@ -3060,7 +3060,7 @@ function got_gmcp_room()
       exit_locks = {}
       }
    if gmcproom.area ~= lastarea then
-      if lastarea == "lasertwo" then
+      if areas["lasertwo"] then
          purgezone("lasertwo")
       end
       lastarea = gmcproom.area
