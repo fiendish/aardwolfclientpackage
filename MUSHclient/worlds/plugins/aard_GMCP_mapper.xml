@@ -1297,6 +1297,7 @@ end -- map_portal
 function create_portal(keyword, destination, level)
    local hhp_room_exists = 0
    local query = ""
+   keyword = Trim(keyword)
    -- first check to see if our special 'from anywhere' room exists...
    for row in db:nrows("select * from rooms where uid='*'") do
       hhp_room_exists = hhp_room_exists + 1
@@ -1305,7 +1306,7 @@ function create_portal(keyword, destination, level)
       query = "INSERT OR REPLACE INTO rooms (uid, name, area, date_added) VALUES ('*', '___HERE___', '___EVERYWHERE___', DATETIME('NOW'))"
       dbCheckExecute(query)
    end
-   print (string.format("Storing %s as a portal to %s.", keyword, destination))
+   print (string.format("Storing '%s' as a portal to %s.", keyword, destination))
    print (string.format("\nPortal given minimum level lock of %s.\n", level))
    query = string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added, level) VALUES (%s, %s, %s, DATETIME('NOW'), %s);", 
       fixsql  (keyword),
