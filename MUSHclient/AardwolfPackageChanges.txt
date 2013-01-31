@@ -1,5 +1,17 @@
 Aardwolf Client Package Major Changes List
 
+r1738 snapshot
+- misc change: the GMCP mapper will now trim whitespace from the ends of mapper portal keywords
+- new feature: the GMCP mapper will purge the map for the randomly generated laser arena if it detects you leaving that zone
+- new feature: the package update checker will now display a small message if you are up to date
+- bug fix: the bigmap plugin should clear its cache better now
+- misc change: the bigmap will not try to update its cache when disabled
+- misc change: the bigmap plugin has improved messages
+- bug fix: the GMCP mapper help for command 'mapper unmapped' had a typo
+- misc change: don't report "-1" exits in the GMCP mapper unmapped command output
+- bug fix: the status bars plugin has various technical display fixes
+- bug fix: don't error on checking for package updates if the current directory pointer has been moved (e.g. the load plugin dialog is open)
+
 r1723 snapshot
 (December 2012 release)
 - one last change before release, renamed aard_inventory_additions plugin to aard_inventory_serials
