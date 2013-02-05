@@ -137,7 +137,7 @@ function OnPluginBroadcast (msg, id, name, text)
       tonumber(stats.status.state) == 9 or
       tonumber(stats.status.state) == 11) then
          EnableTriggerGroup("prompts", true)
-         SendNoEcho("p data")
+         SendNoEcho("prompt data")
       end
    end
 end
