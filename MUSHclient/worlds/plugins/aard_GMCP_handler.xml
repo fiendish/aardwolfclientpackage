@@ -175,14 +175,19 @@ function OnPluginInstall()
    BroadcastPlugin(1,"reload") -- reload basically tells other plugins "clear all your gmcp data"
    if IsConnected() then
       -- pretend like we just logged in
-      Send_GMCP_Packet("request char")
-      Send_GMCP_Packet("request area")
-      Send_GMCP_Packet("request quest")
+      OnPluginConnect()
    end
 end
 
 function OnPluginSaveState()
    SetVariable("GMCPDebug", GMCPDebug)
+end
+
+function OnPluginConnect()
+   Send_GMCP_Packet("request char")
+   Send_GMCP_Packet("request area")
+   Send_GMCP_Packet("request quest")
+   Send_GMCP_Packet("request group")
 end
 
 function OnPluginTelnetRequest (msg_type, data)
