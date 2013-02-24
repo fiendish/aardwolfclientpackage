@@ -170,9 +170,6 @@ lineStart = ""
 lineEnd = ""
 WINDOW_LINES = ""
 
--- pull in telnet option handling
-dofile(GetPluginInfo(GetPluginID(), 20) .. "telnet_options.lua")
-
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
@@ -419,9 +416,6 @@ function OnPluginSaveState()
 end --  OnPluginSaveState
 
 function OnPluginDisable()
-   TelnetOptionOff(TELOPT_CHANNELS)
-   TelnetOptionOff(TELOPT_TELLS)
-   TelnetOptionOff(TELOPT_SAYS)
    WindowShow( win, false )
    UnloadPlugin("55616ea13339bc68e963e1f8")
    OnPluginSaveState()
