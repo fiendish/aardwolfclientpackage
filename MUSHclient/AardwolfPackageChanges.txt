@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1748 snapshot
+- new feature: updated to MUSHclient 4.89 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.89 )
+- misc change LuaJIT updated to 2.0.1 (see luajit.org for details)
+- bug fix: gmcp handler requests all updated data on reconnect instead of just plugin load
+- misc change: don't keep GMCP mapper database open when the server disconnects
+- bug fix: use the full 'prompt data' command in the prompt fixer instead of the more ambiguous 'p'
+
 r1738 snapshot
 - misc change: the GMCP mapper will now trim whitespace from the ends of mapper portal keywords
 - new feature: the GMCP mapper will purge the map for the randomly generated laser arena if it detects you leaving that zone
@@ -36,12 +43,12 @@ r1700 snapshot
 - misc change: the popup that shows when mousing over 'mapper portals' list entries now shows the complete command sequence in addition to the destination
 
 r1697 snapshot
-- new feature: updated to MUSHclient 4.84 (see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.84 )
+- new feature: updated to MUSHclient 4.84 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.84 )
 - misc change: if timers or triggers are disabled, invoking wait.lua methods should give friendlier error messages instead of assertion errors
 - misc change: mapper tooltip popups should stay up longer now
 
 r1693 snapshot
-- new feature: updated to MUSHclient 4.82 (see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.82 )
+- new feature: updated to MUSHclient 4.82 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.82 )
 - bug fix: some cruft accidentally got into the default recent file list
 - misc change: styles to ansi conversion avoids spamming the user when doing stupid things like trying to change channel colors via trigger instead of colorset (seriously? come on)
 - bug fix: resizing the embedded bigmap was horribly broken
