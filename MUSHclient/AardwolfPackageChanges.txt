@@ -2,8 +2,8 @@ Aardwolf Client Package Major Changes List
 
 r1748 snapshot
 - new feature: updated to MUSHclient 4.89 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.89 )
-- misc change LuaJIT updated to 2.0.1 (see luajit.org for details)
-- bug fix: gmcp handler requests all updated data on reconnect instead of just plugin load
+- misc change: LuaJIT updated to 2.0.1 (see luajit.org for details)
+- bug fix: GMCP handler requests all updated data on reconnect instead of just plugin load
 - misc change: don't keep GMCP mapper database open when the server disconnects
 - bug fix: use the full 'prompt data' command in the prompt fixer instead of the more ambiguous 'p'
 
