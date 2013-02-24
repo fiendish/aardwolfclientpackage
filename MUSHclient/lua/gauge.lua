@@ -67,14 +67,14 @@ function gauge (win,                        -- miniwindow ID to draw in
         WindowRectOp (win, 2, left+1, top, left+1+gauge_width, top+height, fg_colour)
     else 
         -- top half
-        WindowGradient (win, left, top-1, 
+        WindowGradient (win, left, top, 
                         left + gauge_width, top + height / 2, 
                         0x000000, -- black
                         fg_colour, 2)  -- vertical top to bottom
         
         -- bottom half
         WindowGradient (win, left, top + height / 2, 
-                        left + gauge_width, top + height,   
+                        left + gauge_width, top + height-1,   
                         fg_colour,
                         0x000000, -- black
                         2) -- vertical top to bottom
