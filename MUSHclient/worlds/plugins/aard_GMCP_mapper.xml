@@ -3839,13 +3839,18 @@ function OnPluginSent (sText)
 end -- function
 
 function OnPluginConnect ()
+   if not db:isopen() then
+      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+   end
    Send_GMCP_Packet("rawcolor on")
    mapper.cancel_speedwalk ()
-   -- DoAfter (3, "look")  -- force mapper update
 end -- OnPluginConnect
 
 function OnPluginDisconnect ()
    mapper.cancel_speedwalk ()
+   if db:isopen() then
+      db:close()
+   end
 end -- OnPluginConnect
 
 function OnHelp (name, line, wildcards)
