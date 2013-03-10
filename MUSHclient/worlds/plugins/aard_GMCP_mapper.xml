@@ -967,16 +967,15 @@ function map_list (name, line, wildcards)
    if string.sub(wildcards[1],1,1) == "\"" and string.sub(wildcards[1],-1) == "\"" then
       name = string.sub(wildcards[1],2,-2)
    end
-   for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE name LIKE %s", fixsql (name))) do
+
+   -- faster than "SELECT uid, name, area FROM rooms WHERE name LIKE %s ORDER BY area LIMIT 101"
+   for row in db:nrows(string.format ("SELECT rooms_lookup.uid as uid, rooms_lookup.name as name, area FROM (select uid, name FROM rooms_lookup WHERE name LIKE %s) AS rooms_lookup JOIN rooms ON rooms_lookup.uid = rooms.uid ORDER BY area LIMIT 101;", fixsql (name))) do
       if count < 100 then
-         for a in db:nrows(string.format ("SELECT area FROM rooms WHERE uid = %s", row.uid)) do
-            area = a.area
-         end -- for
-         print (string.format("(%s) %s is in area \"%s\"",row.uid, row.name, area))
+         print (string.format("(%s) %s is in area \"%s\"",row.uid, row.name, row.area))
       end
       count = count + 1
    end   -- finding room
-   if count >= 100 then
+   if count > 100 then
       mapper.mapprint(string.format("More than 100 search results found. Aborting query. Try a more specific search phrase than '%s'.",wildcards[1]))
    end
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
