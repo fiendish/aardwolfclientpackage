@@ -1568,13 +1568,16 @@ function fix_up_exit ()
 end -- fix_up_exit
 
 function purgezone(zoneuid)
-   dbCheckExecute(string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from bookmarks where uid in (select uid from rooms where area = %s);", fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from rooms where area = %s;", fixsql(zoneuid)))
-   dbCheckExecute(string.format ("delete from areas where uid = %s;", fixsql(zoneuid)))
-   
+   local query = "BEGIN TRANSACTION;"
+   query = query..string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid))
+   query = query..string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid))
+   query = query..string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))
+   query = query..string.format ("delete from bookmarks where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))
+   query = query..string.format ("delete from rooms where area = %s;", fixsql(zoneuid))
+   query = query..string.format ("delete from areas where uid = %s;", fixsql(zoneuid))
+   query = query.."COMMIT;"
+   dbCheckExecute(query)
+
    for k,v in pairs(rooms) do
       for j,u in pairs(v.exits) do
          if (rooms[u] ~= nil) and (rooms[u].area == zoneuid) then
@@ -1619,15 +1622,19 @@ function room_purgeroom (room, uid)
 end
 
 function map_purgeroom (uid, new_area)
+   local query = "BEGIN TRANSACTION;"
    if new_area then
-      dbCheckExecute(string.format ("delete from exits where touid = %s and fromuid not in (select uid from rooms where area = %s);",fixsql(uid),fixsql(new_area)))
+      query = query..string.format ("delete from exits where touid = %s and fromuid not in (select uid from rooms where area = %s);",fixsql(uid),fixsql(new_area))
    else
-      dbCheckExecute(string.format ("delete from exits where touid = %s;",fixsql(uid)))
+      query = query..string.format ("delete from exits where touid = %s;",fixsql(uid))
    end
-   dbCheckExecute(string.format ("delete from exits where fromuid = %s;",fixsql(uid)))
-   dbCheckExecute(string.format ("delete from rooms_lookup where uid = %s;", fixsql(uid)))
-   dbCheckExecute(string.format ("delete from bookmarks where uid = %s;", fixsql(uid)))
-   dbCheckExecute(string.format ("delete from rooms where uid = %s;", fixsql(uid)))
+   query = query..string.format ("delete from exits where fromuid = %s;",fixsql(uid))
+   query = query..string.format ("delete from rooms_lookup where uid = %s;", fixsql(uid))
+   query = query..string.format ("delete from bookmarks where uid = %s;", fixsql(uid))
+   query = query..string.format ("delete from rooms where uid = %s;", fixsql(uid))
+   query = query.."COMMIT;"
+   dbCheckExecute(query)
+
    rooms[uid] = nil
    for k,v in pairs(rooms) do
       for j,u in pairs(v.exits) do
