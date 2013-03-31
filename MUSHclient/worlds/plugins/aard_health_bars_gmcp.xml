@@ -706,7 +706,7 @@ end
 -- to the main window.
 --=================================================================================
 function SetUpHotspotsAndDraw(firstTime)
-   effectiveWidth = math.min(width, GetInfo(281)-windowinfo.window_left)
+   effectiveWidth = math.max(MIN_WIDTH, math.min(width, GetInfo(281)-windowinfo.window_left))
    if (firstTime == true) then
       check (WindowCreate (win, 
             windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
