@@ -939,11 +939,12 @@ function map_areas (name, line, wildcards)
    Note (hl)
    Note (hr)
    Note (hl)
-
+   local total_explored = 0
    for row in db:nrows(query) do
       query2 = string.format("SELECT count(uid) as count FROM rooms WHERE area=%s;",fixsql(row.uid))
       for row2 in db:nrows(query2) do
          line = string.format(fmt,row.uid, row.name, row2.count)
+         total_explored = total_explored + row2.count
       end
       Note (line)
       count = count + 1
@@ -951,7 +952,7 @@ function map_areas (name, line, wildcards)
    end
   
    Note (hl)
-   line = string.format ("Found %s areas.\n", count)
+   line = string.format ("Found %s areas containing %s rooms mapped.\n", count, total_explored)
    Note (line)
 end
 
@@ -1599,7 +1600,6 @@ function map_purgezone (name, line, wildcards)
    local found = false
    local zone_name = ""
    if #(wildcards[1]) > 1 and string.sub(wildcards[1], 1, 1) == " " then
-   
       for row in db:nrows(string.format("SELECT uid,name FROM areas WHERE uid = %s;", fixsql (zoneuid))) do
          zone_name = row.name
          found = true
