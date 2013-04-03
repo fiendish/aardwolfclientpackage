@@ -83,22 +83,13 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 >
 <send>
    if "%1" == " off" then
-      EnableTimer("backup_timer", false)
       SetVariable("backup_timer_enabled", "0")
-      Note("Automated map database backup is now off.")
+      toggleBackups(false)
    elseif "%1" == " on" then
-      EnableTimer("backup_timer", true)
       SetVariable("backup_timer_enabled", "1")
-      Note("Automated map database backup is now on.")
-      if ((os.time()-last_auto_backup) >= 86401) then
-         Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
-         Note("Forcing an automatic backup now...")
-         Note("")
-         Repaint()
-         automatic_backup()
-      end
+      toggleBackups(true)
    elseif "%1" == "" then
-      Note("Automated map database backup is currently "..((GetTimerInfo("backup_timer", 6) and "on") or "off")..".")
+      Note("Automated map database backup is currently "..((GetTimerInfo("backup_timer", 6) and "on") or ("off"..(GetVariable("backup_timer_enabled")=="1" and " but it will turn on as soon as you connect to the game" or "")))..".")
       local will_be_would_be = ((GetTimerInfo("backup_timer", 6) and "will be") or "would be (if enabled)")
       local seconds = GetTimerInfo("backup_timer", 13)
       local hours = math.floor(seconds/3600)
@@ -671,6 +662,23 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 </triggers>
 
 <script>
+
+function toggleBackups(on)
+   if on then
+      EnableTimer("backup_timer", true)
+      Note("Automated map database backup is now started.")
+      if ((os.time()-last_auto_backup) >= 86401) then
+         Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
+         Note("Forcing an automatic backup now...")
+         Note("")
+         Repaint()
+         automatic_backup()
+      end
+   else
+      EnableTimer("backup_timer", false)
+      Note("Automated map database backup is now stopped.")
+   end
+end
 
 local show_vnums = &show_vnums;
 local show_timing = &show_timing;
@@ -2413,6 +2421,7 @@ function rotate_backups (manual)
       os.rename(firstBackup, firstBackup.."_Manual")
       os.rename(firstBackup..".zip", firstBackup.."_Manual.zip")
    else
+      auto_backup_count = auto_backup_count + 1
       local t = utils.readdir (firstBackup.."_Automatic*")
       local oldest_exists = false
       local olderer_exists = false
@@ -2460,8 +2469,10 @@ function rotate_backups (manual)
       os.rename(firstBackup..".zip", firstBackup.."_Automatic.zip")
       if auto_backup_count == 84 then
          auto_backup_count = 1
-         SetVariable("auto_backup_count",auto_backup_count)
       end
+
+      SetVariable("auto_backup_count",auto_backup_count)
+      SetVariable("last_auto_backup", os.time())
    end
 end
 
@@ -2471,10 +2482,7 @@ function automatic_backup()
       print("Mapper database automatic backup delayed due to combat. Will try again in 5 seconds.")
    else
       AddTimer("backup_timer", 23, 59, 59, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
-      auto_backup_count = auto_backup_count + 1
       backup_databases(false)
-      SetVariable("auto_backup_count",auto_backup_count)
-      SetVariable("last_auto_backup", os.time())
    end
 end
 
@@ -2835,12 +2843,6 @@ function OnPluginInstall ()
       end
    end
   
-   if IsConnected() then
-      OnPluginConnect()
-      Send_GMCP_Packet("request char")
-      Send_GMCP_Packet("request room")
-   end
-  
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
@@ -2848,24 +2850,15 @@ function OnPluginInstall ()
       return
    end -- they didn't enable us last time
 
+   SetVariable("backup_timer_enabled", GetVariable("backup_timer_enabled") or "1")
    last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
-   SetTimerOption("backup_timer", "enabled", tonumber(GetVariable("backup_timer_enabled")) or 1)
-   if GetTimerOption("backup_timer", "enabled") == 1 then
-      if (os.time()-last_auto_backup) >= 86401 then
-         Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
-         Note("Forcing an automatic backup now...")
-         Note("")
-         Repaint()
-         automatic_backup()
-      else
-         local seconds = 86400-(os.time()-last_auto_backup)
-         local hours = math.floor(seconds/3600)
-         seconds = seconds - hours*3600
-         local minutes = math.floor(seconds/60)
-         seconds = math.floor(seconds - minutes*60)
-         -- replace the timer with a new one that has the right time
-         AddTimer("backup_timer", hours, minutes, seconds, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.OneShot, "automatic_backup")
-      end
+  
+   if IsConnected() then
+      OnPluginConnect()
+      Send_GMCP_Packet("request char")
+      Send_GMCP_Packet("request room")
+   else
+      OnPluginDisconnect()
    end
 end -- OnPluginInstall
 
@@ -3833,20 +3826,31 @@ valid_direction = {
 function OnPluginSent (sText)
    if valid_direction [sText] then
       last_direction_moved = valid_direction [sText]
---    print ("Just moved", last_direction_moved)
       if current_room and rooms [current_room] then
          expected_exit = rooms [current_room].exits [last_direction_moved]
          if expected_exit then
             from_room = current_room
          end -- if
---     print ("expected exit for this direction is to room", expected_exit)
       end -- if
    end -- if 
 end -- function
 
 function OnPluginConnect ()
    if not db:isopen() then
+      Note("GMCP Mapper: World reconnected; opening map database.")
       db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+   end
+   if GetVariable("backup_timer_enabled") == "1" then
+      if (os.time()-last_auto_backup) < 86401 then
+         local seconds = 86400-(os.time()-last_auto_backup)
+         local hours = math.floor(seconds/3600)
+         seconds = seconds - hours*3600
+         local minutes = math.floor(seconds/60)
+         seconds = math.floor(seconds - minutes*60)
+         -- replace the timer with a new one that has the right time
+         AddTimer("backup_timer", hours, minutes, seconds, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.OneShot, "automatic_backup")
+      end
+      toggleBackups(true)
    end
    Send_GMCP_Packet("rawcolor on")
    mapper.cancel_speedwalk ()
@@ -3855,7 +3859,11 @@ end -- OnPluginConnect
 function OnPluginDisconnect ()
    mapper.cancel_speedwalk ()
    if db:isopen() then
+      Note("GMCP Mapper: World disconnected; closing map database.")
       db:close()
+   end
+   if GetVariable("backup_timer_enabled") == "1" then
+      toggleBackups(false)
    end
 end -- OnPluginConnect
 
