@@ -6,10 +6,11 @@ local BLUE = 5
 local MAGENTA = 6 
 local CYAN = 7 
 local WHITE = 8
-local DEFAULT_COLOUR = "@w"
+local DEFAULT_FOREGROUND = WHITE
+local DEFAULT_BACKGROUND = BLACK
 
-function init_ansi()
-   -- map from color values to aardwolf color codes
+local function init_ansi()
+   -- map from color values to color codes
    conversion_colours = {
       [GetNormalColour (BLACK)]   = "@x000",
       [GetNormalColour (RED)]     = "@r",
@@ -29,12 +30,14 @@ function init_ansi()
       [GetBoldColour   (WHITE)]   = "@W",
    }  -- end conversion table
      
+   colour_letters = "xrgybmcwDRGYBMCW"
+   
    -- This table uses the colours as defined in the MUSHclient ANSI tab, however the
    -- defaults are shown on the right if you prefer to use those.
 
-   -- map from aardwolf color codes to color values
+   -- map from color codes to color values
    colour_conversion = {
-      k = GetNormalColour (BLACK)   ,   -- 0x000000 
+      k = GetNormalColour (BLACK)   ,   -- 0x000000 (not used)
       r = GetNormalColour (RED)     ,   -- 0x000080 
       g = GetNormalColour (GREEN)   ,   -- 0x008000 
       y = GetNormalColour (YELLOW)  ,   -- 0x008080 
@@ -93,7 +96,8 @@ for i = 16,255 do
    colour_conversion[string.format("x%d",i)] = xterm_colour
 end
 
--- Aardwolf bumps a few very dark xterm colors to brighter values to improve visibility
+-- Aardwolf bumps a few very dark xterm colors to brighter values to improve visibility.
+-- This seems like a good idea.
 for i = 232,237 do
    colour_conversion[string.format("x%d",i)] = extended_colours[238]
 end
@@ -181,7 +185,7 @@ function StylesToColoursOneLine (styles, startcol, endcol)
    return copystring
 end -- StylesToColoursOneLine
 
--- converts text with colour codes in it into style runs
+-- Converts text with colour codes in it into style runs
 function ColoursToStyles (Text)
    if Text:match ("@") then
       astyles = {}
@@ -192,11 +196,11 @@ function ColoursToStyles (Text)
       Text = Text:gsub ("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
       Text = Text:gsub ("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
       Text = Text:gsub ("@x25[6-9]","") -- strip invalid xterm codes (256+)
-      Text = Text:gsub ("@[^xcmyrgbwCMYRGBWD]", "")  -- rip out hidden garbage
+      Text = Text:gsub ("@[^"..colour_letters.."]", "")  -- rip out hidden garbage
       
       -- make sure we start with @ or gsub doesn't work properly
       if Text:sub (1, 1) ~= "@" then
-         Text = DEFAULT_COLOUR .. Text
+         Text = DEFAULT_FOREGROUND .. Text
       end -- if
 
       for colour, text in Text:gmatch ("@(%a)([^@]+)") do
@@ -210,8 +214,8 @@ function ColoursToStyles (Text)
          if #text > 0 then
             table.insert (astyles, { text = text, 
                length = #text, 
-               textcolour = colour_conversion [colour] or GetNormalColour (WHITE),
-               backcolour = GetNormalColour (BLACK) })
+               textcolour = colour_conversion [colour] or GetNormalColour (DEFAULT_FOREGROUND),
+               backcolour = GetNormalColour (DEFAULT_BACKGROUND) })
          end -- if some text
       end -- for each colour run.
 
@@ -221,21 +225,21 @@ function ColoursToStyles (Text)
    -- No colour codes, create a single style.
    return { { text = Text, 
       length = #Text, 
-      textcolour = GetNormalColour (WHITE),
-      backcolour = GetNormalColour (BLACK) } }
+      textcolour = GetNormalColour (DEFAULT_FOREGROUND),
+      backcolour = GetNormalColour (DEFAULT_BACKGROUND) } }
 end  -- function ColoursToStyles
 
--- strip all aardwolf color codes from a string
+-- Strip all color codes from a string
 function strip_colours (s)
    s = s:gsub ("@%-", "~")    -- fix tildes
    s = s:gsub ("@@", "\0")  -- change @@ to 0x00
-   s = s:gsub ("@[^xcmyrgbwCMYRGBWD]", "")  -- rip out hidden garbage
-   s = s:gsub ("@x%d?%d?%d?", "") -- strip xterm color codes
-   s = s:gsub ("@%a([^@]*)", "%1") -- strip normal color codes
+   s = s:gsub ("@x%d?%d?%d?", "") -- strip valid and invalid xterm color codes
+   s = s:gsub ("@.([^@]*)", "%1") -- strip normal color codes and hidden garbage
    return (s:gsub ("%z", "@")) -- put @ back
 end -- strip_colours
 
--- returns a string with embedded ansi codes
+-- Returns a string with embedded ansi codes.
+-- This can get confused if the player has redefined their color chart.
 function stylesToANSI (styles)
    local line = {}
    local reinit = true
