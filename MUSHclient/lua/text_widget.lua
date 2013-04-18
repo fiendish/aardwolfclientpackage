@@ -882,45 +882,23 @@ function TextWidget_MT.LinkHoverCancelCallback(flags, hotspot_id)
   end
 end
 
-function TextWidget_MT:resizeText(width, height)
+function TextWidget_MT:moveText(x, y, width, height)
+  self.text_x_position = x
+  self.text_y_position = y
   self.text_width = width
   self.text_height = height
   self.window_lines = math.floor(self.text_height / self.line_height)
   self.line_start = math.max(1, #self.lines - self.window_lines + 1)
   self.line_end = math.max(1, #self.lines)
-  self:moveTextHandlers()
-end
-
-function TextWidget_MT:moveText(x, y)
-  self.text_x_position = x
-  self.text_y_position = y
-  self:moveTextHandlers()
-end
-
-function TextWidget_MT:moveTextHandlers()
   WindowMoveHotspot(self.window_name, self:getHotspotName("textarea"), self.text_x_position, self.text_y_position, self.text_x_position + self.text_width, self.text_y_position + self.text_height)
 end
 
-function TextWidget_MT:resizeScrollbar(height)
-  self.scrollbar_height = height
-  self:moveScrollbarHandlers()
-end
-
-function TextWidget_MT:moveScrollbar(x, y)
+function TextWidget_MT:moveScrollbar(x, y, height)
   self.scrollbar_x_position = x
   self.scrollbar_y_position = y
-  print(x, y)
-  self:moveScrollbarHandlers()
-end
-
-function TextWidget_MT:moveScrollbarHandlers()
+  self.scrollbar_height = height
   WindowMoveHotspot(self.window_name, self:getHotspotName("up"), self.scrollbar_x_position, self.scrollbar_y_position, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_width)
   WindowMoveHotspot(self.window_name, self:getHotspotName("down"), self.scrollbar_x_position, self.scrollbar_y_position + self.scrollbar_height - self.scrollbar_width, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_height)
-end
-
-function TextWidget_MT:moveText(x, y)
-  self.text_x_position = x
-  self.text_y_position = y
 end
 
 function TextWidget_MT:bufferWindowLines()
