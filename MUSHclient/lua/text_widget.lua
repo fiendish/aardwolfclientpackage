@@ -198,7 +198,14 @@ function TextWidget_MT:draw()
   if self.scrollable then
     self:drawScrollbar()
   end
-  self:drawText()
+  
+  -- reset url hyperlinks
+  for k,v in pairs(self.hyperlinks) do
+    WindowDeleteHotspot(self.window_name, k)
+  end
+  self.hyperlinks = {}
+
+  self:refreshText()
 end
 
 function TextWidget_MT:drawScrollbar()
@@ -243,15 +250,6 @@ function TextWidget_MT:drawScrollbar()
     WindowDragHandler(self.window_name, self:generateHotspotName("scroller"), "TextWidget_MT.ScrollbarMoveCallback", "TextWidget_MT.ScrollbarReleaseCallback", 0)
   end
   WindowRectOp(self.window_name, 5, self.scrollbar_x_position, self.scrollbar_pos, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_pos + self.scrollbar_size, 5, 15 + 0x800)
-end
-
-function TextWidget_MT:drawText()
-  -- reset hyperlinks if the text moves
-  for k,v in pairs(self.hyperlinks) do
-    WindowDeleteHotspot(self.window_name, k)
-  end
-  self.hyperlinks = {}  
-  self:refreshText()
 end
 
 function TextWidget_MT:refreshText()
@@ -736,11 +734,17 @@ function TextWidget_MT.TextareaMoveCallback(flags, hotspot_id)
     widget.end_copying_x = WindowInfo(widget.window_name, 17) - WindowInfo(widget.window_name, 1)
     widget.end_copying_y = WindowInfo(widget.window_name, 18) - WindowInfo(widget.window_name, 2)
     local ypos = widget.end_copying_y
-    widget.end_copying_x = math.max(widget.text_x_position, math.min(widget.end_copying_x, widget.text_x_position + widget.text_width))
     widget.copy_end_windowline = math.floor((widget.end_copying_y - widget.text_y_position) / widget.line_height)
     widget.copy_end_line = widget.copy_end_windowline + widget.line_start
     widget.copy_start_line = widget.temp_start_line
     widget.start_copying_x = widget.temp_start_copying_x
+
+    -- get the entire last line if we drag off the bottom
+    if widget.copy_end_line <= widget.line_end then
+       widget.end_copying_x = math.max(widget.text_x_position, math.min(widget.end_copying_x, widget.text_x_position + widget.text_width))
+    else
+       widget.end_copying_x = widget.text_x_position + widget.text_width
+    end
 
     if not widget.copy_start_line then
       -- OS bug causing errors for me. hack around stupid mouse click tracking mess.
@@ -962,7 +966,7 @@ function TextWidget_MT:scroll()
          end
        end
        self:draw()
-       wait.time(0.1)
+       wait.time(0.01)
      end
   end)
 end
