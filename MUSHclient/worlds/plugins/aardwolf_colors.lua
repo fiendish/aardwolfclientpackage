@@ -238,6 +238,15 @@ function strip_colours (s)
    return (s:gsub ("%z", "@")) -- put @ back
 end -- strip_colours
 
+-- Strip all color codes from a table of styles
+function strip_colours_from_styles(styles)
+   local ret = {}
+   for i,v in ipairs(styles) do
+      table.insert(ret, v.text)
+   end
+   return table.concat(ret)
+end
+
 -- Returns a string with embedded ansi codes.
 -- This can get confused if the player has redefined their color chart.
 function stylesToANSI (styles)
