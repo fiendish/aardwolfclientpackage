@@ -5,23 +5,15 @@
    * name must be a string composed of only alphanumeric values
    * parent_miniwindow_name is the name of miniwindow that will hold this widget, and must be a string composed of only alphanumeric values
    * values is a table of custom settings to override TextWidget_MT variables described below as USER SETTINGS
+
+   To add text to the widget, call either (depending on the input format)
+      your_widget:addColouredLine("HELLO@RHello@Mhello@x215hello@x66HELLO")
+   or
+      your_widget:addStyles(style_run_table)
 ]]--
 
-require "copytable"
-require "wait"
-require "movewindow"
-
-TextWidgetSaveStrings = {"font_name", "font_size", "date_format", "log_file_name"}
-TextWidgetSaveNumbers = {"width", "height", "log_to_file", "log_colour_codes", "log_timestamps"}
-
-TextWidgetNameMap = {}
-TextWidgetHotspotMap = {}
-local function getWidgetFromHotspotID(hotspot_id)
-   return TextWidgetNameMap[TextWidgetHotspotMap[hotspot_id] or ""]
-end
-
 TextWidget_MT = {
-  -- USER SETTINGS
+  -- USER SETTINGS --
   name = "",
   window_name = "",
   text_x_position=0,
@@ -31,30 +23,30 @@ TextWidget_MT = {
   font_name = "",
   font_size = "",
   color_window_background = GetNormalColour(1),
-  color_scroll_detail = 0x000000,
-  color_scroll_background = 0xE8E8E8,
-  max_scrollback_lines = 10000,
   log_to_file = 0,
   log_file_name = "CaptureLog.txt",
   log_colour_codes = 1,
   log_timestamps = 1,
   date_format = "[%d %b %I:%M:%S%p] ",
   timestamp_formats = {"", "[%d %b %H:%M:%S] ", "[%d %b %I:%M:%S%p] ", "[%H:%M:%S] ", "[%I:%M:%S%p] "},
-  scrollable=true,
-  scrollbar_width = 15,
+  scrollable=true, -- enable/disable the scrollbar
   scrollbar_x_position = 0,
   scrollbar_y_position = 0,
+  scrollbar_width = 15,
   scrollbar_height = 0,
+  max_scrollback_lines = 10000,
+  color_scroll_detail = 0x000000,
+  color_scroll_background = 0xE8E8E8,
   extra_rightclick_menu = nil,
 
-  -- SEMI-PRIVATE VARIABLES
+  -- SEMI-PRIVATE VARIABLES --
   resize_scrollbar_height = 0,
   resize_scrollbar_x = 0,
   resize_scrollbar_y = 0,
   resize_text_width = 0,
   resize_text_height = 0,
 
-  -- PRIVATE VARIABLES. DO NOT TOUCH.
+  -- PRIVATE VARIABLES. DO NOT TOUCH. --
   plain_lines = {},
   lines = {},
   raw_lines = {},
@@ -81,6 +73,43 @@ TextWidget_MT = {
   copy_start_line = 0,
   copy_end_line = 0,
 }
+
+require "copytable"
+require "wait"
+require "movewindow"
+
+--usage: widget:addColouredLine("HELLO@RHello@Mhello@x215hello@x66HELLO")
+function TextWidget_MT:addColouredLine(string)
+  self:addStyles(ColoursToStyles(string))
+end
+
+function TextWidget_MT:addStyles(styles)
+  local timestamp=os.time()
+  table.insert(self.plain_lines, {styles, timestamp})
+  --pop our last line from our buffer, if we're at our max.
+  if #self.plain_lines >= self.max_scrollback_lines then
+    table.remove(self.plain_lines, 1)
+  end
+  self:addLogLine(styles, timestamp)
+  self:addFormattedString(styles, timestamp)
+  self:wrapLine(self.raw_lines[#self.raw_lines][1], self.raw_lines[#self.raw_lines][2])
+end
+
+TextWidgetSaveStrings = {"font_name", "font_size", "date_format", "log_file_name"}
+TextWidgetSaveNumbers = {"width", "height", "log_to_file", "log_colour_codes", "log_timestamps"}
+
+TextWidgetNameMap = {}
+TextWidgetHotspotMap = {}
+local function getWidgetFromHotspotID(hotspot_id)
+   return TextWidgetNameMap[TextWidgetHotspotMap[hotspot_id] or ""]
+end
+
+-- Give our hotspots unique names, to ensure no naming conflicts for our handlers
+function TextWidget_MT:generateHotspotName(name)
+  local hotspotName = self.name.."__hotspot__"..name
+  TextWidgetHotspotMap[hotspotName] = self.name
+  return hotspotName
+end
 
 function TextWidget_MT:saveState()
   for _,variable in pairs(TextWidgetSaveStrings) do
@@ -117,7 +146,7 @@ function TextWidget_MT.new(name, window_name, values)
   self:set_values(values)
   self.name = name
   self.window_name = window_name
-  self:loadState()
+  self:initialize()
   return self
 end
 
@@ -149,20 +178,26 @@ function TextWidget_MT:initializeFonts()
 end
 
 function TextWidget_MT:initializeMiniwindowHandlers()
-  -- scroll bar up/down buttons
-  WindowAddHotspot(self.window_name, self:generateHotspotName("up"), self.scrollbar_x_position, self.scrollbar_y_position, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_width, "", "", "TextWidget_MT.MouseDownUpArrow", "TextWidget_MT.CancelMouseDown", "TextWidget_MT.MouseUp", "", 1, 0)
-  WindowAddHotspot(self.window_name, self:generateHotspotName("down"), self.scrollbar_x_position, self.scrollbar_y_position + self.scrollbar_height - self.scrollbar_width, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_height, "", "", "TextWidget_MT.MouseDownDownArrow", "TextWidget_MT.CancelMouseDown", "TextWidget_MT.MouseUp", "", 1, 0)
+  if self.scrollable then
+     -- scroll bar up/down buttons
+     WindowAddHotspot(self.window_name, self:generateHotspotName("up"), self.scrollbar_x_position, self.scrollbar_y_position, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_width, "", "", "TextWidget_MT.MouseDownUpArrow", "TextWidget_MT.CancelMouseDown", "TextWidget_MT.MouseUp", "", 1, 0)
+     WindowAddHotspot(self.window_name, self:generateHotspotName("down"), self.scrollbar_x_position, self.scrollbar_y_position + self.scrollbar_height - self.scrollbar_width, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_height, "", "", "TextWidget_MT.MouseDownDownArrow", "TextWidget_MT.CancelMouseDown", "TextWidget_MT.MouseUp", "", 1, 0)
+  end
 
   --highlight, right click, scrolling
   local textarea_name = self:generateHotspotName("textarea")
   WindowAddHotspot(self.window_name, textarea_name, self.text_x_position, self.text_y_position, self.text_x_position + self.text_width, self.text_y_position + self.text_height, "", "", "TextWidget_MT.MouseDownText", "TextWidget_MT.CancelMouseDown", "TextWidget_MT.MouseUp", "", 2, 0)
   WindowDragHandler(self.window_name, textarea_name, "TextWidget_MT.TextareaMoveCallback", "TextWidget_MT.TextareaReleaseCallback", 0x10)
-  WindowScrollwheelHandler(self.window_name, textarea_name, "TextWidget_MT.WheelMoveCallback")
+  if self.scrollable then
+     WindowScrollwheelHandler(self.window_name, textarea_name, "TextWidget_MT.WheelMoveCallback")
+  end
 end
 
 -- draw functions only work after all initialization is complete
 function TextWidget_MT:draw()
-  self:drawScrollbar()
+  if self.scrollable then
+    self:drawScrollbar()
+  end
   self:drawText()
 end
 
@@ -205,7 +240,7 @@ function TextWidget_MT:drawScrollbar()
       self.scrollbar_pos = self.scrollbar_height + self.scrollbar_y_position - self.scrollbar_size - self.scrollbar_width
     end
     WindowAddHotspot(self.window_name, self:generateHotspotName("scroller"), self.scrollbar_x_position, self.scrollbar_pos, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_pos + self.scrollbar_size, "", "", "TextWidget_MT.MouseDownScrollbar", "", "TextWidget_MT.MouseUp", "", 1, 0)
-    WindowDragHandler(self.window_name, self:getHotspotName("scroller"), "TextWidget_MT.ScrollbarMoveCallback", "TextWidget_MT.ScrollbarReleaseCallback", 0)
+    WindowDragHandler(self.window_name, self:generateHotspotName("scroller"), "TextWidget_MT.ScrollbarMoveCallback", "TextWidget_MT.ScrollbarReleaseCallback", 0)
   end
   WindowRectOp(self.window_name, 5, self.scrollbar_x_position, self.scrollbar_pos, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_pos + self.scrollbar_size, 5, 15 + 0x800)
 end
@@ -230,7 +265,7 @@ function TextWidget_MT:refreshText()
       ax = nil
       zx = nil
       if self.lines[count] then
-        line_no_colors = strip_colours(StylesToColoursOneLine(self.lines[count][1]))
+        line_no_colors = strip_colours_from_styles(self.lines[count][1])
 
         -- create clickable links for urls
         for i,v in ipairs(self.lines[count][3]) do
@@ -279,27 +314,9 @@ function TextWidget_MT:drawLine (line, styles, backfill_start, backfill_end)
   end
 end
 
-
---line-writing hooks
-function TextWidget_MT:addColouredLine(string)
-  self:addLine(ColoursToStyles(string))
-end
-
---usage: widget:addLine("HELLO@RHello@Mhello@x215hello@x66HELLO")
-function TextWidget_MT:addLine(styledString)
-  local timestamp=os.time()
-  table.insert(self.plain_lines, {styledString, timestamp})
-  --pop our last line from our buffer, if we're at our max.
-  if #self.plain_lines >= self.max_scrollback_lines then
-    table.remove(self.plain_lines, 1)
-  end
-  self:addLogLine(styledString, timestamp)
-  self:addFormattedString(styledString, timestamp)
-end
-
-function TextWidget_MT:addLogLine(styledString, timestamp)
+function TextWidget_MT:addLogLine(styles, timestamp)
   if (self.log_to_file == 1) then
-    local log_text = StylesToColoursOneLine(styledString)
+    local log_text = StylesToColoursOneLine(styles)
     if (self. log_colour_codes == 0) then
       log_text = strip_colours(log_text)
     end
@@ -317,28 +334,22 @@ function TextWidget_MT:addLogLine(styledString, timestamp)
   end
 end
 
-function TextWidget_MT:addFormattedString(styledString, timestamp)
-  styledString = copytable.deep(styledString)
+function TextWidget_MT:addFormattedString(styles, timestamp)
+  local styles = copytable.deep(styles)
   local tstamp = os.date(self.date_format, timestamp)
-  timestyle = {text=tstamp, length=string.len(tstamp), textcolour=0xc0c0c0}
-  table.insert(styledString, 1, timestyle)
-
-  text = StylesToColoursOneLine(styledString)
-  raw_text = strip_colours(text)
+  table.insert(styles, 1, {text=tstamp, length=string.len(tstamp), textcolour=0xc0c0c0})
 
   --strip out our URLs, so we can add our movespots later
-  local urls = self:findURLs(raw_text)
+  local urls = self:findURLs(strip_colours_from_styles(styles))
 
   --pop our last line from our buffer, if we're at our max.
-  if #self.raw_lines >= self.max_scrollback_lines then
+  if #self.raw_lines > self.max_scrollback_lines then
     table.remove(self.raw_lines, 1)
   end
-  table.insert(self.raw_lines, {[1]=styledString, [2]=urls})
-
-  self:bufferLine(styledString, urls)
+  table.insert(self.raw_lines, {[1]=styles, [2]=urls})
 end
 
-function TextWidget_MT:bufferLine(styledString, rawURLs)
+function TextWidget_MT:wrapLine(styledString, rawURLs)
   local avail = self.text_width
   local line_styles = {}
   local beginning = true
@@ -490,60 +501,6 @@ function TextWidget_MT:findURLs(text)
    return URLs
 end -- function findURL
 
-function TextWidget_MT:buildRightClickMenu(hotspot_id)
-  local menu = {}
-  if self.hyperlinks[hotspot_id] then
-    table.insert(menu, {"Go to URL: "..self.hyperlinks[hotspot_id], TextWidget_MT.clickUrl})
-    table.insert(menu, {"Copy URL to Clipboard", TextWidget_MT.copyUrl})
-    table.insert(menu, "|")
-  end
-  if self.copied_text ~= "" then
-    table.insert(menu, {"Copy Selected Without Colors", TextWidget_MT.copyPlain})
-    table.insert(menu, {"Copy Selected", TextWidget_MT.copy})
-  end
-  table.insert(menu, {"Copy All", TextWidget_MT.copyFull})
-  table.insert(menu, "|")
-
-  --prep our timestamp menu
-  local timestamp = os.date("*t")
-  timestamp.hour=13
-  timestamp.min=30
-  timestamp.sec=15
-  local timestamp=os.time(timestamp)
-  local format = ""
-  local timestampMenu = {}
-  for _,v in pairs(self.timestamp_formats) do
-    if v == "" then
-      format = "No Timestamps"
-    else
-      format = os.date(v, timestamp)
-    end
-    table.insert(timestampMenu, {(self.date_format == v and "+" or "").. format, TextWidget_MT.changeTimestamp, v})
-  end
-  table.insert(menu, {"Timestamps", timestampMenu})
-
-  --prep our Logging submenu
-  local loggingMenu = {}
-  if (self.log_to_file == 0) then
-    table.insert(loggingMenu, {"Enable Logging", TextWidget_MT.enableLogging})
-  else
-    table.insert(loggingMenu, {"+Enable Logging", TextWidget_MT.disableLogging})
-  end
-  table.insert(loggingMenu, "|")
-  table.insert(loggingMenu, {"Choose Logfile...", TextWidget_MT.changeLogfile})
-  table.insert(loggingMenu, {(self.log_colour_codes == 1 and "+" or "").."Log Color Codes", TextWidget_MT.toggleLogColours, self.log_colour_codes})
-  table.insert(loggingMenu, {(self.log_timestamps == 1 and "+" or "").."Log Timetsamps", TextWidget_MT.toggleLogTimestamps, self.log_timestamps})
-  table.insert(menu, {"Logging", loggingMenu})
-
---if we have extra right click menu options, show them here
-  if self.extra_rightclick_menu ~= nil then
-    for _,option in pairs(self.extra_rightclick_menu) do
-      table.insert(menu, option)
-    end
-  end
-  return menu
-end
-
 function TextWidget_MT:getMenuText(menu, menuText, flatMenu)
   for _,value in pairs(menu) do
     if type(value) == "string" then
@@ -562,7 +519,57 @@ function TextWidget_MT:getMenuText(menu, menuText, flatMenu)
 end
 
 function TextWidget_MT:RightClickMenu(hotspot_id)
-  local menu = self:buildRightClickMenu(hotspot_id)
+  local menu = {}
+  if self.hyperlinks[hotspot_id] then
+    table.insert(menu, {"Go to URL: "..self.hyperlinks[hotspot_id], TextWidget_MT.clickUrl})
+    table.insert(menu, {"Copy URL to Clipboard", TextWidget_MT.copyUrl})
+    table.insert(menu, "|")
+  end
+  if self.copied_text ~= "" then
+    table.insert(menu, {"Copy Selected Without Colors", TextWidget_MT.copyPlain})
+    table.insert(menu, {"Copy Selected", TextWidget_MT.copy})
+  end
+  table.insert(menu, {"Copy All", TextWidget_MT.copyFull})
+  table.insert(menu, "|")
+
+  -- prep our timestamp menu with a time that is always demonstrative
+  local timestamp = os.date("*t")
+  timestamp.hour=13
+  timestamp.min=30
+  timestamp.sec=15
+  local timestamp=os.time(timestamp)
+  local format = ""
+  local timestampMenu = {}
+  for _,v in pairs(self.timestamp_formats) do
+    if v == "" then
+      format = "No Timestamps"
+    else
+      format = os.date(v, timestamp)
+    end
+    table.insert(timestampMenu, {(self.date_format == v and "+" or "").. format, TextWidget_MT.changeTimestamp, v})
+  end
+  table.insert(menu, {"Timestamps", timestampMenu})
+
+  -- prep our Logging submenu
+  local loggingMenu = {}
+  if (self.log_to_file == 0) then
+    table.insert(loggingMenu, {"Enable Logging", TextWidget_MT.enableLogging})
+  else
+    table.insert(loggingMenu, {"+Enable Logging", TextWidget_MT.disableLogging})
+  end
+  table.insert(loggingMenu, "|")
+  table.insert(loggingMenu, {"Choose Logfile...", TextWidget_MT.changeLogfile})
+  table.insert(loggingMenu, {(self.log_colour_codes == 1 and "+" or "").."Log Color Codes", TextWidget_MT.toggleLogColours, self.log_colour_codes})
+  table.insert(loggingMenu, {(self.log_timestamps == 1 and "+" or "").."Log Timetsamps", TextWidget_MT.toggleLogTimestamps, self.log_timestamps})
+  table.insert(menu, {"Logging", loggingMenu})
+
+  -- if we have extra right click menu options, show them here
+  if self.extra_rightclick_menu ~= nil then
+    for _,option in pairs(self.extra_rightclick_menu) do
+      table.insert(menu, option)
+    end
+  end
+
   local flatMenu = {}
   local menuText = ""
   local targetFunction
@@ -605,10 +612,23 @@ function TextWidget_MT:changeLogfile()
   ColourNote("yellow", "", "  "..GetInfo(58):gsub("^.\\",GetInfo(56))..self.log_file_name)
 end
 
+function TextWidget_MT:wrapAllLines()
+  self.lines = {}
+  for _,styles in ipairs(self.raw_lines) do
+    self:wrapLine(styles[1], styles[2])
+  end
+  self.line_start = math.max(1, #self.lines - self.window_lines + 1)
+  self.line_end = math.max(1, #self.lines)
+  self:draw()
+end
 
 function TextWidget_MT:changeTimestamp(hotspot_id, format)
   self.date_format = format
-  self:reformatWindowLines()
+  self.raw_lines = {}
+  for _,styles in ipairs(self.plain_lines) do
+    self:addFormattedString(styles[1], styles[2])
+  end
+  self:wrapAllLines()
 end
 
 function TextWidget_MT:toggleLogColours(hotspot_id, old)
@@ -664,6 +684,25 @@ function TextWidget_MT:copy(hotspot_id)
   self:copyAndNotify(self.copied_text)
 end
 
+function TextWidget_MT:repositionText(x, y, width, height)
+  self.text_x_position = x
+  self.text_y_position = y
+  self.text_width = width
+  self.text_height = height
+  self.window_lines = math.floor(self.text_height / self.line_height)
+  self.line_start = math.max(1, #self.lines - self.window_lines + 1)
+  self.line_end = math.max(1, #self.lines)
+  WindowMoveHotspot(self.window_name, self:generateHotspotName("textarea"), self.text_x_position, self.text_y_position, self.text_x_position + self.text_width, self.text_y_position + self.text_height)
+end
+
+function TextWidget_MT:repositionScrollbar(x, y, height)
+  self.scrollbar_x_position = x
+  self.scrollbar_y_position = y
+  self.scrollbar_height = height
+  WindowMoveHotspot(self.window_name, self:generateHotspotName("up"), self.scrollbar_x_position, self.scrollbar_y_position, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_width)
+  WindowMoveHotspot(self.window_name, self:generateHotspotName("down"), self.scrollbar_x_position, self.scrollbar_y_position + self.scrollbar_height - self.scrollbar_width, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_height)
+end
+
 function TextWidget_MT.ScrollbarMoveCallback(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
   local mouseposy = WindowInfo(widget.window_name, 18)
@@ -686,14 +725,12 @@ end
 
 function TextWidget_MT.ScrollbarReleaseCallback(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
   widget.dragging_scrollbar = false
   widget:draw()
 end
 
 function TextWidget_MT.TextareaMoveCallback(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
   if bit.band (flags, miniwin.hotspot_got_lh_mouse) ~= 0 then -- only on left mouse button
     widget.copied_text = ""
     widget.end_copying_x = WindowInfo(widget.window_name, 17) - WindowInfo(widget.window_name, 1)
@@ -706,7 +743,8 @@ function TextWidget_MT.TextareaMoveCallback(flags, hotspot_id)
     widget.start_copying_x = widget.temp_start_copying_x
 
     if not widget.copy_start_line then
-      -- OS bug causing errors for me. hack around stupid mouse click tracking mess
+      -- OS bug causing errors for me. hack around stupid mouse click tracking mess.
+      -- It really shouldn't be possible to get here, ever, but what the hell, it happened.
       return
     end
 
@@ -786,58 +824,57 @@ function TextWidget_MT.TextareaMoveCallback(flags, hotspot_id)
 
       end -- if valid line
     end -- for
-
-    -- Scroll if the mouse is dragged off the top or bottom
-    if ypos < widget.text_y_position then
-      if widget.keepscrolling ~= "up" then
-        widget.keepscrolling = "up"
-        widget:scroll()
-      end
-    elseif ypos > widget.text_y_position + widget.text_height then
-      if widget.keepscrolling ~= "down" then
-        widget.keepscrolling = "down"
-        widget:scroll()
-      end
-    else
-      widget.keepscrolling = ""
-      widget:draw()
+    
+    if widget.scrollable then
+       -- Scroll if the mouse is dragged off the top or bottom
+       if ypos < widget.text_y_position then
+         if widget.keepscrolling ~= "up" then
+           widget.keepscrolling = "up"
+           widget:scroll()
+         end
+         return
+       elseif ypos > widget.text_y_position + widget.text_height then
+         if widget.keepscrolling ~= "down" then
+           widget.keepscrolling = "down"
+           widget:scroll()
+         end
+         return
+       else
+         widget.keepscrolling = ""
+       end
     end
+    widget:draw()
   end
 end
 
 function TextWidget_MT.MouseDownText(flags, hotspot_id)
-  if (flags ~= 0x10) then
-    return
+  if (flags == 0x10) then
+     local widget = getWidgetFromHotspotID(hotspot_id)
+     widget.temp_start_copying_x = WindowInfo(widget.window_name, 14)
+     widget.start_copying_y = WindowInfo(widget.window_name, 15)
+     widget.copy_start_windowline = math.floor((widget.start_copying_y - widget.text_y_position) / widget.line_height)
+     widget.temp_start_line = widget.copy_start_windowline + widget.line_start
+     widget.copied_text = ""
+     widget.copy_start_line = nil
+     widget.copy_end_line = nil
+     widget:refreshText()
   end
-  local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
-  widget.temp_start_copying_x = WindowInfo(widget.window_name, 14)
-  widget.start_copying_y = WindowInfo(widget.window_name, 15)
-  widget.copy_start_windowline = math.floor((widget.start_copying_y - widget.text_y_position) / widget.line_height)
-  widget.temp_start_line = widget.copy_start_windowline + widget.line_start
-  widget.copied_text = ""
-  widget.copy_start_line = nil
-  widget.copy_end_line = nil
-  widget:refreshText()
 end
 
 function TextWidget_MT.TextareaReleaseCallback(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
   widget.copy_start_line = math.min(#widget.lines, widget.copy_start_line or 0)
   widget.copy_end_line = math.min(#widget.lines, widget.copy_end_line or 0)
 end
 
 function TextWidget_MT.MouseDownScrollbar(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
-  widget.scrollbar_start_pos = WindowHotspotInfo(widget.window_name, widget:getHotspotName("scroller"), 2) - WindowInfo(widget.window_name, 15)
+  widget.scrollbar_start_pos = WindowHotspotInfo(widget.window_name, widget:generateHotspotName("scroller"), 2) - WindowInfo(widget.window_name, 15)
   widget.dragging_scrollbar = true
 end
 
 function TextWidget_MT.LinkHoverCallback(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
   local url = string.gsub(hotspot_id, "(.*   ).*", "%1")
   local hotspots = WindowHotspotList(widget.window_name)
   for _, v in ipairs (hotspots) do
@@ -852,8 +889,7 @@ function TextWidget_MT.LinkHoverCallback(flags, hotspot_id)
 end
 
 function TextWidget_MT.WheelMoveCallback(flags, hotspot_id)
-  local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
+   local widget = getWidgetFromHotspotID(hotspot_id)
    if bit.band(flags, 0x100) ~= 0 then
       -- down
       if widget.line_start < #widget.lines - widget.window_lines + 1 then
@@ -871,61 +907,18 @@ end
 
 function TextWidget_MT.LinkHoverCancelCallback(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
-  local url = string.gsub(hotspot_id, "(.*   ).*", "%1")
   local current_hotspot = WindowInfo(widget.window_name, 19)
   if current_hotspot == "" then
     current_hotspot = WindowInfo(widget.window_name, 20)
   end
+  local url = string.gsub(hotspot_id, "(.*   ).*", "%1")
   if not string.find(current_hotspot, url, 1, true) then
     widget:refreshText()
   end
 end
 
-function TextWidget_MT:moveText(x, y, width, height)
-  self.text_x_position = x
-  self.text_y_position = y
-  self.text_width = width
-  self.text_height = height
-  self.window_lines = math.floor(self.text_height / self.line_height)
-  self.line_start = math.max(1, #self.lines - self.window_lines + 1)
-  self.line_end = math.max(1, #self.lines)
-  WindowMoveHotspot(self.window_name, self:getHotspotName("textarea"), self.text_x_position, self.text_y_position, self.text_x_position + self.text_width, self.text_y_position + self.text_height)
-end
-
-function TextWidget_MT:moveScrollbar(x, y, height)
-  self.scrollbar_x_position = x
-  self.scrollbar_y_position = y
-  self.scrollbar_height = height
-  WindowMoveHotspot(self.window_name, self:getHotspotName("up"), self.scrollbar_x_position, self.scrollbar_y_position, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_width)
-  WindowMoveHotspot(self.window_name, self:getHotspotName("down"), self.scrollbar_x_position, self.scrollbar_y_position + self.scrollbar_height - self.scrollbar_width, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_height)
-end
-
-function TextWidget_MT:bufferWindowLines()
-  self.lines = {}
-  for _,styles in ipairs(self.raw_lines) do
-    self:bufferLine(styles[1],styles[2])
-  end
-  self.line_start = math.max(1, #self.lines - self.window_lines + 1)
-  self.line_end = math.max(1, #self.lines)
-  self:draw()
-end
-
-function TextWidget_MT:reformatWindowLines()
-  self.lines = {}
-  self.raw_lines = {}
-  for _,styles in ipairs(self.plain_lines) do
-    self:addFormattedString(styles[1], styles[2])
-  end
-  self.line_start = math.max(1, #self.lines - self.window_lines + 1)
-  self.line_end = math.max(1, #self.lines)
-  self:draw()
-end
-
---generic mouse handlers
 function TextWidget_MT.MouseUp(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
   widget.keepscrolling = ""
   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
     widget:RightClickMenu(hotspot_id)
@@ -937,21 +930,18 @@ end
 
 function TextWidget_MT.CancelMouseDown(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
   widget.keepscrolling = ""
   widget:draw()
 end
 
 function TextWidget_MT.MouseDownDownArrow(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
   widget.keepscrolling = "down"
   widget:scroll()
 end
 
 function TextWidget_MT.MouseDownUpArrow(flags, hotspot_id)
   local widget = getWidgetFromHotspotID(hotspot_id)
-  if not widget then return end
   widget.keepscrolling = "up"
   widget:scroll()
 end
@@ -975,15 +965,4 @@ function TextWidget_MT:scroll()
        wait.time(0.1)
      end
   end)
-end
-
--- Give our hotspots unique names, to ensure no naming conflicts for our handlers
-function TextWidget_MT:generateHotspotName(name)
-  local hotspotName = self:getHotspotName(name)
-  TextWidgetHotspotMap[hotspotName] = self.name
-  return hotspotName
-end
-
-function TextWidget_MT:getHotspotName(name)
-  return self.name.."__hotspot__"..name
 end
