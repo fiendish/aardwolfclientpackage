@@ -33,11 +33,10 @@ AUTOMATIC MAPPER by Fiendish
 ** This is a very improved GMCP version of the original ATCP mapper by Nick Gammon.
 ** Some GMCP specific code added by Lasher.
 ** A few new features contributed by Spartacus.
-** Many bugs squashed and major improvements made to the original design by Fiendish.
+** Many major improvements made to Nick's original design by Fiendish.
 
 The window can be dragged to a new location by dragging the room name.
-Your current room is always in the center with a bolder border.
-LH-click on a room to speed-walk to it. RH-click on a room for options.
+LH-click on a room to speedwalk to it. RH-click on a room for options.
 
 LH-click on the "*" button on the upper-left corner for configuration settings.
 (click again on the [x] to close configuration)
@@ -3883,185 +3882,218 @@ function OnHelp (name, line, wildcards)
  mapper help exploring     --> Commands to aid exploring
  mapper help moving        --> Commands for moving between rooms
  mapper help utils         --> Other utilitarian commands
+ mapper help search <txt>  --> Searches through help lines looking for a
+                               particular word or phrase.
 =============================================================================
 ]]
-
-local help_config = [[
-
-===== CONFIGURATION =============>
-
-mapper quicklist [on/off]      --> ON will cause search results to display much
+   local help_table = {
+   ['config'] = {
+['header'] = [[===== CONFIGURATION =============>]],
+[[mapper quicklist [on/off]      --> ON will cause search results to display much
                                  > faster, but the results will not be sorted
-                                 > by distance (default is off)
-mapper shownotes [on/off]      --> ON will cause any notes in a room to display
-                                 > automatically upon entering (default is on)
-mapper backups <off/on>        --> Turn off or on automatic database backups
-                                 > The default setting is on
-mapper backups [un]compressed  --> Turn off or on database backup compression
-                                 > The default setting is uncompressed (off)
-mapper help                    --> This help
-                                 > (or click the "?" button on the top right)
-mapper zoom out                --> Zoom out
-mapper zoom in                 --> Zoom in
-mapper hide                    --> Hide map
-mapper show                    --> Show map]]
+                                 > by distance (default is off)]],
+[[mapper shownotes [on/off]      --> ON will cause any notes in a room to display
+                                 > automatically upon entering (default is on)]],
+[[mapper backups <off/on>        --> Turn off or on automatic database backups
+                                 > The default setting is on]],
+[[mapper backups [un]compressed  --> Turn off or on database backup compression
+                                 > The default setting is uncompressed (off)]],
+[[mapper help                    --> This help
+                                 > (or click the "?" button on the top right)]],
+[[mapper zoom out                --> Zoom out]],
+[[mapper zoom in                 --> Zoom in]],
+[[mapper hide                    --> Hide map]],
+[[mapper show                    --> Show map]]
+},
 
-local help_utils = [[
-
-===== UTILITIES =================>
-
-mapper backup                  --> Create new archived backup of your map
-
+   ['utils'] = {
+['header'] = [[===== UTILITIES =================>]],
+[[mapper backup                  --> Create new archived backup of your map
                                  > database in a db_backups directory,
-                                 > preserving a few prior backups
-mapper addnote                 --> Add a new note to the current room
-mapper addnote <note>          --> Ditto, but skips the dialog
-mapper purgezone <area>        --> Remove an area from the map database
-mapper purgeroom               --> Purge the current room from the map database]]
+                                 > preserving a few prior backups]],
+[[mapper addnote                 --> Add a new note to the current room]],
+[[mapper addnote <note>          --> Ditto, but skips the dialog]],
+[[mapper purgezone <area>        --> Remove an area from the map database]],
+[[mapper purgeroom               --> Purge the current room from the map database]]
+},
 
-   local help_exits = [[
-
-===== EXIT ACTIONS ==============>
-
-mapper cexits                  --> List known custom exits
-mapper cexits <here/area>      --> List known custom exits only in this or
-                                 > another area
-mapper cexit <command>         --> Follow and link a custom exit
+   ['exits'] = {
+['header'] = [[===== EXIT ACTIONS ==============>]],
+[[mapper cexits                  --> List known custom exits]],
+[[mapper cexits <here/area>      --> List known custom exits only in this or
+                                 > another area]],
+[[mapper cexit <command>         --> Follow and link a custom exit
                                  > (ex: 'mapper cexit ride bucket')
                                  > To insert a pause during execution
                                  > of the cexit, use wait(<seconds>) as one
                                  > or more of the cexit moves
                                  > To stack commands use ;; as separator
                                  > to get around the line break parser
-                                 > (ex: 'mapper cexit open south;;south')
-mapper delete cexits           --> Remove the custom exits from this room
-mapper purge cexits            --> Remove all custom exits
-mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
+                                 > (ex: 'mapper cexit open south;;south')]],
+[[mapper delete cexits           --> Remove the custom exits from this room]],
+[[mapper purge cexits            --> Remove all custom exits]],
+[[mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
                                  > the standard 2 when constructing the next
-                                 > cexit (between 2 and 30)
-mapper lockexit                --> Bring up the exit level-locking dialog
+                                 > cexit (between 2 and 30)]],
+[[mapper lockexit                --> Bring up the exit level-locking dialog
                                  > for the current room.]]
+},
 
-   local help_portals = [[
-
-===== PORTAL ACTIONS ============>
-
-mapper portals                 --> List known hand-held portals
-                                 > Recall-flagged portals (below) show in red
-mapper portal <command>        --> Link a hand-held portal alias to the current
+   ['portals'] = {
+['header'] = [[===== PORTAL ACTIONS ============>]],
+[[mapper portals                 --> List known hand-held portals
+                                 > Recall-flagged portals (below) show in red]],
+[[mapper portal <command>        --> Link a hand-held portal alias to the current
                                  > room as a special exit from everwhere else
                                  > (ex: 'mapper portal recall' at recall).
                                  > To stack commands use ;; as separator
                                  > to get around the line break parser
-                                 > (ex: 'mapper portal hold amulet;;enter').
-
-+---- NORECALL/NOPORTAL ROOM ASSISTANCE -------------------------------------+
-mapper portalrecall <index>    --> Flag/unflag a portal as using a recall or
+                                 > (ex: 'mapper portal hold amulet;;enter').]],
+[[]],
+[[There is also 'mapper fullportal <command> <room_id> <level>' which lets you set
+all portal aspects in one command without being in the target room.]],
+[[]],
+[[+---- NORECALL/NOPORTAL ROOM ASSISTANCE -------------------------------------+]],
+[[mapper portalrecall <index>    --> Flag/unflag a portal as using a recall or
                                  > home command, to avoid using it in
                                  > identified norecall rooms.
-                                 > Find the indices with 'mapper portals'
-mapper bounceportal <index>    --> Specifies which non-recall mapper portal
+                                 > Find the indices with 'mapper portals']],
+[[mapper bounceportal <index>    --> Specifies which non-recall mapper portal
                                  > to bounce through when the path calculation
                                  > wants to recall or home from a
                                  > portal-friendly norecall room. For this to
                                  > work properly you must indicate which mapper
                                  > portals use recall or home with the 
                                  > portalrecall command listed above.
-                                 > Find the indices with 'mapper portals'
-mapper bouncerecall <index>    --> Specifies which home/recall mapper portal to
+                                 > Find the indices with 'mapper portals']],
+[[mapper bouncerecall <index>    --> Specifies which home/recall mapper portal to
                                  > bounce through when the path calculation
                                  > wants to portal from a recall-friendly
                                  > noportal room. You may only choose a portal
                                  > that has been marked as being a recall
                                  > portal using the portalrecall command listed
                                  > above.
+                                 > Find the indices with 'mapper portals']],
+[[mapper bounceportal            --> Display the current bounce portal]],
+[[mapper bouncerecall            --> Display the current bounce recall]],
+[[mapper bounceportal clear      --> Clear the current bounce portal]],
+[[mapper bouncerecall clear      --> Clear the current bounce recall]],
+[[+----------------------------------------------------------------------------+]],
+[[]],
+[[mapper portallevel <ind> <lvl> --> Change the level lock on a stored portal
                                  > Find the indices with 'mapper portals'
-mapper bounceportal            --> Display the current bounce portal
-mapper bouncerecall            --> Display the current bounce recall
-mapper bounceportal clear      --> Clear the current bounce portal
-mapper bouncerecall clear      --> Clear the current bounce recall
-+----------------------------------------------------------------------------+
+                                 > Do not manually account for tiers]],
+[[mapper delete portal <command> --> Remove the specified hand-held portal alias]],
+[[mapper delete portal #<index>  --> Remove a hand-held portal by its index
+                                 > Find the indices with 'mapper portals']],
+[[mapper purge portals           --> Remove all hand-held portal aliases]]
+},
 
-mapper portallevel <ind> <lvl> --> Change the level lock on a stored portal
-                                 > Find the indices with 'mapper portals'
-                                 > Do not manually account for tiers
-mapper delete portal <command> --> Remove the specified hand-held portal alias
-mapper delete portal #<index>  --> Remove a hand-held portal by its index
-                                 > Find the indices with 'mapper portals'
-mapper purge portals           --> Remove all hand-held portal aliases]]
+   ['searching'] = {
+['header'] = [[===== SEARCHING =================>]],
+[[mapper area <text>             --> Full-text search limited to the current zone]],
+[[mapper find <text>             --> Full-text search the whole database]],
+[[mapper list <text>             --> Find rooms without the known-path limits
+                                 > of "area" and "find"]],
+[[]],
+[[mapper notes                   --> Show nearby rooms that you marked with notes]],
+[[mapper notes <here/area>       --> Ditto]],
+[[mapper shops                   --> Show all shops/banks]],
+[[mapper shops <here/area>       --> Ditto]],
+[[mapper train                   --> Show all trainers]],
+[[mapper train <here/area>       --> Ditto]],
+[[mapper quest                   --> Show all quest-givers]],
+[[mapper quest <here/area>       --> Ditto]],
+[[]],
+[[mapper next                    --> Visit the next room in the most recent
+                                 > list of results.]],
+[[mapper where <room id>         --> Show directions to a room number]]
+},
 
-   local help_searching = [[
+   ['exploring'] = {
+['header'] = [[===== EXPLORING =================>]],
+[[mapper thisroom                --> Show details about the current room]],
+[[mapper showroom <room id>      --> Draw the map as if you were standing in
+                                 > a different room]],
+[[mapper areas                   --> Show a list of all mapped areas]],
+[[mapper areas <name>            --> Show a list of mapped areas partially
+                                 > matching <name>]],
+[[mapper unmapped                --> List unmapped exit counts for known areas]],
+[[mapper unmapped <here/area>    --> List unmapped exits in this or another area]]
+},
 
-===== SEARCHING =================>
+   ['moving'] = {
+['header'] = [[===== MOVING ====================>]],
+[[mapper goto <room id>          --> Run to a room by its room number]],
+[[mapper walkto <room id>        --> Run to a room by its room number without 
+                                 > using any mapper portals]],
+[[mapper resume                  --> Initiate a new run to the previous target]]
+}
+}
 
-mapper area <text>             --> Full-text search limited to the current zone
-mapper find <text>             --> Full-text search the whole database
-mapper list <text>             --> Find rooms without the known-path limits
-                                 > of "area" and "find"
-
-mapper notes                   --> Show nearby rooms that you marked with notes
-mapper notes <here/area>       --> Ditto
-mapper shops                   --> Show all shops/banks
-mapper shops <here/area>       --> Ditto
-mapper train                   --> Show all trainers
-mapper train <here/area>       --> Ditto
-mapper quest                   --> Show all quest-givers
-mapper quest <here/area>       --> Ditto
-
-mapper next                    --> Visit the next room in the most recent
-                                 > list of results.
-mapper where <room id>         --> Show directions to a room number]]
-
-   local help_exploring = [[
-
-===== EXPLORING =================>
-
-mapper thisroom                --> Show details about the current room
-mapper showroom <room id>      --> Draw the map as if you were standing in
-                                 > a different room
-mapper areas                   --> Show a list of all mapped areas
-mapper areas <name>            --> Show a list of mapped areas partially
-                                 > matching <name>
-mapper unmapped                --> List unmapped exit counts for known areas
-mapper unmapped <here/area>    --> List unmapped exits in this or another area]]
-
-   local help_moving = [[
-
-===== MOVING ====================>
-
-mapper goto <room id>          --> Run to a room by its room number
-mapper walkto <room id>        --> Run to a room by its room number without 
-                                 > using any mapper portals
-mapper resume                  --> Initiate a new run to the previous target]]
+   local function show_help(helps)
+      print("")
+      print(helps['header'])
+      print("")
+      for i,v in ipairs(helps) do
+         print(v)
+      end
+   end
 
    print("")
    print(help_header)
    print("+---------------------------------------------------------------------------+")
+   badnews = true
    if wildcards and wildcards[2] ~= "" then
+      badnews = false
       if wildcards[2] == "all" then
-         print(help_config)
-         print(help_exits)
-         print(help_portals)
-         print(help_searching)
-         print(help_exploring)
-         print(help_moving)
-         print(help_utils)
+         show_help(help_table['config'])
+         show_help(help_table['exits'])
+         show_help(help_table['portals'])
+         show_help(help_table['searching'])
+         show_help(help_table['exploring'])
+         show_help(help_table['moving'])
+         show_help(help_table['utils'])
       elseif wildcards[2] == "config" then
-         print(help_config)
+         show_help(help_table['config'])
       elseif wildcards[2] == "exits" then
-         print(help_exits)
+         show_help(help_table['exits'])
       elseif wildcards[2] == "portals" then
-         print(help_portals)
+         show_help(help_table['portals'])
       elseif wildcards[2] == "searching" then
-         print(help_searching)
+         show_help(help_table['searching'])
       elseif wildcards[2] == "exploring" then
-         print(help_exploring)
+         show_help(help_table['exploring'])
       elseif wildcards[2] == "moving" then
-         print(help_moving)
+         show_help(help_table['moving'])
       elseif wildcards[2] == "utils" then
-         print(help_utils)      
+         show_help(help_table['utils'])
+      elseif wildcards[2]:find("search ") == 1 then
+         local st, en = wildcards[2]:find("search ")
+         local pattern = wildcards[2]:sub(en+1)
+         if Trim(pattern) ~= "" then
+            for k,v in pairs(help_table) do
+               local done_header = false
+               for j,w in ipairs(v) do
+                  if (w ~= "") and (w:find("--------",nil,true) == nil) and (w:find(pattern) ~= nil) then
+                     if not done_header then
+                        print("")
+                        print(v['header'])
+                        done_header = true
+                     end
+                     print("")
+                     print(w)
+                  end
+               end
+            end
+         else
+            badnews = true
+         end
+      else
+         badnews = true
       end
-   else
+   end
+   if badnews then
       print("")
       mapper.mapprint (world.GetPluginInfo (world.GetPluginID (), 3))
       print("")
