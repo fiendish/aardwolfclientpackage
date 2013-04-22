@@ -16,6 +16,15 @@ This function rounds 1.5 "up" to 2, and -1.5 "down" to -2.
 
 -- ----------------------------------------------------------
 
+-- round normally, but when a number ends in exactly .5 round to the nearest even value.
+function round_banker(x)
+   if x == 0 then return 0 end -- prevent returning -0
+   if (x + 0.5) % 2 == 0 then
+      return math.floor(x + 0.5)
+   else
+      return math.ceil(x - 0.5)
+   end
+end
 
 -- round "up" to absolute value, so we treat negative differently
 --  that is, round (-1.5) will return -2
