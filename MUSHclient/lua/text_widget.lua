@@ -32,7 +32,7 @@ TextWidget_MT = {
   scrollable=true, -- enable/disable the scrollbar
   scrollbar_x_position = 0,
   scrollbar_y_position = 0,
-  scrollbar_width = 15,
+  scrollbar_width = 16,
   scrollbar_height = 0,
   max_scrollback_lines = 10000,
   color_scroll_detail = 0x000000,
@@ -179,7 +179,7 @@ end
 
 function TextWidget_MT:initializeMiniwindowHandlers()
   if self.scrollable then
-     -- scroll bar up/down buttons
+     -- scroll bar up/down button hotspots
      WindowAddHotspot(self.window_name, self:generateHotspotName("up"), self.scrollbar_x_position, self.scrollbar_y_position, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_width, "", "", "TextWidget_MT.MouseDownUpArrow", "TextWidget_MT.CancelMouseDown", "TextWidget_MT.MouseUp", "", 1, 0)
      WindowAddHotspot(self.window_name, self:generateHotspotName("down"), self.scrollbar_x_position, self.scrollbar_y_position + self.scrollbar_height - self.scrollbar_width, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_height, "", "", "TextWidget_MT.MouseDownDownArrow", "TextWidget_MT.CancelMouseDown", "TextWidget_MT.MouseUp", "", 1, 0)
   end
@@ -208,28 +208,46 @@ function TextWidget_MT:draw()
   self:refreshText()
 end
 
+require "commas"
 function TextWidget_MT:drawScrollbar()
   WindowRectOp(self.window_name, 2, self.scrollbar_x_position, self.scrollbar_y_position, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_height, self.color_scroll_background) -- scroll bar background
   WindowRectOp(self.window_name, 1, self.scrollbar_x_position + 1, self.scrollbar_y_position + 1, self.scrollbar_x_position + self.scrollbar_width - 1, self.scrollbar_y_position + self.scrollbar_height - 1, self.color_scroll_detail) -- scroll bar background inset rectangle
 
+  local midpoint = (self.scrollbar_width - 2)/2
+
+  -- draw the scroll up button
   local button_style = miniwin.rect_edge_at_all + miniwin.rect_option_fill_middle
   local button_edge = miniwin.rect_edge_raised
   local points = ""
+
   if (self.keepscrolling == "up") then
     button_edge = miniwin.rect_edge_sunken
-    points = string.format("%i,%i,%i,%i,%i,%i", self.scrollbar_x_position + 5, self.scrollbar_y_position + 8, self.scrollbar_x_position + 8, self.scrollbar_y_position + 5, self.scrollbar_x_position + 11, self.scrollbar_y_position + 8)
+    points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
+self.scrollbar_x_position + math.floor(midpoint) + 1, self.scrollbar_y_position + math.ceil(self.scrollbar_width/4 + 0.5) + 2, self.scrollbar_x_position + math.floor(midpoint) - math.floor(midpoint/2) + 1, self.scrollbar_y_position + round_banker(self.scrollbar_width/2) + 2, 
+self.scrollbar_x_position + math.ceil(midpoint) + math.floor(midpoint/2) + 1, self.scrollbar_y_position + round_banker(self.scrollbar_width/2) + 2, 
+self.scrollbar_x_position + math.ceil(midpoint) + 1, self.scrollbar_y_position + math.ceil(self.scrollbar_width/4 + 0.5) + 2 )
   else
-    points = string.format("%i,%i,%i,%i,%i,%i", self.scrollbar_x_position + 4, self.scrollbar_y_position + 7, self.scrollbar_x_position + 7, self.scrollbar_y_position + 4, self.scrollbar_x_position + 10, self.scrollbar_y_position + 7)
+    points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
+self.scrollbar_x_position + math.floor(midpoint), self.scrollbar_y_position + math.ceil(self.scrollbar_width/4 + 0.5) + 1, self.scrollbar_x_position + math.floor(midpoint) - math.floor(midpoint/2), self.scrollbar_y_position + round_banker(self.scrollbar_width/2) + 1, 
+self.scrollbar_x_position + math.ceil(midpoint) + math.floor(midpoint/2), self.scrollbar_y_position + round_banker(self.scrollbar_width/2) + 1, 
+self.scrollbar_x_position + math.ceil(midpoint), self.scrollbar_y_position + math.ceil(self.scrollbar_width/4 + 0.5) + 1)
   end
   WindowRectOp(self.window_name, 5, self.scrollbar_x_position, self.scrollbar_y_position, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_width, button_edge, button_style)
   WindowPolygon(self.window_name, points, 0x000000, miniwin.pen_solid + miniwin.pen_join_miter, 1, 0x000000, 0, true, false)
 
+  -- draw the scroll down button
   button_edge = miniwin.rect_edge_raised
   if (self.keepscrolling == "down") then
     button_edge = miniwin.rect_edge_sunken
-    points = string.format("%i,%i,%i,%i,%i,%i", self.scrollbar_x_position + 5, self.scrollbar_y_position + self.scrollbar_height - 9, self.scrollbar_x_position + 8, self.scrollbar_y_position + self.scrollbar_height - 6, self.scrollbar_x_position + 11, self.scrollbar_y_position + self.scrollbar_height - 9)
+    points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
+self.scrollbar_x_position + math.floor(midpoint) + 1, self.scrollbar_y_position + self.scrollbar_height - 1 - math.ceil(self.scrollbar_width/4 + 0.5), self.scrollbar_x_position + math.floor(midpoint) - math.floor(midpoint/2) + 1, self.scrollbar_y_position + self.scrollbar_height - 1 - round_banker(self.scrollbar_width/2), 
+self.scrollbar_x_position + math.ceil(midpoint) + math.floor(midpoint/2) + 1, self.scrollbar_y_position + self.scrollbar_height - 1 - round_banker(self.scrollbar_width/2), 
+self.scrollbar_x_position + math.ceil(midpoint) + 1, self.scrollbar_y_position + self.scrollbar_height - 1 - math.ceil(self.scrollbar_width/4 + 0.5))
   else
-    points = string.format("%i,%i,%i,%i,%i,%i", self.scrollbar_x_position + 4, self.scrollbar_y_position + self.scrollbar_height - 10, self.scrollbar_x_position + 7, self.scrollbar_y_position + self.scrollbar_height - 7, self.scrollbar_x_position + 10, self.scrollbar_y_position + self.scrollbar_height - 10)
+    points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
+self.scrollbar_x_position + math.floor(midpoint), self.scrollbar_y_position + self.scrollbar_height - 2 - math.ceil(self.scrollbar_width/4 + 0.5), self.scrollbar_x_position + math.floor(midpoint) - math.floor(midpoint/2), self.scrollbar_y_position + self.scrollbar_height - 2 - round_banker(self.scrollbar_width/2), 
+self.scrollbar_x_position + math.ceil(midpoint) + math.floor(midpoint/2), self.scrollbar_y_position + self.scrollbar_height - 2 - round_banker(self.scrollbar_width/2), 
+self.scrollbar_x_position + math.ceil(midpoint), self.scrollbar_y_position + self.scrollbar_height - 2 - math.ceil(self.scrollbar_width/4 + 0.5))
   end
   WindowRectOp(self.window_name, 5, self.scrollbar_x_position, self.scrollbar_y_position + self.scrollbar_height - self.scrollbar_width, self.scrollbar_x_position + self.scrollbar_width, self.scrollbar_y_position + self.scrollbar_height, button_edge, button_style)
   WindowPolygon(self.window_name, points, 0x000000, 0, 1, 0x000000, 0, true, false)
