@@ -23,12 +23,6 @@ TextWidget_MT = {
   font_name = "",
   font_size = "",
   color_window_background = GetNormalColour(1),
-  log_to_file = 0,
-  log_file_name = "CaptureLog.txt",
-  log_colour_codes = 1,
-  log_timestamps = 1,
-  date_format = "[%d %b %I:%M:%S%p] ",
-  timestamp_formats = {"", "[%d %b %H:%M:%S] ", "[%d %b %I:%M:%S%p] ", "[%H:%M:%S] ", "[%I:%M:%S%p] "},
   scrollable=true, -- enable/disable the scrollbar
   scrollbar_x_position = 0,
   scrollbar_y_position = 0,
@@ -37,7 +31,7 @@ TextWidget_MT = {
   max_scrollback_lines = 10000,
   color_scroll_detail = 0x000000,
   color_scroll_background = 0xE8E8E8,
-  extra_rightclick_menu = nil,
+  external_rightclick_menu = nil,
 
   -- SEMI-PRIVATE VARIABLES --
   resize_scrollbar_height = 0,
@@ -47,7 +41,6 @@ TextWidget_MT = {
   resize_text_height = 0,
 
   -- PRIVATE VARIABLES. DO NOT TOUCH. --
-  plain_lines = {},
   lines = {},
   raw_lines = {},
   hyperlinks = {},
@@ -55,13 +48,9 @@ TextWidget_MT = {
   line_end = "",
   window_lines = "",
   font_height = "",
-  windowinfo = "",
-  moving_start_x = "",
-  moving_start_y = "",
   dragging_scrollbar = false,
   scrollbar_pos = 0,
   scrollbar_size = 0,
-  font_height = "",
   line_height = "",
   scrollbar_steps = 1,
   scrollbar_start_pos = 0,
@@ -84,19 +73,21 @@ function TextWidget_MT:addColouredLine(string)
 end
 
 function TextWidget_MT:addStyles(styles)
-  local timestamp=os.time()
-  table.insert(self.plain_lines, {styles, timestamp})
+  local styles = copytable.deep(styles)
+
+  --strip out our URLs, so we can add our movespots later
+  local urls = self:findURLs(strip_colours_from_styles(styles))
+
   --pop our last line from our buffer, if we're at our max.
-  if #self.plain_lines >= self.max_scrollback_lines then
-    table.remove(self.plain_lines, 1)
+  if #self.raw_lines > self.max_scrollback_lines then
+    table.remove(self.raw_lines, 1)
   end
-  self:addLogLine(styles, timestamp)
-  self:addFormattedString(styles, timestamp)
-  self:wrapLine(self.raw_lines[#self.raw_lines][1], self.raw_lines[#self.raw_lines][2])
+  table.insert(self.raw_lines, {[1]=styles, [2]=urls})
+  self:wrapLine(styles, urls)
 end
 
-TextWidgetSaveStrings = {"font_name", "font_size", "date_format", "log_file_name"}
-TextWidgetSaveNumbers = {"width", "height", "log_to_file", "log_colour_codes", "log_timestamps"}
+TextWidgetSaveStrings = {"font_name", "font_size"}
+TextWidgetSaveNumbers = {"width", "height"}
 
 TextWidgetNameMap = {}
 TextWidgetHotspotMap = {}
@@ -330,47 +321,12 @@ function TextWidget_MT:drawLine (line, styles, backfill_start, backfill_end)
   end
 end
 
-function TextWidget_MT:addLogLine(styles, timestamp)
-  if (self.log_to_file == 1) then
-    local log_text = StylesToColoursOneLine(styles)
-    if (self. log_colour_codes == 0) then
-      log_text = strip_colours(log_text)
-    end
-    if (self.log_timestamps == 1) then
-      log_text = os.date(self.date_format, timestamp) .. log_text
-    end
-    local f = io.open (GetInfo(58):gsub("^.\\",GetInfo(56))..self.log_file_name, "a+")
-    if f then
-       f:write(log_text.."\n") -- write to it
-       f:close()  -- close that file now
-    else
-       ColourNote("white","red","Could not open invalid capture log file '"..self.log_file_name.."'")
-       ColourNote("white","red","Please pick a valid file name.")
-    end
-  end
-end
-
-function TextWidget_MT:addFormattedString(styles, timestamp)
-  local styles = copytable.deep(styles)
-  local tstamp = os.date(self.date_format, timestamp)
-  table.insert(styles, 1, {text=tstamp, length=string.len(tstamp), textcolour=0xc0c0c0})
-
-  --strip out our URLs, so we can add our movespots later
-  local urls = self:findURLs(strip_colours_from_styles(styles))
-
-  --pop our last line from our buffer, if we're at our max.
-  if #self.raw_lines > self.max_scrollback_lines then
-    table.remove(self.raw_lines, 1)
-  end
-  table.insert(self.raw_lines, {[1]=styles, [2]=urls})
-end
-
-function TextWidget_MT:wrapLine(styledString, rawURLs)
+function TextWidget_MT:wrapLine(stylerun, rawURLs)
   local avail = self.text_width
   local line_styles = {}
   local beginning = true
   local length = 0
-  local styles = copytable.deep(styledString)
+  local styles = copytable.deep(stylerun)
   local urls = copytable.deep(rawURLs)
 
   local remove = table.remove
@@ -485,7 +441,7 @@ function TextWidget_MT:wrapLine(styledString, rawURLs)
       end
 
       -- add new line
-      table.insert(self.lines, {[1]=line_styles, [2]=beginning, [3]= line_urls} )
+      table.insert(self.lines, {[1]=line_styles, [2]=beginning, [3]=line_urls} )
       if #self.lines > self.window_lines then
         self.line_start = self.line_start + 1
       end -- if
@@ -517,117 +473,6 @@ function TextWidget_MT:findURLs(text)
    return URLs
 end -- function findURL
 
-function TextWidget_MT:getMenuText(menu, menuText, flatMenu)
-  for _,value in pairs(menu) do
-    if type(value) == "string" then
-      menuText = menuText .. value
-    elseif type(value[2]) == "function" then
-      table.insert(flatMenu, value)
-      menuText = menuText.."|"..value[1]
-    else
-      table.insert(flatMenu, nil)
-      menuText = menuText .. "|>" .. value[1]
-      menuText, flatMenu = self:getMenuText(value[2], menuText, flatMenu)
-      menuText = menuText .. "|<"
-    end
-  end
-  return menuText, flatMenu
-end
-
-function TextWidget_MT:RightClickMenu(hotspot_id)
-  local menu = {}
-  if self.hyperlinks[hotspot_id] then
-    table.insert(menu, {"Go to URL: "..self.hyperlinks[hotspot_id], TextWidget_MT.clickUrl})
-    table.insert(menu, {"Copy URL to Clipboard", TextWidget_MT.copyUrl})
-    table.insert(menu, "|")
-  end
-  if self.copied_text ~= "" then
-    table.insert(menu, {"Copy Selected Without Colors", TextWidget_MT.copyPlain})
-    table.insert(menu, {"Copy Selected", TextWidget_MT.copy})
-  end
-  table.insert(menu, {"Copy All", TextWidget_MT.copyFull})
-  table.insert(menu, "|")
-
-  -- prep our timestamp menu with a time that is always demonstrative
-  local timestamp = os.date("*t")
-  timestamp.hour=13
-  timestamp.min=30
-  timestamp.sec=15
-  local timestamp=os.time(timestamp)
-  local format = ""
-  local timestampMenu = {}
-  for _,v in pairs(self.timestamp_formats) do
-    if v == "" then
-      format = "No Timestamps"
-    else
-      format = os.date(v, timestamp)
-    end
-    table.insert(timestampMenu, {(self.date_format == v and "+" or "").. format, TextWidget_MT.changeTimestamp, v})
-  end
-  table.insert(menu, {"Timestamps", timestampMenu})
-
-  -- prep our Logging submenu
-  local loggingMenu = {}
-  if (self.log_to_file == 0) then
-    table.insert(loggingMenu, {"Enable Logging", TextWidget_MT.enableLogging})
-  else
-    table.insert(loggingMenu, {"+Enable Logging", TextWidget_MT.disableLogging})
-  end
-  table.insert(loggingMenu, "|")
-  table.insert(loggingMenu, {"Choose Logfile...", TextWidget_MT.changeLogfile})
-  table.insert(loggingMenu, {(self.log_colour_codes == 1 and "+" or "").."Log Color Codes", TextWidget_MT.toggleLogColours, self.log_colour_codes})
-  table.insert(loggingMenu, {(self.log_timestamps == 1 and "+" or "").."Log Timetsamps", TextWidget_MT.toggleLogTimestamps, self.log_timestamps})
-  table.insert(menu, {"Logging", loggingMenu})
-
-  -- if we have extra right click menu options, show them here
-  if self.extra_rightclick_menu ~= nil then
-    for _,option in pairs(self.extra_rightclick_menu) do
-      table.insert(menu, option)
-    end
-  end
-
-  local flatMenu = {}
-  local menuText = ""
-  local targetFunction
-  menuText, flatMenu = self:getMenuText(menu, menuText, flatMenu)
-  menuText = "!"..string.sub(menuText, 2)
-  result = WindowMenu (self.window_name,
-    WindowInfo (self.window_name, 14),  -- x position
-    WindowInfo (self.window_name, 15),   -- y position
-    menuText) -- content
-
-  if result ~= "" then
-    numResult = tonumber(result)
-    targetFunction = flatMenu[numResult][2]
-    if targetFunction ~= nil then
-      if #flatMenu[numResult] == 3 then
-        targetFunction(self, hotspot_id, flatMenu[numResult][3])
-      else
-        targetFunction(self, hotspot_id)
-      end
-    end
-  end
-end
-
-function TextWidget_MT:changeLogfile()
-  wanted_file = utils.inputbox ( "Pick a name for your capture log file.\nExample: CaptureLog.txt\n\nIt will be created in the MUSHclient logs folder.", "Log File Name", self.log_file_name or "CaptureLog.txt", nil, nil, nil)
-
-  if self.log_file_name or (wanted_file and (Trim(wanted_file) ~= "")) then
-     -- test file validity
-     local f = io.open (GetInfo(58):gsub("^.\\",GetInfo(56))..((wanted_file and Trim(wanted_file)) or self.log_file_name), "a+")
-     if f then
-        f:close()  -- close that file now
-        self.log_file_name = ((wanted_file and Trim(wanted_file)) or self.log_file_name)
-     else
-        ColourNote("white","red","Could not open invalid capture log file '"..((wanted_file and Trim(wanted_file)) or self.log_file_name).."'")
-        ColourNote("white","red","Please pick a different file name.")
-     end
-  end
-
-  ColourNote("yellow", "", "Your current log file is...")
-  ColourNote("yellow", "", "  "..GetInfo(58):gsub("^.\\",GetInfo(56))..self.log_file_name)
-end
-
 function TextWidget_MT:wrapAllLines()
   self.lines = {}
   for _,styles in ipairs(self.raw_lines) do
@@ -636,31 +481,6 @@ function TextWidget_MT:wrapAllLines()
   self.line_start = math.max(1, #self.lines - self.window_lines + 1)
   self.line_end = math.max(1, #self.lines)
   self:draw()
-end
-
-function TextWidget_MT:changeTimestamp(hotspot_id, format)
-  self.date_format = format
-  self.raw_lines = {}
-  for _,styles in ipairs(self.plain_lines) do
-    self:addFormattedString(styles[1], styles[2])
-  end
-  self:wrapAllLines()
-end
-
-function TextWidget_MT:toggleLogColours(hotspot_id, old)
-  self.log_colour_codes = 1 - old
-end
-
-function TextWidget_MT:toggleLogTimestamps(hotspot_id, old)
-  self.log_timestamps = 1 - old
-end
-
-function TextWidget_MT:enableLogging()
-  self.log_to_file = 1
-end
-
-function TextWidget_MT:disableLogging()
-  self.log_to_file = 0
 end
 
 function TextWidget_MT:clickUrl(hotspot_id)
@@ -684,20 +504,8 @@ function TextWidget_MT:copyUrl(hotspot_id)
   end
 end
 
-function TextWidget_MT:copyPlain(hotspot_id)
-  self:copyAndNotify(strip_colours(self.copied_text))
-end
-
-function TextWidget_MT:copyFull(hotspot_id)
-  local t = {}
-  for _,styles in ipairs(self.raw_lines) do
-    table.insert(t, StylesToColoursOneLine(styles[1]))
-  end
-  self:copyAndNotify(table.concat(t,"\n"))
-end
-
-function TextWidget_MT:copy(hotspot_id)
-  self:copyAndNotify(self.copied_text)
+function TextWidget_MT:getAllText()
+  return copytable.deep(self.raw_lines)
 end
 
 function TextWidget_MT:repositionText(x, y, width, height)
@@ -870,7 +678,7 @@ function TextWidget_MT.TextareaMoveCallback(flags, hotspot_id)
 end
 
 function TextWidget_MT.MouseDownText(flags, hotspot_id)
-  if (flags == 0x10) then
+  if (flags == miniwin.hotspot_got_lh_mouse) then
      local widget = getWidgetFromHotspotID(hotspot_id)
      widget.temp_start_copying_x = WindowInfo(widget.window_name, 14)
      widget.start_copying_y = WindowInfo(widget.window_name, 15)
@@ -937,6 +745,66 @@ function TextWidget_MT.LinkHoverCancelCallback(flags, hotspot_id)
   if not string.find(current_hotspot, url, 1, true) then
     widget:refreshText()
   end
+end
+
+
+function TextWidget_MT:copyPlain(hotspot_id)
+  self:copyAndNotify(strip_colours(self.copied_text))
+end
+
+function TextWidget_MT:copy(hotspot_id)
+  self:copyAndNotify(self.copied_text)
+end
+
+function  TextWidget_MT:copyFull()
+   ColourNote("yellow","","All messages copied to clipboard.")
+   local t = {}
+   for _,styles in ipairs(self.raw_lines) do
+      table.insert(t, StylesToColoursOneLine(styles[1]))
+   end
+   SetClipboard(table.concat(t,"@w\n").."@w")
+end
+
+function TextWidget_MT:RightClickMenu(hotspot_id)
+  local menuText = ""
+  local callbacks = {}
+  if self.hyperlinks[hotspot_id] then
+     menuText = "Go to URL: "..self.hyperlinks[hotspot_id].."|Copy URL to Clipboard|-"
+     callbacks = {TextWidget_MT.clickUrl, TextWidget_MT.copyUrl}
+  end
+  if self.copied_text ~= "" then
+    menuText = menuText..((menuText ~= "") and "|" or "").."Copy Selected Without Colors|Copy Selected"
+    table.insert(callbacks, TextWidget_MT.copyPlain)
+    table.insert(callbacks, TextWidget_MT.copy)
+  end
+  menuText = menuText..((menuText ~= "") and "|" or "").."Copy All"
+  table.insert(callbacks, TextWidget_MT.copyFull)
+  
+  local external_text = self.GetExternalMenuText()
+  if external_text then
+    menuText = menuText.."|-|"..external_text
+  end
+  local external_callbacks = self.GetExternalMenuFunctions()
+  if external_callbacks then
+     for i,v in ipairs(external_callbacks) do
+        table.insert(callbacks, v)
+     end
+  end
+  if menuText ~= "" then
+     result = tonumber( WindowMenu (self.window_name,
+        WindowInfo (self.window_name, 14),  -- x position
+        WindowInfo (self.window_name, 15),   -- y position
+        "!"..menuText) ) -- content
+
+     if result then
+        callbacks[result](self, hotspot_id)
+     end
+  end
+end
+
+function TextWidget_MT:GetExternalMenuFunctions()
+end
+function TextWidget_MT:GetExternalMenuText()
 end
 
 function TextWidget_MT.MouseUp(flags, hotspot_id)
