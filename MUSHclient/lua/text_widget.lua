@@ -269,9 +269,8 @@ function TextWidget_MT:refreshText()
   local count = 0
   if #self.lines >= 1 then
     for count = self.line_start, self.line_end do
-      ax = nil
-      zx = nil
-      if self.lines[count] then
+        ax = nil
+        zx = nil
         line_no_colors = strip_colours_from_styles(self.lines[count][1])
 
         -- create clickable links for urls
@@ -282,7 +281,7 @@ function TextWidget_MT:refreshText()
           local bottom = top + self.line_height + 1
           local link_name = table.concat({v.text,"   ",count,v.start,v.stop})
           link_name = self:generateHotspotName(link_name)
-          if not WindowHotspotInfo(self.name, link_name, 1) then
+          if not WindowHotspotInfo(self.window_name, link_name, 1) then
             self.hyperlinks[link_name] = v.text
             WindowAddHotspot(self.window_name, link_name, left, top, math.min(right, self.text_width), bottom, "TextWidget_MT.LinkHoverCallback", "TextWidget_MT.LinkHoverCancelCallback", "TextWidget_MT.MouseDownText", "TextWidget_MT.CancelMouseDown", "TextWidget_MT.MouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
             WindowDragHandler(self.window_name, link_name, "TextWidget_MT.TextareaMoveCallback", "TextWidget_MT.TextareaReleaseCallback", 0x10)
@@ -297,7 +296,6 @@ function TextWidget_MT:refreshText()
           zx = math.min(self.text_width + self.text_x_position, (((count == self.copy_end_line) and math.min(self.end_copying_x, WindowTextWidth(self.window_name, self.font, line_no_colors) + self.text_x_position)) or WindowTextWidth(self.window_name, self.font, line_no_colors) + self.text_x_position))
         end
         self:drawLine(count - self.line_start, self.lines[count][1], ax, zx )
-      end
     end
   end
   BroadcastPlugin(999, "repaint")
@@ -673,7 +671,7 @@ function TextWidget_MT.TextareaMoveCallback(flags, hotspot_id)
          widget.keepscrolling = ""
        end
     end
-    widget:draw()
+    widget:refreshText()
   end
 end
 
@@ -704,8 +702,8 @@ function TextWidget_MT.MouseDownScrollbar(flags, hotspot_id)
 end
 
 function TextWidget_MT.LinkHoverCallback(flags, hotspot_id)
-  local widget = getWidgetFromHotspotID(hotspot_id)
   local url = string.gsub(hotspot_id, "(.*   ).*", "%1")
+  local widget = getWidgetFromHotspotID(hotspot_id)
   local hotspots = WindowHotspotList(widget.window_name)
   for _, v in ipairs (hotspots) do
     if string.find(v, url, 1, true) then
@@ -716,6 +714,14 @@ function TextWidget_MT.LinkHoverCallback(flags, hotspot_id)
     end
   end
   BroadcastPlugin(999, "repaint")
+end
+
+function TextWidget_MT.LinkHoverCancelCallback(flags, hotspot_id)
+  local widget = getWidgetFromHotspotID(hotspot_id)
+  local url = string.gsub(hotspot_id, "(.*   ).*", "%1")
+  if not string.find(WindowInfo(widget.window_name, 19), url, 1, true) then
+    widget:refreshText()
+  end
 end
 
 function TextWidget_MT.WheelMoveCallback(flags, hotspot_id)
@@ -734,19 +740,6 @@ function TextWidget_MT.WheelMoveCallback(flags, hotspot_id)
       widget:draw()
   end -- if
 end
-
-function TextWidget_MT.LinkHoverCancelCallback(flags, hotspot_id)
-  local widget = getWidgetFromHotspotID(hotspot_id)
-  local current_hotspot = WindowInfo(widget.window_name, 19)
-  if current_hotspot == "" then
-    current_hotspot = WindowInfo(widget.window_name, 20)
-  end
-  local url = string.gsub(hotspot_id, "(.*   ).*", "%1")
-  if not string.find(current_hotspot, url, 1, true) then
-    widget:refreshText()
-  end
-end
-
 
 function TextWidget_MT:copyPlain(hotspot_id)
   self:copyAndNotify(strip_colours(self.copied_text))
