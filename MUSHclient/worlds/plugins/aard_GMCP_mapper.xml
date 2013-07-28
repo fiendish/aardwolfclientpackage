@@ -1771,6 +1771,7 @@ function create_tables ()
       date_added  DATE,               -- date added to database
       texture     TEXT,               -- background area texture
       color       TEXT,               -- ANSI colour code.
+      flags       TEXT NOT NULL DEFAULT '',      -- area flags
       UNIQUE (uid)
    );
    CREATE INDEX IF NOT EXISTS areas_uid_index ON areas (uid);
@@ -2774,14 +2775,26 @@ function OnPluginInstall ()
          dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("bounce_portal"), fixsql(serialize.save("bounce_portal"))))
       end
    end
+
+   -- I guess we effectively skipped over v8. No big deal.
    
-   -- this should always be the last stage in db schema updates
-   if db_user_version < 8 then
-      dbCheckExecute("VACUUM;")
+   if db_user_version < 9 then
+      local flags_column_exists = false
+      for a in db:nrows "PRAGMA table_info('areas')" do
+         if a["name"] == "flags" then
+            flags_column_exists = true
+         end
+      end
+      if not flags_column_exists then
+         dbCheckExecute("ALTER TABLE areas ADD COLUMN flags TEXT NOT NULL DEFAULT '';")
+      end
    end
-   
-   -- update db version
-   dbCheckExecute("PRAGMA user_version = 8;")
+
+   -- this should always be the last stage in db schema updates
+   if db_user_version < 9 then
+      dbCheckExecute("VACUUM;")
+   end   
+   dbCheckExecute("PRAGMA user_version = 9;")
    
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
    if b_b ~= nil then
@@ -2824,7 +2837,8 @@ function OnPluginInstall ()
       area = {
          name = row.name,
          texture = row.texture,
-         color = row.color
+         color = row.color,
+         virtual = (row.flags:find("virtual") ~= nil)
       }
       areas [row.uid] = area
    end   -- finding areas
@@ -3064,8 +3078,8 @@ function got_gmcp_room()
       exit_locks = {}
       }
    if gmcproom.area ~= lastarea then
-      if areas["lasertwo"] then
-         purgezone("lasertwo")
+      if areas[lastarea] and areas[lastarea].virtual then
+         purgezone(lastarea)
       end
       lastarea = gmcproom.area
    end
@@ -3170,19 +3184,22 @@ function update_gmcp_area()
    local texture = gmcpval("texture")
    local color = gmcpval("col")
    local x,y,z = gmcpval("x"),gmcpval("y"),gmcpval("z")
+   local flags = gmcpval("flags") or ""
 
    dbCheckExecute (string.format (
-      "REPLACE INTO areas (uid, name, date_added, texture, color) VALUES (%s, %s, DATETIME('NOW'), %s, %s);",
+      "REPLACE INTO areas (uid, name, date_added, texture, color, flags) VALUES (%s, %s, DATETIME('NOW'), %s, %s, %s);",
       fixsql (areaid), 
       fixsql (areaname),
       fixsql (texture),
-      fixsql (color)
+      fixsql (color),
+      fixsql (flags)
    ))
 
    area = {
       name = areaname,
       texture = texture,
-      color = color
+      color = color,
+      virtual = (flags:find("virtual") ~= nil)
    }
    areas [areaid] = area
 
