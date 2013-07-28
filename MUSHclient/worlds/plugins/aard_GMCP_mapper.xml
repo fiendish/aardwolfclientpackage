@@ -3078,10 +3078,13 @@ function got_gmcp_room()
       exit_locks = {}
       }
    if gmcproom.area ~= lastarea then
-      if areas[lastarea] and areas[lastarea].virtual then
-         purgezone(lastarea)
-      end
       lastarea = gmcproom.area
+      -- purge all virtual areas except the current area
+      for k,v in pairs(areas) do
+         if v.virtual and (k ~= lastarea) then
+            purgezone(k)
+         end
+      end
    end
 
    -- Try to accomodate closed clan rooms and other nomap rooms.
