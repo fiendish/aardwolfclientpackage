@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1773 snapshot
+- bug fix: remove all virtual areas instead of just the one recently left, because users don't always upgrade right away and there might be a buildup of old virtual areas
+
 r1771 snapshot
 - misc change: LuaJIT updated to 2.0.2 (see luajit.org for details)
 - new feature: areas flagged "virtual" by the game are considered temporary and will be removed from the GMCP mapper database when you leave
