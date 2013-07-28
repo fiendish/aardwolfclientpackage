@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r1771 snapshot
+- misc change: LuaJIT updated to 2.0.2 (see luajit.org for details)
+- new feature: areas flagged "virtual" by the game are considered temporary and will be removed from the GMCP mapper database when you leave
+- new feature: the GMCP mapper help is now searchable via 'mapper help search <text>'
+- bug fix: don't try to backup the GMCP mapper database if it isn't open
+- new feature: the GMCP mapper now displays your total number of mapped rooms when using the 'mapper areas' command
+- bug fix: the health bars miniwindow could error on plugin start due to a weirdness in how MUSHclient sizes its window when starting up
+
 r1748 snapshot
 - new feature: updated to MUSHclient 4.89 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.89 )
 - misc change: LuaJIT updated to 2.0.1 (see luajit.org for details)
