@@ -1324,16 +1324,22 @@ function create_portal(keyword, destination, level)
    dbCheckExecute(query)
 end
 
-function string:split(sep)
-   local sep, fields = sep or ":", {}
-   local pattern = string.format("([^%s]+)", sep)
-   self:gsub(pattern, function(c) fields[#fields+1] = c end)
+function string:split(pat)
+   local fields = {}
+   local start = 1
+   self:gsub("()("..pat..")", 
+      function(c,d)
+         table.insert(fields,self:sub(start,c-1))
+         start = c + #d
+      end
+   )
+   table.insert(fields, self:sub(start))
    return fields
 end
 
 function map_portal_level (name, line, wildcards)
   
-   local keys = wildcards[1]:split(" ")
+   local keys = Trim(wildcards[1]):split("[%s]+")
    local pnum = tonumber(keys[1])
    local level = tonumber(keys[2])
 
@@ -4070,8 +4076,10 @@ all portal aspects in one command without being in the target room.]],
          show_help(help_table['utils'])
       elseif wildcards[2]:find("search ") == 1 then
          local st, en = wildcards[2]:find("search ")
-         local pattern = wildcards[2]:sub(en+1)
-         if Trim(pattern) ~= "" then
+         local pattern = Trim(wildcards[2]:sub(en+1))
+         ColourTell("cornflower","black","Searching help for: ")         
+         ColourNote("red","black",pattern)
+         if pattern ~= "" then
             for k,v in pairs(help_table) do
                local done_header = false
                for j,w in ipairs(v) do
@@ -4082,7 +4090,14 @@ all portal aspects in one command without being in the target room.]],
                         done_header = true
                      end
                      print("")
-                     print(w)
+                     local wtable = w:split(pattern)
+                     for i,v in ipairs(wtable) do
+                        ColourTell("cornflower","black",v)
+                        if (i < #wtable) then
+                           ColourTell("red", "black", pattern)
+                        end
+                     end
+                     Note("")
                   end
                end
             end
