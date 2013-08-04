@@ -190,6 +190,11 @@ function ColoursToStyles (Text)
    if Text:match ("@") then
       astyles = {}
 
+      -- make sure we start with a color
+      if Text:sub(1, 1) ~= "@" then
+         Text = conversion_colours[GetNormalColour(DEFAULT_FOREGROUND)] .. Text
+      end -- if
+
       Text = Text:gsub ("@%-", "~") -- fix tildes
       Text = Text:gsub ("@@", "\0") -- change @@ to 0x00
       Text = Text:gsub ("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
@@ -197,11 +202,6 @@ function ColoursToStyles (Text)
       Text = Text:gsub ("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
       Text = Text:gsub ("@x25[6-9]","") -- strip invalid xterm codes (256+)
       Text = Text:gsub ("@[^"..colour_letters.."]", "")  -- rip out hidden garbage
-      
-      -- make sure we start with @ or gsub doesn't work properly
-      if Text:sub (1, 1) ~= "@" then
-         Text = DEFAULT_FOREGROUND .. Text
-      end -- if
 
       for colour, text in Text:gmatch ("@(%a)([^@]+)") do
          text = text:gsub ("%z", "@") -- put any @ characters back
