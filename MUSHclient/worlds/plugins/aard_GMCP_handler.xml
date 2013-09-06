@@ -185,6 +185,7 @@ end
 
 function OnPluginConnect()
    Send_GMCP_Packet("request char")
+   Send_GMCP_Packet("request room")
    Send_GMCP_Packet("request area")
    Send_GMCP_Packet("request quest")
    Send_GMCP_Packet("request group")
