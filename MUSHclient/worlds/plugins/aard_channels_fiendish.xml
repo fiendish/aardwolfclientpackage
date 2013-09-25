@@ -1243,11 +1243,11 @@ function right_click_menu (hotspot_id)
       
       if echo_skip ~= 0 then
          if numResult == 17+hyperlink_skip then
-            Execute("chats echo on")
+            CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "on")
          elseif numResult == 17+hyperlink_skip+1 then
-            Execute("chats echo off")
+            CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "off")
          elseif numResult == 17+hyperlink_skip+2 then
-            Execute("chats echo custom")
+            CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "custom")
          elseif numResult == 17+hyperlink_skip+3 then
             CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", info_echo, nil, nil, nil, nil, nil)
          elseif numResult == 17+hyperlink_skip+4 then
