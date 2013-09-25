@@ -166,7 +166,7 @@ USAGE:
 
 <aliases>
 <alias
-   script="chat_echo"
+   script="chat_echo_wrap"
    match="^chats? echo( on| off| custom)?$"
    enabled="y"
    regexp="y"
@@ -272,26 +272,29 @@ function untagged_info (name, line, wildcards, styles)
    EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
 end
 
-function chat_echo (name, line, wildcards)
-   if wildcards[1] == "" then
+function chat_echo (toggle)
+   if toggle == "" then
       ColourNote("yellow", "", "Current channel echo status: ")
       for k,v in pairsByKeys(channels_table) do
          ColourTell("yellow", "", tostring(k).." ")
          ColourNote((v["echo"] and "lime") or "red", "", tostring(v["echo"] or "false"))
       end
-   elseif wildcards[1]:lower() == " on" then
+      Note("")
+   elseif toggle == "on" then
       for k,v in pairs(channels_table) do
          channels_table[k]["echo"] = true
       end
       ColourNote ("yellow", "", "All chats are now SHOWN in the main window.")
       ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
-   elseif wildcards[1]:lower() == " off" then
+      Note("")
+   elseif toggle == "off" then
       for k,v in pairs(channels_table) do
          channels_table[k]["echo"] = nil
       end
       ColourNote ("yellow", "", "All chats are now HIDDEN in the main window.")
       ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
-   elseif wildcards[1]:lower() == " custom" then
+      Note("")
+   elseif toggle == "custom" then
       local tbl = {}
       local defaults = {}
       local i = 1
@@ -309,6 +312,10 @@ function chat_echo (name, line, wildcards)
    end -- if
    
    OnPluginSaveState()
+end
+
+function chat_echo_wrap (name, line, wildcards)
+   chat_echo(Trim(wildcards[1]):lower())
 end -- chat_echo
 
 require "serialize"
