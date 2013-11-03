@@ -690,6 +690,9 @@ local speedwalk_prefix = "&speedwalk_prefix;"
 
 <![CDATA[
 
+-- functions for handling Aardwolf color codes
+dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
 require "serialize"
 mapper = require "aardmapper"
 require "gmcphelper"
@@ -790,6 +793,73 @@ convert_direction = {
    down = "d"
 }
 
+forced_opened = false
+force_nests = 0
+function forceOpenDB()
+   force_nests = force_nests+1
+   if not db:isopen() then
+      forced_opened = true
+      -- print("Forcing open")
+      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+   end
+end
+
+function closeDBifForcedOpen()
+   force_nests = force_nests-1
+   if forced_opened and (force_nests <= 0) then
+      force_nests = 0
+      forced_opened = false
+      -- print("Forcing closed")
+      db:close()
+   end
+end
+
+function DBisOpen(warn)
+   if db:isopen() then
+      return true
+   end
+   if warn then
+       Note("MAPPER ERROR: The map database is closed for safety when not connected to Aardwolf. If you want to change the DB, please connect to the game.")
+   end
+   return false
+end
+
+function dbnrowsWRAPPER(query)
+   forceOpenDB()
+   iter,vm,i = db:nrows(query)
+   local function itwrap(vm, i)
+      retval = iter(vm, i)
+      if not retval then
+         closeDBifForcedOpen()
+         return nil
+      end
+      return retval
+   end
+   return itwrap,vm,i
+end
+
+function dbCheckExecute(query)
+   forceOpenDB()
+   local code = db:exec(query)
+--~ failed attempt to make concurrent sessions viable
+--~    if code == 5 or code == 6 then -- SQLITE_BUSY or SQLITE_LOCKED (oops?)
+--~       wait.make (function()
+--~          local code = 5
+--~          local count = 0
+--~          while ((code == 5 or code == 6) and count < 20) do
+--~             db:exec ("ROLLBACK")
+--~             wait.time(.1)
+--~             code = db:exec(query)
+--~             count = count + 1
+--~          end
+--~          dbcheck(code, query)
+--~       end)
+--~    else
+   dbcheck(code, query)
+--~    end
+   closeDBifForcedOpen()
+end
+
 function dbcheck (code, query)
    if code ~= sqlite3.OK and    -- no error
       code ~= sqlite3.ROW and   -- completed OK with another row of data
@@ -818,7 +888,6 @@ function fixbool (b)
 end -- fixbool
 
 function findpathfast(name, line, wildcards)
-   db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    local foundpath = findpath(tonumber(wildcards[1]),tonumber(wildcards[2]))
    if foundpath == nil then
       mapper.mapprint (string.format ("Path from %s to %s not found.", wildcards[1], wildcards[2]))
@@ -863,7 +932,7 @@ function map_bounceportal (name, line, wildcards)
    
    local count = 1
    local found = false
-   for row in db:nrows(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       if count == pnum then
          if row.fromuid == "*" then
             bounce_portal = {dir=row.dir, uid=row.touid}
@@ -907,7 +976,7 @@ function map_bouncerecall (name, line, wildcards)
    
    local count = 1
    local found = false
-   for row in db:nrows(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       if count == pnum then
          if row.fromuid == "**" then
             bounce_recall = {dir=row.dir, uid=row.touid}
@@ -947,9 +1016,9 @@ function map_areas (name, line, wildcards)
    Note (hr)
    Note (hl)
    local total_explored = 0
-   for row in db:nrows(query) do
+   for row in dbnrowsWRAPPER(query) do
       query2 = string.format("SELECT count(uid) as count FROM rooms WHERE area=%s;",fixsql(row.uid))
-      for row2 in db:nrows(query2) do
+      for row2 in dbnrowsWRAPPER(query2) do
          line = string.format(fmt,row.uid, row.name, row2.count)
          total_explored = total_explored + row2.count
       end
@@ -977,7 +1046,7 @@ function map_list (name, line, wildcards)
    end
 
    -- faster than "SELECT uid, name, area FROM rooms WHERE name LIKE %s ORDER BY area LIMIT 101"
-   for row in db:nrows(string.format ("SELECT rooms_lookup.uid as uid, rooms_lookup.name as name, area FROM (select uid, name FROM rooms_lookup WHERE name LIKE %s) AS rooms_lookup JOIN rooms ON rooms_lookup.uid = rooms.uid ORDER BY area LIMIT 101;", fixsql (name))) do
+   for row in dbnrowsWRAPPER(string.format ("SELECT rooms_lookup.uid as uid, rooms_lookup.name as name, area FROM (select uid, name FROM rooms_lookup WHERE name LIKE %s) AS rooms_lookup JOIN rooms ON rooms_lookup.uid = rooms.uid ORDER BY area LIMIT 101;", fixsql (name))) do
       if count < 100 then
          print (string.format("(%s) %s is in area \"%s\"",row.uid, row.name, row.area))
       end
@@ -993,7 +1062,8 @@ function map_cexits_delete (name, line, wildcards)
    local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", fixsql(current_room))
    dbCheckExecute(query)
    for k,v in pairs(rooms[current_room].exits) do
-      if #k > 1 then
+      if not directions[k] then
+         print("Found custom exit \""..k.."\" to room "..rooms[current_room].exits[k].." \""..rooms[rooms[current_room].exits[k]].name.."\"")
          rooms[current_room].exits[k] = nil
          rooms[current_room].exit_locks[k] = nil
       end
@@ -1007,7 +1077,7 @@ function map_cexits_purge (name, line, wildcards)
    dbCheckExecute(query)
    for k,v in pairs(rooms) do
       for l,w in pairs(v.exits) do
-         if #l > 1 then
+         if not directions[l] then
             rooms[k].exits[l] = nil
             rooms[k].exit_locks[l] = nil
          end
@@ -1023,11 +1093,6 @@ function custom_exit_list (name, line, wildcards)
    local query
    local display_limit = 30
 
-   res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-   luastmt = "gmcpdata = " .. gmcparg
-   assert(loadstring (luastmt or "")) ()
-   local current_area = gmcpval("zone")
-
    area = Trim(wildcards [1] or "")
    query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by area, uid", fixsql("%" .. area .. "%"))
 
@@ -1035,7 +1100,14 @@ function custom_exit_list (name, line, wildcards)
       intro = "The following rooms have custom exits:"
    else
       if area == "here" then
-         area = current_area
+         
+         if current_room and gmcproom.area then
+            area = gmcproom.area
+         else
+            Note("CEXITS HERE ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
+            return
+         end
+ 
          query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) is %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by area, uid", fixsql(area))
          intro = "The following rooms in the current area have custom exits:"
       else
@@ -1053,7 +1125,7 @@ function custom_exit_list (name, line, wildcards)
    world.Note (hl)
    world.Note (hr)
    world.Note (hl)
-   for row in db:nrows(query) do
+   for row in dbnrowsWRAPPER(query) do
       line = string.format(fmt,row.area, row.name, row.uid, row.dir, row.touid)
       Hyperlink(string.format("mapper goto %s",row.uid), line, string.format("%s",row.dir), "", "", false)
       print("")
@@ -1110,13 +1182,6 @@ function show_known_unmapped_exits (name, line, wildcards)
    local query
    local display_limit = 30
 
-   res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-   luastmt = "gmcpdata = " .. gmcparg
-   if (gmcparg ~= "") then -- in case the user has an old gmcp handler that clears room on room.wrongdir
-      assert(loadstring (luastmt or "")) ()
-   end
-   local current_area = gmcpval("zone")
-
    area = Trim(wildcards [1] or "")
    
    if area == "" then
@@ -1127,7 +1192,14 @@ function show_known_unmapped_exits (name, line, wildcards)
       fmt = "| %10.10s | %5d |"
    else
       if area == "here" then
-         area = current_area
+
+         if gmcproom and gmcproom.area then
+            area = gmcproom.area
+         else
+            Note("UNMAPPED HERE ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
+            return
+         end
+
          intro = "The following rooms in the current area have unmapped exits:"
       else
          intro = string.format("The following rooms in areas matching '%s' have unmapped exits:",area)
@@ -1145,7 +1217,7 @@ function show_known_unmapped_exits (name, line, wildcards)
    world.Note (hl)
    world.Note (hr)
    world.Note (hl)
-   for row in db:nrows(query) do
+   for row in dbnrowsWRAPPER(query) do
       if area == "" then
          line = string.format(fmt,row.area, row.cnt)
          world.Note (line)
@@ -1169,7 +1241,7 @@ function map_portal_delete (name, line, wildcards)
       target_index = tonumber(string.sub(keywords,2))
       local count = 0
       local found = false
-      for row in db:nrows(PORTALS_QUERY) do
+      for row in dbnrowsWRAPPER(PORTALS_QUERY) do
          count = count + 1
          if count == target_index then
             keywords = row.dir
@@ -1183,7 +1255,7 @@ function map_portal_delete (name, line, wildcards)
    end
 
    local portal_exists = false
-   for n in db:nrows (string.format ("SELECT * FROM exits WHERE fromuid in ('*','**') AND dir = %s", fixsql(keywords))) do
+   for n in dbnrowsWRAPPER (string.format ("SELECT * FROM exits WHERE fromuid in ('*','**') AND dir = %s", fixsql(keywords))) do
       portal_exists = true
    end
    
@@ -1235,7 +1307,7 @@ function map_portal_recall (name, line, wildcards)
    
    local count = 1
    local found = false
-   for row in db:nrows(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level, date_added) 
@@ -1306,7 +1378,7 @@ function create_portal(keyword, destination, level)
    local query = ""
    keyword = Trim(keyword)
    -- first check to see if our special 'from anywhere' room exists...
-   for row in db:nrows("select * from rooms where uid='*'") do
+   for row in dbnrowsWRAPPER("select * from rooms where uid='*'") do
       hhp_room_exists = hhp_room_exists + 1
    end
    if hhp_room_exists == 0 then
@@ -1354,7 +1426,7 @@ function map_portal_level (name, line, wildcards)
  
    local count = 1
    local found = false
-   for row in db:nrows(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level, date_added) 
@@ -1391,7 +1463,7 @@ function map_portal_list ()
    Note (hl)
 
    local count = 0
-   for row in db:nrows(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       count = count + 1
       line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
@@ -1415,8 +1487,8 @@ BASE_CEXIT_DELAY = 2
 function change_cexit_delay(name, line, wildcards)
    temp_cexit_delay = tonumber(wildcards[1])
    Note("")
-   if temp_cexit_delay == nil or temp_cexit_delay < BASE_CEXIT_DELAY or temp_cexit_delay > 30 then
-      Note("CEXIT_DELAY FAILED: Invalid delay given ("..wildcards[1].."). Must be a number from 2 to 30.")
+   if temp_cexit_delay == nil or temp_cexit_delay < BASE_CEXIT_DELAY or temp_cexit_delay > 40 then
+      Note("CEXIT_DELAY FAILED: Invalid delay given ("..wildcards[1].."). Must be a number from 2 to 40.")
       temp_cexit_delay = nil
    end
    Note("CEXIT_DELAY: The next mapper custom exit will have ".. (temp_cexit_delay or BASE_CEXIT_DELAY) .." seconds to complete.\n")
@@ -1500,10 +1572,8 @@ function custom_exit (name, line, wildcards)
             world.Note ("CEXIT FAILED: You cannot link custom exits to unmappable rooms.")
          elseif cexit_dest ~= cexit_start then
             world.Note (string.format("Custom Exit CONFIRMED: %s (%s) -> %s", cexit_start, cexit_command, cexit_dest))
-            dbCheckExecute(string.format ([[
-               INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
-               VALUES (%s, %s, %s, DATETIME('NOW'));
-               ]], fixsql  (string.lower(cexit_command)),  -- direction (eg. "n")
+            dbCheckExecute(string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) VALUES (%s, %s, %s, DATETIME('NOW'));",
+               fixsql  (cexit_command),  -- direction (eg. "n")
                fixsql  (cexit_start),  -- from current room
                fixsql  (cexit_dest) -- destination room 
             ))
@@ -1523,7 +1593,7 @@ function save_room_to_database (uid,room)
    
    assert (uid, "No UID supplied to save_room_to_database")
    local area_exists = false
-   for n in db:nrows (string.format ("SELECT uid FROM areas where uid=%s", fixsql(room.area))) do
+   for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(room.area))) do
       area_exists = true
    end
    if not area_exists then
@@ -1543,7 +1613,7 @@ function save_room_to_database (uid,room)
          ))
 
    local exists = false      
-   for n in db:nrows(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s", fixsql(uid))) do 
+   for n in dbnrowsWRAPPER(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s", fixsql(uid))) do 
       exists = true 
    end
    -- don't add multiple times, maintaining backwards database compatibility (there's no uniqueness constraint on rooms_lookup.uid)
@@ -1613,7 +1683,7 @@ function map_purgezone (name, line, wildcards)
    local found = false
    local zone_name = ""
    if #(wildcards[1]) > 1 and string.sub(wildcards[1], 1, 1) == " " then
-      for row in db:nrows(string.format("SELECT uid,name FROM areas WHERE uid = %s;", fixsql (zoneuid))) do
+      for row in dbnrowsWRAPPER(string.format("SELECT uid,name FROM areas WHERE uid = %s;", fixsql (zoneuid))) do
          zone_name = row.name
          found = true
       end   -- finding area uid
@@ -1673,7 +1743,7 @@ function load_area_from_database (area)
    local lastuid = -1
    local newrooms = {}
 
-   for row in db:nrows(string.format("SELECT rooms.*,exits.dir,exits.touid,exits.level FROM rooms,exits where rooms.area=%s and rooms.uid=exits.fromuid;", fixsql(area))) do
+   for row in dbnrowsWRAPPER(string.format("SELECT rooms.*,exits.dir,exits.touid,exits.level FROM rooms,exits where rooms.area=%s and rooms.uid=exits.fromuid;", fixsql(area))) do
       if lastuid ~= row.uid then
          local fixstr = string.gsub(row.uid,"'","''")
          table.insert(newrooms, fixstr)
@@ -1699,7 +1769,7 @@ function load_area_from_database (area)
       lastuid = row.uid
    end   -- finding room
   
-   for bmrow in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid in ('%s')", table.concat(newrooms,"','"))) do
+   for bmrow in dbnrowsWRAPPER(string.format ("SELECT * FROM bookmarks WHERE uid in ('%s')", table.concat(newrooms,"','"))) do
       rooms[bmrow.uid].notes = bmrow.notes
    end   -- finding room
 
@@ -1715,7 +1785,7 @@ function load_room_from_database (uid)
       return nil
    end -- no point looking
    
-   for row in db:nrows(string.format ("SELECT * FROM rooms WHERE uid = %s", fixsql (u))) do
+   for row in dbnrowsWRAPPER(string.format ("SELECT * FROM rooms WHERE uid = %s", fixsql (u))) do
       room = {
       name = row.name,
       area = row.area,
@@ -1732,7 +1802,7 @@ function load_room_from_database (uid)
       exit_locks = {}
       }
       
-      for exitrow in db:nrows(string.format ("SELECT * FROM exits WHERE fromuid = %s", fixsql (u))) do
+      for exitrow in dbnrowsWRAPPER(string.format ("SELECT * FROM exits WHERE fromuid = %s", fixsql (u))) do
          room.exits [exitrow.dir] = tostring (exitrow.touid)
          room.exit_locks [exitrow.dir] = tostring(exitrow.level)
       end -- for each exit
@@ -1745,7 +1815,7 @@ function load_room_from_database (uid)
          rooms = {}
       end
       rooms [u] = room
-      for row in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (u))) do
+      for row in dbnrowsWRAPPER(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (u))) do
          rooms [u].notes = row.notes
       end   -- finding room
         
@@ -1840,7 +1910,7 @@ end -- function create_tables
 function check_rooms_flags()
    local flag_exists = { noportal = false,
                          norecall = false }
-   for a in db:nrows "PRAGMA table_info('rooms')" do
+   for a in dbnrowsWRAPPER "PRAGMA table_info('rooms')" do
       if flag_exists[a.name] ~= nil then
          flag_exists[a.name] = true
       end
@@ -2020,7 +2090,7 @@ function room_edit_note (room, uid, newnotes)
 
    local notes, found
   
-   for row in db:nrows(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
+   for row in dbnrowsWRAPPER(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
       notes = row.notes
       found = true
    end   -- finding room
@@ -2512,7 +2582,7 @@ function checkDatabaseIntegrity()
    -- this is a harmless no-op if not using journal_mode=WAL
    dbCheckExecute("PRAGMA wal_checkpoint(FULL);")
    local integrityCheck = true
-   for row in db:nrows("PRAGMA quick_check;") do
+   for row in dbnrowsWRAPPER("PRAGMA quick_check;") do
       tprint(row)
       if row.integrity_check ~= "ok" then 
          integrityCheck = false
@@ -2538,6 +2608,7 @@ function backup_databases(manual)
       db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
       in_backup = false
       CorruptionAlert()
+      satisfy_broadcast_queue()
       return
    end
    Note("BACKING UP DATABASE")
@@ -2613,12 +2684,13 @@ function backup_databases(manual)
    db = assert (sqlite3.open(worldPath..".db")) -- re-open database 
    Repaint()
    in_backup = false
+   satisfy_broadcast_queue()
 end
 
 function CorruptionAlert()
    Note("")
    Note("WARNING, PLEASE READ: http://code.google.com/p/aardwolfclientpackage/wiki/GMCPmapper#Database_Corruption")
-   Note("If the information there does not help you 100%, then try asking on the Tech channel and report this error to Fiendish.")
+   Note("If the information there does not help you 100%, then try asking on the Tech channel and report this error to Fiendish by email.")
    Note("")
 end
 
@@ -2626,7 +2698,7 @@ end
 -- ec, areaKeys = CallPlugin("b6eae87ccedd84f510b74714", "getkeyword", "halls") puts "damned,horath,vanir" into areaKeys
 function getkeyword(area)
    local keys = {}
-   for row in db:nrows(string.format("SELECT uid FROM areas WHERE name LIKE %s;", fixsql("%"..area.."%"))) do
+   for row in dbnrowsWRAPPER(string.format("SELECT uid FROM areas WHERE name LIKE %s;", fixsql("%"..area.."%"))) do
       table.insert(keys,row.uid);
    end -- finding areas
    return table.concat(keys, ",")
@@ -2636,7 +2708,7 @@ function fix_exits_table()
    -- The original database implementation for exits was naive and broken. We want to fix it up here.
    -- Unfortunately, sqlite requires a little dance of table dropping for this to happen.
    local level_column_exists = false
-   for a in db:nrows "PRAGMA table_info('exits')" do
+   for a in dbnrowsWRAPPER "PRAGMA table_info('exits')" do
       if a["name"] == "level" then
          level_column_exists = true
       end
@@ -2711,7 +2783,7 @@ function OnPluginInstall ()
       return
    end
   
-   for row in db:nrows("PRAGMA user_version") do
+   for row in dbnrowsWRAPPER("PRAGMA user_version") do
       db_user_version = row.user_version
    end
   
@@ -2780,7 +2852,7 @@ function OnPluginInstall ()
    
    if db_user_version < 9 then
       local flags_column_exists = false
-      for a in db:nrows "PRAGMA table_info('areas')" do
+      for a in dbnrowsWRAPPER "PRAGMA table_info('areas')" do
          if a["name"] == "flags" then
             flags_column_exists = true
          end
@@ -2833,7 +2905,7 @@ function OnPluginInstall ()
    end
 
    -- grab all area names
-   for row in db:nrows("SELECT * FROM areas") do
+   for row in dbnrowsWRAPPER("SELECT * FROM areas") do
       area = {
          name = row.name,
          texture = row.texture,
@@ -2844,19 +2916,19 @@ function OnPluginInstall ()
    end   -- finding areas
   
    -- grab all user terrain info
-   for row in db:nrows("SELECT * FROM terrain") do
+   for row in dbnrowsWRAPPER("SELECT * FROM terrain") do
       user_terrain_colour [row.name] = row.color
    end -- finding terrains
  
    -- grab all environment names
-   for row in db:nrows("SELECT * FROM environments") do
+   for row in dbnrowsWRAPPER("SELECT * FROM environments") do
       environments [tonumber (row.uid)] = row.name
       terrain_colours [row.name] = tonumber (row.color)
    end -- finding environments
   
    --~    bounce_recall = {dir="home",uid=21335}
    --~    bounce_portal = {dir="enter",uid=26151}
-   for row in db:nrows("SELECT * FROM storage") do
+   for row in dbnrowsWRAPPER("SELECT * FROM storage") do
       if row.name == "bounce_portal" or row.name == "bounce_recall" then
          loadstring(row.data or "")()
       end
@@ -2883,39 +2955,20 @@ end -- OnPluginInstall
 
 function OnPluginEnable ()
    mapper.show ()
-   if not db:isopen() then
-      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+   if IsConnected() then
+      OnPluginConnect()
+      Send_GMCP_Packet("request char")
+      Send_GMCP_Packet("request room")
    end
    OnPluginSaveState()
 end -- OnPluginEnable
-
-function dbCheckExecute(query)
-   local code = db:exec(query)
---~ failed attempt to make concurrent sessions viable
---~    if code == 5 or code == 6 then -- SQLITE_BUSY or SQLITE_LOCKED (oops?)
---~       wait.make (function()
---~          local code = 5
---~          local count = 0
---~          while ((code == 5 or code == 6) and count < 20) do
---~             db:exec ("ROLLBACK")
---~             wait.time(.1)
---~             code = db:exec(query)
---~             count = count + 1
---~          end
---~          dbcheck(code, query)
---~       end)
---~    else
-      dbcheck(code, query)
---~    end
-end
 
 -- hide window on removal
 function OnPluginDisable ()
    OnPluginSaveState()
    mapper.hide ()
-   -- close databases
-   if db:isopen() then
-      db:close()
+   if IsConnected() then
+      OnPluginDisconnect()
    end
 end -- OnPluginDisable
 
@@ -2991,8 +3044,6 @@ function compareTables(primary, secondary)
    return true
 end
 
--- functions for handling Aardwolf color codes
-dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 bigmap_override = false
 function override_continents(override)
    if override == "true" then
@@ -3096,7 +3147,7 @@ function got_gmcp_room()
    current_room = room_number
    
    local area_exists = false
-   for n in db:nrows (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
+   for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
       area_exists = true
    end
    if not area_exists then
@@ -3210,7 +3261,6 @@ function update_gmcp_area()
    return
 end
 
-
 function save_room_exits(uid) 
    if rooms[uid] == nil then
       return
@@ -3251,19 +3301,33 @@ function update_gmcp_sectors()
    end
    dbCheckExecute("COMMIT;")
    
-   for row in db:nrows("SELECT * FROM environments") do
+   for row in dbnrowsWRAPPER("SELECT * FROM environments") do
       environments [tonumber (row.uid)] = row.name
       terrain_colours [row.name] = tonumber (row.color)
    end -- finding environments
    
    mapper.draw (current_room)
 end
-  
-function OnPluginBroadcast (msg, id, name, text)
-   if in_backup == true then
-      return
+
+broadcast_queue = {}
+function queue_broadcast(msg, id, name, text)
+   broadcast_queue:insert({["msg"]=msg, ["id"]=id, ["name"]=name, ["text"]=text})
+end
+
+function satisfy_broadcast_queue()
+   for i,v in ipairs(broadcast_queue) do
+      OnPluginBroadcast(v.msg, v.id, v.name, v.text)
    end
-   if id == "3e7dedbe37e44942dd46d264" then -- gmcphandler 
+   broadcast_queue = {}
+end
+
+function OnPluginBroadcast (msg, id, name, text)
+   if id == "3e7dedbe37e44942dd46d264" then -- gmcphandler
+      if in_backup == true then
+         queue_broadcast(msg, id, name, text)
+         return
+      end
+
       if (text == "room.info") then
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
          luastmt = "gmcpdata = " .. gmcparg
@@ -3378,7 +3442,7 @@ function map_area (name, line, wildcards)
    if string.sub(key,1,1) == "\"" and string.sub(key,-1) == "\"" then
       name = Trim(string.sub(key,2,-2))
    end
-   for row in db:nrows(string.format ("SELECT uid, name, area FROM rooms WHERE trim(name) LIKE %s and area = %s", fixsql(name), fixsql(area))) do
+   for row in dbnrowsWRAPPER(string.format ("SELECT uid, name, area FROM rooms WHERE trim(name) LIKE %s and area = %s", fixsql(name), fixsql(area))) do
       table.insert(rooms,{uid=row.uid, reason=true})
       count = count + 1
    end   -- finding room
@@ -3409,7 +3473,7 @@ function map_find (name, line, wildcards)
    if string.sub(wildcards[1],1,1) == "\"" and string.sub(wildcards[1],-1) == "\"" then
       name = string.sub(wildcards[1],2,-2)
    end
-   for row in db:nrows(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql (name))) do
+   for row in dbnrowsWRAPPER(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql (name))) do
       table.insert(rooms, {uid=row.uid, reason=true})
       count = count + 1
    end   -- finding room
@@ -3428,7 +3492,6 @@ end -- map_find
 
 
 function map_find_special(which_ones, which_area)
-
    local wanted_items = {}
 
    for _, v in ipairs (which_ones) do 
@@ -3459,7 +3522,7 @@ function map_find_special(which_ones, which_area)
    end -- if area
 
    -- build table of special places (with info in them)
-   for row in db:nrows(query) do
+   for row in dbnrowsWRAPPER(query) do
       if row.info ~= "" then
          local wanted = false
          local t = {}
@@ -3507,6 +3570,9 @@ end -- map_healers
 
 function map_goto (name, line, wildcards)
 
+   if not mapper.check_connected() then
+      return 
+   end
    local wanted = string.match(wildcards[1], "^(nomap_.+)$") or tonumber(wildcards [1])
    if not wanted or (type(wanted) == "number" and  wanted < 0) then
       mapper.mapprint ("The mapper "..(((string.match(line, "^mapper walkto") ~= nil) and "walkto") or "goto").." command expects a room id as input.")
@@ -3532,7 +3598,6 @@ function map_goto (name, line, wildcards)
 end -- map_goto
 
 function map_where (name, line, wildcards)
-
    if not mapper.check_we_can_find () then
       return
    end -- if
@@ -3595,7 +3660,6 @@ function map_resume (name, line, wildcards)
 end -- map_resume
 
 function map_notes (name, line, wildcards)
-
    local rooms = {}
    local count = 0
    local area = Trim(wildcards[2] or "")
@@ -3619,7 +3683,7 @@ function map_notes (name, line, wildcards)
    end
    
    -- build table of special places (with info in them)
-   for row in db:nrows(q) do
+   for row in dbnrowsWRAPPER(q) do
       table.insert(rooms,{uid=row.uid, reason=row.notes})
       count = count + 1
    end   -- finding room
@@ -3696,7 +3760,7 @@ function findpath(src, dst, noportals, norecalls)
       local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc",table.concat(rooms_list,","), visited,mylevel,mylevel+(mytier*10))
       local dcount = 0
       room_sets[depth] = {}
-      for row in db:nrows(q) do
+      for row in dbnrowsWRAPPER(q) do
          dcount = dcount + 1
          -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
          -- used preferentially to normal ones (1 char)
@@ -3804,7 +3868,7 @@ function findNearestJumpRoom(src, dst, target_type)
       local q = string.format ("select fromuid, touid, dir, norecall, noportal from exits,rooms where rooms.uid = exits.touid and exits.fromuid in (%s) and exits.touid not in (%s) and exits.level <= %s order by length(exits.dir) asc",
                   table.concat(rooms_list,","), visited, mylevel+(mytier*10))
       local dcount = 0
-      for row in db:nrows(q) do
+      for row in dbnrowsWRAPPER(q) do
          dcount = dcount + 1
          table.insert(rooms_list, fixsql(row.touid))
          -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
@@ -3846,6 +3910,15 @@ valid_direction = {
    up = "u",
    down = "d",
 }  -- end of valid_direction
+
+directions = {
+   n=true,
+   s=true,
+   e=true,
+   w=true,
+   u=true,
+   d=true
+}
   
 -- try to detect when we send a movement command
 function OnPluginSent (sText)
@@ -3862,7 +3935,7 @@ end -- function
 
 function OnPluginConnect ()
    if not db:isopen() then
-      Note("GMCP Mapper: World reconnected; opening map database.")
+      Note("GMCP Mapper: Reconnected; opening map database.")
       db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    end
    if GetVariable("backup_timer_enabled") == "1" then
@@ -3884,7 +3957,7 @@ end -- OnPluginConnect
 function OnPluginDisconnect ()
    mapper.cancel_speedwalk ()
    if db:isopen() then
-      Note("GMCP Mapper: World disconnected; closing map database.")
+      Note("GMCP Mapper: Disconnected; closing map database.")
       db:close()
    end
    if GetVariable("backup_timer_enabled") == "1" then
