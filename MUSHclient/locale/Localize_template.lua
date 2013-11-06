@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Sunday, 24 February 2013 at 11:33:23
+-- Written: Thursday, 17 October 2013 at 20:01:14
 
 -- Static messages
 
@@ -550,9 +550,9 @@ messages = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/prefspropertypages.cpp:5250
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:655
+-- /cygdrive/c/source/mushclient/evaluate.cpp:663
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:756
+-- /cygdrive/c/source/mushclient/evaluate.cpp:764
   ["Insufficient memory to do this operation"] =
     "",
 
@@ -1000,29 +1000,29 @@ messages = {
   ["The world TCP/IP address cannot be blank."] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:563
+-- /cygdrive/c/source/mushclient/evaluate.cpp:571
   ["Replace existing triggers?\nIf you reply \"No\", then triggers from the file will be added to existing triggers"] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:572
+-- /cygdrive/c/source/mushclient/evaluate.cpp:580
   ["Replace existing aliases?\nIf you reply \"No\", then aliases from the file will be added to existing aliases"] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:581
+-- /cygdrive/c/source/mushclient/evaluate.cpp:589
   ["Replace existing timers?\nIf you reply \"No\", then timers from the file will be added to existing timers"] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:636
+-- /cygdrive/c/source/mushclient/evaluate.cpp:644
 
 -- /cygdrive/c/source/mushclient/serialize.cpp:58
   ["File does not have a valid MUSHclient XML signature."] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:750
+-- /cygdrive/c/source/mushclient/evaluate.cpp:758
   ["Unable to create the requested file"] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:762
+-- /cygdrive/c/source/mushclient/evaluate.cpp:770
   ["There was a problem in the data format"] =
     "",
 
@@ -1778,7 +1778,7 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:1101
+-- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:1109
   ["Trigger: %s"] =
     function (a)
      
@@ -2309,7 +2309,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/doc.cpp:881
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:648
+-- /cygdrive/c/source/mushclient/evaluate.cpp:656
   ["Unable to open or read %s"] =
     function (a)
      
@@ -3108,14 +3108,14 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:661
+-- /cygdrive/c/source/mushclient/evaluate.cpp:669
   ["The file %s is not in the correct format"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:925
+-- /cygdrive/c/source/mushclient/evaluate.cpp:933
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:5760
   ["Alias: %s"] =
@@ -3124,7 +3124,7 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:956
+-- /cygdrive/c/source/mushclient/evaluate.cpp:964
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:5690
   ["processing alias \"%s\""] =
