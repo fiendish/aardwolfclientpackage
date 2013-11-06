@@ -261,7 +261,7 @@ local function get_room (uid)
 
 end -- get_room
 
-local function check_connected ()
+function check_connected ()
    if not IsConnected() then
       mapprint ("You are not connected to", WorldName())
       return false
@@ -770,11 +770,9 @@ end --  draw_zone_exit
 -- can we find another room right now?
 
 function check_we_can_find ()
-   if not check_connected () then
-      return
-   end
    if not current_room then
       mapprint ("I don't know where you are right now - try: LOOK")
+      check_connected ()
       return false
    end
    if current_speedwalk then
