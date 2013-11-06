@@ -71,7 +71,18 @@ Bast and WinkleWinkle.
 <trigger
    enabled="n"
    omit_from_output="y"
-   match="Battle prompt set to*"
+   match="*Battle prompt set to*"
+   sequence="100"
+   send_to="12"
+   group="prompt_set_gags"
+   script="finish"
+>
+</trigger>
+
+<trigger
+   enabled="n"
+   omit_from_output="y"
+   match="*Max battle prompt length is * characters excluding color codes."
    sequence="100"
    send_to="12"
    group="prompt_set_gags"
@@ -112,8 +123,12 @@ function prompt_rec (name, line, wildcards, styles)
    prompt = Trim(substrings[1])
 
    if prompt:sub(-2) ~= "%c" then
-      table.insert(adjusted, name)
-      prompt = prompt .. "%c"
+      if #prompt > 78 then
+         print("\nThe Aardwolf MUSHclient Package needs to adjust your "..name.." to end in '%c', but it is too long. Please adjust your "..name.." manually to end in '%c'.")
+      else
+         table.insert(adjusted, name)
+         prompt = prompt .. "%c"
+      end
    end
    SendNoEcho(name.." ".. prompt)
    if name == "bprompt" then
