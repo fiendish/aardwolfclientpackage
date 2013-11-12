@@ -1,5 +1,16 @@
 Aardwolf Client Package Major Changes List
 
+r1783 snapshot
+- misc change: updated to MUSHclient 4.91 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.91 )
+- new feature: add safety wrappers to temporarily force open/closed a database for running queries when the db is normally closed due to being disconnected from the game (dropbox updating problem)
+- bug fix: yet another prompt fixer error found when battleprompt was too long to change. maybe this one will finally work for all cases? (it'd be nice if we could just get prompts unbroken on the server side)
+- bug fix: fix default color injection in ColoursToStyles helper function
+- misc change: don't rely on the server sending room gmcp info along with area info, just request it
+- bug fix: use callplugin instead of execute to mediate the main output channel echo toggle from the communication log window to fix toggling while writing notes
+- bug fix: don't force cexits to be lowercase
+- bug fix: fix deleting of single character cexits
+- new feature: queue gmcp room broadcasts during mapprt backups and handle them in the GMCP mapper after backup is complete
+
 r1773 snapshot
 - bug fix: remove all virtual areas instead of just the one recently left, because users don't always upgrade right away and there might be a buildup of old virtual areas
 
@@ -12,7 +23,7 @@ r1771 snapshot
 - bug fix: the health bars miniwindow could error on plugin start due to a weirdness in how MUSHclient sizes its window when starting up
 
 r1748 snapshot
-- new feature: updated to MUSHclient 4.89 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.89 )
+- misc change: updated to MUSHclient 4.89 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.89 )
 - misc change: LuaJIT updated to 2.0.1 (see luajit.org for details)
 - bug fix: GMCP handler requests all updated data on reconnect instead of just plugin load
 - misc change: don't keep GMCP mapper database open when the server disconnects
@@ -54,12 +65,12 @@ r1700 snapshot
 - misc change: the popup that shows when mousing over 'mapper portals' list entries now shows the complete command sequence in addition to the destination
 
 r1697 snapshot
-- new feature: updated to MUSHclient 4.84 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.84 )
+- misc change: updated to MUSHclient 4.84 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.84 )
 - misc change: if timers or triggers are disabled, invoking wait.lua methods should give friendlier error messages instead of assertion errors
 - misc change: mapper tooltip popups should stay up longer now
 
 r1693 snapshot
-- new feature: updated to MUSHclient 4.82 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.82 )
+- misc change: updated to MUSHclient 4.82 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.82 )
 - bug fix: some cruft accidentally got into the default recent file list
 - misc change: styles to ansi conversion avoids spamming the user when doing stupid things like trying to change channel colors via trigger instead of colorset (seriously? come on)
 - bug fix: resizing the embedded bigmap was horribly broken
@@ -106,7 +117,7 @@ r1580 snapshot
 
 r1557 snapshot
 (January 2012 release)
-- new feature: updated to MUSHclient 4.81 (fixes import duplication issues and other things)
+- misc change: updated to MUSHclient 4.81 (fixes import duplication issues and other things)
 - misc change: clicking an entry in a gmcp mapper results listing now updates the 'mapper next' pointer so that it doesn't always start at the first entry anyway
 
 r1543 snapshot
@@ -119,7 +130,7 @@ r1541 snapshot
 - bug fix: mapper pathfinding should now work in all situations for noportal/norecall rooms even if you don't have bouncerecall or bounceportal configured
 
 r1508 snapshot
-- new feature: updated to MUSHclient 4.80 (fixes a crash discovered in 4.79)
+- misc change: updated to MUSHclient 4.80 (fixes a crash discovered in 4.79)
 - bug fix: fixes main output gagging caused by the prompt fixer if you had nohelp toggled
 
 r1499 snapshot
@@ -142,7 +153,7 @@ r1479 snapshot
 - new feature: all other things being equal, the gmcp mapper will now prefer to use a regular portal instead of a recall-flagged one
 
 r1476 snapshot
-- new feature: updated to MUSHclient 4.79 (skipped 4.78 due to bugs)
+- misc change: updated to MUSHclient 4.79 (skipped 4.78 due to bugs)
 - bug fix: the gmcp mapper should no longer lag when walking over some rooms just because they have new coordinate data. coordinate information isn't particularly useful, so it doesn't need to trigger sqlite inserts.
 - bug fix: the gmcp mapper should no longer forget noportal/norecall data
 - bug fix: gmcp mapper database tables were being left locked which caused errors. You should never return or break from inside a db:nrows loop. now fixed.
@@ -259,7 +270,7 @@ r1154 snapshot
 - new feature: the "echo on/off" feature of the chat capture window has been spun off into its own plugin. commands are "chats echo on", "chats echo off", and "chats echo custom". The right-click option "Turn Echo Off" has thus been removed from the chat capture window.
 - bug fix: package updater errors should show the download url again
 - misc change: health bars default to exp instead of tnl, because new players often don't know what tnl means
-- new feature: updated to MUSHclient 4.77 (skipped 4.76 due to bugs)
+- misc change: updated to MUSHclient 4.77 (skipped 4.76 due to bugs)
 - bug fix: sanitize world name when logging chats to file
 
 r1126 snapshot
@@ -332,7 +343,7 @@ r1040 snapshot
 - new feature: the chat capture window now has actionable hyperlinks for urls
 
 r1026 snapshot
-- new feature/bug fix: updated to MUSHclient 4.75
+- misc change: updated to MUSHclient 4.75
 - bug fix: main output position and size settings should save instantly now
 - bug fix: the bigmap should be less ugly now from aliasing artifacts when smaller than the ideal size
 - misc change: the z order right-click menu is accessible on the entire gmcp mapper background now
@@ -415,7 +426,7 @@ r769 snapshot
 - new feature: group monitor now has the ability to selectively hide group members. useful for those very large chat groups where not everyone is active.
 
 r758 snapshot
-- new feature: updated to MUSHclient 4.73
+- misc change: updated to MUSHclient 4.73
 - bug fix: (I really sincerely hope) os.execute in Windows is now the bane of my existence. I hope that gmcp mapper database backups are working properly now for everyone.
 - new feature: prompt on first run to add the update checker plugin
 
@@ -548,7 +559,7 @@ r340 snapshot
 - misc change: default to show self in group on first load of the group monitor
 
 r336 snapshot 
-- new feature: updated to MUSHclient 4.72
+- misc change: updated to MUSHclient 4.72
 - new feature: added clickable links to mapper portals list
 - misc change: updated mapper find display
 - bug fix: fixed a bug when defining custom mapper exits sometimes
@@ -590,7 +601,7 @@ r275 snapshot
 
 r236 snapshot
 (First official release)
-- new feature: update MUSHclient from 4.70 to 4.71
+- misc change: updated to MUSHclient 4.71
 - misc change: menu selections now use proper checkmarks
 - bug fix: re-map rooms that have changed detail information (pk, shop, bank, graffiti, etc)
 - new feature: add tick timer plugin
