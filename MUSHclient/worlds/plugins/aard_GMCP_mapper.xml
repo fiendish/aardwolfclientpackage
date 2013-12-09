@@ -3802,13 +3802,13 @@ function findpath(src, dst, noportals, norecalls)
             return path, found_depth
          end
       else
-         local jump_room, type = findNearestJumpRoom(src, dst, f)
+         local jump_room, path_type = findNearestJumpRoom(src, dst, f)
          if not jump_room then
             return
          end
          local path, first_depth = findpath(src,jump_room, true, true) -- this could be optimized away by building the path in findNearestJumpRoom, but the gain would be negligible
-         if bit.band(type, 1) ~= 0 then
-            -- type 1 means just walk to the destination
+         if bit.band(path_type, 1) ~= 0 then
+            -- path_type 1 means just walk to the destination
             return path, first_depth
          else
             local second_path, second_depth = findpath(jump_room, dst)
@@ -3848,7 +3848,7 @@ function findNearestJumpRoom(src, dst, target_type)
    local destination = ""
    local next_room = 0
    local visited = ""
-   local type = ""
+   local path_type = ""
 
    table.insert(rooms_list, fixsql(src))  
    local main_status = GetInfo(53)
@@ -3874,11 +3874,11 @@ function findNearestJumpRoom(src, dst, target_type)
          -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
          -- used preferentially to normal ones (1 char)
          if ((bounce_portal ~= nil or target_type == "*") and row.noportal ~= 1) or ((bounce_recall ~= nil or target_type == "**") and row.norecall ~= 1) or row.touid == dst then
-            type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
-            -- type 1 means walking to the destination is closer than bouncing
-            -- type 2 means the bounce room allows recalling but not portalling
-            -- type 4 means the bounce room allows portalling but not recalling
-            -- type 0 means the bounce room allows both portalling and recalling
+            path_type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
+            -- path_type 1 means walking to the destination is closer than bouncing
+            -- path_type 2 means the bounce room allows recalling but not portalling
+            -- path_type 4 means the bounce room allows portalling but not recalling
+            -- path_type 0 means the bounce room allows both portalling and recalling
             destination = row.touid
             found = true
             found_depth = depth
@@ -3893,7 +3893,7 @@ function findNearestJumpRoom(src, dst, target_type)
    if found == false then
       return
    end
-   return destination, type, found_depth
+   return destination, path_type, found_depth
 end
 
 valid_direction = {
