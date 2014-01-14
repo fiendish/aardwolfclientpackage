@@ -10,12 +10,12 @@
    purpose="Checks online for newer versions of the Aardwolf MUSHclient Package."
    date_written="2011-04-23 11:51:55"
    requires="4.72"
-   version="1.0"
+   version="1.1"
    save_state="y"
 >
 <description trim="y">
-This plugin checks for new beta development updates from the google code repository.
-https://code.google.com/p/aardwolfclientpackage/downloads/list
+This plugin checks for new beta development updates from the new temporary download location.
+http://avi.whube.com/AardwolfPackageChanges.txt
 
 It runs an automatic check every time you start up MUSHclient (or reinstall the plugin).
 
@@ -40,7 +40,8 @@ You can also run a manual check by typing:    package update check
 <![CDATA[
 
 http = require "socket.http"	-- loads http and various dlls
-download_url = "https://code.google.com/p/aardwolfclientpackage/downloads/detail?name=MUSHclient.zip"
+version_url = "http://avi.whube.com/AardwolfPackageChanges.txt"
+download_url = "http://avi.whube.com/MUSHclient.zip"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
@@ -78,21 +79,21 @@ end
 -- Shows an editbox dialog detailing the posted differences between
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
-   if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Show Me", cancel_button="Ignore", read_only=true, no_default=true}) then
+   if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Get It", cancel_button="Ignore", read_only=true, no_default=true}) then
       browse(download_url)
    else
       Note("")
-      ColourNote("cyan", "", "+----------------------------------------------------------------+")
-      ColourNote("cyan", "", "|           Aardwolf MUSHclient Package Update Checker           |")
-      ColourNote("cyan", "", "+----------------------------------------------------------------+")
-      ColourNote("cyan", "", "|                                                                |")
-      ColourNote("cyan", "", "| You have chosen to ignore snapshot r"..latest_version.."."..string.rep(" ",65-string.len("| You have chosen to ignore snapshot r"..latest_version..".")).."|")
-      ColourNote("cyan", "", "| You will be alerted again when another snapshot is released.   |")
-      ColourNote("cyan", "", "|                                                                |")
-      ColourNote("cyan", "", "| Remember, you can always get the latest snapshot at:           |")
-      ColourNote("cyan", "", "| https://code.google.com/p/aardwolfclientpackage/downloads/list |")
-      ColourNote("cyan", "", "|                                                                |")
-      ColourNote("cyan", "", "+----------------------------------------------------------------+")
+      ColourNote("cyan", "", "+----------------------------------------------------------------------+")
+      ColourNote("cyan", "", "|           Aardwolf MUSHclient Package Update Checker                 |")
+      ColourNote("cyan", "", "+----------------------------------------------------------------------+")
+      ColourNote("cyan", "", "|                                                                      |")
+      ColourNote("cyan", "", "| You have chosen to ignore snapshot r"..latest_version.."."..string.rep(" ",71-string.len("| You have chosen to ignore snapshot r"..latest_version..".")).."|")
+      ColourNote("cyan", "", "| You will be alerted again when another snapshot is released.         |")
+      ColourNote("cyan", "", "|                                                                      |")
+      ColourNote("cyan", "", "| Remember, you can always get the latest snapshot at:                 |")
+      ColourNote("cyan", "", "| http://avi.whube.com/MUSHclient.zip                                  |")
+      ColourNote("cyan", "", "|                                                                      |")
+      ColourNote("cyan", "", "+----------------------------------------------------------------------+")
       Note("")
       SetVariable("ignore_before_version", latest_version)
    end
@@ -100,9 +101,6 @@ end
 
 -- Something went wrong when trying to check for updates
 function errorMessage(msg)
-   -- if utils.inputbox(msg,"ERROR: "..window_title,download_url,nil,nil,{ok_button="Ok, Show Me", cancel_button="Maybe Later", read_only=true, no_default=true}) then
-   --    browse(download_url)
-   -- end
    ColourNote("white","red","Aardwolf MUSHclient Package Update Check Error:")
    ColourNote("white","red",msg)
    ColourNote("white","red",download_url)
@@ -158,9 +156,10 @@ function checkLocalFile()
    return true
 end
 
+require "tprint"
 function checkRemoteFile()
    -- grab the download page
-   page, status, headers = http.request(download_url)
+   page, status, headers = http.request(version_url)
    
    if status == 200 then -- 200 is the HTTP status code for "OK"
       update_list, latest_version = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r(%d+) snapshot.*)")

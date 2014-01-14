@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1790 snapshot
+- misc change: google code is eliminating downloads, so move update checking and package download to a new temporary location at whube.com
+
 r1783 snapshot
 - misc change: updated to MUSHclient 4.91 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.91 )
 - new feature: add safety wrappers to temporarily force open/closed a database for running queries when the db is normally closed due to being disconnected from the game (dropbox updating problem)
