@@ -14,8 +14,8 @@
    save_state="y"
 >
 <description trim="y">
-This plugin checks for new beta development updates from the new temporary download location.
-http://avi.whube.com/AardwolfPackageChanges.txt
+This plugin checks for new beta development updates from the repository at
+https://github.com/fiendish/aardwolfclientpackage
 
 It runs an automatic check every time you start up MUSHclient (or reinstall the plugin).
 
@@ -39,9 +39,11 @@ You can also run a manual check by typing:    package update check
 <script>
 <![CDATA[
 
-http = require "socket.http"	-- loads http and various dlls
-version_url = "http://avi.whube.com/AardwolfPackageChanges.txt"
-download_url = "http://avi.whube.com/MUSHclient.zip"
+require("socket")
+https = require("ssl.https")
+
+version_url = "https://raw.github.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardwolfPackageChanges.txt"
+download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
@@ -159,8 +161,7 @@ end
 require "tprint"
 function checkRemoteFile()
    -- grab the download page
-   page, status, headers = http.request(version_url)
-   
+   page, status, headers, full_status = https.request(version_url)
    if status == 200 then -- 200 is the HTTP status code for "OK"
       update_list, latest_version = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r(%d+) snapshot.*)")
       -- extract the snapshot revision number
