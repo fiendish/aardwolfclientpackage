@@ -1268,9 +1268,11 @@ function map_portal_delete (name, line, wildcards)
    query = string.format("DELETE FROM exits WHERE fromuid in ('*','**') AND dir = %s;", fixsql(keywords))
    dbCheckExecute(query)
    if bounce_recall and (bounce_recall.dir == keywords) then
+      Note("Detected matching bounce recall.")
       map_bouncerecall(nil, nil, {"clear"})
    end
    if bounce_portal and (bounce_portal.dir == keywords) then
+      Note("Detected matching bounce portal.")
       map_bounceportal(nil, nil, {"clear"})
    end
 end -- map_portal_delete
@@ -1475,7 +1477,7 @@ function map_portal_list ()
       count = count + 1
       line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
-         -- make the whole line click-able
+         -- make the whole line clickable
          cmd = "mapper goto " .. row.touid
          txt = "click here to run to " .. (row.name or "N/A") .. "\n[ " .. row.dir .. " ]"
          Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false)
@@ -2941,7 +2943,28 @@ function OnPluginInstall ()
          loadstring(row.data or "")()
       end
    end
-  
+
+   local bounce_portal_orphaned = (bounce_portal ~= nil)
+   local bounce_recall_orphaned = (bounce_recall ~= nil)
+   if (bounce_portal_orphaned or bounce_recall_orphaned) then
+      for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+         if (bounce_portal_orphaned and (row.dir==bounce_portal.dir)) then
+            bounce_portal_orphaned = false
+         end
+         if (bounce_recall_orphaned and (row.dir==bounce_recall.dir)) then
+            bounce_recall_orphaned = false
+         end
+      end
+      if bounce_portal_orphaned then
+         Note("Detected orphaned bounce portal.")
+         map_bounceportal(nil, nil, {"clear"})
+      end
+      if bounce_recall_orphaned then
+         Note("Detected orphaned bounce recall.")
+         map_bouncerecall(nil, nil, {"clear"})
+      end
+   end
+
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
@@ -4234,3 +4257,5 @@ end
 ]]>
 </script>
 </muclient>
+
+
