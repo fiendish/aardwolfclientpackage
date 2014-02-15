@@ -4021,7 +4021,7 @@ function OnHelp (name, line, wildcards)
 ['header'] = [[===== CONFIGURATION =============>]],
 [[mapper quicklist [on/off]      --> ON will cause search results to display much
                                  > faster, but the results will not be sorted
-                                 > by distance (default is off)]],
+                                 > by distance (default is on)]],
 [[mapper shownotes [on/off]      --> ON will cause any notes in a room to display
                                  > automatically upon entering (default is on)]],
 [[mapper backups <off/on>        --> Turn off or on automatic database backups
