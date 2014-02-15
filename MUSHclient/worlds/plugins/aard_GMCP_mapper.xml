@@ -1267,12 +1267,20 @@ function map_portal_delete (name, line, wildcards)
    
    query = string.format("DELETE FROM exits WHERE fromuid in ('*','**') AND dir = %s;", fixsql(keywords))
    dbCheckExecute(query)
+   if bounce_recall and (bounce_recall.dir == keywords) then
+      map_bouncerecall(nil, nil, {"clear"})
+   end
+   if bounce_portal and (bounce_portal.dir == keywords) then
+      map_bounceportal(nil, nil, {"clear"})
+   end
 end -- map_portal_delete
 
 function map_portal_purge(name, line, wildcards)
    query = "DELETE FROM exits WHERE fromuid in ('*','**');"
    dbCheckExecute(query)
-   print ("Purged all mapper hand-held exits.")
+   print ("Purged all mapper portals.")
+   map_bouncerecall(nil, nil, {"clear"})
+   map_bounceportal(nil, nil, {"clear"})
 end
 
 function positive_integer_check(input)
@@ -3813,7 +3821,7 @@ function findpath(src, dst, noportals, norecalls)
          else
             local second_path, second_depth = findpath(jump_room, dst)
             for i,v in ipairs(second_path) do
-               table.insert(path, v)
+               table.insert(path, v) -- bug on this line if path is nil?
             end
             return path, first_depth+second_depth
          end
