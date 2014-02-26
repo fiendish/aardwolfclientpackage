@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1792 snapshot
+- bug fix: need to add a hidden file for the new git repository to preserve the comm logs folder
+
 r1791 snapshot
 - misc change: everything is migrating over to github. Using git means that snapshot revision numbers are going to increment much more slowly now, because they aren't "real".
 - misc change: GMCP mapper list functions no longer pathfind all results by default so that searches are faster. To change this back, use the 'mapper quicklist' feature.
