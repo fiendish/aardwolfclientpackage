@@ -238,10 +238,10 @@ function DisplayMapPage()
    if not page_built then
       txt = "Map will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee)
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee, utf8)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee)
    else        
       -- display each line        
       imax = 0
@@ -329,8 +329,13 @@ function Display_Line (line, styles)
    local top =  (line - 1) * font_height + 5
 
    for _, v in ipairs (styles) do
-      left = left + WindowText (win, id, v.text,
-               left, top, 0, 0, v.textcolour)
+      local ret = WindowText (win, id, v.text, left, top, 0, 0, v.textcolour, true)
+      if (ret >= 0) then
+         left = left + ret
+      else
+         print ("foo")
+         left = left + WindowText (win, id, v.text, left, top, 0, 0, v.textcolour, false)
+      end
    end -- for each style run                 
 end -- Display_Line
 
