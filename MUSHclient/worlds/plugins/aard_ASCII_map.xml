@@ -333,7 +333,6 @@ function Display_Line (line, styles)
       if (ret >= 0) then
          left = left + ret
       else
-         print ("foo")
          left = left + WindowText (win, id, v.text, left, top, 0, 0, v.textcolour, false)
       end
    end -- for each style run                 
