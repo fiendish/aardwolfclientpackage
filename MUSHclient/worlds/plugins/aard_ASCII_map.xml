@@ -51,10 +51,11 @@ Blainer and others. All cobbled together by Lasher. And then recobbled by Fiendi
 <trigger
    enabled="n"
    match="*"
-   script="map_redirect"
+   script="map_body_redirect"
    name="multi_line_map"
    omit_from_output="y"
    sequence="10"
+   send_to="14"
 ></trigger>
 
 <trigger
@@ -173,18 +174,40 @@ function map_redirect (name, line, wildcards, styles)
       EnableTrigger ("multi_line_map", false)  -- no more lines to go
       page_built = true
       DisplayMapPage () --end of map from MUD, display the window
-   else
-      table.insert (map_lines, styles)
-      if also_echo_map == 1 then
-         line_count = line_count + 1
-         if line_count == 4 then
-            SetTriggerOption ("multi_line_map", "omit_from_output", "n")
-         elseif line_count == 20 then
-            SetTriggerOption ("multi_line_map", "omit_from_output", "y")
-         end
-      end
    end
 end -- function map_redirect
+
+--E294xx
+utf8_2_ascii = {
+["82"]="7C",
+["80"]="2D",
+["8C"]="20",
+["90"]="20",
+["98"]="20",
+["94"]="20",
+["B4"]="20",
+["A4"]="20",
+["AC"]="20",
+["9C"]="20"
+}
+
+function utf8_map_text_to_ascii(text)
+   local gsub = string.gsub
+   text = gsub(utils.tohex(text), "E294(%x%x)", utf8_2_ascii)
+   return utils.fromhex(text)
+end
+
+function map_body_redirect(name, line, wildcards, styles)
+   table.insert (map_lines, styles)
+   if also_echo_map == 1 then
+      line_count = line_count + 1
+
+      for k,v in ipairs(styles) do
+         ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), utf8_map_text_to_ascii(v.text))
+      end
+      Note("")
+   end
+end
 
 function SetUpHotspotsAndDraw(firstTime)
    if (firstTime == true) then
