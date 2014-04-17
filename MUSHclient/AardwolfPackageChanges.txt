@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1793 snapshot
+- misc change: testing
+
 r1792 snapshot
 - bug fix: need to add a hidden file for the new git repository to preserve the comm logs folder
 
