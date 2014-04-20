@@ -39,8 +39,7 @@ You can also run a manual check by typing:    package update check
 <script>
 <![CDATA[
 
-require("socket")
-https = require("ssl.https")
+async_ok, async = pcall (require, "async")
 
 version_url = "https://raw.github.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardwolfPackageChanges.txt"
 download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip"
@@ -92,7 +91,7 @@ function updateDialog(message,list)
       ColourNote("cyan", "", "| You have chosen to ignore snapshot r"..latest_version.."."..string.rep(" ",75-string.len("| You have chosen to ignore snapshot r"..latest_version..".")).."|")
       ColourNote("cyan", "", "| You will be alerted again when another snapshot is released.             |")
       ColourNote("cyan", "", "|                                                                          |")
-      ColourNote("cyan", "", "| Remember, you can always get the latest snapshot at:                     |")
+      ColourNote("cyan", "", "| Remember, you can always get the latest development release at:          |")
       ColourNote("cyan", "", "| https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip |")
       ColourNote("cyan", "", "|                                                                          |")
       ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
@@ -105,31 +104,46 @@ end
 function errorMessage(msg)
    ColourNote("white","red","Aardwolf MUSHclient Package Update Check Error:")
    ColourNote("white","red",msg)
+   if msg:find("plugin network") then
+      Execute("checkversion")
+   end
+   ColourNote("white","red", "\nThe latest development release is always available at:")
    ColourNote("white","red",download_url)
 end
 
 loaded = false
+thread = nil
 function OnPluginListChanged()
    if not loaded then
       -- only fire on start after loading all plugins
       loaded = true
+      if async_ok and not thread then
+         thread = async.request(version_url, "HTTPS")
+      end
       DoAfterSpecial(10,"main()",sendto.script)
    end
 end
 
 function manualCheck()
    DeleteTemporaryTimers()
+   if async_ok and not thread then
+      thread = async.request(version_url, "HTTPS")
+   end
    main()
 end
 
 function main()
    ignore_before_version = tonumber(GetVariable("ignore_before_version")) or 0
    SetStatus("Checking online for Aardwolf MUSHclient Package updates")
-   ErrorMessage = ""
-   if checkRemoteFile() then
-      if checkLocalFile() then
-         showUpdate()
+   if async_ok then
+      ErrorMessage = ""
+      if checkRemoteFile() then
+         if checkLocalFile() then
+            showUpdate()
+         end
       end
+   else
+      ErrorMessage = "Failed to load plugin network component. Tell Fiendish. Include your OS version and your client package version."
    end
    checkErrors()
    SetStatus("")
@@ -139,40 +153,41 @@ function checkLocalFile()
    -- open the local version file
    version_file,err = io.open (GetInfo(56).."AardwolfPackageChanges.txt", "r")
    if not version_file then -- the file is missing or unreadable
-      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.\n\nThe system returned the error:\n"..err.."\n\nYou should download the latest development snapshot from:"
+      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.\n\nThe system returned the error:\n"..err
       return false
    end
    --- read the snapshot revision from the third line
    line = version_file:read ("*l") -- read one line
    line = version_file:read ("*l") -- read one line
    line = version_file:read ("*l") -- read one line
+   version_file:close ()
+
    local_version = nil
    if line then -- if we got something
       local_version = tonumber(string.match(line, "r(%d+) snapshot"))
    end
    if not local_version then -- the file is messed up such that the third line doesn't contain "r<###> snapshot"
-      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to have been modified (this is bad), so the version check cannot proceed. You should download the latest development snapshot from:"
+      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to have been mangled (this is bad), so the version check cannot proceed."
       return false
    end
-   version_file:close ()
    return true
 end
 
-require "tprint"
 function checkRemoteFile()
    -- grab the download page
-   page, status, headers, full_status = https.request(version_url)
+   retval, page, status, headers, full_status = thread:join()
+   thread = nil
    if status == 200 then -- 200 is the HTTP status code for "OK"
       update_list, latest_version = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r(%d+) snapshot.*)")
       -- extract the snapshot revision number
       latest_version = tonumber(latest_version)
    else -- http access error
-      ErrorMessage = "Could not access the Aardwolf MUSHclient Package download page to check for the latest version number. Please make sure that you are able to access the url below in your browser and then type \'PACKAGE UPDATE CHECK\' to try again..."
+      ErrorMessage = "Could not access the Aardwolf MUSHclient Package download page to check for the latest version number. Please make sure that you are able to access the version file at "..version_url.." and then type \'PACKAGE UPDATE CHECK\' to try again."
       return false
    end
    
    if not latest_version then -- string.match failed to find the right pattern above
-      ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package download page (below). Please alert Fiendish about this."
+      ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package site. Please alert Fiendish about this."
       return false
    end
 
@@ -191,7 +206,7 @@ function showUpdate()
          message = "There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
       elseif local_version > latest_version then
-         ErrorMessage = "Oh, dear...this is embarrassing. The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Go to the following url in your browser to get the latest package and contact Fiendish about this message, because clearly this situation is impossible. :/"
+         ErrorMessage = "Oh, dear...this is embarrassing. The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Contact Fiendish about this message, because clearly this situation is impossible. :/"
          return false
       else
          ColourNote("yellow", "", "Your package version r"..local_version.." appears to be up-to-date.")
