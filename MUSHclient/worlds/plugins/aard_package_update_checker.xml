@@ -129,7 +129,7 @@ function manualCheck()
    if async_ok and not thread then
       thread = async.request(version_url, "HTTPS")
    end
-   main()
+   DoAfterSpecial(1,"main()",sendto.script)
 end
 
 function main()
