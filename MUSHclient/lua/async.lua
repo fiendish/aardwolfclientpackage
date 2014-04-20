@@ -1,4 +1,4 @@
-module("network", package.seeall)
+module("async", package.seeall)
 local _llthreads = require("llthreads")
 
 local network_thread_code = string.dump(function(arg)
