@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1793 snapshot
+- bug fix: new SSL dll should work better (at all?)
+- new feature: ability to spawn low level threads in plugins added via lua-llthreads
+- misc change: package updater should now do https request in a background thread
+
 r1792 snapshot
 - bug fix: need to add a hidden file for the new git repository to preserve the comm logs folder
 
