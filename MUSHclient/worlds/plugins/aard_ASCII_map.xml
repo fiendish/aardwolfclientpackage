@@ -185,30 +185,47 @@ utf8_2_ascii = {
 ["90"]="20",
 ["98"]="20",
 ["94"]="20",
-["B4"]="20",
-["A4"]="20",
-["AC"]="20",
-["9C"]="20"
+["AC"]="20", -- vertical end cap T
+["B4"]="20", -- vertical end cap T
+["A4"]="7C",
+["9C"]="7C"
 }
 
+--E295xx
 utf8_2_ascii2 = {
-["91"]="7C", -- |
-["90"]="2D", -- -
+["91"]="7C", -- ||
+["90"]="2D", -- =
 ["A5"]="20",
 ["9D"]="20",
 ["9A"]="20",
 ["94"]="20",
 ["97"]="20",
 ["A8"]="20",
-["A3"]="20",
-["A0"]="20"
+["A3"]="7C",
+["A0"]="7C",
+["A9"]="2D",
+["A6"]="2D"
 }
 
 function utf8_map_text_to_ascii(text)
-   local gsub = string.gsub
-   text = gsub(utils.tohex(text), "E294(%x%x)", utf8_2_ascii)
-   text = utils.fromhex(gsub(text, "E295(%x%x)", utf8_2_ascii2))
-   return text
+   text = utils.tohex(text)
+
+   -- replace vertical three way intersections with "-"
+   text = string.gsub(text, "E29480E294B4E29480", "2D2D2D")
+   text = string.gsub(text, "E29480E294ACE29480", "2D2D2D")
+
+   -- drop extra long ends
+   text = string.gsub(text, "E2948020", "2020") -- "- "
+   text = string.gsub(text, "20E29480", "2020") -- " -"
+   text = string.gsub(text, "E2959020", "2020") -- "= "
+   text = string.gsub(text, "20E29590", "2020") -- " ="
+   text = string.gsub(text, "E29480$", "20") -- "- "
+   text = string.gsub(text, "^E29480", "20") -- " -"
+   text = string.gsub(text, "E29590$", "20") -- "= "
+   text = string.gsub(text, "^E29590", "20") -- " ="
+
+   text = string.gsub(text, "E294(%x%x)", utf8_2_ascii)
+   return utils.fromhex(string.gsub(text, "E295(%x%x)", utf8_2_ascii2))
 end
 
 function map_body_redirect(name, line, wildcards, styles)
