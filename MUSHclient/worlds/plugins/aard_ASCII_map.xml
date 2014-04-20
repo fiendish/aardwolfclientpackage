@@ -179,8 +179,8 @@ end -- function map_redirect
 
 --E294xx
 utf8_2_ascii = {
-["82"]="7C",
-["80"]="2D",
+["82"]="7C", -- |
+["80"]="2D", -- -
 ["8C"]="20",
 ["90"]="20",
 ["98"]="20",
@@ -191,10 +191,22 @@ utf8_2_ascii = {
 ["9C"]="20"
 }
 
+utf8_2_ascii2 = {
+["91"]="7C", -- |
+["90"]="2D", -- -
+["A5"]="20",
+["9D"]="20",
+["9A"]="20",
+["94"]="20",
+["97"]="20",
+["A8"]="20"
+}
+
 function utf8_map_text_to_ascii(text)
    local gsub = string.gsub
    text = gsub(utils.tohex(text), "E294(%x%x)", utf8_2_ascii)
-   return utils.fromhex(text)
+   text = utils.fromhex(gsub(text, "E295(%x%x)", utf8_2_ascii2))
+   return text
 end
 
 function map_body_redirect(name, line, wildcards, styles)
@@ -342,17 +354,18 @@ end
 
 function Display_Line (line, styles)
    local id = font_id
-
+   local padding = 0
    -- first 2 lines in bold
    if line < 3 then
       id = font_id_bold
+      padding = 5
    end
 
    local left = 10
-   local top =  (line - 1) * font_height + 5
+   local top = (line - 1) * line_height + padding
 
    for _, v in ipairs (styles) do
-      local ret = WindowText (win, id, v.text, left, top, 0, 0, v.textcolour, true)
+      local ret = WindowText (win, id, v.text, left, top, 0, 0, v.textcolour, true) -- try utf8 first
       if (ret >= 0) then
          left = left + ret
       else
@@ -695,7 +708,7 @@ function OnPluginInstall()
    --- Grab font size settings.
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
-   line_height = font_height + 1
+   line_height = font_height + 2
 
    --- install the window movement handler, get back the window position.
    windowinfo  = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
