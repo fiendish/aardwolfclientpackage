@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1795 snapshot
+- bug fix: github changed the domain for raw files
+
 r1793 snapshot
 - bug fix: new SSL dll should work better (at all?)
 - new feature: ability to spawn low level threads in plugins added via lua-llthreads
