@@ -41,7 +41,7 @@ You can also run a manual check by typing:    package update check
 
 async_ok, async = pcall (require, "async")
 
-version_url = "https://raw.github.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardwolfPackageChanges.txt"
+version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardwolfPackageChanges.txt"
 download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
