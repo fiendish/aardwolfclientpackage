@@ -371,9 +371,10 @@ end
 
 function Display_Line (line, styles)
    local id = font_id
-   local left = 4
+   local left = 3
    -- first 2 lines in bold
    if line < 3 then
+      left = 4
       id = font_id_bold
    end
    local padding = 5
