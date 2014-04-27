@@ -394,11 +394,19 @@ end -- Display_Line
 -- right click menu
 function right_click_menu ()
 
-   menustring ="Change Font|-|"
-   menustring = (menustring ..(((show_exits == 1) and "+") or "").."Show Exits|")
-   menustring = (menustring ..(((show_coords == 1) and "+") or "").."Show Coordinates|")
-   menustring = (menustring..(((also_echo_map == 1) and "+") or "").."Echo Map In Main Output")
-   menustring = (menustring .."|-|Bring To Front|Send To Back|-|Reset Defaults")
+   menustring = "Change Font|>Map Type|"
+   menustring = menustring .. ((maptype == 0 and "+") or "") .. "0 - Standard ASCII based map|"
+   menustring = menustring .. ((maptype == 1 and "+") or "") .. "1 - Solid single line map|"
+   menustring = menustring .. ((maptype == 2 and "+") or "") .. "2 - Solid double line map|"
+   menustring = menustring .. ((maptype == 3 and "+") or "") .. "3 - Solid single line map (no end caps)|"
+   menustring = menustring .. ((maptype == 4 and "+") or "") .. "4 - Solid double line map (no end caps)|"
+   menustring = menustring .. ((maptype == 5 and "+") or "") .. "5 - Solid single line map (extended walls)|"
+   menustring = menustring .. ((maptype == 6 and "+") or "") .. "6 - Solid double line map (extended walls)|"
+   menustring = menustring .. "<|-|"
+   menustring = (menustring .. (((show_exits == 1) and "+") or "") .. "Show Exits|")
+   menustring = (menustring .. (((show_coords == 1) and "+") or "") .. "Show Coordinates|")
+   menustring = (menustring .. (((also_echo_map == 1) and "+") or "") .. "Echo Map In Main Output")
+   menustring = (menustring .. "|-|Bring To Front|Send To Back|-|Reset Defaults")
 
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
@@ -429,6 +437,8 @@ function right_click_menu ()
       show_coords = 0
       show_exits = 0
       also_echo_map = 0
+   elseif result ~= "" then
+      maptype = tonumber(result:sub(1,1))
    end -- if
    -- save and reload
    OnPluginSaveState()
@@ -461,6 +471,7 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          end
          if page_built == false then
+            Note("Requesting Map")
             SendNoEcho("map")
          end
       end
@@ -617,12 +628,14 @@ function LeftClickOnly(flags, hotspot_id, win)
 end
 
 function OnPluginConnect()
+   page_built = false
    TelnetOptionOn(TELOPT_MAP)
    TelnetOptionOff(TELOPT_SHORTMAP)
    TelnetOptionOn(TELOPT_ROOM_NAMES)
    TelnetOptionOn(TELOPT_EXIT_NAMES)
    TelnetOptionOff(TELOPT_QUIET)
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
+   Execute("sendgmcp maptype "..maptype)
    Execute("sendgmcp request room")
 end
 
@@ -640,6 +653,7 @@ function OnPluginSaveState ()
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
    SetVariable ("also_echo_map", also_echo_map)
+   SetVariable ("maptype", maptype)
 end -- OnPluginSaveState
 
 function OnPluginClose ()
@@ -680,6 +694,7 @@ function OnPluginInstall()
    show_coords = tonumber (GetVariable ("showcoords")) or show_coords
    show_exits = tonumber (GetVariable ("showexits")) or 0
    also_echo_map = tonumber (GetVariable("also_echo_map")) or 0
+   maptype = tonumber (GetVariable("maptype")) or (((default_font_name ~= "Dina") and 2) or 0)
 
    -- make window so I can grab the font info
    WindowCreate (win, 1, 1, width, height, 0, 0, background_colour) 
