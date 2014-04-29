@@ -440,9 +440,11 @@ function right_click_menu ()
    elseif result ~= "" then
       maptype = tonumber(result:sub(1,1))
    end -- if
-   -- save and reload
-   OnPluginSaveState()
-   OnPluginInstall()
+   if result ~= "" then
+      -- save and reload
+      OnPluginSaveState()
+      OnPluginInstall()
+   end
 end -- right_click_menu
 
 
@@ -664,8 +666,11 @@ end
 function OnPluginDisable ()
    WindowShow( win, false )
    if IsConnected() then
-      TelnetOptionOff(TELOPT_MAP)
-      TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
+      Execute("sendgmcp maptype -1")
+      if (also_echo_map == 0) then
+         TelnetOptionOff(TELOPT_MAP)
+         TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
+      end
    end
    OnPluginSaveState()
 end --  OnPluginDisable
@@ -758,11 +763,6 @@ function OnPluginInstall()
    WindowFont (infowin, popup_font_id, font_name, font_size, false, false, false, false, 0, 49) 
    WindowFont (infowin, heading_font_id, font_name, font_size + 2, false, false, false, false, 0, 49)
    
-   -- update on reload
-   if IsConnected() then
-      OnPluginConnect()
-   end
-   
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
@@ -770,6 +770,10 @@ function OnPluginInstall()
       return
    end -- they didn't enable us last time
 
+   -- update on reload
+   if IsConnected() then
+      OnPluginConnect()
+   end   
 end
 
 ]]>
