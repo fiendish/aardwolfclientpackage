@@ -35,6 +35,24 @@ Blainer and others. All cobbled together by Lasher. And then recobbled by Fiendi
    ignore_case="y"
    script="reset_aard"
 ></alias>
+
+<alias
+   match="maptype *"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+>
+<send>
+   local temptype = tonumber("%1")
+   if temptype and (temptype &gt;= 0) and (temptype &lt;= 6) then
+      maptype = temptype
+      OnPluginSaveState()
+      OnPluginInstall()
+   end
+   Send("maptype %1 session")
+</send>
+</alias>
 </aliases>
 
 <triggers>
@@ -117,6 +135,7 @@ Blainer and others. All cobbled together by Lasher. And then recobbled by Fiendi
 <script>
 <![CDATA[
 
+require "gmcphelper"
 require "movewindow"
 require "mw"
 
@@ -472,7 +491,7 @@ function OnPluginBroadcast (msg, id, name, text)
                DisplayMapPage()
             end
          end
-         if page_built == false then
+         if page_built == false and (GetOption("enable_triggers") == 1) then
             Note("Requesting Map")
             SendNoEcho("map")
          end
@@ -637,8 +656,8 @@ function OnPluginConnect()
    TelnetOptionOn(TELOPT_EXIT_NAMES)
    TelnetOptionOff(TELOPT_QUIET)
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
-   Execute("sendgmcp maptype "..maptype)
-   Execute("sendgmcp request room")
+   Send_GMCP_Packet("maptype "..maptype)
+   Send_GMCP_Packet("request room")
 end
 
 ---------------------------------------------------------------------------------
@@ -666,7 +685,7 @@ end
 function OnPluginDisable ()
    WindowShow( win, false )
    if IsConnected() then
-      Execute("sendgmcp maptype -1")
+      Send_GMCP_Packet("maptype -1")
       if (also_echo_map == 0) then
          TelnetOptionOff(TELOPT_MAP)
          TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
