@@ -782,9 +782,16 @@ function stampAndStore(styles)
       if (log_colour_codes == 0) then
          log_text = strip_colours(log_text)
       end
-      local f = assert(io.open (GetInfo(58):gsub("^.\\",GetInfo(56))..sanitize_filename(GetInfo(2)).."ChatLog.txt", "a+")) -- handle to chat log file
-      f:write(log_text.."\n") -- write to it
-      f:close()  -- close that file now
+      local filename = GetInfo(58):gsub("^.\\",GetInfo(56))..sanitize_filename(GetInfo(2)).."ChatLog.txt"
+      local f, err = io.open (filename, "a+") -- handle to chat log file
+      if f then
+         f:write(log_text.."\n") -- write to it
+         f:close()  -- close that file now
+      else
+         ColourNote("white", "red", "COMMUNICATION LOG ERROR: Failed to access your logging file because of the following reason:" )
+         ColourNote("white", "red", err)
+         ColourNote("white", "red", "Fix the problem or disable Logging to File in the Communication Log plugin.")
+      end
    end
 
    local urls = findURLs(strip_colours(text))
