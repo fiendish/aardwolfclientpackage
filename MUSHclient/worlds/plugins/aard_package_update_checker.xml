@@ -125,6 +125,7 @@ function OnPluginListChanged()
 end
 
 function manualCheck()
+   SetVariable("ignore_before_version", 0)
    DeleteTemporaryTimers()
    if async_ok and not thread then
       thread = async.request(version_url, "HTTPS")
@@ -201,8 +202,8 @@ end
 function showUpdate()
    if local_version and latest_version then -- sanity check
       if local_version < latest_version then
-         final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>\r\n").."\r\nGet it from: "..download_url
-         final_update_list = convertHTMLcodesToStandardText(final_update_list)
+         final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>\r\n")
+         final_update_list = "( Get it from: "..download_url.." )\n\n"..convertHTMLcodesToStandardText(final_update_list)
          message = "There's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
       elseif local_version > latest_version then
