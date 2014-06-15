@@ -89,46 +89,36 @@ Blainer and others. All cobbled together by Lasher. And then recobbled by Fiendi
    enabled="y"
    match="You open *."
    sequence="100"
-   send_to="12"
->
-<send>SendNoEcho ("map")</send>
-</trigger>
+   script="request_new_map"
+></trigger>
   
 <trigger
    enabled="y"
    match="You close *."
    sequence="100"
-   send_to="12"
->
-<send>SendNoEcho ("map")</send>
-</trigger>
+   script="request_new_map"
+></trigger>
 
 <trigger
    enabled="y"
    match="* opens*."
    sequence="100"
-   send_to="12"
->
-<send>SendNoEcho ("map")</send>
-</trigger>
+   script="request_new_map"
+></trigger>
   
 <trigger
    enabled="y"
    match="* closes*."
    sequence="100"
-   send_to="12"
->
-<send>SendNoEcho ("map")</send>
-</trigger>
+   script="request_new_map"
+></trigger>
   
 <trigger
    enabled="y"
    match="You can now sense anger in your immediate area."
    sequence="100"
-   send_to="12"
->
-<send>SendNoEcho ("map")</send>
-</trigger>
+   script="request_new_map"
+></trigger>
   
 </triggers>
 
@@ -184,15 +174,29 @@ function reset_aard()
    OnPluginInstall()
 end
 
+function request_new_map()
+   SendNoEcho ("map")
+end
+
 function map_redirect (name, line, wildcards, styles)
    EnableTrigger ("multi_line_map", true)  -- capture subsequent lines
    if name == "map_start" then   --- Setup the window.
-      line_count = 1
       map_lines = {} --reset ready for new map
    elseif name == "map_end" then
       EnableTrigger ("multi_line_map", false)  -- no more lines to go
       page_built = true
       DisplayMapPage () --end of map from MUD, display the window
+
+      if also_echo_map == 1 then
+         for i,line in ipairs(map_lines) do
+            if i > 3 and i < #map_lines then
+               for _,v in ipairs(line) do
+                  ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), ((GetOption("utf_8") == 1) and v.text) or utf8_map_text_to_ascii(v.text))
+               end
+               Note("")
+            end
+         end
+      end
    end
 end -- function map_redirect
 
@@ -249,13 +253,6 @@ end
 
 function map_body_redirect(name, line, wildcards, styles)
    table.insert (map_lines, styles)
-   if also_echo_map == 1 and line_count > 3 and line_count < 20 then
-      for _,v in ipairs(styles) do
-         ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), utf8_map_text_to_ascii(v.text))
-      end
-      Note("")
-   end
-   line_count = line_count + 1
 end
 
 function SetUpHotspotsAndDraw(firstTime)
@@ -293,9 +290,7 @@ end
 --=================================================================================
 
 function DisplayMapPage()
-    
    styles = { }
-   
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
 
    -- show the widget for the legend popup
@@ -314,7 +309,7 @@ function DisplayMapPage()
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee)
-   else        
+   else
       -- display each line        
       for i, line in ipairs (map_lines) do
          if (show_exits == 1) or (i < #map_lines) then
