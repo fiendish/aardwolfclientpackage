@@ -487,7 +487,7 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          end
          if page_built == false and (GetOption("enable_triggers") == 1) then
-            Note("Requesting Map")
+            Note("Requesting Map Update")
             SendNoEcho("map")
          end
       end
@@ -730,13 +730,16 @@ function OnPluginInstall()
    end -- if Dina not installed
 
    if fonts["Courier New"] then
-      default_font_size = 8
+      default_font_size = 9
       default_font_name = "Courier New"
    elseif fonts ["Lucida Console"] then
-      default_font_size = 8
+      default_font_size = 9
       default_font_name = "Lucida Console"
+   elseif fonts ["Liberation Mono"] then
+      default_font_size = 9
+      default_font_name = "Liberation Mono"
    else
-      default_font_size = 8
+      default_font_size = 9
       default_font_name = "Dina"    -- the actual font
    end -- if
 
@@ -748,7 +751,7 @@ function OnPluginInstall()
    WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false) -- bold font
 
    --- Grab font size settings.
-   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
+   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) -- height
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
 
    --- install the window movement handler, get back the window position.
