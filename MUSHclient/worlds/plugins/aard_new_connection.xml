@@ -37,6 +37,7 @@
 </aliases>
 <script>
 <![CDATA[
+SetOption ("omit_date_from_save_files", 1)
 
 require "movewindow"
 
