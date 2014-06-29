@@ -162,8 +162,8 @@ function draw_3d_box (win, left, top, width, height)
 end -- draw_3d_box
 
 function draw_text_box (win, font, left, top, text, utf8, text_colour, fill_colour, border_colour)
-local width       = WindowTextWidth (win, font, text, utf8)
-local font_height = WindowFontInfo (win, font, 1) 
+  local width       = WindowTextWidth (win, font, text, utf8)
+  local font_height = WindowFontInfo (win, font, 1) 
 
   WindowRectOp (win, 2, left - 3, top, left + width + 3, top + font_height, fill_colour)  -- fill
   WindowText   (win, font, text, left, top, 0, 0, text_colour, utf8)   -- draw text
@@ -184,4 +184,3 @@ function outlined_text(window, font, text, startx, starty, endx, endy, color, ut
     WindowText(window, font, text, startx+1, starty+1, endx, endy, 0x000000, utf8)
     WindowText(window, font, text, startx, starty, endx, endy, color, utf8)
 end
-
