@@ -46,9 +46,9 @@ require "copytable"
 background_colour     = 0x000000
 border_colour         = 0xcccccc
 default_width         = 209
-default_height        = 307
+default_height        = 287
 default_x             = 658
-default_y             = 244
+default_y             = 264
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
 LEFT_MARGIN     = 10
