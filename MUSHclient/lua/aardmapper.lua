@@ -913,7 +913,7 @@ function draw (uid)
          areaname:gsub("^%l", string.upper), false, 
          AREA_NAME_TEXT.colour,   -- text colour
          AREA_NAME_FILL.colour,   -- fill colour   
-         AREA_NAME_BORDER.colour)     -- border colour
+         AREA_NAME_BORDER.colour) -- border colour
    end -- if area known
   
    -- configure?
@@ -922,18 +922,18 @@ function draw (uid)
       draw_configuration ()
    else
       WindowShow(config_win, false)
-      local x = 5
+      local x = 2
       local y = 2
-      local width = draw_text_box (win, FONT_ID, 
-         x,   -- left
-         y,    -- top (ie. at bottom)
-         "*", false,                   -- what to draw, utf8
+      local text_width = draw_text_box (win, FONT_ID, 
+         x+3,   -- left
+         y,   -- top
+         "*", false,              -- what to draw, utf8
          AREA_NAME_TEXT.colour,   -- text colour
          AREA_NAME_FILL.colour,   -- fill colour   
-         AREA_NAME_BORDER.colour)     -- border colour
+         AREA_NAME_BORDER.colour) -- border colour
 
          WindowAddHotspot(win, "<configure>",  
-         x, y, x + width, y + font_height,   -- rectangle
+         x, y, x+text_width+6, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
          "",  -- mousedown
@@ -945,19 +945,17 @@ function draw (uid)
                
    if type (show_help) == "function" then
       local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 5
---    local y = config.WINDOW.height - 2 - font_height
-      local y = 0
-      local width = draw_text_box (win, FONT_ID, 
+      local y = 2
+      local text_width = draw_text_box (win, FONT_ID, 
          x,   -- left
-         2,
-         --config.WINDOW.height - 2 - font_height,    -- top (ie. at bottom)
-         "?", false,                   -- what to draw, utf8
+         y,   -- top
+         "?", false,              -- what to draw, utf8
          AREA_NAME_TEXT.colour,   -- text colour
          AREA_NAME_FILL.colour,   -- fill colour   
-         AREA_NAME_BORDER.colour)     -- border colour
+         AREA_NAME_BORDER.colour) -- border colour
       
       WindowAddHotspot(win, "<help>",  
-         x, y, x + width, y + font_height,   -- rectangle
+         x-3, y, x+text_width+3, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
          "",  -- mousedown
