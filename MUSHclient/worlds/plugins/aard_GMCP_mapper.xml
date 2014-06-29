@@ -9,7 +9,6 @@
    <!ENTITY show_completed "true" > 
    <!ENTITY show_database_mods "false" > 
    <!ENTITY show_other_areas "false" > 
-   <!ENTITY show_area_exits "false" > 
    <!ENTITY show_up_down "false" > 
    <!ENTITY speedwalk_prefix "run" > 
 ]>
@@ -32,7 +31,7 @@
 AUTOMATIC MAPPER by Fiendish
 ** This is a very improved GMCP version of the original ATCP mapper by Nick Gammon.
 ** Some GMCP specific code added by Lasher.
-** A few new features contributed by Spartacus.
+** A few features contributed by Spartacus.
 ** Many major improvements made to Nick's original design by Fiendish.
 
 The window can be dragged to a new location by dragging the room name.
@@ -685,7 +684,6 @@ local show_completed = &show_completed;
 local show_database_mods = &show_database_mods;
 local show_other_areas = &show_other_areas;
 local show_up_down = &show_up_down;
-local show_area_exits = &show_area_exits;
 local speedwalk_prefix = "&speedwalk_prefix;"
 
 <![CDATA[
@@ -702,52 +700,6 @@ require "wait"
 toConfirm = ""
 
 -- Mapper Variables --
-
-default_config = {
-   -- assorted colours
-   BACKGROUND_COLOUR       = { name = "Area Background",        colour =  ColourNameToRGB "#111111", },
-   ROOM_COLOUR             = { name = "Room",              colour =  ColourNameToRGB "#dcdcdc", },
-   EXIT_COLOUR             = { name = "Exit",              colour =  ColourNameToRGB "#e0ffff", },
-   EXIT_COLOUR_UP_DOWN     = { name = "Exit up/down",      colour =  ColourNameToRGB "#ffb6c1", },
-   ROOM_NOTE_COLOUR        = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen", },
-   OUR_ROOM_COLOUR         = { name = "Our room",          colour =  ColourNameToRGB "#ff1493", },
-   UNKNOWN_ROOM_COLOUR     = { name = "Unknown room",      colour =  ColourNameToRGB "#8b0000", },
-   DIFFERENT_AREA_COLOUR   = { name = "Another area",      colour =  ColourNameToRGB "#ff0000", },
-   PK_BORDER_COLOUR        = { name = "PK border",         colour =  ColourNameToRGB "red", },
-   SHOP_FILL_COLOUR        = { name = "Shop",              colour =  ColourNameToRGB "#ffad2f", },
-   HEALER_FILL_COLOUR      = { name = "Healer",       colour =  ColourNameToRGB "#9acd32", },
-   TRAINER_FILL_COLOUR     = { name = "Trainer",       colour =  ColourNameToRGB "#9acd32", },
-   QUESTOR_FILL_COLOUR     = { name = "Questor",       colour =  ColourNameToRGB "deepskyblue", },
-   BANK_FILL_COLOUR        = { name = "Bank",              colour =  ColourNameToRGB "#ffD700", },
-   GUILD_FILL_COLOUR        = { name = "Guild",              colour =  ColourNameToRGB "magenta", },
-   SAFEROOM_FILL_COLOUR    = { name = "Safe room",          colour =  ColourNameToRGB "lightblue", },
-   MAPPER_NOTE_COLOUR      = { name = "Messages",          colour =  ColourNameToRGB "lightgreen" },
-   
-   ROOM_NAME_TEXT          = { name = "Room name text",    colour = ColourNameToRGB "#BEF3F1", },
-   ROOM_NAME_FILL          = { name = "Room name fill",    colour = ColourNameToRGB "#105653", },
-   ROOM_NAME_BORDER        = { name = "Room name box",     colour = ColourNameToRGB "black", },
-   
-   AREA_NAME_TEXT          = { name = "Area name text",    colour = ColourNameToRGB "#BEF3F1",},
-   AREA_NAME_FILL          = { name = "Area name fill",    colour = ColourNameToRGB "#105653", },   
-   AREA_NAME_BORDER        = { name = "Area name box",     colour = ColourNameToRGB "black", },
-               
-   FONT = { name =  get_preferred_font {"Dina",  "Lucida Console",  "Fixedsys", "Courier",} ,
-            size = 8
-         } ,
-         
-   -- size of map window
-   WINDOW = { width = mapper.default_width, height = mapper.default_height },
-  
-   -- how far from where we are standing to draw (rooms)
-   SCAN = { depth = 300 },
-  
-   -- show custom tiling background textures
-   USE_TEXTURES = { enabled = true },
-  
-   -- how many seconds to show "recent visit" lines (default 3 minutes)
-   LAST_VISIT_TIME = { time = 60 * 3 },  
-  
-}
 
 mylevel = 0
 mytier = 0
@@ -1952,11 +1904,11 @@ function get_room (uid)
    end -- not in cache
 
    local room = copytable.deep(ourroom)
-   room.bordercolour = configs.ROOM_COLOUR.colour
+   room.bordercolour = mapper.ROOM_COLOUR.colour
    if areas[room.area] then
       room.texture = areas[room.area].texture
       if areas[room.area].color ~= "" then
-         room.bordercolour = areas[room.area].color or configs.ROOM_COLOUR.colour
+         room.bordercolour = areas[room.area].color or mapper.ROOM_COLOUR.colour
       end
       room.area = areas[room.area].name or string.format ("%s", room.area or "<unknown>")
    end
@@ -2031,31 +1983,31 @@ function get_room (uid)
    if room.info and room.info ~= "" then
       if string.match (room.info, "shop") then
          special_room = true
-         room.fillcolour = configs.SHOP_FILL_COLOUR.colour
+         room.fillcolour = mapper.SHOP_FILL_COLOUR.colour
          room.fillbrush = 0  -- solid
       elseif string.match (room.info, "healer") then
          special_room = true
-         room.fillcolour = configs.HEALER_FILL_COLOUR.colour
+         room.fillcolour = mapper.HEALER_FILL_COLOUR.colour
          room.fillbrush = 0  -- solid
       elseif string.match (room.info, "guild") then
          special_room = true
-         room.fillcolour = configs.GUILD_FILL_COLOUR.colour
+         room.fillcolour = mapper.GUILD_FILL_COLOUR.colour
          room.fillbrush = 0 -- solid
       elseif string.match (room.info, "trainer") then
          special_room = true
-         room.fillcolour = configs.TRAINER_FILL_COLOUR.colour
+         room.fillcolour = mapper.TRAINER_FILL_COLOUR.colour
          room.fillbrush = 0 -- solid
       elseif string.match (room.info, "questor") then
          special_room = true
-         room.fillcolour = configs.QUESTOR_FILL_COLOUR.colour
+         room.fillcolour = mapper.QUESTOR_FILL_COLOUR.colour
          room.fillbrush = 0 -- solid
       elseif string.match (room.info, "bank") then
          special_room = true
-         room.fillcolour = configs.BANK_FILL_COLOUR.colour
+         room.fillcolour = mapper.BANK_FILL_COLOUR.colour
          room.fillbrush = 0  -- solid
       elseif string.match (room.info, "safe") then
          special_room = true
-         room.fillcolour = configs.SAFEROOM_FILL_COLOUR.colour
+         room.fillcolour = mapper.SAFEROOM_FILL_COLOUR.colour
          room.fillbrush = 0  -- solid
       end -- if
    end  
@@ -2073,12 +2025,12 @@ function get_room (uid)
    end -- if environmentname
 
    if uid == current_room then
-      room.bordercolour = configs.OUR_ROOM_COLOUR.colour
+      room.bordercolour = mapper.OUR_ROOM_COLOUR.colour
       room.borderpenwidth = 3
    elseif room.area ~= current_area then
-      room.bordercolour = configs.DIFFERENT_AREA_COLOUR.colour
+      room.bordercolour = mapper.DIFFERENT_AREA_COLOUR.colour
    elseif room.info and string.match(room.info, "pk") then
-      room.bordercolour = configs.PK_BORDER_COLOUR.colour
+      room.bordercolour = mapper.PK_BORDER_COLOUR.colour
       room.borderpenwidth = 3
    end -- not in this area
   
@@ -2762,11 +2714,6 @@ function OnPluginInstall ()
 
    -- get saved configuration
    assert (loadstring (GetVariable ("configs") or "")) ()
-
-   -- allow for additions to configs
-   for k, v in pairs (default_config) do
-      configs [k] = configs [k] or v
-   end -- for
   
    -- initialize mapper engine
    mapper.init { findpath = findpath,
@@ -2778,7 +2725,6 @@ function OnPluginInstall ()
       show_completed = show_completed,  -- want to see "Speedwalk completed." message
       show_other_areas = show_other_areas,  -- want to see areas other than the current one?
       show_up_down = show_up_down,          -- want to follow up/down exits?
-      show_area_exits = show_area_exits,    -- want to see area exits?
       speedwalk_prefix = speedwalk_prefix,  -- how to speedwalk
    } 
     
@@ -3013,13 +2959,13 @@ end -- OnPluginClose
 
 function OnPluginSaveState ()
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   if configs.SCAN.depth < temp_scan_depth then
+   if mapper.config.SCAN.depth < temp_scan_depth then
       -- then we probably caught ourselves in a botched run or something
-      configs.SCAN.depth = temp_scan_depth
+      mapper.config.SCAN.depth = temp_scan_depth
    end
    mapper.save_state ()
    SetVariable("config","") -- wipe out the old config table
-   SetVariable ("configs", "configs = " .. serialize.save_simple (configs))
+   SetVariable("configs", "configs = " .. serialize.save_simple (mapper.config))
    SetVariable("quick_mode", (quick_mode and "1") or "0")
    SetVariable("shownotes", (shownotes and "1") or "0")
    
@@ -3058,10 +3004,10 @@ temp_scan_depth = 4
 function activate_running(run)
    running = run
    if running then
-      temp_scan_depth = mapper.configs.SCAN.depth
-      mapper.configs.SCAN.depth = 4  -- or whatever
+      temp_scan_depth = mapper.config.SCAN.depth
+      mapper.config.SCAN.depth = 4  -- or whatever
    else
-      mapper.configs.SCAN.depth = temp_scan_depth
+      mapper.config.SCAN.depth = temp_scan_depth
    end
    mapper.draw(current_room)
 end
@@ -3736,7 +3682,7 @@ local bit = require("bit")
 -- original findpath function idea contributed by Spartacus
 function findpath(src, dst, noportals, norecalls)
    local depth = 0
-   local max_depth = mapper.configs.SCAN.depth
+   local max_depth = mapper.config.SCAN.depth
    local room_sets = {}
    local rooms_list = {}
    local found = false
@@ -3871,7 +3817,7 @@ end -- function findpath
 -- and stops at the nearest portalable or recallable room
 function findNearestJumpRoom(src, dst, target_type)
    local depth = 0
-   local max_depth = mapper.configs.SCAN.depth
+   local max_depth = mapper.config.SCAN.depth
    local room_sets = {}
    local rooms_list = {}
    local found = false
