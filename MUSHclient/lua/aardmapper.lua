@@ -103,7 +103,7 @@ local walk_to_room_name
 local total_times_drawn = 0
 local total_time_taken = 0
 
-default_width = 268
+default_width = 269
 default_height = 335
 default_x = 868
 default_y = 0
