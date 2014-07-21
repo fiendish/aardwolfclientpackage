@@ -1,7 +1,15 @@
 Aardwolf Client Package Major Changes List
 
+r1800 snapshot
+- misc change: updated to MUSHclient 4.93 ( see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.93 ).
+- new feature: add support for new UTF-8 maptypes in the ascii map plugin. (Make sure you pick UTF-8 capable fonts! I use Courier New.)
+- misc change: remove Saves from stat display, because it is being phased out.
+- misc change: streamline GMCP mapper configuration box in preparation to maybe add some other options more useful than the silly color configuration that nobody should be using.
+- bug fix: make sure triggers are enabled before requesting the automap.
+- bug fix: remove the arbitrary length limit on the ascii map so that test port tetris works again (heh).
+
 r1797 snapshot
-- misc change: updated to MUSHclient 4.92 (see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.92 )
+- misc change: updated to MUSHclient 4.92 ( see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.92 )
 
 r1795 snapshot
 - bug fix: github changed the domain for raw files
