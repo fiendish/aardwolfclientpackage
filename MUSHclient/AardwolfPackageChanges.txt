@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1801 snapshot
+- misc change: change default fonts to Courier New instead of Courier for UTF8 boxchar support
+
 r1800 snapshot
 - misc change: updated to MUSHclient 4.93 ( see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.93 ).
 - new feature: add support for new UTF-8 maptypes in the ascii map plugin. (Make sure you pick UTF-8 capable fonts! I use Courier New.)
