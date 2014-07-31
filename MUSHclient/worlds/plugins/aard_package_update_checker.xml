@@ -102,6 +102,7 @@ end
 
 -- Something went wrong when trying to check for updates
 function errorMessage(msg)
+   Note("")
    ColourNote("white","red","Aardwolf MUSHclient Package Update Check Error:")
    ColourNote("white","red",msg)
    if msg:find("plugin network") then
@@ -109,6 +110,7 @@ function errorMessage(msg)
    end
    ColourNote("white","red", "\nThe latest development release is always available at:")
    ColourNote("white","red",download_url)
+   Note("")
 end
 
 loaded = false
@@ -117,34 +119,48 @@ function OnPluginListChanged()
    if not loaded then
       -- only fire on start after loading all plugins
       loaded = true
-      if async_ok and not thread then
-         thread = async.request(version_url, "HTTPS")
-      end
-      DoAfterSpecial(10,"main()",sendto.script)
+      doAsyncRemoteRequest()
    end
 end
 
 function manualCheck()
    SetVariable("ignore_before_version", 0)
    DeleteTemporaryTimers()
-   if async_ok and not thread then
-      thread = async.request(version_url, "HTTPS")
+   doAsyncRemoteRequest()
+end
+
+function doAsyncRemoteRequest()
+   if not async_ok then
+      ErrorMessage = "Failed to load plugin network component. Tell Fiendish. Include your OS version and your client package version."
+      checkErrors()
+      return
    end
-   DoAfterSpecial(1,"main()",sendto.script)
+
+   if not thread then
+      thread = async.request(version_url, "HTTPS")
+      request_time = os.time()
+   end
+   
+   if thread:alive() then
+      if os.time() - request_time > 30 then
+         -- stop trying after 30 seconds
+         thread = nil
+      else
+         DoAfterSpecial(1,"doAsyncRemoteRequest()",sendto.script)
+      end
+   else
+      main()
+   end
 end
 
 function main()
    ignore_before_version = tonumber(GetVariable("ignore_before_version")) or 0
    SetStatus("Checking online for Aardwolf MUSHclient Package updates")
-   if async_ok then
-      ErrorMessage = ""
-      if checkRemoteFile() then
-         if checkLocalFile() then
-            showUpdate()
-         end
+   ErrorMessage = ""
+   if checkRemoteFile() then
+      if checkLocalFile() then
+         showUpdate()
       end
-   else
-      ErrorMessage = "Failed to load plugin network component. Tell Fiendish. Include your OS version and your client package version."
    end
    checkErrors()
    SetStatus("")
