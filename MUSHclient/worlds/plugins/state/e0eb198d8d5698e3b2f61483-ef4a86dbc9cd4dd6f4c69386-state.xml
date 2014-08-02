@@ -20,12 +20,8 @@
   <variable name="enabled">true</variable>
   <variable name="font_name">Dina</variable>
   <variable name="font_size">8</variable>
-  <variable name="height">307</variable>
   <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowflags">2</variable>
   <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowmode">0</variable>
-  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowx">658</variable>
-  <variable name="mw_ef4a86dbc9cd4dd6f4c69386_windowy">244</variable>
   <variable name="stacked">0</variable>
-  <variable name="width">209</variable>
 </variables>
 </muclient>
