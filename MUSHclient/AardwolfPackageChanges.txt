@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1802 snapshot:
+- bug fix: default position for stat miniwindow needs to conform to new size
+- misc change: default maptype 1 instead of 2 for new players
+
 r1801 snapshot
 - misc change: change default fonts to Courier New instead of Courier for UTF8 boxchar support
 
