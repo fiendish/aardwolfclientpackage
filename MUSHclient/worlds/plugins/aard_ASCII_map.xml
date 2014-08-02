@@ -705,6 +705,29 @@ function OnPluginListChanged ()
    do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
 end -- OnPluginListChanged
 
+function setDefaultFont()
+   local fonts = utils.getfontfamilies ()
+
+   -- install Dina as a backup
+   if not fonts.Dina then
+      AddFont (GetInfo (66) .. "\\Dina.fon")
+      fonts = utils.getfontfamilies ()
+   end
+
+   default_font_size = 9
+   if fonts["Courier New"] then
+      default_font_name = "Courier New"
+   elseif fonts ["Lucida Console"] then
+      default_font_name = "Lucida Console"
+   elseif fonts ["Liberation Mono"] then
+      default_font_name = "Liberation Mono"
+   else
+      default_font_name = "Dina"
+   end
+end
+
+setDefaultFont()
+
 function OnPluginInstall()
    --- Pull some state variables.
    title_colour = tonumber (GetVariable ("title_colour")) or title_colour
@@ -713,7 +736,6 @@ function OnPluginInstall()
    show_coords = tonumber (GetVariable ("showcoords")) or show_coords
    show_exits = tonumber (GetVariable ("showexits")) or 0
    also_echo_map = tonumber (GetVariable("also_echo_map")) or 0
-   maptype = tonumber (GetVariable("maptype")) or (((default_font_name ~= "Dina") and 2) or 0)
 
    -- make window so I can grab the font info
    WindowCreate (win, 1, 1, width, height, 0, 0, background_colour) 
@@ -721,30 +743,10 @@ function OnPluginInstall()
    font_id        = "mapper_font"
    font_id_bold   = "mapper_bold"
 
-   local fonts = utils.getfontfamilies ()
-
-   -- if not there already, add it
-   if not fonts.Dina then
-      AddFont (GetInfo (66) .. "\\Dina.fon")
-      fonts = utils.getfontfamilies ()
-   end -- if Dina not installed
-
-   if fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   elseif fonts ["Lucida Console"] then
-      default_font_size = 9
-      default_font_name = "Lucida Console"
-   elseif fonts ["Liberation Mono"] then
-      default_font_size = 9
-      default_font_name = "Liberation Mono"
-   else
-      default_font_size = 9
-      default_font_name = "Dina"    -- the actual font
-   end -- if
-
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
+
+   maptype = tonumber (GetVariable("maptype")) or (((font_name ~= "Dina") and 1) or 0)
 
    --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
@@ -770,7 +772,7 @@ function OnPluginInstall()
 
    -- font IDs
    popup_font_id = "popup_font"  
-   heading_font_id = "popup_heading_font"  
+   heading_font_id = "popup_heading_font"
  
    -- load fonts - mouseover window
    WindowCreate (infowin, 0, 0, 1, 1, 0, 0, 0)   -- make 1-pixel wide window
