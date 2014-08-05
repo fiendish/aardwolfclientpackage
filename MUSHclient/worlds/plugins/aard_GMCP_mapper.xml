@@ -2456,8 +2456,8 @@ function rotate_backups (manual)
       os.rename(firstBackup.."_Manual_old.zip", firstBackup.."_Manual_older.zip")
       os.rename(firstBackup.."_Manual", firstBackup.."_Manual_old")
       os.rename(firstBackup.."_Manual.zip", firstBackup.."_Manual_old.zip")
-      os.rename(firstBackup, firstBackup.."_Manual")
-      os.rename(firstBackup..".zip", firstBackup.."_Manual.zip")
+      ok, err = os.rename(firstBackup, firstBackup.."_Manual")
+      ok, err = os.rename(firstBackup..".zip", firstBackup.."_Manual.zip")
    else
       auto_backup_count = auto_backup_count + 1
       local t = utils.readdir (firstBackup.."_Automatic*")
@@ -2578,16 +2578,20 @@ function backup_databases(manual)
    
    backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
    firstBackup = backupPath..".db.Backup"
-   
-   local ffi = require("ffi")
-   ffi.cdef[[
-   bool CreateDirectoryA(const char *lpPathName, void *lpSecurityAttributes);
-   bool CopyFileA(const char* lpExistingFileName, const char * lpNewFileName, bool bFailIfExists);
-   unsigned long GetLastError(void);
-   ]]
-   
-   succ = ffi.C.CreateDirectoryA(GetInfo(66).."db_backups\\", nil)
-   err_no = ffi.C.GetLastError()
+   local ffi
+   if type(jit) == 'table' then
+      ffi = require("ffi")
+      ffi.cdef[[
+      bool CreateDirectoryA(const char *lpPathName, void *lpSecurityAttributes);
+      bool CopyFileA(const char* lpExistingFileName, const char * lpNewFileName, bool bFailIfExists);
+      unsigned long GetLastError(void);
+      ]]
+      
+      succ = ffi.C.CreateDirectoryA(GetInfo(66).."db_backups\\", nil)
+      err_no = ffi.C.GetLastError()
+   else
+      succ, err_no = utils.shellexecute("cmd", "/C mkdir db_backups", "GetInfo(66)", "open", 0)
+   end
    if succ == false and err_no ~= 183 and err_no ~= 127 then
       -- error
       ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66).."db_backups\\\n")
@@ -2625,8 +2629,28 @@ function backup_databases(manual)
          end
       else 
          -- no compression, just copy
-         succ = ffi.C.CopyFileA(worldPath..".db", firstBackup, false)
-         err_no = ffi.C.GetLastError()
+         if type(jit) == 'table' then
+            succ = ffi.C.CopyFileA(worldPath..".db", firstBackup, false)
+            err_no = ffi.C.GetLastError()
+         else
+            -- succ, err_no =  utils.shellexecute("cmd", "/C copy "..worldPath..".db "..firstBackup, "", "open", 0);
+            local inp, outp, errmsg
+            succ = false
+            inp, errmsg, err_no = io.open(worldPath..".db", "rb")
+            if err_no == nil then
+               outp, errmsg, err_no = io.open(firstBackup, "wb")
+               if err_no == nil then
+                  local data = inp:read("*all")
+                  outp:write(data)
+                  outp:close()
+                  inp:close()
+                  succ = true
+               end
+            end
+            if succ == false then
+               ColourNote("yellow","red", "ERROR: "..errmsg)
+            end
+         end
          if succ == false then
             ColourNote("yellow","red", "ERROR ("..err_no..") trying to copy database from '"..worldPath..".db' to '"..firstBackup.."'")
          else
@@ -2637,7 +2661,7 @@ function backup_databases(manual)
    
    if success then
       rotate_backups(manual) -- rotate backup folders (obviously)
-      Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
+      Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDI0NG.")
    else
       Note("ABORTING BACKUP.")
       CorruptionAlert()
