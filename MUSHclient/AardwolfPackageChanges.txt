@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1803 snapshot:
+- misc change: let mapper work without luajit
+
 r1802 snapshot:
 - bug fix: default position for stat miniwindow needs to conform to new size
 - misc change: default maptype 1 instead of 2 for new players
