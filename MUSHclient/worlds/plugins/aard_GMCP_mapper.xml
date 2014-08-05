@@ -2661,7 +2661,7 @@ function backup_databases(manual)
    
    if success then
       rotate_backups(manual) -- rotate backup folders (obviously)
-      Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDI0NG.")
+      Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
    else
       Note("ABORTING BACKUP.")
       CorruptionAlert()
