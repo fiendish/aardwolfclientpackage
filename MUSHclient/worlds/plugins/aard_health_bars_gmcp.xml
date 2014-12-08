@@ -744,6 +744,11 @@ function styleWidth(styles)
    return WindowTextWidth(win,font_id,s)
 end -- styleWidth
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>
