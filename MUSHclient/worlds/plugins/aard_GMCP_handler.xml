@@ -276,6 +276,11 @@ function OnPluginDisable()
    GetPluginInfo(GetPluginID(), 1).." plugin. It is necessary for other plugins.")
 end
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>
