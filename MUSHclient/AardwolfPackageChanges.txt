@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1805 snapshot:
+- bug fix: wrong level check in mapper was causing errors when bounce rooms led to paths through certain locked exits
+- misc change: updated to MUSHclient 4.96 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
+
 r1803 snapshot:
 - misc change: let mapper work without luajit
 
@@ -11,7 +15,7 @@ r1801 snapshot
 - misc change: change default fonts to Courier New instead of Courier for UTF8 boxchar support
 
 r1800 snapshot
-- misc change: updated to MUSHclient 4.93 ( see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.93 ).
+- misc change: updated to MUSHclient 4.93 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - new feature: add support for new UTF-8 maptypes in the ascii map plugin. (Make sure you pick UTF-8 capable fonts! I use Courier New.)
 - misc change: remove Saves from stat display, because it is being phased out.
 - misc change: streamline GMCP mapper configuration box in preparation to maybe add some other options more useful than the silly color configuration that nobody should be using.
@@ -19,7 +23,7 @@ r1800 snapshot
 - bug fix: remove the arbitrary length limit on the ascii map so that test port tetris works again (heh).
 
 r1797 snapshot
-- misc change: updated to MUSHclient 4.92 ( see release notes http://www.gammon.com.au/scripts/showrelnote.php?version=4.92 )
+- misc change: updated to MUSHclient 4.92 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
 
 r1795 snapshot
 - bug fix: github changed the domain for raw files
@@ -42,7 +46,7 @@ r1790 snapshot
 - misc change: google code is eliminating downloads, so move update checking and package download to a new temporary location at whube.com
 
 r1783 snapshot
-- misc change: updated to MUSHclient 4.91 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.91 )
+- misc change: updated to MUSHclient 4.91 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - new feature: add safety wrappers to temporarily force open/closed a database for running queries when the db is normally closed due to being disconnected from the game (dropbox updating problem)
 - bug fix: yet another prompt fixer error found when battleprompt was too long to change. maybe this one will finally work for all cases? (it'd be nice if we could just get prompts unbroken on the server side)
 - bug fix: fix default color injection in ColoursToStyles helper function
@@ -64,7 +68,7 @@ r1771 snapshot
 - bug fix: the health bars miniwindow could error on plugin start due to a weirdness in how MUSHclient sizes its window when starting up
 
 r1748 snapshot
-- misc change: updated to MUSHclient 4.89 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.89 )
+- misc change: updated to MUSHclient 4.89 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - misc change: LuaJIT updated to 2.0.1 (see luajit.org for details)
 - bug fix: GMCP handler requests all updated data on reconnect instead of just plugin load
 - misc change: don't keep GMCP mapper database open when the server disconnects
@@ -106,12 +110,12 @@ r1700 snapshot
 - misc change: the popup that shows when mousing over 'mapper portals' list entries now shows the complete command sequence in addition to the destination
 
 r1697 snapshot
-- misc change: updated to MUSHclient 4.84 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.84 )
+- misc change: updated to MUSHclient 4.84 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - misc change: if timers or triggers are disabled, invoking wait.lua methods should give friendlier error messages instead of assertion errors
 - misc change: mapper tooltip popups should stay up longer now
 
 r1693 snapshot
-- misc change: updated to MUSHclient 4.82 (see release notes http://www.mushclient.com/scripts/showrelnote.php?version=4.82 )
+- misc change: updated to MUSHclient 4.82 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - bug fix: some cruft accidentally got into the default recent file list
 - misc change: styles to ansi conversion avoids spamming the user when doing stupid things like trying to change channel colors via trigger instead of colorset (seriously? come on)
 - bug fix: resizing the embedded bigmap was horribly broken

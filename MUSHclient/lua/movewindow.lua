@@ -392,7 +392,7 @@ function movewindow.save_state (win)
     return
   end -- no such window
   
-  -- remember where the window was
+  -- remember where the window was 
   SetVariable ("mw_" .. win .. "_windowx",      mwi.window_left)
   SetVariable ("mw_" .. win .. "_windowy",      mwi.window_top)
   SetVariable ("mw_" .. win .. "_windowmode",   mwi.window_mode)
