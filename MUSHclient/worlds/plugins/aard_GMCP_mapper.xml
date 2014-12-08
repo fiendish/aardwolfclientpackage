@@ -3867,7 +3867,7 @@ function findNearestJumpRoom(src, dst, target_type)
     
       -- get all exits to any room in the previous set
       local q = string.format ("select fromuid, touid, dir, norecall, noportal from exits,rooms where rooms.uid = exits.touid and exits.fromuid in (%s) and exits.touid not in (%s) and exits.level <= %s order by length(exits.dir) asc",
-                  table.concat(rooms_list,","), visited, mylevel+(mytier*10))
+                  table.concat(rooms_list,","), visited, mylevel)
       local dcount = 0
       for row in dbnrowsWRAPPER(q) do
          dcount = dcount + 1
