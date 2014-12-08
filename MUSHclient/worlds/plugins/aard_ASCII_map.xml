@@ -795,6 +795,12 @@ function OnPluginInstall()
    end   
 end
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
+
 ]]>
 </script>
 </muclient>

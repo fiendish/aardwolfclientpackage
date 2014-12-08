@@ -90,6 +90,11 @@ function OnPluginBroadcast(msg, id, name, text)
    end
 end -- onpluginbroadcast
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script> 
 

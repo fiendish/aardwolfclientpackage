@@ -4224,6 +4224,11 @@ function nilToStr(n)
    return (((n ~= nil) and tostring(n)) or "")
 end
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>
