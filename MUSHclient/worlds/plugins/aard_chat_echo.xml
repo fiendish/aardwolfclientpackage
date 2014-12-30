@@ -250,7 +250,10 @@ function chats (name, line, wildcards, styles)
    if not tag then
       tag = string.match(styles[1].text, "{(tell)}")
    end
-   
+   if not tag then
+      return
+   end
+
    if not channels_table[tag] then
       addNewChannel(tag)
    end
