@@ -490,6 +490,9 @@ function OnPluginBroadcast (msg, id, name, text)
             Note("Requesting Map Update")
             SendNoEcho("map")
          end
+      elseif (text == "comm.repop") then
+         Note("Requesting Map Update")
+         SendNoEcho("map")
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
