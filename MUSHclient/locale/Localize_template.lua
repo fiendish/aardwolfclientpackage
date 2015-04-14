@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Tuesday, 02 December 2014 at 14:40:45
+-- Written: Tuesday, 07 April 2015 at 10:45:55
 
 -- Static messages
 
@@ -598,9 +598,9 @@ messages = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/prefspropertypages.cpp:5250
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:663
+-- /cygdrive/c/source/mushclient/evaluate.cpp:690
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:764
+-- /cygdrive/c/source/mushclient/evaluate.cpp:791
   ["Insufficient memory to do this operation"] =
     "",
 
@@ -1048,29 +1048,29 @@ messages = {
   ["The world TCP/IP address cannot be blank."] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:571
+-- /cygdrive/c/source/mushclient/evaluate.cpp:598
   ["Replace existing triggers?\nIf you reply \"No\", then triggers from the file will be added to existing triggers"] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:580
+-- /cygdrive/c/source/mushclient/evaluate.cpp:607
   ["Replace existing aliases?\nIf you reply \"No\", then aliases from the file will be added to existing aliases"] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:589
+-- /cygdrive/c/source/mushclient/evaluate.cpp:616
   ["Replace existing timers?\nIf you reply \"No\", then timers from the file will be added to existing timers"] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:644
+-- /cygdrive/c/source/mushclient/evaluate.cpp:671
 
 -- /cygdrive/c/source/mushclient/serialize.cpp:58
   ["File does not have a valid MUSHclient XML signature."] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:758
+-- /cygdrive/c/source/mushclient/evaluate.cpp:785
   ["Unable to create the requested file"] =
     "",
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:770
+-- /cygdrive/c/source/mushclient/evaluate.cpp:797
   ["There was a problem in the data format"] =
     "",
 
@@ -1830,7 +1830,7 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:1109
+-- /cygdrive/c/source/mushclient/ProcessPreviousLine.cpp:1144
   ["Trigger: %s"] =
     function (a)
      
@@ -2361,7 +2361,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/doc.cpp:881
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:656
+-- /cygdrive/c/source/mushclient/evaluate.cpp:683
   ["Unable to open or read %s"] =
     function (a)
      
@@ -3050,8 +3050,8 @@ formatted = {
     end,  -- function
 
 -- /cygdrive/c/source/mushclient/doc.cpp:2625
-  ["processing trigger \"%s\""] =
-    function (a)
+  ["processing trigger \"%s\" when matching line: \"%s\""] =
+    function (a, b)
      
       return ""
     end,  -- function
@@ -3202,14 +3202,14 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:669
+-- /cygdrive/c/source/mushclient/evaluate.cpp:696
   ["The file %s is not in the correct format"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:933
+-- /cygdrive/c/source/mushclient/evaluate.cpp:960
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:5863
   ["Alias: %s"] =
@@ -3218,7 +3218,7 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/evaluate.cpp:964
+-- /cygdrive/c/source/mushclient/evaluate.cpp:991
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:5793
   ["processing alias \"%s\""] =
@@ -3559,35 +3559,35 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:79
+-- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:84
   ["Invalid hex number in MXP entity: &%s;"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:91
+-- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:96
   ["Invalid hex number in MXP entity: &%s;- maximum of 2 hex digits"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:105
+-- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:110
   ["Invalid number in MXP entity: &%s;"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:117
+-- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:122
   ["Disallowed number in MXP entity: &%s;"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:134
+-- /cygdrive/c/source/mushclient/mxp/mxpEntities.cpp:139
   ["Unknown MXP entity: &%s;"] =
     function (a)
      
