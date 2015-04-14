@@ -156,6 +156,11 @@ posy             = ""
 hotspot_id       = ""
 page_built       = false
 
+always_echo_rooms = {
+-- "A Garden" via FT2 Gardener's Brain Control Room
+    ["26841"]=true, ["26846"]=true, ["26828"]=true, ["26829"]=true, ["26824"]=true, ["26842"]=true, ["26843"]=true, ["26825"]=true, ["26830"]=true, ["26831"]=true, ["26826"]=true, ["26844"]=true, ["26827"]=true
+}
+
 continents = { [0]="Mesolar", [1]="Southern Ocean", [2]="Gelidus", [3]="Abend", [4]="Alagh", [5]="Uncharted Ocean", [6]="Vidblain" }
 
 -- pull in telnet option handling
@@ -178,6 +183,8 @@ function request_new_map()
    SendNoEcho ("map")
 end
 
+roomnum = ""
+
 function map_redirect (name, line, wildcards, styles)
    EnableTrigger ("multi_line_map", true)  -- capture subsequent lines
    if name == "map_start" then   --- Setup the window.
@@ -187,7 +194,7 @@ function map_redirect (name, line, wildcards, styles)
       page_built = true
       DisplayMapPage () --end of map from MUD, display the window
 
-      if also_echo_map == 1 then
+      if (also_echo_map == 1) or always_echo_rooms[roomnum] then
          for i,line in ipairs(map_lines) do
             if i > 3 and i < #map_lines then
                for _,v in ipairs(line) do
@@ -476,15 +483,13 @@ function OnPluginBroadcast (msg, id, name, text)
       end
 
       if (text == "room.info") then
+         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
+         luastmt = "gmcpdata = " .. gmcparg
+         assert (loadstring (luastmt or "")) ()
+         coord_data = gmcpdata.coord
+         roomnum = gmcpdata.num
          if (show_coords == 1) then
-            res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info.coord")         
-            luastmt = "gmcpdata = " .. gmcparg
-            assert (loadstring (luastmt or "")) ()
-            coord_data = gmcpdata
             process_coords()
-            if page_built then
-               DisplayMapPage()
-            end
          end
          if page_built == false and (GetOption("enable_triggers") == 1) then
             Note("Requesting Map Update")
@@ -799,8 +804,8 @@ function OnPluginInstall()
 end
 
 function getmemoryusage()
-  collectgarbage('collect')
-  return collectgarbage('count')
+   collectgarbage('collect')
+   return collectgarbage('count')
 end
 
 
