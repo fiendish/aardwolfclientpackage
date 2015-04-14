@@ -1551,6 +1551,7 @@ function custom_exit (name, line, wildcards)
    end)
 end -- custom_exit
 
+last_area_requested = ""
 function save_room_to_database (uid,room) 
    
    assert (uid, "No UID supplied to save_room_to_database")
@@ -1558,7 +1559,8 @@ function save_room_to_database (uid,room)
    for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(room.area))) do
       area_exists = true
    end
-   if not area_exists then
+   if not area_exists and last_area_requested ~= room.area then
+      last_area_requested = room.area
       Send_GMCP_Packet("request area")
       return false
    end
@@ -3151,7 +3153,8 @@ function got_gmcp_room()
    for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
       area_exists = true
    end
-   if not area_exists then
+   if not area_exists and last_area_requested ~= gmcproom.area then
+      last_area_requested = gmcproom.area
       Send_GMCP_Packet("request area")
    end
    
