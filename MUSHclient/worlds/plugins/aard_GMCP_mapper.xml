@@ -1559,7 +1559,7 @@ function save_room_to_database (uid,room)
    for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(room.area))) do
       area_exists = true
    end
-   if not area_exists 
+   if not area_exists then
       if last_area_requested ~= room.area then
          last_area_requested = room.area
          Send_GMCP_Packet("request area")
