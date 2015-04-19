@@ -30,7 +30,7 @@ local function init_ansi()
       [GetBoldColour   (WHITE)]   = "@W",
    }  -- end conversion table
      
-   colour_letters = "xrgybmcwDRGYBMCW"
+   colour_letters = "xrgybmcwDRGYBMCWd"
    
    -- This table uses the colours as defined in the MUSHclient ANSI tab, however the
    -- defaults are shown on the right if you prefer to use those.
@@ -186,13 +186,28 @@ function StylesToColoursOneLine (styles, startcol, endcol)
 end -- StylesToColoursOneLine
 
 -- Converts text with colour codes in it into style runs
-function ColoursToStyles (Text)
+function ColoursToStyles (Text, default_foreground_code, default_background_code)
+   if default_foreground_code then
+      default_foreground = colour_conversion[default_foreground_code]
+      default_foreground_code = "@"..default_foreground_code
+   else
+      default_foreground_code = conversion_colours[GetNormalColour(DEFAULT_FOREGROUND)]
+      default_foreground = GetNormalColour(DEFAULT_FOREGROUND)
+   end
+   if default_background_code then
+      default_background = colour_conversion[default_background_code]
+      default_background_code = "@"..default_background_code
+   else
+      default_background_code = conversion_colours[GetNormalColour(DEFAULT_BACKGROUND)]
+      default_background = GetNormalColour(DEFAULT_BACKGROUND)
+   end
+   
    if Text:match ("@") then
       astyles = {}
 
       -- make sure we start with a color
       if Text:sub(1, 1) ~= "@" then
-         Text = conversion_colours[GetNormalColour(DEFAULT_FOREGROUND)] .. Text
+         Text = default_foreground_code .. Text
       end -- if
 
       Text = Text:gsub ("@%-", "~") -- fix tildes
@@ -210,12 +225,12 @@ function ColoursToStyles (Text)
             code,text = text:match("(%d%d?%d?)(.*)")
             colour = colour..code
          end
-           
+
          if #text > 0 then
             table.insert (astyles, { text = text, 
                length = #text, 
-               textcolour = colour_conversion [colour] or GetNormalColour (DEFAULT_FOREGROUND),
-               backcolour = GetNormalColour (DEFAULT_BACKGROUND) })
+               textcolour = colour_conversion[colour] or default_foreground,
+               backcolour = default_background })
          end -- if some text
       end -- for each colour run.
 
@@ -225,8 +240,8 @@ function ColoursToStyles (Text)
    -- No colour codes, create a single style.
    return { { text = Text, 
       length = #Text, 
-      textcolour = GetNormalColour (DEFAULT_FOREGROUND),
-      backcolour = GetNormalColour (DEFAULT_BACKGROUND) } }
+      textcolour = default_foreground,
+      backcolour = default_background } }
 end  -- function ColoursToStyles
 
 -- Strip all color codes from a string
