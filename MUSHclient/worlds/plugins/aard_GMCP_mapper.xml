@@ -3167,7 +3167,9 @@ function got_gmcp_room()
    end -- not in cache
    
    if shownotes and room and room.notes and room.notes ~= "" then
-      print("*** MAPPER NOTE *** ->",room.notes)
+      for _,v in ipairs(ColoursToStyles("*** MAPPER NOTE *** -> "..room.notes.."@w\n\n", "x033")) do
+         ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
+      end
    end
 
    -- re-save if we got information that is different than before  
