@@ -781,6 +781,11 @@ function OnPluginDisable ()
    end -- currently enabled
 end -- OnPluginDisable
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>

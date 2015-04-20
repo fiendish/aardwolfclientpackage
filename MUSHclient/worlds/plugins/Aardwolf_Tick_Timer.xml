@@ -66,6 +66,11 @@ function OnPluginSaveState ()
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
 end -- OnPluginSaveState
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>

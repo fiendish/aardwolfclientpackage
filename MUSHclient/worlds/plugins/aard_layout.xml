@@ -369,6 +369,11 @@ function draw_main_window()
    add_main_resizer()
 end
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>
