@@ -1,5 +1,16 @@
 Aardwolf Client Package Major Changes List
 
+r1810 snapshot:
+- new feature: GMCP mapper notes display will now accept color codes.
+- new feature: aardwolf_colors.lua:ColoursToStyles will now treat @d as a reset to default foreground color.
+- new feature: aardwolf_colors.lua:ColoursToStyles now accepts optional parameters to override the default foreground and background colors.
+- new feature: there's a new "gmcp(data)" function in gmcphelper.lua for fetching GMCP data in a simple "do-what-I-mean" way. Thanks Cizra!
+- new feature: requests new overhead map on area repops. Thanks Abelinc!
+- bug fix: GMCP mapper no longer spams the server with area info requests when speedwalking through an unmapped area.
+- new feature: ASCII rooms can be whitelisted to always echo in main. makes use of the gmcp room.info send-order change.
+- bug fix: using the new whitelist feature, the garden rooms inside the gardener's brain in FT2 will now display their ASCII map.
+- misc change: updated to MUSHclient 4.97 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
+
 r1805 snapshot:
 - bug fix: wrong level check in mapper was causing errors when bounce rooms led to paths through certain locked exits
 - misc change: updated to MUSHclient 4.96 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )

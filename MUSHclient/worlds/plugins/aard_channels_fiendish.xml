@@ -1303,6 +1303,11 @@ function right_click_menu (hotspot_id)
    end
 end -- right_click_menu
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>
