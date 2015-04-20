@@ -105,6 +105,11 @@ end -- function CopyScript
 
 AcceleratorTo ("Ctrl+D", "CallPlugin ('04d9e64f835452b045b427a7', 'CopyScript', '')", sendto.script)
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>

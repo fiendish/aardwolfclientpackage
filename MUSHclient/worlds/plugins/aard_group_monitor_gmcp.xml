@@ -887,6 +887,11 @@ function OnPluginInstall()
    SetUpHotspotsAndDraw(true)
 end
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 
 </script>

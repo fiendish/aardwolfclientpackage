@@ -418,6 +418,11 @@ function ShowGreeting(firstTime, highlight_url)
 
 end -- ShowGreeting
 
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
+end
+
 ]]>
 </script>
 </muclient>
