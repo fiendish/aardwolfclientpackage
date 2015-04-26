@@ -4128,6 +4128,9 @@ all portal aspects in one command without being in the target room.]],
 [[mapper bounceportal clear      --> Clear the current bounce portal]],
 [[mapper bouncerecall clear      --> Clear the current bounce recall]],
 [[+----------------------------------------------------------------------------+]],
+[[mapper noportal <id> [true/false] --> Manually set noportal flag]],
+[[mapper norecall <id> [true/false] --> Manually set norecall flag]],
+[[+----------------------------------------------------------------------------+]],
 [[]],
 [[mapper portallevel <ind> <lvl> --> Change the level lock on a stored portal
                                  > Find the indices with 'mapper portals'
