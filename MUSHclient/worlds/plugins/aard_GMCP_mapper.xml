@@ -111,6 +111,26 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 </alias>
 
 <alias
+   match="^mapper noportal (.*) (true|false)"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   send_to="12"
+><send>
+   manual_noportal("%1", %2 and 1 or 0)
+</send></alias>
+
+<alias
+   match="^mapper norecall (.*) (true|false)"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   send_to="12"
+><send>
+   manual_norecall("%1", %2 and 1 or 0)
+</send></alias>
+
+<alias
    match="resetaard"
    enabled="y"
    sequence="100"
@@ -3057,6 +3077,28 @@ function override_continents(override)
       bigmap_override = false
    end
    mapper.halt_drawing(bigmap_override and current_room_is_cont)
+end
+
+function manual_norecall(room_id, norecall)
+   local room = load_room_from_database(room_id)
+   if room ~= nil then 
+      room.norecall = norecall
+      save_room_to_database(room_id, room)
+      Note("No-recall flag "..(norecall == 1 and "set on" or "removed from").." room "..room_id..".")
+   else
+      Note("NORECALL ERROR: Room "..room_id.." is not in the database.")
+   end
+end
+
+function manual_noportal(room_id, noportal)
+   local room = load_room_from_database(room_id)
+   if room ~= nil then 
+      room.noportal = noportal
+      save_room_to_database(room_id, room)
+      Note("No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".") 
+   else
+      Note("NOPORTAL ERROR: Room "..room_id.." is not in the database.")
+   end
 end
 
 flagType = nil
