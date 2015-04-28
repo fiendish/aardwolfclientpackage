@@ -1218,7 +1218,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
    if walk and t[1] then
       local uid = t[1]
       local path = paths[uid].path
-      mapprint ("Walking to:", rooms[uid].name)
+      mapprint ("Going to:", rooms[uid].name)
       start_speedwalk(path)
       return
    end -- if walking wanted

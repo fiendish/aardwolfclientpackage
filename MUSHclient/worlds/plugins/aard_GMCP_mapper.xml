@@ -3754,6 +3754,11 @@ local bit = require("bit")
 
 -- original findpath function idea contributed by Spartacus
 function findpath(src, dst, noportals, norecalls)
+   for dir,touid in pairs(rooms[src].exits) do
+      if touid == dst and tonumber(rooms[src].exit_locks[dir]) <= mylevel then
+         return {{dir=dir, uid=touid}}, 1 -- if one room away, walk
+      end
+   end
    local depth = 0
    local max_depth = mapper.config.SCAN.depth
    local room_sets = {}
