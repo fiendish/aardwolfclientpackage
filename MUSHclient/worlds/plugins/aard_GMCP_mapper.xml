@@ -3756,6 +3756,9 @@ local bit = require("bit")
 
 -- original findpath function idea contributed by Spartacus
 function findpath(src, dst, noportals, norecalls)
+   if not rooms[src] then
+      rooms[src] = load_room_from_database(src)
+   end
    for dir,touid in pairs(rooms[src].exits) do
       if touid == dst and tonumber(rooms[src].exit_locks[dir]) <= mylevel then
          return {{dir=dir, uid=touid}}, 1 -- if one room away, walk
@@ -3842,10 +3845,6 @@ function findpath(src, dst, noportals, norecalls)
    local path = {}
    -- set ftd to the first from,to,dir set where from was either our start room or * or **
    ftd = room_sets[found_depth][f]
-   
-   if not rooms[src] then
-      rooms[src] = load_room_from_database(src)
-   end
    
    if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
       if rooms[src].norecall ~= 1 and bounce_recall ~= nil then
