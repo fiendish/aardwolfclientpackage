@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1815 snapshot:
+- info: A change crept into the the previous release that apparently wasn't fully baked yet. The chat echo plugin now runs with a plugin sequence of -5000, which will make it run before everything else, so if you're triggering on channel tags anywhere you'll need to either switch to using GMCP or set your plugin priority lower. See http://mushclient.com/forum/bbshowpost.php?bbsubject_id=12790
+- bug fix: Also make comm log plugin have sequence -5000 so that it catches unechoed lines.
+- bug fix: GMCP mapper should now be better about flagging wrong rooms as noportal/norecall when moving while blind.
+- new feature: GMCP mapper has new aliases for manual noportal/norecall flagging.
+- misc change: GMCP mapper will run instead of portal to an immediately adjacent room.
+
 r1810 snapshot:
 - new feature: GMCP mapper notes display will now accept color codes.
 - new feature: aardwolf_colors.lua:ColoursToStyles will now treat @d as a reset to default foreground color.
