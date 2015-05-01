@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1816 snapshot:
+- bug fix: #alias and #trigger world aliases were broken. Apparently world aliases and triggers can't be made with equal signs in the name. Sigh. Oops. Nobody reported this? Maybe nobody uses them.
+
 r1815 snapshot:
 - info: A change crept into the the previous release that apparently wasn't fully baked yet. The chat echo plugin now runs with a plugin sequence of -5000, which will make it run before everything else, so if you're triggering on channel tags anywhere you'll need to either switch to using GMCP or set your plugin priority lower. See http://mushclient.com/forum/bbshowpost.php?bbsubject_id=12790
 - bug fix: Also make comm log plugin have sequence -5000 so that it catches unechoed lines.
