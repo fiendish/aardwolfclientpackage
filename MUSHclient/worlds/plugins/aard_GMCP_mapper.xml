@@ -1345,12 +1345,12 @@ function map_portal (name, line, wildcards)
    end
    local destination = wildcards[2] or current_room
    local level = (level_check(wildcards[3]) and wildcards[3]) or tonumber(utils.inputbox (string.format("Please enter the level of your portal to %s, or leave at 0 for the default",destination), "Portal Level", "0", "Courier", 9, {validate=level_check}))
-	
-	if not level then
-		Note("Portal creation cancelled.")
-		return
-	end
-	  
+   
+   if not level then
+      Note("Portal creation cancelled.")
+      return
+   end
+     
    create_portal(wildcards[1], destination, level)
 
 end -- map_portal
@@ -2184,89 +2184,27 @@ function room_edit_terrain_colour (room, uid)
 
 end -- room_edit_terrain_colour
 
-function room_add_exit (room, uid)
 
-   local available =  {
-   n = "North",
-   s = "South",
-   e = "East",
-   w = "West",
-   u = "Up",
-   d = "Down",
-   }  -- end of available
+function room_delete_exit (room, uid, exit)
+   local chosen_exit = exit
 
-   -- remove existing exits
-   for k in pairs (room.exits) do
-      available [k] = nil
-   end -- for
-  
-   if next (available) == nil then
-      utils.msgbox ("All exits already used.", "No free exits!", "ok", "!", 1)
-      return
-   end -- not known
-  
-   local chosen_exit = utils.listbox ("Choose exit to add", "Exits ...", available )
-   if not chosen_exit then
-      return
-   end
-  
-   exit_destination = utils.inputbox ("Enter destination room identifier (number) for " .. available [chosen_exit], room.name, "")
+   if chosen_exit == nil then
+      local available =  {}  -- end of available
 
-   if not exit_destination then
-      return
-   end -- cancelled
-  
-   -- look it up
-   local dest_room = rooms [exit_destination]
-  
-   -- not cached - see if in database
-   if not dest_room then
-      dest_room = load_room_from_database (exit_destination)
-      rooms [exit_destination] = dest_room -- cache for later
-   end -- not in cache
-  
-   if not dest_room then
-      utils.msgbox ("Room " .. exit_destination .. " does not exist.", "Room does not exist!", "ok", "!", 1)
-      return
-   end -- if still not there
-
-   dbCheckExecute(string.format ([[
-      INSERT OR REPLACE INTO exits (dir, fromuid, touid, date_added) 
-      VALUES (%s, %s, %s, DATETIME('NOW'));
-      ]], 
-      fixsql(chosen_exit),  -- direction (eg. "n")
-      fixsql(uid),  -- from current room
-      fixsql(exit_destination) -- destination room 
-      ))
-   if show_database_mods then
-      mapper.mapprint ("Added exit", available [chosen_exit], "from room", uid, "to room", exit_destination, "to database.")
-   end -- if
-  
-   -- update in-memory table
-   rooms [uid].exits [chosen_exit] = exit_destination
-  
-   mapper.draw (current_room)
-   
-end -- room_add_exit
-
-
-function room_delete_exit (room, uid)
-
-   local available =  {}  -- end of available
-
-   -- construct available exits list for display
-   for k,v in pairs (room.exits) do
-      available [k] = k .. " --> " .. room.exits [k] 
-   end -- for
-   
-   if next (available) == nil then
-      utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
-      return
-   end -- not known
-  
-   local chosen_exit = utils.listbox ("Choose exit to delete", "Exits ...", available )
-   if not chosen_exit then
-      return
+      -- construct available exits list for display
+      for k,v in pairs (room.exits) do
+         available [k] = k .. " --> " .. room.exits [k] 
+      end -- for
+      
+      if next (available) == nil then
+         utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
+         return
+      end -- not known
+     
+      local chosen_exit = utils.listbox ("Choose exit to delete", "Exits ...", available )
+      if not chosen_exit then
+         return
+      end
    end
 
    dbCheckExecute(string.format ([[
@@ -2285,23 +2223,26 @@ function room_delete_exit (room, uid)
 end -- room_delete_exit
 
 
-function room_change_exit (room, uid)
+function room_change_exit (room, uid, exit)
+   local chosen_exit = exit
 
-   local available =  {}  -- end of available
+   if chosen_exit == nil then
+      local available =  {}  -- end of available
 
-   -- construct available exits list for display
-   for k,v in pairs (room.exits) do
-      available [k] = k .. " --> " .. room.exits [k] 
-   end -- for
-  
-   if next (available) == nil then
-      utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
-      return
-   end -- not known
-  
-   local chosen_exit = utils.listbox ("Choose exit to change destination of:", "Exits ...", available )
-   if not chosen_exit then
-      return
+      -- construct available exits list for display
+      for k,v in pairs (room.exits) do
+         available [k] = k .. " --> " .. room.exits [k] 
+      end -- for
+     
+      if next (available) == nil then
+         utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
+         return
+      end -- not known
+     
+      local chosen_exit = utils.listbox ("Choose exit to change destination of:", "Exits ...", available )
+      if not chosen_exit then
+         return
+      end
    end
 
    exit_destination = utils.inputbox ("Enter destination room identifier (number) for " .. chosen_exit, room.name, room.exits[chosen_exit])
@@ -2344,7 +2285,7 @@ function room_change_exit (room, uid)
       
 end -- room_change_exit
 
-function room_lock_exit (room, uid)
+function room_lock_exit (room, uid, exit)
    if uid == nil and current_room ~= nil then
       uid = current_room
       room = rooms[uid]
@@ -2355,23 +2296,25 @@ function room_lock_exit (room, uid)
       return
    end
    
-   local available = {}
-
    -- construct available exits list for display
+   local available = {}
    for k,v in pairs (room.exits) do
       available [k] = k .. " --> " .. room.exits [k] 
    end -- for
-  
-   if next (available) == nil then
-      utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
-      return
-   end -- not known
-  
-   local chosen_exit = utils.listbox ("Choose exit to lock:", "Exits ...", available )
-   if not chosen_exit then
-      return
-   end -- cancelled
 
+   local chosen_exit = exit
+   if chosen_exit == nil then
+      if next (available) == nil then
+         utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
+         return
+      end -- not known
+     
+      chosen_exit = utils.listbox ("Choose exit to lock:", "Exits ...", available )
+      if not chosen_exit then
+         return
+      end -- cancelled
+   end
+   
    exit_level = tostring(tonumber(utils.inputbox ("Enter level lock for " .. chosen_exit, room.name, room.exit_locks[chosen_exit],nil,nil,{validate=positive_integer_check}))) -- use tonumber to strip off any ".0"
 
    if exit_level == "nil" then
@@ -2422,51 +2365,63 @@ function room_click (uid, flags)
       return
    end -- if still not there
    
-   local handlers = {
-      { name = "Edit Note", func = room_edit_note} ,
-      { name = "Edit Terrain Colour", func = room_edit_terrain_colour} ,
-      { name = "-", } ,
-      { name = "Add Exit", func = room_add_exit} ,
-      { name = "Change Exit", func = room_change_exit} ,
-      { name = "Change Exit Level Lock", func = room_lock_exit} ,
-      { name = "-", },
-      { name = "Delete Exit", func = room_delete_exit},
-      { name = "Delete Room", func = room_purgeroom}
---      { name = "-", } ,
-      } -- handlers
-      
-   local t, tf = {}, {}
-   for _, v in pairs (handlers) do
-      table.insert (t, v.name)
-      tf [v.name] = v.func
-   end -- for
+   local handlers = {}
+   table.insert(handlers, { name = "Edit Note", func = room_edit_note})
+   table.insert(handlers, { name = "Edit Terrain Colour", func = room_edit_terrain_colour})
+   table.insert(handlers, { name = "-", })
+   
+   table.insert(handlers, { name = ">Change Exit", })
+   for ex, to in pairs(room.exits) do
+      table.insert(handlers, { name = ex.." -> "..to, func = room_change_exit, param = ex})
+   end
+   table.insert(handlers, { name = "<", })
+
+   table.insert(handlers, {name = ">Change Exit Level Lock", })
+   for ex, lock in pairs(room.exit_locks) do
+      table.insert(handlers, { name = ex.."  [ "..lock.." ]", func = room_lock_exit, param = ex})
+   end
+   table.insert(handlers, { name = "<", })
+
+   table.insert(handlers, { name = "-", })
+
+   table.insert(handlers, { name = ">Delete Exit", })   
+   for ex, to in pairs(room.exits) do
+      table.insert(handlers, { name = ex.." -> "..to, func = room_delete_exit, param = ex})
+   end
+   table.insert(handlers, { name = "<", })
+   
+   table.insert(handlers, { name = "Delete Room", func = room_purgeroom})
       
    rc, a, b, c = CallPlugin("60840c9013c7cc57777ae0ac", "getCurrentState")
    if rc == 0 and a == true then
       if b == 1 then
-         table.insert(t,"-")
-         table.insert(t,"Show Continent Bigmap")
+         table.insert(handlers, {name = "-"})
+         table.insert(handlers, {name = "Show Continent Bigmap", func = function() Execute("bigmap on") end })
       elseif c == 1 then
-         table.insert(t,"-")
-         table.insert(t,"Merge Continent Bigmap Into GMCP Mapper")
+         table.insert(handlers, {name = "-"})
+         table.insert(handlers, {name = "Merge Continent Bigmap Into GMCP Mapper", func = function() Execute("bigmap merge") end })
       end
    end
+      
+   local t, tf = {}, {}
+   for i, v in ipairs(handlers) do
+      table.insert (t, v.name)
+      if v.func then
+         table.insert(tf, v)
+      end
+   end -- for
       
    local choice = WindowMenu (mapper.win, 
                         WindowInfo (mapper.win, 14), 
                         WindowInfo (mapper.win, 15), 
-                        table.concat (t, "|"))
+                        "!"..table.concat (t, "|"))
    
-   local f = tf [choice]
-  
-   if f then
-      f (room, uid)
-   elseif choice == "Show Continent Bigmap" then
-      Execute("bigmap on")
-   elseif choice == "Merge Continent Bigmap Into GMCP Mapper" then
-      Execute("bigmap merge")
-   end -- if handler found
-                           
+   if choice ~= "" then
+      local f = tf[tonumber(choice)]
+      if f then
+         f.func(room, uid, f.param)
+      end -- if handler found
+   end                        
 end -- room_click
 
 auto_backup_count = tonumber(GetVariable("auto_backup_count")) or 0
