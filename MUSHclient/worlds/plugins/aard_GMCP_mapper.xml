@@ -2654,7 +2654,7 @@ end
 
 function CorruptionAlert()
    Note("")
-   Note("WARNING, PLEASE READ: http://code.google.com/p/aardwolfclientpackage/wiki/GMCPmapper#Database_Corruption")
+   Note("WARNING, PLEASE READ: https://github.com/fiendish/aardwolfclientpackage/wiki/GMCP-driven-world-mapper#database-corruption")
    Note("If the information there does not help you 100%, then try asking on the Tech channel and report this error to Fiendish by email.")
    Note("")
 end
