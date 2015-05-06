@@ -2394,8 +2394,8 @@ function room_click (uid, flags)
    table.insert(handlers, { name = "<", })
 
    table.insert(handlers, { name = "-", })
-
-   table.insert(handlers, { name = ">Delete Exit", })   
+   table.insert(handlers, { name = (room.ignore_exits_mismatch and "+" or "").."Ignore Exits Mismatch Here", func = ignore_mismatch_toggle, param = room.ignore_exits_mismatch})
+   table.insert(handlers, { name = ">Delete Exit", })
    for ex, to in pairs(room.exits) do
       table.insert(handlers, { name = ex.." -> "..to, func = room_delete_exit, param = ex})
    end
@@ -3179,6 +3179,9 @@ function manual_noportal(room_id, noportal)
       Note("NOPORTAL ERROR: Room "..room_id.." is not in the database.")
    end
 end
+function ignore_mismatch_toggle(room, room_id, ignore_exits_mismatch)
+   ignore_mismatch(room_id, not ignore_exits_mismatch)
+end
 
 function ignore_mismatch(room_id, ignore_exits_mismatch)
    room_id = Trim(room_id)
@@ -3314,7 +3317,11 @@ function got_gmcp_room()
    end
 
    -- re-save if we got information that is different than before
-   local same_exits = ((room and (room.ignore_exits_mismatch or compareTables(gmcpdata.exits, room.exits))) or false)
+   local same_exits = ((room and compareTables(gmcpdata.exits, room.exits)) or false)
+   if room and room.ignore_exits_mismatch and not same_exits then
+      same_exits = true
+      Note("(This room has exits that don't match the MUD, but you've chosen to ignore it.)")
+   end
    local same_area = ((room and (nilToStr(room.area) == nilToStr(gmcproom.area))) or false)
    if not room or nilToStr(room.name) ~= nilToStr(gmcproom.name) or
                   nilToStr(room.terrain) ~= nilToStr(gmcproom.terrain) or
