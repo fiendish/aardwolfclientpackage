@@ -1090,8 +1090,15 @@ function custom_exit_list (name, line, wildcards)
             return
          end
  
-         query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) is %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by area, uid", fixsql(area))
+         query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) is %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by uid", fixsql(area))
          intro = "The following rooms in the current area have custom exits:"
+      elseif area == "thisroom" then
+         if not current_room then
+            Note("CEXITS THISROOM ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
+            return
+         end
+         query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where fromuid=%s and dir not in ('n','s','e','w','d','u')", fixsql(current_room))
+         intro = "The following custom exits are in this room:"
       else
          intro = string.format("The following rooms in areas partially matching '%s' have custom exits:",area)
       end
