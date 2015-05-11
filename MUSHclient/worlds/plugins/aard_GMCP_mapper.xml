@@ -2830,7 +2830,7 @@ function OnPluginInstall ()
       db_user_version = row.user_version
    end
 
-   if db_user_version < 10 then
+   if db_user_version < 11 then
       performing_maintenance = true
       DoAfterSpecial(3, "update_db_schema("..db_user_version..")",sendto.script)
    else
@@ -2941,6 +2941,14 @@ function update_db_schema(db_user_version)
       BroadcastPlugin (999, "repaint")
       remove_date_added_columns()
       dbCheckExecute("ALTER TABLE rooms ADD COLUMN ignore_exits_mismatch INTEGER NOT NULL DEFAULT 0;")
+      dbCheckExecute("PRAGMA user_version = 10;")
+   end
+
+   if db_user_version < 11 then
+      print("Updating mapper database schema to v11...")
+      BroadcastPlugin (999, "repaint")
+      dbCheckExecute("CREATE INDEX IF NOT EXISTS exits_touid_index ON exits (touid);")
+      dbCheckExecute("CREATE INDEX IF NOT EXISTS rooms_area_index ON rooms (area);")
    end
 
    dbCheckExecute("VACUUM;")
@@ -2950,7 +2958,7 @@ function update_db_schema(db_user_version)
    checkDatabaseIntegrity(true)
    print("")
    BroadcastPlugin (999, "repaint")
-   dbCheckExecute("PRAGMA user_version = 10;")
+   dbCheckExecute("PRAGMA user_version = 11;")
 
    utils.msgbox ("Your map database schema update has completed.", "", "ok", "i")
 
@@ -3459,8 +3467,8 @@ function update_gmcp_sectors()
    dbCheckExecute ("DELETE FROM environments;")
    for i,v in pairs(gmcp_sectors_list.sectors) do
       dbCheckExecute( string.format([[
-      INSERT OR REPLACE INTO environments VALUES (%s,%s,%s,%s);
-      ]], i, v.id, fixsql(v.name), v.color))
+      INSERT OR REPLACE INTO environments VALUES (%s,%s,%s);
+      ]], v.id, fixsql(v.name), v.color))
    end
    dbCheckExecute("COMMIT;")
    
