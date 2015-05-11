@@ -1,5 +1,14 @@
 Aardwolf Client Package Major Changes List
 
+r1820 snapshot:
+- new feature: You can now command 'mapper cexits thisroom' to see cexits in the current room.
+- bug fix: ASCII map plugin will no longer request a map update automatically if the player is in note mode or sleeping.
+- misc change: map DB should be slightly smaller
+- new feature: rooms in the GMCP mapper can now be flagged to ignore when your stored exits don't match those sent by the MUD so your changed exits don't get forcibly overriden.
+- bug fix: the mapper database corruption alert message points to the new wiki location for information.
+- misc change: some GMCP mapper right-click options now use submenus to directly access options instead of a popup dialog.
+- misc change: updated to MUSHclient 4.98 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
+
 r1816 snapshot:
 - bug fix: #alias and #trigger world aliases were broken. Apparently world aliases and triggers can't be made with equal signs in the name. Sigh. Oops. Nobody reported this? Maybe nobody uses them.
 
