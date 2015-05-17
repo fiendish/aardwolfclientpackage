@@ -179,11 +179,9 @@ function reset_aard()
    OnPluginInstall()
 end
 
-function request_new_map(notice)
-   if can_request_map then
-      if notice then
-         Note("Requesting Map Update")
-      end
+kinda_busy = 0
+function request_new_map()
+   if can_request_map and kinda_busy == 0 then
       SendNoEcho ("map")
    end
 end
@@ -498,19 +496,24 @@ function OnPluginBroadcast (msg, id, name, text)
             process_coords()
          end
          if page_built == false and (GetOption("enable_triggers") == 1) then
-            request_new_map(true)
+            request_new_map()
          end
       elseif (text == "comm.repop") then
-         request_new_map(true)
+         request_new_map()
       elseif (text == "char.status") then
          local char_state = gmcp("char.status.state")
          can_request_map = (char_state == 3 or char_state == 11)
-         if can_request_map and not page_built then
+         if not page_built then
             request_new_map()
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
+   elseif (msg == 999 and text == "kinda_busy") then
+      kinda_busy = kinda_busy + 1
+   elseif (msg == 999 and text == "ok_you_can_go_now") then
+      kinda_busy = kinda_busy - 1
+      if kinda_busy < 0 then kinda_busy = 0 end
    end
 end
 
