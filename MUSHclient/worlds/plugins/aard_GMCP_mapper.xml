@@ -1340,7 +1340,7 @@ function map_portal_recall (name, line, wildcards)
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) 
-            VALUES (%s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s);
             ]], 
             fixsql(row.dir),  -- direction (eg. "n")
             fixsql(((row.fromuid == "*") and "**") or "*"),  -- toggle between '*' and '**'
@@ -1458,7 +1458,7 @@ function map_portal_level (name, line, wildcards)
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) 
-            VALUES (%s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s);
             ]], 
             fixsql(row.dir),  -- direction (eg. "n")
             fixsql(row.fromuid),  -- from '*' or '**'
