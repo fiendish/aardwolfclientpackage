@@ -146,7 +146,7 @@ show_coords = 0
 --title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
-TITLE_HEIGHT    = 11
+TITLE_HEIGHT    = 0
 
 -- Variables not saved.
 startx           = ""  
@@ -179,11 +179,9 @@ function reset_aard()
    OnPluginInstall()
 end
 
-function request_new_map(notice)
-   if can_request_map then
-      if notice then
-         Note("Requesting Map Update")
-      end
+kinda_busy = 0
+function request_new_map()
+   if can_request_map and kinda_busy == 0 then
       SendNoEcho ("map")
    end
 end
@@ -279,7 +277,7 @@ function SetUpHotspotsAndDraw(firstTime)
       -- Add the drag handler so they can move the window around
       movewindow.add_drag_handler (win, 0, 0, 0, 0)
       -- Add legend-popup handler
-      WindowAddHotspot(win, "legend", 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
+      WindowAddHotspot(win, "legend", 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
 
       -- Add handler for resizing
       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
@@ -305,15 +303,17 @@ function DisplayMapPage()
    styles = { }
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
 
-   -- show the widget for the legend popup
-   WindowRectOp(win, 2, 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5,0x303030,0x0000ff) -- fill
-   WindowRectOp(win, 1, 1, font_height*2+TITLE_HEIGHT+1, 3*font_width+1,font_height*2+TITLE_HEIGHT+font_height+5,0x777777,0x0000ff) -- border
-   WindowText (win, font_id, "?", font_width+1, font_height*2+TITLE_HEIGHT+1, 0, 0, 0xffffff)
+   if show_title == 1 then
+      -- title rectangle
+      WindowGradient (win, 2, 2, -2, TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
+      WindowLine(win,0,TITLE_HEIGHT,width,TITLE_HEIGHT,0xeeeeee,0,1)
+   end
    
-   -- title rectangle
-   WindowGradient (win, 2, 2, -2, font_height*2+TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
-   WindowLine(win,0,font_height*2 + TITLE_HEIGHT,width,font_height*2+TITLE_HEIGHT,0xeeeeee,0,1)
-
+   -- show the widget for the legend popup
+   WindowRectOp(win, 2, 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5,0x303030,0x0000ff) -- fill
+   WindowRectOp(win, 1, 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5,0x777777,0x0000ff) -- border
+   WindowText (win, font_id, "?", font_width+1, TITLE_HEIGHT+1, 0, 0, 0xffffff)
+   
    if not page_built then
       txt = "Map will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
@@ -322,7 +322,7 @@ function DisplayMapPage()
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee)
    else
-      -- display each line        
+      -- display each line
       for i, line in ipairs (map_lines) do
          if (show_exits == 1) or (i < #map_lines) then
             Display_Line (i, line)
@@ -399,10 +399,15 @@ function Display_Line (line, styles)
    local id = font_id
    local left = 3
    -- first 2 lines in bold
-   if line < 3 then
-      left = 4
-      id = font_id_bold
+   if show_title == 1 then
+      if line < 3 then
+         left = 4
+         id = font_id_bold
+      end
+   else
+      line = line - 3
    end
+
    local padding = 5
 
    local top = ((line - 1) * (font_height)) + padding
@@ -429,9 +434,10 @@ function right_click_menu ()
    menustring = menustring .. ((maptype == 5 and "+") or "") .. "5 - Solid single line map (extended walls)|"
    menustring = menustring .. ((maptype == 6 and "+") or "") .. "6 - Solid double line map (extended walls)|"
    menustring = menustring .. "<|-|"
+   menustring = (menustring .. (((show_title == 1) and "+") or "") .. "Show Room Name|")
    menustring = (menustring .. (((show_exits == 1) and "+") or "") .. "Show Exits|")
    menustring = (menustring .. (((show_coords == 1) and "+") or "") .. "Show Coordinates|")
-   menustring = (menustring .. (((also_echo_map == 1) and "+") or "") .. "Echo Map In Main Output")
+   menustring = (menustring .. (((also_echo_map == 1) and "+") or "") .. "Also Show Map In Main Output")
    menustring = (menustring .. "|-|Bring To Front|Send To Back|-|Reset Defaults")
 
    result = WindowMenu (win,
@@ -439,7 +445,9 @@ function right_click_menu ()
       WindowInfo (win, 15),   -- y position
       menustring) -- content
 
-   if result == "Show Exits" then
+   if result == "Show Room Name" then
+      show_title = (((show_title == 0) and 1) or 0)
+   elseif result == "Show Exits" then
       show_exits = (((show_exits == 0) and 1) or 0)
    elseif result == "Show Coordinates" then
       show_coords = (((show_coords == 0) and 1) or 0)
@@ -453,7 +461,7 @@ function right_click_menu ()
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == "Send To Back" then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-   elseif result == "Echo Map In Main Output" then
+   elseif result == "Also Show Map In Main Output" then
       also_echo_map = (((also_echo_map == 0) and 1) or 0)
    elseif result == "Reset Defaults" then
       font_name = default_font_name
@@ -463,6 +471,7 @@ function right_click_menu ()
       show_coords = 0
       show_exits = 0
       also_echo_map = 0
+      show_title = 1
    elseif result ~= "" then
       maptype = tonumber(result:sub(1,1))
    end -- if
@@ -498,19 +507,24 @@ function OnPluginBroadcast (msg, id, name, text)
             process_coords()
          end
          if page_built == false and (GetOption("enable_triggers") == 1) then
-            request_new_map(true)
+            request_new_map()
          end
       elseif (text == "comm.repop") then
-         request_new_map(true)
+         request_new_map()
       elseif (text == "char.status") then
          local char_state = gmcp("char.status.state")
          can_request_map = (char_state == 3 or char_state == 11)
-         if can_request_map and not page_built then
+         if not page_built then
             request_new_map()
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
+   elseif (msg == 999 and text == "kinda_busy") then
+      kinda_busy = kinda_busy + 1
+   elseif (msg == 999 and text == "ok_you_can_go_now") then
+      kinda_busy = kinda_busy - 1
+      if kinda_busy < 0 then kinda_busy = 0 end
    end
 end
 
@@ -684,6 +698,7 @@ function OnPluginSaveState ()
    SetVariable ("height", height)
    SetVariable ("showcoords", show_coords)
    SetVariable ("showexits", show_exits)
+   SetVariable ("showtitle", show_title)
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
    SetVariable ("also_echo_map", also_echo_map)
@@ -753,6 +768,7 @@ function OnPluginInstall()
    width = tonumber (GetVariable ("width")) or default_width
    show_coords = tonumber (GetVariable ("showcoords")) or show_coords
    show_exits = tonumber (GetVariable ("showexits")) or 0
+   show_title = tonumber (GetVariable ("showtitle")) or 1
    also_echo_map = tonumber (GetVariable("also_echo_map")) or 0
 
    -- make window so I can grab the font info
@@ -773,6 +789,12 @@ function OnPluginInstall()
    --- Grab font size settings.
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) -- height
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
+
+   if show_title == 1 then
+      TITLE_HEIGHT = font_height*2 + 11
+   else
+      TITLE_HEIGHT = 0
+   end
 
    --- install the window movement handler, get back the window position.
    windowinfo  = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})

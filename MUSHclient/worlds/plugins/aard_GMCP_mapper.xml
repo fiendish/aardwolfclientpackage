@@ -566,6 +566,35 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 
 <trigger
    enabled="y"
+   match="{begin running}"
+   send_to="12"
+   omit_from_output="y"
+>
+<send>
+if not sent_busy then
+   sent_busy = true
+   BroadcastPlugin(999, "kinda_busy")
+end
+</send>
+</trigger>
+
+<trigger
+   enabled="y"
+   match="{end running}"
+   send_to="12"
+   omit_from_output="y"
+>
+<send>
+if sent_busy then
+   sent_busy = false
+   BroadcastPlugin(999, "ok_you_can_go_now")
+end
+</send>
+</trigger>
+
+
+<trigger
+   enabled="y"
    match="The door is locked."
    script="mapper.cancel_speedwalk"
    sequence="100"
@@ -1311,7 +1340,7 @@ function map_portal_recall (name, line, wildcards)
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) 
-            VALUES (%s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s);
             ]], 
             fixsql(row.dir),  -- direction (eg. "n")
             fixsql(((row.fromuid == "*") and "**") or "*"),  -- toggle between '*' and '**'
@@ -1429,7 +1458,7 @@ function map_portal_level (name, line, wildcards)
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) 
-            VALUES (%s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s);
             ]], 
             fixsql(row.dir),  -- direction (eg. "n")
             fixsql(row.fromuid),  -- from '*' or '**'
@@ -1494,6 +1523,7 @@ end
 
 function ExecuteWithWaits(cexit_command)
    wait.make (function()
+      SendNoEcho("echo {begin running}")
       local partial_cexit_command = cexit_command
       local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
       while strbegin do
@@ -1512,6 +1542,7 @@ function ExecuteWithWaits(cexit_command)
          end
       end
       Execute(partial_cexit_command)
+      SendNoEcho("echo {end running}")
    end)
 end
 
@@ -4130,8 +4161,13 @@ function OnPluginConnect ()
    mapper.cancel_speedwalk ()
 end -- OnPluginConnect
 
+sent_busy = false
 function OnPluginDisconnect ()
    mapper.cancel_speedwalk ()
+   if sent_busy then
+      BroadcastPlugin(999, "ok_you_can_go_now")
+      sent_busy = false
+   end
    if db:isopen() then
       Note("GMCP Mapper: Disconnected; closing map database.")
       db:close()
