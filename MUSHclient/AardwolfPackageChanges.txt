@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r1825 snapshot:
+- bug fix: squish mapper errors in portallevel and portalrecall introduced in r1820
+- misc change: The ASCII map "echo" menu option has been reworded for clarity.
+- new feature: new Show Room Name toggle added to the ASCII map miniwindow
+- new feature: the ASCII map will no longer ask for map updates during a GMCP mapper initiated run.
+
 r1820 snapshot:
 - new feature: You can now command 'mapper cexits thisroom' to see cexits in the current room.
 - bug fix: ASCII map plugin will no longer request a map update automatically if the player is in note mode or sleeping.
