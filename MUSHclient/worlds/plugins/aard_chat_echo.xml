@@ -34,6 +34,7 @@ USAGE:
    omit_from_output="y"
    sequence="100"
    send_to="12"
+   name="say"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
    
 <trigger
@@ -44,6 +45,7 @@ USAGE:
    omit_from_output="y"
    sequence="100"
    send_to="12"
+   name="chan"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
     
 <trigger
@@ -54,6 +56,7 @@ USAGE:
    regexp="y"
    sequence="100"
    send_to="12"
+   name="tell"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
 
 <trigger
@@ -255,24 +258,29 @@ function echoStyles(styles)
 end
 
 function chats (name, line, wildcards, styles)
-   local tag = string.match(styles[1].text, "chan ch=(%a+)")
-   if not tag then
-      tag = string.match(styles[1].text, "{(say)}")
-   end
-   if not tag then
-      tag = string.match(styles[1].text, "{(tell)}")
+   local tag = name
+   if name == "chan" then
+      tag = string.match(line, "^{chan ch=(%a+)}")
    end
    if not tag then
       return
    end
 
-   if not channels_table[tag] then
-      addNewChannel(tag)
-   end
+   tag_length = string.find(line,"}")
+   addNewChannel(tag)
+
    -- echo in this world only if the user wants
    if channels_table[tag]["echo"] then
+      -- Mahony reported that tags would sometimes come through with a color change injected by...something. 
+      -- That *SHOULD* never happen, but apparently has multiple times now. May as well take care of the possibility. Can't hurt right?
+      while tag_length > styles[1].length and styles[2] ~= nil do
+         -- merge all dangling styles up to the end of the tag
+         styles[1].text = styles[1].text .. styles[2].text
+         styles[1].length = styles[1].length + styles[2].length
+         table.remove(styles, 2)
+      end
+
       -- strip out the tag
-      tag_length = string.find(styles[1].text,"}")
       styles[1].text = string.sub(styles[1].text, tag_length+1)
       styles[1].length = styles[1].length-tag_length
       
