@@ -2589,6 +2589,7 @@ function checkDatabaseIntegrity(full_check, second_run)
    if not integrityCheck then
       ColourNote("yellow", "red", "FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.")
       utils.msgbox("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.", "Error!", "ok", "!", 1)
+      CorruptionAlert()
       return false
    end
    Note("MAP DATABASE INTEGRITY CHECK PASSED")
@@ -2608,7 +2609,6 @@ function backup_databases(manual)
       Repaint()   
       db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
       performing_maintenance = false
-      CorruptionAlert()
       satisfy_broadcast_queue()
       return
    end
@@ -2858,7 +2858,6 @@ function OnPluginInstall ()
    db:busy_timeout(100)
       
    if not checkDatabaseIntegrity(true) then
-      CorruptionAlert()
       return
    end
   
@@ -2963,7 +2962,7 @@ function update_db_schema(db_user_version)
       print("Updating mapper database schema to v9 (v8 skipped)...")
       BroadcastPlugin (999, "repaint")
       local flags_column_exists = false
-      for a in dbnrowsWRAPPER "PRAGMA table_info('areas')" do
+      for a in dbnrowsWRAPPER("PRAGMA table_info('areas')") do
          if a["name"] == "flags" then
             flags_column_exists = true
          end
@@ -2978,7 +2977,15 @@ function update_db_schema(db_user_version)
       print("Updating mapper database schema to v10...")
       BroadcastPlugin (999, "repaint")
       remove_date_added_columns()
-      dbCheckExecute("ALTER TABLE rooms ADD COLUMN ignore_exits_mismatch INTEGER NOT NULL DEFAULT 0;")
+      local ignore_exits_mismatch_column_exists = false
+      for row in dbnrowsWRAPPER("PRAGMA table_info('rooms')") do
+         if row["name"] == "ignore_exits_mismatch" then
+            ignore_exits_mismatch_column_exists = true
+         end
+      end
+      if not ignore_exits_mismatch_column_exists then
+         dbCheckExecute("ALTER TABLE rooms ADD COLUMN ignore_exits_mismatch INTEGER NOT NULL DEFAULT 0;")
+      end
       dbCheckExecute("PRAGMA user_version = 10;")
    end
 
@@ -2989,11 +2996,13 @@ function update_db_schema(db_user_version)
       dbCheckExecute("CREATE INDEX IF NOT EXISTS rooms_area_index ON rooms (area);")
    end
 
-   dbCheckExecute("VACUUM;")
    print("")
    print("Converted database to new format. Verifying integrity.")
    BroadcastPlugin (999, "repaint")
-   checkDatabaseIntegrity(true)
+   if not checkDatabaseIntegrity(true) then
+      return
+   end
+   dbCheckExecute("VACUUM;")
    print("")
    BroadcastPlugin (999, "repaint")
    dbCheckExecute("PRAGMA user_version = 11;")
