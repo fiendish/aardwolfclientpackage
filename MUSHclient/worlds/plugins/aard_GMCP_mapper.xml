@@ -2577,7 +2577,8 @@ function checkDatabaseIntegrity(full_check, second_run)
       integrity_check_query = "PRAGMA integrity_check;"
    end
    for row in dbnrowsWRAPPER(integrity_check_query) do
-      if row.integrity_check ~= "ok" then 
+      tprint(row)
+      if row.integrity_check ~= "ok" then
          integrityCheck = false
       end
    end
