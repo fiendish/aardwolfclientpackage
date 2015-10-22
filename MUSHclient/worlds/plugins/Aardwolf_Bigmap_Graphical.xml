@@ -283,6 +283,10 @@ function ConstructMap()
    if not map or #map == 0 then
       return
    end -- no map
+   
+   if loadCustomImage() then
+      return
+   end
 
    local lines = #map
    local columns = 0
@@ -307,6 +311,15 @@ function ConstructMap()
    end -- for
    WindowImageFromWindow(mapwin, "bigmap_continent_"..zone, win)
 end
+
+
+function loadCustomImage()
+   local dir = GetInfo(66)
+   local imgpath = dir.."worlds\\plugins\\images\\bigmap_continent_"..zone..".png"
+   local res = WindowLoadImage(mapwin, "bigmap_continent_"..zone, imgpath)
+   return (res ~= error_code.eFileNotFound and res ~= error_code.eUnableToLoadImage)
+end
+
 
 
 function NoMap()
