@@ -155,7 +155,16 @@ show_map = tonumber(GetVariable("show_map")) or 1
 background_colour = 0x000028
 title_colour = 0x696969
 zone_name_colour = ColourNameToRGB "yellow"
-rectangle_size = 8
+square_brush_pixels = 8
+continent_dimensions = {
+[0]={["w"]=60, ["h"]=40},
+[1]={["w"]=60, ["h"]=15},
+[2]={["w"]=60, ["h"]=40},
+[3]={["w"]=30, ["h"]=40},
+[4]={["w"]=30, ["h"]=50},
+[5]={["w"]=60, ["h"]=55},
+[6]={["w"]=30, ["h"]=30}
+}
 in_continent = false
 use_gmcp_mapper = tonumber(GetVariable("use_gmcp_mapper")) or 1
 
@@ -252,7 +261,7 @@ brushes = {
 function Display_Styled_Line (line, styles, id)
 
    local left = 0
-   local top = (line - 1) * (rectangle_size-1)
+   local top = (line - 1) * (square_brush_pixels-1)
    
    for _, v in ipairs (styles) do
       for i = 1, #v.text do
@@ -264,16 +273,16 @@ function Display_Styled_Line (line, styles, id)
             backcolour = v.textcolour
          end -- if
          if char ~= " " then
-            WindowCircleOp(win, miniwin.circle_rectangle, left, top, left + rectangle_size, top + rectangle_size,
+            WindowCircleOp(win, miniwin.circle_rectangle, left, top, left + square_brush_pixels, top + square_brush_pixels,
                forecolour, miniwin.pen_null, 0,   -- pen colour, null pen, pen width
                backcolour, brush)  -- brush colour, style
 
             -- special image for the zone entrance
             if char == "?" then
-               WindowDrawImage (win, "zone", left-1, top-1, left + rectangle_size-1, top-1 + rectangle_size, 2)
+               WindowDrawImage (win, "zone", left-1, top-1, left + square_brush_pixels-1, top + square_brush_pixels-1, 2)
             end -- if
          end
-         left = left + rectangle_size-1
+         left = left + square_brush_pixels-1
       end -- for each character
    end -- for each style run
 end -- Display_Styled_Line
@@ -293,8 +302,8 @@ function ConstructMap()
    for _, v in ipairs (map [1]) do
       columns = columns + v.length
    end -- for
-   window_width = columns * (rectangle_size-1)
-   window_height =  lines * (rectangle_size-1)
+   window_width = columns * (square_brush_pixels-1)
+   window_height =  lines * (square_brush_pixels-1)
 
    -- recreate the window the correct size
    WindowCreate (win,
@@ -382,8 +391,12 @@ function DrawMap(clearHotspotsFirst)
 
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
    WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction*WindowImageInfo(mapwin,image_name,2)), starty + (correction*WindowImageInfo(mapwin,image_name,3)), 2)
-   local our_location_x = ((x - 1) * (rectangle_size-1) + (rectangle_size / 2) )
-   local our_location_y = ((y - 1) * (rectangle_size-1) + (rectangle_size / 2) )
+
+   local tile_pixels_x = 1 + WindowImageInfo(mapwin,image_name,2)/continent_dimensions[zone].w 
+   local tile_pixels_y = 1 + WindowImageInfo(mapwin,image_name,3)/continent_dimensions[zone].h
+   
+   local our_location_x = ((x - 1) * (tile_pixels_x-1) + (tile_pixels_x / 2) )
+   local our_location_y = ((y - 1) * (tile_pixels_y-1) + (tile_pixels_y / 2) )
 
    local name = continent or ""
    local namewidth = WindowTextWidth (mapwin, font_id, name)
@@ -395,24 +408,24 @@ function DrawMap(clearHotspotsFirst)
 
    -- rounded rects around the player's position
    WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-      startx+(correction*(our_location_x - (3*rectangle_size))), starty+(correction*(our_location_y - (3*rectangle_size)-1)),
-      startx+(correction*(our_location_x + (3*rectangle_size)))-1, starty+(correction*(our_location_y + (3*rectangle_size))),
+      startx+(correction*(our_location_x - (3*tile_pixels_x))), starty+(correction*(our_location_y - (3*tile_pixels_y)-1)),
+      startx+(correction*(our_location_x + (3*tile_pixels_x)))-1, starty+(correction*(our_location_y + (3*tile_pixels_y))),
       ColourNameToRGB "cornflowerblue",  -- pen colour
       miniwin.pen_solid, -- solid pen
       3, -- pen width
       0, -- brush colour
       miniwin.brush_null, 25, 25 ) -- null brush
    WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-      startx+(correction*(our_location_x - (3*rectangle_size))), starty+(correction*(our_location_y - (3*rectangle_size)-1)),
-      startx+(correction*(our_location_x + (3*rectangle_size)))-1, starty+(correction*(our_location_y + (3*rectangle_size))),
+      startx+(correction*(our_location_x - (3*tile_pixels_x))), starty+(correction*(our_location_y - (3*tile_pixels_y)-1)),
+      startx+(correction*(our_location_x + (3*tile_pixels_x)))-1, starty+(correction*(our_location_y + (3*tile_pixels_y))),
       ColourNameToRGB "cyan",  -- pen colour
       miniwin.pen_solid, -- solid pen
       1, -- pen width
       0, -- brush colour
       miniwin.brush_null, 25, 25 ) -- null brush
    WindowCircleOp (mapwin, miniwin.circle_rectangle,
-      startx+(correction*(our_location_x - rectangle_size+4)), starty+(correction*(our_location_y - rectangle_size/2)),
-      startx+(correction*(our_location_x + rectangle_size-4))-1, starty+(correction*(our_location_y + rectangle_size/2)) - 1,
+      startx+(correction*(our_location_x - tile_pixels_x/2)), starty+(correction*(our_location_y - tile_pixels_y/2)),
+      startx+(correction*(our_location_x + tile_pixels_x/2))-1, starty+(correction*(our_location_y + tile_pixels_y/2)) - 1,
       ColourNameToRGB "cyan",  -- pen colour
       miniwin.pen_solid, -- solid pen
       2, -- pen width
