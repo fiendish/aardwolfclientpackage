@@ -1,8 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r1830 snapshot:
+- bug fix: should fix a bug reported with the GMCP mapper where adjacent from starting room cexits weren't being used.
+- misc change: The GMCP mapper is now more thorough about database integrity checks because several reported bugs occured because of database file integrity errors.
+- new feature: The bigmap display now optionally loads custom map images. See https://github.com/fiendish/aardwolfclientpackage/wiki/Bigmap-display#custom-bigmap-images for details.
+
 r1825 snapshot:
 - bug fix: squish mapper errors in portallevel and portalrecall introduced in r1820
-- misc change: The ASCII map "echo" menu option has been reworded for clarity.
+- misc change: the ASCII map "echo" menu option has been reworded for clarity.
 - new feature: new Show Room Name toggle added to the ASCII map miniwindow
 - new feature: the ASCII map will no longer ask for map updates during a GMCP mapper initiated run.
 
