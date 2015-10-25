@@ -2565,7 +2565,7 @@ function quote(str)
    return "\""..str.."\""
 end
 
-function checkDatabaseIntegrity(full_check)
+function checkDatabaseIntegrity(full_check, second_run)
    Note("CHECKING MAP DATABASE INTEGRITY")
    Repaint()
    -- If needed, force wal_checkpoint databases to make sure everything gets written out
@@ -2578,16 +2578,25 @@ function checkDatabaseIntegrity(full_check)
    end
    for row in dbnrowsWRAPPER(integrity_check_query) do
       tprint(row)
-      if row.integrity_check ~= "ok" then 
+      if row.integrity_check ~= "ok" then
          integrityCheck = false
       end
    end
+   if integrityCheck == false and second_run ~= true then
+      ColourNote("yellow", "red", "MAPPER DB INTEGRITY CHECK FAILED. REBUILDING INDEXES AND TRYING AGAIN.")
+      dbCheckExecute("REINDEX")
+      return checkDatabaseIntegrity(true, true)
+   end
    if not integrityCheck then
-      Note("FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.")
+      ColourNote("yellow", "red", "FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.")
       utils.msgbox("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.", "Error!", "ok", "!", 1)
+      CorruptionAlert()
       return false
    end
    Note("MAP DATABASE INTEGRITY CHECK PASSED")
+   if second_run then
+      ColourNote("white", "blue", "WHEW! LUCKY!")
+   end
    return true
 end
 
@@ -2595,13 +2604,12 @@ function backup_databases(manual)
    performing_maintenance = true
    local success = false
    Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
-   if not checkDatabaseIntegrity() then
+   if not checkDatabaseIntegrity(true) then
       Note("ABORTING CURRENT BACKUP")
       Note("")
       Repaint()   
       db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
       performing_maintenance = false
-      CorruptionAlert()
       satisfy_broadcast_queue()
       return
    end
@@ -2850,8 +2858,7 @@ function OnPluginInstall ()
    db = assert (sqlite3.open(worldPath..".db"))
    db:busy_timeout(100)
       
-   if not checkDatabaseIntegrity() then
-      CorruptionAlert()
+   if not checkDatabaseIntegrity(true) then
       return
    end
   
@@ -2870,9 +2877,9 @@ function OnPluginInstall ()
 end
 
 function update_db_schema(db_user_version)
-      SetScroll(-1)
-      print("\nThe GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.\n")
-      utils.msgbox ("The GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.", "", "ok", "i")
+   SetScroll(-1)
+   print("\nThe GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.\n")
+   utils.msgbox ("The GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.", "", "ok", "i")
 
    -- Only go through the structure creation if we haven't done it already
    -- to save time at startup.
@@ -2956,7 +2963,7 @@ function update_db_schema(db_user_version)
       print("Updating mapper database schema to v9 (v8 skipped)...")
       BroadcastPlugin (999, "repaint")
       local flags_column_exists = false
-      for a in dbnrowsWRAPPER "PRAGMA table_info('areas')" do
+      for a in dbnrowsWRAPPER("PRAGMA table_info('areas')") do
          if a["name"] == "flags" then
             flags_column_exists = true
          end
@@ -2971,7 +2978,15 @@ function update_db_schema(db_user_version)
       print("Updating mapper database schema to v10...")
       BroadcastPlugin (999, "repaint")
       remove_date_added_columns()
-      dbCheckExecute("ALTER TABLE rooms ADD COLUMN ignore_exits_mismatch INTEGER NOT NULL DEFAULT 0;")
+      local ignore_exits_mismatch_column_exists = false
+      for row in dbnrowsWRAPPER("PRAGMA table_info('rooms')") do
+         if row["name"] == "ignore_exits_mismatch" then
+            ignore_exits_mismatch_column_exists = true
+         end
+      end
+      if not ignore_exits_mismatch_column_exists then
+         dbCheckExecute("ALTER TABLE rooms ADD COLUMN ignore_exits_mismatch INTEGER NOT NULL DEFAULT 0;")
+      end
       dbCheckExecute("PRAGMA user_version = 10;")
    end
 
@@ -2982,11 +2997,13 @@ function update_db_schema(db_user_version)
       dbCheckExecute("CREATE INDEX IF NOT EXISTS rooms_area_index ON rooms (area);")
    end
 
-   dbCheckExecute("VACUUM;")
    print("")
    print("Converted database to new format. Verifying integrity.")
    BroadcastPlugin (999, "repaint")
-   checkDatabaseIntegrity(true)
+   if not checkDatabaseIntegrity(true) then
+      return
+   end
+   dbCheckExecute("VACUUM;")
    print("")
    BroadcastPlugin (999, "repaint")
    dbCheckExecute("PRAGMA user_version = 11;")
@@ -3086,7 +3103,7 @@ function after_update_check()
          map_bouncerecall(nil, nil, {"clear"})
       end
    end
-
+      
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
@@ -3910,10 +3927,14 @@ function findpath(src, dst, noportals, norecalls)
    if not rooms[src] then
       rooms[src] = load_room_from_database(src)
    end
+   local walk_one = nil
    for dir,touid in pairs(rooms[src].exits) do
-      if touid == dst and tonumber(rooms[src].exit_locks[dir]) <= mylevel then
-         return {{dir=dir, uid=touid}}, 1 -- if one room away, walk
+      if tostring(touid) == tostring(dst) and tonumber(rooms[src].exit_locks[dir]) <= mylevel and ((walk_one == nil) or (#dir > #walk_one)) then
+         walk_one = dir -- if one room away, walk there (don't portal), but prefer a cexit
       end
+   end
+   if walk_one ~= nil then
+      return {{dir=walk_one, uid=touid}}, 1
    end
    local depth = 0
    local max_depth = mapper.config.SCAN.depth

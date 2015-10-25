@@ -142,12 +142,12 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
 require "serialize"  -- needed to serialize table to string
 require "checkplugin"
 require "movewindow"
-require "tprint"
 require "gmcphelper"
 
 -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID (), 20) .. "telnet_options.lua")
 
+use_exact_sizes = true
 map = {}
 continents = {}
 xref = {}
@@ -155,7 +155,16 @@ show_map = tonumber(GetVariable("show_map")) or 1
 background_colour = 0x000028
 title_colour = 0x696969
 zone_name_colour = ColourNameToRGB "yellow"
-rectangle_size = 8
+square_brush_pixels = 8
+continent_dimensions = {
+[0]={["w"]=60, ["h"]=40},
+[1]={["w"]=60, ["h"]=15},
+[2]={["w"]=60, ["h"]=40},
+[3]={["w"]=30, ["h"]=40},
+[4]={["w"]=30, ["h"]=50},
+[5]={["w"]=60, ["h"]=55},
+[6]={["w"]=30, ["h"]=30}
+}
 in_continent = false
 use_gmcp_mapper = tonumber(GetVariable("use_gmcp_mapper")) or 1
 
@@ -177,6 +186,8 @@ function remove_cache ()
    SetVariable ("xref", "xref = " .. serialize.save_simple (xref))
 
    ColourNote ("white", "blue", "All bigmap cache has been cleared.")
+   
+   force_update = true
    updatelocation()
 end -- remove_cache
 
@@ -216,6 +227,7 @@ function map_on_off_alias (name, line, wildcards)
          end
       end
    elseif (wildcards[1]:lower() == " merge") then
+      OnPluginSaveState()
       if show_map == 0 then
          ColourNote ("yellow", "", "Bigmap is currently disabled. You will have to type 'bigmap on' for any change to occur.")
       end
@@ -243,18 +255,28 @@ function map_on_off_alias (name, line, wildcards)
 end -- map_on_off_alias
 
 brushes = {
-  ["~"] = miniwin.brush_waves_horizontal,
-  ["?"] = miniwin.brush_medium_pattern,
-  ["^"] = miniwin.brush_waves_vertical,
-  ["."] = miniwin.brush_hatch_backwards_diagonal,
+   ["~"] = miniwin.brush_waves_horizontal,
+   ["?"] = miniwin.brush_null,
+   ["^"] = miniwin.brush_waves_vertical,
+   ["."] = miniwin.brush_hatch_backwards_diagonal,
+}
+
+local entrances = {
+   [0] = {},
+   [1] = {},
+   [2] = {},
+   [3] = {},
+   [4] = {},
+   [5] = {},
+   [6] = {}
 }
 
 function Display_Styled_Line (line, styles, id)
 
    local left = 0
-   local top = (line - 1) * (rectangle_size-1)
-   
-   for _, v in ipairs (styles) do
+   local top = (line - 1) * (square_brush_pixels-1)
+   local zone_entrances = entrances[zone]
+   for j, v in ipairs (styles) do
       for i = 1, #v.text do
          local char = string.sub (v.text, i, i)
          local brush = brushes [char] or 0
@@ -264,16 +286,16 @@ function Display_Styled_Line (line, styles, id)
             backcolour = v.textcolour
          end -- if
          if char ~= " " then
-            WindowCircleOp(win, miniwin.circle_rectangle, left, top, left + rectangle_size, top + rectangle_size,
+            WindowCircleOp(win, miniwin.circle_rectangle, left, top, left + square_brush_pixels, top + square_brush_pixels,
                forecolour, miniwin.pen_null, 0,   -- pen colour, null pen, pen width
                backcolour, brush)  -- brush colour, style
 
-            -- special image for the zone entrance
+            -- remember locations of zone entrances
             if char == "?" then
-               WindowDrawImage (win, "zone", left-1, top-1, left + rectangle_size-1, top-1 + rectangle_size, 2)
+               zone_entrances[#zone_entrances+1] = {left, top}
             end -- if
          end
-         left = left + rectangle_size-1
+         left = left + square_brush_pixels-1
       end -- for each character
    end -- for each style run
 end -- Display_Styled_Line
@@ -283,14 +305,14 @@ function ConstructMap()
    if not map or #map == 0 then
       return
    end -- no map
-
+   
    local lines = #map
    local columns = 0
    for _, v in ipairs (map [1]) do
       columns = columns + v.length
    end -- for
-   window_width = columns * (rectangle_size-1)
-   window_height =  lines * (rectangle_size-1)
+   local window_width = columns * (square_brush_pixels-1)
+   local window_height =  lines * (square_brush_pixels-1)
 
    -- recreate the window the correct size
    WindowCreate (win,
@@ -302,10 +324,40 @@ function ConstructMap()
       0,
       0x00)
 
+   entrances[zone] = {}
    for i, v in ipairs (map) do
       Display_Styled_Line (i, v, font_id)
    end -- for
+   overlay_area_entrances_on_buffer()
    WindowImageFromWindow(mapwin, "bigmap_continent_"..zone, win)
+
+   loadCustomImage()
+   
+   WindowDelete(win)
+end
+
+function overlay_area_entrances_on_buffer()
+   for _,v in ipairs(entrances[zone]) do
+      WindowCircleOp(win, miniwin.circle_rectangle, v[1], v[2], v[1] + square_brush_pixels, v[2] + square_brush_pixels, 
+      ColourNameToRGB("cyan"),
+      miniwin.pen_solid,
+      2, -- line width
+      0, -- backcolour
+      miniwin.brush_null)
+   end
+end
+
+function loadCustomImage()
+   local dir = GetInfo(66)
+   local imgpath = dir.."worlds\\plugins\\images\\bigmap_continent_"..zone..".png"
+   local res = WindowLoadImage(win, "bigmap_continent_"..zone, imgpath)
+   if (res ~= error_code.eFileNotFound and res ~= error_code.eUnableToLoadImage) then
+      WindowDrawImage (win, "bigmap_continent_"..zone, 0, 0, 0, 0, 2)  -- stretch to fill
+      overlay_area_entrances_on_buffer()
+      WindowImageFromWindow(mapwin, "bigmap_continent_"..zone, win)
+      return true
+   end
+   return false
 end
 
 
@@ -320,11 +372,10 @@ function NoMap()
       WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
    end
    draw_edge() -- add border
-   if use_gmcp_mapper == 1 then
+   if use_gmcp_mapper == 1 or not use_exact_sizes then
       add_resize_tag() -- add resizer
    end
 end
-
 
 function DrawMap(clearHotspotsFirst)
    if show_map ~= 1 then
@@ -337,22 +388,15 @@ function DrawMap(clearHotspotsFirst)
    local starty = (font_height*2)+15
    local image_name = "bigmap_continent_"..zone
    if (not (use_gmcp_mapper == 1)) then
-      local window_width =  WindowImageInfo(mapwin,image_name,2) + (startx*2)
-      local window_height =  WindowImageInfo(mapwin,image_name,3) + starty + startx
-      if nil == WindowInfo(mapwin, 1) then
-         -- recreate the window the correct size
-         WindowCreate (mapwin,
-            windowinfo.window_left,
-            windowinfo.window_top,
-            window_width,     -- width
-            window_height,  -- height
-            windowinfo.window_mode,
-            windowinfo.window_flags,
-            background_colour)
-         CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
+      local window_width, window_height
+      if not use_exact_sizes and unmerged_width ~= nil and unmerged_height ~= nil then
+         window_width = unmerged_width
+         window_height = unmerged_height
       else
-         WindowResize(mapwin, window_width, window_height, background_colour)
+         window_width = WindowImageInfo(mapwin,image_name,2) + (startx*2)
+         window_height = WindowImageInfo(mapwin,image_name,3) + starty + startx
       end
+      WindowResize(mapwin, window_width, window_height, background_colour)
       WindowShow (mapwin, true)
    end
    movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
@@ -369,8 +413,12 @@ function DrawMap(clearHotspotsFirst)
 
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
    WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction*WindowImageInfo(mapwin,image_name,2)), starty + (correction*WindowImageInfo(mapwin,image_name,3)), 2)
-   local our_location_x = ((x - 1) * (rectangle_size-1) + (rectangle_size / 2) )
-   local our_location_y = ((y - 1) * (rectangle_size-1) + (rectangle_size / 2) )
+
+   local tile_pixels_x = 1 + WindowImageInfo(mapwin,image_name,2)/continent_dimensions[zone].w 
+   local tile_pixels_y = 1 + WindowImageInfo(mapwin,image_name,3)/continent_dimensions[zone].h
+   
+   local our_location_x = ((x - 1) * (tile_pixels_x-1) + (tile_pixels_x / 2) )
+   local our_location_y = ((y - 1) * (tile_pixels_y-1) + (tile_pixels_y / 2) )
 
    local name = continent or ""
    local namewidth = WindowTextWidth (mapwin, font_id, name)
@@ -382,24 +430,24 @@ function DrawMap(clearHotspotsFirst)
 
    -- rounded rects around the player's position
    WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-      startx+(correction*(our_location_x - (3*rectangle_size))), starty+(correction*(our_location_y - (3*rectangle_size)-1)),
-      startx+(correction*(our_location_x + (3*rectangle_size)))-1, starty+(correction*(our_location_y + (3*rectangle_size))),
+      startx+(correction*(our_location_x - (3*tile_pixels_x))), starty+(correction*(our_location_y - (3*tile_pixels_y)-1)),
+      startx+(correction*(our_location_x + (3*tile_pixels_x)))-1, starty+(correction*(our_location_y + (3*tile_pixels_y))),
       ColourNameToRGB "cornflowerblue",  -- pen colour
       miniwin.pen_solid, -- solid pen
       3, -- pen width
       0, -- brush colour
       miniwin.brush_null, 25, 25 ) -- null brush
    WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
-      startx+(correction*(our_location_x - (3*rectangle_size))), starty+(correction*(our_location_y - (3*rectangle_size)-1)),
-      startx+(correction*(our_location_x + (3*rectangle_size)))-1, starty+(correction*(our_location_y + (3*rectangle_size))),
+      startx+(correction*(our_location_x - (3*tile_pixels_x))), starty+(correction*(our_location_y - (3*tile_pixels_y)-1)),
+      startx+(correction*(our_location_x + (3*tile_pixels_x)))-1, starty+(correction*(our_location_y + (3*tile_pixels_y))),
       ColourNameToRGB "cyan",  -- pen colour
       miniwin.pen_solid, -- solid pen
       1, -- pen width
       0, -- brush colour
       miniwin.brush_null, 25, 25 ) -- null brush
    WindowCircleOp (mapwin, miniwin.circle_rectangle,
-      startx+(correction*(our_location_x - rectangle_size+4)), starty+(correction*(our_location_y - rectangle_size/2)),
-      startx+(correction*(our_location_x + rectangle_size-4))-1, starty+(correction*(our_location_y + rectangle_size/2)) - 1,
+      startx+(correction*(our_location_x - tile_pixels_x/2)), starty+(correction*(our_location_y - tile_pixels_y/2)),
+      startx+(correction*(our_location_x + tile_pixels_x/2))-1, starty+(correction*(our_location_y + tile_pixels_y/2)) - 1,
       ColourNameToRGB "cyan",  -- pen colour
       miniwin.pen_solid, -- solid pen
       2, -- pen width
@@ -407,7 +455,7 @@ function DrawMap(clearHotspotsFirst)
       miniwin.brush_null ) -- null brush
 
    draw_edge() -- add border
-   if use_gmcp_mapper == 1 then
+   if use_gmcp_mapper == 1 or not use_exact_sizes then
       add_resize_tag() -- add resizer
    end
    BroadcastPlugin (999, "repaint")
@@ -419,8 +467,12 @@ function resize_mouse_down(flags, hotspot_id)
    end
 end
 
+unmerged_width = nil
+unmerged_height = nil
 function resize_release_callback()
-   DrawMap()
+   SetVariable("unmerged_width", tostring(unmerged_width))
+   SetVariable("unmerged_height", tostring(unmerged_height))
+   DrawMap(true)
 end
 
 function resize_move_callback()
@@ -450,7 +502,11 @@ function resize_move_callback()
    end
 
    WindowResize(mapwin, width, height, 0x000000)
-
+   
+   if use_gmcp_mapper ~= 1 then
+      unmerged_width = width
+      unmerged_height = height
+   end
    DrawMap()
 end
 
@@ -572,8 +628,7 @@ function map_redirect (name, line, wildcards, styles)
          SetVariable ("xref", "xref = " .. serialize.save_simple (xref))
       end -- we know the continent
       if in_continent then
-         WindowDeleteAllHotspots (mapwin)
-         DrawMap()
+         DrawMap(true)
       end
    else
       table.insert (map, styles)
@@ -584,10 +639,11 @@ end -- function map_redirect
 function right_click_menu ()
    menustring = "Bring To Front|Send To Back"
    if use_gmcp_mapper == 1 then
-      menustring = menustring.."|-|Hide Continent Bigmap|Unmerge Continent Bigmap From GMCP Mapper"
+      menustring = menustring.."|-|Hide Continent Bigmap|Unmerge Continent Bigmap From GMCP Mapper|-|"
    else
-      menustring = menustring.."|-|Hide Continent Bigmap|Merge Continent Bigmap Into GMCP Mapper"
+      menustring = menustring.."|-|Hide Continent Bigmap|Merge Continent Bigmap Into GMCP Mapper|-|"
    end
+   menustring = menustring..(use_exact_sizes and "+" or "").."Use Exact Image Sizes When Unmerged"
    result = WindowMenu (mapwin,
       WindowInfo (mapwin, 14), -- x position
       WindowInfo (mapwin, 15), -- y position
@@ -603,6 +659,10 @@ function right_click_menu ()
       Execute("bigmap merge")
    elseif result == "Unmerge Continent Bigmap From GMCP Mapper" then
       Execute("bigmap unmerge")
+   elseif result == "Use Exact Image Sizes When Unmerged" then
+      use_exact_sizes = not use_exact_sizes
+      SetVariable("use_exact_sizes", use_exact_sizes and "1" or "0")
+      DrawMap(true)
    end -- if
 end -- right_click_menu
 
@@ -623,6 +683,9 @@ end
 require "checkplugin"
 function OnPluginListChanged ()
    bigmap_enabled = false -- make sure that we re-activate bigmap if the gmcp mapper gets reloaded
+   if nil == WindowFontInfo(mapwin, font_id, 21) then
+      check (WindowFont (mapwin, font_id, font_name, font_size, false, false, false, false, 0, 49))  -- reload the font
+   end
    do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
    do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
    do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
@@ -631,7 +694,9 @@ end
 function OnPluginInstall ()
    assert (loadstring (GetVariable ("continents") or "")) ()
    assert (loadstring (GetVariable ("xref") or "")) ()
-
+   use_exact_sizes = ( GetVariable("use_exact_sizes") == "1" )
+   unmerged_width = tonumber(GetVariable("unmerged_width"))
+   unmerged_height = tonumber(GetVariable("unmerged_height"))
    win = GetPluginID ().."_offscreen_buffer"
    mapwin = (((use_gmcp_mapper == 1) and "b6eae87ccedd84f510b74714_mapper") or GetPluginID().."_mapper")
 
@@ -646,22 +711,21 @@ function OnPluginInstall ()
       end
    end -- if any
 
-   if not mapwin_found then
-      WindowCreate (mapwin, 0, 0, 0, 0, 0, 0, 0) -- dummy window just to load the font stuff
-   end
-
    windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, miniwin.create_absolute_location, true, nil, {mouseup=MouseUp, 
-      mousedown=LeftClickOnly, dragmove=LeftClickOnly, 
-      dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-
-   WindowCreate (win,
-      0,
-      0,
-      100,     -- width
-      100,  -- height
-      0,
-      0,
-      0x00)
+         mousedown=LeftClickOnly, dragmove=LeftClickOnly, 
+         dragrelease=LeftClickOnly},{x=0, y=0})
+         
+   if not (use_gmcp_mapper == 1) then   
+      WindowCreate (mapwin,
+         windowinfo.window_left,
+         windowinfo.window_top,
+         0,     -- width
+         0,  -- height
+         windowinfo.window_mode,
+         windowinfo.window_flags,
+         background_colour)
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
+   end
                  
    local fonts = utils.getfontfamilies ()
    if fonts.Dina then
@@ -679,17 +743,6 @@ function OnPluginInstall ()
    font_height = WindowFontInfo (mapwin, font_id, 1) -  WindowFontInfo (mapwin, font_id, 4) + 1 -- height
    font_width = WindowFontInfo (mapwin, font_id, 6)  -- avg width
    descent = WindowFontInfo (mapwin, font_id, 3)
-
-   WindowCreateImage (win, "zone",
-      tonumber ("11111111", 2),  -- row 8
-      tonumber ("11000011", 2),  -- row 7
-      tonumber ("10000001", 2),  -- row 6
-      tonumber ("10000001", 2),  -- row 6
-      tonumber ("10000001", 2),  -- row 6
-      tonumber ("10000001", 2),  -- row 6
-      tonumber ("11000011", 2),  -- row 7
-      tonumber ("11111111", 2))  -- row 8
-
 
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
@@ -741,7 +794,7 @@ function OnPluginBroadcast (msg, id, name, text)
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
-      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
    end
 end
 
