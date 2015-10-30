@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="Text_Substitutions"
+   author="Fiendish"
+   id="26240e292291e159e1ff3cde"
+   language="Lua"
+   purpose="Replace text with other text"
+   date_written="2011-07-27 01:00:00"
+   requires="4.75"
+   version="1.0"
+   save_state="y"
+   sequence="-6000"
+>
+
+<description trim="y">
+
+Replaces text in server output with whatever you want.
+
+Does not cross color code boundaries.
+'#sub potato pants' will make @Mpotato@Cpants@Rairplane become @Mpants@Cpants@Rairplane
+but will not do anything to @Mpot@Yato@Cpants@Rairplane.
+
+Operates at the incoming packet level, so GMCP strings are affected as well.
+
+</description>
+</plugin>
+<aliases>
+
+<alias
+   match="^#sub[ ]*$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="listsub"
+></alias>
+
+<alias
+   match="#sub {*} {*}"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   script="addsub"
+></alias>
+
+<alias
+   match="^#sub ([^ ]+) (.+)$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="addsub"
+></alias>
+
+<alias
+   match="^#sub .+$"
+   enabled="y"
+   regexp="y"
+   sequence="200"
+   ignore_case="y"
+   script="helpsub"
+></alias>
+
+<alias
+   match="^#unsub (.+)$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   script="remsub"
+></alias>
+
+<alias
+   match="^#unsub *$"
+   enabled="y"
+   regexp="y"
+   sequence="101"
+   ignore_case="y"
+   script="helpsub"
+></alias>
+
+</aliases>
+
+<!--  Script  -->
+
+<script>
+<![CDATA[
+require "serialize"
+
+subs = {} -- init table
+
+loadstring (GetVariable ("subs") or "") ()
+
+function helpsub(name, line)
+   ColourNote("yellow","","")
+   ColourNote("yellow","","You typed:   '","white","",line,"yellow","","'")
+   ColourNote("yellow","","Available options for the #sub plugin are:")
+   ColourNote("yellow","","-------------------------------------------------")
+   ColourNote("yellow","","#sub            - list all current substitutions")
+   ColourNote("yellow","","#sub a b        - replaces word a with word b")
+   ColourNote("yellow","","#sub {a} {b}    - replaces phrase a with phrase b")
+   ColourNote("yellow","","#unsub a        - removes substitution for a")
+   ColourNote("yellow","","#unsub #number  - removes numbered substitution")
+   ColourNote("yellow","","")
+end
+
+function listsub()
+   ColourNote("yellow","","")
+   ColourNote("yellow","","/-----------------------------------------------------------\\")
+   ColourNote("yellow","","  Current #subs:")
+   for i,v in ipairs(subs) do
+      ColourNote("yellow","",string.format("   %4u",i)..": ","white","",v[1],"yellow",""," --> ","white","",v[2])
+   end
+   ColourNote("yellow","","\\-----------------------------------------------------------/")
+   ColourNote("yellow","","")
+ end
+
+function remsub(name, line, wildcards, styles) 
+   local formerly = nil
+   local found = false
+   local ind = nil
+   local keywords = wildcards[1]
+   
+   if keywords:sub(1,1) == "#" then
+      local ks = subs[tonumber(keywords:sub(2))]
+      if ks then
+         keywords = ks[1]
+      end
+   end
+   
+   for i,v in ipairs(subs) do
+      if v[1] == keywords then
+         formerly = v[2]
+         table.remove(subs, i)
+         found = true
+         break
+      end
+   end
+   ColourNote("yellow","","")
+   if found then
+      ColourNote("yellow","","\""..keywords.."\" un-subbed (formerly \""..formerly.."\")")
+   else
+      ColourNote("yellow","","No existing #sub found for "..wildcards[1])
+   end
+   OnPluginSaveState()
+end
+
+function addsub(name, line, wildcards, styles)
+   remsub(nil, nil, {wildcards[1]}, nil)
+   table.insert(subs, {wildcards[1], wildcards[2]})
+   ColourNote("yellow","","\""..wildcards[1].."\" now subbed with \""..wildcards[2].."\"")
+   listsub()
+   OnPluginSaveState()
+end
+
+function OnPluginSaveState()
+   SetVariable ("subs", serialize.save ("subs"))
+end
+
+function OnPluginPacketReceived(sData)
+   for _,v in ipairs(subs) do
+      sData = sData:gsub(v[1],v[2])
+   end
+   return sData
+end
+
+]]>
+</script>
+</muclient>
