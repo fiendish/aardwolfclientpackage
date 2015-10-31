@@ -3,16 +3,16 @@
 
 <muclient>
 <plugin
-   name="Packet_Level_Text_Substitutions"
+   name="Text_Substitutions"
    author="Fiendish"
-   id="f04b1414f681c029412255cc"
+   id="26240e292291e159e1ff3cde"
    language="Lua"
-   purpose="Replace text with other text at the packet level"
+   purpose="Replace text with other text"
    date_written="2011-07-27 01:00:00"
    requires="4.75"
    version="1.0"
    save_state="y"
-   sequence="-6000"
+   sequence="0"
 >
 
 <description trim="y">
@@ -23,7 +23,7 @@ Does not cross color code boundaries.
 '#sub potato pants' will make @Mpotato@Cpants@Rairplane become @Mpants@Cpants@Rairplane
 but will not do anything to @Mpot@Yato@Cpants@Rairplane.
 
-Operates at the incoming packet level, so GMCP strings are affected as well.
+Operates at the display level, so GMCP strings not are affected.
 
 </description>
 </plugin>
@@ -84,17 +84,29 @@ Operates at the incoming packet level, so GMCP strings are affected as well.
 
 </aliases>
 
+<triggers>
+<trigger
+   enabled="y"
+   match="^.*$"
+   regexp="y"
+   script="dosubs"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+</triggers>
+
 <!--  Script  -->
 
 <script>
 <![CDATA[
 require "serialize"
+stylestring = require "stylestring"
 
 subs = {} -- init table
 
 loadstring (GetVariable ("subs") or "") ()
 
-function helpsub(name, line)
+function helpsub(name, line, wildcards)
    ColourNote("yellow","","")
    ColourNote("yellow","","You typed:   '","white","",line,"yellow","","'")
    ColourNote("yellow","","Available options for the #sub plugin are:")
@@ -107,7 +119,7 @@ function helpsub(name, line)
    ColourNote("yellow","","")
 end
 
-function listsub()
+function listsub(name, line, wildcards)
    ColourNote("yellow","","")
    ColourNote("yellow","","/-----------------------------------------------------------\\")
    ColourNote("yellow","","  Current #subs:")
@@ -118,7 +130,7 @@ function listsub()
    ColourNote("yellow","","")
  end
 
-function remsub(name, line, wildcards, styles) 
+function remsub(name, line, wildcards) 
    local formerly = nil
    local found = false
    local ind = nil
@@ -148,7 +160,7 @@ function remsub(name, line, wildcards, styles)
    OnPluginSaveState()
 end
 
-function addsub(name, line, wildcards, styles)
+function addsub(name, line, wildcards)
    remsub(nil, nil, {wildcards[1]}, nil)
    table.insert(subs, {wildcards[1], wildcards[2]})
    ColourNote("yellow","","\""..wildcards[1].."\" now subbed with \""..wildcards[2].."\"")
@@ -160,11 +172,12 @@ function OnPluginSaveState()
    SetVariable ("subs", serialize.save ("subs"))
 end
 
-function OnPluginPacketReceived(sData)
-   for _,v in ipairs(subs) do
-      sData = sData:gsub(v[1],v[2])
+function dosubs(name, line, wildcards, styles)
+   local ss = stylestring.new(line, styles)
+   for i = 1,#subs do
+      ss:replace(subs[i][1], subs[i][2])
    end
-   return sData
+   ss:note()
 end
 
 ]]>
