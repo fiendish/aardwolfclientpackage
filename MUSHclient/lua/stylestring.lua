@@ -41,4 +41,10 @@ function stylestring.replace(self, match, replace)
    end
 end
 
+
+-- Complex replace. Matches across color boundaries
+function stylestring.deepreplace(self, match, replace)
+   -- NYI
+end
+
 return stylestring
