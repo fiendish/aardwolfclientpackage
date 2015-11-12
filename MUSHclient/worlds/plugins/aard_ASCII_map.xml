@@ -63,8 +63,10 @@ Blainer and others. All cobbled together by Lasher. And then recobbled by Fiendi
    script="map_redirect"
    omit_from_output="y"
    name="map_start"
-   sequence="100"
-></trigger>
+   sequence="100"   
+   send_to="12"
+><send>StopEvaluatingTriggers(true)</send>
+</trigger>
   
 <trigger
    enabled="n"
@@ -73,9 +75,10 @@ Blainer and others. All cobbled together by Lasher. And then recobbled by Fiendi
    name="multi_line_map"
    omit_from_output="y"
    sequence="10"
-   send_to="14"
-></trigger>
-
+   send_to="12"
+><send>StopEvaluatingTriggers(true)</send>
+</trigger>
+  
 <trigger
    enabled="y"
    match="<MAPEND>"
@@ -83,8 +86,9 @@ Blainer and others. All cobbled together by Lasher. And then recobbled by Fiendi
    omit_from_output="y"
    name="map_end"
    sequence="5"
-></trigger>
-
+   send_to="12"
+><send>StopEvaluatingTriggers(true)</send></trigger>
+  
 <trigger
    enabled="y"
    match="You open *."
