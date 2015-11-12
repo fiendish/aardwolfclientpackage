@@ -39,7 +39,10 @@ You can also run a manual check by typing:    package update check
 <script>
 <![CDATA[
 
-async_ok, async = pcall (require, "async")
+async = require "async"
+require "json"
+require "sha1"
+require "wait"
 
 version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardwolfPackageChanges.txt"
 download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip"
@@ -77,11 +80,284 @@ function browse(url)
    end
 end
 
+local _llthreads = require("llthreads")
+backgroundUpdate = string.dump(function(githubjson_t, mushpath)
+   require "sha1"
+   function gitsha (filename)   
+      function readAll(file)
+          local f = io.open(file, "rb")
+          if f == nil then
+            return ""
+          end
+          local content = f:read("*all")
+          f:close()
+          return content
+      end
+      local filed = readAll(filename)
+      return sha1.hash("blob "..#filed.."\0"..filed, true)
+   end
+   
+   local files = {}
+   local ignored_files = {"/worlds/plugins/state/", "%.db$", "%.mcl$", "%.sqlite", "%.HLP", "%.GID", "%.ini"}
+   for i,v in ipairs(githubjson_t) do
+      if v.type == "blob" then
+         local ignored = false
+         for j,ign in ipairs(ignored_files) do
+            if string.find(v.path, ign) ~= nil then
+               ignored = true
+               break
+            end
+         end
+         if not ignored then
+            local filepath = string.gsub(v.path, "/", "\\"):sub(12)
+            local githubsha = v.sha
+            if gitsha(mushpath..filepath) ~= githubsha then
+               --if string.find(filepath, "MUSHclient%.exe$") ~= nil then
+               --   return false -- updated exe. They'll have to grab the zip.
+               --end
+               table.insert(files, {["filepath"]=filepath, ["fileurl"]=v.url, ["exists"]=(gitsha(mushpath.."update_tmp\\"..filepath)==githubsha)})
+            end
+         end
+      end
+   end
+   return files
+end)
+
+local files_to_fetch = {}
+local fetch_list = {}
+function doUpdate(retval, page, status, headers, full_status, requested_url)
+   local githubjson_t = json.decode(page)
+   
+   if githubjson_t.tree == nil then
+      Note()
+      ColourNote("white", "black", "  +-------------------------------","red","black"," Unable to Update ","white","black","------------------------------+")
+      ColourNote("white", "black", "  |                                                                               |")
+      ColourNote("white", "black", "  |  The GitHub API returned a bad result...                                      |")
+      ColourTell("white", "black", "  |  ")
+      Hyperlink("https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "New MUSHclient Package Download", "white", "black", true)
+      ColourNote("white", "black", "     |")
+      ColourNote("white", "black", "  |                                                                               |")
+      ColourNote("white", "black", "  +-------------------------------------------------------------------------------+")
+      if githubjson_t.message ~= nil then
+         Note("    ( A 'rate limit' message is probably ok; just try again in an hour or two. )")
+         Note("    ( But report other messages to Fiendish and/or the tech channel.           )")
+         ColourNote("white", "black", " ---v---v---v---v---v---v---v---v---v---v---v---v---v---v---v---v---v---v---v---v---")
+         ColourNote("white", "black", " Message from GitHub: "..githubjson_t.message)
+         if githubjson_t.documentation_url ~= nil then
+            ColourNote("white", "black", " Documentation: "..githubjson_t.documentation_url)
+         end
+         ColourNote("white", "black", " ___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___")
+      end
+      Note()
+      return
+   end
+   
+   local thread = _llthreads.new(backgroundUpdate, githubjson_t.tree, GetInfo(66))
+   thread:start()
+   retval, fetch_list = thread:join()
+   
+   if fetch_list == false then
+      ColourNote("white", "black", "+-------------------------------","red","black"," Unable to Update ","white","black","------------------------------+")
+      ColourNote("white", "black", "|                                                                               |")
+      ColourNote("white", "black", "|  This update includes a new MUSHclient.exe, so you'll need to go download...  |")
+      ColourTell("white", "black", "|  ")
+      Hyperlink("https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "New MUSHclient Package Download", "white", "black", true)
+      ColourNote("white", "black", "     |")
+      ColourNote("white", "black", "|                                                                               |")
+      ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
+      Note()
+      Note()
+      return
+   end
+   
+   if type(fetch_list) == "string" then
+      -- print("Will try again later.")
+      return -- Connection error? We can always try again later.
+   end
+   
+   for i,v in ipairs(fetch_list) do
+      v.fileurl = v.fileurl:gsub("api.github.com/repos", "raw.githubusercontent.com"):gsub("(aardwolfclientpackage/)git/.*", "%1".."MUSHclient/MUSHclient/"..v.filepath:gsub("\\", "/"))
+      files_to_fetch[v.fileurl] = v.filepath
+      print("Requesting file ["..i.." of "..#fetch_list.."]: "..v.filepath.." from "..v.fileurl)
+      Repaint()
+   end
+   for i,v in ipairs(fetch_list) do
+-- from e.g. :  https://api.github.com/repos/fiendish/aardwolfclientpackage/git/blobs/307a61f81fb7df5cd53565fd479ede3dab2bd081
+-- to e.g.   :  https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardMUSH_README.html
+      if v.exists then
+         print(" -- Already downloaded update_tmp\\"..v.filepath)
+         files_to_fetch[v.fileurl] = nil
+         checkIfFinishedDownloading()
+      else
+         async.doAsyncRemoteRequest(v.fileurl, saveNewFile, "HTTPS", 600)
+      end
+   end
+end
+
+ffi = require("ffi")
+ffi.cdef[[
+   bool CreateDirectoryA(const char *lpPathName, void *lpSecurityAttributes);
+   bool CopyFileA(const char* lpExistingFileName, const char * lpNewFileName, bool bFailIfExists);
+   unsigned long GetLastError(void);
+]]
+
+
+function saveNewFile(retval, page, status, headers, full_status, requested_url)
+   local filepath = files_to_fetch[requested_url]
+   files_to_fetch[requested_url] = nil
+   
+   local filepathdirs = utils.split("update_tmp\\"..filepath, "\\")
+   if #filepathdirs > 1 then
+      local curpath = ""
+      local curdir = "update_tmp"
+      for i,dir in ipairs(filepathdirs) do
+         if i ~= #filepathdirs then -- not the file
+            curpath = curpath.."\\"..dir
+
+            local succ = ffi.C.CreateDirectoryA(GetInfo(66)..curpath, nil)
+            local err_no = ffi.C.GetLastError()
+            
+            if succ == false and err_no ~= 183 and err_no ~= 127 then
+               ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66)..curpath.."\n")
+               return
+            end
+            curdir = dir
+         end
+      end
+   end
+         
+   local out = assert(io.open(GetInfo(66).."update_tmp\\"..filepath, "wb"))
+   out:write(page)
+   assert(out:close())
+   
+   print("Saved update file ---> update_tmp\\"..filepath)
+   checkIfFinishedDownloading()
+end
+
+local DELAY = 1
+function checkIfFinishedDownloading()
+   local num_left = 0
+   for i,v in pairs(files_to_fetch) do
+      num_left = num_left + 1
+   end
+   print("Files remaining:  "..tostring(num_left))
+      
+   if num_left == 0 then
+      wait.make(function() 
+         wait.time(DELAY)
+         print("")
+         print("Done saving update files!")
+         print("")
+         if IsConnected() then
+            print("Disconnecting to perform update...")
+            print("")
+            Disconnect()
+         end
+         Save()
+         Repaint()
+         wait.time(DELAY)
+         
+         ColourNote("white", "black", "+---------------------------------","red","black"," Touch Nothing ","white","black","-------------------------------+")
+         ColourNote("white", "black", "|                                                                               |")
+         ColourNote("white", "black", "|  Overwriting files. Be prepared for failure and hopeful for success.          |")
+         ColourNote("white", "black", "|  If this fails, download the complete new package from...                     |")      
+         ColourTell("white", "black", "|  ")
+         Hyperlink("https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "New MUSHclient Package Download", "white", "black", true)
+         ColourNote("white", "black", "     |")
+         ColourNote("white", "black", "|                                                                               |")
+         ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
+         Repaint()
+      
+         wait.time(DELAY)
+         
+         print("Updating Files...")
+         Repaint()
+
+         osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)
+                           
+         local succ = ffi.C.CreateDirectoryA(GetInfo(66).."oldvers", nil)
+         local err_no = ffi.C.GetLastError()
+         if succ == false and err_no ~= 127 then -- I guess if it still exists (error 183) then the previous cmd failed! Yay!
+            ColourNote("yellow","red", "Package Update ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66).."oldvers. Did you remember to restart MUSHclient since the last update?")
+            return
+         end
+         
+         local all_files_moved_away = true
+         local err_msg = ""
+         for i,v in ipairs(fetch_list) do
+            local newdir = utils.split(v.filepath, "\\")
+            newdir[#newdir] = nil
+            newdir = table.concat(newdir, "\\")
+            
+            os.execute("md \"".. GetInfo(66).."oldvers\\"..newdir.."\" 2> nul")
+            
+            all_files_moved_away, err_msg = os.rename(GetInfo(66)..v.filepath, GetInfo(66).."oldvers\\"..v.filepath)
+            if not all_files_moved_away and err_msg:find("No such file") == nil then
+               break
+            end
+            all_files_moved_away = true -- reset if just a no such file error
+         end
+         
+         if not all_files_moved_away then
+            ColourNote("yellow","red", "Package Update ERROR trying to move old files out of the way: "..err_msg)
+            unmoveOldFiles()
+            return
+         end
+         
+         local err, execute_lines = osexecute("xcopy \""..GetInfo(66).."update_tmp\" \"".. string.gsub(GetInfo(66),"\\$","").."\" /s /v /y /f")
+         
+         if err ~= 0 or not execute_lines[#execute_lines] or not string.find(execute_lines[#execute_lines], tostring(#fetch_list).." file%(s%) copied") then
+            ColourNote("white", "red", "Package Update ERROR (while replacing files)")
+            for i,v in ipairs(execute_lines) do
+               ColourNote("yellow", "red", v) -- flaming output
+            end
+            unmoveOldFiles()
+            return
+         end
+         
+         osexecute("rd /q /s \""..GetInfo(66).."update_tmp\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)
+                  
+         Note("Finished updating!")
+         Note()
+         ColourNote("white", "black", "+-------------------------------","yellow","black"," Restart MUSHclient ","white","black","----------------------------+")
+         ColourNote("white", "black", "|                                                                               |")
+         ColourNote("white", "black", "|  Updating files has completed. You must now restart MUSHclient immediately.   |")
+         ColourNote("white", "black", "|  If you don't, things will probably break.                                    |")
+         ColourNote("white", "black", "|                                                                               |")
+         ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
+         Note()
+         Repaint()
+      end)
+   end
+end
+
+function unmoveOldFiles()
+   print("UNMOVING???")
+   -- spray undo of move away, ignore errors
+   for i,v in ipairs(fetch_list) do
+      os.rename(GetInfo(66).."oldvers\\"..v.filepath, GetInfo(66)..v.filepath)
+   end
+end
+
+function osexecute(cmd)
+   local n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching output
+   cmd = cmd .. " > \""..n.."\""
+   local err = os.execute(cmd)
+   local message_accumulator = {}
+   -- It's not so simple to catch errors from os.execute, so grab the system output from a catfile
+   for line in io.lines (n) do
+      table.insert(message_accumulator, line)
+   end
+   os.remove(n) -- remove temp file
+   return err, message_accumulator
+end
+
 -- Shows an editbox dialog detailing the posted differences between
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Get It", cancel_button="Ignore", read_only=true, no_default=true}) then
-      browse(download_url)
+      -- browse(download_url)
+      async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/MUSHclient?recursive=1&access_token=d69e824fe859032fbe0492e3a5c4c91aca092619", doUpdate, "HTTPS", 120)
    else
       Note("")
       ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
@@ -119,45 +395,21 @@ function OnPluginListChanged()
    if not loaded then
       -- only fire on start after loading all plugins
       loaded = true
-      doAsyncRemoteRequest()
+      async.doAsyncRemoteRequest(version_url, main, "HTTPS", 120)
    end
 end
 
 function manualCheck()
    SetVariable("ignore_before_version", 0)
    DeleteTemporaryTimers()
-   doAsyncRemoteRequest()
+   async.doAsyncRemoteRequest(version_url, main, "HTTPS", 120)
 end
 
-function doAsyncRemoteRequest()
-   if not async_ok then
-      ErrorMessage = "Failed to load plugin network component. Tell Fiendish. Include your OS version and your client package version."
-      checkErrors()
-      return
-   end
-
-   if not thread then
-      thread = async.request(version_url, "HTTPS")
-      request_time = os.time()
-   end
-   
-   if thread:alive() then
-      if os.time() - request_time > 30 then
-         -- stop trying after 30 seconds
-         thread = nil
-      else
-         DoAfterSpecial(1,"doAsyncRemoteRequest()",sendto.script)
-      end
-   else
-      main()
-   end
-end
-
-function main()
+function main(retval, page, status, headers, full_status, request_url)
    ignore_before_version = tonumber(GetVariable("ignore_before_version")) or 0
    SetStatus("Checking online for Aardwolf MUSHclient Package updates")
    ErrorMessage = ""
-   if checkRemoteFile() then
+   if checkRemoteFile(page, status) then
       if checkLocalFile() then
          showUpdate()
       end
@@ -168,13 +420,13 @@ end
 
 function checkLocalFile()
    -- open the local version file
-   version_file,err = io.open (GetInfo(56).."AardwolfPackageChanges.txt", "r")
-   if not version_file then -- the file is missing or unreadable
+   local version_file, err = io.open (GetInfo(66).."AardwolfPackageChanges.txt", "r")
+   if version_file == nil then -- the file is missing or unreadable
       ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.\n\nThe system returned the error:\n"..err
       return false
    end
    --- read the snapshot revision from the third line
-   line = version_file:read ("*l") -- read one line
+   local line = version_file:read ("*l") -- read one line
    line = version_file:read ("*l") -- read one line
    line = version_file:read ("*l") -- read one line
    version_file:close ()
@@ -190,9 +442,8 @@ function checkLocalFile()
    return true
 end
 
-function checkRemoteFile()
+function checkRemoteFile(page, status)
    -- grab the download page
-   retval, page, status, headers, full_status = thread:join()
    thread = nil
    if status == 200 then -- 200 is the HTTP status code for "OK"
       update_list, latest_version = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r(%d+) snapshot.*)")
