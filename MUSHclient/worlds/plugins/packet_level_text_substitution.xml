@@ -12,7 +12,6 @@
    requires="4.75"
    version="1.0"
    save_state="y"
-   sequence="-6000"
 >
 
 <description trim="y">
@@ -23,7 +22,7 @@ Does not cross color code boundaries.
 '#sub potato pants' will make @Mpotato@Cpants@Rairplane become @Mpants@Cpants@Rairplane
 but will not do anything to @Mpot@Yato@Cpants@Rairplane.
 
-Operates at the incoming packet level, so GMCP strings are affected as well.
+Operates at the incoming packet level, so GMCP strings are modified as well.
 
 </description>
 </plugin>
@@ -39,7 +38,8 @@ Operates at the incoming packet level, so GMCP strings are affected as well.
 ></alias>
 
 <alias
-   match="#sub {*} {*}"
+   match="^#sub \{(.*)\} \{(.*)\}( (#nocase)| (#alone))* *$"
+   regexp="y"
    enabled="y"
    sequence="100"
    ignore_case="y"
@@ -47,10 +47,10 @@ Operates at the incoming packet level, so GMCP strings are affected as well.
 ></alias>
 
 <alias
-   match="^#sub ([^ ]+) (.+)$"
+   match="^#sub (.+?) (.+?)( (#nocase)| (#alone))* *$"
    enabled="y"
    regexp="y"
-   sequence="100"
+   sequence="101"
    ignore_case="y"
    script="addsub"
 ></alias>
@@ -94,31 +94,37 @@ subs = {} -- init table
 
 loadstring (GetVariable ("subs") or "") ()
 
-function helpsub(name, line)
+function helpsub(name, line, wildcards)
    ColourNote("yellow","","")
    ColourNote("yellow","","You typed:   '","white","",line,"yellow","","'")
    ColourNote("yellow","","Available options for the #sub plugin are:")
-   ColourNote("yellow","","-------------------------------------------------")
+   ColourNote("yellow","","---------------------------------------------------------------")
    ColourNote("yellow","","#sub            - list all current substitutions")
+   ColourNote("yellow","","")
    ColourNote("yellow","","#sub a b        - replaces word a with word b")
    ColourNote("yellow","","#sub {a} {b}    - replaces phrase a with phrase b")
+   ColourNote("lime","","-  Add #alone to your sub line to only match at word boundaries")
+   ColourNote("lime","","-  Add #nocase to your sub line to do case-insensitive matching")
+   ColourNote("lime","","-  example:  #sub {hello} {Howdy} #alone #nocase")
+   ColourNote("lime","","-            will match HeLlO but not othello")
+   ColourNote("yellow","","")
    ColourNote("yellow","","#unsub a        - removes substitution for a")
    ColourNote("yellow","","#unsub #number  - removes numbered substitution")
    ColourNote("yellow","","")
 end
 
-function listsub()
+function listsub(name, line, wildcards)
    ColourNote("yellow","","")
-   ColourNote("yellow","","/-----------------------------------------------------------\\")
-   ColourNote("yellow","","  Current #subs:")
+   ColourNote("yellow",""," Current #subs:")
+   ColourNote("yellow","","/-----------------------------------------------------------------------------\\")
    for i,v in ipairs(subs) do
       ColourNote("yellow","",string.format("   %4u",i)..": ","white","",v[1],"yellow",""," --> ","white","",v[2])
    end
-   ColourNote("yellow","","\\-----------------------------------------------------------/")
+   ColourNote("yellow","","\\-----------------------------------------------------------------------------/")
    ColourNote("yellow","","")
  end
 
-function remsub(name, line, wildcards, styles) 
+function remsub(name, line, wildcards) 
    local formerly = nil
    local found = false
    local ind = nil
@@ -148,10 +154,39 @@ function remsub(name, line, wildcards, styles)
    OnPluginSaveState()
 end
 
-function addsub(name, line, wildcards, styles)
+function addsub(name, line, wildcards)
+
+   local fromstr = wildcards[1]
+   local tostr = wildcards[2]
+   
+   if wildcards[4] == "#nocase" then
+      wildcards[1] = string.gsub(wildcards[1], '(%a)', function (v) return '['..string.upper(v)..string.lower(v)..']' end)
+   end
+   if wildcards[5] == "#alone" then
+      wildcards[1] = "([%s%p])"..wildcards[1].."([%s%p])"
+      
+      wildcards[2] = string.gsub(wildcards[2], "%%%%", "%%\0"):gsub("%%([%d]+)", function (v) return "%"..tostring(tonumber(v)+1) end):gsub("%z","%%")
+      wildcards[2] = "%1"..wildcards[2]
+      local num_wilds = 0
+      for wild in string.gmatch(wildcards[1], "%(") do
+         num_wilds = num_wilds+1
+      end
+      wildcards[2] = wildcards[2].."%"..tostring(num_wilds)
+   end
+   
+   ColourNote("yellow", "", "...")
+   if wildcards[4] == "#nocase" or wildcards[5] == "#alone" then
+      ColourNote("yellow", "", "You specified"..((wildcards[4] == "#nocase") and (" "..wildcards[4]) or "")..((wildcards[5] == "#alone") and (" "..wildcards[5]) or "")..", so converting your #sub patterns...")
+      ColourNote("yellow", "", "")
+      ColourNote("yellow", "", "\""..fromstr.."\" --> \""..tostr.."\"")
+      ColourNote("yellow", "", "becomes")
+      ColourNote("yellow", "", "\""..wildcards[1].."\" --> \""..wildcards[2].."\"")
+   end
+
    remsub(nil, nil, {wildcards[1]}, nil)
-   table.insert(subs, {wildcards[1], wildcards[2]})
    ColourNote("yellow","","\""..wildcards[1].."\" now subbed with \""..wildcards[2].."\"")
+
+   table.insert(subs, {wildcards[1], wildcards[2]})
    listsub()
    OnPluginSaveState()
 end
@@ -160,9 +195,15 @@ function OnPluginSaveState()
    SetVariable ("subs", serialize.save ("subs"))
 end
 
+function OnPluginSaveState()
+   SetVariable ("subs", serialize.save ("subs"))
+end
+
 function OnPluginPacketReceived(sData)
-   for _,v in ipairs(subs) do
-      sData = sData:gsub(v[1],v[2])
+   if not GetInfo(123) then
+      for _,v in ipairs(subs) do
+         sData = sData:gsub(v[1],v[2])
+      end
    end
    return sData
 end
