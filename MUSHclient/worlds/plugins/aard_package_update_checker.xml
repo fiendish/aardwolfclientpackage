@@ -357,7 +357,7 @@ end
 function updateDialog(message,list)
    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Get It", cancel_button="Ignore", read_only=true, no_default=true}) then
       -- browse(download_url)
-      async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/MUSHclient?recursive=1&access_token=d69e824fe859032fbe0492e3a5c4c91aca092619", doUpdate, "HTTPS", 120)
+      async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/MUSHclient?recursive=1", doUpdate, "HTTPS", 120)
    else
       Note("")
       ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
