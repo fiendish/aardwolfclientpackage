@@ -49,6 +49,10 @@ download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHcl
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
+function OnPluginInstall()
+   osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                           
+end
+
 -- converts special character codes in html source to their ascii 
 -- equivalents for display. Also specially escapes things that need to be.
 function convertHTMLcodesToStandardText(str)
@@ -273,8 +277,6 @@ function checkIfFinishedDownloading()
          print("Updating Files...")
          Repaint()
 
-         osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)
-                           
          local succ = ffi.C.CreateDirectoryA(GetInfo(66).."oldvers", nil)
          local err_no = ffi.C.GetLastError()
          if succ == false and err_no ~= 127 then -- I guess if it still exists (error 183) then the previous cmd failed! Yay!
@@ -284,7 +286,12 @@ function checkIfFinishedDownloading()
          
          local all_files_moved_away = true
          local err_msg = ""
+         local exe = false
          for i,v in ipairs(fetch_list) do
+            if not exe and v:find("MUSHclient.exe") then
+               exe = true
+            end
+            
             local newdir = utils.split(v.filepath, "\\")
             newdir[#newdir] = nil
             newdir = table.concat(newdir, "\\")
@@ -317,12 +324,25 @@ function checkIfFinishedDownloading()
          
          osexecute("rd /q /s \""..GetInfo(66).."update_tmp\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)
                   
+         for i,pID in ipairs(GetPluginList()) do 
+            DoAfterSpecial(1, "ReloadPlugin(\""..pID.."\")", sendto.script)
+         end
+
          Note("Finished updating!")
          Note()
-         ColourNote("white", "black", "+-------------------------------","yellow","black"," Restart MUSHclient ","white","black","----------------------------+")
+         if exe then
+            ColourNote("white", "black", "+-------------------------------","yellow","black"," Restart MUSHclient ","white","black","----------------------------+")
+         else
+            ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
+         end
          ColourNote("white", "black", "|                                                                               |")
-         ColourNote("white", "black", "|  Updating files has completed. You must now restart MUSHclient immediately.   |")
-         ColourNote("white", "black", "|  If you don't, things will probably break.                                    |")
+         if exe then
+            ColourNote("white", "black", "|  Updating is complete. You should now restart MUSHclient immediately.         |")
+            ColourNote("white", "black", "|  If you don't, things may break.                                              |")
+         else
+            ColourNote("white", "black", "|  Updating is complete. Only scripts changed. Plugins have been reloaded.      |")
+         end
+         ColourNote("white", "black", "|                                                                               |")
          ColourNote("white", "black", "|                                                                               |")
          ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
          Note()
