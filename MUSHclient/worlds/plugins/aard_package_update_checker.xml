@@ -357,6 +357,9 @@ function unmoveOldFiles()
    for i,v in ipairs(fetch_list) do
       os.rename(GetInfo(66).."oldvers\\"..v.filepath, GetInfo(66)..v.filepath)
    end
+   osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                           
+end
+
 end
 
 function osexecute(cmd)
@@ -522,3 +525,4 @@ end
 ]]>
 </script>
 </muclient>
+
