@@ -166,7 +166,7 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
          checkIfFinishedDownloading()
       else
          async.doAsyncRemoteRequest(v.fileurl, saveNewFile, "HTTPS", 1200, cancel_update_on_timeout)
-         AddTimer("in_progress", 0, 0, 10, nil, timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace + timer_flag.ActiveWhenClosed, "files_left_in_progress")
+         AddTimer("in_progress", 0, 0, 10, "", timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace + timer_flag.ActiveWhenClosed, "files_left_in_progress")
       end
    end
 end
@@ -215,7 +215,7 @@ end
 function files_left_in_progress()
    local left = {}
    for k,v in pairs(files_to_fetch) do
-      table.insert(left, v.filepath)
+      table.insert(left, v)
    end
    print("Still waiting for download of: ", table.concat(left, ","))
 end
