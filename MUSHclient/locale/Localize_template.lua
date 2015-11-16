@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Sunday, 10 May 2015 at 09:46:04
+-- Written: Friday, 28 August 2015 at 15:12:30
 
 -- Static messages
 
@@ -1040,11 +1040,11 @@ messages = {
   ["Ready"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc_construct.cpp:790
+-- /cygdrive/c/source/mushclient/doc_construct.cpp:791
   ["Your world name cannot be blank."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc_construct.cpp:796
+-- /cygdrive/c/source/mushclient/doc_construct.cpp:797
   ["The world TCP/IP address cannot be blank."] =
     "",
 
@@ -1648,97 +1648,97 @@ messages = {
   ["--------(end script)-----------"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1053
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1062
   ["Script file: "] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1266
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1275
   ["MCCP not active."] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1558
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1567
   ["        WARNING: temporarily hidden by auto-positioning (no room)"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1695
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1704
   ["----- Debug commands available -----"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2292
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2301
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2362
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2371
   ["Matched count"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2293
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2302
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2363
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2372
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2433
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2442
   ["Has script"] =
-    "",
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2294
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2364
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2434
-  ["Times script called"] =
-    "",
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2295
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2365
-  ["When last matched"] =
-    "",
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2296
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2366
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2438
-  ["Send to"] =
-    "",
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2297
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2367
-
--- /cygdrive/c/source/mushclient/world_debug.cpp:2439
-  ["Temporary"] =
     "",
 
 -- /cygdrive/c/source/mushclient/world_debug.cpp:2303
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2372
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2373
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2443
+  ["Times script called"] =
+    "",
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2304
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2374
+  ["When last matched"] =
+    "",
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2305
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2375
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2447
+  ["Send to"] =
+    "",
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2306
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2376
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2448
+  ["Temporary"] =
+    "",
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2312
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2381
   ["Time to match"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2307
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2316
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2375
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2384
   ["Match attempts"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2432
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2441
   ["Fired count"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2435
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2444
   ["When to fire next"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2436
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2445
   ["Seconds to fire next"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2437
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2446
   ["When last reset/fired"] =
     "",
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2547
-
 -- /cygdrive/c/source/mushclient/world_debug.cpp:2556
+
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2565
   ["Never"] =
     "",
 
@@ -2672,7 +2672,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/dialogs/plugins/PluginsDlg.cpp:576
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2468
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2477
   ["Unable to edit the plugin file %s."] =
     function (a)
      
@@ -4508,7 +4508,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/world_debug.cpp:574
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1938
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1947
   ["%i alias%s."] =
     function (a, b)
      
@@ -4517,7 +4517,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/world_debug.cpp:645
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1875
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1884
   ["%i trigger%s."] =
     function (a, b)
      
@@ -4526,7 +4526,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/world_debug.cpp:782
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2074
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2083
   ["%i variable%s."] =
     function (a, b)
      
@@ -4675,464 +4675,464 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1029
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1038
   ["Operating system: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1032
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1041
   ["Libraries: %s, PCRE %s, PNG %s, SQLite3 %s, Zlib %s"] =
     function (a, b, c, d, e)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1039
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1048
   ["World name: '%s', ID: %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1046
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1055
   ["Script language: %s, enabled: %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1050
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1059
   ["Scripting active: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1060
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1069
   ["Lua sandbox is %i characters, DLL loading allowed: %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1064
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1073
   ["Scripting prefix: '%s'. External editor in use: %s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1067
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1076
   ["Editor path: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1074
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1083
   ["Scripting for: %1.6f seconds."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1109
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1118
   ["** Triggers: %ld in world file, triggers enabled: %s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1122
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1131
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1177
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1186
   ["   %ld enabled, %ld regexp, %I64d attempts, %I64d matched, %1.6f seconds."] =
     function (a, b, c, d, e)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1164
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1173
   ["** Aliases: %ld in world file, aliases enabled: %s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1197
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1206
   ["** Timers: %ld in world file, timers enabled: %s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1211
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1220
   ["   %ld enabled, %I64d fired."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1214
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1223
   ["   Timers checked every %i second(s)."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1216
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1225
   ["   Timers checked every %0.1f seconds."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1241
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1250
   ["** Variables: %ld."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1257
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1266
   ["MCCP active, took %1.6f seconds to decompress"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1258
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1267
   ["MCCP received %I64d compressed bytes, decompressed to %I64d bytes."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1262
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1271
   ["MCCP compression ratio was: %6.1f%% (lower is better)"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1293
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1302
   ["ID: %s, '"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1310
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1319
   ["', (%s, %0.3f s) %s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1409
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1418
   ["** Plugins: %ld loaded, %ld enabled."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1417
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1426
   ["Connect phase: %i (%s). NAWS wanted: %s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1422
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1431
   ["Received: %I64d bytes (%I64d Kb)"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1423
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1432
   ["Sent: %I64d bytes (%I64d Kb)"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1424
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1433
   ["Received %I64d packets, sent %I64d packets."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1425
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1434
   ["Total lines received: %ld"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1427
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1436
   ["This connection: Sent %ld lines, received %ld lines."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1431
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1440
   ["Telnet (IAC) received: DO: %ld, DONT: %ld, WILL: %ld, WONT: %ld, SB: %ld"] =
     function (a, b, c, d, e)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1457
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1466
   ["MXP active: %s, Pueblo mode: %s, Activated: %s"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1462
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1471
   ["MXP tags received: %I64d"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1463
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1472
   ["MXP entities received: %I64d"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1464
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1473
   ["MXP errors: %I64d"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1486
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1495
   ["Commands in command history: %ld"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1487
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1496
   ["Speed walking enabled: %s. Speed walking prefix: %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1489
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1498
   ["Command stacking enabled: %s. Command stack character: '%s'"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1494
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1503
   ["Accelerators defined: %ld"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1541
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1550
   ["Window: '%s', at (%ld,%ld,%ld,%ld), shown: %s"] =
     function (a, b, c, d, e, f)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1549
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1558
   ["        width: %ld, height: %ld, position: %d, hotspots: %ld, fonts: %ld, images: %ld"] =
     function (a, b, c, d, e, f)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1562
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1571
   ["** Miniwindows: %ld loaded, %ld shown."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1574
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1583
   ["Output pixels: width %ld, height: %ld, font width: %ld, font height: %ld"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1578
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1587
   ["               can show %ld characters, wrapping at column %ld, height %ld lines."] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1582
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1591
   ["Output buffer: %i of %ld lines."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1599
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1608
   ["Logging: %s, tracing: %s"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1608
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1617
   ["Database: '%s', disk file: '%s'"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1614
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1623
   ["** SQLite3 databases: %i"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1624
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1633
   ["Sound buffers in use: %ld"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1647
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1656
   ["Pane name   = %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1648
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1657
   [" Pane title = %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1649
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1658
   [" Left = %i, Top = %i, Width = %i, Height = %i, Flags = %08X, Lines = %i"] =
     function (a, b, c, d, e, f)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1667
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1676
   ["Line %i, Width = %i, Styles = %i, newline = %i"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1689
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1698
   ["%i pane%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1787
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1796
   ["Plugin ID %s does not exist."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1796
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1805
   ["(For plugin: %s)"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:1799
+-- /cygdrive/c/source/mushclient/world_debug.cpp:1808
   ["Warning: Plugin '%s' disabled."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2010
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2019
   [" %5s %02i:%02i:%04.2f"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2019
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2028
   [" - firing in %8.1f seconds."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2026
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2035
   ["%i timer%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2109
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2118
   ["%i callback%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2161
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2170
   ["%i accelerator%s."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2256
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2265
   ["Trigger %s does not exist."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2326
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2335
   ["Alias %s does not exist."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2394
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2403
   ["Timer %s does not exist."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2497
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2506
   ["Unable to edit the script file %s."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/world_debug.cpp:2512
+-- /cygdrive/c/source/mushclient/world_debug.cpp:2521
   ["DebugHelper: %s, %s"] =
     function (a, b)
      
