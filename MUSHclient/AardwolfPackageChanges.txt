@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1840 snapshot:
+- bug fix: hopefully fix bad github merge
+
 r1835 snapshot:
 - new feature: the package update plugin now actually tries to update the package in place for you instead of just pointing to a download link.
 - new feature: using async io with the "async" require is now a lot easier.
