@@ -41,7 +41,6 @@ You can also run a manual check by typing:    package update check
 
 async = require "async"
 require "json"
-require "sha1"
 require "wait"
 
 version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardwolfPackageChanges.txt"
@@ -86,20 +85,7 @@ end
 
 local _llthreads = require("llthreads")
 backgroundUpdate = string.dump(function(githubjson_t, mushpath)
-   require "sha1"
-   function gitsha (filename)   
-      function readAll(file)
-          local f = io.open(file, "rb")
-          if f == nil then
-            return ""
-          end
-          local content = f:read("*all")
-          f:close()
-          return content
-      end
-      local filed = readAll(filename)
-      return sha1.hash("blob "..#filed.."\0"..filed, true)
-   end
+   require "gitsha"
    
    local files = {}
    local ignored_files = {"/worlds/plugins/state/", "%.db$", "%.mcl$", "%.sqlite", "%.HLP", "%.GID", "%.ini"}
@@ -116,9 +102,6 @@ backgroundUpdate = string.dump(function(githubjson_t, mushpath)
             local filepath = string.gsub(v.path, "/", "\\"):sub(12)
             local githubsha = v.sha
             if gitsha(mushpath..filepath) ~= githubsha then
-               --if string.find(filepath, "MUSHclient%.exe$") ~= nil then
-               --   return false -- updated exe. They'll have to grab the zip.
-               --end
                table.insert(files, {["filepath"]=filepath, ["fileurl"]=v.url, ["exists"]=(gitsha(mushpath.."update_tmp\\"..filepath)==githubsha)})
             end
          end
@@ -129,6 +112,7 @@ end)
 
 local files_to_fetch = {}
 local fetch_list = {}
+local still_downloading = false
 function doUpdate(retval, page, status, headers, full_status, requested_url)
    local githubjson_t = json.decode(page)
    
@@ -160,20 +144,6 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
    thread:start()
    retval, fetch_list = thread:join()
    
-   if fetch_list == false then
-      ColourNote("white", "black", "+-------------------------------","red","black"," Unable to Update ","white","black","------------------------------+")
-      ColourNote("white", "black", "|                                                                               |")
-      ColourNote("white", "black", "|  This update includes a new MUSHclient.exe, so you'll need to go download...  |")
-      ColourTell("white", "black", "|  ")
-      Hyperlink("https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "New MUSHclient Package Download", "white", "black", true)
-      ColourNote("white", "black", "     |")
-      ColourNote("white", "black", "|                                                                               |")
-      ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
-      Note()
-      Note()
-      return
-   end
-   
    if type(fetch_list) == "string" then
       -- print("Will try again later.")
       return -- Connection error? We can always try again later.
@@ -185,6 +155,8 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
       print("Requesting file ["..i.." of "..#fetch_list.."]: "..v.filepath.." from "..v.fileurl)
       Repaint()
    end
+   
+   still_downloading = true
    for i,v in ipairs(fetch_list) do
 -- from e.g. :  https://api.github.com/repos/fiendish/aardwolfclientpackage/git/blobs/307a61f81fb7df5cd53565fd479ede3dab2bd081
 -- to e.g.   :  https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardMUSH_README.html
@@ -193,7 +165,8 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
          files_to_fetch[v.fileurl] = nil
          checkIfFinishedDownloading()
       else
-         async.doAsyncRemoteRequest(v.fileurl, saveNewFile, "HTTPS", 600)
+         async.doAsyncRemoteRequest(v.fileurl, saveNewFile, "HTTPS", 1200, cancel_update_on_timeout)
+         AddTimer("in_progress", 0, 0, 10, nil, timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace + timer_flag.ActiveWhenClosed, "files_left_in_progress")
       end
    end
 end
@@ -238,6 +211,16 @@ function saveNewFile(retval, page, status, headers, full_status, requested_url)
    checkIfFinishedDownloading()
 end
 
+
+function files_left_in_progress()
+   local left = {}
+   for k,v in pairs(files_to_fetch) do
+      table.insert(left, v.filepath)
+   end
+   print("Still waiting for download of: ", table.concat(left, ","))
+end
+
+
 local DELAY = 1
 function checkIfFinishedDownloading()
    local num_left = 0
@@ -247,6 +230,9 @@ function checkIfFinishedDownloading()
    print("Files remaining:  "..tostring(num_left))
       
    if num_left == 0 then
+      DeleteTimer("in_progress")
+      still_downloading = false
+      
       wait.make(function() 
          wait.time(DELAY)
          print("")
@@ -338,6 +324,17 @@ function checkIfFinishedDownloading()
       end)
    end
 end
+
+
+function cancel_update_on_timeout()
+   DeleteTimer("in_progress")
+   if still_downloading then
+      ColourNote("yellow", "red", "Cancelling MUSHclient update. Downloads are taking too long.") -- flaming output
+      files_left_in_progress()
+      still_downloading = false
+   end
+end
+
 
 function unmoveOldFiles()
    -- spray undo of move away, ignore errors
