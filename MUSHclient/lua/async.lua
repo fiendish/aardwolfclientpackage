@@ -10,7 +10,7 @@ local timeouts = {}
 
 -- result_callback_function gets arguments (retval, page, status, headers, full_status, requested_url)
 -- callback_on_timeout function gets arguments (requested_url, timeout_after)
-function doAsyncRemoteRequest(request_url, result_callback_function, callback_on_timeout, request_protocol, timeout_after)
+function doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout)
    if request_protocol == nil then
       request_protocol = "HTTPS"
    end
@@ -24,7 +24,7 @@ function doAsyncRemoteRequest(request_url, result_callback_function, callback_on
    assert(request_protocol == "HTTP" or request_protocol == "HTTPS")
    assert(type(timeout_after) == "number")
    assert(type(result_callback_function) == "function" or type(result_callback_function) == "string")
-   assert(type(callback_on_timeout) == "function" or type(callback_on_timeout) == "string")
+   assert(type(callback_on_timeout) == "function" or type(callback_on_timeout) == "string" or callback_on_timeout == nil)
    
    request_urls[thread_id] = request_url
    timeouts[thread_id] = timeout_after
@@ -37,7 +37,7 @@ function doAsyncRemoteRequest(request_url, result_callback_function, callback_on
       result_callbacks[thread_id] = loadstring(result_callback_function)
    end
    
-   if type(callback_on_timeout) == "function" then
+   if type(callback_on_timeout) == "function" or callback_on_timeout == nil then
       timeout_callbacks[thread_id] = callback_on_timeout
    else
       timeout_callbacks[thread_id] = loadstring(callback_on_timeout)
@@ -50,8 +50,9 @@ end
 
 
 
-
-
+local default_timeout_callback(requested_url, timeout) 
+   print("Async Request ["..requested_url].."] Thread Timed Out After "..tostring(timeout).."s") 
+end
 
 local network_thread_code = string.dump(function(arg)
     local args = arg
@@ -82,7 +83,6 @@ function __checkCompletionFor(thread_id)
          local timeout_callback = timeout_callbacks[thread_id]
          local request_url = request_urls[thread_id]
          local timeout = timeouts[thread_id]
-         print("Async Request ["..request_urls[thread_id].."] Thread Timed Out")
          
          thread_pool[thread_id] = nil
          request_times[thread_id] = nil
@@ -91,7 +91,11 @@ function __checkCompletionFor(thread_id)
          timeouts[thread_id] = nil
          request_urls[thread_id] = nil
          
-         timeout_callback(request_url, timeout)
+         if timeout_callback ~= nil then
+            timeout_callback(request_url, timeout)
+         else
+            default_timeout_callback(request_url, timeout)
+         end
       else
          DoAfterSpecial(0.2, "async.__checkCompletionFor('"..thread_id.."')", sendto.script)
       end
