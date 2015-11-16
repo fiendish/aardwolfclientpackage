@@ -50,8 +50,8 @@ end
 
 
 
-local default_timeout_callback(requested_url, timeout) 
-   print("Async Request ["..requested_url].."] Thread Timed Out After "..tostring(timeout).."s") 
+function default_timeout_callback(requested_url, timeout) 
+   print("Async Request ["..requested_url.."] Thread Timed Out After "..tostring(timeout).."s") 
 end
 
 local network_thread_code = string.dump(function(arg)
