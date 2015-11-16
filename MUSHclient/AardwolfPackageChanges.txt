@@ -1,11 +1,5 @@
 Aardwolf Client Package Major Changes List
 
-r1835 snapshot:
-- new feature: the package update plugin now actually tries to update the package in place for you instead of just pointing to a download link.
-- new feature: using async io with the "async" require is now a lot easier.
-- bug fix: fixes an error on loading the bigmap plugin if the gmcp mapper is absent
-- misc change: updated to MUSHclient 4.99 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
-
 r1830 snapshot:
 - bug fix: should fix a bug reported with the GMCP mapper where adjacent from starting room cexits weren't being used.
 - misc change: The GMCP mapper is now more thorough about database integrity checks because several reported bugs occured because of database file integrity errors.

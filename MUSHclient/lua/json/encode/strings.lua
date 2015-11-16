@@ -1,14 +1,12 @@
 --[[
 	Licensed according to the included 'LICENSE' document
 	Author: Thomas Harning Jr <harningt@gmail.com>
-]]
+--]]
 local string_char = require("string").char
 local pairs = pairs
 
-local jsonutil = require("json.util")
-local util_merge = jsonutil.merge
-
-local _ENV = nil
+local util_merge = require("json.util").merge
+module("json.encode.strings")
 
 local normalEncodingMap = {
 	['"'] = '\\"',
@@ -44,45 +42,26 @@ end
 
 local defaultOptions = {
 	xEncode = false, -- Encode single-bytes as \xXX
-	processor = nil, -- Simple processor for the string prior to quoting
 	-- / is not required to be quoted but it helps with certain decoding
 	-- Required encoded characters, " \, and 00-1F  (0 - 31)
 	encodeSet = '\\"/%z\1-\031',
 	encodeSetAppend = nil -- Chars to append to the default set
 }
 
-local modeOptions = {}
+default = nil
+strict = nil
 
-local function mergeOptions(options, mode)
-	jsonutil.doOptionMerge(options, false, 'strings', defaultOptions, mode and modeOptions[mode])
-end
-
-local function getEncoder(options)
+function getEncoder(options)
 	options = options and util_merge({}, defaultOptions, options) or defaultOptions
 	local encodeSet = options.encodeSet
 	if options.encodeSetAppend then
 		encodeSet = encodeSet .. options.encodeSetAppend
 	end
 	local encodingMap = options.xEncode and xEncodingMap or normalEncodingMap
-	local encodeString
-	if options.processor then
-		local processor = options.processor
-		encodeString = function(s, state)
-			return '"' .. processor(s:gsub('[' .. encodeSet .. ']', encodingMap)) .. '"'
-		end
-	else
-		encodeString = function(s, state)
-			return '"' .. s:gsub('[' .. encodeSet .. ']', encodingMap) .. '"'
-		end
+	local function encodeString(s, state)
+		return '"' .. s:gsub('[' .. encodeSet .. ']', encodingMap) .. '"'
 	end
 	return {
 		string = encodeString
 	}
 end
-
-local strings = {
-	mergeOptions = mergeOptions,
-	getEncoder = getEncoder
-}
-
-return strings

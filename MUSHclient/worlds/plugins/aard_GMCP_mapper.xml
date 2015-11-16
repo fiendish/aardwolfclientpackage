@@ -575,7 +575,6 @@ if not sent_busy then
    sent_busy = true
    BroadcastPlugin(999, "kinda_busy")
 end
-StopEvaluatingTriggers(true)
 </send>
 </trigger>
 
@@ -590,7 +589,6 @@ if sent_busy then
    sent_busy = false
    BroadcastPlugin(999, "ok_you_can_go_now")
 end
-StopEvaluatingTriggers(true)
 </send>
 </trigger>
 
@@ -721,6 +719,24 @@ StopEvaluatingTriggers(true)
 </triggers>
 
 <script>
+
+function toggleBackups(on)
+   if on then
+      EnableTimer("backup_timer", true)
+      Note("Automated map database backup enabled.")
+      if ((os.time()-last_auto_backup) >= 86401) then
+         Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
+         Note("Forcing an automatic backup now...")
+         Note("")
+         Repaint()
+         automatic_backup()
+      end
+   else
+      EnableTimer("backup_timer", false)
+      Note("Automated map database backup disabled.")
+   end
+end
+
 local show_vnums = &show_vnums;
 local show_timing = &show_timing;
 local show_completed = &show_completed;
@@ -4144,23 +4160,6 @@ function OnPluginSent (sText)
       end -- if
    end -- if 
 end -- function
-
-function toggleBackups(on)
-   if on then
-      EnableTimer("backup_timer", true)
-      Note("Automated map database backup enabled.")
-      if ((os.time()-last_auto_backup) >= 86401) then
-         Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
-         Note("Forcing an automatic backup now...")
-         Note("")
-         Repaint()
-         automatic_backup()
-      end
-   else
-      EnableTimer("backup_timer", false)
-      Note("Automated map database backup disabled.")
-   end
-end
 
 function OnPluginConnect ()
    if not db:isopen() then

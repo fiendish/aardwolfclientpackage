@@ -1,29 +1,24 @@
 --[[
 	Licensed according to the included 'LICENSE' document
 	Author: Thomas Harning Jr <harningt@gmail.com>
-]]
+--]]
 local tostring = tostring
 local assert = assert
-local jsonutil = require("json.util")
+local util = require("json.util")
 local huge = require("math").huge
 
-local _ENV = nil
+module("json.encode.number")
 
 local defaultOptions = {
 	nan = true,
 	inf = true
 }
 
-local modeOptions = {}
-modeOptions.strict = {
+default = nil -- Let the buildCapture optimization take place
+strict = {
 	nan = false,
 	inf = false
 }
-
-local function mergeOptions(options, mode)
-	jsonutil.doOptionMerge(options, false, 'number', defaultOptions, mode and modeOptions[mode])
-end
-
 
 local function encodeNumber(number, options)
 	if number ~= number then
@@ -41,18 +36,11 @@ local function encodeNumber(number, options)
 	return tostring(number)
 end
 
-local function getEncoder(options)
-	options = options and jsonutil.merge({}, defaultOptions, options) or defaultOptions
+function getEncoder(options)
+	options = options and util.merge({}, defaultOptions, options) or defaultOptions
 	return {
 		number = function(number, state)
 			return encodeNumber(number, options)
 		end
 	}
 end
-
-local number = {
-	mergeOptions = mergeOptions,
-	getEncoder = getEncoder
-}
-
-return number

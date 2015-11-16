@@ -1,17 +1,18 @@
 --[[
 	Licensed according to the included 'LICENSE' document
 	Author: Thomas Harning Jr <harningt@gmail.com>
-]]
+--]]
 local tostring = tostring
 
 local assert = assert
 local jsonutil = require("json.util")
+local util_merge = require("json.util").merge
 local type = type
 
-local _ENV = nil
+module("json.encode.others")
 
 -- Shortcut that works
-local encodeBoolean = tostring
+encodeBoolean = tostring
 
 local defaultOptions = {
 	allowUndefined = true,
@@ -19,17 +20,13 @@ local defaultOptions = {
 	undefined = jsonutil.undefined
 }
 
-local modeOptions = {}
-
-modeOptions.strict = {
+default = nil -- Let the buildCapture optimization take place
+strict = {
 	allowUndefined = false
 }
 
-local function mergeOptions(options, mode)
-	jsonutil.doOptionMerge(options, false, 'others', defaultOptions, mode and modeOptions[mode])
-end
-local function getEncoder(options)
-	options = options and jsonutil.merge({}, defaultOptions, options) or defaultOptions
+function getEncoder(options)
+	options = options and util_merge({}, defaultOptions, options) or defaultOptions
 	local function encodeOthers(value, state)
 		if value == options.null then
 			return 'null'
@@ -56,11 +53,3 @@ local function getEncoder(options)
 	end
 	return ret
 end
-
-local others = {
-	encodeBoolean = encodeBoolean,
-	mergeOptions = mergeOptions,
-	getEncoder = getEncoder
-}
-
-return others

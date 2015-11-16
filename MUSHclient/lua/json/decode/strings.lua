@@ -1,11 +1,10 @@
 --[[
 	Licensed according to the included 'LICENSE' document
 	Author: Thomas Harning Jr <harningt@gmail.com>
-]]
+--]]
 local lpeg = require("lpeg")
-local jsonutil = require("json.util")
 local util = require("json.decode.util")
-local merge = jsonutil.merge
+local merge = require("json.util").merge
 
 local tonumber = tonumber
 local string_char = require("string").char
@@ -13,16 +12,14 @@ local floor = require("math").floor
 local table_concat = require("table").concat
 
 local error = error
-
-local _ENV = nil
-
+module("json.decode.strings")
 local function get_error(item)
 	local fmt_string = item .. " in string [%q] @ %i:%i"
-	return lpeg.P(function(data, index)
+	return function(data, index)
 		local line, line_index, bad_char, last_line = util.get_invalid_character_info(data, index)
 		local err = fmt_string:format(bad_char, line, line_index)
 		error(err)
-	end) * 1
+	end
 end
 
 local bad_unicode   = get_error("Illegal unicode escape")
@@ -67,8 +64,8 @@ local function decodeX(code)
 end
 
 local doSimpleSub = lpeg.C(lpeg.S("'\"\\/bfnrtvz")) / knownReplacements
-local doUniSub = lpeg.P('u') * (lpeg.C(util.hexpair) * lpeg.C(util.hexpair) + bad_unicode)
-local doXSub = lpeg.P('x') * (lpeg.C(util.hexpair) + bad_hex)
+local doUniSub = lpeg.P('u') * (lpeg.C(util.hexpair) * lpeg.C(util.hexpair) + lpeg.P(bad_unicode))
+local doXSub = lpeg.P('x') * (lpeg.C(util.hexpair) + lpeg.P(bad_hex))
 
 local defaultOptions = {
 	badChars = '',
@@ -78,28 +75,24 @@ local defaultOptions = {
 	strict_quotes = false
 }
 
-local modeOptions = {}
+default = nil -- Let the buildCapture optimization take place
 
-modeOptions.strict = {
+strict = {
 	badChars = '\b\f\n\r\t\v',
 	additionalEscapes = false, -- no additional escapes
 	escapeCheck = #lpeg.S('bfnrtv/\\"u'), --only these chars are allowed to be escaped
 	strict_quotes = true
 }
 
-local function mergeOptions(options, mode)
-	jsonutil.doOptionMerge(options, false, 'strings', defaultOptions, mode and modeOptions[mode])
-end
-
 local function buildCaptureString(quote, badChars, escapeMatch)
 	local captureChar = (1 - lpeg.S("\\" .. badChars .. quote)) + (lpeg.P("\\") / "" * escapeMatch)
-	-- During error, force end
-	local captureString = captureChar^0 + (-#lpeg.P(quote) * bad_character + -1)
+	captureChar = captureChar + (-#lpeg.P(quote) * lpeg.P(bad_character))
+	local captureString = captureChar^0
 	return lpeg.P(quote) * lpeg.Cs(captureString) * lpeg.P(quote)
 end
 
-local function generateLexer(options)
-	options = options.strings
+local function buildCapture(options)
+	options = options and merge({}, defaultOptions, options) or defaultOptions
 	local quotes = { '"' }
 	if not options.strict_quotes then
 		quotes[#quotes + 1] = "'"
@@ -111,7 +104,7 @@ local function generateLexer(options)
 		escapeMatch = escapeMatch + options.additionalEscapes
 	end
 	if options.escapeCheck then
-		escapeMatch = options.escapeCheck * escapeMatch + bad_escape
+		escapeMatch = options.escapeCheck * escapeMatch + lpeg.P(bad_escape)
 	end
 	local captureString
 	for i = 1, #quotes do
@@ -125,9 +118,13 @@ local function generateLexer(options)
 	return captureString
 end
 
-local strings = {
-	mergeOptions = mergeOptions,
-	generateLexer = generateLexer
-}
+function register_types()
+	util.register_type("STRING")
+end
 
-return strings
+function load_types(options, global_options, grammar)
+	local capture = buildCapture(options)
+	local string_id = util.types.STRING
+	grammar[string_id] = capture
+	util.append_grammar_item(grammar, "VALUE", lpeg.V(string_id))
+end

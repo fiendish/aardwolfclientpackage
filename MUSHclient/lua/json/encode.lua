@@ -1,10 +1,11 @@
 --[[
 	Licensed according to the included 'LICENSE' document
 	Author: Thomas Harning Jr <harningt@gmail.com>
-]]
+--]]
 local type = type
 local assert, error = assert, error
 local getmetatable, setmetatable = getmetatable, setmetatable
+local util = require("json.util")
 
 local ipairs, pairs = ipairs, pairs
 local require = require
@@ -14,13 +15,13 @@ local output = require("json.encode.output")
 local util = require("json.util")
 local util_merge, isCall = util.merge, util.isCall
 
-local _ENV = nil
+module("json.encode")
 
 --[[
 	List of encoding modules to load.
 	Loaded in sequence such that earlier encoders get priority when
 	duplicate type-handlers exist.
-]]
+--]]
 local modulesToLoad = {
 	"strings",
 	"number",
@@ -32,24 +33,19 @@ local modulesToLoad = {
 -- Modules that have been loaded
 local loadedModules = {}
 
-local json_encode = {}
-
+-- Default configuration options to apply
+local defaultOptions = {}
 -- Configuration bases for client apps
-local modes_defined = { "default", "strict" }
-
-json_encode.default = {}
-json_encode.strict = {
+default = nil
+strict = {
 	initialObject = true -- Require an object at the root
 }
 
 -- For each module, load it and its defaults
 for _,name in ipairs(modulesToLoad) do
 	local mod = require("json.encode." .. name)
-	if mod.mergeOptions then
-		for _, mode in pairs(modes_defined) do
-			mod.mergeOptions(json_encode[mode], mode)
-		end
-	end
+	defaultOptions[name] = mod.default
+	strict[name] = mod.strict
 	loadedModules[name] = mod
 end
 
@@ -80,12 +76,12 @@ end
 
 --[[
 	Encode a value with a given encoding map and state
-]]
-local function encodeWithMap(value, map, state, isObjectKey)
+--]]
+local function encodeWithMap(value, map, state)
 	local t = type(value)
 	local encoderList = assert(map[t], "Failed to encode value, unhandled type: " .. t)
 	for _, encoder in ipairs(encoderList) do
-		local ret = encoder(value, state, isObjectKey)
+		local ret = encoder(value, state)
 		if false ~= ret then
 			return ret
 		end
@@ -98,15 +94,15 @@ local function getBaseEncoder(options)
 	local encoderMap = prepareEncodeMap(options)
 	if options.preProcess then
 		local preProcess = options.preProcess
-		return function(value, state, isObjectKey)
-			local ret = preProcess(value, isObjectKey or false)
+		return function(value, state)
+			local ret = preProcess(value)
 			if nil ~= ret then
 				value = ret
 			end
 			return encodeWithMap(value, encoderMap, state)
 		end
 	end
-	return function(value, state, isObjectKey)
+	return function(value, state)
 		return encodeWithMap(value, encoderMap, state)
 	end
 end
@@ -114,9 +110,9 @@ end
 	Retreive an initial encoder instance based on provided options
 	the initial encoder is responsible for initializing state
 		State has at least these values configured: encode, check_unique, already_encoded
-]]
-function json_encode.getEncoder(options)
-	options = options and util_merge({}, json_encode.default, options) or json_encode.default
+--]]
+function getEncoder(options)
+	options = options and util_merge({}, defaultOptions, options) or defaultOptions
 	local encode = getBaseEncoder(options)
 
 	local function initialEncode(value)
@@ -151,16 +147,13 @@ end
 	encoder
 	check_unique -- used by inner encoders to make sure value is unique
 	already_encoded -- used to unmark a value as unique
-]]
-function json_encode.encode(data, options)
-	return json_encode.getEncoder(options)(data)
+--]]
+function encode(data, options)
+	return getEncoder(options)(data)
 end
 
-local mt = {}
+local mt = getmetatable(_M) or {}
 mt.__call = function(self, ...)
-	return json_encode.encode(...)
+	return encode(...)
 end
-
-setmetatable(json_encode, mt)
-
-return json_encode
+setmetatable(_M, mt)

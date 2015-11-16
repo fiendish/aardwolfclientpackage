@@ -1,11 +1,11 @@
 --[[
 	Licensed according to the included 'LICENSE' document
 	Author: Thomas Harning Jr <harningt@gmail.com>
-]]
+--]]
 local setmetatable = setmetatable
-local assert, loadstring = assert, loadstring or load
+local assert, loadstring = assert, loadstring
 
-local _ENV = nil
+module("json.encode.output_utility")
 
 -- Key == weak, if main key goes away, then cache cleared
 local outputCache = setmetatable({}, {__mode = 'k'})
@@ -33,7 +33,7 @@ local function buildFunction(nextValues, innerValue, valueWriter, innerWriter)
 	return assert(loadstring(functionCode))()
 end
 
-local function prepareEncoder(cacheKey, nextValues, innerValue, valueWriter, innerWriter)
+function prepareEncoder(cacheKey, nextValues, innerValue, valueWriter, innerWriter)
 	local cache = outputCache[cacheKey]
 	if not cache then
 		cache = {}
@@ -46,9 +46,3 @@ local function prepareEncoder(cacheKey, nextValues, innerValue, valueWriter, inn
 	end
 	return fun
 end
-
-local output_utility = {
-	prepareEncoder = prepareEncoder
-}
-
-return output_utility
