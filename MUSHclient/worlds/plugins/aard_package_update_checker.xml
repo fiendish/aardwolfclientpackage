@@ -88,7 +88,7 @@ backgroundUpdate = string.dump(function(githubjson_t, mushpath)
    require "gitsha"
    
    local files = {}
-   local ignored_files = {"/worlds/plugins/state/", "Aardwolf%.db$", "%.mcl$", "%.sqlite$", "%.ini$"}
+   local ignored_files = {"/worlds/plugins/state/", "%.db$", "%.mcl$", "%.sqlite", "%.HLP", "%.GID", "%.ini"}
    for i,v in ipairs(githubjson_t) do
       if v.type == "blob" then
          local ignored = false
@@ -361,8 +361,11 @@ end
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Install It", cancel_button="Ignore", read_only=true, no_default=true}) then
-      -- browse(download_url)
-      async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/MUSHclient?recursive=1", doUpdate, "HTTPS", 120)
+      if utils.msgbox("This plugin can optionally try to perform the full upgrade for you so that you don't have to do anything except wait, watch, and then eventually restart MUSHclient. \n\nCaution: The code for this may be broken or incomplete, or it may just not work. If you're unsure, choose No, quit MUSHclient, backup your whole directory, then come back and do \"package update check\" again.\n\nWould you like to try installing automatically instead of making you do it manually?\n\n (choosing No will just download .zip archive)", "Try to install in place?", "yesno", "?", 2) == "yes" then
+         async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/MUSHclient?recursive=1", doUpdate, "HTTPS", 120)
+      else
+         browse(download_url)
+      end
    else
       Note("")
       ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
