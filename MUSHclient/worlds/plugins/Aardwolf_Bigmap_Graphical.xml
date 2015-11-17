@@ -756,7 +756,6 @@ function do_init()
    font_id = "bigmap_font"  -- our internal name
    font_id_bold = "bigmap_font_bold"  -- our internal name
 
-   print(mapwin)
    check (WindowFont (mapwin, font_id, font_name, font_size, false, false, false, false, 0, 49))  -- normal
    
    font_height = WindowFontInfo (mapwin, font_id, 1) -  WindowFontInfo (mapwin, font_id, 4) + 1 -- height
