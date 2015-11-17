@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1842 snapshot:
+- misc change: confirm at package update whether to update in place or to download the .zip instead
+
 r1840 snapshot:
 - bug fix: hopefully fix bad github merge
 
