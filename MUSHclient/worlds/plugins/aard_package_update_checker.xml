@@ -236,15 +236,18 @@ function checkIfFinishedDownloading()
       wait.make(function() 
          wait.time(DELAY)
          print("")
-         print("Done saving update files!")
+         print("Done downloading update files!")
          print("")
          if IsConnected() then
             print("Disconnecting to perform update...")
             print("")
             Disconnect()
          end
-         Save()
+         print("Saving world settings")
+         print("")
          Repaint()
+         
+         Save()
          wait.time(DELAY)
          
          ColourNote("white", "black", "+---------------------------------","red","black"," Touch Nothing ","white","black","-------------------------------+")
@@ -315,7 +318,7 @@ function checkIfFinishedDownloading()
          Note()
          result = utils.msgbox( "MUSHclient has finished updating and needs to be restarted. Exit the program now?", "Restart MUSHclient!", "yesno", "!", 1)
          if result == "yes" then
-            result = utils.msgbox( "Save world before exiting?", "Save", "yesno", "?", 1 )
+            result = utils.msgbox( "Save world again before exiting?", "Save", "yesno", "?", 1 )
             if result == "yes" then
                Save()
             end
