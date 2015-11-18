@@ -3870,20 +3870,30 @@ function map_notes (name, line, wildcards)
 
    local q = string.format ("SELECT bookmarks.uid as uid, bookmarks.notes as notes FROM bookmarks")
 
-   if area ~= "" then
-      if area == "here" then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-         luastmt = "gmcpdata = " .. gmcparg
-         assert(loadstring (luastmt or "")) ()
-         area = gmcpval("zone")
-         mapper.mapprint("Searching the current area")
+   if area == "room" or area == "thisroom" then
+      if not current_room then
+         mapper.mapprint("I don't know where you are right now - try: LOOK")
+         return
       else
-         mapper.mapprint("Searching areas that partially match '"..area.."'")
-         area = "%"..area.."%"
+         mapper.mapprint("Searching the current room")
+         q = q..",rooms where bookmarks.uid=rooms.uid and rooms.uid="..fixsql(current_room)
       end
-      q = q..",rooms where bookmarks.uid=rooms.uid and rooms.area like "..fixsql(area)
    else
-      mapper.mapprint("Searching all areas")
+      if area ~= "" then
+         if area == "here" then
+            res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
+            luastmt = "gmcpdata = " .. gmcparg
+            assert(loadstring (luastmt or "")) ()
+            area = gmcpval("zone")
+            mapper.mapprint("Searching the current area")
+         else
+            mapper.mapprint("Searching areas that partially match '"..area.."'")
+            area = "%"..area.."%"
+         end
+         q = q..",rooms where bookmarks.uid=rooms.uid and rooms.area like "..fixsql(area)
+      else
+         mapper.mapprint("Searching all areas")
+      end
    end
    
    -- build table of special places (with info in them)
