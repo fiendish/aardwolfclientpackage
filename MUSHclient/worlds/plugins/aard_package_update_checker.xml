@@ -300,7 +300,7 @@ function checkIfFinishedDownloading()
          
          local err, execute_lines = osexecute("xcopy \""..GetInfo(66).."update_tmp\" \"".. string.gsub(GetInfo(66),"\\$","").."\" /s /v /y /f")
          
-         if err ~= 0 or not execute_lines[#execute_lines] or not string.find(execute_lines[#execute_lines], tostring(#fetch_list).." file%(s%) copied") then
+         if err ~= 0 or not execute_lines[#execute_lines] or not string.find(execute_lines[#execute_lines]:lower(), tostring(#fetch_list).." file%(s%) copied") then
             ColourNote("white", "red", "Package Update ERROR (while replacing files)")
             for i,v in ipairs(execute_lines) do
                ColourNote("yellow", "red", v) -- flaming output
