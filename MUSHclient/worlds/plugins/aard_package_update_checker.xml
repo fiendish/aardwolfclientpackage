@@ -236,15 +236,18 @@ function checkIfFinishedDownloading()
       wait.make(function() 
          wait.time(DELAY)
          print("")
-         print("Done saving update files!")
+         print("Done downloading update files!")
          print("")
          if IsConnected() then
             print("Disconnecting to perform update...")
             print("")
             Disconnect()
          end
-         Save()
+         print("Saving world settings")
+         print("")
          Repaint()
+         
+         Save()
          wait.time(DELAY)
          
          ColourNote("white", "black", "+---------------------------------","red","black"," Touch Nothing ","white","black","-------------------------------+")
@@ -300,7 +303,7 @@ function checkIfFinishedDownloading()
          
          local err, execute_lines = osexecute("xcopy \""..GetInfo(66).."update_tmp\" \"".. string.gsub(GetInfo(66),"\\$","").."\" /s /v /y /f")
          
-         if err ~= 0 or not execute_lines[#execute_lines] or not string.find(execute_lines[#execute_lines], tostring(#fetch_list).." file%(s%) copied") then
+         if err ~= 0 or not execute_lines[#execute_lines] or not string.find(execute_lines[#execute_lines]:lower(), tostring(#fetch_list).." file%(s%) copied") then
             ColourNote("white", "red", "Package Update ERROR (while replacing files)")
             for i,v in ipairs(execute_lines) do
                ColourNote("yellow", "red", v) -- flaming output
@@ -315,7 +318,7 @@ function checkIfFinishedDownloading()
          Note()
          result = utils.msgbox( "MUSHclient has finished updating and needs to be restarted. Exit the program now?", "Restart MUSHclient!", "yesno", "!", 1)
          if result == "yes" then
-            result = utils.msgbox( "Save world before exiting?", "Save", "yesno", "?", 1 )
+            result = utils.msgbox( "Save world again before exiting?", "Save", "yesno", "?", 1 )
             if result == "yes" then
                Save()
             end
@@ -361,8 +364,11 @@ end
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Install It", cancel_button="Ignore", read_only=true, no_default=true}) then
-      -- browse(download_url)
-      async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/MUSHclient?recursive=1", doUpdate, "HTTPS", 120)
+      if utils.msgbox("This plugin can optionally try to perform the full upgrade for you so that you don't have to do anything except wait, watch, and then eventually restart MUSHclient. \n\nCaution: The code for this may be broken or incomplete, or it may just not work. If you're unsure, choose No, quit MUSHclient, backup your whole directory, then come back and do \"package update check\" again.\n\nWould you like to try installing automatically instead of making you do it manually?\n\n (choosing No will just download .zip archive)", "Try to install in place?", "yesno", "?", 2) == "yes" then
+         async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/MUSHclient?recursive=1", doUpdate, "HTTPS", 120)
+      else
+         browse(download_url)
+      end
    else
       Note("")
       ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
