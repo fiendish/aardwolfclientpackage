@@ -1,7 +1,9 @@
 Aardwolf Client Package Major Changes List
 
 r1842 snapshot:
+- bug fix: update plugin now seen working in Windows XP. Wine's xcopy prints "<#> file(s) copied" with a lowercase f, but Windows's xcopy prints "<#> File(s) copied" with a capital F.
 - misc change: confirm at package update whether to update in place or to download the .zip instead
+- new feature: mapper notes room (or mapper notes thisroom) will print mapper notes for just the current room
 
 r1840 snapshot:
 - bug fix: hopefully fix bad github merge
