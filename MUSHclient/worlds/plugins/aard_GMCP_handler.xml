@@ -220,6 +220,7 @@ function PackageVersion()
          ret = string.match(line, "(r%d+)") or "unknown"
       end
    end
+   version_file:close()
    return ret
 end
 
