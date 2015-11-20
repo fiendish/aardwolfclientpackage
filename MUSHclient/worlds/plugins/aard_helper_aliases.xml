@@ -42,6 +42,7 @@
    if line then -- if we got something
       local_version = tonumber(string.match(line, "r(%d+) snapshot"))
    end
+   version_file:close()
    if not local_version then -- the file is messed up such that the third line doesn't contain "r### snapshot"
       ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to have been modified (this is bad), so the version check cannot proceed.")
       return
