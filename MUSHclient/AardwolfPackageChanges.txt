@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1843 snapshot:
+- bug fix: two plugins didn't close the version file after opening it, leading to access permission errors in the updater
+
 r1842 snapshot:
 - bug fix: update plugin now seen working in Windows XP. Wine's xcopy prints "<#> file(s) copied" with a lowercase f, but Windows's xcopy prints "<#> File(s) copied" with a capital F.
 - misc change: confirm at package update whether to update in place or to download the .zip instead
