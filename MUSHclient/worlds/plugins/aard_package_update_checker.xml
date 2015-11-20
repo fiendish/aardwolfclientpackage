@@ -39,11 +39,12 @@ You can also run a manual check by typing:    package update check
 <script>
 <![CDATA[
 
+aard_extras = require "aard_lua_extras"
 async = require "async"
 require "json"
 require "wait"
 
-version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardwolfPackageChanges.txt"
+version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/"..aard_extras.version_file
 download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
@@ -430,27 +431,11 @@ function main(retval, page, status, headers, full_status, request_url)
 end
 
 function checkLocalFile()
-   -- open the local version file
-   local version_file, err = io.open (GetInfo(66).."AardwolfPackageChanges.txt", "r")
-   if version_file == nil then -- the file is missing or unreadable
-      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.\n\nThe system returned the error:\n"..err
-      return false
+   succ, local_version, msg = aard_extras.PackageVersionExtended()
+   if not succ then 
+      ErrorMessage = msg 
    end
-   --- read the snapshot revision from the third line
-   local line = version_file:read ("*l") -- read one line
-   line = version_file:read ("*l") -- read one line
-   line = version_file:read ("*l") -- read one line
-   version_file:close ()
-
-   local_version = nil
-   if line then -- if we got something
-      local_version = tonumber(string.match(line, "r(%d+) snapshot"))
-   end
-   if not local_version then -- the file is messed up such that the third line doesn't contain "r<###> snapshot"
-      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to have been mangled (this is bad), so the version check cannot proceed."
-      return false
-   end
-   return true
+   return succ
 end
 
 function checkRemoteFile(page, status)
@@ -480,7 +465,7 @@ end
 function showUpdate()
    if local_version and latest_version then -- sanity check
       if local_version < latest_version then
-         final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>\r\n")
+         final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your "..aard_extras.version_file.." file>\r\n")
          final_update_list = "( Get it from: "..download_url.." )\n\n"..convertHTMLcodesToStandardText(final_update_list)
          message = "THIS UPDATER WILL USE DATA AND ASK TO RESTART YOUR CLIENT WHEN FINISHED\n\n\nThere's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
