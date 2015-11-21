@@ -89,7 +89,7 @@ backgroundUpdate = string.dump(function(githubjson_t, mushpath)
    require "gitsha"
    
    local files = {}
-   local ignored_files = {"/worlds/plugins/state/", "%.db$", "%.mcl$", "%.sqlite", "%.HLP", "%.GID", "%.ini"}
+   local ignored_files = {"/worlds/plugins/state/", "Aardwolf%.db$", "%.mcl$", "%.sqlite$", "%.ini$"}
    for i,v in ipairs(githubjson_t) do
       if v.type == "blob" then
          local ignored = false
