@@ -115,6 +115,7 @@ local files_to_fetch = {}
 local fetch_list = {}
 local still_downloading = false
 function doUpdate(retval, page, status, headers, full_status, requested_url)
+   num_retries = {}
    local githubjson_t = json.decode(page)
    
    if githubjson_t.tree == nil then
@@ -180,7 +181,23 @@ ffi.cdef[[
 ]]
 
 
+num_retries = {}
 function saveNewFile(retval, page, status, headers, full_status, requested_url)
+   if page == nil then
+      num_retries[requested_url] = num_retries[requested_url] or 0
+      if num_retries[requested_url] < 5 then
+         num_retries[requested_url] = num_retries[requested_url] + 1
+         print("Download of "..requested_url:match("/([^/]+)$").." failed. Retrying ["..num_retries[requested_url].."/5]")
+         wait.make(function()
+            wait.time(5)
+            async.doAsyncRemoteRequest(requested_url, saveNewFile, "HTTPS", 1200, cancel_update_on_timeout)
+         end)
+      else
+         cancel_update_on_timeout("Too many download retries.")
+      end
+      return
+   end
+   
    local filepath = files_to_fetch[requested_url]
    files_to_fetch[requested_url] = nil
    
@@ -218,7 +235,8 @@ function files_left_in_progress()
    for k,v in pairs(files_to_fetch) do
       table.insert(left, v)
    end
-   print("Still waiting for download of: ", table.concat(left, ","))
+   print("Still waiting for download of: ", table.concat(left, ", "))
+   print("")
 end
 
 
@@ -330,11 +348,14 @@ function checkIfFinishedDownloading()
 end
 
 
-function cancel_update_on_timeout()
+function cancel_update_on_timeout(reason)
    DeleteTimer("in_progress")
    if still_downloading then
-      ColourNote("yellow", "red", "Cancelling MUSHclient update. Downloads are taking too long.") -- flaming output
-      files_left_in_progress()
+      if reason then
+         ColourNote("yellow", "red", "Cancelling MUSHclient update. "..reason) -- flaming output
+      else
+         ColourNote("yellow", "red", "Cancelling MUSHclient update. Downloads are taking too long.") -- flaming output
+      end
       still_downloading = false
    end
 end
