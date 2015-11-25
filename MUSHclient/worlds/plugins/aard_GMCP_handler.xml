@@ -77,6 +77,7 @@ have been a better lua idiom', please do let me know at wolf@aardwolf.com - than
 <script>
 <![CDATA[
 
+aard_extras = require "aard_lua_extras"
 require "json"
 require "serialize"
 require "gmcphelper"
@@ -199,7 +200,7 @@ function OnPluginTelnetRequest (msg_type, data)
    if msg_type == GMCP and data == "SENT_DO" then
       Note ("Enabling GMCP.") 
       -- This hard-coded block may need to be made into a config table as we add more message types.
-      Send_GMCP_Packet (string.format ('Core.Hello { "client": "MUSHclient", "version": "%s" }', Version().." "..PackageVersion()))
+      Send_GMCP_Packet (string.format ('Core.Hello { "client": "MUSHclient", "version": "%s" }', Version().." r"..aard_extras.PackageVersion()))
       Send_GMCP_Packet ('Core.Supports.Set [ "Char 1", "Comm 1", "Room 1" ]')
       return true
    end -- if GMCP login needed (just sent DO)
@@ -207,22 +208,6 @@ function OnPluginTelnetRequest (msg_type, data)
    return false
 end -- function OnPluginTelnetRequest
 
-function PackageVersion()
-   local ret = "unknown"
-   -- borrowed from the package update checker
-   version_file,err = io.open ("AardwolfPackageChanges.txt", "r")
-   if version_file then -- the file exists
-      --- read the snapshot revision from the third line
-      line = version_file:read ("*l") -- read one line
-      line = version_file:read ("*l") -- read one line
-      line = version_file:read ("*l") -- read one line
-      if line then -- if we got something
-         ret = string.match(line, "(r%d+)") or "unknown"
-      end
-   end
-   version_file:close()
-   return ret
-end
 
 ---------------------------------------------------------------------------------------------------
 -- FUNCTION:: init_gmcpdata
