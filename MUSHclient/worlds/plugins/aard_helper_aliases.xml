@@ -28,26 +28,13 @@
    sequence="100"
 >
 <send>
-   -- code taken from the package update checker
-   version_file,err = io.open (GetInfo(56).."AardwolfPackageChanges.txt", "r")
-   if not version_file then -- the file is missing or unreadable
-      ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.")
-      return
+   aard_extras = require "aard_lua_extras"
+   local succ, version, msg = aard_extras.PackageVersionExtended()
+   if succ then
+      ColourNote("white", "blue", msg)
+   else
+      ColourNote("white","red", msg)
    end
-   --- read the snapshot revision from the third line
-   line = version_file:read ("*l") -- read one line
-   line = version_file:read ("*l") -- read one line
-   line = version_file:read ("*l") -- read one line
-   local_version = nil
-   if line then -- if we got something
-      local_version = tonumber(string.match(line, "r(%d+) snapshot"))
-   end
-   version_file:close()
-   if not local_version then -- the file is messed up such that the third line doesn't contain "r### snapshot"
-      ColourNote("white","red","The file \'AardwolfPackageChanges.txt\' appears to have been modified (this is bad), so the version check cannot proceed.")
-      return
-   end
-   ColourNote("white","blue","You are currently using Aardwolf MUSHclient Package version: r"..local_version)
 </send>
 </alias>
 

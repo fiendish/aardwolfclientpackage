@@ -39,11 +39,12 @@ You can also run a manual check by typing:    package update check
 <script>
 <![CDATA[
 
+aard_extras = require "aard_lua_extras"
 async = require "async"
 require "json"
 require "wait"
 
-version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardwolfPackageChanges.txt"
+version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/"..aard_extras.version_file
 download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
@@ -88,7 +89,7 @@ backgroundUpdate = string.dump(function(githubjson_t, mushpath)
    require "gitsha"
    
    local files = {}
-   local ignored_files = {"/worlds/plugins/state/", "%.db$", "%.mcl$", "%.sqlite", "%.HLP", "%.GID", "%.ini"}
+   local ignored_files = {"/worlds/plugins/state/", "Aardwolf%.db$", "%.mcl$", "%.sqlite$", "%.ini$"}
    for i,v in ipairs(githubjson_t) do
       if v.type == "blob" then
          local ignored = false
@@ -114,6 +115,7 @@ local files_to_fetch = {}
 local fetch_list = {}
 local still_downloading = false
 function doUpdate(retval, page, status, headers, full_status, requested_url)
+   num_retries = {}
    local githubjson_t = json.decode(page)
    
    if githubjson_t.tree == nil then
@@ -179,7 +181,23 @@ ffi.cdef[[
 ]]
 
 
+num_retries = {}
 function saveNewFile(retval, page, status, headers, full_status, requested_url)
+   if page == nil then
+      num_retries[requested_url] = num_retries[requested_url] or 0
+      if num_retries[requested_url] < 5 then
+         num_retries[requested_url] = num_retries[requested_url] + 1
+         print("Download of "..requested_url:match("/([^/]+)$").." failed. Retrying ["..num_retries[requested_url].."/5]")
+         wait.make(function()
+            wait.time(5)
+            async.doAsyncRemoteRequest(requested_url, saveNewFile, "HTTPS", 1200, cancel_update_on_timeout)
+         end)
+      else
+         cancel_update_on_timeout("Too many download retries.")
+      end
+      return
+   end
+   
    local filepath = files_to_fetch[requested_url]
    files_to_fetch[requested_url] = nil
    
@@ -217,7 +235,8 @@ function files_left_in_progress()
    for k,v in pairs(files_to_fetch) do
       table.insert(left, v)
    end
-   print("Still waiting for download of: ", table.concat(left, ","))
+   print("Still waiting for download of: ", table.concat(left, ", "))
+   print("")
 end
 
 
@@ -329,11 +348,14 @@ function checkIfFinishedDownloading()
 end
 
 
-function cancel_update_on_timeout()
+function cancel_update_on_timeout(reason)
    DeleteTimer("in_progress")
    if still_downloading then
-      ColourNote("yellow", "red", "Cancelling MUSHclient update. Downloads are taking too long.") -- flaming output
-      files_left_in_progress()
+      if reason then
+         ColourNote("yellow", "red", "Cancelling MUSHclient update. "..reason) -- flaming output
+      else
+         ColourNote("yellow", "red", "Cancelling MUSHclient update. Downloads are taking too long.") -- flaming output
+      end
       still_downloading = false
    end
 end
@@ -430,27 +452,11 @@ function main(retval, page, status, headers, full_status, request_url)
 end
 
 function checkLocalFile()
-   -- open the local version file
-   local version_file, err = io.open (GetInfo(66).."AardwolfPackageChanges.txt", "r")
-   if version_file == nil then -- the file is missing or unreadable
-      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to be missing or unreadable (this is bad), so the version check cannot proceed.\n\nThe system returned the error:\n"..err
-      return false
+   succ, local_version, msg = aard_extras.PackageVersionExtended()
+   if not succ then 
+      ErrorMessage = msg 
    end
-   --- read the snapshot revision from the third line
-   local line = version_file:read ("*l") -- read one line
-   line = version_file:read ("*l") -- read one line
-   line = version_file:read ("*l") -- read one line
-   version_file:close ()
-
-   local_version = nil
-   if line then -- if we got something
-      local_version = tonumber(string.match(line, "r(%d+) snapshot"))
-   end
-   if not local_version then -- the file is messed up such that the third line doesn't contain "r<###> snapshot"
-      ErrorMessage = "The file \'AardwolfPackageChanges.txt\' appears to have been mangled (this is bad), so the version check cannot proceed."
-      return false
-   end
-   return true
+   return succ
 end
 
 function checkRemoteFile(page, status)
@@ -480,7 +486,7 @@ end
 function showUpdate()
    if local_version and latest_version then -- sanity check
       if local_version < latest_version then
-         final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your AardwolfPackageChanges.txt file>\r\n")
+         final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your "..aard_extras.version_file.." file>\r\n")
          final_update_list = "( Get it from: "..download_url.." )\n\n"..convertHTMLcodesToStandardText(final_update_list)
          message = "THIS UPDATER WILL USE DATA AND ASK TO RESTART YOUR CLIENT WHEN FINISHED\n\n\nThere's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
