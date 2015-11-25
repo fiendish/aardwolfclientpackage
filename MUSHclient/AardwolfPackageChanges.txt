@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1845 snapshot:
+- bug fix: detect file download failures during updates and gently retry a few times.
+- misc change: move version file checks to a more central location to hopefully avoid the file handle being held open accidentally by bad copy+pastes.
+
 r1843 snapshot:
 - bug fix: two plugins didn't close the version file after opening it, leading to access permission errors in the updater
 
