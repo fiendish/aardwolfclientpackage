@@ -50,7 +50,7 @@ window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
 function OnPluginInstall()
-   osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                           
+   aard_extras.osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                           
 end
 
 -- converts special character codes in html source to their ascii 
@@ -281,7 +281,7 @@ function checkIfFinishedDownloading()
          Repaint()
       
          print("Updating Files...")
-         osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                                    
+         aard_extras.osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                                    
          wait.time(DELAY)
 
          Repaint()
@@ -320,9 +320,9 @@ function checkIfFinishedDownloading()
             return
          end
          
-         local err, execute_lines = osexecute("xcopy \""..GetInfo(66).."update_tmp\" \"".. string.gsub(GetInfo(66),"\\$","").."\" /s /v /y /f")
+         local err, execute_lines = aard_extras.osexecute("xcopy \""..GetInfo(66).."update_tmp\" \"".. string.gsub(GetInfo(66),"\\$","").."\" /s /i /e /v /y /f")
          
-         if err ~= 0 or not execute_lines[#execute_lines] or not string.find(execute_lines[#execute_lines]:lower(), tostring(#fetch_list).." file%(s%) copied") then
+         if err ~= 0 then
             ColourNote("white", "red", "Package Update ERROR (while replacing files)")
             for i,v in ipairs(execute_lines) do
                ColourNote("yellow", "red", v) -- flaming output
@@ -331,7 +331,7 @@ function checkIfFinishedDownloading()
             return
          end
          
-         osexecute("rd /q /s \""..GetInfo(66).."update_tmp\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)
+         aard_extras.osexecute("rd /q /s \""..GetInfo(66).."update_tmp\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)
 
          Note("Finished updating!")
          Note()
@@ -366,20 +366,7 @@ function unmoveOldFiles()
    for i,v in ipairs(fetch_list) do
       os.rename(GetInfo(66).."oldvers\\"..v.filepath, GetInfo(66)..v.filepath)
    end
-   osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                           
-end
-
-function osexecute(cmd)
-   local n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching output
-   cmd = cmd .. " > \""..n.."\""
-   local err = os.execute(cmd)
-   local message_accumulator = {}
-   -- It's not so simple to catch errors from os.execute, so grab the system output from a catfile
-   for line in io.lines (n) do
-      table.insert(message_accumulator, line)
-   end
-   os.remove(n) -- remove temp file
-   return err, message_accumulator
+   aard_extras.osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                           
 end
 
 -- Shows an editbox dialog detailing the posted differences between
