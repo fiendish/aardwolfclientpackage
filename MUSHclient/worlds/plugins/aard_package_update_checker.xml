@@ -40,6 +40,7 @@ You can also run a manual check by typing:    package update check
 <![CDATA[
 
 aard_extras = require "aard_lua_extras"
+require "aard_lua_ffi"
 async = require "async"
 require "json"
 require "wait"
@@ -50,7 +51,7 @@ window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
 function OnPluginInstall()
-   aard_extras.osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                           
+   aard_lua_ffi.DeleteFile(GetInfo(66).."oldvers", true)
 end
 
 -- converts special character codes in html source to their ascii 
@@ -173,13 +174,6 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
    end
 end
 
-ffi = require("ffi")
-ffi.cdef[[
-   bool CreateDirectoryA(const char *lpPathName, void *lpSecurityAttributes);
-   bool CopyFileA(const char* lpExistingFileName, const char * lpNewFileName, bool bFailIfExists);
-   unsigned long GetLastError(void);
-]]
-
 
 num_retries = {}
 function saveNewFile(retval, page, status, headers, full_status, requested_url)
@@ -202,23 +196,11 @@ function saveNewFile(retval, page, status, headers, full_status, requested_url)
    files_to_fetch[requested_url] = nil
    
    local filepathdirs = utils.split("update_tmp\\"..filepath, "\\")
-   if #filepathdirs > 1 then
-      local curpath = ""
-      local curdir = "update_tmp"
-      for i,dir in ipairs(filepathdirs) do
-         if i ~= #filepathdirs then -- not the file
-            curpath = curpath.."\\"..dir
-
-            local succ = ffi.C.CreateDirectoryA(GetInfo(66)..curpath, nil)
-            local err_no = ffi.C.GetLastError()
-            
-            if succ == false and err_no ~= 183 and err_no ~= 127 then
-               ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66)..curpath.."\n")
-               return
-            end
-            curdir = dir
-         end
-      end
+   filepathdirs[#filepathdirs] = nil
+   filepathdirs = table.concat(filepathdirs, "\\")
+   if not aard_lua_ffi.CreateDirectory(GetInfo(66)..filepathdirs, true) then
+      ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66)..filepathdirs.."\n")
+      return
    end
          
    local out = assert(io.open(GetInfo(66).."update_tmp\\"..filepath, "wb"))
@@ -281,15 +263,12 @@ function checkIfFinishedDownloading()
          Repaint()
       
          print("Updating Files...")
-         aard_extras.osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                                    
+         aard_lua_ffi.DeleteFile(GetInfo(66).."oldvers", true)
          wait.time(DELAY)
 
          Repaint()
          
-         local succ = ffi.C.CreateDirectoryA(GetInfo(66).."oldvers", nil)
-         local err_no = ffi.C.GetLastError()
-         if succ == false and err_no ~= 127 then -- I guess if it still exists (error 183) then the previous cmd failed! Yay!
-            ColourNote("yellow","red", "Package Update ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66).."oldvers. Did you remember to restart MUSHclient since the last update?")
+         if not aard_lua_ffi.CreateDirectory(GetInfo(66).."oldvers") then
             return
          end
          
@@ -304,34 +283,28 @@ function checkIfFinishedDownloading()
             local newdir = utils.split(v.filepath, "\\")
             newdir[#newdir] = nil
             newdir = table.concat(newdir, "\\")
-            
-            os.execute("md \"".. GetInfo(66).."oldvers\\"..newdir.."\" 2> nul")
+            aard_lua_ffi.CreateDirectory(GetInfo(66).."oldvers\\"..newdir, true)
             
             all_files_moved_away, err_msg = os.rename(GetInfo(66)..v.filepath, GetInfo(66).."oldvers\\"..v.filepath)
             if not all_files_moved_away and err_msg:find("No such file") == nil then
-               break
+               ColourNote("yellow","red", "Package Update ERROR trying to move old files out of the way: "..err_msg)
+               unmoveOldFiles()
+               return
             end
-            all_files_moved_away = true -- reset if just a no such file error
          end
-                  
-         if not all_files_moved_away then
-            ColourNote("yellow","red", "Package Update ERROR trying to move old files out of the way: "..err_msg)
-            unmoveOldFiles()
-            return
-         end
+
          
-         local err, execute_lines = aard_extras.osexecute("xcopy \""..GetInfo(66).."update_tmp\" \"".. string.gsub(GetInfo(66),"\\$","").."\" /s /i /e /v /y /f")
-         
-         if err ~= 0 then
-            ColourNote("white", "red", "Package Update ERROR (while replacing files)")
-            for i,v in ipairs(execute_lines) do
-               ColourNote("yellow", "red", v) -- flaming output
+         all_files_moved_away = true
+         for i,v in ipairs(fetch_list) do
+            all_files_moved_away, err_msg = os.rename(GetInfo(66).."update_tmp\\"..v.filepath, GetInfo(66)..v.filepath)
+            if not all_files_moved_away then
+               ColourNote("white", "red", "Package Update ERROR while replacing file: "..v.filepath)
+               unmoveOldFiles()
+               return
             end
-            unmoveOldFiles()
-            return
          end
          
-         aard_extras.osexecute("rd /q /s \""..GetInfo(66).."update_tmp\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)
+         aard_lua_ffi.DeleteFile(GetInfo(66).."update_tmp", true)
 
          Note("Finished updating!")
          Note()
@@ -366,7 +339,7 @@ function unmoveOldFiles()
    for i,v in ipairs(fetch_list) do
       os.rename(GetInfo(66).."oldvers\\"..v.filepath, GetInfo(66)..v.filepath)
    end
-   aard_extras.osexecute("rd /q /s \""..GetInfo(66).."oldvers\"") -- _impossible_ to capture errors from rd. hope this always works! (sigh)                           
+   aard_lua_ffi.DeleteFile(GetInfo(66).."oldvers", true)
 end
 
 -- Shows an editbox dialog detailing the posted differences between
