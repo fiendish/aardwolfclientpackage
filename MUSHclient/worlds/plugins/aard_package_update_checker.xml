@@ -120,7 +120,7 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
    local githubjson_t = json.decode(page)
    
    if githubjson_t.tree == nil then
-      Note()
+      Note("")
       ColourNote("white", "black", "  +-------------------------------","red","black"," Unable to Update ","white","black","------------------------------+")
       ColourNote("white", "black", "  |                                                                               |")
       ColourNote("white", "black", "  |  The GitHub API returned a bad result...                                      |")
@@ -139,23 +139,38 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
          end
          ColourNote("white", "black", " ___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___^___")
       end
-      Note()
+      Note("")
       return
    end
    
    local thread = _llthreads.new(backgroundUpdate, githubjson_t.tree, GetInfo(66))
    thread:start()
-   retval, fetch_list = thread:join()
+   retval, fetch_list = thread:join() -- todo: don't join immediately
    
    if type(fetch_list) == "string" then
       -- print("Will try again later.")
       return -- Connection error? We can always try again later.
    end
    
+   -- only download a new help.db if the exe has changed
+   local exe = false
+   local helpdb = nil
+   for i,v in ipairs(fetch_list) do
+      if v.filepath:find("MUSHclient%.exe") then
+         exe = true
+      end
+      if v.filepath:find("help%.db") then
+         helpdb = i
+      end
+   end
+   if helpdb and not exe then
+      table.remove(fetch_list, helpdb)
+   end
+   
    for i,v in ipairs(fetch_list) do
       v.fileurl = v.fileurl:gsub("api.github.com/repos", "raw.githubusercontent.com"):gsub("(aardwolfclientpackage/)git/.*", "%1".."MUSHclient/MUSHclient/"..v.filepath:gsub("\\", "/"))
       files_to_fetch[v.fileurl] = v.filepath
-      print("Requesting file ["..i.." of "..#fetch_list.."]: "..v.filepath.." from "..v.fileurl)
+      print("Auto Updater: Requesting file ["..i.." of "..#fetch_list.."]: "..v.filepath.." from "..v.fileurl)
       Repaint()
    end
    
@@ -164,7 +179,7 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
 -- from e.g. :  https://api.github.com/repos/fiendish/aardwolfclientpackage/git/blobs/307a61f81fb7df5cd53565fd479ede3dab2bd081
 -- to e.g.   :  https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/AardMUSH_README.html
       if v.exists then
-         print(" -- Already downloaded update_tmp\\"..v.filepath)
+         print("Auto Updater:  -- Already downloaded update_tmp\\"..v.filepath)
          files_to_fetch[v.fileurl] = nil
          checkIfFinishedDownloading()
       else
@@ -181,13 +196,13 @@ function saveNewFile(retval, page, status, headers, full_status, requested_url)
       num_retries[requested_url] = num_retries[requested_url] or 0
       if num_retries[requested_url] < 5 then
          num_retries[requested_url] = num_retries[requested_url] + 1
-         print("Download of "..requested_url:match("/([^/]+)$").." failed. Retrying ["..num_retries[requested_url].."/5]")
+         print("Auto Updater: Download of "..requested_url:match("/([^/]+)$").." failed. Retrying ["..num_retries[requested_url].."/5]")
          wait.make(function()
             wait.time(5)
             async.doAsyncRemoteRequest(requested_url, saveNewFile, "HTTPS", 1200, cancel_update_on_timeout)
          end)
       else
-         cancel_update_on_timeout("Too many download retries.")
+         cancel_update_on_timeout("Auto Updater: Too many download retries.")
       end
       return
    end
@@ -207,7 +222,7 @@ function saveNewFile(retval, page, status, headers, full_status, requested_url)
    out:write(page)
    assert(out:close())
    
-   print("Saved update file ---> update_tmp\\"..filepath)
+   print("Auto Updater: Saved update file ---> update_tmp\\"..filepath)
    checkIfFinishedDownloading()
 end
 
@@ -217,7 +232,7 @@ function files_left_in_progress()
    for k,v in pairs(files_to_fetch) do
       table.insert(left, v)
    end
-   print("Still waiting for download of: ", table.concat(left, ", "))
+   print("Auto Updater: Still downloading: ", table.concat(left, ", "))
    print("")
 end
 
@@ -228,7 +243,7 @@ function checkIfFinishedDownloading()
    for i,v in pairs(files_to_fetch) do
       num_left = num_left + 1
    end
-   print("Files remaining:  "..tostring(num_left))
+   print("Auto Updater: Files remaining:  "..tostring(num_left))
       
    if num_left == 0 then
       DeleteTimer("in_progress")
@@ -237,14 +252,14 @@ function checkIfFinishedDownloading()
       wait.make(function() 
          wait.time(DELAY)
          print("")
-         print("Done downloading update files!")
+         print("Auto Updater: Done downloading update files!")
          print("")
          if IsConnected() then
-            print("Disconnecting to perform update...")
+            print("Auto Updater: Disconnecting to perform update...")
             print("")
             Disconnect()
          end
-         print("Saving world settings")
+         print("Auto Updater: Saving world settings")
          print("")
          Repaint()
          
@@ -262,7 +277,7 @@ function checkIfFinishedDownloading()
          ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
          Repaint()
       
-         print("Updating Files...")
+         print("Auto Updater: Updating Files...")
          aard_lua_ffi.DeleteFile(GetInfo(66).."oldvers", true)
          wait.time(DELAY)
 
@@ -272,14 +287,19 @@ function checkIfFinishedDownloading()
             return
          end
          
+         -- Because a plugin might grab a file and not let go, we have to unload all plugins and then reload them later
+         print("Auto Updater: We have to temporarily unload all plugins for safety.")
+         loaded_plugins = {}
+         for k, v in pairs(GetPluginList()) do
+            if v ~= GetPluginID() then
+               loaded_plugins[v] = GetPluginInfo(v, 6)
+               UnloadPlugin(v)
+            end
+         end
+         
          local all_files_moved_away = true
          local err_msg = ""
-         local exe = false
-         for i,v in ipairs(fetch_list) do
-            if not exe and v.filepath:find("MUSHclient.exe") then
-               exe = true
-            end
-            
+         for i,v in ipairs(fetch_list) do            
             local newdir = utils.split(v.filepath, "\\")
             newdir[#newdir] = nil
             newdir = table.concat(newdir, "\\")
@@ -306,8 +326,18 @@ function checkIfFinishedDownloading()
          
          aard_lua_ffi.DeleteFile(GetInfo(66).."update_tmp", true)
 
-         Note("Finished updating!")
+         Note("Auto Updater: Finished updating!")
          Note()
+      
+         -- reload unloaded plugins
+         print("Auto Updater: Reloading your temporarily unloaded plugins.")
+         for k, v in pairs(loaded_plugins) do
+            if not IsPluginInstalled(k) then
+               LoadPlugin(v)
+            end
+         end
+         loaded_plugins = {}
+         
          result = utils.msgbox( "MUSHclient has finished updating and needs to be restarted. Exit the program now?", "Restart MUSHclient!", "yesno", "!", 1)
          if result == "yes" then
             result = utils.msgbox( "Save world again before exiting?", "Save", "yesno", "?", 1 )
@@ -340,6 +370,15 @@ function unmoveOldFiles()
       os.rename(GetInfo(66).."oldvers\\"..v.filepath, GetInfo(66)..v.filepath)
    end
    aard_lua_ffi.DeleteFile(GetInfo(66).."oldvers", true)
+   
+   -- reload unloaded plugins
+   print("Auto Updater: Reloading your temporarily unloaded plugins.")
+   for k, v in pairs(loaded_plugins) do
+      if not IsPluginInstalled(k) then
+         LoadPlugin(v)
+      end
+   end
+   loaded_plugins = {}
 end
 
 -- Shows an editbox dialog detailing the posted differences between
