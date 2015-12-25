@@ -10,6 +10,11 @@ module (..., package.seeall)
 --
 
 function DeleteFile(pathname, recursive, acceptable_errors)
+   succ, pathname = RestrictPathScope(pathname)
+   if not succ then
+      return false
+   end
+   
    acceptable_errors = acceptable_errors or {["2"]=true}
    
    local SHDeleteFlags = ffi.C.FOF_NOCONFIRMATION + ffi.C.FOF_NOERRORUI + ffi.C.FOF_SILENT
@@ -25,17 +30,32 @@ function DeleteFile(pathname, recursive, acceptable_errors)
 end
 
 function CreateDirectory(path_to_create, recursive, acceptable_errors)
+   succ, path_to_create = RestrictPathScope(path_to_create)
+   if not succ then
+      return false
+   end
+   
    acceptable_errors = acceptable_errors or {["183"]=true}
    
    if recursive then
       return CheckForWinError(SHCreateDirectoryExA(nil, path_to_create, nil), acceptable_errors)
    else
       ffi.C.CreateDirectoryA(path_to_create, nil)
-      return CheckForWinError(ffi.C.GetLastError(), acceptable_errors)
+      return CheckForWinError(ffi.C.GetLastError())
    end
 end
 
 function MoveFile(src, dest)
+   succ, src = RestrictPathScope(src)
+   if not succ then
+      return false
+   end
+   
+   succ, dest = RestrictPathScope(dest)
+   if not succ then
+      return false
+   end
+   
    if 0 == ffi.C.MoveFileA(src, dest) then
       return CheckForWinError(ffi.C.GetLastError())
    end
@@ -68,37 +88,8 @@ end
 -- ignore everything below this point
 --
 
-function CheckForWinError(err, acceptable_errors)
-   acceptable_errors = acceptable_errors or {}
-   
-   if err ~= 0 and not acceptable_errors[tostring(err)] then
-      print("")
-      
-      local str = ffi_charstr(1024)
-      local ferr = ffi.C.FormatMessageA(ffi.C.FORMAT_MESSAGE_FROM_SYSTEM + ffi.C.FORMAT_MESSAGE_IGNORE_INSERTS, nil, err, 0, str, 1023, nil)
-      if ferr == 0 then
-         print("Received Win32 error code:", err, "but encountered another error calling FormatMessage")
-         print("Try to see what this code means at:")
-         print("    https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx")
-      else
-         print("Received Win32 error code:", err, ffi.string(str, numout))
-      end
-      
-      local author = GetPluginInfo(GetPluginID(), 2)
-      if author == nil or author == "" then
-         author = "Fiendish"
-      end
-      print("If you think this shouldn't be considered an error, please tell "..author..".")
-      
-      print(debug.traceback())
-      print("")
-      return false
-   end
-   
-   return true
-end
 
-ffi = require "ffi"
+local ffi = require "ffi"
 
 local ffi_charstr = ffi.typeof("char[?]")
 
@@ -159,10 +150,85 @@ int __stdcall SHFileOperationA(LPSHFILEOPSTRUCTA lpFileOp);
 int __stdcall SHCreateDirectoryExA(HWND hwnd, LPCTSTR pszPath, const SECURITY_ATTRIBUTES* lpSecurityAttributes); // deprecated api?
 BOOL __stdcall CreateDirectoryA(LPCTSTR lpPathName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 BOOL __stdcall MoveFileA(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName);
+BOOL PathCanonicalizeA(LPTSTR lpszDst, LPCTSTR lpszSrc);
 
 DWORD __stdcall GetLastError(void);
 DWORD __stdcall FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPTSTR lpBuffer, DWORD nSize, va_list *Arguments);
 ]]
 
-SHFileOperationA = ffi.load("Shell32", true).SHFileOperationA
-SHCreateDirectoryExA = ffi.load("Shell32", true).SHCreateDirectoryExA  -- deprecated api?
+local SHFileOperationA = ffi.load("Shell32").SHFileOperationA
+local SHCreateDirectoryExA = ffi.load("Shell32").SHCreateDirectoryExA  -- deprecated api?
+local PathCanonicalizeA = ffi.load("shlwapi.dll").PathCanonicalizeA
+
+function RestrictPathScope(path)
+   local original_path = path
+   
+   -- clean up path separators
+   path = path:gsub("/","\\")
+   repeat
+      path, num = path:gsub("\\\\", "\\")
+   until num == 0
+   
+   local mushclient_canonical_path = ffi_charstr(1024, 0)
+   if not PathCanonicalizeA(mushclient_canonical_path, GetInfo(66)) then
+      CheckForWinError(ffi.C.GetLastError())
+      return false
+   end
+   
+   local canonical_path = ffi_charstr(1024, 0)
+   if not PathCanonicalizeA(canonical_path, path) then
+      CheckForWinError(ffi.C.GetLastError())
+      return false
+   end
+   
+   canonical_path = ffi.string(canonical_path)
+   if canonical_path:find(ffi.string(mushclient_canonical_path)) ~= 1 then
+      print("ERROR: A script just tried to operate on a file outside of your MUSHclient directory.")
+      print("The action has been prevented.")
+      print("Details:")
+      print("-------------------------------------------------------")
+      print("Attempted File Path:  "..original_path)
+      print("MUSHclient Directory: "..GetInfo(66))
+      plugin_id = GetPluginID()
+      if plugin_id ~= "" then
+         print("Plugin ID:   "..plugin_id)
+         print("Plugin Name: "..GetPluginInfo(plugin_id, 1))
+         print("Plugin File: "..GetPluginInfo(plugin_id, 6))
+      end
+      print(debug.traceback())
+      print("")
+      return false
+   end
+   
+   return true, canonical_path
+end
+
+function CheckForWinError(err, acceptable_errors)
+   acceptable_errors = acceptable_errors or {}
+   
+   if err ~= 0 and not acceptable_errors[tostring(err)] then
+      print("")
+      
+      local str = ffi_charstr(1024, 0)
+      local errlen = ffi.C.FormatMessageA(ffi.C.FORMAT_MESSAGE_FROM_SYSTEM + ffi.C.FORMAT_MESSAGE_IGNORE_INSERTS, nil, err, 0, str, 1023, nil)
+      if errlen == 0 then
+         print("Received Win32 error code:", err, "but encountered another error calling FormatMessage")
+         print("Try to see what this code means at:")
+         print("    https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx")
+      else
+         print("Received Win32 error code:", err, ffi.string(str, errlen))
+      end
+      
+      local author = GetPluginInfo(GetPluginID(), 2)
+      if author == nil or author == "" then
+         author = "Fiendish"
+      end
+      print("If you think this shouldn't be considered an error, please tell "..author..".")
+      
+      print(debug.traceback())
+      print("")
+      return false
+   end
+   
+   return true
+end
