@@ -49,14 +49,17 @@
 --Example Useage:
 -->>
 -- require "aard_lua_ffi"
+--
 -- print("A")
 -- if not aard_lua_ffi.CreateDirectory(GetInfo(66).."test\\test", true) then
 --    print("Failed A")
 -- end
+--
 -- print("B")
 -- if not aard_lua_ffi.CreateDirectory(GetInfo(66).."test\\test", true) then
 --    print("Failed B")
 -- end
+--
 -- print("C")
 -- if not aard_lua_ffi.CreateDirectory(GetInfo(66).."test\\test", true, {}) then
 --    print("Failed C")
