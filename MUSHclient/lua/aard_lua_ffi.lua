@@ -1,99 +1,79 @@
--- This module simplifies (and hopefully makes a bit safer) use of some Win32 APIs 
+-- This module simplifies (and hopefully makes a bit safer) use of some Windows APIs 
 -- through the LuaJIT FFI library. See http://luajit.org/ext_ffi.html
 -- Author: Avi Kelman (Fiendish)
 -- 
-
-module (..., package.seeall)
-
+-- Usage Notes: 
 --
--- interface functions:
+-->>
+-- After doing 'require "aard_lua_ffi"' from a script, you get access to the
+-- aard_lua_ffi function namespace which includes a curated and safened set of
+-- a few Windows API functions ( https://en.wikipedia.org/wiki/Windows_API ).
+--<<
 --
-
-function DeleteFile(pathname, recursive, acceptable_errors)
-   succ, pathname = RestrictPathScope(pathname)
-   if not succ then
-      return false
-   end
-   
-   acceptable_errors = acceptable_errors or {["2"]=true}
-   
-   local SHDeleteFlags = ffi.C.FOF_NOCONFIRMATION + ffi.C.FOF_NOERRORUI + ffi.C.FOF_SILENT
-   if not recursive then
-      SHDeleteFlags = SHDeleteFlags + ffi.C.FOF_NORECURSION
-   end
-   
-   local fos = ffi.new("SHFILEOPSTRUCTA")
-   fos.wFunc = "FO_DELETE"
-   fos.pFrom = pathname.."\000"
-   fos.fFlags = SHDeleteFlags
-   return CheckForWinError(SHFileOperationA(fos), acceptable_errors)
-end
-
-function CreateDirectory(path_to_create, recursive, acceptable_errors)
-   succ, path_to_create = RestrictPathScope(path_to_create)
-   if not succ then
-      return false
-   end
-   
-   acceptable_errors = acceptable_errors or {["183"]=true}
-   
-   if recursive then
-      return CheckForWinError(SHCreateDirectoryExA(nil, path_to_create, nil), acceptable_errors)
-   else
-      ffi.C.CreateDirectoryA(path_to_create, nil)
-      return CheckForWinError(ffi.C.GetLastError())
-   end
-end
-
-function MoveFile(src, dest)
-   succ, src = RestrictPathScope(src)
-   if not succ then
-      return false
-   end
-   
-   succ, dest = RestrictPathScope(dest)
-   if not succ then
-      return false
-   end
-   
-   if 0 == ffi.C.MoveFileA(src, dest) then
-      return CheckForWinError(ffi.C.GetLastError())
-   end
-end
-
---[[
-function Copy(source, dest)
-    wstring new_sf = source_folder + L"\\*";
-    WCHAR sf[MAX_PATH+1];
-    WCHAR tf[MAX_PATH+1];
-
-    wcscpy_s(sf, MAX_PATH, new_sf.c_str());
-    wcscpy_s(tf, MAX_PATH, target_folder.c_str());
-
-    sf[lstrlenW(sf)+1] = 0;
-    tf[lstrlenW(tf)+1] = 0;
-
-    SHFILEOPSTRUCTW s = { 0 };
-    s.wFunc = FO_COPY;
-    s.pTo = tf;
-    s.pFrom = sf;
-    s.fFlags = FOF_SILENT | FOF_NOCONFIRMMKDIR | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NO_UI;
-    int res = SHFileOperationW( &s );
-
-    return res == 0;
-end
---]]
-
+-->>
+-- See the table at the very end for the list of exported functions
+-- and their input arguments. 
+-- It looks something like:
 --
--- ignore everything below this point
+-- --
+-- -- export public functions
+-- --
+-- aard_lua_ffi = {
+--    MoveFile = MoveFile, -- (source, destination, acceptable_errors)
+--    CreateDirectory = CreateDirectory, -- (path_to_create, recursive, acceptable_errors)
+--    DeleteFile = DeleteFile, -- (path_name, recursive, acceptable_errors)
+--    ...
+-- }
+--<<
+--
+-->>
+-- The acceptable_errors input argument on each of the functions is given
+-- either nil or a list of Windows error codes that you want to be 
+-- ignored by the error checker. This will be function-specific, and 
+-- using it requires knowledge of what error codes might be thrown. 
+-- See the API call documentation linked in the function comments and also
+-- the list of error codes at
+-- https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx
+--
+-- Some functions will have default reasonable acceptable_errors already set
+-- if you pass in nil.
+--
+-- For instance: CreateDirectory has {183} assigned by default, which 
+--          ignores the error given if the directory already exists.
+--          To re-enable this error you need to pass in either the empty
+--          list {} or another list of other error codes, but reasonably
+--          you probably don't care if a CreateDirectory attempt technically
+--          fails because the directory already exists.
+--<<
+--
+--Example Useage:
+-->>
+-- require "aard_lua_ffi"
+-- print("A")
+-- if not aard_lua_ffi.CreateDirectory(GetInfo(66).."test\\test", true) then
+--    print("Failed A")
+-- end
+-- print("B")
+-- if not aard_lua_ffi.CreateDirectory(GetInfo(66).."test\\test", true) then
+--    print("Failed B")
+-- end
+-- print("C")
+-- if not aard_lua_ffi.CreateDirectory(GetInfo(66).."test\\test", true, {}) then
+--    print("Failed C")
+-- end
+--<<
+--This will likely print: "A", "B", "C", an error report that the directory already exists, "Failed C"
+--
 --
 
 
+--
+-- declarations
+--
 local ffi = require "ffi"
-
 local ffi_charstr = ffi.typeof("char[?]")
 
-ffi.cdef[[
+ffi.cdef([[
 typedef enum {
    FO_MOVE         = 0x0001,
    FO_COPY         = 0x0002,
@@ -154,13 +134,54 @@ BOOL PathCanonicalizeA(LPTSTR lpszDst, LPCTSTR lpszSrc);
 
 DWORD __stdcall GetLastError(void);
 DWORD __stdcall FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPTSTR lpBuffer, DWORD nSize, va_list *Arguments);
-]]
+]])
+
+--
+-- connect non-automatic libraries
+--
 
 local SHFileOperationA = ffi.load("Shell32").SHFileOperationA
 local SHCreateDirectoryExA = ffi.load("Shell32").SHCreateDirectoryExA  -- deprecated api?
 local PathCanonicalizeA = ffi.load("shlwapi.dll").PathCanonicalizeA
 
-function RestrictPathScope(path)
+--------------------------
+--------------------------
+
+local function CheckForWinError(err, acceptable_errors)
+   acceptable_errors = acceptable_errors or {}
+   
+   for i,v in ipairs(acceptable_errors) do
+      acceptable_errors[tostring(v)] = true
+   end
+   
+   if err ~= 0 and not acceptable_errors[tostring(err)] then
+      print("")
+      
+      local str = ffi_charstr(1024, 0)
+      local errlen = ffi.C.FormatMessageA(ffi.C.FORMAT_MESSAGE_FROM_SYSTEM + ffi.C.FORMAT_MESSAGE_IGNORE_INSERTS, nil, err, 0, str, 1023, nil)
+      if errlen == 0 then
+         print("Received Win32 error code:", err, "but encountered another error calling FormatMessage")
+         print("Try to see what this code means at:")
+         print("    https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx")
+      else
+         print("Received Win32 error code:", err, ffi.string(str, errlen))
+      end
+      
+      local author = GetPluginInfo(GetPluginID(), 2) -- GetPluginInfo and GetPluginID are a MUSHclient API call
+      if author == nil or author == "" then
+         author = "Fiendish"
+      end
+      print("If you think this shouldn't be considered an error, please tell the script author (maybe "..author.."?).")
+      
+      print(debug.traceback())
+      print("")
+      return false
+   end
+   
+   return true
+end
+
+local function RestrictPathScope(path)
    local original_path = path
    
    -- clean up path separators
@@ -170,7 +191,7 @@ function RestrictPathScope(path)
    until num == 0
    
    local mushclient_canonical_path = ffi_charstr(1024, 0)
-   if not PathCanonicalizeA(mushclient_canonical_path, GetInfo(66)) then
+   if not PathCanonicalizeA(mushclient_canonical_path, GetInfo(66)) then -- GetInfo is a MUSHclient API call
       CheckForWinError(ffi.C.GetLastError())
       return false
    end
@@ -188,12 +209,12 @@ function RestrictPathScope(path)
       print("Details:")
       print("-------------------------------------------------------")
       print("Attempted File Path:  "..original_path)
-      print("MUSHclient Directory: "..GetInfo(66))
-      plugin_id = GetPluginID()
+      print("MUSHclient Directory: "..GetInfo(66))           -- GetInfo is a MUSHclient API call
+      plugin_id = GetPluginID()                              -- GetPluginID is a MUSHclient API call
       if plugin_id ~= "" then
          print("Plugin ID:   "..plugin_id)
-         print("Plugin Name: "..GetPluginInfo(plugin_id, 1))
-         print("Plugin File: "..GetPluginInfo(plugin_id, 6))
+         print("Plugin Name: "..GetPluginInfo(plugin_id, 1)) -- GetPluginInfo is a MUSHclient API call
+         print("Plugin File: "..GetPluginInfo(plugin_id, 6)) -- GetPluginInfo is a MUSHclient API call
       end
       print(debug.traceback())
       print("")
@@ -203,32 +224,80 @@ function RestrictPathScope(path)
    return true, canonical_path
 end
 
-function CheckForWinError(err, acceptable_errors)
-   acceptable_errors = acceptable_errors or {}
-   
-   if err ~= 0 and not acceptable_errors[tostring(err)] then
-      print("")
-      
-      local str = ffi_charstr(1024, 0)
-      local errlen = ffi.C.FormatMessageA(ffi.C.FORMAT_MESSAGE_FROM_SYSTEM + ffi.C.FORMAT_MESSAGE_IGNORE_INSERTS, nil, err, 0, str, 1023, nil)
-      if errlen == 0 then
-         print("Received Win32 error code:", err, "but encountered another error calling FormatMessage")
-         print("Try to see what this code means at:")
-         print("    https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx")
-      else
-         print("Received Win32 error code:", err, ffi.string(str, errlen))
-      end
-      
-      local author = GetPluginInfo(GetPluginID(), 2)
-      if author == nil or author == "" then
-         author = "Fiendish"
-      end
-      print("If you think this shouldn't be considered an error, please tell "..author..".")
-      
-      print(debug.traceback())
-      print("")
+--
+-- public interface functions:
+--
+
+-- wraps SHFileOperationA using SHFILEOPSTRUCTA.wFunc=FO_DELETE
+-- https://msdn.microsoft.com/en-us/library/windows/desktop/bb762164.aspx
+-- https://msdn.microsoft.com/en-us/library/windows/desktop/bb759795.aspx
+local function DeleteFile(pathname, recursive, acceptable_errors)
+   succ, pathname = RestrictPathScope(pathname)
+   if not succ then
       return false
    end
    
-   return true
+   acceptable_errors = acceptable_errors or {2} -- already gone
+   
+   local SHDeleteFlags = ffi.C.FOF_NOCONFIRMATION + ffi.C.FOF_NOERRORUI + ffi.C.FOF_SILENT
+   if not recursive then
+      SHDeleteFlags = SHDeleteFlags + ffi.C.FOF_NORECURSION
+   end
+   
+   local fos = ffi.new("SHFILEOPSTRUCTA")
+   fos.wFunc = "FO_DELETE"
+   fos.pFrom = pathname.."\000"
+   fos.fFlags = SHDeleteFlags
+   return CheckForWinError(SHFileOperationA(fos), acceptable_errors)
 end
+
+-- wraps SHCreateDirectoryExA if recursive
+-- wraps CreateDirectoryA if not
+-- https://msdn.microsoft.com/en-us/library/windows/desktop/bb762131.aspx
+-- https://msdn.microsoft.com/en-us/library/windows/desktop/aa363855.aspx
+local function CreateDirectory(path_to_create, recursive, acceptable_errors)
+   succ, path_to_create = RestrictPathScope(path_to_create)
+   if not succ then
+      return false
+   end
+   
+   acceptable_errors = acceptable_errors or {183} -- already exists
+   
+   if recursive then
+      return CheckForWinError(SHCreateDirectoryExA(nil, path_to_create, nil), acceptable_errors)
+   else
+      ffi.C.CreateDirectoryA(path_to_create, nil)
+      return CheckForWinError(ffi.C.GetLastError(), acceptable_errors)
+   end
+end
+
+-- wraps MoveFileA
+-- https://msdn.microsoft.com/en-us/library/windows/desktop/aa365239.aspx
+local function MoveFile(src, dest, acceptable_errors)
+   acceptable_errors = acceptable_errors or {}
+
+   succ, src = RestrictPathScope(src)
+   if not succ then
+      return false
+   end
+   
+   succ, dest = RestrictPathScope(dest)
+   if not succ then
+      return false
+   end
+   
+   if 0 == ffi.C.MoveFileA(src, dest) then
+      return CheckForWinError(ffi.C.GetLastError(), acceptable_errors)
+   end
+end
+
+--
+-- export public functions
+--
+
+aard_lua_ffi = {
+   MoveFile = MoveFile, -- (source, destination, acceptable_errors)
+   CreateDirectory = CreateDirectory, -- (path_to_create, recursive, acceptable_errors)
+   DeleteFile = DeleteFile, -- (path_name, recursive, acceptable_errors)
+}
+
