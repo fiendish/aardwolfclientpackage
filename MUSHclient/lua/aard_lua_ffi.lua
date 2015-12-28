@@ -206,7 +206,7 @@ local function RestrictPathScope(path)
    end
    
    canonical_path = ffi.string(canonical_path)
-   if canonical_path:find(ffi.string(mushclient_canonical_path)) ~= 1 then
+   if canonical_path:find(ffi.string(mushclient_canonical_path), nil, true) ~= 1 then
       ColourNote("yellow", "red", "ERROR: A script just tried to operate on a file outside of your MUSHclient directory.")
       ColourNote("yellow", "red", "The action has been prevented.")
       ColourNote("yellow", "red", "Details:")
