@@ -202,7 +202,7 @@ function saveNewFile(retval, page, status, headers, full_status, requested_url)
             async.doAsyncRemoteRequest(requested_url, saveNewFile, "HTTPS", 1200, cancel_update_on_timeout)
          end)
       else
-         cancel_update_on_timeout("Auto Updater: Too many download retries.")
+         cancel_update_on_timeout("Too many download retries.")
       end
       return
    end
@@ -214,7 +214,7 @@ function saveNewFile(retval, page, status, headers, full_status, requested_url)
    filepathdirs[#filepathdirs] = nil
    filepathdirs = table.concat(filepathdirs, "\\")
    if not aard_lua_ffi.CreateDirectory(GetInfo(66)..filepathdirs, true) then
-      ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66)..filepathdirs.."\n")
+      errorMessage("Failed trying to CreateDirectory: "..filepathdirs.."\n")
       return
    end
          
@@ -278,12 +278,17 @@ function checkIfFinishedDownloading()
          Repaint()
       
          print("Auto Updater: Updating Files...")
-         aard_lua_ffi.DeleteFile(GetInfo(66).."oldvers", true)
+         if not aard_lua_ffi.DeleteFile(GetInfo(66).."oldvers", true) then
+            errorMessage("Failed trying to prepare workspace for the update")
+            return
+         end
+         
          wait.time(DELAY)
 
          Repaint()
          
          if not aard_lua_ffi.CreateDirectory(GetInfo(66).."oldvers") then
+            errorMessage("Failed trying to prepare workspace for the update")
             return
          end
          
@@ -307,18 +312,17 @@ function checkIfFinishedDownloading()
             
             all_files_moved_away, err_msg = os.rename(GetInfo(66)..v.filepath, GetInfo(66).."oldvers\\"..v.filepath)
             if not all_files_moved_away and err_msg:find("No such file") == nil then
-               ColourNote("yellow","red", "Package Update ERROR trying to move old files out of the way: "..err_msg)
+               errorMessage(err_msg.."\n trying to move old file out of the way "..v.filepath.." --> oldvers\\"..v.filepath)
                unmoveOldFiles()
                return
             end
          end
-
          
          all_files_moved_away = true
          for i,v in ipairs(fetch_list) do
             all_files_moved_away, err_msg = os.rename(GetInfo(66).."update_tmp\\"..v.filepath, GetInfo(66)..v.filepath)
             if not all_files_moved_away then
-               ColourNote("white", "red", "Package Update ERROR while replacing file: "..v.filepath)
+               errorMessage(err_msg.."\n trying to install file: ".."update_tmp\\"..v.filepath.." --> "..v.filepath)
                unmoveOldFiles()
                return
             end
@@ -355,9 +359,9 @@ function cancel_update_on_timeout(reason)
    DeleteTimer("in_progress")
    if still_downloading then
       if reason then
-         ColourNote("yellow", "red", "Cancelling MUSHclient update. "..reason) -- flaming output
+         errorMessage(reason)
       else
-         ColourNote("yellow", "red", "Cancelling MUSHclient update. Downloads are taking too long.") -- flaming output
+         errorMessage("Downloads are taking too long.")
       end
       still_downloading = false
    end
@@ -400,7 +404,7 @@ function updateDialog(message,list)
       ColourNote("cyan", "", "| You will be alerted again when another snapshot is released.             |")
       ColourNote("cyan", "", "|                                                                          |")
       ColourNote("cyan", "", "| Remember, you can always get the latest development release at:          |")
-      ColourNote("cyan", "", "| https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip |")
+      ColourNote("cyan", "", "| "..download_url..string.rep(" ", 75-string.len("| "..download_url.." |")).." |")
       ColourNote("cyan", "", "|                                                                          |")
       ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
       Note("")
@@ -411,13 +415,10 @@ end
 -- Something went wrong when trying to check for updates
 function errorMessage(msg)
    Note("")
-   ColourNote("white","red","Aardwolf MUSHclient Package Update Check Error:")
-   ColourNote("white","red",msg)
-   if msg:find("plugin network") then
-      Execute("checkversion")
-   end
-   ColourNote("white","red", "\nThe latest development release is always available at:")
-   ColourNote("white","red",download_url)
+   ColourNote("yellow","red","Aardwolf MUSHclient Package Updater Error:")
+   ColourNote("yellow","red",msg)
+   ColourNote("yellow","red", "\nThe latest development release is always available at:")
+   ColourNote("yellow","red",download_url)
    Note("")
 end
 
@@ -490,7 +491,7 @@ function showUpdate()
          message = "THIS UPDATER WILL USE DATA AND ASK TO RESTART YOUR CLIENT WHEN FINISHED\n\n\nThere's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
       elseif local_version > latest_version then
-         ErrorMessage = "Oh, dear...this is embarrassing. The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Contact Fiendish about this message, because clearly this situation is impossible. :/"
+         ErrorMessage = "The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Contact Fiendish about this message, because clearly this situation is impossible. :/"
          return false
       else
          ColourNote("yellow", "", "Your package version r"..local_version.." appears to be up-to-date.")
