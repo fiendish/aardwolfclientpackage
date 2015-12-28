@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r1850 snapshot:
+- misc change: with GMCP mapper cexits it should now be possible to visually draw exits between rooms that are nomap but still actually unique. You have to manually flag the room to ignore exits mismatches and then create a single-letter direction cexit. This will probably fail in funny ways for non-unique rooms.
+- bug fix: ascii map plugin will no longer request map updates if a room description kinda sorta looks like a door opening or closing.
+- bug fix: use luajit's FFI interface to replace calls to os.execute in the package updater plugin with direct Windows API calls because os.execute was freezing MUSHclient for at least one player.
+- bug fix: unload plugins before moving files around with the new updater, because a loaded plugin might be keeping a file locked.
+
 r1845 snapshot:
 - bug fix: detect file download failures during updates and gently retry a few times.
 - misc change: move version file checks to a more central location to hopefully avoid the file handle being held open accidentally by bad copy+pastes.
