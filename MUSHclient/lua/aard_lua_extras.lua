@@ -49,3 +49,17 @@ function PackageVersionExtended()
    
    return succ, version, msg
 end
+
+function osexecute(cmd)
+   local n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching output
+   cmd = cmd .. " > \""..n.."\""
+   local err = os.execute(cmd)
+   local message_accumulator = {}
+   -- It's not so simple to catch errors from os.execute, so grab the system output from a catfile
+   for line in io.lines (n) do
+      table.insert(message_accumulator, line)
+   end
+   os.remove(n) -- remove temp file
+   return err, message_accumulator
+end
+
