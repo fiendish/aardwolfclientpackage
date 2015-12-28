@@ -163,20 +163,20 @@ local function CheckForWinError(err, acceptable_errors)
       local str = ffi_charstr(1024, 0)
       local errlen = ffi.C.FormatMessageA(ffi.C.FORMAT_MESSAGE_FROM_SYSTEM + ffi.C.FORMAT_MESSAGE_IGNORE_INSERTS, nil, err, 0, str, 1023, nil)
       if errlen == 0 then
-         print("Received Win32 error code:", err, "but encountered another error calling FormatMessage")
-         print("Try to see what this code means at:")
-         print("    https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx")
+         ColourNote("yellow", "red", "Received Win32 error code: "..tostring(err).."but encountered another error calling FormatMessageA")
+         ColourNote("yellow", "red", "Try to see what this code means at:")
+         ColourNote("yellow", "red", "    https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx")
       else
-         print("Received Win32 error code:", err, ffi.string(str, errlen))
+         ColourNote("yellow", "red", "Received Win32 error code:", err, ffi.string(str, errlen))
       end
       
       local author = GetPluginInfo(GetPluginID(), 2) -- GetPluginInfo and GetPluginID are a MUSHclient API call
       if author == nil or author == "" then
          author = "Fiendish"
       end
-      print("If you think this shouldn't be considered an error, please tell the script author (maybe "..author.."?).")
+      ColourNote("yellow", "red", "If you think this shouldn't be considered an error, please tell the script author (maybe "..author.."?).")
       
-      print(debug.traceback())
+      ColourNote("yellow", "red", debug.traceback())
       print("")
       return false
    end
@@ -207,19 +207,19 @@ local function RestrictPathScope(path)
    
    canonical_path = ffi.string(canonical_path)
    if canonical_path:find(ffi.string(mushclient_canonical_path)) ~= 1 then
-      print("ERROR: A script just tried to operate on a file outside of your MUSHclient directory.")
-      print("The action has been prevented.")
-      print("Details:")
-      print("-------------------------------------------------------")
-      print("Attempted File Path:  "..original_path)
-      print("MUSHclient Directory: "..GetInfo(66))           -- GetInfo is a MUSHclient API call
-      plugin_id = GetPluginID()                              -- GetPluginID is a MUSHclient API call
+      ColourNote("yellow", "red", "ERROR: A script just tried to operate on a file outside of your MUSHclient directory.")
+      ColourNote("yellow", "red", "The action has been prevented.")
+      ColourNote("yellow", "red", "Details:")
+      ColourNote("yellow", "red", "-------------------------------------------------------")
+      ColourNote("yellow", "red", "Attempted File Path:  "..original_path)
+      ColourNote("yellow", "red", "MUSHclient Directory: "..GetInfo(66))  -- GetInfo is a MUSHclient API call
+      plugin_id = GetPluginID()  -- GetPluginID is a MUSHclient API call
       if plugin_id ~= "" then
-         print("Plugin ID:   "..plugin_id)
-         print("Plugin Name: "..GetPluginInfo(plugin_id, 1)) -- GetPluginInfo is a MUSHclient API call
-         print("Plugin File: "..GetPluginInfo(plugin_id, 6)) -- GetPluginInfo is a MUSHclient API call
+         ColourNote("yellow", "red", "Plugin ID:   "..plugin_id)
+         ColourNote("yellow", "red", "Plugin Name: "..GetPluginInfo(plugin_id, 1))  -- GetPluginInfo is a MUSHclient API call
+         ColourNote("yellow", "red", "Plugin File: "..GetPluginInfo(plugin_id, 6))  -- GetPluginInfo is a MUSHclient API call
       end
-      print(debug.traceback())
+      ColourNote("yellow", "red", debug.traceback())
       print("")
       return false
    end
