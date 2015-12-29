@@ -163,7 +163,7 @@ local function CheckForWinError(err, acceptable_errors)
       local str = ffi_charstr(1024, 0)
       local errlen = ffi.C.FormatMessageA(ffi.C.FORMAT_MESSAGE_FROM_SYSTEM + ffi.C.FORMAT_MESSAGE_IGNORE_INSERTS, nil, err, 0, str, 1023, nil)
       if errlen == 0 then
-         ColourNote("yellow", "red", "Received Win32 error code: "..tostring(err).."but encountered another error calling FormatMessageA")
+         ColourNote("yellow", "red", "Received Win32 error code: "..tostring(err).." but encountered another error calling FormatMessageA")
          ColourNote("yellow", "red", "Try to see what this code means at:")
          ColourNote("yellow", "red", "    https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx")
       else
@@ -240,7 +240,7 @@ local function DeleteFile(pathname, recursive, acceptable_errors)
       return false
    end
    
-   acceptable_errors = acceptable_errors or {2} -- already gone
+   acceptable_errors = acceptable_errors or {2, 1026} -- already gone
    
    local SHDeleteFlags = ffi.C.FOF_NOCONFIRMATION + ffi.C.FOF_NOERRORUI + ffi.C.FOF_SILENT
    if not recursive then
