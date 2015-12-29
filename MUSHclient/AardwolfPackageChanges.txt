@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1851 snapshot:
+- bug fix: Windows XP returns error 1026 if an FO_DELETE operation is attempted for a file that doesn't exist (updater)
+- bug fix: string comparisons should be plain (updater)
+
 r1850 snapshot:
 - misc change: with GMCP mapper cexits it should now be possible to visually draw exits between rooms that are nomap but still actually unique. You have to manually flag the room to ignore exits mismatches and then create a single-letter direction cexit. This will probably fail in funny ways for non-unique rooms.
 - bug fix: ascii map plugin will no longer request map updates if a room description kinda sorta looks like a door opening or closing.
