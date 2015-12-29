@@ -487,7 +487,7 @@ function showUpdate()
    if local_version and latest_version then -- sanity check
       if local_version < latest_version then
          final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your "..aard_extras.version_file.." file>\r\n")
-         final_update_list = "( Get it from: "..download_url.." )\n\n"..convertHTMLcodesToStandardText(final_update_list)
+         final_update_list = "( Get it from: "..download_url.." )\r\n\r\n"..convertHTMLcodesToStandardText(final_update_list)
          message = "THIS UPDATER WILL USE DATA AND ASK TO RESTART YOUR CLIENT WHEN FINISHED\n\n\nThere's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
       elseif local_version > latest_version then
