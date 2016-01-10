@@ -1299,7 +1299,7 @@ end
 
 function level_check(input)
    input = tonumber(input)
-   if positive_integer_check(input) == false or input > 291 then
+   if positive_integer_check(input) == false then
       return false
    else
       return true
