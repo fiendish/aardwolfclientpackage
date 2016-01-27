@@ -29,7 +29,7 @@ _COPYRIGHT = "LuaSec 0.4.1 - Copyright (C) 2009-2011 PUC-Rio"
 PORT = 443
 
 local cfg = {
-  protocol = "tlsv1",
+  protocol = "TLSv1_2",
   options  = "all",
   verify   = "none",
 }
