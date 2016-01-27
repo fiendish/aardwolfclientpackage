@@ -1,5 +1,7 @@
 module("async", package.seeall)
 local _llthreads = require("llthreads")
+require "socket.http" -- just make sure they can load
+require "ssl.https" -- just make sure they can load
 
 local thread_pool = {}
 local request_urls = {}
@@ -8,8 +10,11 @@ local result_callbacks = {}
 local timeout_callbacks = {}
 local timeouts = {}
 
+-- This is really the function you should use instead of calling request directly.
 -- result_callback_function gets arguments (retval, page, status, headers, full_status, requested_url)
 -- callback_on_timeout function gets arguments (requested_url, timeout_after)
+-- request_protocol is either HTTP or HTTPS
+-- timeout_after is in seconds
 function doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout)
    if request_protocol == nil then
       request_protocol = "HTTPS"
