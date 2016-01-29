@@ -43,23 +43,6 @@ local function default_https_port(u)
    return url.build(url.parse(u, {port = PORT}))
 end
 
--- Convert an URL to a table according to Luasocket needs.
-local function urlstring_totable(url, body, result_table)
-   url = {
-      url = default_https_port(url),
-      method = body and "POST" or "GET",
-      sink = ltn12.sink.table(result_table)
-   }
-   if body then
-      url.source = ltn12.source.string(body)
-      url.headers = {
-         ["content-length"] = #body,
-         ["content-type"] = "application/x-www-form-urlencoded",
-      }
-   end
-   return url
-end
-
 -- Forward calls to the real connection object.
 local function reg(conn)
    local mt = getmetatable(conn.sock).__index
@@ -117,10 +100,11 @@ function request(url, body)
   local result_table = {}
   local stringrequest = type(url) == "string"
   if stringrequest then
-    url = urlstring_totable(url, body, result_table)
+    url = {url = default_https_port(url)}
   else
     url.url = default_https_port(url.url)
   end
+  url.sink = ltn12.sink.table(result_table)
   if http.PROXY or url.proxy then
     return nil, "proxy not supported"
   elseif url.redirect then
@@ -130,6 +114,15 @@ function request(url, body)
   end
   -- New 'create' function to establish a secure connection
   url.create = tcp(url)
+  if body then
+    url.source = ltn12.source.string(body)
+    url.headers = url.headers or {}
+    url.headers["content-length"] = string.len(body)
+    url.headers["content-type"] = "application/x-www-form-urlencoded"
+    url.method = "POST"
+  else
+    url.method = "GET"
+  end
   local res, code, headers, status = http.request(url)
   if res and stringrequest then
     return table.concat(result_table), code, headers, status
