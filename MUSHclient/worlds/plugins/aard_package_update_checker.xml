@@ -50,6 +50,10 @@ download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHcl
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
+removed_files = {
+   "ssl.dll" -- switched from luasec to lua-openssl 
+}
+
 function OnPluginInstall()
    aard_lua_ffi.DeleteFile(GetInfo(66).."oldvers", true)
 end
@@ -293,7 +297,7 @@ function checkIfFinishedDownloading()
          end
          
          -- Because a plugin might grab a file and not let go, we have to unload all plugins and then reload them later
-         print("Auto Updater: We have to temporarily unload all plugins for safety.")
+         print("Auto Updater: Temporarily unloading all other plugins for safety")
          loaded_plugins = {}
          for k, v in pairs(GetPluginList()) do
             if v ~= GetPluginID() then
@@ -302,6 +306,7 @@ function checkIfFinishedDownloading()
             end
          end
          
+         print("Auto Updater: Moving old files out of the way")
          local all_files_moved_away = true
          local err_msg = ""
          for i,v in ipairs(fetch_list) do            
@@ -318,6 +323,7 @@ function checkIfFinishedDownloading()
             end
          end
          
+         print("Auto Updater: Installing new files.")
          all_files_moved_away = true
          for i,v in ipairs(fetch_list) do
             all_files_moved_away, err_msg = os.rename(GetInfo(66).."update_tmp\\"..v.filepath, GetInfo(66)..v.filepath)
@@ -328,13 +334,17 @@ function checkIfFinishedDownloading()
             end
          end
          
+         print("Auto Updater: Cleaning up")
+         for i,file_to_delete in ipairs(removed_files) do
+            aard_lua_ffi.DeleteFile(GetInfo(66)..file_to_delete, true)
+         end
          aard_lua_ffi.DeleteFile(GetInfo(66).."update_tmp", true)
 
          Note("Auto Updater: Finished updating!")
          Note()
       
          -- reload unloaded plugins
-         print("Auto Updater: Reloading your temporarily unloaded plugins.")
+         print("Auto Updater: Reloading your temporarily unloaded plugins")
          for k, v in pairs(loaded_plugins) do
             if not IsPluginInstalled(k) then
                LoadPlugin(v)
