@@ -1,5 +1,14 @@
 Aardwolf Client Package Major Changes List
 
+r1860 snapshot:
+- misc change: updated to MUSHclient 5.01 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
+- new feature: ascii map plugin will only automatically request updates if the player is active so they shouldn't keep you from idling out.
+- new feature: mapper backups internally store the date and time of when they were created.
+- bug fix/misc change: luasec replaced by lua-openssl, because luasec was not thread-safe. This should solve some hangs/crashes. Hopefully this doesn't cause other SSL connectivity regressions for anyone. (updater)
+- misc change: remove some plugins that are distributed with MUSHclient by default that I consider harmful to the package.
+- bug fix: replace old code.google.com links in the new connection plugin.
+- comment: I have the nagging feeling that I've forgotten to include something in this release, but I don't know what.
+
 r1851 snapshot:
 - bug fix: Windows XP returns error 1026 if an FO_DELETE operation is attempted for a file that doesn't exist (updater)
 - bug fix: string comparisons should be plain (updater)
