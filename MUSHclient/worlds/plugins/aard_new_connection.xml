@@ -126,7 +126,7 @@ function hyperlink_url(flags, hotspot_id, win)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       right_click_url()
    else
-      OpenBrowser("https://code.google.com/p/aardwolfclientpackage/wiki/Introduction")
+      OpenBrowser("https://github.com/fiendish/aardwolfclientpackage/wiki")
    end
 end
 
@@ -136,7 +136,7 @@ function right_click_url()
       WindowInfo (win, 15),
       "Copy url to clipboard")
    if result ~= "" then
-      SetClipboard("https://code.google.com/p/aardwolfclientpackage/wiki/Introduction")
+      SetClipboard("https://github.com/fiendish/aardwolfclientpackage/wiki")
    end
 end
 
@@ -242,7 +242,7 @@ function ShowGreeting(firstTime, highlight_url)
       WindowText (win, font_id, baselines[1], x, y, 0, 0, WINDOW_TEXT_COLOUR )
       y = y + line_height
       url_bottom = y+line_height
-      url_width = WindowText (win, font_id, "https://code.google.com/p/aardwolfclientpackage/wiki/Introduction", x, y, 0, 0, WINDOW_TEXT_COLOUR )
+      url_width = WindowText (win, font_id, "https://github.com/fiendish/aardwolfclientpackage/wiki", x, y, 0, 0, WINDOW_TEXT_COLOUR )
       WindowAddHotspot(win, "url",  
          x, 
          y, 

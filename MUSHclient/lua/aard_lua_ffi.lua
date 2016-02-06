@@ -193,6 +193,11 @@ local function RestrictPathScope(path)
       path, num = path:gsub("\\\\", "\\")
    until num == 0
    
+   local firstchar = string.sub(original_path,1,1)
+   if firstchar == "\\" or firstchar == "/" then
+      path = "\\"..path -- put UNC code back
+   end
+   
    local mushclient_canonical_path = ffi_charstr(1024, 0)
    if not PathCanonicalizeA(mushclient_canonical_path, GetInfo(66)) then -- GetInfo is a MUSHclient API call
       CheckForWinError(ffi.C.GetLastError())
@@ -302,5 +307,6 @@ aard_lua_ffi = {
    MoveFile = MoveFile, -- (source, destination, acceptable_errors)
    CreateDirectory = CreateDirectory, -- (path_to_create, recursive, acceptable_errors)
    DeleteFile = DeleteFile, -- (path_name, recursive, acceptable_errors)
+   RestrictPathScope = RestrictPathScope
 }
 
