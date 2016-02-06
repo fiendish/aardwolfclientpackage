@@ -73,7 +73,11 @@
 --
 -- declarations
 --
-local ffi = require "ffi"
+local ffi_ok, ffi = pcall(require, "ffi")
+if not ffi_ok then
+   utils.msgbox ( "Your MUSHclient package appears to be missing the LuaJIT FFI extensions.\r\nThis is bad.\r\nMostly this is bad, because one of your plugins wants to use LuaJIT FFI extension capability.\r\n\r\nHow did you get here?\r\n\r\n1) You thought it would be safe to replace your Lua DLLs? It's not.\r\n2) You downloaded an installer from mushclient.com or gammon.com.au and thought it would be safe to install that on top of the Aardwolf MUSHclient Package? It's not.\r\n3) You accidentally something something? Be more careful.\r\n4) File system corruption? Ruh-roh, Shaggy. Time to call tech support.", "Your MUSHclient Install is Broken", "ok", ".")
+end
+
 local ffi_charstr = ffi.typeof("char[?]")
 
 ffi.cdef([[
