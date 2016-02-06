@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Friday, 28 August 2015 at 15:12:30
+-- Written: Friday, 05 February 2016 at 15:40:36
 
 -- Static messages
 
@@ -1040,11 +1040,11 @@ messages = {
   ["Ready"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc_construct.cpp:791
+-- /cygdrive/c/source/mushclient/doc_construct.cpp:793
   ["Your world name cannot be blank."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc_construct.cpp:797
+-- /cygdrive/c/source/mushclient/doc_construct.cpp:799
   ["The world TCP/IP address cannot be blank."] =
     "",
 
@@ -1742,7 +1742,7 @@ messages = {
   ["Never"] =
     "",
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:734
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:735
   ["Loading plugins ..."] =
     "",
   } -- end messages
@@ -5181,46 +5181,46 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:613
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:614
   ["Line %4i: %s (%s)%s"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:667
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:668
   ["Attribute not used: %s=\"%s\""] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:683
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:684
   ["Tag not used: <%s>"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:751
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:752
   ["Loading plugin: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1047
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1048
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1113
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1114
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1144
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:1145
   ["option '%s' not set"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:2417
+-- /cygdrive/c/source/mushclient/xml/xml_load_world.cpp:2418
   ["%s loading plugin %s ..."] =
     function (a, b)
      

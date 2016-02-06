@@ -1,9 +1,3 @@
-MUSHclient version 4.99
-=======================
-
-Friday, 28th August 2015
-
-
 Author: Nick Gammon
 Web support: http://www.gammon.com.au/forum/
 

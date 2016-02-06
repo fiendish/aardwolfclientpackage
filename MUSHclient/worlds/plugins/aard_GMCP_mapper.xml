@@ -1299,7 +1299,7 @@ end
 
 function level_check(input)
    input = tonumber(input)
-   if positive_integer_check(input) == false or input > 291 then
+   if positive_integer_check(input) == false then
       return false
    else
       return true
@@ -2623,6 +2623,10 @@ function backup_databases(manual)
       ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66).."db_backups\\\n")
    else 
       -- successfully created the backup directory
+      
+      -- record when the backup occurs
+      dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("backup_date"), fixsql(os.date("%b %d, %Y - %X"))))
+      
       db:close() -- always close the database before copying
       
       -- make new backup
