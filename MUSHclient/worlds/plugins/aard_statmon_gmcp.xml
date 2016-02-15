@@ -257,7 +257,7 @@ function BuildStatsPage()
       fighting = gmcpval("status.enemy")
 
       if fighting ~= "" and fighting ~= null then
-         fstr = string.format("@Foe : @W%s @R(@W%s%%@R)@w",gmcpval("status.enemy"),gmcpval("status.enemypct"))
+         fstr = string.format("@RFoe : @R(@W%s%%@R) @W%s@w",gmcpval("status.enemypct"),gmcpval("status.enemy"))
          table.insert(cstyles,ColoursToStyles(fstr))
       else
          table.insert(cstyles,{text=""})
