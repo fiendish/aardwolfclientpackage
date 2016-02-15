@@ -584,7 +584,7 @@ function right_click_menu ()
          end
       end
    elseif result == "Commas in Gold" then
-      commas_in_gold = not commas_in_gold
+      SetVariable("commas_in_gold", not commas_in_gold and 1 or 0)
       OnPluginInstall()
       BuildStatsPage()
       if (page_built) then
@@ -601,7 +601,7 @@ function right_click_menu ()
    elseif result == "Send To Back" then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
    elseif result == "Reset Defaults" then
-      commas_in_gold       = false
+      commas_in_gold   = false
       font_name        = default_font_name
       font_size        = default_font_size
       height           = default_height
@@ -733,7 +733,7 @@ function OnPluginSaveState ()
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
    SetVariable ("stacked", stacked)
-   SetVariable ("commas_in_gold", commas_in_gold)
+   SetVariable ("commas_in_gold", commas_in_gold and 1 or 0)
    SetVariable ("label_colors", serialize.save("label_colors"))
    SetVariable ("data_colors", serialize.save("data_colors"))
 end
@@ -790,6 +790,7 @@ function OnPluginInstall()
       default_font_name = "Lucida Console"
    end -- if
 
+   commas_in_gold = tonumber(GetVariable("commas_in_gold")) == 1
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
