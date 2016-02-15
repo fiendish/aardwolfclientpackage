@@ -12,7 +12,6 @@
    requires="4.75"
    version="1.0"
    save_state="y"
-   sequence="10000"
 >
 
 <description trim="y">
@@ -23,7 +22,7 @@ Does not cross color code boundaries.
 '#sub potato pants' will make @Mpotato@Cpants@Rairplane become @Mpants@Cpants@Rairplane
 but will not do anything to @Mpot@Yato@Cpants@Rairplane.
 
-Operates at the display level, so GMCP strings not are modified.
+Operates at the incoming packet level, so GMCP strings are modified as well.
 
 </description>
 </plugin>
@@ -85,27 +84,11 @@ Operates at the display level, so GMCP strings not are modified.
 
 </aliases>
 
-<triggers>
-<trigger
-   enabled="y"
-   match="^.*$"
-   regexp="y"
-   script="dosubs"
-   omit_from_output="y"
-   sequence="100"
-   send_to="14"
->
-<send>StopEvaluatingTriggers(true)</send>
-</trigger>
-
-</triggers>
-
 <!--  Script  -->
 
 <script>
 <![CDATA[
 require "serialize"
-stylestring = require "stylestring"
 
 subs = {} -- init table
 
@@ -212,12 +195,13 @@ function OnPluginSaveState()
    SetVariable ("subs", serialize.save ("subs"))
 end
 
-function dosubs(name, line, wildcards, styles)
-   local ss = stylestring.new(line, styles)
-   for i = 1,#subs do
-      ss:replace(subs[i][1], subs[i][2])
+function OnPluginPacketReceived(sData)
+   if not GetInfo(123) then
+      for _,v in ipairs(subs) do
+         sData = sData:gsub(v[1],v[2])
+      end
    end
-   ss:note()
+   return sData
 end
 
 ]]>
