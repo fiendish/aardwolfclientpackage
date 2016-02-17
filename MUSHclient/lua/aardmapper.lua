@@ -970,7 +970,7 @@ function draw (uid)
    add_resize_tag()
 
    -- make sure window visible
-   WindowShow (win, not hidden)
+   WindowShow (win, not window_hidden)
 
    last_drawn = uid  -- last room number we drew (for zooming)
    
@@ -1074,7 +1074,7 @@ function init (t)
    draw_edge()
    add_resize_tag()
    
-   WindowShow (win, true)
+   WindowShow (win, not window_hidden)
    WindowShow (config_win, false)
    
 end -- init  
@@ -1155,20 +1155,20 @@ function maperror (...)
    SetNoteColourFore (old_note_colour)
 end -- maperror
 
-function show ()
-   WindowShow (win, true)
+function show()
+   WindowShow(win, true)
    hidden = false
 end -- show
 
-function hide ()
-   WindowShow (win, false)
+function hide()
+   WindowShow(win, false)
    hidden = true
 end -- hide
 
 function save_state ()
    SetVariable("ROOM_SIZE", ROOM_SIZE)
    SetVariable("DISTANCE_TO_NEXT_ROOM", DISTANCE_TO_NEXT_ROOM)
-   if WindowInfo(win,1) then
+   if WindowInfo(win,1) and WindowInfo(win,5) then
       movewindow.save_state (win)
    end
 end -- save_state
