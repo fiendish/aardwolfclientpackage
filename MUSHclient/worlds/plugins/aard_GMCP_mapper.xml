@@ -338,15 +338,21 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    match="mapper hide"
    enabled="y"
    sequence="100"
-   script="mapper.hide"
-></alias>  
+   send_to="12"
+><send>
+   window_hidden = true
+   mapper.hide()
+</send></alias>  
   
 <alias
    match="mapper show"
    enabled="y"
    sequence="100"
-   script="mapper.show"
-></alias>  
+   send_to="12"
+><send>
+   window_hidden = false
+   mapper.show()
+</send></alias>  
 
 <alias
    match="mapper area *"
@@ -746,6 +752,7 @@ toConfirm = ""
 blinded = false
 mylevel = 0
 mytier = 0
+window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = ((GetVariable("quick_mode") or "1") == "1") -- default true
 shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
@@ -3101,17 +3108,18 @@ function after_update_check()
       return
    end -- they didn't enable us last time
 
-   if IsConnected() then
-      OnPluginConnect()
-      Send_GMCP_Packet("request char")
-      Send_GMCP_Packet("request room")
-   else
+   OnPluginEnable()
+   if not IsConnected() then
       OnPluginDisconnect()
    end
 end -- OnPluginInstall
 
-function OnPluginEnable ()
-   mapper.show ()
+function OnPluginEnable()
+   if not window_hidden then
+      mapper.show()
+   else
+      Note("------ Your mapper is active but hidden. --------")
+   end
    if IsConnected() then
       OnPluginConnect()
       Send_GMCP_Packet("request char")
@@ -3123,7 +3131,7 @@ end -- OnPluginEnable
 -- hide window on removal
 function OnPluginDisable ()
    OnPluginSaveState()
-   mapper.hide ()
+   mapper.hide()
    if IsConnected() then
       OnPluginDisconnect()
    end
@@ -3138,6 +3146,7 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginSaveState ()
+   SetVariable ("window_hidden", window_hidden and "1" or "0")
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    if mapper.config.SCAN.depth < temp_scan_depth then
       -- then we probably caught ourselves in a botched run or something
@@ -4161,10 +4170,10 @@ function OnPluginSent (sText)
    end -- if 
 end -- function
 
-function toggleBackups(on)
+function toggleBackups(on, quiet)
    if on then
       EnableTimer("backup_timer", true)
-      Note("Automated map database backup enabled.")
+      if not quiet then Note("Automated map database backup enabled.") end
       if ((os.time()-last_auto_backup) >= 86401) then
          Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
          Note("Forcing an automatic backup now...")
@@ -4174,7 +4183,7 @@ function toggleBackups(on)
       end
    else
       EnableTimer("backup_timer", false)
-      Note("Automated map database backup disabled.")
+      if not quiet then Note("Automated map database backup disabled.") end
    end
 end
 
@@ -4193,7 +4202,7 @@ function OnPluginConnect ()
          -- replace the timer with a new one that has the right time
          AddTimer("backup_timer", hours, minutes, seconds, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.OneShot, "automatic_backup")
       end
-      toggleBackups(true)
+      toggleBackups(true, true)
    end
    Send_GMCP_Packet("rawcolor on")
    mapper.cancel_speedwalk ()
@@ -4211,7 +4220,7 @@ function OnPluginDisconnect ()
       db:close()
    end
    if GetVariable("backup_timer_enabled") == "1" then
-      toggleBackups(false)
+      toggleBackups(false, true)
    end
 end -- OnPluginConnect
 
