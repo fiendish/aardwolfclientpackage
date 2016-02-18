@@ -190,6 +190,7 @@ function OnPluginConnect()
    Send_GMCP_Packet("request area")
    Send_GMCP_Packet("request quest")
    Send_GMCP_Packet("request group")
+   Send_GMCP_Packet("rawcolor on")
 end
 
 function OnPluginTelnetRequest (msg_type, data)
