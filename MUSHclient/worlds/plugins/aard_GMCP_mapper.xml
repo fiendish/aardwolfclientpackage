@@ -567,7 +567,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 ></alias>
 
 <alias
-   match="^mapper updown?$"
+   match="^mapper updown$"
    enabled="y"
    regexp="y"
    send_to="12"
