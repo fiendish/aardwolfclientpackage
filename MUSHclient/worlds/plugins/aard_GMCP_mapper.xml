@@ -566,6 +566,18 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    script="OnHelp"
 ></alias>
 
+<alias
+   match="^mapper updown?$"
+   enabled="y"
+   regexp="y"
+   send_to="12"
+>
+<send>
+   mapper.show_up_down = not mapper.show_up_down
+   mapper.draw (current_room)
+</send>
+</alias>
+
 </aliases>
 
 <triggers>
@@ -4261,7 +4273,8 @@ function OnHelp (name, line, wildcards)
 [[mapper zoom out                --> Zoom out]],
 [[mapper zoom in                 --> Zoom in]],
 [[mapper hide                    --> Hide map]],
-[[mapper show                    --> Show map]]
+[[mapper show                    --> Show map]],
+[[mapper updown                  --> Toggle up/down exit drawing]]
 },
 
    ['utils'] = {
