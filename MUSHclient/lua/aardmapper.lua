@@ -83,9 +83,6 @@ local supplied_get_room
 local room_click
 local timing            -- true to show timing and other info
 local show_completed    -- true to show "Speedwalk completed."
-local show_other_areas  -- true to draw other areas
-local show_area_exits   -- true to show area exits
-local show_up_down      -- true to show up/down exits
 
 -- current room number
 local current_room
