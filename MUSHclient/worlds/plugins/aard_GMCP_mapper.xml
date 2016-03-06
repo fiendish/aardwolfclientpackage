@@ -395,7 +395,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 ></alias>
 
 <alias
-   match="^mapper fullportal (.+) (.+) (\d+)$"
+   match="^mapper fullportal {(.+)} {(.+)} (\d+)$"
    enabled="y"
    sequence="100"
    script="map_portal"
@@ -1373,26 +1373,19 @@ end -- map_recall
 
 -- first map_portal function was contributed by Spartacus.
 function map_portal (name, line, wildcards)
-   -- store portal as an exit from anywhere to the current room
-   res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-   luastmt = "gmcpdata = " .. gmcparg
-   assert (loadstring (luastmt or "")) ()
+   -- store portal as an exit from anywhere to the current or given room
+   local destination = wildcards[2] or current_room  
    
-   if not current_room then
+   if not destination then
       print ("PORTAL FAILED: No room received from the mud yet. Try using the 'LOOK' command first.")
       return
-   end -- no room number.map_portal
-  
-   if current_room == "-1" then
-      print("PORTAL FAILED: Cannot link portals to unmappable rooms.")
+   end
+   
+   if not load_room_from_database(destination) then 
+      print("PORTAL ["..wildcards[1].."] FAILED: Room "..destination.." is unknown.")
       return
    end
    
-   if wildcards[2] and not load_room_from_database(wildcards[2]) then 
-      print("PORTAL FAILED: The room "..wildcards[2].." does not exist.")
-      return
-   end
-   local destination = wildcards[2] or current_room
    local level = (level_check(wildcards[3]) and wildcards[3]) or tonumber(utils.inputbox (string.format("Please enter the level of your portal to %s, or leave at 0 for the default",destination), "Portal Level", "0", "Courier", 9, {validate=level_check}))
    
    if not level then
@@ -1486,7 +1479,7 @@ function map_portal_list ()
    local txt
    -- show portals stored in the exits table
    local hl = "+-----+------------+----------------------+-------+----------------------+-----+"
-   local hr = "|   # | area       | room name            |  vnum | portal keywords      | lvl |"
+   local hr = "|   # | area       | room name            |  vnum | portal commands      | lvl |"
 
    Note ("\n"..hl)
    Note (hr)
