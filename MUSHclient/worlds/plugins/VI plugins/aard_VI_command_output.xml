@@ -114,6 +114,7 @@ function OnPluginDisconnect()
    EnableTrigger("blank_line", false)
    last_command = ""
    in_command = ""
+   temp_buffer = {}
 end
 
 require "checkplugin"
@@ -139,6 +140,7 @@ end
 function begin_capture(name, line, wildcards, styles)
    in_command = Trim(wildcards[1])
    if last_command == in_command then
+      temp_buffer = {}
       EnableTrigger("capture_body", true)
    end
 end
