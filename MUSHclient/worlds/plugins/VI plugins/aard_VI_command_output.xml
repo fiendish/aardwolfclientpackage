@@ -129,30 +129,17 @@ function capture_activate(name, line, wildcards, styles)
    SendNoEcho("echo {End MC Capture:"..last_command.."}")
 end
 
+temp_buffer = {}
 function capture_body(name, line, wildcards, styles)
    line = line:gsub("^%[?%d%d %u%l%l %d%d:%d%d:%d%d%]? ?-? ","")
-   if use_notepad then
-      AppendToNotepad(command_capture, line.."\n")
-   else
-      CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, line)
-   end
+   table.insert(temp_buffer, line)
 end
+
 
 function begin_capture(name, line, wildcards, styles)
    in_command = Trim(wildcards[1])
    if last_command == in_command then
       EnableTrigger("capture_body", true)
-      if use_notepad then
-         ReplaceNotepad(command_capture,  "Captured output for command ["..last_command.."].\n")
-         NotepadSaveMethod(command_capture, 2)
-         NotepadReadOnly (command_capture, true)
-      else
-         CallPlugin("dd10517422bc35b5131a3aa0", "remove_capture_internal", command_capture, true)
-         CallPlugin("dd10517422bc35b5131a3aa0", "add_capture_if_new", command_capture, false, true, nil, false)
-         CallPlugin("dd10517422bc35b5131a3aa0", "switch_to_capture", command_capture, true)
-         CallPlugin("dd10517422bc35b5131a3aa0", "clear_capture", true)
-         CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, "Captured output for command ["..last_command.."].")
-      end
    end
 end
 
@@ -160,13 +147,40 @@ function end_capture(name, line, wildcards, styles)
    EnableTrigger("blank_line", true)
    EnableTrigger("capture_body", false)
    if (last_command ~= "") and (last_command == in_command) then
+   
+      while Trim(temp_buffer[1]) == "" do
+         table.remove(temp_buffer, 1)
+      end
+      while Trim(temp_buffer[#temp_buffer]) == "" do
+         table.remove(temp_buffer, #temp_buffer)
+      end
+      
       if use_notepad then
-         Note("Captured output from command ["..last_command.."] to ["..command_capture.."] notepad.")
+         local full_capture_string = ""
+         for i,v in ipairs(temp_buffer) do
+            full_capture_string = full_capture_string..v.."\n"
+         end
+         ReplaceNotepad(command_capture,  "Captured output for command ["..last_command.."].\n"..full_capture_string.."End of capture.")
+         
+         NotepadSaveMethod(command_capture, 2)
+         NotepadReadOnly (command_capture, true)
          ActivateNotepad(command_capture)
       else
+         CallPlugin("dd10517422bc35b5131a3aa0", "remove_capture_internal", command_capture, true)
+         CallPlugin("dd10517422bc35b5131a3aa0", "add_capture_if_new", command_capture, false, true, nil, false)
+         CallPlugin("dd10517422bc35b5131a3aa0", "switch_to_capture", command_capture, true)
+         CallPlugin("dd10517422bc35b5131a3aa0", "clear_capture", true)
+         CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, "Captured output for command ["..last_command.."].")
+
+         for i,v in ipairs(temp_buffer) do
+            CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, v)
+         end
+         
          CallPlugin("dd10517422bc35b5131a3aa0", "show", "Captured output from command ["..last_command.."] to ["..command_capture.."] capture.")
          CallPlugin("dd10517422bc35b5131a3aa0", "switch_to_capture", command_capture)
       end
+
+      temp_buffer = {}
       last_command = ""
    end
 end
