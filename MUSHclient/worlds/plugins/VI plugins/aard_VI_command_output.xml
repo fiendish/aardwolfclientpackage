@@ -177,9 +177,9 @@ function end_capture(name, line, wildcards, styles)
       if use_notepad then
          local full_capture_string = ""
          for i,v in ipairs(temp_buffer) do
-            full_capture_string = full_capture_string..v.msg.."\n"
+            full_capture_string = full_capture_string..v.msg.."\r\n"
          end
-         ReplaceNotepad(command_capture,  "Captured output for command ["..last_command.."].\n"..full_capture_string.."End of capture.")
+         ReplaceNotepad(command_capture,  "Captured output for command ["..last_command.."].\r\n"..full_capture_string.."End of capture.")
          
          NotepadSaveMethod(command_capture, 2)
          NotepadReadOnly (command_capture, true)
