@@ -98,6 +98,7 @@
 
 <script>
 <![CDATA[
+dofile(GetInfo(60).."telnet_options.lua")
 
 command_capture = "command output"
 last_command = ""
@@ -125,9 +126,11 @@ end
 
 function capture_activate(name, line, wildcards, styles)
    last_command = Trim(wildcards[1])
+   TelnetOptionOff(TELOPT_PAGING)
    SendNoEcho("echo {Begin MC Capture:"..last_command.."}")
    SendNoEcho(last_command)
    SendNoEcho("echo {End MC Capture:"..last_command.."}")
+   TelnetOptionOn(TELOPT_PAGING)
 end
 
 temp_buffer = {}
