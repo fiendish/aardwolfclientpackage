@@ -1241,7 +1241,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
       if current_room ~= uid then
          table.insert(last_result_list, uid)
          Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. uid .. ")", 
-            room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
+            "["..#last_result_list.."] "..room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
       else
          Tell(room_name)
       end
@@ -1310,9 +1310,9 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
       if current_room ~= v.uid then
          table.insert(last_result_list, v.uid)
          Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto("..v.uid..")", 
-            room_name, "Click to speedwalk there", "", "", false)
+            "["..#last_result_list.."] "..room_name, "Click to speedwalk there", "", "", false)
       else
-         ColourTell(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"",room_name)
+         ColourTell(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","[you are here] "..room_name)
       end
       
       local info = ""
@@ -1334,17 +1334,28 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end
 
-function gotoNextResult()
-   if next_result_index ~= nil then
-      next_result_index = next_result_index+1
-      if next_result_index <= #last_result_list then
+function gotoNextResult(which)
+   if tonumber(which) == nil then
+      if next_result_index ~= nil then
+         next_result_index = next_result_index+1
+         if next_result_index <= #last_result_list then
+            mapper.goto(last_result_list[next_result_index])
+            return
+         else
+            next_result_index = nil
+         end
+      end
+      ColourNote(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","NEXT ERROR: No more NEXT results left.")
+   else
+      next_result_index = tonumber(which)
+      if (next_result_index > 0) and (next_result_index <= #last_result_list) then
          mapper.goto(last_result_list[next_result_index])
          return
       else
+         ColourNote(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","NEXT ERROR: There is no NEXT result #"..next_result_index..".")
          next_result_index = nil
       end
    end
-   ColourNote(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","NEXT ERROR: No more NEXT results left.")
 end
 
 function goto(uid)

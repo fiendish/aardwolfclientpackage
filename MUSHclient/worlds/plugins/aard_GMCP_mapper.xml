@@ -371,12 +371,16 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 ></alias>
 
 <alias
-   match="mapper next"
+   match="^mapper next( .*)?$"
    enabled="y"
+   regexp="y"
    sequence="100"
-   script="mapper.gotoNextResult"
-   regexp="n"
-></alias>
+   send_to="12"
+>
+<send>
+mapper.gotoNextResult(Trim("%1"))
+</send>
+</alias>
 
 <alias
    match="^mapper portals$"
