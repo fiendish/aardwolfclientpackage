@@ -207,9 +207,9 @@ function BuildStatsPage()
       table.insert(cstyles, {})
 
       table.insert(cstyles, {
-            {text="TNL : ",textcolour=label_colors["Exp To Level"]},
+            {text="TNL : ",textcolour=label_colors["TNL"]},
             bracket,
-            {text=string.format("%5d",gmcpval("status.tnl")), textcolour=data_colors["Exp To Level"]},
+            {text=string.format("%5d",gmcpval("status.tnl")), textcolour=data_colors["TNL"]},
             endbracket,
             
             {text="       Lvl : ",textcolour=label_colors["Level"]},
@@ -379,9 +379,9 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="TNL   : ",textcolour=label_colors["Exp To Level"]},
+            {text="TNL   : ",textcolour=label_colors["TNL"]},
             bracket,
-            {text=string.format("%5d",gmcpval("status.tnl")), textcolour=data_colors["Exp To Level"]},
+            {text=string.format("%5d",gmcpval("status.tnl")), textcolour=data_colors["TNL"]},
             endbracket
       })
 
