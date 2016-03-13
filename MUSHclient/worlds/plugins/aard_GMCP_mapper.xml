@@ -906,7 +906,22 @@ function fixbool (b)
 end -- fixbool
 
 function findpathfast(name, line, wildcards)
-   local foundpath = findpath(tonumber(wildcards[1]),tonumber(wildcards[2]))
+   local src = wildcards[1]
+   local dest = wildcards[2]
+   rooms[src] = load_room_from_database(src)
+   rooms[dest] = load_room_from_database(dest)
+   
+   if rooms[src] == nil then
+      mapper.mapprint (string.format ("Room %s not known.", src))
+   end
+   if rooms[dest] == nil then
+      mapper.mapprint (string.format ("Room %s not known.", dest))
+   end
+   if rooms[src] == nil or rooms[dest] == nil then
+      return
+   end
+   
+   local foundpath = findpath(src, dest)
    if foundpath == nil then
       mapper.mapprint (string.format ("Path from %s to %s not found.", wildcards[1], wildcards[2]))
       return
