@@ -3,11 +3,11 @@
 
 <muclient>
 <plugin
-   name="Aardwolf_VI_Command_Output"
+   name="Aardwolf_VI_Command_Output_Capture"
    author="Fiendish"
    id="fefc7923b4db9e0ee3add286"
    language="Lua"
-   purpose="Capture command feedback"
+   purpose="Captures output from game commands"
    date_written="2016-02-14"
    requires="4.70"
    version="0.1"
@@ -38,12 +38,13 @@
    send_to="12"
 >
 <send>
-  use_notepad = not use_notepad
-  SetVariable("use_notepad", use_notepad and "1" or "0")
-  if not use_notepad then
-     do_plugin_check_now("dd10517422bc35b5131a3a0", "VI_captures")
-  end
-  Note("MC command captures will be sent to a "..(use_notepad and "notepad tab" or "capture buffer")..".")
+Note("MC buffer capture command not yet ready to use.")
+--  use_notepad = not use_notepad
+--  SetVariable("use_notepad", use_notepad and "1" or "0")
+--  if not use_notepad then
+--     do_plugin_check_now("dd10517422bc35b5131a3a0", "VI_captures")
+--  end
+--  Note("MC command captures will be sent to a "..(use_notepad and "notepad tab" or "capture buffer")..".")
 </send>
 </alias>
 </aliases>
@@ -121,7 +122,7 @@ end
 require "checkplugin"
 function OnPluginListChanged()
    -- check we have necessary plugins
-   --do_plugin_check_now("dd10517422bc35b5131a3aa0", "VI_captures")
+   -- do_plugin_check_now("dd10517422bc35b5131a3aa0", "VI_captures")
 end
 
 function capture_activate(name, line, wildcards, styles)
@@ -170,6 +171,7 @@ function end_capture(name, line, wildcards, styles)
    EnableTrigger("capture_body", false)
    if (last_command ~= "") and (last_command == in_command) then
    
+      -- remove leading and trailing blank lines
       while Trim(temp_buffer[1].msg) == "" do
          table.remove(temp_buffer, 1)
       end
@@ -185,7 +187,7 @@ function end_capture(name, line, wildcards, styles)
          ReplaceNotepad(command_capture,  "Captured output for command ["..last_command.."].\r\n"..full_capture_string.."End of capture.")
          
          NotepadSaveMethod(command_capture, 2)
-         NotepadReadOnly (command_capture, true)
+         NotepadReadOnly(command_capture, true)
          ActivateNotepad(command_capture)
       else
          CallPlugin("dd10517422bc35b5131a3aa0", "remove_capture_internal", command_capture, true)
