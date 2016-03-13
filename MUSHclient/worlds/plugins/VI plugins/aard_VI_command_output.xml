@@ -3,7 +3,7 @@
 
 <muclient>
 <plugin
-   name="Aardwolf_VI_Command_Output_Capture"
+   name="Aardwolf_VI_Command_Output"
    author="Fiendish"
    id="fefc7923b4db9e0ee3add286"
    language="Lua"
