@@ -10,8 +10,9 @@
    purpose="Captures output from game commands"
    date_written="2016-02-14"
    requires="4.70"
-   version="0.1"
+   version="1.0"
    save_state="y"
+   sequence="10000"
 >
 
 <description trim="y">
@@ -65,10 +66,20 @@ Note("MC buffer capture command not yet ready to use.")
    name="capture_body"
    match="^.*$"
    regexp="y"
-   script="capture_body"
    sequence="101"
    omit_from_output="y"
-></trigger>
+   send_to="12"
+><send>
+   -- code must go here and not in script body, because the script body happens after this
+   -- trigger's omit gets set in GetInfo(124)
+   if not GetInfo(124) then
+      local date_string = nil
+      line = "%0"
+      line = line:gsub("^%[?(%d%d %u%l%l %d%d:%d%d:%d%d)%]? ?-? (.*)", function(a,b) date_string = a; return b end)
+      table.insert(temp_buffer, {msg=line, date=date_string})
+   end
+</send>
+</trigger>
 
 <trigger
    enabled="y"
@@ -135,11 +146,6 @@ function capture_activate(name, line, wildcards, styles)
 end
 
 temp_buffer = {}
-function capture_body(name, line, wildcards, styles)
-   local date_string = nil
-   line = line:gsub("^%[?(%d%d %u%l%l %d%d:%d%d:%d%d)%]? ?-? (.*)", function(a,b) date_string = a; return b end)
-   table.insert(temp_buffer, {msg=line, date=date_string})
-end
 
 
 function begin_capture(name, line, wildcards, styles)
