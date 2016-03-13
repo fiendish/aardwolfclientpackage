@@ -4380,6 +4380,7 @@ all portal aspects in one command without being in the target room.]],
 [[]],
 [[mapper next                    --> Visit the next room in the most recent
                                  > list of results.]],
+[[mapper next <index>            --> Ditto, but skip to the given result index.]],
 [[mapper where <room id>         --> Show directions to a room number]]
 },
 
