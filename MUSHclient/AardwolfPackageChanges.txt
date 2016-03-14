@@ -1,5 +1,17 @@
 Aardwolf Client Package Major Changes List
 
+r1870 snapshot:
+- misc change: the statmon miniwindow plugin has more compact labels that waste less space.
+- new feature: the statmon miniwindow has an option for showing gold with commas.
+- misc change: one of the experimental text substitution plugins has been removed. Substitutions without GMCP are just not good.
+- new feature: if the GMCP mapper is hidden using "mapper hide", it will stay hidden across sessions.
+- new feature: the GMCP mapper has a new "mapper updown" command to toggle showing up and down exits.
+- buf fix/misc change: the GMCP mapper's fullportal command has a new syntax that better separates the input arguments.
+- new feature: the GMCP mapper now in theory allows portal creation to nomap rooms (though the room still needs to be uniquely named to work properly).
+- new feature: GMCP mapper search results are now numbered, and the "mapper next" command correspondingly accepts a numeric argument.
+- new feature: there is a new plugin meant to assist players who use screen readers by capturing the output from game commands and sending it to a MUSHclient notepad. The plugin is called aard_VI_command_output.xml. For now it has an accompanying readme file.
+- misc change: if you accidentally replace the LuaJIT DLL with another one, the package will now alert you. Don't do it. It breaks things.
+
 r1860 snapshot:
 - misc change: updated to MUSHclient 5.01 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - new feature: ascii map plugin will only automatically request updates if the player is active so they shouldn't keep you from idling out.
