@@ -16,6 +16,7 @@ function findURLs(text)
 end -- function findURL
 
 version_file = "AardwolfPackageChanges.txt"
+git_branch = "MUSHclient"
 function PackageVersion()
    local ver = "missing"
    -- borrowed from the package update checker
