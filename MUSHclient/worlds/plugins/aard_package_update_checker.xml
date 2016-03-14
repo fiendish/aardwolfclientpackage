@@ -45,8 +45,8 @@ async = require "async"
 require "json"
 require "wait"
 
-version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/MUSHclient/MUSHclient/"..aard_extras.version_file
-download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip"
+version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/"..aard_extras.git_branch.."/MUSHclient/"..aard_extras.version_file
+download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/"..aard_extras.git_branch..".zip"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
@@ -129,7 +129,7 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
       ColourNote("white", "black", "  |                                                                               |")
       ColourNote("white", "black", "  |  The GitHub API returned a bad result...                                      |")
       ColourTell("white", "black", "  |  ")
-      Hyperlink("https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "New MUSHclient Package Download", "white", "black", true)
+      Hyperlink(download_url, download_url, "New MUSHclient Package Download", "white", "black", true)
       ColourNote("white", "black", "     |")
       ColourNote("white", "black", "  |                                                                               |")
       ColourNote("white", "black", "  +-------------------------------------------------------------------------------+")
@@ -172,7 +172,7 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
    end
    
    for i,v in ipairs(fetch_list) do
-      v.fileurl = v.fileurl:gsub("api.github.com/repos", "raw.githubusercontent.com"):gsub("(aardwolfclientpackage/)git/.*", "%1".."MUSHclient/MUSHclient/"..v.filepath:gsub("\\", "/"))
+      v.fileurl = v.fileurl:gsub("api.github.com/repos", "raw.githubusercontent.com"):gsub("(aardwolfclientpackage/)git/.*", "%1"..aard_extras.git_branch.."/MUSHclient/"..v.filepath:gsub("\\", "/"))
       files_to_fetch[v.fileurl] = v.filepath
       print("Auto Updater: Requesting file ["..i.." of "..#fetch_list.."]: "..v.filepath.." from "..v.fileurl)
       Repaint()
@@ -275,7 +275,7 @@ function checkIfFinishedDownloading()
          ColourNote("white", "black", "|  Overwriting files. Be prepared for failure and hopeful for success.          |")
          ColourNote("white", "black", "|  If this fails, download the complete new package from...                     |")      
          ColourTell("white", "black", "|  ")
-         Hyperlink("https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "https://github.com/fiendish/aardwolfclientpackage/archive/MUSHclient.zip", "New MUSHclient Package Download", "white", "black", true)
+         Hyperlink(download_url, download_url, "New MUSHclient Package Download", "white", "black", true)
          ColourNote("white", "black", "     |")
          ColourNote("white", "black", "|                                                                               |")
          ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
@@ -399,8 +399,8 @@ end
 -- the newest available download and the currently downloaded package
 function updateDialog(message,list)
    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Install It", cancel_button="Ignore", read_only=true, no_default=true}) then
-      if utils.msgbox("This plugin can optionally try to perform the full upgrade for you so that you don't have to do anything except wait, watch, and then eventually restart MUSHclient. \n\nCaution: The code for this may be broken or incomplete, or it may just not work.\n\nIf you want to download a zip of the new version and manually perform the udpate yourself, choose No.\n\nIf you're unsure but want to try anyway, choose No, quit MUSHclient, backup your whole directory, then come back and do \"package update check\" again.\n\nWould you like to try installing automatically instead of making you do it manually?\n\n (choosing No will just download the new .zip archive)", "Try to install in place?", "yesno", "?", 2) == "yes" then
-         async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/MUSHclient?recursive=1", doUpdate, "HTTPS", 120)
+      if utils.msgbox("This plugin can optionally try to perform the full upgrade for you so that you don't have to do anything except wait, watch, and then eventually restart MUSHclient. \n\nCaution: I really need people to test this feature, but the code for this may be broken or incomplete, or it may just not work.\n\nIf you want to download a zip of the new version and manually perform the udpate yourself, choose No.\n\nIf you're unsure but want to try anyway, choose No, quit MUSHclient, backup your whole directory, then come back and do \"package update check\" again.\n\nWould you like to try installing automatically instead of making you do it manually?\n\n (choosing No will just download the new .zip archive)", "Try to install in place?", "yesno", "?", 2) == "yes" then
+         async.doAsyncRemoteRequest("https://api.github.com/repos/fiendish/aardwolfclientpackage/git/trees/"..aard_extras.git_branch.."?recursive=1", doUpdate, "HTTPS", 120)
       else
          browse(download_url)
       end
@@ -498,7 +498,7 @@ function showUpdate()
       if local_version < latest_version then
          final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your "..aard_extras.version_file.." file>\r\n")
          final_update_list = "( Get it from: "..download_url.." )\r\n\r\n"..convertHTMLcodesToStandardText(final_update_list)
-         message = "THIS UPDATER WILL USE DATA AND ASK TO RESTART YOUR CLIENT WHEN FINISHED\n\n\nThere's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
+         message = "This updater will use data and ask to restart your client when finished.\n\n\nThere's a new Aardwolf MUSHclient Package development snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
       elseif local_version > latest_version then
          ErrorMessage = "The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Contact Fiendish about this message, because clearly this situation is impossible. :/"
