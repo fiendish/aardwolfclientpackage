@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Saved on Sunday, August 15, 2010, 9:25 PM -->
-<!-- MuClient version 4.69 -->
-
+<!-- Originally based on work by Lasher -->
 <muclient>
 <plugin
    name="Aardwolf_Statmon"
-   author="Fiendish and Lasher"
+   author="Fiendish"
    id="ef4a86dbc9cd4dd6f4c69386"
    language="Lua"
    purpose="GMCP Version of statmon"
    date_written="2010-08-15 21:25:03"
    requires="4.73"
-   version="2.0"
+   version="2.1"
    save_state="y"
 >
 <description trim="y">
@@ -533,6 +531,7 @@ function right_click_menu ()
          font_size = wanted_font.size
          SetVariable("font_name", font_name)
          SetVariable("font_size", font_size)
+         movewindow.save_state(win)
          OnPluginInstall()
          BuildStatsPage()
          if (page_built) then
@@ -585,6 +584,7 @@ function right_click_menu ()
       end
    elseif result == "Commas in Gold" then
       SetVariable("commas_in_gold", not commas_in_gold and 1 or 0)
+      movewindow.save_state(win)
       OnPluginInstall()
       BuildStatsPage()
       if (page_built) then
