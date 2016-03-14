@@ -6,3 +6,5 @@ So, for example, if you type "MC command worth", it will send "worth" to the gam
 Having the command output printed into a MUSHclient notepad allows you to navigate the information the same way you would if it were a plain text file.
 Once done, just press Ctrl+W to close the notepad and go back to the game.
 
+Additional Notes:
+For technical reasons, because the plugin signals the start and end of your command output to itself using multiple consecutive server commands, it is possible that random game output can accidentally insert itself at the beginning or end of your captured result. This is, as far as Fiendish knows, unavoidable at the time of writing this. It should also probably be pretty rare and have insignificant impact.
