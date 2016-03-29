@@ -4,13 +4,10 @@
 <!-- MuClient version 4.59 -->
 
 <!DOCTYPE muclient [
-   <!ENTITY show_vnums "true" > 
    <!ENTITY show_timing "false" > 
-   <!ENTITY show_completed "true" > 
    <!ENTITY show_database_mods "false" > 
    <!ENTITY show_other_areas "false" > 
-   <!ENTITY show_up_down "false" > 
-   <!ENTITY speedwalk_prefix "run" > 
+   <!ENTITY show_up_down "false" >
 ]>
 
 <muclient>
@@ -216,6 +213,48 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 ></alias>  
 
 <alias
+   match="^mapper debug memorydb$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   db:close()
+   db = sqlite3.open_memory()
+
+   dbCheckExecute("ATTACH DATABASE '"..GetInfo (66) .. sanitize_filename(WorldName()) .. ".db".."' AS file_db;")
+
+   dbCheckExecute("CREATE TABLE rooms AS SELECT * FROM file_db.rooms;")
+   dbCheckExecute("CREATE TABLE bookmarks AS SELECT * FROM file_db.bookmarks;")
+   dbCheckExecute("CREATE TABLE exits AS SELECT * FROM file_db.exits;")
+   
+   dbCheckExecute("CREATE INDEX IF NOT EXISTS exits_touid_index ON exits (touid);")
+   dbCheckExecute("CREATE INDEX IF NOT EXISTS exits_dir_index ON exits (dir);")
+   dbCheckExecute("CREATE INDEX IF NOT EXISTS exits_level_index ON exits (level);")
+   dbCheckExecute("CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);")
+   
+   dbCheckExecute("DETACH DATABASE file_db;")
+   
+   print("DONE")
+</send>
+</alias>
+
+<alias
+   match="^mapper debug filedb$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   db:close()
+   db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+   print("DONE")
+</send>
+</alias>
+
+<alias
    match="^mapper train( .+)?$"
    regexp="y"
    enabled="y"
@@ -326,14 +365,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    sequence="100"
    script="map_resume"
 ></alias>  
- 
-<alias
-   match="mapper stop"
-   enabled="y"
-   sequence="100"
-   script="mapper.cancel_speedwalk"
-></alias>  
-   
+    
 <alias
    match="mapper hide"
    enabled="y"
@@ -615,72 +647,7 @@ end
 StopEvaluatingTriggers(true)
 </send>
 </trigger>
-
-
-<trigger
-   enabled="y"
-   match="The door is locked."
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger>
-  
-<trigger
-   enabled="y"
-   match="You are regaining balance and are unable to move."
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger>
-
-<trigger
-   enabled="y"
-   match="You fumble about drunkenly."
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger>
-  
-<trigger
-   enabled="y"
-   match="You must be standing first."
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger>
-  
-<trigger
-   enabled="y"
-   match="You need to use a boat, fly, or swim underwater to go there."
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger> 
-  
-<trigger
-   enabled="y"
-   match="You can't * while sitting."
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger> 
-  
-<trigger
-   enabled="y"
-   regexp="y"
-   match="^You dream about "
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger>
-   
-<trigger
-   enabled="y"
-   match="There is no exit in that direction."
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger> 
-  
-<trigger
-   enabled="y"
-   match="Alas, you cannot go that way."
-   script="mapper.cancel_speedwalk"
-   sequence="100"
-></trigger>   
-
+ 
   <trigger
    enabled="y"
    match="^Magic walls bounce you back\.$"
@@ -743,13 +710,10 @@ StopEvaluatingTriggers(true)
 </triggers>
 
 <script>
-local show_vnums = &show_vnums;
 local show_timing = &show_timing;
-local show_completed = &show_completed;
 local show_database_mods = &show_database_mods;
 local show_other_areas = &show_other_areas;
 local show_up_down = &show_up_down;
-local speedwalk_prefix = "&speedwalk_prefix;"
 
 <![CDATA[
 
@@ -921,6 +885,8 @@ function findpathfast(name, line, wildcards)
       return
    end
    
+   local speedwalk = nil
+   local elapsed = utils.timer()
    local foundpath = findpath(src, dest)
    if foundpath == nil then
       mapper.mapprint (string.format ("Path from %s to %s not found.", wildcards[1], wildcards[2]))
@@ -928,8 +894,11 @@ function findpathfast(name, line, wildcards)
    end
     
    -- turn into speedwalk
-   local speedwalk = mapper.build_speedwalk (foundpath, speedwalk_prefix)
-
+   speedwalk = mapper.build_speedwalk (foundpath)
+   
+   if show_timing then
+      print("Elapsed", utils.timer()-elapsed)
+   end
    -- display it
    if speedwalk ~= nil then
       mapper.mapprint (string.format ("Path from %s to %s is: %s", wildcards[1], wildcards[2], speedwalk))
@@ -1540,9 +1509,9 @@ function ExecuteWithWaits(cexit_command)
    wait.make (function()
       SendNoEcho("echo {begin running}")
       local partial_cexit_command = cexit_command
-      local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
+      local strbegin,strend = string.find(partial_cexit_command,"wait%(%d*.?%d+%)")
       while strbegin do
-         strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
+         strbegin,strend = string.find(partial_cexit_command,"wait%(%d*.?%d+%)")
          if strbegin ~= nil and strbegin ~= 1 then
             Execute(string.sub(partial_cexit_command,1,strbegin-1))
          end
@@ -2867,10 +2836,8 @@ function OnPluginInstall ()
       show_help = OnHelp,         -- to show help
       room_click = room_click,    -- called on RH click on room square
       timing = show_timing,       -- want to see timing
-      show_completed = show_completed,  -- want to see "Speedwalk completed." message
       show_other_areas = show_other_areas,  -- want to see areas other than the current one?
       show_up_down = show_up_down,          -- want to follow up/down exits?
-      speedwalk_prefix = speedwalk_prefix,  -- how to speedwalk
    } 
     
    -- open databases on disk 
@@ -3579,7 +3546,7 @@ function OnPluginBroadcast (msg, id, name, text)
       end -- if room.info
 
       if (text == "room.wrongdir") then
-         mapper.cancel_speedwalk()
+--         catch bumps here
       end -- wrongdir
 
       if (text == "char.base") then
@@ -3678,7 +3645,6 @@ function map_area (name, line, wildcards)
    local area = rooms[uid].area
 
    local rooms = {}
-   local count = 0
    
    local key = Trim(wildcards[1])
    local name = "%"..key.."%"
@@ -3687,18 +3653,13 @@ function map_area (name, line, wildcards)
    end
    for row in dbnrowsWRAPPER(string.format ("SELECT uid, name, area FROM rooms WHERE trim(name) LIKE %s and area = %s", fixsql(name), fixsql(area))) do
       table.insert(rooms,{uid=row.uid, reason=true})
-      count = count + 1
    end   -- finding room
 
    -- see if nearby
 
    mapper.find (name,
       rooms,
-      50,
-      show_vnums,  -- show vnum?
-      count,      -- how many to expect
       false,       -- don't auto-walk
-      nil,
       quick_mode
    )
 
@@ -3708,7 +3669,6 @@ end -- map_area
 function map_find (name, line, wildcards)
 
    local rooms = {}
-   local count = 0
 
    -- find matching rooms using FTS3
    local name = "%"..wildcards[1].."%"
@@ -3718,17 +3678,12 @@ function map_find (name, line, wildcards)
    end
    for row in dbnrowsWRAPPER(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql (name))) do
       table.insert(rooms, {uid=row.uid, reason=true})
-      count = count + 1
    end   -- finding room
       
    -- see if nearby
    mapper.find (name,
-      rooms,  -- function
-      50,
-      show_vnums,  -- show vnum?
-      count,      -- how many to expect
+      rooms,
       false,       -- don't auto-walk
-      nil,
       quick_mode
    )
 end -- map_find
@@ -3742,7 +3697,6 @@ function map_find_special(which_ones, which_area)
    end
             
    local rooms = {}
-   local count = 0
   
    res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
    luastmt = "gmcpdata = " .. gmcparg
@@ -3777,7 +3731,6 @@ function map_find_special(which_ones, which_area)
          end -- for
          if wanted then
             table.insert(rooms, {uid=row.uid, reason=table.concat(t, ", ")})
-            count = count + 1
          end -- if
       end -- if
    end   -- finding room
@@ -3785,15 +3738,11 @@ function map_find_special(which_ones, which_area)
    -- find such places
    mapper.find (table.concat(which_ones,","),
       rooms,
-      0,
-      show_vnums,  -- show vnum?
-      count,      -- how many to expect
       false,       -- don't auto-walk
-      nil,
       true         -- quick list
    )
 end -- map_find_special
-            
+
 function map_shops (name, line, wildcards)
    map_find_special ({ "shop", "bank", }, wildcards[1])
 end -- map_shops
@@ -3828,16 +3777,7 @@ function map_goto (name, line, wildcards)
    end -- if
   
    -- find desired room
-   mapper.find (nil,
-      {{uid=wanted, reason=true}},
-      0,
-      show_vnums,  -- show vnum?
-      1,          -- how many to expect
-      true,        -- just walk there
-      nil,
-      nil,
-      string.match(line, "^mapper walkto") ~= nil
-   )
+   mapper.goto(wanted, string.match(line, "^mapper walkto") ~= nil)
 end -- map_goto
 
 function map_where (name, line, wildcards)
@@ -3872,7 +3812,7 @@ function map_where (name, line, wildcards)
    end -- if
   
    -- turn into speedwalk
-   local speedwalk = mapper.build_speedwalk (item.path, speedwalk_prefix)
+   local speedwalk = mapper.build_speedwalk (item.path)
   
    -- display it
    if speedwalk ~= nil then
@@ -3884,7 +3824,7 @@ end -- map_where
 
 function map_resume (name, line, wildcards)
 
-   local wanted = tonumber(mapper.last_hyperlink_uid or mapper.last_speedwalk_uid)
+   local wanted = tonumber(mapper.last_speedwalk_uid)
   
    if not wanted then
       mapper.print "No outstanding speedwalks or hyperlinks."
@@ -3892,19 +3832,12 @@ function map_resume (name, line, wildcards)
    end -- if nothing to do
    
    wanted = tostring(wanted)
-   -- find desired room
-   mapper.find (nil,
-      {{uid=wanted,reason=true}},
-      0,  -- function
-      show_vnums,  -- show vnum?
-      1,      -- how many to expect
-      true    -- just walk there
-   )
+   
+   mapper.goto(wanted)
 end -- map_resume
 
 function map_notes (name, line, wildcards)
    local rooms = {}
-   local count = 0
    local area = Trim(wildcards[2] or "")
 
    local q = string.format ("SELECT bookmarks.uid as uid, bookmarks.notes as notes FROM bookmarks")
@@ -3938,25 +3871,21 @@ function map_notes (name, line, wildcards)
    -- build table of special places (with info in them)
    for row in dbnrowsWRAPPER(q) do
       table.insert(rooms,{uid=row.uid, reason=row.notes})
-      count = count + 1
    end   -- finding room
   
    -- find such places
    mapper.find ("[NOTE]",
       rooms,
-      0,  -- function
-      show_vnums,  -- show vnum?
-      count,       -- how many to expect
       false,        -- don't auto-walk
-      nil,
       true  -- quick list
    )
 end -- map_notes
 
 local bit = require("bit")
 
--- original findpath function idea contributed by Spartacus
+-- original findpath function idea contributed by Spartacus. we don't use that one anymore.
 function findpath(src, dst, noportals, norecalls)
+   local outer_elapsed = utils.timer()
    if not rooms[src] then
       rooms[src] = load_room_from_database(src)
    end
@@ -3992,25 +3921,32 @@ function findpath(src, dst, noportals, norecalls)
    src = tostring(src)
    dst = tostring(dst)
    
-   table.insert(rooms_list, fixsql(dst))
-  
+   table.insert(rooms_list, dst)
+     
    local visited = ""
    local main_status = GetInfo(53)
+   local inner_elapsed = utils.timer()
+   
    while not found and depth < max_depth do
       SetStatus(main_status.." (searching depth "..depth..")")
-      BroadcastPlugin (999, "repaint")
       depth = depth + 1
       if depth > 1 then
          ftd = room_sets[depth-1] or {}
          rooms_list = {}
-         for k,v in pairs(ftd) do
-            table.insert(rooms_list, fixsql(v.fromuid))
+         for k,_ in pairs(ftd) do
+            table.insert(rooms_list, k)
          end -- for from, to, dir      
       end -- if depth
 
+      if rooms_list[1] then
+         rooms_list = table.concat(rooms_list, "','")
+      end
+      
+      rooms_list = "'"..rooms_list:gsub("([^,])'([^,])", "%1''%2").."'"
+      
       -- prune the search space
       if visited ~= "" then 
-         visited = visited..","..table.concat(rooms_list, ",")
+         visited = visited..","..rooms_list
       else
          if noportals then
             visited = visited..fixsql("*")..","
@@ -4018,18 +3954,18 @@ function findpath(src, dst, noportals, norecalls)
          if norecalls then
             visited = visited..fixsql("**")..","
          end
-         visited = visited..table.concat(rooms_list, ",")
+         visited = visited..rooms_list
       end
     
       -- get all exits to any room in the previous set
-      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc",table.concat(rooms_list,","), visited,mylevel,mylevel+(mytier*10))
+      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc",rooms_list, visited, mylevel, mylevel+(mytier*10))
       local dcount = 0
       room_sets[depth] = {}
       for row in dbnrowsWRAPPER(q) do
          dcount = dcount + 1
          -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
          -- used preferentially to normal ones (1 char)
-         room_sets[depth][row.fromuid] = {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
+         room_sets[depth][row.fromuid] = row
          if row.fromuid == "*" or (row.fromuid == "**" and f ~= "*" and f ~= src) or row.fromuid == src then
             f = row.fromuid
             found = true
@@ -4038,10 +3974,16 @@ function findpath(src, dst, noportals, norecalls)
       end -- for select
 
       if dcount == 0 then
+         SetStatus(main_status)
          return -- there is no path from here to there
       end -- if dcount
    end -- while
-  
+
+   if show_timing then
+      print("Time elapsed pathfinding (inner loop): ", utils.timer()-inner_elapsed)
+   end
+   SetStatus(main_status)
+
    if found == false then
       return
    end
@@ -4063,11 +4005,20 @@ function findpath(src, dst, noportals, norecalls)
             return path, found_depth
          end
       else
+         local jump_time = utils.timer()
          local jump_room, path_type = findNearestJumpRoom(src, dst, f)
+         if show_timing then
+            print("Time elapsed pathfinding (nearest jump):", utils.timer()-jump_time)
+         end
+
          if not jump_room then
             return
          end
+         local refind_time = utils.timer()
          local path, first_depth = findpath(src,jump_room, true, true) -- this could be optimized away by building the path in findNearestJumpRoom, but the gain would be negligible
+         if show_timing then
+            print("Time elapsed pathfinding (refind):", utils.timer()-refind_time)
+         end
          if bit.band(path_type, 1) ~= 0 then
             -- path_type 1 means just walk to the destination
             return path, first_depth
@@ -4088,12 +4039,11 @@ function findpath(src, dst, noportals, norecalls)
       depth = depth - 1
       ftd = room_sets[depth][next_room]
       next_room = ftd.touid
--- this caching is probably not noticeably useful, so disable it for now
---      if not rooms[ftd.touid] then -- if not in memory yet, get it
---         rooms[ftd.touid] = load_room_from_database (ftd.touid)
---      end
       table.insert(path, {dir=ftd.dir, uid=ftd.touid})
    end -- while
+   if show_timing then
+      print("Time elapsed pathfinding (outer):", utils.timer()-outer_elapsed)
+   end
    return path, found_depth
 end -- function findpath
 
@@ -4229,12 +4179,10 @@ function OnPluginConnect ()
       toggleBackups(true, true)
    end
    Send_GMCP_Packet("rawcolor on")
-   mapper.cancel_speedwalk ()
 end -- OnPluginConnect
 
 sent_busy = false
 function OnPluginDisconnect ()
-   mapper.cancel_speedwalk ()
    if sent_busy then
       BroadcastPlugin(999, "ok_you_can_go_now")
       sent_busy = false
