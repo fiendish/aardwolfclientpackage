@@ -756,6 +756,7 @@ function OnPluginDisable ()
    WindowShow( win, false )
    if IsConnected() then
       Send_GMCP_Packet("maptype -1")
+      TelnetOptionOff(TELOPT_ROOMDESC_TAGS)
       if (also_echo_map == 0) then
          TelnetOptionOff(TELOPT_MAP)
          TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
