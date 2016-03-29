@@ -15,10 +15,8 @@ init (t)            -- call once, supply:
    t.show_help   -- function that displays some help
    t.room_click  -- function that handles RH click on room (uid, flags)
    t.timing      -- true to show timing
-   t.show_completed  -- true to show "Speedwalk completed."
    t.show_other_areas -- true to show non-current areas
    t.show_up_down    -- follow up/down exits
-   t.speedwalk_prefix   -- if not nil, speedwalk by prefixing with this
    
 zoom_in ()          -- zoom in map view
 zoom_out ()         -- zoom out map view
@@ -30,15 +28,13 @@ save_state ()       -- call to save plugin state (ie. in OnPluginSaveState)
 draw (uid)          -- draw map - starting at room 'uid'
 start_speedwalk (path)  -- starts speedwalking. path is a table of directions/uids
 build_speedwalk (path)  -- builds a client speedwalk string from path
-cancel_speedwalk ()     -- cancel current speedwalk, if any
 check_we_can_find ()    -- returns true if doing a find is OK right now
-find (f, show_uid, count, walk)      -- generic room finder
+find (f, count, walk)      -- generic room finder
 
 Exposed variables:
 
 win                 -- the window (in case you want to put up menus)
 VERSION             -- mapper version
-last_hyperlink_uid  -- room uid of last hyperlink click (destination)
 last_speedwalk_uid  -- room uid of last speedwalk attempted (destination)
 <various functions> -- functions required to be global by the client (eg. for mouseup)
 
@@ -82,7 +78,6 @@ local DISTANCE_TO_NEXT_ROOM = tonumber(GetVariable("DISTANCE_TO_NEXT_ROOM")) or 
 local supplied_get_room
 local room_click
 local timing            -- true to show timing and other info
-local show_completed    -- true to show "Speedwalk completed."
 
 -- current room number
 local current_room
@@ -579,7 +574,19 @@ local function draw_room (uid, path, x, y)
          
          if rooms [exit_uid].unknown then
             linetype = miniwin.pen_dot -- dots
+         else
+            local exit_time = last_visited [exit_uid] or 0
+            local this_time = last_visited [uid] or 0
+            local now = os.time ()
+            if exit_time > (now - LAST_VISIT_TIME) and
+               this_time > (now - LAST_VISIT_TIME) then
+               linewidth = 3
+               if not locked_exit then
+                  exit_line_colour = ColourNameToRGB("orange")
+               end
+            end -- if
          end -- if
+
          
          local next_x = x + exit_info.at [1] * (ROOM_SIZE + DISTANCE_TO_NEXT_ROOM)
          local next_y = y + exit_info.at [2] * (ROOM_SIZE + DISTANCE_TO_NEXT_ROOM)
@@ -604,30 +611,10 @@ local function draw_room (uid, path, x, y)
                (not show_up_down and (dir == "u" or dir == "d")) then
                exit_info = stub_exit_info    -- don't show other areas
             else
-               -- if we are scheduled to draw the room already, only draw a stub this time
-               if plan_to_draw [exit_uid] and plan_to_draw [exit_uid] ~= next_coords then
-                  -- here if room already going to be drawn
-                  exit_info = stub_exit_info
-                  linetype = miniwin.pen_dash -- dash
-               else
-                  -- remember to draw room next iteration
-                  local new_path = copytable.deep (path)
-                  table.insert (new_path, { dir = dir, uid = exit_uid })
-                  table.insert (rooms_to_be_drawn, add_another_room (exit_uid, new_path, next_x, next_y))
-                  drawn_coords [next_coords] = exit_uid
-                  plan_to_draw [exit_uid] = next_coords
-                  
-                  -- if exit room known
-                  if not rooms [exit_uid].unknown then
-                     local exit_time = last_visited [exit_uid] or 0
-                     local this_time = last_visited [uid] or 0
-                     local now = os.time ()
-                     if exit_time > (now - LAST_VISIT_TIME) and
-                        this_time > (now - LAST_VISIT_TIME) then
-                        linewidth = 2
-                     end -- if
-                  end -- if
-               end -- if
+               local new_path = copytable.deep (path)
+               table.insert (new_path, { dir = dir, uid = exit_uid })
+               table.insert (rooms_to_be_drawn, add_another_room (exit_uid, new_path, next_x, next_y))
+               drawn_coords [next_coords] = exit_uid               
             end -- if
          end -- if drawn on this spot
 
@@ -695,41 +682,6 @@ local function draw_room (uid, path, x, y)
    WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
 end -- draw_room
 
-local function changed_room (uid)
-   if current_speedwalk then
-      if uid ~= expected_room then
-         local exp = rooms [expected_room]
-         if not exp then
-            exp = get_room (expected_room) or { name = expected_room }
-         end -- if
-         local here = rooms [uid]
-         if not here then
-            here = get_room (uid) or { name = uid }
-         end -- if
-         exp = expected_room
-         here = uid
-         maperror (string.format ("Speedwalk failed! Expected to be in '%s' but ended up in '%s'.", exp, here))
-         cancel_speedwalk ()
-      else
-         if #current_speedwalk > 0 then
-            local dir = table.remove (current_speedwalk, 1)
-            SetStatus ("Walking " .. (expand_direction [dir.dir] or dir.dir) .. 
-               " to " .. walk_to_room_name ..
-               ". Speedwalks to go: " .. #current_speedwalk + 1)
-            expected_room = dir.uid
-            Send (dir.dir)
-         else
-            last_hyperlink_uid = nil
-            last_speedwalk_uid = nil
-            if show_completed then
-               mapprint ("Speedwalk completed.")
-            end -- if wanted
-            cancel_speedwalk ()
-         end -- if any left    
-      end -- if expected room or not
-   end -- if have a current speedwalk
-end -- changed_room
-
 local function draw_zone_exit (exit)
    local x, y, def = exit.x, exit.y, exit.def
    local offset = ROOM_SIZE
@@ -744,34 +696,32 @@ end --  draw_zone_exit
 ----------------------------------------------------------------------------------
 
 -- can we find another room right now?
-
-function check_we_can_find ()
+function check_we_can_find()
    if not current_room then
       mapprint ("I don't know where you are right now - try: LOOK")
       check_connected ()
       return false
    end
+   
    if current_speedwalk then
-      mapprint ("The mapper has detected a speedwalk initiated inside another speedwalk. Aborting.")
+      mapprint ("The mapper has detected a mapper goto initiated inside another goto. That isn't allowed. Blocking the inner goto.")
       return false
    end -- if
+
    return true
 end -- check_we_can_find
 
--- draw our map starting at room: uid
+
 dont_draw = false
 function halt_drawing(halt)
    dont_draw = halt
 end
 
+-- draw our map starting at room: uid
 function draw (uid)
    if not uid then
       maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
       return
-   end -- if
-   
-   if current_room and current_room ~= uid then
-      changed_room (uid)
    end -- if
    
    current_room = uid -- remember where we are
@@ -963,8 +913,6 @@ function draw (uid)
    end -- if
 
    draw_edge()
-   
-   add_resize_tag()
 
    -- make sure window visible
    WindowShow (win, not window_hidden)
@@ -1014,10 +962,8 @@ function init (t)
    show_help = t.show_help     -- "help" function
    room_click = t.room_click   -- RH mouse-click function
    timing = t.timing           -- true for timing info
-   show_completed = t.show_completed  -- true to show "Speedwalk completed." message
    show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
-   speedwalk_prefix = t.speedwalk_prefix  -- how to speedwalk (prefix)
    
    -- force some config defaults if not supplied
    for k, v in pairs (default_config) do
@@ -1069,7 +1015,6 @@ function init (t)
    end -- for
 
    draw_edge()
-   add_resize_tag()
    
    WindowShow (win, not window_hidden)
    WindowShow (config_win, false)
@@ -1181,18 +1126,18 @@ function hyperlinkGoto(uid)
 end
 
 require "serialize"
-function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals)
+function full_find (dests, walk, no_portals)
    local paths = {}
    local notfound = {}
    for i,v in ipairs(dests) do
-      SetStatus (string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
-      BroadcastPlugin (999, "repaint")
+      SetStatus(string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
+      BroadcastPlugin(999, "repaint")
       local foundpath = findpath(current_room, v.uid, no_portals, no_portals)
-      if not rooms [v.uid] then
-         rooms [v.uid] = get_room (v.uid)
+      if not rooms[v.uid] then
+         rooms[v.uid] = get_room(v.uid)
       end
       if foundpath ~= nil then
-         paths[v.uid] = {path=foundpath, reason=v.reason}
+         table.insert(paths, {uid=v.uid, path=foundpath, reason=v.reason})
       else
          table.insert(notfound, {uid=v.uid, reason=v.reason})
       end
@@ -1202,80 +1147,62 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
    BroadcastPlugin(500, "found_paths = "..string.gsub(serialize.save_simple(paths),"%s+"," "))
    BroadcastPlugin(501, "unfound_paths = "..string.gsub(serialize.save_simple(notfound),"%s+"," "))
    
-   local t = {}
-   local found_count = 0
-   for k in pairs (paths) do
-      table.insert (t, k)
-      found_count = found_count + 1
-   end -- for
+   local found_count = #paths
 
    -- sort so closest ones are first  
-   table.sort (t, function (a, b) return #paths [a].path < #paths [b].path end )
+   table.sort(paths, function (a, b) return #a.path < #b.path end)
 
-   if walk and t[1] then
-      local uid = t[1]
-      local path = paths[uid].path
-      mapprint ("Going to:", rooms[uid].name)
-      start_speedwalk(path)
+   if walk and paths[1] then
+      local uid = paths[1].uid
+      local path = paths[1].path
+      mapprint("Going to:", rooms[uid].name)
+      start_speedwalk(path, uid)
       return
    end -- if walking wanted
       
    Note("+------------------------------ START OF SEARCH -------------------------------+")  
-   for _, uid in ipairs (t) do
-      local room = rooms [uid] -- ought to exist or wouldn't be in table
-      assert (room, "Room " .. uid .. " is not in rooms table.")
+   for _, p in ipairs(paths) do
+      local room = rooms[p.uid] -- ought to exist or wouldn't be in table
+      assert (room, "Room " .. p.uid .. " is not in rooms table.")
       
-      local distance = #paths [uid].path .. " room"
-      if #paths [uid].path > 1 or #paths[uid].path == 0 then
+      local distance = #p.path .. " room"
+      if #p.path > 1 or #p.path == 0 then
          distance = distance .. "s"
       end -- if
       distance = distance .. " away"
       
       local room_name = room.name
       room_name = room_name .. " (" .. room.area .. ")"
+      room_name = room_name .. " (" .. p.uid .. ")"
       
-      if show_uid then
-         room_name = room_name .. " (" .. uid .. ")"
-      end -- if
-      
-      if current_room ~= uid then
-         table.insert(last_result_list, uid)
-         Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. uid .. ")", 
+      if current_room ~= p.uid then
+         table.insert(last_result_list, p.uid)
+         Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. p.uid .. ")", 
             "["..#last_result_list.."] "..room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
       else
          Tell(room_name)
       end
       local info = ""
-      if type (paths [uid].reason) == "string" and paths [uid].reason ~= "" then
-         info = " [" .. paths [uid].reason .. "]"
+      if type (p.reason) == "string" and p.reason ~= "" then
+         info = " [" .. p.reason .. "]"
       end -- if
       mapprint (" - " .. distance .. info) -- new line
       
-      -- callback to display extra stuff (like find context, room description)
-      if fcb then
-         fcb (uid)
-      end -- if callback
    end -- for each room
 
-   if expected_count and found_count < expected_count then
-      local diff = expected_count - found_count
+   if #notfound > 0 then
       local were, matches = "were", "matches"
       if diff == 1 then
          were, matches = "was", "match"
       end -- if
       Note("+------------------------------------------------------------------------------+")
-      mapprint ("There", were, diff, matches, 
-         "which I could not find a path to within", 
-         config.SCAN.depth, "rooms:")
+      mapprint ("There", were, #notfound, matches,  "which I could not find a path to within", config.SCAN.depth, "rooms:")
    end -- if
    for i,v in ipairs(notfound) do
       local nfroom = rooms[v.uid]
       local nfline = nfroom.name
       nfline = nfline .. " (" .. nfroom.area .. ")"
-
-      if show_uid then
-         nfline = nfline .. " (" .. v.uid .. ")"
-      end -- if
+      nfline = nfline .. " (" .. v.uid .. ")"
       Tell(nfline)
       if type (v.reason) == "string" and v.reason ~= "" then
          nfinfo = " - [" .. v.reason .. "]"
@@ -1288,7 +1215,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end
 
-function quick_find(name, dests, show_uid, expected_count, walk, fcb)
+function quick_find(dests, walk)
    BroadcastPlugin (999, "repaint")
    Note("+------------------------------ START OF SEARCH -------------------------------+")
    
@@ -1303,10 +1230,8 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
       
       local room_name = room.name
       room_name = room_name .. " (" .. room.area .. ")"
-      if show_uid then
-         room_name = room_name .. " (" .. v.uid .. ")"
-      end
-
+      room_name = room_name .. " (" .. v.uid .. ")"
+    
       if current_room ~= v.uid then
          table.insert(last_result_list, v.uid)
          Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto("..v.uid..")", 
@@ -1323,11 +1248,6 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
          Note("")
       end
       
-      -- callback to display extra stuff (like find context, room description)
-      if fcb then
-         fcb (uid)
-      end -- if callback
-
       BroadcastPlugin (999, "repaint")
    end -- for each room
    
@@ -1358,40 +1278,22 @@ function gotoNextResult(which)
    end
 end
 
-function goto(uid)
-   find (nil,
-      {{uid=uid, reason=true}},
-      0,
-      false,  -- show vnum?
-      1,          -- how many to expect
-      true        -- just walk there
-   )
-end
-
 -- generic room finder
 -- dests is a list of room/reason pairs where reason is either true (meaning generic) or a string to find
--- show_uid is true if you want the room uid to be displayed
--- expected_count is the number we expect to find (eg. the number found on a database)
 -- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
--- if fcb is a function, it is called back after displaying each line
 -- quick_list determines whether we pathfind every destination in advance to be able to sort by distance
-function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quick_list, no_portals)
-   if not check_we_can_find () then
+function find (name, dests, walk, quick_list, no_portals)
+   if not check_we_can_find() then
       return
    end -- if
 
-   if fcb then
-      assert (type (fcb) == "function")
-   end -- if
-
-   if max_paths <= 0 then
-      max_paths = #dests
-   end
    if not walk then
       mapprint ("Found",#dests,"target"..(((#dests ~= 1) and "s") or "")..(((name ~= nil) and (" matching '"..name.."'")) or "")..".")
    end
-   if #dests > max_paths then
-      mapprint(string.format("Your search returned more than %s results. Choose a more specific pattern.", max_paths))
+   
+   local max_paths = 50
+   if #dests > max_paths and not quick_list then
+      mapprint("Your search would pathfind more than "..tostring(max_paths).." results. Choose a more specific pattern or activate the mapper quicklist setting.")
       return
    end
    
@@ -1401,50 +1303,44 @@ function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quic
    end
    
    if quick_list == true then
-      quick_find(name, dests, show_uid, expected_count, walk, fcb)
+      quick_find(dests, walk)
    else
-      full_find(name, dests, show_uid, expected_count, walk, fcb, no_portals)
+      full_find(dests, walk, no_portals)
    end
 end -- map_find_things
 
 -- build a speedwalk from a path into a string
+function build_speedwalk(path)
 
-function build_speedwalk (path, prefix)
+   if #path == 0 then
+      return
+   end -- nowhere to go (current room?)
 
-   stack_char = ";"
    if GetOption("enable_command_stack")==1 then
       stack_char = GetAlphaOption("command_stack_character")
    else
       stack_char = "\r\n"
    end
-  
-   -- build speedwalk string (collect identical directions)
+     
+   -- combine direction chains
    local tspeed = {}
-   for _, dir in ipairs (path) do
-      local n = #tspeed
-      if n == 0 then
-         table.insert (tspeed, { dir = dir.dir, count = 1 })
+   local n = 0
+   for _, ex in ipairs(path) do
+      if (n == 0) or (expand_direction[ex.dir] == nil) or (tspeed[n].dir ~= ex.dir) then
+         table.insert(tspeed, {dir=ex.dir, count=1})
+         n = n + 1
       else
-         if expand_direction[dir.dir] ~= nil and tspeed [n].dir == dir.dir then
-            tspeed [n].count = tspeed [n].count + 1
-         else
-            table.insert (tspeed, { dir = dir.dir, count = 1 })
-         end -- if different direction
-      end -- if
+         tspeed[n].count = tspeed[n].count + 1
+      end -- if new direction
    end -- for
  
-   if #tspeed == 0 then
-      return
-   end -- nowhere to go (current room?)
-  
-   -- now build string like: 2n3e4(sw)
+   -- now build string like: run 2n3e4;open east;east;run 3n
    local s = ""
-
-   local new_command = false
-   for _, dir in ipairs (tspeed) do
-      if expand_direction[dir.dir] ~= nil then
+   local new_command = true
+   for i, dir in ipairs(tspeed) do
+      if expand_direction[dir.dir] then
          if new_command then
-            s = s .. stack_char .. speedwalk_prefix .. " "
+            s = s .. ((i > 1) and ";" or "") .. "run "
             new_command = false
          end
          if dir.count > 1 then
@@ -1452,117 +1348,64 @@ function build_speedwalk (path, prefix)
          end -- if
          s = s .. dir.dir
       else
-         s = s .. stack_char .. dir.dir
+         s = s .. ((i > 1) and ";" or "") .. dir.dir
          new_command = true
       end -- if
    end -- if
-  
-   if prefix ~= nil then
-      if s:sub(1,1) == stack_char then
-         return string.gsub(s:sub(2),";",stack_char)
-      else
-         return string.gsub(prefix.." "..s,";",stack_char)
-      end
-   end
+   
    return string.gsub(s,";",stack_char)
 end -- build_speedwalk
 
 -- start a speedwalk to a path
-
-function start_speedwalk (path)
+function start_speedwalk(path)
 
    if not check_connected () then
       return
    end -- if
-
+   
    if myState == 9 or myState == 11 then
       Send("stand")
    end
 
-   if current_speedwalk and #current_speedwalk > 0 then
-      mapprint ("You are already speedwalking! (Ctrl + LH-click on any room to cancel)")
-      return
-   end -- if
-
    current_speedwalk = path
+   if path and #path > 0 then
+      last_speedwalk_uid = path[#path].uid
+      
+      -- fast speedwalk: send run 4s3e etc.
+      ExecuteWithWaits(build_speedwalk(path))
 
-   if current_speedwalk then
-      if #current_speedwalk > 0 then
-         last_speedwalk_uid = current_speedwalk [#current_speedwalk].uid
-         
-         -- fast speedwalk: just send # 4s 3e  etc.
-         if type (speedwalk_prefix) == "string" and speedwalk_prefix ~= "" then
-            local s = speedwalk_prefix .. " "
-            local p = build_speedwalk (path)
-            if p:sub(1,1) ~= stack_char then
-               s = s .. p        
-            else
-               s = p:sub(2)
-            end
-            ExecuteWithWaits(s:gsub(";","\r\n"))
-            current_speedwalk = nil
-            return  
-         end -- if
-         
-         local dir = table.remove (current_speedwalk, 1)
-         local room = get_room (dir.uid)
-         walk_to_room_name = room.name
-         SetStatus ("Walking " .. (expand_direction [dir.dir] or dir.dir) .. 
-            " to " .. walk_to_room_name ..
-            ". Speedwalks to go: " .. #current_speedwalk + 1)
-         Send (dir.dir)
-         expected_room = dir.uid
-      else
-         cancel_speedwalk ()
-      end -- if any left    
-   end -- if
+      current_speedwalk = nil
+      return
+   end -- if any steps
    
 end -- start_speedwalk
-
--- cancel the current speedwalk
-
-function cancel_speedwalk ()
-   if current_speedwalk and #current_speedwalk > 0 then
-      mapprint "Speedwalk cancelled."
-   end -- if
-   current_speedwalk = nil
-   expected_room = nil
-   SetStatus ("Ready")
-end -- cancel_speedwalk
-
 
 -- ------------------------------------------------------------------
 -- mouse-up handlers (need to be exposed)
 -- these are for clicking on the map, or the configuration box
 -- ------------------------------------------------------------------
+function goto(dest, force_walking)
+   find (nil,
+      {{uid=dest, reason=true}},
+      true,   -- just go there
+      nil,
+      force_walking)
+end
 
 function mouseup_room (flags, hotspot_id)
-   local uid = hotspot_id
 
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       -- RH click
       if type (room_click) == "function" then
-         room_click (uid, flags)
+         room_click (hotspot_id, flags)
       end
       return
    end -- if RH click
 
    -- here for LH click
    
-   -- Control key down?
-   if bit.band (flags, miniwin.hotspot_got_control) ~= 0 then
-      cancel_speedwalk ()
-      return
-   end -- if ctrl-LH click
-
    -- find desired room
-   find (nil,
-      {{uid=uid, reason=true}},
-      0,
-      false,  -- show vnum?
-      1,          -- how many to expect
-      true        -- just walk there
-   )
+   goto(hotspot_id)
 end -- mouseup_room
 
 function mouseup_configure (flags, hotspot_id)
@@ -1711,7 +1554,6 @@ function resize_move_callback()
 
    WindowResize(win, width, height, BACKGROUND_COLOUR.colour)
    draw_edge()
-   add_resize_tag()
 
    WindowShow(win,true)
 end
@@ -1750,4 +1592,5 @@ function draw_edge()
    -- draw edge frame.
    check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
    check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
+   add_resize_tag()
 end
