@@ -220,7 +220,9 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    send_to="12"
 >
 <send>
-   db:close()
+   if DBisOpen() then
+      db:close()
+   end
    db = sqlite3.open_memory()
 
    dbCheckExecute("ATTACH DATABASE '"..GetInfo (66) .. sanitize_filename(WorldName()) .. ".db".."' AS file_db;")
@@ -248,7 +250,9 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    send_to="12"
 >
 <send>
-   db:close()
+   if DBisOpen() then
+      db:close()
+   end
    db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    print("DONE")
 </send>
@@ -781,7 +785,6 @@ function forceOpenDB()
    force_nests = force_nests+1
    if not db:isopen() then
       forced_opened = true
-      -- print("Forcing open")
       db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    end
 end
@@ -791,7 +794,6 @@ function closeDBifForcedOpen()
    if forced_opened and (force_nests <= 0) then
       force_nests = 0
       forced_opened = false
-      -- print("Forcing closed")
       db:close()
    end
 end
@@ -3686,6 +3688,10 @@ function map_find (name, line, wildcards)
       false,       -- don't auto-walk
       quick_mode
    )
+   
+   if show_timing then
+      print("mapper find elapsed: ", utils.timer() - find_elapsed)
+   end
 end -- map_find
 
 
@@ -3892,7 +3898,7 @@ function findpath(src, dst, noportals, norecalls)
    local walk_one = nil
    for dir,touid in pairs(rooms[src].exits) do
       if tostring(touid) == tostring(dst) and tonumber(rooms[src].exit_locks[dir]) <= mylevel and ((walk_one == nil) or (#dir > #walk_one)) then
-         walk_one = dir -- if one room away, walk there (don't portal), but prefer a cexit
+         walk_one = dir -- if one room away, walk there (don't portal), but prefer a (longer) cexit
       end
    end
    if walk_one ~= nil then
@@ -3901,7 +3907,6 @@ function findpath(src, dst, noportals, norecalls)
    local depth = 0
    local max_depth = mapper.config.SCAN.depth
    local room_sets = {}
-   local rooms_list = {}
    local found = false
    local ftd = {}
    local f = ""
@@ -3921,48 +3926,43 @@ function findpath(src, dst, noportals, norecalls)
    src = tostring(src)
    dst = tostring(dst)
    
-   table.insert(rooms_list, dst)
-     
-   local visited = ""
+   local rooms_list = {dst}     
+   
+   local visited = {}
+   local visited_str = ""
+   if noportals then
+      table.insert(visited, "*")
+   end
+   if norecalls then
+      table.insert(visited, "**")
+   end
+   if noportals or norecalls then
+      visited_str = "'"..table.concat(visited, "','").."'"
+   end
+   
    local main_status = GetInfo(53)
    local inner_elapsed = utils.timer()
    
    while not found and depth < max_depth do
       SetStatus(main_status.." (searching depth "..depth..")")
       depth = depth + 1
-      if depth > 1 then
-         ftd = room_sets[depth-1] or {}
-         rooms_list = {}
-         for k,_ in pairs(ftd) do
-            table.insert(rooms_list, k)
-         end -- for from, to, dir      
-      end -- if depth
 
-      if rooms_list[1] then
-         rooms_list = table.concat(rooms_list, "','")
-      end
-      
-      rooms_list = "'"..rooms_list:gsub("([^,])'([^,])", "%1''%2").."'"
-      
-      -- prune the search space
-      if visited ~= "" then 
-         visited = visited..","..rooms_list
-      else
-         if noportals then
-            visited = visited..fixsql("*")..","
-         end
-         if norecalls then
-            visited = visited..fixsql("**")..","
-         end
-         visited = visited..rooms_list
-      end
-    
       -- get all exits to any room in the previous set
-      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc",rooms_list, visited, mylevel, mylevel+(mytier*10))
-      local dcount = 0
+      -- unprepared query fallback (like maybe if too many SQL variables)
+      rooms_list_str = "'"..table.concat(rooms_list,"','"):gsub("([^,])'([^,])", "%1''%2").."'"
+      if visited_str ~= "" then
+         visited_str = visited_str..","..rooms_list_str
+      else
+         visited_str = rooms_list_str
+      end
+
+      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc", rooms_list_str, visited_str, mylevel, mylevel+(mytier*10))
+
+      local dcount = false
       room_sets[depth] = {}
+      rooms_list = {}
       for row in dbnrowsWRAPPER(q) do
-         dcount = dcount + 1
+         dcount = true
          -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
          -- used preferentially to normal ones (1 char)
          room_sets[depth][row.fromuid] = row
@@ -3973,14 +3973,22 @@ function findpath(src, dst, noportals, norecalls)
          end -- if src
       end -- for select
 
-      if dcount == 0 then
+      if not dcount then
          SetStatus(main_status)
          return -- there is no path from here to there
       end -- if dcount
+   
+      local i = 1
+      ftd = room_sets[depth]
+      for k,_ in pairs(ftd) do
+         rooms_list[i] = k
+         i = i+1
+      end -- for from, to, dir      
+      
    end -- while
 
    if show_timing then
-      print("Time elapsed pathfinding (inner loop): ", utils.timer()-inner_elapsed)
+      print("Time elapsed pathfinding ",depth," levels (inner loop): ", utils.timer()-inner_elapsed)
    end
    SetStatus(main_status)
 
