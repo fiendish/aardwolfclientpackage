@@ -140,7 +140,13 @@ function capture_activate(name, line, wildcards, styles)
    last_command = Trim(wildcards[1])
    TelnetOptionOff(TELOPT_PAGING)
    SendNoEcho("echo {Begin MC Capture:"..last_command.."}")
-   SendNoEcho(last_command)
+
+   -- execute without echo
+   local original_echo_setting = GetOption("display_my_input")
+   SetOption ("display_my_input", 0)
+   Execute (last_command)
+   SetOption ("display_my_input", original_echo_setting)
+   
    SendNoEcho("echo {End MC Capture:"..last_command.."}")
    TelnetOptionOn(TELOPT_PAGING)
 end
