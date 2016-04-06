@@ -4177,8 +4177,8 @@ function OnHelp (name, line, wildcards)
                                  > to get around the line break parser
                                  > (ex: 'mapper portal hold amulet;;enter').]],
 [[]],
-[[There is also 'mapper fullportal <command> <room_id> <level>' which lets you set
-all portal aspects in one command without being in the target room.]],
+[[There is also 'mapper fullportal {<command>} {<room_id>} <level>' which lets you
+set all portal aspects in one command without being in the target room.]],
 [[]],
 [[+---- NORECALL/NOPORTAL ROOM ASSISTANCE -------------------------------------+]],
 [[mapper portalrecall <index>    --> Flag/unflag a portal as using a recall or
