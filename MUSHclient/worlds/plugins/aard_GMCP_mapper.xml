@@ -4,7 +4,7 @@
 <!-- MuClient version 4.59 -->
 
 <!DOCTYPE muclient [
-   <!ENTITY show_timing "false" > 
+   <!ENTITY show_timing "true" > 
    <!ENTITY show_database_mods "false" > 
    <!ENTITY show_other_areas "false" > 
    <!ENTITY show_up_down "false" >
@@ -160,21 +160,37 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    sequence="100"
    script="shownote_toggle"
 ></alias>
-  
+
 <alias
-   match="mapper zoom out"
+   match="mapper denser"
    enabled="y"
    sequence="100"
    omit_from_output="y"
-   script="mapper.zoom_out"
+   script="mapper.denser"
 ></alias>
   
 <alias
-   match="mapper zoom in"
+   match="mapper sparser"
    enabled="y"
    sequence="100"
    omit_from_output="y"
-   script="mapper.zoom_in"
+   script="mapper.sparser"
+></alias>  
+  
+<alias
+   match="mapper smaller"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   script="mapper.smaller_rooms"
+></alias>
+  
+<alias
+   match="mapper bigger"
+   enabled="y"
+   sequence="100"
+   omit_from_output="y"
+   script="mapper.bigger_rooms"
 ></alias>  
 
 <alias
@@ -618,6 +634,17 @@ mapper.gotoNextResult(Trim("%1"))
 </send>
 </alias>
 
+<alias
+   match="^mapper daredevil$"
+   enabled="y"
+   regexp="y"
+   send_to="12"
+>
+<send>
+   mapper.daredevil_mode = not mapper.daredevil_mode
+   mapper.draw (current_room)
+</send>
+</alias>
 </aliases>
 
 <triggers>
@@ -740,11 +767,9 @@ window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = ((GetVariable("quick_mode") or "1") == "1") -- default true
 shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
-local rooms = {}
-local areas = {}
-local environments = {}
-local user_terrain_colour = {}
-local performing_maintenance = false
+rooms = {}
+environments = {}
+performing_maintenance = false
 
 room_not_in_database = {}
 room_in_database = {}
@@ -810,11 +835,15 @@ end
 
 function dbnrowsWRAPPER(query)
    forceOpenDB()
+   local nrows_elapse = utils.timer()
    iter,vm,i = db:nrows(query)
    local function itwrap(vm, i)
       retval = iter(vm, i)
       if not retval then
          closeDBifForcedOpen()
+         if show_timing then
+            print("dbnrowsWRAPPER elapsed ("..query:sub(1,100)..(#query > 100 and "..." or "").." ):",utils.timer()-nrows_elapse)
+         end
          return nil
       end
       return retval
@@ -874,8 +903,8 @@ end -- fixbool
 function findpathfast(name, line, wildcards)
    local src = wildcards[1]
    local dest = wildcards[2]
-   rooms[src] = load_room_from_database(src)
-   rooms[dest] = load_room_from_database(dest)
+   rooms[src] = get_room(src)
+   rooms[dest] = get_room(dest)
    
    if rooms[src] == nil then
       mapper.mapprint (string.format ("Room %s not known.", src))
@@ -1036,7 +1065,6 @@ function map_areas (name, line, wildcards)
    Note (line)
 end
 
--- map_list function contributed by Spartacus
 function map_list (name, line, wildcards)
    -- ok, so if I want to lookup a room in my db, I don't want it only if the mapper can find a sw in a certain # of rooms.
    -- if it is in the db, I want its vnum and area, so that I can figure out how to get there if the mapper does not know.
@@ -1136,9 +1164,13 @@ function custom_exit_list (name, line, wildcards)
    world.Note (hl)
    world.Note (hr)
    world.Note (hl)
+   
+   last_result_list = {}
+   next_result_index = 0
+      
    for row in dbnrowsWRAPPER(query) do
       line = string.format(fmt,row.area, row.name, row.uid, row.dir, row.touid)
-      Hyperlink(string.format("mapper goto %s",row.uid), line, string.format("%s",row.dir), "", "", false)
+      mapper.addRunHyperlink(row.uid, line)
       print("")
       count = count + 1
       BroadcastPlugin(999, "repaint")
@@ -1229,6 +1261,10 @@ function show_known_unmapped_exits (name, line, wildcards)
    world.Note (hl)
    world.Note (hr)
    world.Note (hl)
+   
+   last_result_list = {}
+   next_result_index = 0
+  
    for row in dbnrowsWRAPPER(query) do
       if area == "" then
          line = string.format(fmt,row.area, row.cnt)
@@ -1236,11 +1272,12 @@ function show_known_unmapped_exits (name, line, wildcards)
          count = count + row.cnt
       else
          line = string.format(fmt,row.area, row.name, row.uid, row.dir, row.touid)
-         Hyperlink(string.format("mapper goto %s",row.uid), line, "Click to attempt to walk here", "", "", false)
+         mapper.addRunHyperlink(row.uid, line)
          print("")
          count = count + 1
       end -- if count
    end -- unmapped rooms query
+   
    world.Note (hl)
    line = string.format ("Found %s unmapped exits.", count)
    print (line.."\n")
@@ -1371,7 +1408,7 @@ function map_portal (name, line, wildcards)
       return
    end
    
-   if not load_room_from_database(destination) then 
+   if not get_room(destination) then 
       print("PORTAL ["..wildcards[1].."] FAILED: Room "..destination.." is unknown.")
       return
    end
@@ -1474,21 +1511,22 @@ function map_portal_list ()
    Note ("\n"..hl)
    Note (hr)
    Note (hl)
-
+   
+   last_result_list = {}
+   next_result_index = 0
+   
    local count = 0
    for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       count = count + 1
       line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
-         -- make the whole line clickable
-         cmd = "mapper goto " .. row.touid
-         txt = "click here to run to " .. (row.name or "N/A") .. "\n[ " .. row.dir .. " ]"
-         Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false)
+         mapper.addRunHyperlink(row.touid, line, "\nPortal Action: "..row.dir, true, ((row.fromuid=="*") and "") or "red")         
          Note()
       else
          Note(line)
       end -- if row.level
    end -- for row (portals query)
+   
    Note (hl)
    Note ("|* Indicates designated bouncerecall/bounceportal |")
    Note ("+-------------------------------------------------+\n")
@@ -1696,7 +1734,7 @@ function purgezone(zoneuid)
          rooms[k] = nil
       end
    end
-   areas[zoneuid] = nil
+   mapper.areas[zoneuid] = nil
    Send_GMCP_Packet("request room")
 end
 
@@ -1852,6 +1890,25 @@ function load_room_from_database (uid)
     
 end -- load_room_from_database
 
+
+function get_room (uid)
+
+   local room = rooms[uid]
+
+   -- not cached - see if in database
+   if not room then
+      room = load_room_from_database(uid)
+      rooms[uid] = room -- cache for later
+  
+      if room then
+         load_area_from_database(room.area)
+      end
+   end -- not in cache
+
+   return room
+end -- get_room
+
+
 function create_tables ()
    -- create rooms table
    dbCheckExecute([[
@@ -1947,158 +2004,6 @@ function check_rooms_flags()
    end
 end -- function check_rooms_flags
 
-function get_room (uid)
-     
-   -- look it up
-   local ourroom = rooms [uid]
-
-   -- not cached - see if in database
-   if not ourroom then
-      ourroom = load_room_from_database (uid)
-      rooms [uid] = ourroom -- cache for later
-  
-      if not ourroom then
-         return nil
-      end -- if
-
-      load_area_from_database(ourroom.area)
-   end -- not in cache
-
-   local room = copytable.deep(ourroom)
-   room.bordercolour = mapper.ROOM_COLOUR.colour
-   if areas[room.area] then
-      room.texture = areas[room.area].texture
-      if areas[room.area].color ~= "" then
-         room.bordercolour = areas[room.area].color or mapper.ROOM_COLOUR.colour
-      end
-      room.area = areas[room.area].name or string.format ("%s", room.area or "<unknown>")
-   end
-   
-   if uid == current_room then
-      current_area = room.area
-   end -- if
-  
-   -- build hover message  
-   local environmentname = room.terrain
-   if tonumber (environmentname) then
-      environmentname = environments [tonumber (environmentname)]
-   end -- convert to name
-  
-   local terrain = ""
-   if environmentname and environmentname ~= "" then
-      terrain = "\nTerrain: " .. capitalize (environmentname)
-   end -- if terrain known
-  
-   local info = ""
-   if room.info and room.info ~= "" then
-      info = "\nInfo: " .. capitalize (room.info)
-   end -- if info known
-  
-   local notes = ""
-   if room.notes and room.notes ~= "" then
-      notes = "\nNote: " .. room.notes
-   end -- if notes
-
-   local flags = ""
-   if room.norecall == 1 then
-         flags = flags.."norecall "
-   end
-   if room.noportal == 1 then
-         flags = flags.."noportal"
-   end
-   if flags ~= "" then
-      flags = "\nFlags: "..string.gsub(flags," ",", ")
-   end
-  
-   local texits = {}
-   for dir in pairs (room.exits) do
-      table.insert (texits, dir)
-   end -- for
-   table.sort (texits)
-   
-   local areaname = room.area
-   if tonumber (areaname) then
-      areaname = areas [tonumber (areaname)].name
-   end -- convert to name
-    
-   room.hovermessage = string.format (
-      "%s\tExits: %s\nRoom: %s\nArea: %s%s%s%s%s",
-      room.name, 
-      table.concat (texits, ", "),
-      uid,
-      areaname,
-      terrain,
-      info,
-      notes,
-      flags
-      -- depth,
-      -- table.concat (path, ",")
-      )
-      
-   room.borderpen = 0 -- solid
-   room.borderpenwidth = 1
-   room.fillcolour = 0xff0000
-   room.fillbrush = 1 -- no fill
-   -- special room fill colours
-   local special_room = false
-   if room.info and room.info ~= "" then
-      if string.match (room.info, "shop") then
-         special_room = true
-         room.fillcolour = mapper.SHOP_FILL_COLOUR.colour
-         room.fillbrush = 0  -- solid
-      elseif string.match (room.info, "healer") then
-         special_room = true
-         room.fillcolour = mapper.HEALER_FILL_COLOUR.colour
-         room.fillbrush = 0  -- solid
-      elseif string.match (room.info, "guild") then
-         special_room = true
-         room.fillcolour = mapper.GUILD_FILL_COLOUR.colour
-         room.fillbrush = 0 -- solid
-      elseif string.match (room.info, "trainer") then
-         special_room = true
-         room.fillcolour = mapper.TRAINER_FILL_COLOUR.colour
-         room.fillbrush = 0 -- solid
-      elseif string.match (room.info, "questor") then
-         special_room = true
-         room.fillcolour = mapper.QUESTOR_FILL_COLOUR.colour
-         room.fillbrush = 0 -- solid
-      elseif string.match (room.info, "bank") then
-         special_room = true
-         room.fillcolour = mapper.BANK_FILL_COLOUR.colour
-         room.fillbrush = 0  -- solid
-      elseif string.match (room.info, "safe") then
-         special_room = true
-         room.fillcolour = mapper.SAFEROOM_FILL_COLOUR.colour
-         room.fillbrush = 0  -- solid
-      end -- if
-   end  
-   -- use terrain colour
-   if environmentname and environmentname ~= "" and not special_room then
-      if user_terrain_colour [environmentname] then
-         room.fillcolour = user_terrain_colour [environmentname]
-         room.fillbrush = 8  -- fine pattern
-      elseif terrain_colours [environmentname] then
-         room.fillcolour = colour_lookup [terrain_colours [environmentname]]
-         room.fillbrush = 8  -- fine pattern
-      else
-         Send_GMCP_Packet("request sectors")
-      end
-   end -- if environmentname
-
-   if uid == current_room then
-      room.bordercolour = mapper.OUR_ROOM_COLOUR.colour
-      room.borderpenwidth = 3
-   elseif room.area ~= current_area then
-      room.bordercolour = mapper.DIFFERENT_AREA_COLOUR.colour
-   elseif room.info and string.match(room.info, "pk") then
-      room.bordercolour = mapper.PK_BORDER_COLOUR.colour
-      room.borderpenwidth = 3
-   end -- not in this area
-  
-   return room      
-      
-end -- get_room
-
 function room_edit_note (room, uid, newnotes)
 
    if uid == nil and current_room ~= nil then 
@@ -2190,8 +2095,8 @@ function room_edit_terrain_colour (room, uid)
       colour = colour_lookup [colourtype]
    end -- if type known
 
-   if user_terrain_colour [environmentname] then
-      colour = user_terrain_colour [environmentname]
+   if mapper.user_terrain_colour[environmentname] then
+      colour = mapper.user_terrain_colour[environmentname]
    end -- if already have user colour
   
    local newcolour = PickColour (colour or 0x000000)
@@ -2199,7 +2104,7 @@ function room_edit_terrain_colour (room, uid)
       return
    end -- cancelled
   
-   if user_terrain_colour [environmentname] then
+   if mapper.user_terrain_colour[environmentname] then
       dbCheckExecute(string.format (
       "UPDATE terrain SET color = %s WHERE name = %s;",
       fixsql (newcolour),
@@ -2215,7 +2120,7 @@ function room_edit_terrain_colour (room, uid)
       mapper.mapprint ("Colour for terrain '" .. environmentname .. "' is now", RGBColourToName (newcolour))
    end -- if    
    
-   user_terrain_colour [environmentname] = newcolour
+   mapper.user_terrain_colour[environmentname] = newcolour
 
    mapper.draw (current_room)
 
@@ -2251,9 +2156,10 @@ function room_delete_exit (room, uid, exit)
       fixsql (uid)  -- from current room
    ))
    mapper.mapprint ("Deleted exit '"..chosen_exit.."' from room "..uid.." from database.")
-  
+
    -- update in-memory table
-   rooms[uid] = load_room_from_database(uid)
+   rooms[uid] = nil
+   get_room(uid)
   
    mapper.draw (current_room)
    
@@ -2289,13 +2195,7 @@ function room_change_exit (room, uid, exit)
    end -- cancelled
   
    -- look it up
-   local dest_room = rooms [exit_destination]
-  
-   -- not cached - see if in database
-   if not dest_room then
-      dest_room = load_room_from_database (exit_destination)
-      rooms [exit_destination] = dest_room -- cache for later
-   end -- not in cache
+   local dest_room = get_room(exit_destination)
   
    if not dest_room then
       utils.msgbox ("Room " .. exit_destination .. " does not exist.", "Room does not exist!", "ok", "!", 1)
@@ -2314,8 +2214,8 @@ function room_change_exit (room, uid, exit)
       mapper.mapprint ("Modified exit", chosen_exit, "from room", uid, "to be to room", exit_destination, "in database.")
      
       -- update in-memory table
-      rooms [uid].exits [chosen_exit] = exit_destination
-      mapper.draw (current_room)
+      rooms[uid].exits[chosen_exit] = exit_destination
+      mapper.draw(current_room)
    else
       mapper.mapprint ("Destination unchanged for exit '"..chosen_exit.."'.")
    end
@@ -2378,7 +2278,7 @@ function room_lock_exit (room, uid, exit)
 
    -- update in-memory table
    rooms[uid].exit_locks[chosen_exit] = exit_level
-   mapper.draw (current_room)
+   mapper.draw(current_room)
    
 end -- room_lock_exit
 
@@ -2390,13 +2290,7 @@ function room_click (uid, flags)
    end -- if
   
    -- look it up
-   local room = rooms [uid]
-  
-   -- not cached - see if in database
-   if not room then
-      room = load_room_from_database (uid)
-      rooms [uid] = room -- cache for later
-   end -- not in cache
+   local room = get_room(uid)
   
    if not room then
       return
@@ -3051,12 +2945,12 @@ function after_update_check()
          color = row.color,
          virtual = (row.flags:find("virtual") ~= nil)
       }
-      areas [row.uid] = area
+      mapper.areas[row.uid] = area
    end   -- finding areas
   
    -- grab all user terrain info
    for row in dbnrowsWRAPPER("SELECT * FROM terrain") do
-      user_terrain_colour [row.name] = row.color
+      mapper.user_terrain_colour[row.name] = row.color
    end -- finding terrains
  
    -- grab all environment names
@@ -3214,7 +3108,7 @@ function override_continents(override)
 end
 
 function manual_norecall(room_id, norecall)
-   local room = load_room_from_database(room_id)
+   local room = get_room(room_id)
    if room ~= nil then 
       room.norecall = norecall
       save_room_to_database(room_id, room)
@@ -3225,7 +3119,7 @@ function manual_norecall(room_id, norecall)
 end
 
 function manual_noportal(room_id, noportal)
-   local room = load_room_from_database(room_id)
+   local room = get_room(room_id)
    if room ~= nil then 
       room.noportal = noportal
       save_room_to_database(room_id, room)
@@ -3244,7 +3138,7 @@ function ignore_mismatch(room_id, ignore_exits_mismatch)
       room_id = current_room
    end
    if room_id then
-      local room = load_room_from_database(room_id)
+      local room = get_room(room_id)
       if room ~= nil then 
          room.ignore_exits_mismatch = ignore_exits_mismatch
          save_room_to_database(room_id, room)
@@ -3332,13 +3226,23 @@ function got_gmcp_room()
       exits = {},
       exit_locks = {}
       }
+      
    if gmcproom.area ~= lastarea then
       lastarea = gmcproom.area
       -- purge all virtual areas except the current area
-      for k,v in pairs(areas) do
+      for k,v in pairs(mapper.areas) do
          if v.virtual and (k ~= lastarea) then
             purgezone(k)
          end
+      end
+   
+      local area_exists = false
+      for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
+         area_exists = true
+      end
+      if not area_exists and last_area_requested ~= gmcproom.area then
+         last_area_requested = gmcproom.area
+         Send_GMCP_Packet("request area")
       end
    end
 
@@ -3349,22 +3253,8 @@ function got_gmcp_room()
    end
    
    current_room = room_number
-   
-   local area_exists = false
-   for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
-      area_exists = true
-   end
-   if not area_exists and last_area_requested ~= gmcproom.area then
-      last_area_requested = gmcproom.area
-      Send_GMCP_Packet("request area")
-   end
-   
-   local room = rooms [room_number]
-   -- not cached - see if in database
-   if not room then
-      room = load_room_from_database (room_number)
-   end -- not in cache
-   
+   local room = get_room(room_number)
+
    if shownotes and room and room.notes and room.notes ~= "" then
       for _,v in ipairs(ColoursToStyles("*** MAPPER NOTE *** -> "..room.notes.."@w\n\n", "x033")) do
          ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
@@ -3397,7 +3287,7 @@ function got_gmcp_room()
          gmcproom.notes = nilToStr(room.notes)
          gmcproom.noportal = (room.noportal or 0)
          gmcproom.norecall = (room.norecall or 0)
-      elseif room and nilToStr(room.area) ~= "" and areas[nilToStr(room.area)] then
+      elseif room and nilToStr(room.area) ~= "" and mapper.areas[nilToStr(room.area)] then
          -- replacement area
 --         print("different area")
 --         if room then 
@@ -3466,7 +3356,7 @@ function update_gmcp_area()
       color = color,
       virtual = (flags:find("virtual") ~= nil)
    }
-   areas [areaid] = area
+   mapper.areas[areaid] = area
 
    Send_GMCP_Packet("request room") -- Just got a new area update. Now check for our room again.
    return
@@ -3544,7 +3434,11 @@ function OnPluginBroadcast (msg, id, name, text)
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
+         local full_gmcp_room_elapsed = utils.timer()
          got_gmcp_room()
+         if show_timing then
+            print("Full room processing elapsed:",utils.timer()-full_gmcp_room_elapsed)
+         end
       end -- if room.info
 
       if (text == "room.wrongdir") then
@@ -3631,13 +3525,7 @@ function map_area (name, line, wildcards)
    end -- if
 
    -- look it up
-   local ourroom = rooms [uid]
-
-   -- not cached - see if in database
-   if not ourroom then
-      ourroom = load_room_from_database (uid)
-      rooms [uid] = ourroom -- cache for later
-   end -- not in cache
+   local ourroom = get_room(uid)
 
    if not ourroom then
       print("AREA ERROR: The area has not been initialized yet. Please try again in a second.")
@@ -3697,7 +3585,6 @@ end -- map_find
 
 function map_find_special(which_ones, which_area)
    local wanted_items = {}
-
    for _, v in ipairs (which_ones) do 
       wanted_items [v:lower ()] = true 
    end
@@ -3892,9 +3779,8 @@ local bit = require("bit")
 -- original findpath function idea contributed by Spartacus. we don't use that one anymore.
 function findpath(src, dst, noportals, norecalls)
    local outer_elapsed = utils.timer()
-   if not rooms[src] then
-      rooms[src] = load_room_from_database(src)
-   end
+   get_room(src)
+   
    local walk_one = nil
    for dir,touid in pairs(rooms[src].exits) do
       if tostring(touid) == tostring(dst) and tonumber(rooms[src].exit_locks[dir]) <= mylevel and ((walk_one == nil) or (#dir > #walk_one)) then
