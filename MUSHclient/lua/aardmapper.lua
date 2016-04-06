@@ -17,9 +17,9 @@ init (t)            -- call once, supply:
    t.timing      -- true to show timing
    t.show_other_areas -- true to show non-current areas
    t.show_up_down    -- follow up/down exits
-   
-zoom_in ()          -- zoom in map view
-zoom_out ()         -- zoom out map view
+
+bigger_rooms ()          -- zoom in map view
+smaller_rooms ()         -- zoom out map view
 mapprint (message)  -- like print, but uses mapper colour
 maperror (message)  -- like print, but prints in red
 hide ()             -- hides map window (eg. if plugin disabled)
@@ -67,15 +67,23 @@ local FONT_ID     = "fn"  -- internal font identifier
 local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
 local CONFIG_FONT_ID = "cfn"
 local CONFIG_FONT_ID_UL = "cfnu"
+local BORDER_TYPES = {"On","Off"}
 
 -- size of room box
-local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 12
+local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 13
+if ROOM_SIZE %2 == 0 then
+   ROOM_SIZE = ROOM_SIZE+1
+end
 
 -- how far away to draw rooms from each other
 local DISTANCE_TO_NEXT_ROOM = tonumber(GetVariable("DISTANCE_TO_NEXT_ROOM")) or 8
 
+local ROOM_BORDER_TYPE = tonumber(GetVariable("ROOM_BORDER_TYPE"))
+if not BORDER_TYPES[ROOM_BORDER_TYPE] then
+   ROOM_BORDER_TYPE = 1
+end
+
 -- supplied in init
-local supplied_get_room
 local room_click
 local timing            -- true to show timing and other info
 
@@ -83,14 +91,16 @@ local timing            -- true to show timing and other info
 local current_room
 
 -- our copy of rooms info
-local rooms = {}
+areas = {}
+user_terrain_colour = {}
+display_rooms = {}
 local last_visited = {}
 local textures = {}
 
 -- other locals
-local HALF_ROOM, connectors, half_connectors, arrows
-local plan_to_draw, drawn, drawn_coords
-local last_drawn, depth, font_height 
+local HALF_ROOM_UP, connectors, half_connectors, arrows
+local plan_to_draw, drawn_uids, drawn_coords
+local last_drawn, depth, font_height
 local walk_to_room_name
 local total_times_drawn = 0
 local total_time_taken = 0
@@ -111,55 +121,70 @@ end
 
 local function build_room_info ()
 
-   HALF_ROOM   = math.ceil(ROOM_SIZE / 2)
-   local THIRD_WAY   = math.ceil(DISTANCE_TO_NEXT_ROOM / 3)
-   local HALF_WAY = math.ceil(DISTANCE_TO_NEXT_ROOM / 2)
-   
+   HALF_ROOM_UP   = math.ceil(ROOM_SIZE / 2)
+   HALF_ROOM_DOWN = math.floor(ROOM_SIZE / 2)
+   THIRD_WAY_UP   = math.ceil(DISTANCE_TO_NEXT_ROOM / 3)
+   THIRD_WAY_DOWN = math.floor(DISTANCE_TO_NEXT_ROOM / 3)
+   HALF_WAY_UP = math.ceil(DISTANCE_TO_NEXT_ROOM / 2)
+   HALF_WAY_DOWN = math.floor(DISTANCE_TO_NEXT_ROOM / 2)
+
    barriers = {
-      n =  { x1 = -HALF_ROOM, y1 = -HALF_ROOM, x2 = HALF_ROOM, y2 = -HALF_ROOM},
-      s =  { x1 = -HALF_ROOM, y1 =  HALF_ROOM, x2 = HALF_ROOM, y2 =  HALF_ROOM},
-      e =  { x1 =  HALF_ROOM, y1 = -HALF_ROOM, x2 =  HALF_ROOM, y2 = HALF_ROOM}, 
-      w =  { x1 = -HALF_ROOM, y1 = -HALF_ROOM, x2 = -HALF_ROOM, y2 = HALF_ROOM}, 
-   
-      u = { x1 =  HALF_ROOM-HALF_WAY, y1 = -HALF_ROOM-HALF_WAY, x2 =  HALF_ROOM+HALF_WAY, y2 = -HALF_ROOM+HALF_WAY}, 
-      d = { x1 = -HALF_ROOM+HALF_WAY, y1 =  HALF_ROOM+HALF_WAY, x2 = -HALF_ROOM-HALF_WAY, y2 =  HALF_ROOM-HALF_WAY}, 
-   
+      n =  { x1 = -HALF_ROOM_UP, y1 = -HALF_ROOM_UP, x2 = HALF_ROOM_UP, y2 = -HALF_ROOM_UP},
+      s =  { x1 = -HALF_ROOM_UP, y1 =  HALF_ROOM_UP, x2 = HALF_ROOM_UP, y2 =  HALF_ROOM_UP},
+      e =  { x1 =  HALF_ROOM_UP, y1 = -HALF_ROOM_UP, x2 =  HALF_ROOM_UP, y2 = HALF_ROOM_UP},
+      w =  { x1 = -HALF_ROOM_UP, y1 = -HALF_ROOM_UP, x2 = -HALF_ROOM_UP, y2 = HALF_ROOM_UP},
+
+      u = { x1 =  HALF_ROOM_UP-HALF_WAY_UP, y1 = -HALF_ROOM_UP-HALF_WAY_UP, x2 =  HALF_ROOM_UP+HALF_WAY_UP, y2 = -HALF_ROOM_UP+HALF_WAY_UP},
+      d = { x1 = -HALF_ROOM_UP+HALF_WAY_UP, y1 =  HALF_ROOM_UP+HALF_WAY_UP, x2 = -HALF_ROOM_UP-HALF_WAY_UP, y2 =  HALF_ROOM_UP-HALF_WAY_UP},
+
    } -- end barriers
 
    -- how to draw a line from this room to the next one (relative to the center of the room)
    connectors = {
-      n =  { x1 = 0,            y1 = - HALF_ROOM, x2 = 0,                             y2 = - HALF_ROOM - HALF_WAY, at = { 0, -1 } }, 
-      s =  { x1 = 0,            y1 =   HALF_ROOM, x2 = 0,                             y2 =   HALF_ROOM + HALF_WAY, at = { 0,  1 } }, 
-      e =  { x1 =   HALF_ROOM,  y1 = 0,           x2 =   HALF_ROOM + HALF_WAY,  y2 = 0,                            at = {  1,  0 }}, 
-      w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - HALF_WAY,  y2 = 0,                            at = { -1,  0 }}, 
-   
-      u = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + HALF_WAY , y2 = - HALF_ROOM - HALF_WAY, at = { 1, -1 } }, 
-      d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - HALF_WAY , y2 =   HALF_ROOM + HALF_WAY, at = {-1,  1 } }, 
-   
+      n = { x = 0 ,                                   y = - ROOM_SIZE - DISTANCE_TO_NEXT_ROOM, at = { 0, -1 } },
+      s = { x = 0 ,                                   y =  ROOM_SIZE + DISTANCE_TO_NEXT_ROOM, at = { 0,  1 } },
+      e = { x =   ROOM_SIZE + DISTANCE_TO_NEXT_ROOM , y = 0,                            at = {  1,  0 }},
+      w = { x = - ROOM_SIZE - DISTANCE_TO_NEXT_ROOM , y = 0,                            at = { -1,  0 }},
+      u = { x =   ROOM_SIZE + DISTANCE_TO_NEXT_ROOM , y = -ROOM_SIZE - DISTANCE_TO_NEXT_ROOM, at = { 1, -1 } },
+      d = { x = - ROOM_SIZE - DISTANCE_TO_NEXT_ROOM , y =  ROOM_SIZE + DISTANCE_TO_NEXT_ROOM, at = {-1,  1 } }
    } -- end connectors
    
    -- how to draw a stub line
    half_connectors = {
-      n =  { x1 = 0,            y1 = - HALF_ROOM, x2 = 0,                        y2 = - HALF_ROOM - THIRD_WAY, at = { 0, -1 } }, 
-      s =  { x1 = 0,            y1 =   HALF_ROOM, x2 = 0,                        y2 =   HALF_ROOM + THIRD_WAY, at = { 0,  1 } }, 
-      e =  { x1 =   HALF_ROOM,  y1 = 0,           x2 =   HALF_ROOM + THIRD_WAY,  y2 = 0,                       at = {  1,  0 }}, 
-      w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - THIRD_WAY,  y2 = 0,                       at = { -1,  0 }}, 
-  
-      u = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = { 1, -1 } }, 
-      d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY, at = {-1,  1 } }, 
-  
-   } -- end half_connectors
-  
+      n = { x = 0 ,                                   y = -HALF_ROOM_DOWN - HALF_WAY_DOWN + 1, at = { 0, -1 } },
+      s = { x = 0 ,                                   y =  HALF_ROOM_DOWN + HALF_WAY_DOWN, at = { 0,  1 } },
+      e = { x =  HALF_ROOM_DOWN + HALF_WAY_DOWN ,     y = 0,                            at = {  1,  0 }},
+      w = { x = -HALF_ROOM_DOWN - HALF_WAY_DOWN + 1 , y = 0,                            at = { -1,  0 }},
+      u = { x =  HALF_ROOM_DOWN + HALF_WAY_DOWN - 3 , y = -HALF_ROOM_DOWN - HALF_WAY_DOWN + 3, at = { 1, -1 } },
+      d = { x = -HALF_ROOM_UP - HALF_WAY_UP + 4 ,     y =  HALF_ROOM_DOWN + HALF_WAY_UP - 3, at = {-1,  1 } }
+   }
+
    -- how to draw one-way arrows (relative to the center of the room)
    arrows = {
-      n =  { - 2, - HALF_ROOM - 2,  2, - HALF_ROOM - 2,  0, - HALF_ROOM - 6 },
-      s =  { - 2,   HALF_ROOM + 2,  2,   HALF_ROOM + 2,  0,   HALF_ROOM + 6  },
-      e =  {   HALF_ROOM + 2, -2,   HALF_ROOM + 2, 2,   HALF_ROOM + 6, 0 },
-      w =  { - HALF_ROOM - 2, -2, - HALF_ROOM - 2, 2, - HALF_ROOM - 6, 0 },
-   
-      u = {   HALF_ROOM + 3,  - HALF_ROOM,  HALF_ROOM + 3, - HALF_ROOM - 3,  HALF_ROOM, - HALF_ROOM - 3 },
-      d = { - HALF_ROOM - 3,    HALF_ROOM,  - HALF_ROOM - 3,   HALF_ROOM + 3,  - HALF_ROOM,   HALF_ROOM + 3},
-  
+      n =  { - THIRD_WAY_UP, - HALF_ROOM_DOWN - THIRD_WAY_UP/2,  --left
+               THIRD_WAY_UP, - HALF_ROOM_DOWN - THIRD_WAY_UP/2,  --right
+                       0, - HALF_ROOM_DOWN - HALF_WAY_DOWN - 1 }, --top
+      
+      s =  { - THIRD_WAY_UP, HALF_ROOM_DOWN + THIRD_WAY_UP/2, --left
+               THIRD_WAY_UP, HALF_ROOM_DOWN + THIRD_WAY_UP/2, --right
+                       0, HALF_ROOM_DOWN + HALF_WAY_UP + 1 }, --bottom
+      
+      e =  {HALF_ROOM_DOWN + THIRD_WAY_UP/2, - THIRD_WAY_UP, -- top
+            HALF_ROOM_DOWN + THIRD_WAY_UP/2, THIRD_WAY_UP, -- bottom
+        HALF_ROOM_DOWN + HALF_WAY_UP + 1, 0 }, -- right
+        
+      w =  {- HALF_ROOM_DOWN - THIRD_WAY_DOWN/2, - THIRD_WAY_UP, -- top
+            - HALF_ROOM_DOWN - THIRD_WAY_DOWN/2, THIRD_WAY_UP, -- bottom
+        - HALF_ROOM_DOWN - HALF_WAY_DOWN - 1, 0 }, -- left
+            
+      u = {HALF_ROOM_DOWN + HALF_WAY_DOWN - 1, - ROOM_SIZE/2 + 2,
+           HALF_ROOM_DOWN + HALF_WAY_DOWN - 1,        - HALF_ROOM_DOWN - HALF_WAY_DOWN + 1,
+               ROOM_SIZE/2 - 2, - HALF_ROOM_DOWN - HALF_WAY_DOWN + 1 },
+
+      d = {- HALF_ROOM_DOWN - HALF_WAY_DOWN + 1, ROOM_SIZE/2 - 2,
+           - HALF_ROOM_DOWN - HALF_WAY_DOWN + 1, HALF_ROOM_DOWN + HALF_WAY_DOWN - 1,
+              - ROOM_SIZE/2 + 2, HALF_ROOM_DOWN + HALF_WAY_DOWN - 1 }
+
    } -- end of arrows
 
 end -- build_room_info
@@ -167,8 +192,6 @@ end -- build_room_info
 -- assorted colours
 BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#111111"}
 ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
-EXIT_COLOUR           = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
-EXIT_COLOUR_UP_DOWN   = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
 ROOM_NOTE_COLOUR      = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen"}
 OUR_ROOM_COLOUR       = { name = "Our room",         colour =  ColourNameToRGB "#ff1493"}
 UNKNOWN_ROOM_COLOUR   = { name = "Unknown room",     colour =  ColourNameToRGB "#8b0000"}
@@ -190,26 +213,17 @@ ROOM_NAME_BORDER      = { name = "Room name box",    colour = ColourNameToRGB "b
 AREA_NAME_TEXT        = { name = "Area name text",   colour = ColourNameToRGB "#BEF3F1"}
 AREA_NAME_FILL        = { name = "Area name fill",   colour = ColourNameToRGB "#105653"}
 AREA_NAME_BORDER      = { name = "Area name box",    colour = ColourNameToRGB "black"}
-              
+EXIT_COLOUR           = ColourNameToRGB "#e0ffff"
+
 -- how many seconds to show "recent visit" lines (default 3 minutes)
 LAST_VISIT_TIME = 60 * 3
 
 default_config = {
-   FONT = { name =  get_preferred_font {"Dina",  "Lucida Console",  "Fixedsys", "Courier",} ,
-            size = 8
-         } ,
-         
-   -- size of map window
-   WINDOW = { width = default_width, height = default_height },
-  
-   -- how far from where we are standing to draw (rooms)
-   SCAN = { depth = 300 },
-  
-   -- show custom tiling background textures
-   USE_TEXTURES = { enabled = true },
-
+   FONT = {size = 8, name =  get_preferred_font({"Dina",  "Lucida Console",  "Fixedsys", "Courier",})} ,
+   WINDOW = { width = default_width, height = default_height }, -- size of map window
+   SCAN = { depth = 300 },   -- how far from where we are standing to draw (rooms)
+   USE_TEXTURES = { enabled = true }, -- show custom tiling background textures
    SHOW_ROOM_ID = false,
-
    SHOW_AREA_EXITS = false
 }
 
@@ -222,44 +236,157 @@ local expand_direction = {
    d = "down",
 }  -- end of expand_direction
 
-local function get_room (uid)
-   local room = supplied_get_room (uid)
-   room = room or { unknown = true }
+local function get_room_display_params (uid)
 
-   -- defaults in case they didn't supply them ...
-   room.name = room.name or string.format ("Room %s", uid)
-   room.name = mw.strip_colours (room.name)  -- no colour codes for now
-   room.exits = room.exits or {}
-   room.area = room.area or "<No area>"
-   room.hovermessage = room.hovermessage or "<Unexplored room>"
-   room.bordercolour = room.bordercolour or ROOM_COLOUR.colour
-   room.borderpen = room.borderpen or 0 -- solid
-   room.borderpenwidth = room.borderpenwidth or 1
-   room.fillcolour = room.fillcolour or 0x000000
-   room.fillbrush = room.fillbrush or 1 -- no fill
-   room.texture = room.texture or nil -- no texture
+   -- look it up
+   local ourroom = get_room(uid)
 
-   room.textimage = nil
+   if not ourroom then
+      return {
+         unknown = true,
+         exits = {},
+         name = "< Unexplored Room "..uid.." >",
+         hovermessage = "< Unexplored Room "..uid.." >"
+      }
+   end
 
-   if room.texture == nil or room.texture == "" then room.texture = "test5.png" end
-   if textures[room.texture] then
-      room.textimage = textures[room.texture] -- assign image
-   else
-      if textures[room.texture] ~= false then
-         local dir = GetInfo(66)
-         imgpath = dir .. "worlds\\plugins\\images\\" ..room.texture
-         if WindowLoadImage(win, room.texture, imgpath) ~= 0 then 
-            textures[room.texture] = false  -- just indicates not found
-         else
-            textures[room.texture] = room.texture -- imagename
-            room.textimage = room.texture
-         end
+   local room = {}
+   room.bordercolour = mapper.ROOM_COLOUR.colour
+   if areas[ourroom.area] then
+      if areas[ourroom.area].color ~= "" then
+         room.bordercolour = areas[ourroom.area].color or mapper.ROOM_COLOUR.colour
       end
+   end
+
+   if uid == current_room then
+      current_area = ourroom.area
+   end -- if
+
+   -- build hover message
+   local environmentname = ourroom.terrain
+   if tonumber (environmentname) then
+      environmentname = environments[tonumber(environmentname)]
+   end -- convert to name
+
+   local terrain = ""
+   if environmentname and environmentname ~= "" then
+      terrain = "\nTerrain: " .. capitalize (environmentname)
+   end -- if terrain known
+
+   local info = ""
+   if ourroom.info and ourroom.info ~= "" then
+      info = "\nInfo: " .. capitalize (ourroom.info)
+   end -- if info known
+
+   local notes = ""
+   if ourroom.notes and ourroom.notes ~= "" then
+      notes = "\nNote: " .. ourroom.notes
+   end -- if notes
+
+   local flags = ""
+   if ourroom.norecall == 1 then
+      flags = flags.."norecall "
+   end
+   if ourroom.noportal == 1 then
+      flags = flags.."noportal"
+   end
+   if flags ~= "" then
+      flags = "\nFlags: "..string.gsub(flags," ",", ")
+   end
+
+   local texits = {}
+   for dir in pairs (ourroom.exits) do
+      table.insert (texits, dir)
+   end -- for
+   table.sort (texits)
+
+   local areaname = areas[ourroom.area].name
+
+   room.hovermessage = string.format (
+      "%s\tExits: %s\nRoom: %s\nArea: %s%s%s%s%s",
+      ourroom.name,
+      table.concat (texits, ", "),
+      uid,
+      areaname,
+      terrain,
+      info,
+      notes,
+      flags
+      )
+
+   -- default
+   room.borderpen = 0 -- solid
+   room.borderpenwidth = 1
+   room.fillcolour = 0xff0000
+   room.fillbrush = 1 -- no fill
+
+   -- special room fills
+   local special_room = false
+   if ourroom.info and ourroom.info ~= "" then
+      if string.match (ourroom.info, "shop") then
+         special_room = true
+         room.fillcolour = mapper.SHOP_FILL_COLOUR.colour
+         room.fillbrush = 0  -- solid
+      elseif string.match (ourroom.info, "healer") then
+         special_room = true
+         room.fillcolour = mapper.HEALER_FILL_COLOUR.colour
+         room.fillbrush = 0  -- solid
+      elseif string.match (ourroom.info, "guild") then
+         special_room = true
+         room.fillcolour = mapper.GUILD_FILL_COLOUR.colour
+         room.fillbrush = 0 -- solid
+      elseif string.match (ourroom.info, "trainer") then
+         special_room = true
+         room.fillcolour = mapper.TRAINER_FILL_COLOUR.colour
+         room.fillbrush = 0 -- solid
+      elseif string.match (ourroom.info, "questor") then
+         special_room = true
+         room.fillcolour = mapper.QUESTOR_FILL_COLOUR.colour
+         room.fillbrush = 0 -- solid
+      elseif string.match (ourroom.info, "bank") then
+         special_room = true
+         room.fillcolour = mapper.BANK_FILL_COLOUR.colour
+         room.fillbrush = 0  -- solid
+      elseif string.match (ourroom.info, "safe") then
+         special_room = true
+         room.fillcolour = mapper.SAFEROOM_FILL_COLOUR.colour
+         room.fillbrush = 0  -- solid
+      end -- if
+   end
+
+   -- use terrain colour
+   if environmentname and environmentname ~= "" and not special_room then
+      if user_terrain_colour[environmentname] then
+         room.fillcolour = user_terrain_colour[environmentname]
+         room.fillbrush = 8  -- fine pattern
+      elseif terrain_colours[environmentname] then
+         room.fillcolour = colour_lookup[terrain_colours[environmentname]]
+         room.fillbrush = 8  -- fine pattern
+      else
+         Send_GMCP_Packet("request sectors")
+      end
+   end -- if environmentname
+
+   -- special borders
+   if uid == current_room then
+      room.bordercolour = mapper.OUR_ROOM_COLOUR.colour
+      room.borderpenwidth = 3
+   elseif ourroom.area ~= current_area then
+      room.bordercolour = mapper.DIFFERENT_AREA_COLOUR.colour
+   elseif ourroom.info and string.match(ourroom.info, "pk") then
+      room.bordercolour = mapper.PK_BORDER_COLOUR.colour
+      room.borderpenwidth = 3
+   elseif ourroom.notes ~= nil and ourroom.notes ~= "" then
+      room.borderpenwidth = 3
+      room.bordercolour = ROOM_NOTE_COLOUR.colour
+   elseif ROOM_BORDER_TYPE == 2 then
+      room.borderpen = pen_null
    end
 
    return room
 
-end -- get_room
+end -- get_room_display_params
+
 
 function check_connected ()
    if not IsConnected() then
@@ -290,22 +417,22 @@ local function make_number_checker (title, min, max, decimals)
    end -- generated function
 end -- make_number_checker
 
- 
+
 local function get_number_from_user (msg, title, current, min, max, decimals)
    local max_length = math.ceil (math.log10 (max) + 1)
-   
+
    -- if decimals allowed, allow room for them
    if decimals then
       max_length = max_length + 2  -- allow for 0.x
    end -- if
-   
+
    -- if can be negative, allow for minus sign
    if min < 0 then
       max_length = max_length + 1
    end -- if can be negative
-   
-   return tonumber (utils.inputbox (msg, title, current, nil, nil, 
-      { validate = make_number_checker (title, min, max, decimals), 
+
+   return tonumber (utils.inputbox (msg, title, current, nil, nil,
+      { validate = make_number_checker (title, min, max, decimals),
          prompt_height = 14,
          box_height = 130,
          box_width = 300,
@@ -317,178 +444,227 @@ end -- get_number_from_user
 
 local function draw_configuration ()
 
-   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", "Area Textures", "Room size"}
+   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", "Area Textures", "Room size", "Room spacing", "Room borders"}
    local width =  max_text_width (config_win, CONFIG_FONT_ID, config_entries , true)
    local GAP = 5
-   
+
    local x = 0
    local y = 0
    local box_size = font_height - 2
-   local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID, 
+   local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID,
       {config.FONT.name .. " " .. config.FONT.size,
       ((config.USE_TEXTURES.enabled and "On") or "Off"),
-      "- +", 
-      tostring (config.SCAN.depth)}, 
+      "- +",
+      tostring (config.SCAN.depth)},
       true))
    local frame_width = GAP + width + GAP + rh_size + GAP  -- gap / text / gap / box / gap
 
    WindowCreate(config_win, windowinfo.window_left, windowinfo.window_top, frame_width, font_height * #config_entries + GAP+GAP, windowinfo.window_mode, windowinfo.window_flags, 0xDCDCDC)
    WindowSetZOrder(config_win, 99999) -- always on top
-  
+
    -- frame it
    draw_3d_box (config_win, 0, 0, frame_width, font_height * #config_entries + GAP+GAP)
-  
+
    y = y + GAP
    x = x + GAP
-  
+
    -- title
    WindowText (config_win, CONFIG_FONT_ID, "Map Configuration", ((frame_width-WindowTextWidth(config_win,CONFIG_FONT_ID,"Map Configuration"))/2), y, 0, 0, 0x808080)
-  
+
    -- close box
-   WindowRectOp (config_win, 
-      miniwin.rect_frame, 
-      x, 
-      y + 1, 
-      x + box_size, 
-      y + 1 + box_size, 
+   WindowRectOp (config_win,
+      miniwin.rect_frame,
+      x,
+      y + 1,
+      x + box_size,
+      y + 1 + box_size,
       0x808080)
-   WindowLine (config_win, 
-      x + 3, 
-      y + 4, 
-      x + box_size - 3, 
-      y - 2 + box_size, 
-      0x808080, 
-      miniwin.pen_solid, 1)
-   WindowLine (config_win, 
-      x + box_size - 4, 
-      y + 4, 
-      x + 2, 
-      y - 2 + box_size, 
-      0x808080, 
-      miniwin.pen_solid, 1)
-  
-   -- close configuration hotspot               
-   WindowAddHotspot(config_win, "$<close_configure>",  
-      x, 
-      y + 1, 
-      x + box_size, 
+   WindowLine (config_win,
+      x + 3,
+      y + 4,
+      x + box_size - 3,
+      y - 2 + box_size,
+      0x808080,
+      pen_solid, 1)
+   WindowLine (config_win,
+      x + box_size - 4,
+      y + 4,
+      x + 2,
+      y - 2 + box_size,
+      0x808080,
+      pen_solid, 1)
+
+   -- close configuration hotspot
+   WindowAddHotspot(config_win, "$<close_configure>",
+      x,
+      y + 1,
+      x + box_size,
       y + 1 + box_size,    -- rectangle
       "", "", "", "", "mapper.mouseup_close_configure",  -- mouseup
       "Click to close",
-      miniwin.cursor_hand, 0)  -- hand cursor
-      
+      miniwin.cursor_plus, 0)  -- hand cursor
+
    y = y + font_height
 
    -- depth
    WindowText(config_win, CONFIG_FONT_ID, "Depth", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL,   tostring (config.SCAN.depth), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.SCAN.depth)/2, y, 0, 0, 0x808080)
-   
+
    -- depth hotspot
-   WindowAddHotspot(config_win, 
-      "$<depth>",  
-      x + GAP, 
-      y, 
-      x + frame_width, 
+   WindowAddHotspot(config_win,
+      "$<depth>",
+      x + GAP,
+      y,
+      x + frame_width,
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.mouseup_change_depth",  -- mouseup
       "Click to change scan depth",
       miniwin.cursor_hand, 0)  -- hand cursor
+
    y = y + font_height
-    
+
    -- font
    WindowText(config_win, CONFIG_FONT_ID, "Font", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL,  config.FONT.name .. " " .. config.FONT.size, x + width + GAP, y, 0, 0, 0x808080)
-   
-   -- font hotspot               
-   WindowAddHotspot(config_win, 
+
+   -- font hotspot
+   WindowAddHotspot(config_win,
       "$<font>",
-      x + GAP, 
+      x + GAP,
       y,
-      x + frame_width, 
+      x + frame_width,
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.mouseup_change_font",  -- mouseup
       "Click to change font",
       miniwin.cursor_hand, 0)  -- hand cursor
+
    y = y + font_height
-  
+
    -- area textures
    WindowText(config_win, CONFIG_FONT_ID, "Area Textures", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"))/2, y, 0, 0, 0x808080)
 
    -- area textures hotspot
-   WindowAddHotspot(config_win, 
-      "$<area_textures>",  
-      x + GAP, 
-      y, 
-      x + frame_width, 
+   WindowAddHotspot(config_win,
+      "$<area_textures>",
+      x + GAP,
+      y,
+      x + frame_width,
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.mouseup_change_area_textures",  -- mouseup
       "Click to toggle use of area textures",
       miniwin.cursor_hand, 0)  -- hand cursor
+
    y = y + font_height
-   
-  
+
    -- show ID
    WindowText(config_win, CONFIG_FONT_ID, "Show Room ID", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_ROOM_ID and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_ROOM_ID and "On") or "Off"))/2, y, 0, 0, 0x808080)
 
    -- show ID hotspot
-   WindowAddHotspot(config_win, 
-      "$<room_id>",  
-      x + GAP, 
-      y, 
-      x + frame_width, 
+   WindowAddHotspot(config_win,
+      "$<room_id>",
+      x + GAP,
+      y,
+      x + frame_width,
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.mouseup_change_show_id",  -- mouseup
       "Click to toggle display of room UID",
       miniwin.cursor_hand, 0)  -- hand cursor
-   y = y + font_height
 
+   y = y + font_height
 
    -- show area exits
    WindowText(config_win, CONFIG_FONT_ID, "Show Area Exits", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_AREA_EXITS and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_AREA_EXITS and "On") or "Off"))/2, y, 0, 0, 0x808080)
 
    -- show area exits hotspot
-   WindowAddHotspot(config_win, 
-      "$<area_exits>",  
-      x + GAP, 
-      y, 
-      x + frame_width, 
+   WindowAddHotspot(config_win,
+      "$<area_exits>",
+      x + GAP,
+      y,
+      x + frame_width,
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.mouseup_change_show_area_exits",  -- mouseup
       "Click to toggle display of area exits",
       miniwin.cursor_hand, 0)  -- hand cursor
+
    y = y + font_height
 
-   
    -- room size
-   WindowText(config_win, CONFIG_FONT_ID, "Room size", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "Room Size", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID, "("..tostring (ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Room size "), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
-                                  
+
    -- room size hotspots
-   WindowAddHotspot(config_win, 
-      "$<room_size_down>",  
-      width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), 
-      y, 
-      width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), 
+   WindowAddHotspot(config_win,
+      "$<room_size_down>",
+      width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
+      y,
+      width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
       y + font_height,   -- rectangle
-      "", "", "", "", "mapper.zoom_out",  -- mouseup
-      "Click to zoom out",
+      "", "", "", "", "mapper.smaller_rooms",  -- mouseup
+      "Click to emsmallen rooms",
       miniwin.cursor_hand, 0)  -- hand cursor
-   WindowAddHotspot(config_win, 
-      "$<room_size_up>",  
-      width + rh_size / 2 + box_size + GAP, 
-      y, 
-      width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"), 
+   WindowAddHotspot(config_win,
+      "$<room_size_up>",
+      width + rh_size / 2 + box_size + GAP,
+      y,
+      width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"),
       y + font_height,   -- rectangle
-      "", "", "", "", "mapper.zoom_in",  -- mouseup
-      "Click to zoom in",
+      "", "", "", "", "mapper.bigger_rooms",  -- mouseup
+      "Click to embiggen rooms",
       miniwin.cursor_hand, 0)  -- hand cursor
    y = y + font_height
-   
+      
+   -- room spacing
+   WindowText(config_win, CONFIG_FONT_ID, "Room Spacing", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (DISTANCE_TO_NEXT_ROOM)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Room spacing "), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
+
+   -- room spacing hotspots
+   WindowAddHotspot(config_win,
+      "$<room_spacing_down>",
+      width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
+      y,
+      width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.denser",  -- mouseup
+      "Click to compact rooms",
+      miniwin.cursor_hand, 0)  -- hand cursor
+   WindowAddHotspot(config_win,
+      "$<room_spacing_up>",
+      width + rh_size / 2 + box_size + GAP,
+      y,
+      width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"),
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.sparser",  -- mouseup
+      "Click to spread rooms",
+      miniwin.cursor_hand, 0)  -- hand cursor
+
+   y = y + font_height
+
+   -- room border type
+
+   -- show area exits
+   WindowText(config_win, CONFIG_FONT_ID, "Room Borders", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[ROOM_BORDER_TYPE], width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[ROOM_BORDER_TYPE])/2, y, 0, 0, 0x808080)
+
+   -- show area exits hotspot
+   WindowAddHotspot(config_win,
+      "$<border_type>",
+      x + GAP,
+      y,
+      x + frame_width,
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.mouseup_change_border_type",  -- mouseup
+      "Click to change room border type",
+      miniwin.cursor_hand, 0)  -- hand cursor
+
+   y = y + font_height
+
    WindowShow(config_win, true)
 end -- draw_configuration
 
@@ -505,191 +681,204 @@ local inverse_direction = {
    sw = "ne",
    nw = "se"
 }  -- end of inverse_direction
-  
-local function add_another_room (uid, path, x, y)
-   local path = path or {}
-   return {uid=uid, path=path, x = x, y = y}
-end  -- add_another_room
-  
-local function draw_room (uid, path, x, y)
-   
-   local coords = string.format ("%i,%i", math.floor (x), math.floor (y))
 
-   -- need this for the *current* room !!!
-   drawn_coords [coords] = uid
-   
-   -- print ("drawing", uid, "at", coords)
-   
-   if drawn [uid] then
-      return
-   end -- done this one
-   
-   -- don't draw the same room more than once
-   drawn [uid] = { coords = coords, path = path }
-   
-   local room = rooms [uid]
-   
-   -- not cached - get from caller
-   if not room then
-      room = get_room (uid)
-      rooms [uid] = room
-   end -- not in cache
-   
-   
-   local left, top, right, bottom = x - HALF_ROOM, y - HALF_ROOM, x + HALF_ROOM, y + HALF_ROOM
+local function xy_to_coord(x,y)
+   return tostring(math.floor (x) + (math.floor (y) * config.WINDOW.width))
+end
+
+local function draw_room (uid, x, y)
+
+   -- no need to check if drawn_coords[coords] or drawn_uids[uid] exist, because we check when
+   -- adding exit destinations to the next level of rooms
+   drawn_coords[xy_to_coord(x,y)] = uid
+   drawn_uids[uid] = true
    
    -- forget it if off screen
-   if x < HALF_ROOM or y < HALF_ROOM or 
-      x > config.WINDOW.width - HALF_ROOM or y > config.WINDOW.height - HALF_ROOM then
+   if x < HALF_ROOM_UP or y <= HALF_ROOM_UP+ROOM_SIZE or
+      x > config.WINDOW.width - HALF_ROOM_UP or y > config.WINDOW.height - HALF_ROOM_UP then
       return
    end -- if
    
-   -- exits
-   
-   local texits = {}
-   
-   for dir, exit_uid in pairs (room.exits) do
-      table.insert (texits, dir)
-      local exit_info = connectors [dir]
-      local stub_exit_info = half_connectors [dir]
-      local locked_exit = not (room.exit_locks == nil or room.exit_locks[dir] == nil or room.exit_locks[dir] == "0")
-      local exit_line_colour = (locked_exit and 0x0000FF) or EXIT_COLOUR.colour
-      local arrow = arrows [dir]
-      
-      -- draw up in the ne/nw position if not already an exit there at this level
-      if dir == "u" then
-         exit_line_colour = (locked_exit and 0x0000FF) or EXIT_COLOUR_UP_DOWN.colour
-      elseif dir == "d" then
-         exit_line_colour = (locked_exit and 0x0000FF) or EXIT_COLOUR_UP_DOWN.colour
-      end -- if down
-      
-      if exit_info then
-         local linetype = miniwin.pen_solid -- unbroken
-         local linewidth = (locked_exit and 2) or 1 -- not recent
-         
-         -- try to cache room
-         if not rooms [exit_uid] then
-            rooms [exit_uid] = get_room (exit_uid)
-         end -- if
-         
-         if rooms [exit_uid].unknown then
-            linetype = miniwin.pen_dot -- dots
-         else
-            local exit_time = last_visited [exit_uid] or 0
-            local this_time = last_visited [uid] or 0
-            local now = os.time ()
-            if exit_time > (now - LAST_VISIT_TIME) and
-               this_time > (now - LAST_VISIT_TIME) then
-               linewidth = 3
-               if not locked_exit then
-                  exit_line_colour = ColourNameToRGB("orange")
+   local left, top, right, bottom = x - HALF_ROOM_DOWN, y - HALF_ROOM_DOWN, x + HALF_ROOM_UP, y + HALF_ROOM_UP
+
+   local room_params = get_room_display_params(uid)
+   local room = rooms[uid]
+
+   if room then
+      local NEXT_ROOM = ROOM_SIZE + DISTANCE_TO_NEXT_ROOM
+      if DISTANCE_TO_NEXT_ROOM < 4 then
+         for dir,exit_uid in pairs(room.exits) do
+            local exit_info = connectors[dir]
+            if exit_info then -- want to draw exits in this direction
+               local exit_room = get_room(exit_uid)
+               if exit_room then
+                  if config.SHOW_AREA_EXITS and room.area ~= exit_room.area then
+                     table.insert(area_exits, {x = x, y = y, def = barriers[dir]})
+                  end
+                  local next_x = x + exit_info.at[1] * NEXT_ROOM
+                  local next_y = y + exit_info.at[2] * NEXT_ROOM
+                  local next_coords = xy_to_coord(next_x, next_y)
+
+                  -- choose between a real exit or just a stub
+                  if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
+                     (not show_other_areas and exit_room and exit_room.area ~= current_area) or -- room in another area
+                     (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
+                     --nop
+                  elseif exit_uid == uid then
+                     -- if the exit leads back to this room, only draw stub
+                     --nop
+                  elseif not drawn_uids[exit_uid] and not drawn_coords[next_coords] then
+                     -- queue for next level of rooms
+                     table.insert(rooms_to_draw_next, {exit_uid, next_x, next_y})
+                     drawn_coords[next_coords] = exit_uid
+                  end
+               else
+                  linetype = pen_dot
                end
-            end -- if
-         end -- if
+            end
+         end
+      else
+         -- look at exits first
+         for dir,exit_uid in pairs(room.exits) do
+            local exit_info = connectors[dir]
+            if exit_info then -- want to draw exits in this direction
+               local locked_exit = not (room.exit_locks == nil or room.exit_locks[dir] == nil or room.exit_locks[dir] == "0")
+               local exit_line_colour = (locked_exit and 0x0000FF) or EXIT_COLOUR
 
-         
-         local next_x = x + exit_info.at [1] * (ROOM_SIZE + DISTANCE_TO_NEXT_ROOM)
-         local next_y = y + exit_info.at [2] * (ROOM_SIZE + DISTANCE_TO_NEXT_ROOM)
-         
-         local next_coords = string.format ("%i,%i", math.floor (next_x), math.floor (next_y))
-         
-         -- remember if a zone exit (first one only)
-         if config.SHOW_AREA_EXITS and room.area ~= rooms [exit_uid].area and not rooms[exit_uid].unknown then
-            area_exits [ rooms [exit_uid].area ] = area_exits [ rooms [exit_uid].area ] or {x = x, y = y, def = barriers[dir]}
-         end -- if
-         
-         -- if another room (not where this one leads to) is already there, only draw "stub" lines
-         if drawn_coords [next_coords] and drawn_coords [next_coords] ~= exit_uid then
-            exit_info = stub_exit_info
-         elseif exit_uid == uid then 
-            -- here if room leads back to itself
-            exit_info = stub_exit_info
-            linetype = miniwin.pen_dash -- dash
-         else
-         --if (not show_other_areas and rooms [exit_uid].area ~= current_area) or
-            if (not show_other_areas and rooms [exit_uid].area ~= current_area and not rooms[exit_uid].unknown) or
-               (not show_up_down and (dir == "u" or dir == "d")) then
-               exit_info = stub_exit_info    -- don't show other areas
-            else
-               local new_path = copytable.deep (path)
-               table.insert (new_path, { dir = dir, uid = exit_uid })
-               table.insert (rooms_to_be_drawn, add_another_room (exit_uid, new_path, next_x, next_y))
-               drawn_coords [next_coords] = exit_uid               
-            end -- if
-         end -- if drawn on this spot
+               local linewidth = (locked_exit and 3) or 1
+               local linetype = pen_solid
 
-         WindowLine (win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
-         
-         -- one-way exit?
-         
-         if not rooms [exit_uid].unknown then
-            local dest = rooms [exit_uid]
-            -- if inverse direction doesn't point back to us, this is one-way
-            if dest.exits [inverse_direction [dir]] ~= uid then
-               -- turn points into string, relative to where the room is
-               local points = string.format ("%i,%i,%i,%i,%i,%i", 
-                  x + arrow [1],
-                  y + arrow [2],
-                  x + arrow [3],
-                  y + arrow [4],
-                  x + arrow [5],
-                  y + arrow [6])
+               local exit_room = get_room(exit_uid)
+
+               if exit_room then
+                  if config.SHOW_AREA_EXITS and room.area ~= exit_room.area then -- zone exits get drawn later
+                     table.insert(area_exits, {x = x, y = y, def = barriers[dir]})
+                  end
                   
-               -- draw arrow
-               WindowPolygon(win, points, 
-                  exit_line_colour, miniwin.pen_solid, 1, 
-                  exit_line_colour, miniwin.brush_solid, 
-                  true, true)
-            end -- one way
-         end -- if we know of the room where it does
-      end -- if we know what to do with this direction
-   end -- for each exit
+                  local now = os.time()
+                  if (last_visited[exit_uid] or 0) > (now - LAST_VISIT_TIME) and
+                     (last_visited[uid] or 0) > (now - LAST_VISIT_TIME) then
+                     if (dir == "u" or dir == "d") then linewidth = 2 else linewidth = 3 end
+                     if not locked_exit then
+                        exit_line_colour = ColourNameToRGB("orange")
+                     end
+                  end -- if
+               else
+                  linetype = pen_dot
+               end
 
-   
-   if room.unknown then
-      WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
-         UNKNOWN_ROOM_COLOUR.colour, miniwin.pen_dot, 1,  --  dotted single pixel pen
-         -1, miniwin.brush_null)  -- opaque, no brush
-   else
-      -- room fill
-      WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
-         0, miniwin.pen_null, 0,  -- no pen
-         room.fillcolour, room.fillbrush)  -- brush
-      
-      -- room border
-      WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom, 
-         room.bordercolour, room.borderpen, room.borderpenwidth,  -- pen
-         -1, miniwin.brush_null)  -- opaque, no brush
+               local next_x = x + exit_info.at[1] * NEXT_ROOM
+               local next_y = y + exit_info.at[2] * NEXT_ROOM
+               local next_coords = xy_to_coord(next_x, next_y)
+               
+               -- choose between a real exit or just a stub
+               if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
+                  (not show_other_areas and exit_room and exit_room.area ~= current_area) or -- room in another area
+                  (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
+                  exit_info = half_connectors[dir]
+               elseif exit_uid == uid then
+                  -- if the exit leads back to this room, only draw stub
+                  exit_info = half_connectors[dir]
+                  linetype = pen_dash
+               elseif not drawn_uids[exit_uid] and not drawn_coords[next_coords] then
+                  -- queue for next level of rooms
+                  table.insert(rooms_to_draw_next, {exit_uid, next_x, next_y})
+                  drawn_coords[next_coords] = exit_uid
+               end
 
-      -- mark rooms with notes
-      if room.notes ~= nil and room.notes ~= "" then
-         WindowCircleOp (win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth, 
-            right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,ROOM_NOTE_COLOUR.colour,
-            room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+               if not drawn_uids[exit_uid] then
+                  WindowLine (win, x, y, x + exit_info.x, y + exit_info.y, exit_line_colour, linetype, linewidth)
+               end
+
+               -- one-way exit arrow
+               if exit_room and exit_room.exits[inverse_direction[dir]] ~= uid then
+                  local arrow = arrows[dir]
+                  -- draw arrow
+                  if daredevil_mode then
+                     WindowPolygon(win, 
+                        string.format("%i,%i,%i,%i,%i,%i",
+                           x + arrow[1],
+                           y + arrow[2],
+                           x + arrow[3],
+                           y + arrow[4],
+                           x + arrow[5],
+                           y + arrow[6]),
+                        UNKNOWN_ROOM_COLOUR.colour, 
+                        pen_dot, 
+                        1,
+                        -1, 
+                        miniwin.brush_null,
+                        true, 
+                        true)
+                  else
+                     WindowPolygon(win, 
+                        string.format("%i,%i,%i,%i,%i,%i",
+                           x + arrow[1],
+                           y + arrow[2],
+                           x + arrow[3],
+                           y + arrow[4],
+                           x + arrow[5],
+                           y + arrow[6]),
+                        exit_line_colour, 
+                        pen_solid, 
+                        1,
+                        exit_line_colour, 
+                        miniwin.brush_solid,
+                        true, 
+                        true)
+                  end
+               end -- one way
+            end -- if we know what to do with this direction
+         end -- for each exit
       end
-   end -- if 
-   
-   WindowAddHotspot(win, uid,  
+
+      if daredevil_mode then
+         WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
+            UNKNOWN_ROOM_COLOUR.colour, pen_dot, 1,  --  dotted single pixel pen
+            -1, miniwin.brush_null)  -- opaque, no brush
+      else  
+         -- room fill
+         WindowCircleOp (win, miniwin.circle_rectangle, left, top, right+1, bottom+1,
+            0, pen_null, 0,  -- no pen
+            room_params.fillcolour, room_params.fillbrush)  -- brush
+
+         if room_params.borderpen ~= pen_null then
+            -- room border
+            WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
+                  room_params.bordercolour, room_params.borderpen, room_params.borderpenwidth,  -- pen
+                  -1, miniwin.brush_null)  -- opaque, no brush
+         end
+      end
+   else
+      WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
+         UNKNOWN_ROOM_COLOUR.colour, pen_dot, 1,  --  dotted single pixel pen
+         -1, miniwin.brush_null)  -- opaque, no brush
+   end
+
+   WindowAddHotspot(win, uid,
       left, top, right, bottom,   -- rectangle
       "",  -- mouseover
       "",  -- cancelmouseover
       "",  -- mousedown
       "",  -- cancelmousedown
       "mapper.mouseup_room",  -- mouseup
-      room.hovermessage,
-      miniwin.cursor_hand, 0)  -- hand cursor
+      daredevil_mode and "" or room_params.hovermessage,
+      daredevil_mode and miniwin.cursor_none or miniwin.cursor_hand, 0)  -- hand cursor
 
    WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
 end -- draw_room
 
 local function draw_zone_exit (exit)
    local x, y, def = exit.x, exit.y, exit.def
-   local offset = ROOM_SIZE
-   
-   WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("yellow"), miniwin.pen_solid + 0x0200, 5)
-   WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("green"), miniwin.pen_solid + 0x0200, 1)
-end --  draw_zone_exit 
+   local x1, y1, x2, y2 = x + def.x1, y + def.y1, x + def.x2, y + def.y2
+   WindowLine (win, x1, y1, x2, y2, ColourNameToRGB("yellow"), pen_solid, 5)
+   WindowLine (win, x1, y1, x2, y2, ColourNameToRGB("green"), pen_solid, 1)
+end --  draw_zone_exit
 
+pen_solid = miniwin.pen_solid + 0x0200
+pen_dot = miniwin.pen_dot + 0x0200
+pen_dash = miniwin.pen_dash + 0x0200
+pen_null = miniwin.pen_null
 
 ----------------------------------------------------------------------------------
 --  EXPOSED FUNCTIONS
@@ -702,7 +891,7 @@ function check_we_can_find()
       check_connected ()
       return false
    end
-   
+
    if current_speedwalk then
       mapprint ("The mapper has detected a mapper goto initiated inside another goto. That isn't allowed. Blocking the inner goto.")
       return false
@@ -720,188 +909,208 @@ end
 -- draw our map starting at room: uid
 function draw (uid)
    if not uid then
-      maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
+      draw_credits()
       return
    end -- if
-   
+
    current_room = uid -- remember where we are
-   
+
    if dont_draw then
       return
    end
-   
+
    -- timing
    local start_time = utils.timer ()
-   
-   -- start with initial room
-   rooms = { [uid] = get_room (uid) }
-   
+
    -- lookup current room
-   local room = rooms [uid]
-   
-   room = room or { name = "<Unknown room>", area = "<Unknown area>" }
-   last_visited [uid] = os.time ()
+   local room_params = get_room_display_params(uid)
+   local room = rooms[uid]
+
+   last_visited[uid] = os.time ()
 
    current_area = room.area
-   
+
    -- update dimensions and position here because the bigmap might have changed them
    windowinfo.window_left = WindowInfo(win, 1) or windowinfo.window_left
    windowinfo.window_top = WindowInfo(win, 2) or windowinfo.window_top
    config.WINDOW.width = WindowInfo(win, 3) or config.WINDOW.width
    config.WINDOW.height = WindowInfo(win, 4) or config.WINDOW.height
-   
-   WindowCreate (win, 
-      windowinfo.window_left, 
-      windowinfo.window_top, 
-      config.WINDOW.width, 
-      config.WINDOW.height,  
+   WindowCreate (win,
+      windowinfo.window_left,
+      windowinfo.window_top,
+      config.WINDOW.width,
+      config.WINDOW.height,
       windowinfo.window_mode,   -- top right
       windowinfo.window_flags,
-      BACKGROUND_COLOUR.colour) 
-   
-   -- Handle background texture.
-   if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
-      local iwidth = WindowImageInfo(win,room.textimage,2)
-      local iheight= WindowImageInfo(win,room.textimage,3)
-      local x = 0
-      local y = 0
+      BACKGROUND_COLOUR.colour)
 
-      while y < config.WINDOW.height do
-         x = 0
-         while x < config.WINDOW.width do
-            WindowDrawImage (win, room.textimage, x, y, 0, 0, 1)  -- straight copy
-            x = x + iwidth
+   if config.USE_TEXTURES.enabled == true then
+      -- Load background texture
+      local textimage = nil
+      local texture = nil
+      if areas[room.area] then
+         texture = areas[room.area].texture
+      end
+      if texture == nil or texture == "" then texture = "test5.png" end
+
+      if textures[texture] then
+         textimage = textures[texture]
+      else
+         if textures[texture] ~= false then
+            local dir = GetInfo(66)
+            local imgpath = dir .. "worlds\\plugins\\images\\" ..texture
+            if WindowLoadImage(win, texture, imgpath) ~= 0 then
+               textures[texture] = false  -- file not found
+            else
+               textures[texture] = texture -- cache image
+               textimage = texture
+            end
          end
-         y = y + iheight
+      end
+
+      -- Draw background texture.
+      if textimage ~= nil then
+         local iwidth = WindowImageInfo(win,textimage,2)
+         local iheight= WindowImageInfo(win,textimage,3)
+         local x = 0
+         local y = 0
+
+         while y < config.WINDOW.height do
+            x = 0
+            while x < config.WINDOW.width do
+               WindowDrawImage(win, textimage, x, y, 0, 0, 1)  -- straight copy
+               x = x + iwidth
+            end
+            y = y + iheight
+         end
       end
    end
-   
-   -- let them move it around                 
-   movewindow.add_drag_handler (win, 0, 0, 0, font_height)
+
+   -- let them move it around
+   movewindow.add_drag_handler(win, 0, 0, 0, font_height)
 
    -- for zooming
-   WindowAddHotspot(win, 
-      "zzz_zoom",  
-      0, 0, 0, 0, 
+   WindowAddHotspot(win,
+      "zzz_zoom",
+      0, 0, 0, 0,
       "", "", "", "", "mapper.MouseUp",
       "",  -- hint
-      miniwin.cursor_arrow, 0)
-   
-   WindowScrollwheelHandler (win, "zzz_zoom", "mapper.zoom_map")
-   
+      daredevil_mode and miniwin.cursor_none or miniwin.cursor_arrow,
+      0)
+   WindowScrollwheelHandler(win, "zzz_zoom", "mapper.zoom_map")
+
    -- set up for initial room, in middle
-   drawn, drawn_coords, rooms_to_be_drawn, plan_to_draw, area_exits = {}, {}, {}, {}, {}, {}
+   drawn_uids, drawn_coords, rooms_to_draw_next, area_exits = {}, {}, {}, {}, {}
    depth = 0
 
    -- insert initial room
-   table.insert (rooms_to_be_drawn, add_another_room (uid, {}, config.WINDOW.width / 2, config.WINDOW.height / 2))
+   table.insert(rooms_to_draw_next, {uid, config.WINDOW.width / 2, config.WINDOW.height / 2})
 
-   while #rooms_to_be_drawn > 0 and depth < config.SCAN.depth do
-      local old_generation = rooms_to_be_drawn
-      rooms_to_be_drawn = {}  -- new generation
-      for i, part in ipairs (old_generation) do 
-         draw_room (part.uid, part.path, part.x, part.y)
+   while #rooms_to_draw_next > 0 and depth < config.SCAN.depth do
+      local this_draw_level = rooms_to_draw_next
+      rooms_to_draw_next = {}  -- new generation
+      for i, room in ipairs (this_draw_level) do
+         draw_room (room[1], room[2], room[3])
       end -- for each existing room
       depth = depth + 1
-   end -- while all rooms_to_be_drawn
-  
-   for area, zone_exit in pairs (area_exits) do
-      draw_zone_exit (zone_exit)
+   end -- while all rooms_to_draw_next
+
+   for i, zone_exit in ipairs(area_exits) do
+      draw_zone_exit(zone_exit)
    end -- for
-   
+
    local room_name = room.name
-   local name_width = WindowTextWidth (win, FONT_ID, room_name)
+   local name_width = WindowTextWidth(win, FONT_ID, room_name)
    local add_dots = false
-   
+
    -- truncate name if too long
-   while name_width > (config.WINDOW.width - 20 - WindowTextWidth (win, FONT_ID, "*?")) do
-      -- get rid of last word
-      local s = string.match (" " .. room_name .. "...", "(%s%S*)$")
-      if not s or #s == 0 then 
+   while name_width + 19 + WindowTextWidth(win, FONT_ID, "*?") > config.WINDOW.width do
+      -- get rid of last letter until it fits
+      room_name = room_name:sub(1, -2)
+      if room_name == "" then
          break
       end
-      room_name = room_name:sub (1, - (#s - 2))  -- except the last 3 dots but add the space
-      name_width = WindowTextWidth (win, FONT_ID, room_name .. " ...")
+      name_width = WindowTextWidth(win, FONT_ID, room_name.."...")
       add_dots = true
    end -- while
-   
+
    if add_dots then
-      room_name = room_name .. " ..."
+      room_name = room_name.."..."
    end -- if
-   
+
    -- room name
-   
-   draw_text_box (win, FONT_ID, 
+
+   local name_box_width = draw_text_box (win, FONT_ID,
       (config.WINDOW.width - WindowTextWidth (win, FONT_ID, room_name)) / 2,   -- left
       2,    -- top
       room_name, false,             -- what to draw, utf8
       ROOM_NAME_TEXT.colour,   -- text colour
-      ROOM_NAME_FILL.colour,   -- fill colour   
+      ROOM_NAME_FILL.colour,   -- fill colour
       ROOM_NAME_BORDER.colour)     -- border colour
-
+      
    if config.SHOW_ROOM_ID then
       draw_text_box (win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..uid)) / 2,   -- left
          2+font_height+1,    -- top
          "ID: "..uid, false,             -- what to draw, utf8
          ROOM_NAME_TEXT.colour,   -- text colour
-         ROOM_NAME_FILL.colour,   -- fill colour   
+         ROOM_NAME_FILL.colour,   -- fill colour
          ROOM_NAME_BORDER.colour)     -- border colour
    end
-   
+
    -- area name
-   
+
    local areaname = room.area
-   
+
    if areaname then
-      draw_text_box (win, FONT_ID, 
+      draw_text_box (win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname)) / 2,   -- left
          config.WINDOW.height - 3 - font_height,    -- top
-         areaname:gsub("^%l", string.upper), false, 
+         areaname:gsub("^%l", string.upper), false,
          AREA_NAME_TEXT.colour,   -- text colour
-         AREA_NAME_FILL.colour,   -- fill colour   
+         AREA_NAME_FILL.colour,   -- fill colour
          AREA_NAME_BORDER.colour) -- border colour
    end -- if area known
-  
+
    -- configure?
-   
+
    if draw_configure_box then
       draw_configuration ()
    else
       WindowShow(config_win, false)
       local x = 2
       local y = 2
-      local text_width = draw_text_box (win, FONT_ID, 
+      local text_width = draw_text_box (win, FONT_ID,
          x+3,   -- left
          y,   -- top
          "*", false,              -- what to draw, utf8
          AREA_NAME_TEXT.colour,   -- text colour
-         AREA_NAME_FILL.colour,   -- fill colour   
+         AREA_NAME_FILL.colour,   -- fill colour
          AREA_NAME_BORDER.colour) -- border colour
 
-         WindowAddHotspot(win, "<configure>",  
-         x, y, x+text_width+6, y + font_height,   -- rectangle
+      WindowAddHotspot(win, "$<configure>",
+         0, 0, x+text_width+6, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
          "",  -- mousedown
          "",  -- cancelmousedown
          "mapper.mouseup_configure",  -- mouseup
          "Click to configure map",
-         miniwin.cursor_hand, 0)  -- hand cursor
+         miniwin.cursor_plus, 0)  -- hand cursor
    end -- if
-               
+
    if type (show_help) == "function" then
       local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 5
       local y = 2
-      local text_width = draw_text_box (win, FONT_ID, 
+      local text_width = draw_text_box (win, FONT_ID,
          x,   -- left
          y,   -- top
          "?", false,              -- what to draw, utf8
          AREA_NAME_TEXT.colour,   -- text colour
-         AREA_NAME_FILL.colour,   -- fill colour   
+         AREA_NAME_FILL.colour,   -- fill colour
          AREA_NAME_BORDER.colour) -- border colour
-      
-      WindowAddHotspot(win, "<help>",  
+
+      WindowAddHotspot(win, " $<help>",
          x-3, y, x+text_width+3, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
@@ -909,7 +1118,7 @@ function draw (uid)
          "",  -- cancelmousedown
          "mapper.show_help",  -- mouseup
          "Click for help",
-         miniwin.cursor_hand, 0)  -- hand cursor
+         miniwin.cursor_help, 0)  -- hand cursor
    end -- if
 
    draw_edge()
@@ -918,27 +1127,27 @@ function draw (uid)
    WindowShow (win, not window_hidden)
 
    last_drawn = uid  -- last room number we drew (for zooming)
-   
+
    local end_time = utils.timer ()
 
    -- timing stuff
    if timing then
       local count= 0
-      for k in pairs (drawn) do 
-         count = count + 1 
+      for k in pairs (drawn_uids) do
+         count = count + 1
       end
       print (string.format ("Time to draw %i rooms = %0.3f seconds, search depth = %i", count, end_time - start_time, depth))
-    
+
       total_times_drawn = total_times_drawn + 1
       total_time_taken = total_time_taken + end_time - start_time
-    
+
       print (string.format ("Total times map drawn = %i, average time to draw = %0.3f seconds",
          total_times_drawn,
          total_time_taken / total_times_drawn))
    end -- if
    BroadcastPlugin (999, "repaint")
 end -- draw
-  
+
 local credits = {
    "MUSHclient mapper",
    string.format ("Version %0.1f", VERSION),
@@ -947,7 +1156,7 @@ local credits = {
    "World: "..WorldName (),
    GetInfo (3),
 }
-  
+
 -- call once to initialize the mapper
 function init (t)
 
@@ -955,71 +1164,60 @@ function init (t)
    findpath = t.findpath
    config = t.config
    assert (type (config) == "table", "No 'config' table supplied to mapper.")
-   
-   supplied_get_room = t.get_room
-   assert (type (supplied_get_room) == "function", "No 'get_room' function supplied to mapper.")
-   
+
+   get_room = t.get_room
    show_help = t.show_help     -- "help" function
    room_click = t.room_click   -- RH mouse-click function
    timing = t.timing           -- true for timing info
    show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
-   
+
    -- force some config defaults if not supplied
    for k, v in pairs (default_config) do
       config[k] = config[k] or v
    end -- for
-   
+
    win = GetPluginID () .. "_mapper"
    config_win = GetPluginID () .. "_z_config_win"
-   
+
    WindowCreate (win, 0, 0, 0, 0, 0, 0, 0)
-   WindowCreate(config_win, 0, 0, 0, 0, 0, 0, 0) 
-   
+   WindowCreate(config_win, 0, 0, 0, 0, 0, 0, 0)
+
    -- add the fonts
    WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
    WindowFont (win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
    WindowFont (config_win, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
    WindowFont (config_win, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
-   
+
    -- see how high it is
    font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
-   
+
    -- find where window was last time
    windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , true, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, {x=default_x, y=default_y})
-   
+
    -- calculate box sizes, arrows, connecting lines etc.
    build_room_info ()
-   
-   WindowCreate (win, 
-      windowinfo.window_left, 
-      windowinfo.window_top, 
-      config.WINDOW.width, 
-      config.WINDOW.height,  
+
+   WindowCreate (win,
+      windowinfo.window_left,
+      windowinfo.window_top,
+      config.WINDOW.width,
+      config.WINDOW.height,
       windowinfo.window_mode,   -- top right
       windowinfo.window_flags,
-      BACKGROUND_COLOUR.colour) 
-  
+      BACKGROUND_COLOUR.colour)
+
    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
 
    -- let them move it around
    movewindow.add_drag_handler (win, 0, 0, 0, 0)
-   
-   local top = (config.WINDOW.height - #credits * font_height) /2
-   
-   for _, v in ipairs (credits) do
-      local width = WindowTextWidth (win, FONT_ID, v)
-      local left = (config.WINDOW.width - width) / 2
-      WindowText (win, FONT_ID, v, left, top, 0, 0, ROOM_COLOUR.colour)
-      top = top + font_height 
-   end -- for
 
-   draw_edge()
-   
+   draw_credits()
+
    WindowShow (win, not window_hidden)
    WindowShow (config_win, false)
-   
-end -- init  
+
+end -- init
 
 function MouseUp(flags, hotspot_id, win)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
@@ -1037,7 +1235,7 @@ end
 
 function right_click_menu()
    menustring = "Bring To Front|Send To Back"
-   
+
    rc, a, b, c = CallPlugin("60840c9013c7cc57777ae0ac", "getCurrentState")
    if rc == 0 and a == true then
       if b == 1 then
@@ -1046,7 +1244,7 @@ function right_click_menu()
          menustring = menustring.."|-|Merge Continent Bigmap Into GMCP Mapper"
       end
    end
-   
+
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
@@ -1062,26 +1260,59 @@ function right_click_menu()
    end
 end
 
-function zoom_in ()
-   if last_drawn and ROOM_SIZE < 40 then
-      ROOM_SIZE = ROOM_SIZE + 2
-      DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM + 2
+ROOM_SCALE_LIMITS = {
+   DISTANCE_TO_NEXT_ROOM_MIN = 0, 
+   DISTANCE_TO_NEXT_ROOM_MAX = 40,
+   ROOM_SIZE_MIN = 4, 
+   ROOM_SIZE_MAX = 40,
+   SIZE_STEP = 2,
+   DISTANCE_STEP = 2
+}
+
+function sparser ()
+   if last_drawn and DISTANCE_TO_NEXT_ROOM < ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MAX then
+      DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM + ROOM_SCALE_LIMITS.DISTANCE_STEP
       build_room_info ()
       draw (last_drawn)
       OnPluginSaveState()
+      return true
    end -- if
-end -- zoom_in
+   return false
+end
 
-
-function zoom_out ()
-   if last_drawn and ROOM_SIZE > 4 then
-      ROOM_SIZE = ROOM_SIZE - 2
-      DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM - 2
+function denser ()
+   if last_drawn and DISTANCE_TO_NEXT_ROOM > ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MIN then
+      DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM - ROOM_SCALE_LIMITS.DISTANCE_STEP
       build_room_info ()
       draw (last_drawn)
       OnPluginSaveState()
+      return true
    end -- if
-end -- zoom_out
+   return false
+end
+
+function bigger_rooms ()
+   if last_drawn and ROOM_SIZE < ROOM_SCALE_LIMITS.ROOM_SIZE_MAX then
+      ROOM_SIZE = ROOM_SIZE + ROOM_SCALE_LIMITS.SIZE_STEP
+      build_room_info ()
+      draw (last_drawn)
+      OnPluginSaveState()
+      return true
+   end -- if
+   return false
+end -- bigger_rooms
+
+
+function smaller_rooms ()
+   if last_drawn and ROOM_SIZE > ROOM_SCALE_LIMITS.ROOM_SIZE_MIN then
+      ROOM_SIZE = ROOM_SIZE - ROOM_SCALE_LIMITS.SIZE_STEP
+      build_room_info ()
+      draw (last_drawn)
+      OnPluginSaveState()
+      return true
+   end -- if
+   return false
+end -- smaller_rooms
 
 function mapprint (...)
    local old_note_colour = GetNoteColourFore ()
@@ -1110,10 +1341,29 @@ end -- hide
 function save_state ()
    SetVariable("ROOM_SIZE", ROOM_SIZE)
    SetVariable("DISTANCE_TO_NEXT_ROOM", DISTANCE_TO_NEXT_ROOM)
+   SetVariable("ROOM_BORDER_TYPE", ROOM_BORDER_TYPE)
+
    if WindowInfo(win,1) and WindowInfo(win,5) then
       movewindow.save_state (win)
    end
 end -- save_state
+
+function addRunHyperlink(destination_uid, msg_override, bubble_addition, no_renumber, foreground_color, background_color)
+   table.insert(last_result_list, destination_uid)
+   local dest = get_room(destination_uid)
+   local destination_name = dest.name
+   if msg_override then
+      Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. destination_uid .. ")",
+      msg_override..(no_renumber and "" or "["..#last_result_list.."]"),
+      "Click here to run to room ("..destination_uid..") \""..destination_name.."\""..(bubble_addition or ""),
+      foreground_color or "", background_color or "", false)
+   else
+      Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. destination_uid .. ")",
+      (no_renumber and "" or "["..#last_result_list.."] ")..destination_name.." ("..destination_uid..") ("..dest.area..")" ,
+      "Click here to run to room ("..destination_uid..") \""..destination_name.."\""..(bubble_addition or ""),
+      foreground_color or "", background_color or "", false)
+   end
+end
 
 function hyperlinkGoto(uid)
    mapper.goto(uid)
@@ -1133,9 +1383,9 @@ function full_find (dests, walk, no_portals)
       SetStatus(string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
       BroadcastPlugin(999, "repaint")
       local foundpath = findpath(current_room, v.uid, no_portals, no_portals)
-      if not rooms[v.uid] then
-         rooms[v.uid] = get_room(v.uid)
-      end
+
+      get_room(v.uid)
+
       if foundpath ~= nil then
          table.insert(paths, {uid=v.uid, path=foundpath, reason=v.reason})
       else
@@ -1143,51 +1393,45 @@ function full_find (dests, walk, no_portals)
       end
    end
    SetStatus ("")
-   
+
    BroadcastPlugin(500, "found_paths = "..string.gsub(serialize.save_simple(paths),"%s+"," "))
    BroadcastPlugin(501, "unfound_paths = "..string.gsub(serialize.save_simple(notfound),"%s+"," "))
-   
+
    local found_count = #paths
 
-   -- sort so closest ones are first  
+   -- sort so closest ones are first
    table.sort(paths, function (a, b) return #a.path < #b.path end)
 
    if walk and paths[1] then
       local uid = paths[1].uid
       local path = paths[1].path
-      mapprint("Going to:", rooms[uid].name)
-      start_speedwalk(path, uid)
+      mapprint("Going to:", get_room_display_params(uid).name)
+      start_speedwalk(path)
       return
    end -- if walking wanted
-      
-   Note("+------------------------------ START OF SEARCH -------------------------------+")  
+
+   Note("+------------------------------ START OF SEARCH -------------------------------+")
    for _, p in ipairs(paths) do
       local room = rooms[p.uid] -- ought to exist or wouldn't be in table
       assert (room, "Room " .. p.uid .. " is not in rooms table.")
-      
+
       local distance = #p.path .. " room"
       if #p.path > 1 or #p.path == 0 then
          distance = distance .. "s"
       end -- if
       distance = distance .. " away"
-      
-      local room_name = room.name
-      room_name = room_name .. " (" .. room.area .. ")"
-      room_name = room_name .. " (" .. p.uid .. ")"
-      
+
       if current_room ~= p.uid then
-         table.insert(last_result_list, p.uid)
-         Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. p.uid .. ")", 
-            "["..#last_result_list.."] "..room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
+         addRunHyperlink(p.uid)
       else
-         Tell(room_name)
+         Tell(room.name)
       end
       local info = ""
       if type (p.reason) == "string" and p.reason ~= "" then
-         info = " [" .. p.reason .. "]"
+         info = "[" .. p.reason .. "]"
       end -- if
       mapprint (" - " .. distance .. info) -- new line
-      
+
    end -- for each room
 
    if #notfound > 0 then
@@ -1205,7 +1449,7 @@ function full_find (dests, walk, no_portals)
       nfline = nfline .. " (" .. v.uid .. ")"
       Tell(nfline)
       if type (v.reason) == "string" and v.reason ~= "" then
-         nfinfo = " - [" .. v.reason .. "]"
+         nfinfo = " -[" .. v.reason .. "]"
          mapprint (nfinfo) -- new line
       else
          Note("")
@@ -1218,39 +1462,30 @@ end
 function quick_find(dests, walk)
    BroadcastPlugin (999, "repaint")
    Note("+------------------------------ START OF SEARCH -------------------------------+")
-   
+
    for i,v in ipairs(dests) do
       local uid = v.uid
-      if not rooms[uid] then
-         rooms[uid] = get_room(uid)
-      end -- if
-      local room = rooms[uid] -- ought to exist or wouldn't be in table
-      
+      local room = get_room(uid)
+
       assert (room, "Room " .. v.uid .. " is not in rooms table.")
-      
-      local room_name = room.name
-      room_name = room_name .. " (" .. room.area .. ")"
-      room_name = room_name .. " (" .. v.uid .. ")"
-    
+
       if current_room ~= v.uid then
-         table.insert(last_result_list, v.uid)
-         Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto("..v.uid..")", 
-            "["..#last_result_list.."] "..room_name, "Click to speedwalk there", "", "", false)
+         addRunHyperlink(v.uid)
       else
-         ColourTell(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","[you are here] "..room_name)
+         ColourTell(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","[you are here] "..room.name)
       end
-      
+
       local info = ""
       if type (v.reason) == "string" and v.reason ~= "" then
-         info = " [" .. v.reason .. "]"
+         info = "[" .. v.reason .. "]"
          mapprint (" - " .. info) -- new line
       else -- if
          Note("")
       end
-      
+
       BroadcastPlugin (999, "repaint")
    end -- for each room
-   
+
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end
 
@@ -1268,7 +1503,7 @@ function gotoNextResult(which)
       ColourNote(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","NEXT ERROR: No more NEXT results left.")
    else
       next_result_index = tonumber(which)
-      if (next_result_index > 0) and (next_result_index <= #last_result_list) then
+      if (next_result_index > 0) and last_result_list and (next_result_index <= #last_result_list) then
          mapper.goto(last_result_list[next_result_index])
          return
       else
@@ -1290,18 +1525,18 @@ function find (name, dests, walk, quick_list, no_portals)
    if not walk then
       mapprint ("Found",#dests,"target"..(((#dests ~= 1) and "s") or "")..(((name ~= nil) and (" matching '"..name.."'")) or "")..".")
    end
-   
+
    local max_paths = 50
    if #dests > max_paths and not quick_list then
       mapprint("Your search would pathfind more than "..tostring(max_paths).." results. Choose a more specific pattern or activate the mapper quicklist setting.")
       return
    end
-   
+
    if not walk then
       last_result_list = {}
       next_result_index = 0
    end
-   
+
    if quick_list == true then
       quick_find(dests, walk)
    else
@@ -1321,7 +1556,7 @@ function build_speedwalk(path)
    else
       stack_char = "\r\n"
    end
-     
+
    -- combine direction chains
    local tspeed = {}
    local n = 0
@@ -1333,7 +1568,7 @@ function build_speedwalk(path)
          tspeed[n].count = tspeed[n].count + 1
       end -- if new direction
    end -- for
- 
+
    -- now build string like: run 2n3e4;open east;east;run 3n
    local s = ""
    local new_command = true
@@ -1352,17 +1587,16 @@ function build_speedwalk(path)
          new_command = true
       end -- if
    end -- if
-   
+
    return string.gsub(s,";",stack_char)
 end -- build_speedwalk
 
 -- start a speedwalk to a path
 function start_speedwalk(path)
-
    if not check_connected () then
       return
    end -- if
-   
+
    if myState == 9 or myState == 11 then
       Send("stand")
    end
@@ -1370,14 +1604,12 @@ function start_speedwalk(path)
    current_speedwalk = path
    if path and #path > 0 then
       last_speedwalk_uid = path[#path].uid
-      
+
       -- fast speedwalk: send run 4s3e etc.
       ExecuteWithWaits(build_speedwalk(path))
-
-      current_speedwalk = nil
-      return
    end -- if any steps
-   
+   current_speedwalk = nil
+
 end -- start_speedwalk
 
 -- ------------------------------------------------------------------
@@ -1403,14 +1635,14 @@ function mouseup_room (flags, hotspot_id)
    end -- if RH click
 
    -- here for LH click
-   
+
    -- find desired room
    goto(hotspot_id)
 end -- mouseup_room
 
 function mouseup_configure (flags, hotspot_id)
    draw_configure_box = true
-   draw (current_room)
+   draw_configuration()
 end -- mouseup_configure
 
 function mouseup_close_configure (flags, hotspot_id)
@@ -1419,62 +1651,66 @@ function mouseup_close_configure (flags, hotspot_id)
    draw (current_room)
 end -- mouseup_player
 
+function mouseup_change_border_type (flags, hotspot_id)
+   ROOM_BORDER_TYPE = ROOM_BORDER_TYPE + 1
+   if ROOM_BORDER_TYPE > #BORDER_TYPES then
+      ROOM_BORDER_TYPE = 1
+   end
+   OnPluginSaveState()
+   draw (current_room)
+end
+
 function mouseup_change_colour (flags, hotspot_id)
- 
+
    local which = string.match (hotspot_id, "^$colour:([%a%d_]+)$")
    if not which then
       return  -- strange ...
    end -- not found
 
-   local newcolour = PickColour (config [which].colour)
-   
+   local newcolour = PickColour (config[which].colour)
+
    if newcolour == -1 then
       return
    end -- if dismissed
-   
-   config [which].colour = newcolour
-   
+
+   config[which].colour = newcolour
+
    draw (current_room)
 end -- mouseup_change_colour
 
 function mouseup_change_font (flags, hotspot_id)
-  
+
    local newfont =  utils.fontpicker (config.FONT.name, config.FONT.size, ROOM_NAME_TEXT.colour)
-   
+
    if not newfont then
       return
    end -- if dismissed
-   
+
    config.FONT.name = newfont.name
-   
-   if newfont.size > 12 then
-      utils.msgbox ("Maximum allowed font size is 12 points.", "Font too large", "ok", "!", 1)
-   else
-      config.FONT.size = newfont.size
-   end -- if
-   
+   config.FONT.size = newfont.size
+
    ROOM_NAME_TEXT.colour = newfont.colour
-   
-   -- reload new font  
+
+   -- reload new font
    WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
    WindowFont (win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
    WindowFont (config_win, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
    WindowFont (config_win, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
-   
+
    -- see how high it is
    font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
-   
+
    draw (current_room)
 end -- mouseup_change_font
 
 function mouseup_change_depth (flags, hotspot_id)
-  
+
    local depth = get_number_from_user ("Choose scan depth (3 to 300 rooms)", "Depth", config.SCAN.depth, 3, 300)
-   
+
    if not depth then
       return
    end -- if dismissed
-   
+
    config.SCAN.depth = depth
    draw (current_room)
 end -- mouseup_change_depth
@@ -1507,17 +1743,39 @@ function mouseup_change_show_area_exits (flags, hotspot_id)
 end -- mouseup_change_area_textures
 
 function zoom_map (flags, hotspot_id)
-   if bit.band (flags, 0x100) ~= 0 then
-      zoom_out ()
+   if bit.band(flags, 0x100) ~= 0 then
+      if ROOM_SIZE > ROOM_SCALE_LIMITS.ROOM_SIZE_MIN and DISTANCE_TO_NEXT_ROOM > ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MIN then
+         smaller_rooms()
+         denser()
+      end
    else
-      zoom_in ()
+      if ROOM_SIZE < ROOM_SCALE_LIMITS.ROOM_SIZE_MAX and DISTANCE_TO_NEXT_ROOM < ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MAX then
+         bigger_rooms()
+         sparser()
+      end
    end -- if
 end -- zoom_map
 
 function resize_mouse_down(flags, hotspot_id)
-   if (hotspot_id == "resize") then
+   if (hotspot_id == "$<resize>") then
       startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
    end
+end
+
+function draw_credits()
+   local top = (config.WINDOW.height - #credits * font_height) /2
+
+   WindowRectOp (win, 2, 0, 0, 0, 0, 0)
+
+   for _, v in ipairs (credits) do
+      local width = WindowTextWidth (win, FONT_ID, v)
+      local left = (config.WINDOW.width - width) / 2
+      WindowText (win, FONT_ID, v, left, top, 0, 0, ROOM_COLOUR.colour)
+      top = top + font_height
+   end -- for
+
+   draw_edge()
+   BroadcastPlugin (999, "repaint")
 end
 
 function resize_release_callback()
@@ -1540,7 +1798,7 @@ function resize_move_callback()
    elseif (windowinfo.window_left + width > GetInfo(281)) then
       width = GetInfo(281) - windowinfo.window_left
       startx = GetInfo(281)
-   end 
+   end
 
    local height = WindowInfo(win, 4) + posy - starty
    starty = posy
@@ -1558,12 +1816,11 @@ function resize_move_callback()
    WindowShow(win,true)
 end
 
-
 function add_resize_tag()
    -- draw the resize widget bottom right corner.
    local width  = WindowInfo(win, 3)
    local height = WindowInfo(win, 4)
-   
+
    WindowLine(win, width-4, height-2, width-2, height-4, 0xffffff, 0, 2)
    WindowLine(win, width-5, height-2, width-2, height-5, 0x696969, 0, 1)
    WindowLine(win, width-7, height-2, width-2, height-7, 0xffffff, 0, 2)
@@ -1572,21 +1829,21 @@ function add_resize_tag()
    WindowLine(win, width-11, height-2, width-2, height-11, 0x696969, 0, 1)
    WindowLine(win, width-13, height-2, width-2, height-13, 0xffffff, 0, 2)
    WindowLine(win, width-14, height-2, width-2, height-14, 0x696969, 0, 1)
-   
-   -- Hotspot for resizer.                                                              
+
+   -- Hotspot for resizer.
    local x = width - 14
    local y = height - 14
-   if (WindowHotspotInfo(win, "resize", 1) == nil) then
-      WindowAddHotspot(win, "resize",  
+   if (WindowHotspotInfo(win, "$<resize>", 1) == nil) then
+      WindowAddHotspot(win, "$<resize>",
          x, y, 0, 0,   -- rectangle
          "", "", "mapper.resize_mouse_down", "", "",
          "Drag to resize",
          6, 0)  -- hand cursor
-      WindowDragHandler(win, "resize", "mapper.resize_move_callback", "mapper.resize_release_callback", 0)
+      WindowDragHandler(win, "$<resize>", "mapper.resize_move_callback", "mapper.resize_release_callback", 0)
    else
-      WindowMoveHotspot(win, "resize", x, y,  0,  0)
+      WindowMoveHotspot(win, "$<resize>", x, y,  0,  0)
    end
-end -- draw resize tag. 
+end -- draw resize tag.
 
 function draw_edge()
    -- draw edge frame.
