@@ -130,15 +130,16 @@ local function build_room_info ()
    THIRD_WAY = DISTANCE_TO_NEXT_ROOM / 3
    THIRD_WAY_UP   = math.ceil(THIRD_WAY)
    THIRD_WAY_DOWN = math.floor(THIRD_WAY)
+   HR_5_SQR = (HALF_ROOM-5)*(HALF_ROOM-5)
 
    barriers = {
-      n =  { x1 = -HALF_ROOM_DOWN, y1 = -HALF_ROOM_UP,   x2 = HALF_ROOM_UP,  y2 = -HALF_ROOM_UP},
-      s =  { x1 = -HALF_ROOM_DOWN, y1 =  HALF_ROOM_UP,   x2 = HALF_ROOM_UP,  y2 =  HALF_ROOM_UP},
-      e =  { x1 =  HALF_ROOM_UP, y1 = -HALF_ROOM_DOWN, x2 =  HALF_ROOM_UP, y2 = HALF_ROOM_UP},
-      w =  { x1 = -HALF_ROOM_UP, y1 = -HALF_ROOM_DOWN, x2 = -HALF_ROOM_UP, y2 = HALF_ROOM_UP},
+      n =  { x1 = -HALF_ROOM_DOWN+5, y1 = -HALF_ROOM_UP,   x2 = HALF_ROOM_UP-5,  y2 = -HALF_ROOM_UP},
+      s =  { x1 = -HALF_ROOM_DOWN+5, y1 =  HALF_ROOM_UP,   x2 = HALF_ROOM_UP-5,  y2 =  HALF_ROOM_UP},
+      e =  { x1 =  HALF_ROOM_UP, y1 = -HALF_ROOM_DOWN+5, x2 =  HALF_ROOM_UP, y2 = HALF_ROOM_UP-5},
+      w =  { x1 = -HALF_ROOM_UP, y1 = -HALF_ROOM_DOWN+5, x2 = -HALF_ROOM_UP, y2 = HALF_ROOM_UP-5},
 
-      u = { x1 =  math.ceil(HALF_ROOM - math.sqrt(HALF_ROOM*HALF_ROOM / 2)), y1 = math.ceil(-HALF_ROOM-math.sqrt(HALF_ROOM*HALF_ROOM / 2)), x2 =  math.floor(HALF_ROOM+math.sqrt(HALF_ROOM*HALF_ROOM / 2)), y2 = math.floor(-HALF_ROOM+math.sqrt(HALF_ROOM*HALF_ROOM / 2))},
-      d = { x1 = math.ceil(-HALF_ROOM-math.sqrt(HALF_ROOM*HALF_ROOM / 2)), y1 =  math.ceil(HALF_ROOM-math.sqrt(HALF_ROOM*HALF_ROOM / 2)), x2 = math.floor(-HALF_ROOM+math.sqrt(HALF_ROOM*HALF_ROOM / 2)), y2 = math.floor(HALF_ROOM+math.sqrt(HALF_ROOM*HALF_ROOM / 2))},
+      u = { x1 =  math.ceil(HALF_ROOM - math.sqrt(HR_5_SQR / 2)), y1 = math.ceil(-HALF_ROOM-math.sqrt(HR_5_SQR / 2)), x2 =  math.floor(HALF_ROOM+math.sqrt(HR_5_SQR / 2)), y2 = math.floor(-HALF_ROOM+math.sqrt(HR_5_SQR / 2))},
+      d = { x1 = math.ceil(-HALF_ROOM-math.sqrt(HR_5_SQR / 2)), y1 =  math.ceil(HALF_ROOM-math.sqrt(HR_5_SQR / 2)), x2 = math.floor(-HALF_ROOM+math.sqrt(HR_5_SQR / 2)), y2 = math.floor(HALF_ROOM+math.sqrt(HR_5_SQR / 2))},
 
    } -- end barriers
 
