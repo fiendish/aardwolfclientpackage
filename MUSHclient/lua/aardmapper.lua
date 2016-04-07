@@ -61,6 +61,7 @@ require "copytable"
 require "gauge"
 require "pairsbykeys"
 require "mw"
+require "bit"
 
 local FONT_ID     = "fn"  -- internal font identifier
 local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
@@ -97,7 +98,7 @@ local last_visited = {}
 local textures = {}
 
 -- other locals
-local HALF_ROOM_UP, connectors, half_connectors, arrows
+local HALF_ROOM_UP, connectors, stub_connectors, arrows
 local plan_to_draw, drawn_uids, drawn_coords
 local last_drawn, depth, font_height
 local walk_to_room_name
@@ -120,42 +121,45 @@ end
 
 local function build_room_info ()
 
-   HALF_ROOM_UP   = math.ceil(ROOM_SIZE / 2)
-   HALF_ROOM_DOWN = math.floor(ROOM_SIZE / 2)
-   THIRD_WAY_UP   = math.ceil(DISTANCE_TO_NEXT_ROOM / 3)
-   THIRD_WAY_DOWN = math.floor(DISTANCE_TO_NEXT_ROOM / 3)
-   HALF_WAY_UP = math.ceil(DISTANCE_TO_NEXT_ROOM / 2)
-   HALF_WAY_DOWN = math.floor(DISTANCE_TO_NEXT_ROOM / 2)
+   HALF_ROOM = ROOM_SIZE / 2
+   HALF_ROOM_UP   = math.ceil(HALF_ROOM)
+   HALF_ROOM_DOWN = math.floor(HALF_ROOM)
+   HALF_WAY = DISTANCE_TO_NEXT_ROOM / 2
+   HALF_WAY_UP = math.ceil(HALF_WAY)
+   HALF_WAY_DOWN = math.floor(HALF_WAY)
+   THIRD_WAY = DISTANCE_TO_NEXT_ROOM / 3
+   THIRD_WAY_UP   = math.ceil(THIRD_WAY)
+   THIRD_WAY_DOWN = math.floor(THIRD_WAY)
 
    barriers = {
-      n =  { x1 = -HALF_ROOM_UP, y1 = -HALF_ROOM_UP, x2 = HALF_ROOM_UP, y2 = -HALF_ROOM_UP},
-      s =  { x1 = -HALF_ROOM_UP, y1 =  HALF_ROOM_UP, x2 = HALF_ROOM_UP, y2 =  HALF_ROOM_UP},
-      e =  { x1 =  HALF_ROOM_UP, y1 = -HALF_ROOM_UP, x2 =  HALF_ROOM_UP, y2 = HALF_ROOM_UP},
-      w =  { x1 = -HALF_ROOM_UP, y1 = -HALF_ROOM_UP, x2 = -HALF_ROOM_UP, y2 = HALF_ROOM_UP},
+      n =  { x1 = -HALF_ROOM_DOWN, y1 = -HALF_ROOM_UP,   x2 = HALF_ROOM_UP,  y2 = -HALF_ROOM_UP},
+      s =  { x1 = -HALF_ROOM_DOWN, y1 =  HALF_ROOM_UP,   x2 = HALF_ROOM_UP,  y2 =  HALF_ROOM_UP},
+      e =  { x1 =  HALF_ROOM_UP, y1 = -HALF_ROOM_DOWN, x2 =  HALF_ROOM_UP, y2 = HALF_ROOM_UP},
+      w =  { x1 = -HALF_ROOM_UP, y1 = -HALF_ROOM_DOWN, x2 = -HALF_ROOM_UP, y2 = HALF_ROOM_UP},
 
-      u = { x1 =  HALF_ROOM_UP-HALF_WAY_UP, y1 = -HALF_ROOM_UP-HALF_WAY_UP, x2 =  HALF_ROOM_UP+HALF_WAY_UP, y2 = -HALF_ROOM_UP+HALF_WAY_UP},
-      d = { x1 = -HALF_ROOM_UP+HALF_WAY_UP, y1 =  HALF_ROOM_UP+HALF_WAY_UP, x2 = -HALF_ROOM_UP-HALF_WAY_UP, y2 =  HALF_ROOM_UP-HALF_WAY_UP},
+      u = { x1 =  math.ceil(HALF_ROOM - math.sqrt(HALF_ROOM*HALF_ROOM / 2)), y1 = math.ceil(-HALF_ROOM-math.sqrt(HALF_ROOM*HALF_ROOM / 2)), x2 =  math.floor(HALF_ROOM+math.sqrt(HALF_ROOM*HALF_ROOM / 2)), y2 = math.floor(-HALF_ROOM+math.sqrt(HALF_ROOM*HALF_ROOM / 2))},
+      d = { x1 = math.ceil(-HALF_ROOM-math.sqrt(HALF_ROOM*HALF_ROOM / 2)), y1 =  math.ceil(HALF_ROOM-math.sqrt(HALF_ROOM*HALF_ROOM / 2)), x2 = math.floor(-HALF_ROOM+math.sqrt(HALF_ROOM*HALF_ROOM / 2)), y2 = math.floor(HALF_ROOM+math.sqrt(HALF_ROOM*HALF_ROOM / 2))},
 
    } -- end barriers
 
    -- how to draw a line from this room to the next one (relative to the center of the room)
    connectors = {
-      n = { x = 0 ,                                   y = - ROOM_SIZE - DISTANCE_TO_NEXT_ROOM, at = { 0, -1 } },
-      s = { x = 0 ,                                   y =  ROOM_SIZE + DISTANCE_TO_NEXT_ROOM, at = { 0,  1 } },
-      e = { x =   ROOM_SIZE + DISTANCE_TO_NEXT_ROOM , y = 0,                            at = {  1,  0 }},
-      w = { x = - ROOM_SIZE - DISTANCE_TO_NEXT_ROOM , y = 0,                            at = { -1,  0 }},
-      u = { x =   ROOM_SIZE + DISTANCE_TO_NEXT_ROOM , y = -ROOM_SIZE - DISTANCE_TO_NEXT_ROOM, at = { 1, -1 } },
-      d = { x = - ROOM_SIZE - DISTANCE_TO_NEXT_ROOM , y =  ROOM_SIZE + DISTANCE_TO_NEXT_ROOM, at = {-1,  1 } }
+      n = { x =  0 ,                               y = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM, at = { 0, -1 } },
+      s = { x =  0 ,                               y =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, at = { 0,  1 } },
+      e = { x =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM , y = 0,                                at = {  1,  0 }},
+      w = { x = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM , y = 0,                                at = { -1,  0 }},
+      u = { x =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM , y = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM, at = { 1, -1 } },
+      d = { x = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM , y =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, at = {-1,  1 } }
    } -- end connectors
    
    -- how to draw a stub line
-   half_connectors = {
-      n = { x = 0 ,                                   y = -HALF_ROOM_DOWN - HALF_WAY_DOWN + 1, at = { 0, -1 } },
-      s = { x = 0 ,                                   y =  HALF_ROOM_DOWN + HALF_WAY_DOWN, at = { 0,  1 } },
-      e = { x =  HALF_ROOM_DOWN + HALF_WAY_DOWN ,     y = 0,                            at = {  1,  0 }},
-      w = { x = -HALF_ROOM_DOWN - HALF_WAY_DOWN + 1 , y = 0,                            at = { -1,  0 }},
-      u = { x =  HALF_ROOM_DOWN + HALF_WAY_DOWN - 3 , y = -HALF_ROOM_DOWN - HALF_WAY_DOWN + 3, at = { 1, -1 } },
-      d = { x = -HALF_ROOM_UP - HALF_WAY_UP + 4 ,     y =  HALF_ROOM_DOWN + HALF_WAY_UP - 3, at = {-1,  1 } }
+   stub_connectors = {
+      n = { x = 0 ,                                  y = math.floor(-HALF_ROOM-THIRD_WAY), at = { 0, -1 } },
+      s = { x = 0 ,                                  y =  math.ceil(HALF_ROOM+THIRD_WAY),  at = { 0,  1 } },
+      e = { x = math.ceil(HALF_ROOM+THIRD_WAY) ,   y = 0,                                  at = {  1,  0 }},
+      w = { x = math.floor(-HALF_ROOM-THIRD_WAY) , y = 0,                                  at = { -1,  0 }},
+      u = { x = math.floor(HALF_ROOM+THIRD_WAY) ,  y = math.ceil(-HALF_ROOM-THIRD_WAY),  at = { 1, -1 } },
+      d = { x = math.ceil(-HALF_ROOM-THIRD_WAY) ,  y =  math.floor(HALF_ROOM+THIRD_WAY), at = {-1,  1 } }
    }
 
    -- how to draw one-way arrows (relative to the center of the room)
@@ -774,10 +778,10 @@ local function draw_room (uid, x, y)
                if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
                   (not show_other_areas and exit_room and exit_room.area ~= current_area) or -- room in another area
                   (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
-                  exit_info = half_connectors[dir]
+                  exit_info = stub_connectors[dir]
                elseif exit_uid == uid then
                   -- if the exit leads back to this room, only draw stub
-                  exit_info = half_connectors[dir]
+                  exit_info = stub_connectors[dir]
                   linetype = pen_dash
                elseif not drawn_uids[exit_uid] and not drawn_coords[next_coords] then
                   -- queue for next level of rooms
@@ -961,7 +965,7 @@ function draw (uid)
       windowinfo.window_flags,
       BACKGROUND_COLOUR.colour)
 
-   if config.USE_TEXTURES.enabled == true then
+   if config.USE_TEXTURES.enabled == true and not daredevil_mode then
       -- Load background texture
       local textimage = nil
       local texture = nil
