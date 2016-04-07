@@ -9,7 +9,6 @@ Generic MUD mapper.
 Exposed functions:
 
 init (t)            -- call once, supply:
-   t.findpath    -- function for finding the path between two rooms (src, dest)
    t.config      -- ie. colours, sizes
    t.get_room    -- info about room (uid)
    t.show_help   -- function that displays some help
@@ -250,7 +249,7 @@ local function get_room_display_params (uid)
       }
    end
 
-   local room = {}
+   local room = {name = ourroom.name}
    room.bordercolour = mapper.ROOM_COLOUR.colour
    if areas[ourroom.area] then
       if areas[ourroom.area].color ~= "" then
@@ -884,6 +883,24 @@ pen_null = miniwin.pen_null
 --  EXPOSED FUNCTIONS
 ----------------------------------------------------------------------------------
 
+function verify_search_target(target_uid, command_line)
+   local wanted = string.match(target_uid, "^(nomap_.+)$") or tonumber(target_uid)
+  
+   if not wanted or (type(wanted) == "number" and  wanted < 0) then
+      mapprint ("The mapper "..string.match(command_line, "^mapper (%a*)").." command expects a valid room id as input. Got: "..target_uid)
+      return nil
+   end
+  
+   wanted = tostring(wanted)
+
+   if not get_room(wanted) then
+      mapprint("The room you requested ["..target_uid.."] doesn't appear to exist.")
+      return nil
+   end
+
+   return wanted
+end
+
 -- can we find another room right now?
 function check_we_can_find()
    if not current_room then
@@ -1161,11 +1178,9 @@ local credits = {
 function init (t)
 
    -- make copy of colours, sizes etc.
-   findpath = t.findpath
    config = t.config
    assert (type (config) == "table", "No 'config' table supplied to mapper.")
 
-   get_room = t.get_room
    show_help = t.show_help     -- "help" function
    room_click = t.room_click   -- RH mouse-click function
    timing = t.timing           -- true for timing info
@@ -1375,6 +1390,231 @@ function hyperlinkGoto(uid)
    end
 end
 
+-- original findpath function idea contributed by Spartacus. we don't use that one anymore.
+function findpath(src, dst, noportals, norecalls)
+   local outer_elapsed = utils.timer()
+   get_room(src)
+   
+   local walk_one = nil
+   for dir,touid in pairs(rooms[src].exits) do
+      if tostring(touid) == tostring(dst) and tonumber(rooms[src].exit_locks[dir]) <= mylevel and ((walk_one == nil) or (#dir > #walk_one)) then
+         walk_one = dir -- if one room away, walk there (don't portal), but prefer a (longer) cexit
+      end
+   end
+   if walk_one ~= nil then
+      return {{dir=walk_one, uid=touid}}, 1
+   end
+   local depth = 0
+   local max_depth = mapper.config.SCAN.depth
+   local room_sets = {}
+   local found = false
+   local ftd = {}
+   local f = ""
+   local next_room = 0
+  
+   if type(src) ~= "number" then
+      src = string.match(src, "^(nomap_.+)$") or tonumber(src)
+   end
+   if type(dst) ~= "number" then
+      dst = string.match(dst, "^(nomap_.+)$") or tonumber(dst)
+   end
+   
+   if src == dst or src == nil or dst == nil then
+      return {}
+   end
+   
+   src = tostring(src)
+   dst = tostring(dst)
+   
+   local rooms_list = {dst}     
+   
+   local visited = {}
+   local visited_str = ""
+   if noportals then
+      table.insert(visited, "*")
+   end
+   if norecalls then
+      table.insert(visited, "**")
+   end
+   if noportals or norecalls then
+      visited_str = "'"..table.concat(visited, "','").."'"
+   end
+   
+   local main_status = GetInfo(53)
+   local inner_elapsed = utils.timer()
+   
+   while not found and depth < max_depth do
+      SetStatus(main_status.." (searching depth "..depth..")")
+      depth = depth + 1
+
+      -- get all exits to any room in the previous set
+      -- unprepared query fallback (like maybe if too many SQL variables)
+      rooms_list_str = "'"..table.concat(rooms_list,"','"):gsub("([^,])'([^,])", "%1''%2").."'"
+      if visited_str ~= "" then
+         visited_str = visited_str..","..rooms_list_str
+      else
+         visited_str = rooms_list_str
+      end
+
+      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc", rooms_list_str, visited_str, mylevel, mylevel+(mytier*10))
+
+      local dcount = false
+      room_sets[depth] = {}
+      rooms_list = {}
+      for row in dbnrowsWRAPPER(q) do
+         dcount = true
+         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
+         -- used preferentially to normal ones (1 char)
+         room_sets[depth][row.fromuid] = row
+         if row.fromuid == "*" or (row.fromuid == "**" and f ~= "*" and f ~= src) or row.fromuid == src then
+            f = row.fromuid
+            found = true
+            found_depth = depth
+         end -- if src
+      end -- for select
+
+      if not dcount then
+         SetStatus(main_status)
+         return -- there is no path from here to there
+      end -- if dcount
+   
+      local i = 1
+      ftd = room_sets[depth]
+      for k,_ in pairs(ftd) do
+         rooms_list[i] = k
+         i = i+1
+      end -- for from, to, dir      
+      
+   end -- while
+
+   if show_timing then
+      print("Time elapsed pathfinding ",depth," levels (inner loop): ", utils.timer()-inner_elapsed)
+   end
+   SetStatus(main_status)
+
+   if found == false then
+      return
+   end
+  
+   -- We've gotten back to the starting room from our destination. Now reconstruct the path.
+   local path = {}
+   -- set ftd to the first from,to,dir set where from was either our start room or * or **
+   ftd = room_sets[found_depth][f]
+   
+   if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
+      if rooms[src].norecall ~= 1 and bounce_recall ~= nil then
+         table.insert(path, bounce_recall)
+         if dst == bounce_recall.uid then
+            return path, found_depth
+         end
+      elseif rooms[src].noportal ~= 1 and bounce_portal ~= nil then
+         table.insert(path, bounce_portal)
+         if dst == bounce_portal.uid then
+            return path, found_depth
+         end
+      else
+         local jump_time = utils.timer()
+         local jump_room, path_type = findNearestJumpRoom(src, dst, f)
+         if show_timing then
+            print("Time elapsed pathfinding (nearest jump):", utils.timer()-jump_time)
+         end
+
+         if not jump_room then
+            return
+         end
+         local refind_time = utils.timer()
+         local path, first_depth = findpath(src,jump_room, true, true) -- this could be optimized away by building the path in findNearestJumpRoom, but the gain would be negligible
+         if show_timing then
+            print("Time elapsed pathfinding (refind):", utils.timer()-refind_time)
+         end
+         if bit.band(path_type, 1) ~= 0 then
+            -- path_type 1 means just walk to the destination
+            return path, first_depth
+         else
+            local second_path, second_depth = findpath(jump_room, dst)
+            for i,v in ipairs(second_path) do
+               table.insert(path, v) -- bug on this line if path is nil?
+            end
+            return path, first_depth+second_depth
+         end
+      end
+   end
+
+   table.insert(path, {dir=ftd.dir, uid=ftd.touid})
+
+   next_room = ftd.touid
+   while depth > 1 do
+      depth = depth - 1
+      ftd = room_sets[depth][next_room]
+      next_room = ftd.touid
+      table.insert(path, {dir=ftd.dir, uid=ftd.touid})
+   end -- while
+   if show_timing then
+      print("Time elapsed pathfinding (outer):", utils.timer()-outer_elapsed)
+   end
+   return path, found_depth
+end -- function findpath
+
+-- Very similar to findpath, but looks forwards instead of backwards (so only walks)
+-- and stops at the nearest portalable or recallable room
+function findNearestJumpRoom(src, dst, target_type)
+   local depth = 0
+   local max_depth = mapper.config.SCAN.depth
+   local room_sets = {}
+   local rooms_list = {}
+   local found = false
+   local ftd = {}
+   local destination = ""
+   local next_room = 0
+   local visited = ""
+   local path_type = ""
+
+   table.insert(rooms_list, fixsql(src))  
+   local main_status = GetInfo(53)
+   while not found and depth < max_depth do
+      SetStatus(main_status.." (searching jump depth "..depth..")")
+      BroadcastPlugin (999, "repaint")
+      depth = depth + 1
+
+      -- prune the search space
+      if visited ~= "" then 
+         visited = visited..","..table.concat(rooms_list, ",")
+      else
+         visited = table.concat(rooms_list, ",")
+      end
+    
+      -- get all exits to any room in the previous set
+      local q = string.format ("select fromuid, touid, dir, norecall, noportal from exits,rooms where rooms.uid = exits.touid and exits.fromuid in (%s) and exits.touid not in (%s) and exits.level <= %s order by length(exits.dir) asc",
+                  table.concat(rooms_list,","), visited, mylevel)
+      local dcount = 0
+      for row in dbnrowsWRAPPER(q) do
+         dcount = dcount + 1
+         table.insert(rooms_list, fixsql(row.touid))
+         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
+         -- used preferentially to normal ones (1 char)
+         if ((bounce_portal ~= nil or target_type == "*") and row.noportal ~= 1) or ((bounce_recall ~= nil or target_type == "**") and row.norecall ~= 1) or row.touid == dst then
+            path_type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
+            -- path_type 1 means walking to the destination is closer than bouncing
+            -- path_type 2 means the bounce room allows recalling but not portalling
+            -- path_type 4 means the bounce room allows portalling but not recalling
+            -- path_type 0 means the bounce room allows both portalling and recalling
+            destination = row.touid
+            found = true
+            found_depth = depth
+         end -- if src
+      end -- for select
+
+      if dcount == 0 then
+         return -- there is no path to a portalable or recallable room
+      end -- if dcount
+   end -- while
+   
+   if found == false then
+      return
+   end
+   return destination, path_type, found_depth
+end
+
 require "serialize"
 function full_find (dests, walk, no_portals)
    local paths = {}
@@ -1436,7 +1676,7 @@ function full_find (dests, walk, no_portals)
 
    if #notfound > 0 then
       local were, matches = "were", "matches"
-      if diff == 1 then
+      if #notfound == 1 then
          were, matches = "was", "match"
       end -- if
       Note("+------------------------------------------------------------------------------+")
@@ -1518,6 +1758,7 @@ end
 -- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
 -- quick_list determines whether we pathfind every destination in advance to be able to sort by distance
 function find (name, dests, walk, quick_list, no_portals)
+   local find_elapsed = utils.timer()
    if not check_we_can_find() then
       return
    end -- if
@@ -1541,6 +1782,9 @@ function find (name, dests, walk, quick_list, no_portals)
       quick_find(dests, walk)
    else
       full_find(dests, walk, no_portals)
+   end
+   if show_timing then
+      print("mapper find elapsed: ", utils.timer() - find_elapsed)
    end
 end -- map_find_things
 
@@ -1597,12 +1841,13 @@ function start_speedwalk(path)
       return
    end -- if
 
-   if myState == 9 or myState == 11 then
-      Send("stand")
-   end
-
-   current_speedwalk = path
    if path and #path > 0 then
+      current_speedwalk = path
+
+      if myState == 9 or myState == 11 then
+         Send("stand")
+      end
+
       last_speedwalk_uid = path[#path].uid
 
       -- fast speedwalk: send run 4s3e etc.
@@ -1617,11 +1862,22 @@ end -- start_speedwalk
 -- these are for clicking on the map, or the configuration box
 -- ------------------------------------------------------------------
 function goto(dest, force_walking)
-   find (nil,
-      {{uid=dest, reason=true}},
-      true,   -- just go there
-      nil,
-      force_walking)
+   if not dest or not check_we_can_find() or not check_connected() then
+      return
+   end
+
+   if dest == current_room then
+      mapprint(string.format("You are already in room %s.", dest))
+      return
+   end
+
+   local path = findpath(current_room, dest, force_walking, force_walking)
+
+   if path then
+      start_speedwalk(path)
+   else
+      mapprint (string.format ("Path from here to %s could not be found.", dest))
+   end
 end
 
 function mouseup_room (flags, hotspot_id)
