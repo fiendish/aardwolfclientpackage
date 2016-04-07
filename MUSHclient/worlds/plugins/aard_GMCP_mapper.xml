@@ -1625,25 +1625,6 @@ function save_room_to_database (uid,room)
    end -- if
    return true
 end -- function save_room_to_database
-      
-function fix_up_exit ()
-   local room = rooms [from_room]
-
-   dbCheckExecute(string.format ("UPDATE exits SET touid = %s WHERE fromuid = %s AND dir = %s;", 
-        fixsql  (current_room),     -- destination room
-        fixsql  (from_room),       -- from previous room
-        fixsql  (last_direction_moved)  -- direction (eg. "n")
-   ))
-        
---   if show_database_mods then
-      mapper.mapprint ("Fixed exit", last_direction_moved, "from room", from_room, "to be to", current_room)
---   end -- if
-  
-   room.exits [last_direction_moved] = current_room
-    
-   last_direction_moved = nil
-   from_room = nil
-end -- fix_up_exit
 
 function purgezone(zoneuid)
    local query = "BEGIN TRANSACTION;"
@@ -3259,10 +3240,6 @@ function got_gmcp_room()
   
    mapper.draw(room_number)
 
-   if expected_exit == "0" and from_room then
-      fix_up_exit ()
-   end -- exit was wrong
-   
    return
 end
 
@@ -3676,23 +3653,6 @@ function map_notes (name, line, wildcards)
    )
 end -- map_notes
 
-local bit = require("bit")
-
-valid_direction = {
-   n = "n",
-   s = "s",
-   e = "e",
-   w = "w",
-   u = "u",
-   d = "d",
-   north = "n",
-   south = "s",
-   east = "e",
-   west = "w",
-   up = "u",
-   down = "d",
-}  -- end of valid_direction
-
 directions = {
    n=true,
    s=true,
@@ -3701,19 +3661,6 @@ directions = {
    u=true,
    d=true
 }
-  
--- try to detect when we send a movement command
-function OnPluginSent (sText)
-   if valid_direction [sText] then
-      last_direction_moved = valid_direction [sText]
-      if current_room and rooms [current_room] then
-         expected_exit = rooms [current_room].exits [last_direction_moved]
-         if expected_exit then
-            from_room = current_room
-         end -- if
-      end -- if
-   end -- if 
-end -- function
 
 function toggleBackups(on, quiet)
    if on then
