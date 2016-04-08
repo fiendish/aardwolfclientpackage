@@ -130,64 +130,65 @@ local function build_room_info ()
    THIRD_WAY = DISTANCE_TO_NEXT_ROOM / 3
    THIRD_WAY_UP   = math.ceil(THIRD_WAY)
    THIRD_WAY_DOWN = math.floor(THIRD_WAY)
-   HR_5_SQR = (HALF_ROOM-5)*(HALF_ROOM-5)
+   RT_HR_5_SQR_2 = math.sqrt(((HALF_ROOM-5)*(HALF_ROOM-5))/2)
 
    barriers = {
-      n =  { x1 = -HALF_ROOM_DOWN+5, y1 = -HALF_ROOM_UP,   x2 = HALF_ROOM_UP-5,  y2 = -HALF_ROOM_UP},
-      s =  { x1 = -HALF_ROOM_DOWN+5, y1 =  HALF_ROOM_UP,   x2 = HALF_ROOM_UP-5,  y2 =  HALF_ROOM_UP},
-      e =  { x1 =  HALF_ROOM_UP, y1 = -HALF_ROOM_DOWN+5, x2 =  HALF_ROOM_UP, y2 = HALF_ROOM_UP-5},
-      w =  { x1 = -HALF_ROOM_UP, y1 = -HALF_ROOM_DOWN+5, x2 = -HALF_ROOM_UP, y2 = HALF_ROOM_UP-5},
-
-      u = { x1 =  math.ceil(HALF_ROOM - math.sqrt(HR_5_SQR / 2)), y1 = math.ceil(-HALF_ROOM-math.sqrt(HR_5_SQR / 2)), x2 =  math.floor(HALF_ROOM+math.sqrt(HR_5_SQR / 2)), y2 = math.floor(-HALF_ROOM+math.sqrt(HR_5_SQR / 2))},
-      d = { x1 = math.ceil(-HALF_ROOM-math.sqrt(HR_5_SQR / 2)), y1 =  math.ceil(HALF_ROOM-math.sqrt(HR_5_SQR / 2)), x2 = math.floor(-HALF_ROOM+math.sqrt(HR_5_SQR / 2)), y2 = math.floor(HALF_ROOM+math.sqrt(HR_5_SQR / 2))},
+      n = { x1 = -HALF_ROOM_DOWN+5, y1 = -HALF_ROOM_UP,     x2 = HALF_ROOM_UP-5,  y2 = -HALF_ROOM_UP},
+      s = { x1 = -HALF_ROOM_DOWN+5, y1 =  HALF_ROOM_UP,     x2 = HALF_ROOM_UP-5,  y2 =  HALF_ROOM_UP},
+      e = { x1 =  HALF_ROOM_UP,     y1 = -HALF_ROOM_DOWN+5, x2 =  HALF_ROOM_UP,   y2 = HALF_ROOM_UP-5},
+      w = { x1 = -HALF_ROOM_UP,     y1 = -HALF_ROOM_DOWN+5, x2 = -HALF_ROOM_UP,   y2 = HALF_ROOM_UP-5},
+      u = { x1 =  math.ceil(HALF_ROOM-RT_HR_5_SQR_2), y1 = math.ceil(-HALF_ROOM-RT_HR_5_SQR_2), x2 =  math.floor(HALF_ROOM+RT_HR_5_SQR_2), y2 = math.floor(-HALF_ROOM+RT_HR_5_SQR_2)},
+      d = { x1 = math.ceil(-HALF_ROOM-RT_HR_5_SQR_2), y1 = math.ceil(HALF_ROOM-RT_HR_5_SQR_2),  x2 = math.floor(-HALF_ROOM+RT_HR_5_SQR_2), y2 = math.floor(HALF_ROOM+RT_HR_5_SQR_2)},
 
    } -- end barriers
 
    -- how to draw a line from this room to the next one (relative to the center of the room)
    connectors = {
-      n = { x =  0 ,                               y = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM, at = { 0, -1 } },
-      s = { x =  0 ,                               y =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, at = { 0,  1 } },
-      e = { x =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM , y = 0,                                at = {  1,  0 }},
-      w = { x = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM , y = 0,                                at = { -1,  0 }},
-      u = { x =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM , y = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM, at = { 1, -1 } },
-      d = { x = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM , y =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, at = {-1,  1 } }
+      n = { x =  0,                               y = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM, at = { 0, -1 } },
+      s = { x =  0,                               y =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, at = { 0,  1 } },
+      e = { x =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, y = 0,                                at = {  1,  0 }},
+      w = { x = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM, y = 0,                                at = { -1,  0 }},
+      u = { x =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, y = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM, at = { 1, -1 } },
+      d = { x = -ROOM_SIZE-DISTANCE_TO_NEXT_ROOM, y =  ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, at = {-1,  1 } }
    } -- end connectors
    
    -- how to draw a stub line
    stub_connectors = {
-      n = { x = 0 ,                                  y = math.floor(-HALF_ROOM-THIRD_WAY), at = { 0, -1 } },
-      s = { x = 0 ,                                  y =  math.ceil(HALF_ROOM+THIRD_WAY),  at = { 0,  1 } },
-      e = { x = math.ceil(HALF_ROOM+THIRD_WAY) ,   y = 0,                                  at = {  1,  0 }},
-      w = { x = math.floor(-HALF_ROOM-THIRD_WAY) , y = 0,                                  at = { -1,  0 }},
-      u = { x = math.floor(HALF_ROOM+THIRD_WAY) ,  y = math.ceil(-HALF_ROOM-THIRD_WAY),  at = { 1, -1 } },
-      d = { x = math.ceil(-HALF_ROOM-THIRD_WAY) ,  y =  math.floor(HALF_ROOM+THIRD_WAY), at = {-1,  1 } }
+      n = { x = 0,                                y = math.floor(-HALF_ROOM-THIRD_WAY), at = { 0, -1 } },
+      s = { x = 0,                                y = math.ceil(HALF_ROOM+THIRD_WAY),   at = { 0,  1 } },
+      e = { x = math.ceil(HALF_ROOM+THIRD_WAY),   y = 0,                                at = {  1,  0 }},
+      w = { x = math.floor(-HALF_ROOM-THIRD_WAY), y = 0,                                at = { -1,  0 }},
+      u = { x = math.floor(HALF_ROOM+THIRD_WAY),  y = math.ceil(-HALF_ROOM-THIRD_WAY),  at = { 1, -1 } },
+      d = { x = math.ceil(-HALF_ROOM-THIRD_WAY),  y = math.floor(HALF_ROOM+THIRD_WAY),  at = {-1,  1 } }
    }
+
+   require "commas"
 
    -- how to draw one-way arrows (relative to the center of the room)
    arrows = {
-      n =  { - THIRD_WAY_UP, - HALF_ROOM_DOWN - THIRD_WAY_UP/2,  --left
-               THIRD_WAY_UP, - HALF_ROOM_DOWN - THIRD_WAY_UP/2,  --right
-                       0, - HALF_ROOM_DOWN - HALF_WAY_DOWN - 1 }, --top
+      n =  { -round_banker(THIRD_WAY), -(HALF_ROOM + THIRD_WAY/2), --left
+               round_banker(THIRD_WAY), -(HALF_ROOM + THIRD_WAY/2), --right
+                       0, -round_banker(HALF_ROOM + HALF_WAY + 0.5) }, --top
       
-      s =  { - THIRD_WAY_UP, HALF_ROOM_DOWN + THIRD_WAY_UP/2, --left
-               THIRD_WAY_UP, HALF_ROOM_DOWN + THIRD_WAY_UP/2, --right
-                       0, HALF_ROOM_DOWN + HALF_WAY_UP + 1 }, --bottom
+      s =  { -round_banker(THIRD_WAY), (HALF_ROOM + THIRD_WAY/2 + 1), --left
+               round_banker(THIRD_WAY), (HALF_ROOM + THIRD_WAY/2 + 1), --right
+                       0, round_banker(HALF_ROOM + HALF_WAY + 0.5) }, --bottom
       
-      e =  {HALF_ROOM_DOWN + THIRD_WAY_UP/2, - THIRD_WAY_UP, -- top
-            HALF_ROOM_DOWN + THIRD_WAY_UP/2, THIRD_WAY_UP, -- bottom
-        HALF_ROOM_DOWN + HALF_WAY_UP + 1, 0 }, -- right
+      e =  {(HALF_ROOM + THIRD_WAY/2 + 1), - round_banker(THIRD_WAY), -- top
+            (HALF_ROOM + THIRD_WAY/2 + 1), round_banker(THIRD_WAY), -- bottom
+           HALF_ROOM + HALF_WAY + 0.5, 0 }, -- right
         
-      w =  {- HALF_ROOM_DOWN - THIRD_WAY_DOWN/2, - THIRD_WAY_UP, -- top
-            - HALF_ROOM_DOWN - THIRD_WAY_DOWN/2, THIRD_WAY_UP, -- bottom
-        - HALF_ROOM_DOWN - HALF_WAY_DOWN - 1, 0 }, -- left
-            
-      u = {HALF_ROOM_DOWN + HALF_WAY_DOWN - 1, - ROOM_SIZE/2 + 2,
-           HALF_ROOM_DOWN + HALF_WAY_DOWN - 1,        - HALF_ROOM_DOWN - HALF_WAY_DOWN + 1,
-               ROOM_SIZE/2 - 2, - HALF_ROOM_DOWN - HALF_WAY_DOWN + 1 },
+      w =  {-(HALF_ROOM + THIRD_WAY/2), - round_banker(THIRD_WAY), -- top
+            -(HALF_ROOM + THIRD_WAY/2), round_banker(THIRD_WAY), -- bottom
+           -(HALF_ROOM + HALF_WAY + 0.5), 0 }, -- left
 
-      d = {- HALF_ROOM_DOWN - HALF_WAY_DOWN + 1, ROOM_SIZE/2 - 2,
-           - HALF_ROOM_DOWN - HALF_WAY_DOWN + 1, HALF_ROOM_DOWN + HALF_WAY_DOWN - 1,
-              - ROOM_SIZE/2 + 2, HALF_ROOM_DOWN + HALF_WAY_DOWN - 1 }
+      u = {HALF_ROOM + HALF_WAY - 1, - ROOM_SIZE/2 + 2,
+           HALF_ROOM + HALF_WAY - 1,        - HALF_ROOM - HALF_WAY + 1,
+               ROOM_SIZE/2 - 2, - HALF_ROOM - HALF_WAY + 1 },
+
+      d = {- HALF_ROOM - HALF_WAY + 1, ROOM_SIZE/2 - 2,
+           - HALF_ROOM - HALF_WAY + 1, HALF_ROOM + HALF_WAY - 1,
+              - ROOM_SIZE/2 + 2, HALF_ROOM + HALF_WAY - 1 }
 
    } -- end of arrows
 
@@ -807,7 +808,7 @@ local function draw_room (uid, x, y)
                            y + arrow[4],
                            x + arrow[5],
                            y + arrow[6]),
-                        UNKNOWN_ROOM_COLOUR.colour, 
+                        exit_line_colour, 
                         pen_dot, 
                         1,
                         -1, 
@@ -838,7 +839,7 @@ local function draw_room (uid, x, y)
 
       if daredevil_mode then
          WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
-            UNKNOWN_ROOM_COLOUR.colour, pen_dot, 1,  --  dotted single pixel pen
+            EXIT_COLOUR, pen_dot, 1,  --  dotted single pixel pen
             -1, miniwin.brush_null)  -- opaque, no brush
       else  
          -- room fill
