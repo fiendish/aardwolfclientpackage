@@ -77,10 +77,23 @@ end
 
 -- how far away to draw rooms from each other
 local DISTANCE_TO_NEXT_ROOM = tonumber(GetVariable("DISTANCE_TO_NEXT_ROOM")) or 8
+if DISTANCE_TO_NEXT_ROOM%2 == 1 then
+   DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM-1
+end
+
+local DISTANCE_TO_NEXT_CONTINENT_ROOM = tonumber(GetVariable("DISTANCE_TO_NEXT_CONTINENT_ROOM")) or 2
+if DISTANCE_TO_NEXT_CONTINENT_ROOM%2 == 1 then
+   DISTANCE_TO_NEXT_CONTINENT_ROOM = DISTANCE_TO_NEXT_CONTINENT_ROOM-1
+end
 
 local ROOM_BORDER_TYPE = tonumber(GetVariable("ROOM_BORDER_TYPE"))
 if not BORDER_TYPES[ROOM_BORDER_TYPE] then
    ROOM_BORDER_TYPE = 1
+end
+
+local CONTINENT_ROOM_BORDER_TYPE = tonumber(GetVariable("CONTINENT_ROOM_BORDER_TYPE"))
+if not BORDER_TYPES[CONTINENT_ROOM_BORDER_TYPE] then
+   CONTINENT_ROOM_BORDER_TYPE = 2
 end
 
 -- supplied in init
@@ -98,7 +111,6 @@ local last_visited = {}
 local textures = {}
 
 -- other locals
-local HALF_ROOM_UP, connectors, stub_connectors, arrows
 local plan_to_draw, drawn_uids, drawn_coords
 local last_drawn, depth, font_height
 local walk_to_room_name
@@ -119,7 +131,9 @@ function reset_pos()
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
 end
 
-local function build_room_info ()
+local function build_room_info (for_continents)
+   require "commas"
+   local DISTANCE_TO_NEXT_ROOM = for_continents and DISTANCE_TO_NEXT_CONTINENT_ROOM or DISTANCE_TO_NEXT_ROOM
 
    HALF_ROOM = ROOM_SIZE / 2
    HALF_ROOM_UP   = math.ceil(HALF_ROOM)
@@ -128,18 +142,15 @@ local function build_room_info ()
    HALF_WAY_UP = math.ceil(HALF_WAY)
    HALF_WAY_DOWN = math.floor(HALF_WAY)
    THIRD_WAY = DISTANCE_TO_NEXT_ROOM / 3
-   THIRD_WAY_UP   = math.ceil(THIRD_WAY)
-   THIRD_WAY_DOWN = math.floor(THIRD_WAY)
-   RT_HR_5_SQR_2 = math.sqrt(((HALF_ROOM-5)*(HALF_ROOM-5))/2)
+   RT_HR_5_SQR_2 = math.sqrt(((HALF_ROOM*.7)*(HALF_ROOM*.7))/2)
 
    barriers = {
-      n = { x1 = -HALF_ROOM_DOWN+5, y1 = -HALF_ROOM_UP,     x2 = HALF_ROOM_UP-5,  y2 = -HALF_ROOM_UP},
-      s = { x1 = -HALF_ROOM_DOWN+5, y1 =  HALF_ROOM_UP,     x2 = HALF_ROOM_UP-5,  y2 =  HALF_ROOM_UP},
-      e = { x1 =  HALF_ROOM_UP,     y1 = -HALF_ROOM_DOWN+5, x2 =  HALF_ROOM_UP,   y2 = HALF_ROOM_UP-5},
-      w = { x1 = -HALF_ROOM_UP,     y1 = -HALF_ROOM_DOWN+5, x2 = -HALF_ROOM_UP,   y2 = HALF_ROOM_UP-5},
-      u = { x1 =  math.ceil(HALF_ROOM-RT_HR_5_SQR_2), y1 = math.ceil(-HALF_ROOM-RT_HR_5_SQR_2), x2 =  math.floor(HALF_ROOM+RT_HR_5_SQR_2), y2 = math.floor(-HALF_ROOM+RT_HR_5_SQR_2)},
-      d = { x1 = math.ceil(-HALF_ROOM-RT_HR_5_SQR_2), y1 = math.ceil(HALF_ROOM-RT_HR_5_SQR_2),  x2 = math.floor(-HALF_ROOM+RT_HR_5_SQR_2), y2 = math.floor(HALF_ROOM+RT_HR_5_SQR_2)},
-
+      n = { x1 = -math.floor(HALF_ROOM*.7), y1 = -HALF_ROOM_UP,     x2 = math.ceil(HALF_ROOM*.7),  y2 = -HALF_ROOM_UP},
+      s = { x1 = -math.floor(HALF_ROOM*.7), y1 =  HALF_ROOM_UP,     x2 = math.ceil(HALF_ROOM*.7),  y2 =  HALF_ROOM_UP},
+      e = { x1 =  HALF_ROOM_UP,     y1 = -math.floor(HALF_ROOM*.7), x2 =  HALF_ROOM_UP,   y2 = math.ceil(HALF_ROOM*.7)},
+      w = { x1 = -HALF_ROOM_UP,     y1 = -math.floor(HALF_ROOM*.7), x2 = -HALF_ROOM_UP,   y2 = math.ceil(HALF_ROOM*.7)},
+      u = { x1 =  math.ceil(HALF_ROOM-RT_HR_5_SQR_2), y1 = math.floor(-HALF_ROOM-RT_HR_5_SQR_2), x2 =  math.ceil(HALF_ROOM+RT_HR_5_SQR_2), y2 = math.floor(-HALF_ROOM+RT_HR_5_SQR_2)},
+      d = { x1 = math.ceil(-HALF_ROOM-RT_HR_5_SQR_2), y1 = math.ceil(HALF_ROOM-RT_HR_5_SQR_2),  x2 = math.floor(-HALF_ROOM+RT_HR_5_SQR_2), y2 = math.floor(HALF_ROOM+RT_HR_5_SQR_2)}
    } -- end barriers
 
    -- how to draw a line from this room to the next one (relative to the center of the room)
@@ -162,8 +173,6 @@ local function build_room_info ()
       d = { x = math.ceil(-HALF_ROOM-THIRD_WAY),  y = math.floor(HALF_ROOM+THIRD_WAY),  at = {-1,  1 } }
    }
 
-   require "commas"
-
    -- how to draw one-way arrows (relative to the center of the room)
    arrows = {
       n =  { -round_banker(THIRD_WAY), -(HALF_ROOM + THIRD_WAY/2), --left
@@ -174,24 +183,31 @@ local function build_room_info ()
                round_banker(THIRD_WAY), (HALF_ROOM + THIRD_WAY/2 + 1), --right
                        0, round_banker(HALF_ROOM + HALF_WAY + 0.5) }, --bottom
       
-      e =  {(HALF_ROOM + THIRD_WAY/2 + 1), - round_banker(THIRD_WAY), -- top
-            (HALF_ROOM + THIRD_WAY/2 + 1), round_banker(THIRD_WAY), -- bottom
+      e =  {round_banker(HALF_ROOM + THIRD_WAY/2 + 0.5), - round_banker(THIRD_WAY), -- top
+            round_banker(HALF_ROOM + THIRD_WAY/2 + 0.5), round_banker(THIRD_WAY), -- bottom
            HALF_ROOM + HALF_WAY + 0.5, 0 }, -- right
         
-      w =  {-(HALF_ROOM + THIRD_WAY/2), - round_banker(THIRD_WAY), -- top
-            -(HALF_ROOM + THIRD_WAY/2), round_banker(THIRD_WAY), -- bottom
+      w =  {-round_banker(HALF_ROOM + THIRD_WAY/2 + 0.5), - round_banker(THIRD_WAY), -- top
+            -round_banker(HALF_ROOM + THIRD_WAY/2 + 0.5), round_banker(THIRD_WAY), -- bottom
            -(HALF_ROOM + HALF_WAY + 0.5), 0 }, -- left
 
-      u = {HALF_ROOM + HALF_WAY - 1, - ROOM_SIZE/2 + 2,
-           HALF_ROOM + HALF_WAY - 1,        - HALF_ROOM - HALF_WAY + 1,
-               ROOM_SIZE/2 - 2, - HALF_ROOM - HALF_WAY + 1 },
+      u = {math.floor(HALF_ROOM + HALF_WAY - 1), math.ceil(- ROOM_SIZE/2 + 2),  -- bottom
+           math.floor(HALF_ROOM + HALF_WAY - 1),        math.ceil(- HALF_ROOM - HALF_WAY + 1), -- righttop
+               math.floor(ROOM_SIZE/2 - 2), math.ceil(- HALF_ROOM - HALF_WAY + 1) },  -- left
 
-      d = {- HALF_ROOM - HALF_WAY + 1, ROOM_SIZE/2 - 2,
-           - HALF_ROOM - HALF_WAY + 1, HALF_ROOM + HALF_WAY - 1,
-              - ROOM_SIZE/2 + 2, HALF_ROOM + HALF_WAY - 1 }
-
+      d = {- HALF_ROOM - HALF_WAY + 1, ROOM_SIZE/2 - 2, -- top
+           - HALF_ROOM - HALF_WAY + 1, HALF_ROOM + HALF_WAY - 1, -- leftbottom
+              - ROOM_SIZE/2 + 2, HALF_ROOM + HALF_WAY - 1 } -- right
    } -- end of arrows
 
+   print(HALF_ROOM + HALF_WAY - 1, - HALF_ROOM - HALF_WAY + 1, - ROOM_SIZE/2 + 2, ROOM_SIZE/2 - 2)
+
+   return {
+   DISTANCE_TO_NEXT_ROOM=DISTANCE_TO_NEXT_ROOM,
+   arrows=arrows,
+   stub_connectors=stub_connectors,
+   connectors=connectors,
+   }
 end -- build_room_info
 
 -- assorted colours
@@ -449,7 +465,8 @@ end -- get_number_from_user
 
 local function draw_configuration ()
 
-   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", "Area Textures", "Room size", "Room spacing", "Room borders"}
+   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", 
+   "Area Textures", "Room Size", "Area Room Spacing", "Continent Room Spacing", "Area Room Borders"}
    local width =  max_text_width (config_win, CONFIG_FONT_ID, config_entries , true)
    local GAP = 5
 
@@ -514,8 +531,6 @@ local function draw_configuration ()
    -- depth
    WindowText(config_win, CONFIG_FONT_ID, "Depth", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL,   tostring (config.SCAN.depth), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.SCAN.depth)/2, y, 0, 0, 0x808080)
-
-   -- depth hotspot
    WindowAddHotspot(config_win,
       "$<depth>",
       x + GAP,
@@ -531,8 +546,6 @@ local function draw_configuration ()
    -- font
    WindowText(config_win, CONFIG_FONT_ID, "Font", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL,  config.FONT.name .. " " .. config.FONT.size, x + width + GAP, y, 0, 0, 0x808080)
-
-   -- font hotspot
    WindowAddHotspot(config_win,
       "$<font>",
       x + GAP,
@@ -548,8 +561,6 @@ local function draw_configuration ()
    -- area textures
    WindowText(config_win, CONFIG_FONT_ID, "Area Textures", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.USE_TEXTURES.enabled and "On") or "Off"))/2, y, 0, 0, 0x808080)
-
-   -- area textures hotspot
    WindowAddHotspot(config_win,
       "$<area_textures>",
       x + GAP,
@@ -565,8 +576,6 @@ local function draw_configuration ()
    -- show ID
    WindowText(config_win, CONFIG_FONT_ID, "Show Room ID", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_ROOM_ID and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_ROOM_ID and "On") or "Off"))/2, y, 0, 0, 0x808080)
-
-   -- show ID hotspot
    WindowAddHotspot(config_win,
       "$<room_id>",
       x + GAP,
@@ -582,8 +591,6 @@ local function draw_configuration ()
    -- show area exits
    WindowText(config_win, CONFIG_FONT_ID, "Show Area Exits", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_AREA_EXITS and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_AREA_EXITS and "On") or "Off"))/2, y, 0, 0, 0x808080)
-
-   -- show area exits hotspot
    WindowAddHotspot(config_win,
       "$<area_exits>",
       x + GAP,
@@ -601,8 +608,6 @@ local function draw_configuration ()
    WindowText(config_win, CONFIG_FONT_ID, "("..tostring (ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Room size "), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
-
-   -- room size hotspots
    WindowAddHotspot(config_win,
       "$<room_size_down>",
       width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
@@ -610,7 +615,7 @@ local function draw_configuration ()
       width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.smaller_rooms",  -- mouseup
-      "Click to emsmallen rooms",
+      "Click to emsmallen area rooms",
       miniwin.cursor_hand, 0)  -- hand cursor
    WindowAddHotspot(config_win,
       "$<room_size_up>",
@@ -619,17 +624,15 @@ local function draw_configuration ()
       width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"),
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.bigger_rooms",  -- mouseup
-      "Click to embiggen rooms",
+      "Click to embiggen area rooms",
       miniwin.cursor_hand, 0)  -- hand cursor
    y = y + font_height
       
    -- room spacing
-   WindowText(config_win, CONFIG_FONT_ID, "Room Spacing", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (DISTANCE_TO_NEXT_ROOM)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Room spacing "), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID, "Area Room Spacing", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (DISTANCE_TO_NEXT_ROOM)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Area Room Spacing "), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
-
-   -- room spacing hotspots
    WindowAddHotspot(config_win,
       "$<room_spacing_down>",
       width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
@@ -637,7 +640,7 @@ local function draw_configuration ()
       width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.denser",  -- mouseup
-      "Click to compact rooms",
+      "Click to compact area rooms",
       miniwin.cursor_hand, 0)  -- hand cursor
    WindowAddHotspot(config_win,
       "$<room_spacing_up>",
@@ -646,15 +649,40 @@ local function draw_configuration ()
       width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"),
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.sparser",  -- mouseup
-      "Click to spread rooms",
+      "Click to spread area rooms",
+      miniwin.cursor_hand, 0)  -- hand cursor
+
+   y = y + font_height
+
+   -- continent room spacing
+   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Spacing", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (DISTANCE_TO_NEXT_CONTINENT_ROOM)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Continent Room spacing "), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
+   WindowAddHotspot(config_win,
+      "$<continent_room_spacing_down>",
+      width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
+      y,
+      width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.denser",  -- mouseup
+      "Click to compact continent rooms",
+      miniwin.cursor_hand, 0)  -- hand cursor
+   WindowAddHotspot(config_win,
+      "$<continent_room_spacing_up>",
+      width + rh_size / 2 + box_size + GAP,
+      y,
+      width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"),
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.sparser",  -- mouseup
+      "Click to spread continent rooms",
       miniwin.cursor_hand, 0)  -- hand cursor
 
    y = y + font_height
 
    -- room border type
 
-   -- show area exits
-   WindowText(config_win, CONFIG_FONT_ID, "Room Borders", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "Area Room Borders", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[ROOM_BORDER_TYPE], width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[ROOM_BORDER_TYPE])/2, y, 0, 0, 0x808080)
 
    -- show area exits hotspot
@@ -692,7 +720,6 @@ local function xy_to_coord(x,y)
 end
 
 local function draw_room (uid, x, y)
-
    -- no need to check if drawn_coords[coords] or drawn_uids[uid] exist, because we check when
    -- adding exit destinations to the next level of rooms
    drawn_coords[xy_to_coord(x,y)] = uid
@@ -709,16 +736,23 @@ local function draw_room (uid, x, y)
    local room_params = get_room_display_params(uid)
    local room = rooms[uid]
 
+   local metrics
+   if current_room_is_cont then
+      metrics = CONTINENTS_ROOM_INFO
+   else
+      metrics = AREA_ROOM_INFO
+   end
+
    if room then
-      local NEXT_ROOM = ROOM_SIZE + DISTANCE_TO_NEXT_ROOM
-      if DISTANCE_TO_NEXT_ROOM < 4 then
+      local NEXT_ROOM = ROOM_SIZE + metrics.DISTANCE_TO_NEXT_ROOM
+      if metrics.DISTANCE_TO_NEXT_ROOM < 4 then
          for dir,exit_uid in pairs(room.exits) do
-            local exit_info = connectors[dir]
+            local exit_info = metrics.connectors[dir]
             if exit_info then -- want to draw exits in this direction
                local exit_room = get_room(exit_uid)
                if exit_room then
                   if config.SHOW_AREA_EXITS and room.area ~= exit_room.area then
-                     table.insert(area_exits, {x = x, y = y, def = barriers[dir]})
+                     table.insert(area_exits, {x=x, y=y, dir=dir})
                   end
                   local next_x = x + exit_info.at[1] * NEXT_ROOM
                   local next_y = y + exit_info.at[2] * NEXT_ROOM
@@ -745,7 +779,7 @@ local function draw_room (uid, x, y)
       else
          -- look at exits first
          for dir,exit_uid in pairs(room.exits) do
-            local exit_info = connectors[dir]
+            local exit_info = metrics.connectors[dir]
             if exit_info then -- want to draw exits in this direction
                local locked_exit = not (room.exit_locks == nil or room.exit_locks[dir] == nil or room.exit_locks[dir] == "0")
                local exit_line_colour = (locked_exit and 0x0000FF) or EXIT_COLOUR
@@ -757,7 +791,7 @@ local function draw_room (uid, x, y)
 
                if exit_room then
                   if config.SHOW_AREA_EXITS and room.area ~= exit_room.area then -- zone exits get drawn later
-                     table.insert(area_exits, {x = x, y = y, def = barriers[dir]})
+                     table.insert(area_exits, {x=x, y=y, dir=dir})
                   end
                   
                   local now = os.time()
@@ -780,10 +814,10 @@ local function draw_room (uid, x, y)
                if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
                   (not show_other_areas and exit_room and exit_room.area ~= current_area) or -- room in another area
                   (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
-                  exit_info = stub_connectors[dir]
+                  exit_info = metrics.stub_connectors[dir]
                elseif exit_uid == uid then
                   -- if the exit leads back to this room, only draw stub
-                  exit_info = stub_connectors[dir]
+                  exit_info = metrics.stub_connectors[dir]
                   linetype = pen_dash
                elseif not drawn_uids[exit_uid] and not drawn_coords[next_coords] then
                   -- queue for next level of rooms
@@ -797,7 +831,7 @@ local function draw_room (uid, x, y)
 
                -- one-way exit arrow
                if exit_room and exit_room.exits[inverse_direction[dir]] ~= uid then
-                  local arrow = arrows[dir]
+                  local arrow = metrics.arrows[dir]
                   -- draw arrow
                   if daredevil_mode then
                      WindowPolygon(win, 
@@ -873,8 +907,26 @@ local function draw_room (uid, x, y)
    WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
 end -- draw_room
 
+function room_image_create(border_color, border_pen, border_width, fill_color, fill_brush)
+   WindowCreate ("room_draw_buffer", 0, 0, ROOM_SIZE, ROOM_SIZE, 4, 8+2, 0x000000) -- top left corner
+
+   WindowCircleOp ("room_draw_buffer", miniwin.circle_rectangle, 0, 0, 0, 0,
+      0, pen_null, 0,  -- no pen
+      fill_color, fill_brush)  -- brush
+
+   if border_pen ~= pen_null then
+      -- room border
+      WindowCircleOp ("room_draw_buffer", miniwin.circle_rectangle, 0, 0, 0, 0,
+            border_color, border_pen, border_width,  -- pen
+            -1, miniwin.brush_null)  -- opaque, no brush
+   end
+   local image_name = "room_image"..tostring(border_color)..","..tostring(border_pen)..","..tostring(border_width)..","..tostring(fill_colour)..","..tostring(fill_brush)
+   WindowImageFromWindow(win, image_name, "room_draw_buffer")
+   return image_name
+end
+
 local function draw_zone_exit (exit)
-   local x, y, def = exit.x, exit.y, exit.def
+   local x, y, def = exit.x, exit.y, barriers[exit.dir]
    local x1, y1, x2, y2 = x + def.x1, y + def.y1, x + def.x2, y + def.y2
    WindowLine (win, x1, y1, x2, y2, ColourNameToRGB("yellow"), pen_solid, 5)
    WindowLine (win, x1, y1, x2, y2, ColourNameToRGB("green"), pen_solid, 1)
@@ -1217,7 +1269,8 @@ function init (t)
    windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , true, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, {x=default_x, y=default_y})
 
    -- calculate box sizes, arrows, connecting lines etc.
-   build_room_info ()
+   AREA_ROOM_INFO = build_room_info()
+   CONTINENTS_ROOM_INFO = build_room_info(true)
 
    WindowCreate (win,
       windowinfo.window_left,
@@ -1290,32 +1343,49 @@ ROOM_SCALE_LIMITS = {
    DISTANCE_STEP = 2
 }
 
-function sparser ()
-   if last_drawn and DISTANCE_TO_NEXT_ROOM < ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MAX then
-      DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM + ROOM_SCALE_LIMITS.DISTANCE_STEP
-      build_room_info ()
-      draw (last_drawn)
-      OnPluginSaveState()
-      return true
-   end -- if
+function sparser (flags, id)
+   if last_drawn then
+      local for_continents = id:find("continent")
+      if (for_continents and DISTANCE_TO_NEXT_CONTINENT_ROOM or DISTANCE_TO_NEXT_ROOM) < ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MAX then
+         if for_continents then
+            DISTANCE_TO_NEXT_CONTINENT_ROOM = DISTANCE_TO_NEXT_CONTINENT_ROOM + ROOM_SCALE_LIMITS.DISTANCE_STEP
+         else
+            DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM + ROOM_SCALE_LIMITS.DISTANCE_STEP
+         end
+         AREA_ROOM_INFO = build_room_info()
+         CONTINENTS_ROOM_INFO = build_room_info(true)
+         draw (last_drawn)
+         OnPluginSaveState()
+         return true
+      end -- if
+   end
    return false
 end
 
-function denser ()
-   if last_drawn and DISTANCE_TO_NEXT_ROOM > ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MIN then
-      DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM - ROOM_SCALE_LIMITS.DISTANCE_STEP
-      build_room_info ()
-      draw (last_drawn)
-      OnPluginSaveState()
-      return true
-   end -- if
+function denser (flags, id)
+   if last_drawn then
+      local for_continents = id:find("continent")
+      if (for_continents and DISTANCE_TO_NEXT_CONTINENT_ROOM or DISTANCE_TO_NEXT_ROOM) > ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MIN then
+         if for_continents then
+            DISTANCE_TO_NEXT_CONTINENT_ROOM = DISTANCE_TO_NEXT_CONTINENT_ROOM - ROOM_SCALE_LIMITS.DISTANCE_STEP
+         else
+            DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM - ROOM_SCALE_LIMITS.DISTANCE_STEP
+         end
+         AREA_ROOM_INFO = build_room_info()
+         CONTINENTS_ROOM_INFO = build_room_info(true)
+         draw (last_drawn)
+         OnPluginSaveState()
+         return true
+      end -- if
+   end
    return false
 end
 
 function bigger_rooms ()
    if last_drawn and ROOM_SIZE < ROOM_SCALE_LIMITS.ROOM_SIZE_MAX then
       ROOM_SIZE = ROOM_SIZE + ROOM_SCALE_LIMITS.SIZE_STEP
-      build_room_info ()
+      AREA_ROOM_INFO = build_room_info()
+      CONTINENTS_ROOM_INFO = build_room_info(true)
       draw (last_drawn)
       OnPluginSaveState()
       return true
@@ -1327,7 +1397,8 @@ end -- bigger_rooms
 function smaller_rooms ()
    if last_drawn and ROOM_SIZE > ROOM_SCALE_LIMITS.ROOM_SIZE_MIN then
       ROOM_SIZE = ROOM_SIZE - ROOM_SCALE_LIMITS.SIZE_STEP
-      build_room_info ()
+      AREA_ROOM_INFO = build_room_info()
+      CONTINENTS_ROOM_INFO = build_room_info(true)
       draw (last_drawn)
       OnPluginSaveState()
       return true
@@ -1362,7 +1433,9 @@ end -- hide
 function save_state ()
    SetVariable("ROOM_SIZE", ROOM_SIZE)
    SetVariable("DISTANCE_TO_NEXT_ROOM", DISTANCE_TO_NEXT_ROOM)
+   SetVariable("DISTANCE_TO_NEXT_CONTINENT_ROOM", DISTANCE_TO_NEXT_CONTINENT_ROOM)
    SetVariable("ROOM_BORDER_TYPE", ROOM_BORDER_TYPE)
+   SetVariable("CONTINENT_ROOM_BORDER_TYPE", CONTINENT_ROOM_BORDER_TYPE)
 
    if WindowInfo(win,1) and WindowInfo(win,5) then
       movewindow.save_state (win)
@@ -2008,12 +2081,12 @@ function zoom_map (flags, hotspot_id)
    if bit.band(flags, 0x100) ~= 0 then
       if ROOM_SIZE > ROOM_SCALE_LIMITS.ROOM_SIZE_MIN and DISTANCE_TO_NEXT_ROOM > ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MIN then
          smaller_rooms()
-         denser()
+         denser(0, current_room_is_cont and "continent" or "")
       end
    else
       if ROOM_SIZE < ROOM_SCALE_LIMITS.ROOM_SIZE_MAX and DISTANCE_TO_NEXT_ROOM < ROOM_SCALE_LIMITS.DISTANCE_TO_NEXT_ROOM_MAX then
          bigger_rooms()
-         sparser()
+         sparser(0, current_room_is_cont and "continent" or "")
       end
    end -- if
 end -- zoom_map
