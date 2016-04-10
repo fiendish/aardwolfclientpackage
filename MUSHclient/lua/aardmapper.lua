@@ -214,6 +214,7 @@ local function build_room_info (for_continents)
       arrows=arrows,
       stub_connectors=stub_connectors,
       connectors=connectors,
+      barriers=barriers
    }
 end -- build_room_info
 
@@ -803,25 +804,26 @@ local function draw_room (uid, x, y)
                   if config.SHOW_AREA_EXITS and room.area ~= exit_room.area then
                      table.insert(area_exits, {x=x, y=y, dir=dir})
                   end
-                  local next_x = x + exit_info.at[1] * NEXT_ROOM
-                  local next_y = y + exit_info.at[2] * NEXT_ROOM
-                  local next_coords = xy_to_coord(next_x, next_y)
-
-                  -- choose between a real exit or just a stub
-                  if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
-                     (not show_other_areas and exit_room and exit_room.area ~= current_area) or -- room in another area
-                     (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
-                     --nop
-                  elseif exit_uid == uid then
-                     -- if the exit leads back to this room, only draw stub
-                     --nop
-                  elseif not drawn_uids[exit_uid] and not drawn_coords[next_coords] then
-                     -- queue for next level of rooms
-                     table.insert(rooms_to_draw_next, {exit_uid, next_x, next_y})
-                     drawn_coords[next_coords] = exit_uid
-                  end
                else
                   linetype = pen_dot
+               end
+               
+               local next_x = x + exit_info.at[1] * NEXT_ROOM
+               local next_y = y + exit_info.at[2] * NEXT_ROOM
+               local next_coords = xy_to_coord(next_x, next_y)
+
+               -- choose between a real exit or just a stub
+               if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
+                  (not show_other_areas and exit_room and exit_room.area ~= current_area) or -- room in another area
+                  (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
+                  --nop
+               elseif exit_uid == uid then
+                  -- if the exit leads back to this room, only draw stub
+                  --nop
+               elseif not drawn_uids[exit_uid] and not drawn_coords[next_coords] then
+                  -- queue for next level of rooms
+                  table.insert(rooms_to_draw_next, {exit_uid, next_x, next_y})
+                  drawn_coords[next_coords] = exit_uid
                end
             end
          end
@@ -957,7 +959,13 @@ local function draw_room (uid, x, y)
 end -- draw_room
 
 local function draw_zone_exit (exit)
-   local x, y, def = exit.x, exit.y, barriers[exit.dir]
+   local metrics
+   if current_room_is_cont then
+      metrics = CONTINENTS_ROOM_INFO
+   else
+      metrics = AREA_ROOM_INFO
+   end
+   local x, y, def = exit.x, exit.y, metrics.barriers[exit.dir]
    local x1, y1, x2, y2 = x + def.x1, y + def.y1, x + def.x2, y + def.y2
    WindowLine (win, x1, y1, x2, y2, ColourNameToRGB("yellow"), pen_solid, 5)
    WindowLine (win, x1, y1, x2, y2, ColourNameToRGB("green"), pen_solid, 1)
