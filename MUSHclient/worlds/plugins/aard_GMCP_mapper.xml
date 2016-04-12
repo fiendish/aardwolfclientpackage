@@ -3111,8 +3111,17 @@ function check_blindness()
    SendNoEcho("aflags")
 end
 
+continent_zones = {["alagh"]=true,["abend"]=true,["gelidus"]=true,["mesolar"]=true,["southern"]=true,["uncharted"]=true,["vidblain"]=true}
+
 function draw_other(name, line, wildcards)
    current_room = wildcards[1]
+   local the_room = get_room(current_room)
+   if not the_room then
+      mapper.mapprint("No known room "..current_room)
+      return
+   end
+   current_room_is_cont = continent_zones[the_room.area]
+   mapper.halt_drawing(false)
    mapper.draw(current_room)
 end
 
