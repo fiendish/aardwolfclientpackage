@@ -896,6 +896,8 @@ function OnPluginInstall(skip_requests)
       return
    end -- they didn't enable us last time
 
+   SetOption("utf_8", 1)
+
    -- update on reload
    if IsConnected() and not skip_requests then
       OnPluginConnect()
