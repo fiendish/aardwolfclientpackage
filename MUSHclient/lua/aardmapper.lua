@@ -1042,7 +1042,7 @@ function draw (uid)
 
    current_room = uid -- remember where we are
 
-   if dont_draw then -- bigmap plugin merge blocks room drawing
+   if hidden or dont_draw then -- bigmap plugin merge blocks room drawing
       return
    end
 
@@ -1487,13 +1487,14 @@ function maperror (...)
 end -- maperror
 
 function show()
-   WindowShow(win, true)
    hidden = false
+   WindowShow(win, true)
+   draw(current_room) -- force
 end -- show
 
 function hide()
-   WindowShow(win, false)
    hidden = true
+   WindowShow(win, false)
 end -- hide
 
 function save_state ()
