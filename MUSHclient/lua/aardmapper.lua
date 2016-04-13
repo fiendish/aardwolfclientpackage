@@ -288,10 +288,6 @@ local function get_room_display_params (uid)
    room.fillbrush = 1 -- no fill
    room.bordercolour = mapper.ROOM_COLOUR.colour
 
-   if uid == current_room then
-      current_area = ourroom.area
-   end -- if
-
    -- build hover message
    local environmentname = ourroom.terrain
    if tonumber (environmentname) then
@@ -330,7 +326,7 @@ local function get_room_display_params (uid)
    end -- for
    table.sort (texits)
 
-   local areaname = areas[ourroom.area].name
+   local areaname = areas[ourroom.area] and areas[ourroom.area].name or "Unknown Area"
 
    room.hovermessage = string.format (
       "%s\tExits: %s\nRoom: %s\nArea: %s%s%s%s%s",
@@ -769,18 +765,11 @@ local function xy_to_coord(x,y)
    return tostring(math.floor (x) + (math.floor (y) * config.WINDOW.width))
 end
 
-local function draw_room (uid, x, y)
+local function draw_room (uid, x, y, metrics)
    -- no need to check if drawn_coords[coords] or drawn_uids[uid] exist, because we check when
    -- adding exit destinations to the next level of rooms
    drawn_coords[xy_to_coord(x,y)] = uid
    drawn_uids[uid] = true
-
-   local metrics
-   if current_room_is_cont then
-      metrics = CONTINENTS_ROOM_INFO
-   else
-      metrics = AREA_ROOM_INFO
-   end
 
    -- forget it if off screen
    if x < metrics.HALF_ROOM_UP or y <= metrics.HALF_ROOM_UP + metrics.ROOM_SIZE or
@@ -958,14 +947,8 @@ local function draw_room (uid, x, y)
    WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
 end -- draw_room
 
-local function draw_zone_exit (exit)
-   local metrics
-   if current_room_is_cont then
-      metrics = CONTINENTS_ROOM_INFO
-   else
-      metrics = AREA_ROOM_INFO
-   end
-   local x, y, def = exit.x, exit.y, metrics.barriers[exit.dir]
+local function draw_zone_exit (exit, barriers)
+   local x, y, def = exit.x, exit.y, barriers[exit.dir]
    local x1, y1, x2, y2 = x + def.x1, y + def.y1, x + def.x2, y + def.y2
    WindowLine (win, x1, y1, x2, y2, ColourNameToRGB("yellow"), pen_solid, 5)
    WindowLine (win, x1, y1, x2, y2, ColourNameToRGB("green"), pen_solid, 1)
@@ -1020,6 +1003,36 @@ function halt_drawing(halt)
    dont_draw = halt
 end
 
+function draw_area(uid)
+   -- set up for initial room, in middle
+   drawn_uids, drawn_coords, rooms_to_draw_next, area_exits = {}, {}, {}, {}, {}
+   depth = 0
+
+   local metrics
+   if current_room_is_cont then
+      metrics = CONTINENTS_ROOM_INFO
+   else
+      metrics = AREA_ROOM_INFO
+   end
+
+   -- insert initial room
+   local draw_elapsed = utils.timer()
+   table.insert(rooms_to_draw_next, {uid, config.WINDOW.width / 2, config.WINDOW.height / 2})
+   while #rooms_to_draw_next > 0 and (not running or utils.timer()-draw_elapsed < 0.09) do
+      local this_draw_level = rooms_to_draw_next
+      rooms_to_draw_next = {}  -- new generation
+      for i, room in ipairs (this_draw_level) do
+         draw_room (room[1], room[2], room[3], metrics)
+      end -- for each existing room
+      depth = depth + 1
+   end -- while all rooms_to_draw_next
+
+   local barriers = metrics.barriers
+   for i, zone_exit in ipairs(area_exits) do
+      draw_zone_exit(zone_exit, barriers)
+   end -- for
+end
+
 -- draw our map starting at room: uid
 function draw (uid)
    if not uid then
@@ -1029,7 +1042,7 @@ function draw (uid)
 
    current_room = uid -- remember where we are
 
-   if dont_draw then
+   if dont_draw then -- bigmap plugin merge blocks room drawing
       return
    end
 
@@ -1038,9 +1051,13 @@ function draw (uid)
 
    -- lookup current room
    local room_params = get_room_display_params(uid)
-   local room = rooms[uid]
+   local room = get_room(uid)
 
    last_visited[uid] = os.time ()
+
+   if not room then
+      return
+   end
 
    current_area = room.area
 
@@ -1113,25 +1130,7 @@ function draw (uid)
       0)
    WindowScrollwheelHandler(win, "zzz_zoom", "mapper.zoom_map")
 
-   -- set up for initial room, in middle
-   drawn_uids, drawn_coords, rooms_to_draw_next, area_exits = {}, {}, {}, {}, {}
-   depth = 0
-
-   -- insert initial room
-   table.insert(rooms_to_draw_next, {uid, config.WINDOW.width / 2, config.WINDOW.height / 2})
-
-   while #rooms_to_draw_next > 0 and depth < config.SCAN.depth do
-      local this_draw_level = rooms_to_draw_next
-      rooms_to_draw_next = {}  -- new generation
-      for i, room in ipairs (this_draw_level) do
-         draw_room (room[1], room[2], room[3])
-      end -- for each existing room
-      depth = depth + 1
-   end -- while all rooms_to_draw_next
-
-   for i, zone_exit in ipairs(area_exits) do
-      draw_zone_exit(zone_exit)
-   end -- for
+   draw_area(uid)
 
    local room_name = room.name
    local name_width = WindowTextWidth(win, FONT_ID, room_name)
@@ -1180,7 +1179,7 @@ function draw (uid)
       draw_text_box (win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname)) / 2,   -- left
          config.WINDOW.height - 3 - font_height,    -- top
-         areaname:gsub("^%l", string.upper), false,
+         string.gsub(areas[areaname] and areas[areaname].name or areaname, "^%l", string.upper), false,
          AREA_NAME_TEXT.colour,   -- text colour
          AREA_NAME_FILL.colour,   -- fill colour
          AREA_NAME_BORDER.colour) -- border colour

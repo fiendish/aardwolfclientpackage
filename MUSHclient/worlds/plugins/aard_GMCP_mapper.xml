@@ -1578,21 +1578,8 @@ function custom_exit (name, line, wildcards)
    end)
 end -- custom_exit
 
-last_area_requested = ""
-function save_room_to_database (uid,room) 
-   
+function save_room_to_database (uid,room)
    assert (uid, "No UID supplied to save_room_to_database")
-   local area_exists = false
-   for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(room.area))) do
-      area_exists = true
-   end
-   if not area_exists then
-      if last_area_requested ~= room.area then
-         last_area_requested = room.area
-         Send_GMCP_Packet("request area")
-      end
-      return false
-   end
    
    dbCheckExecute(string.format (
          "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, noportal, norecall, ignore_exits_mismatch) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, %d, %d, %d);",
@@ -1623,7 +1610,6 @@ function save_room_to_database (uid,room)
    if show_database_mods then
       mapper.mapprint ("Added room", uid, "to database. Name:", room.name)
    end -- if
-   return true
 end -- function save_room_to_database
 
 function purgezone(zoneuid)
@@ -1635,6 +1621,11 @@ function purgezone(zoneuid)
    query = query..string.format ("delete from rooms where area = %s;", fixsql(zoneuid))
    query = query..string.format ("delete from areas where uid = %s;", fixsql(zoneuid))
    query = query.."COMMIT;"
+
+   if show_database_mods then
+      mapper.mapprint("Purging zone "..zoneuid.." with: "..query)
+   end
+
    dbCheckExecute(query)
 
    for k,v in pairs(rooms) do
@@ -1650,6 +1641,7 @@ function purgezone(zoneuid)
       end
    end
    mapper.areas[zoneuid] = nil
+   lastarea = ""
    Send_GMCP_Packet("request room")
 end
 
@@ -1658,7 +1650,7 @@ function map_purgezone (name, line, wildcards)
    local found = false
    local zone_name = ""
    if #(wildcards[1]) > 1 and string.sub(wildcards[1], 1, 1) == " " then
-      for row in dbnrowsWRAPPER(string.format("SELECT uid,name FROM areas WHERE uid = %s;", fixsql (zoneuid))) do
+      for row in dbnrowsWRAPPER(string.format("SELECT name FROM areas WHERE uid = %s;", fixsql (zoneuid))) do
          zone_name = row.name
          found = true
       end   -- finding area uid
@@ -1807,20 +1799,16 @@ end -- load_room_from_database
 
 
 function get_room (uid)
-
-   local room = rooms[uid]
-
    -- not cached - see if in database
-   if not room then
-      room = load_room_from_database(uid)
-      rooms[uid] = room -- cache for later
+   if not rooms[uid] then
+      rooms[uid] = load_room_from_database(uid) -- cache for later
   
-      if room then
-         load_area_from_database(room.area)
+      if rooms[uid] then
+         load_area_from_database(rooms[uid].area)
       end
    end -- not in cache
 
-   return room
+   return rooms[uid]
 end -- get_room
 
 
@@ -2950,10 +2938,6 @@ end -- OnPluginClose
 function OnPluginSaveState ()
    SetVariable ("window_hidden", window_hidden and "1" or "0")
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   if mapper.config.SCAN.depth < temp_scan_depth then
-      -- then we probably caught ourselves in a botched run or something
-      mapper.config.SCAN.depth = temp_scan_depth
-   end
    mapper.save_state ()
    SetVariable("config","") -- wipe out the old config table
    SetVariable("configs", "configs = " .. serialize.save_simple (mapper.config))
@@ -2990,15 +2974,16 @@ colour_lookup = {
 } -- end of colour_lookup
 
 running = false
-temp_scan_depth = 4
-
 function activate_running(run)
    running = run
-   if running then
-      temp_scan_depth = mapper.config.SCAN.depth
-      mapper.config.SCAN.depth = 4  -- or whatever
-   else
-      mapper.config.SCAN.depth = temp_scan_depth
+   if not running then
+      local area_exists = false
+      for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
+         area_exists = true
+      end
+      if not area_exists then
+         Send_GMCP_Packet("request area")
+      end
    end
    mapper.draw(current_room)
 end
@@ -3155,18 +3140,19 @@ function got_gmcp_room()
       lastarea = gmcproom.area
       -- purge all virtual areas except the current area
       for k,v in pairs(mapper.areas) do
-         if v.virtual and (k ~= lastarea) then
+         if v.virtual and (k ~= gmcproom.area) then
             purgezone(k)
          end
       end
    
-      local area_exists = false
-      for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
-         area_exists = true
-      end
-      if not area_exists and last_area_requested ~= gmcproom.area then
-         last_area_requested = gmcproom.area
-         Send_GMCP_Packet("request area")
+      if not running then
+         local area_exists = false
+         for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
+            area_exists = true
+         end
+         if not area_exists then
+            Send_GMCP_Packet("request area")
+         end
       end
    end
 
@@ -3233,23 +3219,15 @@ function got_gmcp_room()
          gmcproom.norecall = 0
       end
       dbCheckExecute("BEGIN TRANSACTION;")
-      local success = save_room_to_database(room_number, gmcproom)
-      if success then
-         rooms[room_number] = gmcproom
-         if not same_exits or not same_area then
-            save_room_exits(room_number)
-         end
-      end     
-      dbCheckExecute("COMMIT;") 
-      
-      if not success then
-         return
+      save_room_to_database(room_number, gmcproom)
+      rooms[room_number] = gmcproom
+      if not same_exits or not same_area then
+         save_room_exits(room_number)
       end
+      dbCheckExecute("COMMIT;")   
    end -- if room not there
   
    mapper.draw(room_number)
-
-   return
 end
 
 function update_gmcp_area()
@@ -3261,25 +3239,29 @@ function update_gmcp_area()
    local x,y,z = gmcpval("x"),gmcpval("y"),gmcpval("z")
    local flags = gmcpval("flags") or ""
 
-   dbCheckExecute (string.format (
+   local q = string.format (
       "REPLACE INTO areas (uid, name, texture, color, flags) VALUES (%s, %s, %s, %s, %s);",
       fixsql (areaid), 
       fixsql (areaname),
       fixsql (texture),
       fixsql (color),
       fixsql (flags)
-   ))
+   )
 
-   area = {
+   if show_database_mods then
+      mapper.mapprint(q)
+   end
+
+   dbCheckExecute (q)
+
+   mapper.areas[areaid] = {
       name = areaname,
       texture = texture,
       color = color,
       virtual = (flags:find("virtual") ~= nil)
    }
-   mapper.areas[areaid] = area
 
    Send_GMCP_Packet("request room") -- Just got a new area update. Now check for our room again.
-   return
 end
 
 function save_room_exits(uid) 
