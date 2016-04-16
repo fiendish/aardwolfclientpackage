@@ -471,7 +471,7 @@ end -- get_number_from_user
 local function draw_configuration ()
 
    local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", 
-   "Area Textures", "Area Room Size", "Continent Room Size", "Area Room Spacing", "Continent Room Spacing", "Area Room Borders", "Continent Room Borders (without bigmap)"}
+   "Area Textures", "Area Room Size", "Continent Room Size (without bigmap)", "Area Room Spacing", "Continent Room Spacing (without bigmap)", "Area Room Borders", "Continent Room Borders (without bigmap)"}
    local width =  max_text_width (config_win, CONFIG_FONT_ID, config_entries , true)
    local GAP = 5
 
@@ -633,30 +633,6 @@ local function draw_configuration ()
       miniwin.cursor_hand, 0)  -- hand cursor
    y = y + font_height
 
-   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Size (without bigmap)", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (CONTINENT_ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Continent Room size (without bigmap) "), y, 0, 0, 0x808080)
-   WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
-   WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
-   WindowAddHotspot(config_win,
-      "$<continent_room_size_down>",
-      width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
-      y,
-      width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
-      y + font_height,   -- rectangle
-      "", "", "", "", "mapper.smaller_rooms",  -- mouseup
-      "Click to emsmallen continent rooms",
-      miniwin.cursor_hand, 0)  -- hand cursor
-   WindowAddHotspot(config_win,
-      "$<continent_room_size_up>",
-      width + rh_size / 2 + box_size + GAP,
-      y,
-      width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"),
-      y + font_height,   -- rectangle
-      "", "", "", "", "mapper.bigger_rooms",  -- mouseup
-      "Click to embiggen continent rooms",
-      miniwin.cursor_hand, 0)  -- hand cursor
-   y = y + font_height
-
    -- room spacing
    WindowText(config_win, CONFIG_FONT_ID, "Area Room Spacing", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID, "("..tostring (DISTANCE_TO_NEXT_ROOM)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Area Room Spacing "), y, 0, 0, 0x808080)
@@ -683,6 +659,46 @@ local function draw_configuration ()
 
    y = y + font_height
 
+   -- room border type
+   WindowText(config_win, CONFIG_FONT_ID, "Area Room Borders", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[ROOM_BORDER_TYPE], width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[ROOM_BORDER_TYPE])/2, y, 0, 0, 0x808080)
+
+   -- show area exits hotspot
+   WindowAddHotspot(config_win,
+      "$<border_type>",
+      x + GAP,
+      y,
+      x + frame_width,
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.mouseup_change_border_type",  -- mouseup
+      "Click to change area room border type",
+      miniwin.cursor_hand, 0)  -- hand cursor
+   y = y + font_height
+
+   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Size (without bigmap)", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (CONTINENT_ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Continent Room size (without bigmap) "), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
+   WindowAddHotspot(config_win,
+      "$<continent_room_size_down>",
+      width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
+      y,
+      width + rh_size / 2 + box_size/2 + WindowTextWidth(config_win,CONFIG_FONT_ID,"-"),
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.smaller_rooms",  -- mouseup
+      "Click to emsmallen continent rooms",
+      miniwin.cursor_hand, 0)  -- hand cursor
+   WindowAddHotspot(config_win,
+      "$<continent_room_size_up>",
+      width + rh_size / 2 + box_size + GAP,
+      y,
+      width + rh_size / 2 + box_size + GAP + WindowTextWidth(config_win,CONFIG_FONT_ID,"+"),
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.bigger_rooms",  -- mouseup
+      "Click to embiggen continent rooms",
+      miniwin.cursor_hand, 0)  -- hand cursor
+   y = y + font_height
+
    -- continent room spacing
    WindowText(config_win, CONFIG_FONT_ID, "Continent Room Spacing (without bigmap)", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID, "("..tostring (DISTANCE_TO_NEXT_CONTINENT_ROOM)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Continent Room spacing (without bigmap) "), y, 0, 0, 0x808080)
@@ -706,29 +722,9 @@ local function draw_configuration ()
       "", "", "", "", "mapper.sparser",  -- mouseup
       "Click to spread continent rooms",
       miniwin.cursor_hand, 0)  -- hand cursor
-
    y = y + font_height
 
    -- room border type
-
-   WindowText(config_win, CONFIG_FONT_ID, "Area Room Borders", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[ROOM_BORDER_TYPE], width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[ROOM_BORDER_TYPE])/2, y, 0, 0, 0x808080)
-
-   -- show area exits hotspot
-   WindowAddHotspot(config_win,
-      "$<border_type>",
-      x + GAP,
-      y,
-      x + frame_width,
-      y + font_height,   -- rectangle
-      "", "", "", "", "mapper.mouseup_change_border_type",  -- mouseup
-      "Click to change area room border type",
-      miniwin.cursor_hand, 0)  -- hand cursor
-
-   y = y + font_height
-
-   -- room border type
-
    WindowText(config_win, CONFIG_FONT_ID, "Continent Room Borders (without bigmap)", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[CONTINENT_ROOM_BORDER_TYPE], width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[CONTINENT_ROOM_BORDER_TYPE])/2, y, 0, 0, 0x808080)
 
