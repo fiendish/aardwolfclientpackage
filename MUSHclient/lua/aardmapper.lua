@@ -101,6 +101,9 @@ if not BORDER_TYPES[CONTINENT_ROOM_BORDER_TYPE] then
    CONTINENT_ROOM_BORDER_TYPE = 2
 end
 
+local STITCH_CONTINENTS = (GetVariable("STITCH_CONTINENTS") == "1")
+
+
 -- supplied in init
 local room_click
 local timing            -- true to show timing and other info
@@ -250,7 +253,6 @@ LAST_VISIT_TIME = 60 * 3
 default_config = {
    FONT = {size = 8, name =  get_preferred_font({"Dina",  "Lucida Console",  "Fixedsys", "Courier",})} ,
    WINDOW = { width = default_width, height = default_height }, -- size of map window
-   SCAN = { depth = 300 },   -- how far from where we are standing to draw (rooms)
    USE_TEXTURES = { enabled = true }, -- show custom tiling background textures
    SHOW_ROOM_ID = false,
    SHOW_AREA_EXITS = false
@@ -285,6 +287,7 @@ local function get_room_display_params (uid)
    room.borderpen = 0 -- solid
    room.borderpenwidth = 1
    room.fillcolour = 0xff0000
+   room.fillcolor2 = 0
    room.fillbrush = 1 -- no fill
    room.bordercolour = mapper.ROOM_COLOUR.colour
 
@@ -376,6 +379,9 @@ local function get_room_display_params (uid)
 
    -- use terrain colour
    if environmentname and environmentname ~= "" and not special_room then
+      if whitebacked_textures[environmentname] then
+         room.fillcolor2 = 0xcacaca
+      end
       if user_terrain_colour[environmentname] then
          room.fillcolour = user_terrain_colour[environmentname]
          room.fillbrush = 8  -- fine pattern
@@ -393,6 +399,7 @@ local function get_room_display_params (uid)
       room.borderpenwidth = 3
    elseif ourroom.area ~= current_area then
       room.bordercolour = mapper.DIFFERENT_AREA_COLOUR.colour
+      room.borderpen = pen_null
    elseif ourroom.info and string.match(ourroom.info, "pk") then
       room.bordercolour = mapper.PK_BORDER_COLOUR.colour
       room.borderpenwidth = 3
@@ -470,8 +477,8 @@ end -- get_number_from_user
 
 local function draw_configuration ()
 
-   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", 
-   "Area Textures", "Area Room Size", "Continent Room Size (without bigmap)", "Area Room Spacing", "Continent Room Spacing (without bigmap)", "Area Room Borders", "Continent Room Borders (without bigmap)"}
+   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", 
+   "Area Textures", "Area Room Size", "Continent Room Size (without bigmap)", "Area Room Spacing", "Continent Room Spacing (without bigmap)", "Area Room Borders", "Continent Room Borders (without bigmap)", "Stitch Continents (without bigmap)"}
    local width =  max_text_width (config_win, CONFIG_FONT_ID, config_entries , true)
    local GAP = 5
 
@@ -481,8 +488,7 @@ local function draw_configuration ()
    local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID,
       {config.FONT.name .. " " .. config.FONT.size,
       ((config.USE_TEXTURES.enabled and "On") or "Off"),
-      "- +",
-      tostring (config.SCAN.depth)},
+      "- +"},
       true))
    local frame_width = GAP + width + GAP + rh_size + GAP  -- gap / text / gap / box / gap
 
@@ -530,21 +536,6 @@ local function draw_configuration ()
       "", "", "", "", "mapper.mouseup_close_configure",  -- mouseup
       "Click to close",
       miniwin.cursor_plus, 0)  -- hand cursor
-
-   y = y + font_height
-
-   -- depth
-   WindowText(config_win, CONFIG_FONT_ID, "Depth", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID_UL,   tostring (config.SCAN.depth), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, config.SCAN.depth)/2, y, 0, 0, 0x808080)
-   WindowAddHotspot(config_win,
-      "$<depth>",
-      x + GAP,
-      y,
-      x + frame_width,
-      y + font_height,   -- rectangle
-      "", "", "", "", "mapper.mouseup_change_depth",  -- mouseup
-      "Click to change scan depth",
-      miniwin.cursor_hand, 0)  -- hand cursor
 
    y = y + font_height
 
@@ -740,6 +731,23 @@ local function draw_configuration ()
       miniwin.cursor_hand, 0)  -- hand cursor
 
    y = y + font_height
+
+   -- room border type
+   WindowText(config_win, CONFIG_FONT_ID, "Stitch Continents (without bigmap)", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID_UL, STITCH_CONTINENTS and "On" or "Off", width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, STITCH_CONTINENTS and "On" or "Off")/2, y, 0, 0, 0x808080)
+
+   -- show area exits hotspot
+   WindowAddHotspot(config_win,
+      "$<stitch_continents>",
+      x + GAP,
+      y,
+      x + frame_width,
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.mouseup_stitch_continents",  -- mouseup
+      "Click to toggle stitching continents together",
+      miniwin.cursor_hand, 0)  -- hand cursor
+
+   y = y + font_height
    WindowShow(config_win, true)
 end -- draw_configuration
 
@@ -750,20 +758,25 @@ local inverse_direction = {
    e = "w",
    w = "e",
    u = "d",
-   d = "u",
-   ne = "sw",
-   se = "nw",
-   sw = "ne",
-   nw = "se"
+   d = "u"
 }  -- end of inverse_direction
+
+whitebacked_textures = {
+   snow=true,
+   icemount=true,
+   icehills=true,
+   ice=true,
+   beach=true
+}
 
 local function xy_to_coord(x,y)
    return tostring(math.floor (x) + (math.floor (y) * config.WINDOW.width))
 end
 
 local function draw_room (uid, x, y, metrics)
-   -- no need to check if drawn_coords[coords] or drawn_uids[uid] exist, because we check when
-   -- adding exit destinations to the next level of rooms
+   local coords = xy_to_coord(x,y)
+   if drawn_uids[uid] then return end
+
    drawn_coords[xy_to_coord(x,y)] = uid
    drawn_uids[uid] = true
 
@@ -799,7 +812,7 @@ local function draw_room (uid, x, y, metrics)
 
                -- choose between a real exit or just a stub
                if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
-                  (not show_other_areas and exit_room and exit_room.area ~= current_area) or -- room in another area
+                  ((not show_other_areas and exit_room and exit_room.area ~= current_area) and not (STITCH_CONTINENTS and continent_zones[current_area] and continent_zones[exit_room.area])) or -- room in another area
                   (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
                   --nop
                elseif exit_uid == uid then
@@ -848,7 +861,7 @@ local function draw_room (uid, x, y, metrics)
                
                -- choose between a real exit or just a stub
                if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
-                  (not show_other_areas and exit_room and exit_room.area ~= current_area) or -- room in another area
+                  ((not show_other_areas and exit_room and exit_room.area ~= current_area) and not (STITCH_CONTINENTS and continent_zones[current_area] and continent_zones[exit_room.area])) or -- room in another area
                   (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
                   exit_info = metrics.stub_connectors[dir]
                elseif exit_uid == uid then
@@ -914,7 +927,7 @@ local function draw_room (uid, x, y, metrics)
       else  
          -- room fill
          WindowCircleOp (win, miniwin.circle_rectangle, left, top, right+1, bottom+1,
-            0, pen_null, 0,  -- no pen
+            room_params.fillcolor2, pen_null, 0,  -- no pen
             room_params.fillcolour, room_params.fillbrush)  -- brush
 
          if room_params.borderpen ~= pen_null then
@@ -938,7 +951,7 @@ local function draw_room (uid, x, y, metrics)
       "",  -- cancelmousedown
       "mapper.mouseup_room",  -- mouseup
       daredevil_mode and "" or room_params.hovermessage,
-      daredevil_mode and miniwin.cursor_none or miniwin.cursor_hand, 0)  -- hand cursor
+      miniwin.cursor_hand, 0)  -- hand cursor
 
    WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
 end -- draw_room
@@ -1122,7 +1135,7 @@ function draw (uid)
       0, 0, 0, 0,
       "", "", "", "", "mapper.MouseUp",
       "",  -- hint
-      daredevil_mode and miniwin.cursor_none or miniwin.cursor_arrow,
+      miniwin.cursor_arrow,
       0)
    WindowScrollwheelHandler(win, "zzz_zoom", "mapper.zoom_map")
 
@@ -1500,7 +1513,7 @@ function save_state ()
    SetVariable("DISTANCE_TO_NEXT_CONTINENT_ROOM", DISTANCE_TO_NEXT_CONTINENT_ROOM)
    SetVariable("ROOM_BORDER_TYPE", ROOM_BORDER_TYPE)
    SetVariable("CONTINENT_ROOM_BORDER_TYPE", CONTINENT_ROOM_BORDER_TYPE)
-
+   SetVariable("STITCH_CONTINENTS", STITCH_CONTINENTS and "1" or "0")
    if WindowInfo(win,1) and WindowInfo(win,5) then
       movewindow.save_state (win)
    end
@@ -1535,228 +1548,101 @@ end
 
 -- original findpath function idea contributed by Spartacus. we don't use that one anymore.
 function findpath(src, dst, noportals, norecalls)
-   local outer_elapsed = utils.timer()
-   get_room(src)
-   
-   local walk_one = nil
-   for dir,touid in pairs(rooms[src].exits) do
-      if tostring(touid) == tostring(dst) and tonumber(rooms[src].exit_locks[dir]) <= mylevel and ((walk_one == nil) or (#dir > #walk_one)) then
-         walk_one = dir -- if one room away, walk there (don't portal), but prefer a (longer) cexit
-      end
-   end
-   if walk_one ~= nil then
-      return {{dir=walk_one, uid=touid}}, 1
-   end
-   local depth = 0
-   local max_depth = mapper.config.SCAN.depth
-   local room_sets = {}
-   local found = false
-   local ftd = {}
-   local f = ""
-   local next_room = 0
-  
-   if type(src) ~= "number" then
-      src = string.match(src, "^(nomap_.+)$") or tonumber(src)
-   end
-   if type(dst) ~= "number" then
-      dst = string.match(dst, "^(nomap_.+)$") or tonumber(dst)
-   end
-   
-   if src == dst or src == nil or dst == nil then
-      return {}
-   end
-   
-   src = tostring(src)
-   dst = tostring(dst)
-   
-   local rooms_list = {dst}     
-   
-   local visited = {}
-   local visited_str = ""
-   if noportals then
-      table.insert(visited, "*")
-   end
-   if norecalls then
-      table.insert(visited, "**")
-   end
-   if noportals or norecalls then
-      visited_str = "'"..table.concat(visited, "','").."'"
-   end
-   
-   local main_status = GetInfo(53)
-   local inner_elapsed = utils.timer()
-   
-   while not found and depth < max_depth do
-      SetStatus(main_status.." (searching depth "..depth..")")
-      depth = depth + 1
+   local findpath_elapsed = utils.timer()
 
-      -- get all exits to any room in the previous set
-      -- unprepared query fallback (like maybe if too many SQL variables)
-      rooms_list_str = "'"..table.concat(rooms_list,"','"):gsub("([^,])'([^,])", "%1''%2").."'"
-      if visited_str ~= "" then
-         visited_str = visited_str..","..rooms_list_str
-      else
-         visited_str = rooms_list_str
-      end
+   local used_recalls = norecalls
+   local used_portals = noportals
 
-      local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc", rooms_list_str, visited_str, mylevel, mylevel+(mytier*10))
-
-      local dcount = false
-      room_sets[depth] = {}
-      rooms_list = {}
-      for row in dbnrowsWRAPPER(q) do
-         dcount = true
-         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
-         -- used preferentially to normal ones (1 char)
-         room_sets[depth][row.fromuid] = row
-         if row.fromuid == "*" or (row.fromuid == "**" and f ~= "*" and f ~= src) or row.fromuid == src then
-            f = row.fromuid
-            found = true
-            found_depth = depth
-         end -- if src
-      end -- for select
-
-      if not dcount then
-         SetStatus(main_status)
-         return -- there is no path from here to there
-      end -- if dcount
-   
-      local i = 1
-      ftd = room_sets[depth]
-      for k,_ in pairs(ftd) do
-         rooms_list[i] = k
-         i = i+1
-      end -- for from, to, dir      
-      
-   end -- while
-
-   if show_timing then
-      print("Time elapsed pathfinding ",depth," levels (inner loop): ", utils.timer()-inner_elapsed)
-   end
-   SetStatus(main_status)
-
-   if found == false then
-      return
-   end
-  
-   -- We've gotten back to the starting room from our destination. Now reconstruct the path.
-   local path = {}
-   -- set ftd to the first from,to,dir set where from was either our start room or * or **
-   ftd = room_sets[found_depth][f]
-   
-   if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
-      if rooms[src].norecall ~= 1 and bounce_recall ~= nil then
-         table.insert(path, bounce_recall)
-         if dst == bounce_recall.uid then
-            return path, found_depth
-         end
-      elseif rooms[src].noportal ~= 1 and bounce_portal ~= nil then
-         table.insert(path, bounce_portal)
-         if dst == bounce_portal.uid then
-            return path, found_depth
-         end
-      else
-         local jump_time = utils.timer()
-         local jump_room, path_type = findNearestJumpRoom(src, dst, f)
-         if show_timing then
-            print("Time elapsed pathfinding (nearest jump):", utils.timer()-jump_time)
-         end
-
-         if not jump_room then
-            return
-         end
-         local refind_time = utils.timer()
-         local path, first_depth = findpath(src,jump_room, true, true) -- this could be optimized away by building the path in findNearestJumpRoom, but the gain would be negligible
-         if show_timing then
-            print("Time elapsed pathfinding (refind):", utils.timer()-refind_time)
-         end
-         if bit.band(path_type, 1) ~= 0 then
-            -- path_type 1 means just walk to the destination
-            return path, first_depth
-         else
-            local second_path, second_depth = findpath(jump_room, dst)
-            for i,v in ipairs(second_path) do
-               table.insert(path, v) -- bug on this line if path is nil?
+   local portals = {}
+   local recalls = {}
+   if not norecalls or not noportals then
+      for row in dbnrowsWRAPPER("select rooms.area,rooms.name,exits.touid,exits.fromuid,exits.dir,exits.level from exits left outer join rooms on rooms.uid=exits.touid where exits.fromuid in ('*','**')") do
+         if row.level <= mylevel+(mytier*10) then
+            if row.fromuid == "**" then
+               table.insert(recalls, {row.dir, row.touid})
+            else
+               table.insert(portals, {row.dir, row.touid})
             end
-            return path, first_depth+second_depth
+         end -- if row.level
+      end -- for row (portals query)
+   end
+
+   function search_for_dst(dst, su, rooms_to_search_next, searched)
+      if not searched[su[3]] then
+         searched[su[3]] = su
+         if su[3] == dst then
+            return true
+         end
+         local room = get_room(su[3])
+         if room then
+            -- always follow cexits first
+            for dir,next_room in pairs(room.exits) do
+               if not directions[dir] then
+                  table.insert(rooms_to_search_next, {su[3], dir, next_room})
+               end
+            end
+            -- then regular exits
+            for dir,next_room in pairs(room.exits) do
+               if directions[dir] then
+                  table.insert(rooms_to_search_next, {su[3], dir, next_room})
+               end
+            end
+            -- then portals
+            if not used_portals and room.noportal ~= 1 then
+               used_portals = true
+               for i,p in ipairs(portals) do
+                  table.insert(rooms_to_search_next, {su[3], p[1], p[2]})
+               end
+            -- then recalls
+            elseif not used_recalls and room.norecall ~= 1 then
+               used_recalls = true
+               for i,r in ipairs(recalls) do
+                  table.insert(rooms_to_search_next, {su[3], r[1], r[2]})
+               end
+            end
+         end
+      end
+   end
+   
+   local rooms_to_search_next = {}
+   local searched = {}
+   if not search_for_dst(dst, {nil, nil, current_room}, rooms_to_search_next, searched) then
+      local found = false
+      local first_bounce = nil
+      while not found and #rooms_to_search_next > 0 do
+         local this_level = rooms_to_search_next
+         rooms_to_search_next = {}
+         for i,su in ipairs(this_level) do
+            found = search_for_dst(dst, su, rooms_to_search_next, searched)
+            if found then
+               break
+            end
          end
       end
    end
 
-   table.insert(path, {dir=ftd.dir, uid=ftd.touid})
-
-   next_room = ftd.touid
-   while depth > 1 do
-      depth = depth - 1
-      ftd = room_sets[depth][next_room]
-      next_room = ftd.touid
-      table.insert(path, {dir=ftd.dir, uid=ftd.touid})
-   end -- while
-   if show_timing then
-      print("Time elapsed pathfinding (outer):", utils.timer()-outer_elapsed)
+   local path = {}
+   local su = searched[dst]
+   while su and su[1] do
+      table.insert(path, {dir=su[2], uid=su[3]})
+      su = searched[su[1]]
    end
-   return path, found_depth
-end -- function findpath
 
--- Very similar to findpath, but looks forwards instead of backwards (so only walks)
--- and stops at the nearest portalable or recallable room
-function findNearestJumpRoom(src, dst, target_type)
-   local depth = 0
-   local max_depth = mapper.config.SCAN.depth
-   local room_sets = {}
-   local rooms_list = {}
-   local found = false
-   local ftd = {}
-   local destination = ""
-   local next_room = 0
-   local visited = ""
-   local path_type = ""
+   -- reverse
+   for i=1, math.floor(#path / 2) do
+      path[i], path[#path - i + 1] = path[#path - i + 1], path[i]
+   end
 
-   table.insert(rooms_list, fixsql(src))  
-   local main_status = GetInfo(53)
-   while not found and depth < max_depth do
-      SetStatus(main_status.." (searching jump depth "..depth..")")
-      BroadcastPlugin (999, "repaint")
-      depth = depth + 1
+   if show_timing then
+      mapprint("Time elapsed pathfinding ",#path," levels: ", utils.timer()-findpath_elapsed)
+   end
 
-      -- prune the search space
-      if visited ~= "" then 
-         visited = visited..","..table.concat(rooms_list, ",")
-      else
-         visited = table.concat(rooms_list, ",")
-      end
-    
-      -- get all exits to any room in the previous set
-      local q = string.format ("select fromuid, touid, dir, norecall, noportal from exits,rooms where rooms.uid = exits.touid and exits.fromuid in (%s) and exits.touid not in (%s) and exits.level <= %s order by length(exits.dir) asc",
-                  table.concat(rooms_list,","), visited, mylevel)
-      local dcount = 0
-      for row in dbnrowsWRAPPER(q) do
-         dcount = dcount + 1
-         table.insert(rooms_list, fixsql(row.touid))
-         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
-         -- used preferentially to normal ones (1 char)
-         if ((bounce_portal ~= nil or target_type == "*") and row.noportal ~= 1) or ((bounce_recall ~= nil or target_type == "**") and row.norecall ~= 1) or row.touid == dst then
-            path_type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
-            -- path_type 1 means walking to the destination is closer than bouncing
-            -- path_type 2 means the bounce room allows recalling but not portalling
-            -- path_type 4 means the bounce room allows portalling but not recalling
-            -- path_type 0 means the bounce room allows both portalling and recalling
-            destination = row.touid
-            found = true
-            found_depth = depth
-         end -- if src
-      end -- for select
-
-      if dcount == 0 then
-         return -- there is no path to a portalable or recallable room
-      end -- if dcount
-   end -- while
-   
-   if found == false then
+   if #path > 0 then
+      return path
+   else
       return
    end
-   return destination, path_type, found_depth
-end
+end -- function findpath
 
 require "serialize"
 function full_find (dests, walk, no_portals)
@@ -1823,7 +1709,7 @@ function full_find (dests, walk, no_portals)
          were, matches = "was", "match"
       end -- if
       Note("+------------------------------------------------------------------------------+")
-      mapprint ("There", were, #notfound, matches,  "which I could not find a path to within", config.SCAN.depth, "rooms:")
+      mapprint ("There", were, #notfound, matches,  "which I could not find a path to:")
    end -- if
    for i,v in ipairs(notfound) do
       local nfroom = rooms[v.uid]
@@ -2025,10 +1911,10 @@ end
 
 function mouseup_room (flags, hotspot_id)
 
-   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       -- RH click
       if type (room_click) == "function" then
-         room_click (hotspot_id, flags)
+         room_click(hotspot_id, flags)
       end
       return
    end -- if RH click
@@ -2047,8 +1933,14 @@ end -- mouseup_configure
 function mouseup_close_configure (flags, hotspot_id)
    draw_configure_box = false
    OnPluginSaveState()
-   draw (current_room)
+   draw(current_room)
 end -- mouseup_player
+
+function mouseup_stitch_continents(flags, hotspot_id)
+   STITCH_CONTINENTS = not STITCH_CONTINENTS
+   OnPluginSaveState()
+   draw(current_room)
+end
 
 function mouseup_change_border_type (flags, hotspot_id)
    if hotspot_id:find("continent") then
@@ -2063,7 +1955,7 @@ function mouseup_change_border_type (flags, hotspot_id)
       end
    end
    OnPluginSaveState()
-   draw (current_room)
+   draw(current_room)
 end
 
 function mouseup_change_colour (flags, hotspot_id)
@@ -2109,17 +2001,6 @@ function mouseup_change_font (flags, hotspot_id)
    draw (current_room)
 end -- mouseup_change_font
 
-function mouseup_change_depth (flags, hotspot_id)
-
-   local depth = get_number_from_user ("Choose scan depth (3 to 300 rooms)", "Depth", config.SCAN.depth, 3, 300)
-
-   if not depth then
-      return
-   end -- if dismissed
-
-   config.SCAN.depth = depth
-   draw (current_room)
-end -- mouseup_change_depth
 
 function mouseup_change_area_textures (flags, hotspot_id)
    if config.USE_TEXTURES.enabled == true then
