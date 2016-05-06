@@ -4,7 +4,7 @@
 <!-- MuClient version 4.59 -->
 
 <!DOCTYPE muclient [
-   <!ENTITY show_timing "true" > 
+   <!ENTITY show_timing "false" > 
    <!ENTITY show_database_mods "false" > 
    <!ENTITY show_other_areas "false" > 
    <!ENTITY show_up_down "false" >
@@ -778,23 +778,20 @@ room_in_database = {}
 bounce_recall = nil
 bounce_portal = nil
 
--- Create Database Variables --
-
-count = 0
-roomcount = 0
-endroomcount = 0
-areacount = 0
-coordcount = 0
-directioncount = 0
-environmentcount = 0
-       
-directions = {}
-
 function reset_aard()
    mapper.reset_pos()
    OnPluginSaveState()
    OnPluginInstall()
 end
+
+directions = {
+   n=true,
+   s=true,
+   e=true,
+   w=true,
+   u=true,
+   d=true
+}
 
 convert_direction = {
    north = "n",
@@ -1507,14 +1504,6 @@ end
 -- custom_exit function contributed by Spartacus
 function custom_exit (name, line, wildcards)
 
-   local remap = {
-      n = "north",
-      w = "west",
-      s = "south",
-      e = "east",
-      u = "up",
-      d = "down"
-   }
    local cexit_command = wildcards [1] or ""
    local cexit_start
   
@@ -1528,6 +1517,14 @@ function custom_exit (name, line, wildcards)
    ------------------------------------
    -- the current system makes standard letter exit (n,e,s,w,d,u) cexits not usable, so remap them
    -- to their long word forms
+   --local remap = {
+   --   n = "north",
+   --   w = "west",
+   --   s = "south",
+   --   e = "east",
+   --   u = "up",
+   --   d = "down"
+   --}
    --if remap[cexit_command] then
    --   cexit_command = remap[cexit_command]
    --end
@@ -1582,29 +1579,17 @@ function save_room_to_database (uid,room)
    assert (uid, "No UID supplied to save_room_to_database")
    
    dbCheckExecute(string.format (
-         "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, noportal, norecall, ignore_exits_mismatch) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, %d, %d, %d);",
-            fixsql (uid), 
-            fixsql (room.name),
-            fixsql (room.terrain), 
-            fixsql (room.info),
-            room.x or 0, room.y or 0, room.z or 0, fixsql(room.area),
+         "INSERT OR REPLACE INTO rooms (uid, name, area, terrain, info, noportal, norecall, ignore_exits_mismatch) VALUES (%s, %s, %s, %s, %s, %d, %d, %d);",
+            fixsql(uid),
+            fixsql(room.name),
+            fixsql(room.area),
+            fixsql(room.terrain), 
+            fixsql(room.info),
             room.noportal or 0,
             room.norecall or 0,
             room.ignore_exits_mismatch and 1 or 0
          ))
 
-   local exists = false      
-   for n in dbnrowsWRAPPER(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s", fixsql(uid))) do 
-      exists = true 
-   end
-   -- don't add multiple times, maintaining backwards database compatibility (there's no uniqueness constraint on rooms_lookup.uid)
-   if not exists then
-      dbCheckExecute(string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name)))
-   else
-      dbCheckExecute(string.format ("DELETE FROM rooms_lookup WHERE uid = %s",fixsql(uid)))
-      dbCheckExecute(string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name)))
-   end
-   
    room_not_in_database [uid] = nil
    
    if show_database_mods then
@@ -1616,7 +1601,6 @@ function purgezone(zoneuid)
    local query = "BEGIN TRANSACTION;"
    query = query..string.format ("delete from exits where touid in (select uid from rooms where area = %s);",fixsql(zoneuid))
    query = query..string.format ("delete from exits where fromuid in (select uid from rooms where area = %s);",fixsql(zoneuid))
-   query = query..string.format ("delete from rooms_lookup where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))
    query = query..string.format ("delete from bookmarks where uid in (select uid from rooms where area = %s);", fixsql(zoneuid))
    query = query..string.format ("delete from rooms where area = %s;", fixsql(zoneuid))
    query = query..string.format ("delete from areas where uid = %s;", fixsql(zoneuid))
@@ -1679,7 +1663,6 @@ function map_purgeroom (uid, new_area)
       query = query..string.format ("delete from exits where touid = %s;",fixsql(uid))
    end
    query = query..string.format ("delete from exits where fromuid = %s;",fixsql(uid))
-   query = query..string.format ("delete from rooms_lookup where uid = %s;", fixsql(uid))
    query = query..string.format ("delete from bookmarks where uid = %s;", fixsql(uid))
    query = query..string.format ("delete from rooms where uid = %s;", fixsql(uid))
    query = query.."COMMIT;"
@@ -1700,10 +1683,37 @@ function map_clearcache()
    mapper.mapprint ("Cleared local room cache.")
 end
 
+function load_all_rooms ()
+   if not rooms then
+      rooms = {}
+   end
+
+   for row in dbnrowsWRAPPER("SELECT * from rooms") do
+      rooms[row.uid] = {
+         name = row.name,
+         area = row.area,
+         terrain = row.terrain,
+         info = row.info,
+         noportal = row.noportal,
+         norecall = row.norecall,
+         ignore_exits_mismatch = (row.ignore_exits_mismatch == 1),
+         exits = {},
+         exit_locks = {}
+      }
+   end
+   for row in dbnrowsWRAPPER("SELECT * from exits") do
+      rooms[row.fromuid].exits[row.dir] = tostring(row.touid)
+      rooms[row.fromuid].exit_locks[row.dir] = tostring(row.level)
+   end   -- finding room
+   for bmrow in dbnrowsWRAPPER("SELECT * FROM bookmarks") do
+      rooms[bmrow.uid].notes = bmrow.notes
+   end   -- finding room
+end
+
+
 function load_area_from_database (area)
    assert (area, "No area supplied to load_area_from_database")
    if not rooms then
-      -- this shouldn't even be possible. what the hell.
       rooms = {}
    end
 
@@ -1717,13 +1727,8 @@ function load_area_from_database (area)
          rooms[row.uid] = {
          name = row.name,
          area = row.area,
-         building = row.building,
          terrain = row.terrain,
          info = row.info,
-         notes = row.notes,
-         x = row.x or 0,
-         y = row.y or 0,
-         z = row.z or 0,
          noportal = row.noportal,
          norecall = row.norecall,
          exits = {[row.dir]=tostring(row.touid)},
@@ -1757,13 +1762,8 @@ function load_room_from_database (uid)
       room = {
          name = row.name,
          area = row.area,
-         building = row.building,
          terrain = row.terrain,
          info = row.info,
-         notes = row.notes,
-         x = row.x or 0,
-         y = row.y or 0,
-         z = row.z or 0,
          noportal = row.noportal,
          norecall = row.norecall,
          exits = {},
@@ -1879,15 +1879,6 @@ function create_tables ()
    -- Or maybe it's wrong for the MUD to send strings. Either way, we now
    -- have databases with inconsistent data. So let's make it consistent.
    dbCheckExecute("UPDATE OR IGNORE rooms SET terrain = ifnull((SELECT name FROM environments WHERE environments.uid = rooms.terrain), rooms.terrain);")
-  
-   -- check if rooms_lookup table exists
-   dbCheckExecute([[
-   BEGIN TRANSACTION;
-   DROP TABLE IF EXISTS rooms_lookup;
-   CREATE VIRTUAL TABLE rooms_lookup USING FTS3(uid, name);
-   INSERT INTO rooms_lookup (uid, name) SELECT uid, name FROM rooms;
-   COMMIT;
-   ]])
 end -- function create_tables
 
 function check_rooms_flags()
@@ -1979,54 +1970,64 @@ function room_edit_note (room, uid, newnotes)
    
 end -- room_edit_note
 
-function room_edit_terrain_colour (room, uid)
+brush_selection = {
+   [miniwin.brush_solid]="Solid",
+   [miniwin.brush_hatch_horizontal]="Hatch - horizontal",
+   [miniwin.brush_hatch_vertical]="Hatch - vertical",
+   [miniwin.brush_hatch_forwards_diagonal]="Hatch - forwards diagonal",
+   [miniwin.brush_hatch_backwards_diagonal]="Hatch - backwards diagonal",
+   [miniwin.brush_hatch_cross]="Hatch - cross",
+   [miniwin.brush_hatch_cross_diagonal]="Hatch - diagonal cross",
+   [miniwin.brush_fine_pattern]="Checkboard - fine",
+   [miniwin.brush_medium_pattern]="Checkboard - medium",
+   [miniwin.brush_coarse_pattern]="Checkerboard - coarse",
+   [miniwin.brush_waves_horizontal]="Waves - horizontal",
+   [miniwin.brush_waves_vertical]="Waves - vertical"
+}
 
+function room_edit_terrain_colour (room, uid)
    if not room.terrain then
-      utils.msgbox ("This room does not have a terrain type", "Unknown terrain!", "ok", "!", 1)
+      utils.msgbox("This room does not have a terrain type", "Unknown terrain!", "ok", "!", 1)
       return
    end -- not known
    
-   local environmentname = room.terrain
-   if tonumber (environmentname) then
-      environmentname = environments [tonumber (environmentname)]
-   end -- convert to name
-  
-   local colour
-   local colourtype = terrain_colours [environmentname]
-    
-   if colourtype then 
-      colour = colour_lookup [colourtype]
-   end -- if type known
+   local environmentname = room.terrain  
+   local color, color2, fillbrush
+   local newcolor, newcolor2, newfillbrush
 
-   if mapper.user_terrain_colour[environmentname] then
-      colour = mapper.user_terrain_colour[environmentname]
-   end -- if already have user colour
-  
-   local newcolour = PickColour (colour or 0x000000)
-   if newcolour == -1 or newcolour == colour then
-      return
-   end -- cancelled
-  
-   if mapper.user_terrain_colour[environmentname] then
-      dbCheckExecute(string.format (
-      "UPDATE terrain SET color = %s WHERE name = %s;",
-      fixsql (newcolour),
-      fixsql (environmentname)
-      ))
-      mapper.mapprint ("Colour for terrain '" .. environmentname .. "' changed to:", RGBColourToName (newcolour))
-   else
-      dbCheckExecute(string.format (
-      "INSERT INTO terrain (name, color) VALUES (%s, %s);",
-      fixsql (environmentname), 
-      fixsql (newcolour)
-      ))
-      mapper.mapprint ("Colour for terrain '" .. environmentname .. "' is now", RGBColourToName (newcolour))
-   end -- if    
+   color = mapper.user_terrain_colour[environmentname].color
+   color2 = mapper.user_terrain_colour[environmentname].color2
+   fillbrush = mapper.user_terrain_colour[environmentname].fillbrush
+
+   newcolor = PickColour(color or 0)
+   if newcolor == -1 then
+      newcolor = color or 0
+   end
+
+   newfillbrush = utils.listbox ("Choose a tile texture.\r\nIf you choose a texture other than solid, you will be asked for a second color.", "Texture Picker", 
+      brush_selection, 
+      fillbrush or miniwin.brush_fine_pattern) or fillbrush or miniwin.brush_fine_pattern
+
+   if newfillbrush ~= miniwin.brush_solid then
+      newcolor2 = PickColour(color2 or 0)
+      if newcolor2 == -1 then
+         newcolor2 = color2 or 0
+      end
+   end
+   newcolor2 = newcolor2 or 0
+
+   dbCheckExecute(string.format (
+   "INSERT OR REPLACE INTO terrain (name, color, fillbrush, color2) VALUES (%s, %d, %d, %d);",
+   fixsql(environmentname), 
+   newcolor,
+   newfillbrush,
+   newcolor2
+   ))
+   mapper.mapprint("Color for terrain '"..environmentname.."' is now "..RGBColourToName(newcolor)..((newfillbrush ~= miniwin.brush_solid) and (" on "..RGBColourToName(newcolor2)) or "").." using '"..brush_selection[newfillbrush].."' brush.")
    
-   mapper.user_terrain_colour[environmentname] = newcolour
+   mapper.user_terrain_colour[environmentname] = {color = newcolor, color2 = newcolor2, fillbrush = newfillbrush}
 
-   mapper.draw (current_room)
-
+   mapper.draw(current_room)
 end -- room_edit_terrain_colour
 
 
@@ -2655,7 +2656,7 @@ function OnPluginInstall ()
       db_user_version = row.user_version
    end
 
-   if db_user_version < 11 then
+   if db_user_version < 12 then
       performing_maintenance = true
       DoAfterSpecial(3, "update_db_schema("..db_user_version..")",sendto.script)
    else
@@ -2784,6 +2785,35 @@ function update_db_schema(db_user_version)
       dbCheckExecute("CREATE INDEX IF NOT EXISTS rooms_area_index ON rooms (area);")
    end
 
+   if db_user_version < 12 then
+      -- insert sad trombone here
+      print("Updating mapper database schema to v12...")
+
+      print("Removing unused indices...")
+      BroadcastPlugin (999, "repaint")
+      dbCheckExecute("DROP TABLE IF EXISTS rooms_lookup;")
+      dbCheckExecute("DROP INDEX IF EXISTS exits_touid_index;")
+
+      print("Removing more unused columns...")
+      BroadcastPlugin (999, "repaint")
+      drop_db_columns("terrain", {"date_added", "id"}, "PRIMARY KEY(name)") -- I can't believe I missed one. *sigh*
+      drop_db_columns("rooms", {"x","y","z","building","notes"}, "PRIMARY KEY(uid)")
+
+      print("Adding additional room colors stuff")
+      BroadcastPlugin (999, "repaint")
+      dbCheckExecute([[
+         CREATE TABLE room_colors (
+            roomid TEXT PRIMARY KEY,
+            color INTEGER,
+            color2 INTEGER,
+            fillbrush INTEGER
+         );
+      ]])
+      
+      dbCheckExecute('ALTER TABLE terrain ADD COLUMN color2 INTEGER DEFAULT 0;')
+      dbCheckExecute('ALTER TABLE terrain ADD COLUMN fillbrush INTEGER DEFAULT 8;')
+   end
+
    print("")
    print("Converted database to new format. Verifying integrity.")
    BroadcastPlugin (999, "repaint")
@@ -2793,7 +2823,7 @@ function update_db_schema(db_user_version)
    dbCheckExecute("VACUUM;")
    print("")
    BroadcastPlugin (999, "repaint")
-   dbCheckExecute("PRAGMA user_version = 11;")
+   dbCheckExecute("PRAGMA user_version = 12;")
 
    utils.msgbox ("Your map database schema update has completed.", "", "ok", "i")
 
@@ -2853,7 +2883,7 @@ function after_update_check()
   
    -- grab all user terrain info
    for row in dbnrowsWRAPPER("SELECT * FROM terrain") do
-      mapper.user_terrain_colour[row.name] = row.color
+      mapper.user_terrain_colour[row.name] = {color=row.color, color2=row.color2, fillbrush=row.fillbrush}
    end -- finding terrains
  
    -- grab all environment names
@@ -2915,6 +2945,7 @@ function OnPluginEnable()
       Send_GMCP_Packet("request char")
       Send_GMCP_Packet("request room")
    end
+   load_all_rooms()
    OnPluginSaveState()
 end -- OnPluginEnable
 
@@ -3125,13 +3156,8 @@ function got_gmcp_room()
    gmcproom = {
       name = strip_colours(gmcpval("name")),
       area = gmcpval("zone"),
-      building = 0,
       terrain = gmcpval("terrain"),
       info = gmcpval("details"),
-      notes = "",
-      x = gmcpval("coord.x"),
-      y = gmcpval("coord.y"),
-      z = 0,
       exits = {},
       exit_locks = {}
       }
@@ -3194,7 +3220,6 @@ function got_gmcp_room()
          
          gmcproom.exits = (room.exits or {})
          gmcproom.exit_locks = (room.exit_locks or {})
-         gmcproom.notes = nilToStr(room.notes)
          gmcproom.noportal = (room.noportal or 0)
          gmcproom.norecall = (room.norecall or 0)
       elseif room and nilToStr(room.area) ~= "" and mapper.areas[nilToStr(room.area)] then
@@ -3214,7 +3239,6 @@ function got_gmcp_room()
 --         print("new area")
          gmcproom.exits = {}
          gmcproom.exit_locks = {}
-         gmcproom.notes = ""
          gmcproom.noportal = 0
          gmcproom.norecall = 0
       end
@@ -3295,18 +3319,26 @@ function save_room_exits(uid)
 end -- save_room_exits
 
 function update_gmcp_sectors()
+   requesting_sectors = false
    dbCheckExecute("BEGIN TRANSACTION;")
    dbCheckExecute ("DELETE FROM environments;")
    for i,v in pairs(gmcp_sectors_list.sectors) do
       dbCheckExecute( string.format([[
-      INSERT OR REPLACE INTO environments VALUES (%s,%s,%s);
+      INSERT OR REPLACE INTO environments VALUES (%s,%s,%d);
       ]], v.id, fixsql(v.name), v.color))
+      dbCheckExecute( string.format([[
+      INSERT OR IGNORE INTO terrain (name, color) VALUES (%s, %d);
+      ]], fixsql(v.name), colour_lookup[tonumber(v.color)] or 0))
    end
    dbCheckExecute("COMMIT;")
    
    for row in dbnrowsWRAPPER("SELECT * FROM environments") do
       environments [tonumber (row.uid)] = row.name
       terrain_colours [row.name] = tonumber (row.color)
+   end -- finding environments
+
+   for row in dbnrowsWRAPPER("SELECT * FROM terrain") do
+      mapper.user_terrain_colour[row.name] = {color = row.color, color2 = row.color2, fillbrush = row.fillbrush}
    end -- finding environments
    
    mapper.draw (current_room)
@@ -3644,15 +3676,6 @@ function map_notes (name, line, wildcards)
    )
 end -- map_notes
 
-directions = {
-   n=true,
-   s=true,
-   e=true,
-   w=true,
-   u=true,
-   d=true
-}
-
 function toggleBackups(on, quiet)
    if on then
       EnableTimer("backup_timer", true)
@@ -3913,25 +3936,29 @@ you set all portal aspects in one command without being in the target room.]],
       elseif wildcards[2]:find("search ") == 1 then
          local st, en = wildcards[2]:find("search ")
          local pattern = Trim(wildcards[2]:sub(en+1))
+         local lowerPattern = pattern:lower()
          ColourTell("cornflower","black","Searching help for: ")         
-         ColourNote("red","black",pattern)
+         ColourNote("red","black",lowerPattern)
          if pattern ~= "" then
             for k,v in pairs(help_table) do
                local done_header = false
                for j,w in ipairs(v) do
-                  if (w ~= "") and (w:find("--------",nil,true) == nil) and (w:find(pattern) ~= nil) then
+                  local lowerW = w:lower()
+                  if (w ~= "") and (w:find("--------",nil,true) == nil) and (lowerW:find(lowerPattern) ~= nil) then
                      if not done_header then
                         print("")
                         print(v['header'])
                         done_header = true
                      end
                      print("")
-                     local wtable = w:split(pattern)
+                     local wtable = lowerW:split(lowerPattern)
+                     local marker = 1
                      for i,v in ipairs(wtable) do
                         ColourTell("cornflower","black",v)
                         if (i < #wtable) then
-                           ColourTell("red", "black", pattern)
+                           ColourTell("red", "black", w:sub(marker+#v, marker+#v+#pattern - 1))
                         end
+                        marker = marker + #v + #pattern
                      end
                      Note("")
                   end

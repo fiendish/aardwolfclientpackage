@@ -267,13 +267,15 @@ local expand_direction = {
    d = "down",
 }  -- end of expand_direction
 
+room_display_params = {}
+
 local function get_room_display_params (uid)
 
    -- look it up
    local ourroom = get_room(uid)
 
    if not ourroom then
-      return {
+      room_display_params[uid] = {
          unknown = true,
          exits = {},
          name = "< Unexplored Room "..uid.." >",
@@ -281,10 +283,14 @@ local function get_room_display_params (uid)
       }
    end
 
+   if room_display_params[uid] then
+      return room_display_params[uid]
+   end
+
    local room = {name = ourroom.name}
 
    -- default
-   room.borderpen = 0 -- solid
+   room.borderpen = pen_solid
    room.borderpenwidth = 1
    room.fillcolour = 0xff0000
    room.fillcolor2 = 0
@@ -379,35 +385,29 @@ local function get_room_display_params (uid)
 
    -- use terrain colour
    if environmentname and environmentname ~= "" and not special_room then
-      if whitebacked_textures[environmentname] then
-         room.fillcolor2 = 0xcacaca
-      end
-      if user_terrain_colour[environmentname] then
-         room.fillcolour = user_terrain_colour[environmentname]
-         room.fillbrush = 8  -- fine pattern
-      elseif terrain_colours[environmentname] then
-         room.fillcolour = colour_lookup[terrain_colours[environmentname]]
-         room.fillbrush = 8  -- fine pattern
-      else
+      local user_color = user_terrain_colour[environmentname]
+
+      if user_color then
+         room.fillcolour = user_color.color
+         room.fillbrush = user_color.fillbrush
+         room.fillcolor2 = user_color.color2
+      elseif not requesting_sectors then
+         requesting_sectors = true
          Send_GMCP_Packet("request sectors")
       end
    end -- if environmentname
 
    -- special borders
-   if uid == current_room then
-      room.bordercolour = mapper.OUR_ROOM_COLOUR.colour
-      room.borderpenwidth = 3
-   elseif ourroom.area ~= current_area then
-      room.bordercolour = mapper.DIFFERENT_AREA_COLOUR.colour
-      room.borderpen = pen_null
-   elseif ourroom.info and string.match(ourroom.info, "pk") then
+   if ourroom.info and string.match(ourroom.info, "pk") then
       room.bordercolour = mapper.PK_BORDER_COLOUR.colour
       room.borderpenwidth = 3
    elseif ourroom.notes ~= nil and ourroom.notes ~= "" then
       room.borderpenwidth = 3
       room.bordercolour = ROOM_NOTE_COLOUR.colour
-   elseif current_room_is_cont and CONTINENT_ROOM_BORDER_TYPE == 2 or ROOM_BORDER_TYPE == 2 then
-      room.borderpen = pen_null
+   elseif current_room_is_cont then
+      if CONTINENT_ROOM_BORDER_TYPE == 2 or ROOM_BORDER_TYPE == 2 then
+         room.borderpen = pen_null
+      end
    else
       if areas[ourroom.area] then
          if areas[ourroom.area].color ~= "" then
@@ -416,6 +416,7 @@ local function get_room_display_params (uid)
       end
    end
 
+   room_display_params[uid] = room
    return room
 
 end -- get_room_display_params
@@ -781,7 +782,7 @@ local function draw_room (uid, x, y, metrics)
    drawn_uids[uid] = true
 
    -- forget it if off screen
-   if x < metrics.HALF_ROOM_UP or y <= metrics.HALF_ROOM_UP + metrics.ROOM_SIZE or
+   if x < metrics.HALF_ROOM_UP or y <= metrics.HALF_ROOM_UP + font_height or
       x > config.WINDOW.width - metrics.HALF_ROOM_UP or y > config.WINDOW.height - metrics.HALF_ROOM_UP then
       return
    end -- if
@@ -929,11 +930,24 @@ local function draw_room (uid, x, y, metrics)
          WindowCircleOp (win, miniwin.circle_rectangle, left, top, right+1, bottom+1,
             room_params.fillcolor2, pen_null, 0,  -- no pen
             room_params.fillcolour, room_params.fillbrush)  -- brush
+         
+         local borderpen = room_params.borderpen
+         local borderpenwidth = room_params.borderpenwidth
+         local bordercolour = room_params.bordercolour
 
-         if room_params.borderpen ~= pen_null then
+         if uid == current_room then
+            bordercolour = mapper.OUR_ROOM_COLOUR.colour
+            borderpenwidth = 3
+            borderpen = pen_solid
+         elseif room.area ~= current_area then
+            bordercolour = mapper.DIFFERENT_AREA_COLOUR.colour
+            borderpen = pen_null
+         end
+
+         if borderpen ~= pen_null then
             -- room border
             WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
-                  room_params.bordercolour, room_params.borderpen, room_params.borderpenwidth,  -- pen
+                  bordercolour, borderpen, borderpenwidth,  -- pen
                   -1, miniwin.brush_null)  -- opaque, no brush
          end
       end
@@ -1517,6 +1531,7 @@ function save_state ()
    if WindowInfo(win,1) and WindowInfo(win,5) then
       movewindow.save_state (win)
    end
+   room_display_params = {}
 end -- save_state
 
 function addRunHyperlink(destination_uid, msg_override, bubble_addition, no_renumber, foreground_color, background_color)
