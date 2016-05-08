@@ -1591,7 +1591,8 @@ function save_room_to_database (uid,room)
          ))
 
    room_not_in_database [uid] = nil
-   
+   mapper.room_display_params[uid] = nil
+
    if show_database_mods then
       mapper.mapprint ("Added room", uid, "to database. Name:", room.name)
    end -- if
@@ -1622,6 +1623,7 @@ function purgezone(zoneuid)
    for k,v in pairs(rooms) do
       if v.area == zoneuid then
          rooms[k] = nil
+         mapper.room_display_params[k] = nil
       end
    end
    mapper.areas[zoneuid] = nil
