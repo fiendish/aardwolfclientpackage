@@ -1026,7 +1026,11 @@ function halt_drawing(halt)
    dont_draw = halt
 end
 
-function draw_area(uid)
+function draw_fullarea()
+   draw(current_room, true)
+end
+
+function draw_area(uid, fullarea)
    -- set up for initial room, in middle
    drawn_uids, drawn_coords, rooms_to_draw_next, area_exits = {}, {}, {}, {}, {}
    depth = 0
@@ -1041,13 +1045,20 @@ function draw_area(uid)
    -- insert initial room
    local draw_elapsed = utils.timer()
    table.insert(rooms_to_draw_next, {uid, config.WINDOW.width / 2, config.WINDOW.height / 2})
-   while #rooms_to_draw_next > 0 and (not running or utils.timer()-draw_elapsed < 0.09) do
+   while #rooms_to_draw_next > 0 do
       local this_draw_level = rooms_to_draw_next
       rooms_to_draw_next = {}  -- new generation
-      for i, room in ipairs (this_draw_level) do
-         draw_room (room[1], room[2], room[3], metrics)
+      for i, room in ipairs(this_draw_level) do
+         draw_room(room[1], room[2], room[3], metrics)
       end -- for each existing room
       depth = depth + 1
+      if (not fullarea and utils.timer()-draw_elapsed > 0.08) then
+         if not running then
+            AddTimer("draw_fullarea", 0, 0, 0.1, "mapper.draw_fullarea()", timer_flag.Enabled + timer_flag.OneShot + timer_flag.Replace + timer_flag.Temporary, "")
+            SetTimerOption("draw_fullarea", "send_to", sendto.script)
+         end
+         break
+      end
    end -- while all rooms_to_draw_next
 
    local barriers = metrics.barriers
@@ -1057,7 +1068,7 @@ function draw_area(uid)
 end
 
 -- draw our map starting at room: uid
-function draw (uid)
+function draw (uid, fullarea_passthrough)
    if not uid then
       draw_credits()
       return
@@ -1153,7 +1164,7 @@ function draw (uid)
       0)
    WindowScrollwheelHandler(win, "zzz_zoom", "mapper.zoom_map")
 
-   draw_area(uid)
+   draw_area(uid, fullarea_passthrough)
 
    local room_name = room.name
    local name_width = WindowTextWidth(win, FONT_ID, room_name)
