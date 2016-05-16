@@ -72,6 +72,20 @@ have been a better lua idiom', please do let me know at wolf@aardwolf.com - than
 
 </aliases>
 
+<triggers>
+<trigger
+   enabled="n"
+   name="strip_blank"
+   match="^$"
+   regexp="y"
+   omit_from_output="y"
+   send_to="12"
+   sequence="100"
+><send>
+EnableTrigger("strip_blank", false)
+</send>
+</trigger>
+</triggers>
 <!--  Get our standard constants -->
 
 <script>
@@ -154,6 +168,8 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       end
  
       BroadcastPlugin(1,message)
+      EnableTrigger("strip_blank", true)
+      Simulate("\r\n")
 
       -- Examples of use from here on. Can be uncommented for debug.
       --print("Testing room.info.exits table      : " .. gmcpval("room.info.exits")) -- serialized table.
