@@ -27,50 +27,6 @@ USAGE:
 
 <triggers>
 <trigger
-   enabled="y"
-   match="^{say}(?<msg>.*)"
-   regexp="y"
-   script="chats"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-   name="say"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-   
-<trigger
-   enabled="y"
-   match="^{chan ch=(?<channel>\w+)}(?<msg>.*)"
-   regexp="y"
-   script="chats"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-   name="chan"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-    
-<trigger
-   enabled="y"
-   match="^{tell}(?<msg>.*)"
-   script="chats"
-   omit_from_output="y"
-   regexp="y"
-   sequence="100"
-   send_to="12"
-   name="tell"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
-<trigger
-   enabled="n"
-   name="pray"
-   match="^\[ \*\* \(Pray\) \*\* \].+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
-<trigger
    enabled="n"
    name="warfare"
    match="^(WARFARE|GENOCIDE):.+$"
@@ -138,17 +94,6 @@ USAGE:
 
 <trigger
    enabled="n"
-   name="donations"
-   match="^CLAN ANNOUNCEMENT: \a+ has donated "
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
-<trigger
-   enabled="n"
    match="^$"
    regexp="y"
    name="end_gag_omit"
@@ -196,40 +141,77 @@ USAGE:
 <![CDATA[
 
 require "pairsbykeys"
+require "gmcphelper"
 
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
-function hideEchos(info, global_quest, remort_auction, donations, pray, warfare)
+echo_info = GetVariable("echo_info") ~= "0"
+echo_global_quest = GetVariable("echo_global_quest") ~= "0"
+echo_remort_auction = GetVariable("echo_remort_auction") ~= "0"
+echo_donations = GetVariable("echo_donations") ~= "0"
+echo_warfare = GetVariable("echo_warfare") ~= "0"
+EnableTrigger("info", not echo_info)
+EnableTrigger("raidinfo", not echo_info)
+EnableTrigger("claninfo", not echo_info)
+EnableTrigger("global_quest", not echo_global_quest)
+EnableTrigger("remort_auction", not echo_remort_auction)
+EnableTrigger("donations", not echo_donations)
+EnableTrigger("warfare", not echo_warfare)
+
+function hideEchos(info, global_quest, remort_auction, donations, warfare)
    if info ~= nil then
       EnableTrigger("info", info)
       EnableTrigger("raidinfo", info)
       EnableTrigger("claninfo", info)
+      echo_info = not info
+      if echo_info then
+         ColourNote ("yellow", "", "Info echoing is now ENABLED.")
+      else
+         ColourNote ("yellow", "", "Info echoing is now DISABLED.")
+      end
    end
    if global_quest ~= nil then
       EnableTrigger("global_quest", global_quest)
+      echo_global_quest = not global_quest
+      if echo_global_quest then
+         ColourNote ("yellow", "", "Global Quest echoing is now ENABLED.")
+      else
+         ColourNote ("yellow", "", "Global Quest echoing is now DISABLED.")
+      end
    end
    if remort_auction ~= nil then
       EnableTrigger("remort_auction", remort_auction)
+      echo_remort_auction = not remort_auction
+      if echo_remort_auction then
+         ColourNote ("yellow", "", "Remort Auction echoing is now ENABLED.")
+      else
+         ColourNote ("yellow", "", "Remort Auction echoing is now DISABLED.")
+      end
    end
    if donations ~= nil then
       EnableTrigger("donations", donations)
-   end
-   if pray ~= nil then
-      EnableTrigger("pray", pray)
+      echo_donations = not donations
+      if echo_donations then
+         ColourNote ("yellow", "", "Donations echoing is now ENABLED.")
+      else
+         ColourNote ("yellow", "", "Donations echoing is now DISABLED.")
+      end
    end
    if warfare ~= nil then
       EnableTrigger("warfare", warfare)
+      echo_warfare = not warfare
+      if echo_warfare then
+         ColourNote ("yellow", "", "Warfare echoing is now ENABLED.")
+      else
+         ColourNote ("yellow", "", "Warfare echoing is now DISABLED.")
+      end
    end
 end
 
-local echo_info = GetVariable("echo_info") == "1"
-local echo_global_quest = GetVariable("echo_global_quest") == "1"
-local echo_remort_auction = GetVariable("echo_remort_auction") == "1"
-local echo_donations = GetVariable("echo_donations") == "1"
-local echo_pray = GetVariable("echo_pray") == "1"
-local echo_warfare = GetVariable("echo_warfare") == "1"
-hideEchos(echo_info, echo_global_quest, echo_remort_auction, echo_donations, echo_pray, echo_warfare)
+function getEchos()
+   return echo_info, echo_global_quest, echo_remort_auction, echo_donations, echo_warfare
+end
 
 local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","ltalk","market","mobsay","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
 channels_table = {}
@@ -249,47 +231,27 @@ end
 
 constructDefaultChannels()
 
-function echoStyles(styles)
-   Simulate(stylesToANSI(styles).."\r\n")
---   for _, v in ipairs(styles) do
---      ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
---   end -- for each style run
---   Note ("")  -- wrap up line
-end
+function OnPluginBroadcast (msg, id, name, text)
+   -- Look for GMCP handler.
+   if (id == '3e7dedbe37e44942dd46d264') then
+      if (text == "comm.channel") then
+         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","comm.channel")         
+         luastmt = "gmcpdata = " .. gmcparg
+         assert (loadstring (luastmt or ""))()
 
-function chats (name, line, wildcards, styles)
-   local tag = name
-   if name == "chan" then
-      tag = string.match(line, "^{chan ch=(%a+)}")
-   end
-   if not tag then
-      return
-   end
-
-   tag_length = string.find(line,"}")
-   addNewChannel(tag)
-
-   -- echo in this world only if the user wants
-   if channels_table[tag]["echo"] then
-      -- Mahony reported that tags would sometimes come through with a color change injected by...something. 
-      -- That *SHOULD* never happen, but apparently has multiple times now. May as well take care of the possibility. Can't hurt right?
-      while tag_length > styles[1].length and styles[2] ~= nil do
-         -- merge all dangling styles up to the end of the tag
-         styles[1].text = styles[1].text .. styles[2].text
-         styles[1].length = styles[1].length + styles[2].length
-         table.remove(styles, 2)
+         msg = gmcpval("msg") or ""
+         chan = gmcpval("chan") or ""
+         if (echo_donations or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+            if not channels_table[chan] then
+               addNewChannel(chan)
+            end
+            if channels_table[chan]["echo"] then
+               Simulate(stylesToANSI(ColoursToStyles(msg)).."\r\n")
+            end
+         end
       end
-
-      -- strip out the tag
-      styles[1].text = string.sub(styles[1].text, tag_length+1)
-      styles[1].length = styles[1].length-tag_length
-      
-      -- display
-      echoStyles(styles)
-   else
-      EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
-   end -- echo wanted
-end -- chats
+   end
+end
 
 function untagged_info (name, line, wildcards, styles)
    EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
@@ -343,13 +305,12 @@ end -- chat_echo
 
 require "serialize"
 function OnPluginSaveState()
-   SetVariable("echo_info", GetTriggerOption("info", "enabled"))
-   SetVariable("echo_global_quest", GetTriggerOption("global_quest", "enabled"))
-   SetVariable("echo_remort_auction", GetTriggerOption("remort_auction", "enabled"))
-   SetVariable("echo_donations", GetTriggerOption("donations", "enabled"))
+   SetVariable("echo_info", echo_info and "1" or "0")
+   SetVariable("echo_global_quest", echo_global_quest and "1" or "0")
+   SetVariable("echo_remort_auction", echo_remort_auction and "1" or "0")
+   SetVariable("echo_donations", echo_donations and "1" or "0")
+   SetVariable("echo_warfare", echo_warfare and "1" or "0")
    SetVariable("channels_table", serialize.save("channels_table"))
-   SetVariable("echo_pray", GetTriggerOption("pray", "enabled"))
-   SetVariable("echo_warfare", GetTriggerOption("warfare", "enabled"))
 end
 
 function OnPluginInstall()
@@ -375,6 +336,7 @@ function OnPluginDisable()
       TelnetOptionOff(TELOPT_CHANNELS)
       TelnetOptionOff(TELOPT_TELLS)
       TelnetOptionOff(TELOPT_SAYS)
+      Send_GMCP_Packet("gmcpchannels off")
    end
 end
 
@@ -383,6 +345,7 @@ function OnPluginConnect()
    TelnetOptionOn(TELOPT_CHANNELS)
    TelnetOptionOn(TELOPT_TELLS)
    TelnetOptionOn(TELOPT_SAYS)
+   Send_GMCP_Packet("gmcpchannels on")
 end
 
 function getmemoryusage()
