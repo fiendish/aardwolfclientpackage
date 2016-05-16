@@ -231,11 +231,17 @@ end
 
 constructDefaultChannels()
 
+function echo_msg(msg)
+   Simulate(stylesToANSI(ColoursToStyles(msg)).."\r\n")
+end
+
+msg_buffer = {}
 function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == "comm.channel") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","comm.channel")         
+         res, char_state = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status.state")
+         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","comm.channel")
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or ""))()
 
@@ -246,8 +252,20 @@ function OnPluginBroadcast (msg, id, name, text)
                addNewChannel(chan)
             end
             if channels_table[chan]["echo"] then
-               Simulate(stylesToANSI(ColoursToStyles(msg)).."\r\n")
+               if char_state ~= "5" then
+                  echo_msg(msg)
+               else
+                  table.insert(msg_buffer, msg)
+               end
             end
+         end
+      elseif text == "char.status" then
+         res, char_state = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status.state")
+         if char_state ~= "5" then
+            for i,v in ipairs(msg_buffer) do
+               echo_msg(v)
+            end
+            msg_buffer = {}
          end
       end
    end
@@ -288,7 +306,7 @@ function chat_echo (toggle)
          defaults[i] = v["echo"]
          i = i+1
       end
-      local echo_result = utils.multilistbox ("Choose which channels to show in the main window.", "Main Output Echo Channel Selection", tbl, defaults)
+      local echo_result = utils.multilistbox("Choose which channels to show in the main window.", "Main Output Echo Channel Selection", tbl, defaults)
       if echo_result then
          for i,v in ipairs(tbl) do
             channels_table[v]["echo"] = echo_result[i]
