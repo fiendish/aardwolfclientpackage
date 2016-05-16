@@ -1941,6 +1941,7 @@ function room_edit_note (room, uid, newnotes)
          fixsql (uid)
          ))
          mapper.mapprint ("Note for room", uid, "deleted. Was previously:", notes)
+         mapper.room_display_params[uid] = nil
          rooms [uid].notes = nil   
          mapper.draw (current_room)
          return
@@ -1968,6 +1969,7 @@ function room_edit_note (room, uid, newnotes)
    end -- if    
    
    rooms [uid].notes = newnotes
+   mapper.room_display_params[uid] = nil
    mapper.draw (current_room)
    
 end -- room_edit_note
