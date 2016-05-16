@@ -3168,6 +3168,8 @@ function activate_running(run)
       if not area_exists then
          Send_GMCP_Packet("request area")
       end
+   else
+     DeleteTimer("draw_fullarea")
    end
    mapper.draw(current_room)
 end
