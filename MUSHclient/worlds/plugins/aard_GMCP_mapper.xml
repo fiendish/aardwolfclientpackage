@@ -6,7 +6,6 @@
 <!DOCTYPE muclient [
    <!ENTITY show_timing "false" > 
    <!ENTITY show_database_mods "false" > 
-   <!ENTITY show_other_areas "false" > 
    <!ENTITY show_up_down "false" >
 ]>
 
@@ -743,7 +742,6 @@ StopEvaluatingTriggers(true)
 <script>
 local show_timing = &show_timing;
 local show_database_mods = &show_database_mods;
-local show_other_areas = &show_other_areas;
 local show_up_down = &show_up_down;
 
 <![CDATA[
@@ -2641,7 +2639,6 @@ function OnPluginInstall ()
       show_help = OnHelp,         -- to show help
       room_click = room_click,    -- called on RH click on room square
       timing = show_timing,       -- want to see timing
-      show_other_areas = show_other_areas,  -- want to see areas other than the current one?
       show_up_down = show_up_down,          -- want to follow up/down exits?
    } 
     

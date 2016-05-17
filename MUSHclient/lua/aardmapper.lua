@@ -14,7 +14,6 @@ init (t)            -- call once, supply:
    t.show_help   -- function that displays some help
    t.room_click  -- function that handles RH click on room (uid, flags)
    t.timing      -- true to show timing
-   t.show_other_areas -- true to show non-current areas
    t.show_up_down    -- follow up/down exits
 
 bigger_rooms ()          -- zoom in map view
@@ -812,17 +811,16 @@ local function draw_room (uid, x, y, metrics)
                local next_coords = xy_to_coord(next_x, next_y)
 
                -- choose between a real exit or just a stub
-               if (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) or  -- another room already there
-                  ((not show_other_areas and exit_room and exit_room.area ~= current_area) and not (STITCH_CONTINENTS and continent_zones[current_area] and continent_zones[exit_room.area])) or -- room in another area
-                  (not show_up_down and (dir == "u" or dir == "d")) then -- room is above/below
-                  --nop
-               elseif exit_uid == uid then
-                  -- if the exit leads back to this room, only draw stub
-                  --nop
-               elseif not drawn_uids[exit_uid] and not drawn_coords[next_coords] then
-                  -- queue for next level of rooms
-                  table.insert(rooms_to_draw_next, {exit_uid, next_x, next_y})
-                  drawn_coords[next_coords] = exit_uid
+               if not (drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid) and not  -- another room already there
+                  (not (room.area == current_area or (STITCH_CONTINENTS and continent_zones[current_area] and continent_zones[room.area]))) and not -- different area
+                  (not show_up_down and (dir == "u" or dir == "d")) and not -- room is above/below
+                  (exit_uid == uid) and not -- exit leads back to this room
+                  drawn_uids[exit_uid] and not 
+                  drawn_coords[next_coords] 
+                  then 
+                     -- queue for next level of rooms
+                     table.insert(rooms_to_draw_next, {exit_uid, next_x, next_y})
+                     drawn_coords[next_coords] = exit_uid
                end
             end
          end
@@ -925,12 +923,7 @@ local function draw_room (uid, x, y, metrics)
          WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
             EXIT_COLOUR, pen_dot, 1,  --  dotted single pixel pen
             -1, miniwin.brush_null)  -- opaque, no brush
-      else  
-         -- room fill
-         WindowCircleOp (win, miniwin.circle_rectangle, left, top, right+1, bottom+1,
-            room_params.fillcolor2, pen_null, 0,  -- no pen
-            room_params.fillcolour, room_params.fillbrush)  -- brush
-         
+      else
          local borderpen = room_params.borderpen
          local borderpenwidth = room_params.borderpenwidth
          local bordercolour = room_params.bordercolour
@@ -939,16 +932,24 @@ local function draw_room (uid, x, y, metrics)
             bordercolour = mapper.OUR_ROOM_COLOUR.colour
             borderpenwidth = 3
             borderpen = pen_solid
-         elseif room.area ~= current_area then
-            bordercolour = mapper.DIFFERENT_AREA_COLOUR.colour
-            borderpen = pen_null
          end
 
-         if borderpen ~= pen_null then
-            -- room border
-            WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
-                  bordercolour, borderpen, borderpenwidth,  -- pen
-                  -1, miniwin.brush_null)  -- opaque, no brush
+         -- room fill
+         if room.area == current_area or continent_zones[room.area] then
+            WindowCircleOp (win, miniwin.circle_rectangle, left, top, right+1, bottom+1,
+               room_params.fillcolor2, pen_null, 0,  -- no pen
+               room_params.fillcolour, room_params.fillbrush)  -- brush
+         
+            if borderpen ~= pen_null then
+               -- room border
+               WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
+                     bordercolour, borderpen, borderpenwidth,  -- pen
+                     -1, miniwin.brush_null)  -- opaque, no brush
+            end
+         else
+            WindowCircleOp (win, miniwin.circle_rectangle, left, top, right+1, bottom+1,
+               0, pen_null, 0,  -- no pen
+               0, miniwin.brush_solid)  -- brush
          end
       end
    else
@@ -1060,6 +1061,9 @@ function draw_area(uid, fullarea)
          break
       end
    end -- while all rooms_to_draw_next
+   if not fullarea and #rooms_to_draw_next == 0 then
+      draw_fullarea()
+   end
 
    local barriers = metrics.barriers
    for i, zone_exit in ipairs(area_exits) do
@@ -1100,14 +1104,22 @@ function draw (uid, fullarea_passthrough)
    windowinfo.window_top = WindowInfo(win, 2) or windowinfo.window_top
    config.WINDOW.width = WindowInfo(win, 3) or config.WINDOW.width
    config.WINDOW.height = WindowInfo(win, 4) or config.WINDOW.height
-   WindowCreate (win,
-      windowinfo.window_left,
-      windowinfo.window_top,
-      config.WINDOW.width,
-      config.WINDOW.height,
-      windowinfo.window_mode,   -- top right
-      windowinfo.window_flags,
-      BACKGROUND_COLOUR.colour)
+   if WindowInfo(win, 5) and not WindowInfo(win, 6) and not fullarea_passthrough then
+      WindowResize(win,
+         config.WINDOW.width,
+         config.WINDOW.height,
+         BACKGROUND_COLOUR.colour)
+      WindowDeleteAllHotspots(win)
+   else
+      WindowCreate(win,
+         windowinfo.window_left,
+         windowinfo.window_top,
+         config.WINDOW.width,
+         config.WINDOW.height,
+         windowinfo.window_mode,   -- top right
+         windowinfo.window_flags,
+         BACKGROUND_COLOUR.colour)
+   end
 
    if config.USE_TEXTURES.enabled == true and not daredevil_mode then
       -- Load background texture
@@ -1314,7 +1326,6 @@ function init (t)
    show_help = t.show_help     -- "help" function
    room_click = t.room_click   -- RH mouse-click function
    timing = t.timing           -- true for timing info
-   show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
 
    -- force some config defaults if not supplied
