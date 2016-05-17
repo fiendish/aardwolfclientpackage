@@ -478,7 +478,7 @@ end -- get_number_from_user
 local function draw_configuration ()
 
    local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", 
-   "Area Textures", "Area Room Size", "Continent Room Size (without bigmap)", "Area Room Spacing", "Continent Room Spacing (without bigmap)", "Area Room Borders", "Continent Room Borders (without bigmap)", "Stitch Continents (without bigmap)"}
+   "Area Textures", "Area Room Size", "Continent Room Size (if bigmap off)", "Area Room Spacing", "Continent Room Spacing (if bigmap off)", "Area Room Borders", "Continent Room Borders (if bigmap off)", "Stitch Continents (if bigmap off)"}
    local width =  max_text_width (config_win, CONFIG_FONT_ID, config_entries , true)
    local GAP = 5
 
@@ -666,8 +666,8 @@ local function draw_configuration ()
       miniwin.cursor_hand, 0)  -- hand cursor
    y = y + font_height
 
-   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Size (without bigmap)", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (CONTINENT_ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Continent Room size (without bigmap) "), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Size (if bigmap off)", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (CONTINENT_ROOM_SIZE)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Continent Room size (if bigmap off) "), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
    WindowAddHotspot(config_win,
@@ -691,8 +691,8 @@ local function draw_configuration ()
    y = y + font_height
 
    -- continent room spacing
-   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Spacing (without bigmap)", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (DISTANCE_TO_NEXT_CONTINENT_ROOM)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Continent Room spacing (without bigmap) "), y, 0, 0, 0x808080)
+   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Spacing (if bigmap off)", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "("..tostring (DISTANCE_TO_NEXT_CONTINENT_ROOM)..")", x + WindowTextWidth(config_win, CONFIG_FONT_ID, "Continent Room spacing (if bigmap off) "), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "-", width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win,CONFIG_FONT_ID,"-"), y, 0, 0, 0x808080)
    WindowText(config_win, CONFIG_FONT_ID_UL, "+", width + rh_size / 2 + box_size + GAP, y, 0, 0, 0x808080)
    WindowAddHotspot(config_win,
@@ -716,7 +716,7 @@ local function draw_configuration ()
    y = y + font_height
 
    -- room border type
-   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Borders (without bigmap)", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "Continent Room Borders (if bigmap off)", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[CONTINENT_ROOM_BORDER_TYPE], width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, BORDER_TYPES[CONTINENT_ROOM_BORDER_TYPE])/2, y, 0, 0, 0x808080)
 
    -- show area exits hotspot
@@ -733,7 +733,7 @@ local function draw_configuration ()
    y = y + font_height
 
    -- room border type
-   WindowText(config_win, CONFIG_FONT_ID, "Stitch Continents (without bigmap)", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "Stitch Continents (if bigmap off)", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, STITCH_CONTINENTS and "On" or "Off", width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, STITCH_CONTINENTS and "On" or "Off")/2, y, 0, 0, 0x808080)
 
    -- show area exits hotspot
