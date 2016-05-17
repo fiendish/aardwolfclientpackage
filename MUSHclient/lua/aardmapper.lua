@@ -1643,7 +1643,7 @@ function findpath(src, dst, noportals, norecalls)
    
    local rooms_to_search_next = {}
    local searched = {}
-   if not search_for_dst(dst, {nil, nil, current_room}, rooms_to_search_next, searched) then
+   if not search_for_dst(dst, {nil, nil, src}, rooms_to_search_next, searched) then
       local found = false
       local first_bounce = nil
       while not found and #rooms_to_search_next > 0 do
