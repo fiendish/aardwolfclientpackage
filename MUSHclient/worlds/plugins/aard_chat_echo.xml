@@ -28,6 +28,51 @@ USAGE:
 <triggers>
 <trigger
    enabled="n"
+   name="begin_compact_mode"
+   match="^{begin compact check}$"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+   send_to="12"
+><send>
+EnableTrigger("begin_compact_mode", false)
+EnableTrigger("compact_mode", true)
+EnableTrigger("end_compact_mode", true)
+EnableTriggerGroup("end_gag", true)
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   name="compact_mode"
+   match="^Compact mode (.+)\.$"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+><send>
+compact_mode = "%1"
+SetTriggerOption("compact_mode", "omit_from_output", true)
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   name="end_compact_mode"
+   match="^{end compact check}$"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+   send_to="12"
+><send>
+EnableTrigger("end_compact_mode", false)
+EnableTrigger("compact_mode", false)
+EnableTriggerGroup("end_gag", true)
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
    name="warfare"
    match="^(WARFARE|GENOCIDE):.+$"
    regexp="y"
@@ -125,6 +170,23 @@ USAGE:
 </triggers>
 
 <aliases>
+<alias
+   match="^(compact? ?.*)"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+>
+<send>
+EnableTrigger("begin_compact_mode", true)
+SetTriggerOption("compact_mode", "omit_from_output", false)
+SendNoEcho("echo {begin compact check}")
+Send("%1")
+SendNoEcho("echo {end compact check}")
+</send>
+</alias>
+
 <alias
    script="chat_echo_wrap"
    match="^chats? echo( on| off| custom)?$"
@@ -233,6 +295,9 @@ constructDefaultChannels()
 
 function echo_msg(msg)
    Simulate(stylesToANSI(ColoursToStyles(msg)).."\r\n")
+   if compact_mode == "removed" then
+      Simulate("\r\n")
+   end
 end
 
 msg_buffer = {}
@@ -260,6 +325,15 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          end
       elseif text == "char.status" then
+         if not done_init then
+            done_init = true
+            EnableTrigger("begin_compact_mode", true)
+            SendNoEcho("echo {begin compact check}")
+            SendNoEcho("compact")
+            SendNoEcho("compact")
+            SendNoEcho("echo {end compact check}")
+         end
+
          res, char_state = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status.state")
          if char_state ~= "5" then
             for i,v in ipairs(msg_buffer) do
@@ -364,6 +438,7 @@ function OnPluginConnect()
    TelnetOptionOn(TELOPT_TELLS)
    TelnetOptionOn(TELOPT_SAYS)
    Send_GMCP_Packet("gmcpchannels on")
+   Send_GMCP_Packet("request char")
 end
 
 function getmemoryusage()
