@@ -27,6 +27,45 @@ USAGE:
 
 <triggers>
 <trigger
+   enabled="y"
+   name="begin_compact_mode"
+   match="^{begin compact check}$"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+   send_to="12"
+><send>
+EnableTrigger("compact_mode", true)
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   name="compact_mode"
+   match="^Compact mode (.+)\.$"
+   regexp="y"
+   omit_from_output="n"
+   sequence="100"
+   send_to="14"
+><send>
+compact_mode = "%1"
+</send>
+</trigger>
+
+<trigger
+   enabled="y"
+   name="end_compact_mode"
+   match="^{end compact check}$"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+   send_to="12"
+><send>
+EnableTrigger("compact_mode", false)
+</send>
+</trigger>
+
+<trigger
    enabled="n"
    name="warfare"
    match="^(WARFARE|GENOCIDE):.+$"
@@ -109,7 +148,7 @@ USAGE:
     
 <trigger
    enabled="n"
-   match=".*"
+   match=".+"
    regexp="y"
    name="end_gag_keep"
    group="end_gag"
@@ -125,6 +164,22 @@ USAGE:
 </triggers>
 
 <aliases>
+<alias
+   match="^(compact? ?.*)"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+>
+<send>
+EnableTriggerGroup("end_gag", true)
+SendNoEcho("echo {begin compact check}")
+Send("%1")
+SendNoEcho("echo {end compact check}")
+</send>
+</alias>
+
 <alias
    script="chat_echo_wrap"
    match="^chats? echo( on| off| custom)?$"
@@ -233,6 +288,9 @@ constructDefaultChannels()
 
 function echo_msg(msg)
    Simulate(stylesToANSI(ColoursToStyles(msg)).."\r\n")
+   if compact_mode ~= "set" then
+      Simulate("\n\r")
+   end
 end
 
 msg_buffer = {}
@@ -266,6 +324,16 @@ function OnPluginBroadcast (msg, id, name, text)
                echo_msg(v)
             end
             msg_buffer = {}
+         end
+      elseif text == "char.vitals" then
+         -- some gmcp messages get sent with the MOTD and we want this to happen after
+         if not done_init then
+            done_init = true
+            Note("Checking compact setting.")
+            SendNoEcho("echo {begin compact check}")
+            SendNoEcho("compact")
+            SendNoEcho("compact")
+            SendNoEcho("echo {end compact check}")
          end
       end
    end
@@ -364,6 +432,7 @@ function OnPluginConnect()
    TelnetOptionOn(TELOPT_TELLS)
    TelnetOptionOn(TELOPT_SAYS)
    Send_GMCP_Packet("gmcpchannels on")
+   Send_GMCP_Packet("request char")
 end
 
 function getmemoryusage()
