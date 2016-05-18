@@ -576,9 +576,25 @@ function OnPluginBroadcast (msg, id, name, text)
          end
       elseif (text == "comm.repop") then
          request_new_map()
+      elseif (text == "char.vitals") then
+         -- the mud doesn't send a map update when you die (part1)
+         myhp = gmcp("char.vitals.hp")
+         if myhp == 1 then
+            if char_state == 11 and not died then
+               died = true
+               request_new_map()
+            end
+         else
+            died = false
+         end
       elseif (text == "char.status") then
-         local char_state = gmcp("char.status.state")
+         char_state = gmcp("char.status.state")
          can_request_map = (char_state == 3 or char_state == 11)
+         if char_state == 11 and myhp == 1 and not died then
+            -- the mud doesn't send a map update when you die (part2)
+            died = true
+            page_built = false
+         end
          if can_request_map and not page_built then
             request_new_map()
          end
