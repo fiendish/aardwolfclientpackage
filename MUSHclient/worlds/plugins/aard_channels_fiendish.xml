@@ -751,6 +751,12 @@ function stampAndStore(styles)
     
    local text = ""
    local log_text = ""
+
+   -- remove control characters
+   for i,v in ipairs(styles) do
+      v.text = v.text:gsub("%c","")
+      v.length = v.text:len()
+   end
     
    -- inject timestamp if wanted
    tstamp = os.date(date_format)
