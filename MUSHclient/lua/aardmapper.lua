@@ -108,7 +108,7 @@ local room_click
 local timing            -- true to show timing and other info
 
 -- current room number
-local current_room
+current_room = nil
 
 -- our copy of rooms info
 areas = {}
