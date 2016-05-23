@@ -355,8 +355,7 @@ local function get_room_display_params (uid)
       room.fillbrush = ourroom.fillbrush
       room.fillcolor2 = ourroom.color2
       special_room = true
-   end
-   if ourroom.info and ourroom.info ~= "" then
+   elseif ourroom.info and ourroom.info ~= "" then
       if string.match (ourroom.info, "shop") then
          special_room = true
          room.fillcolour = mapper.SHOP_FILL_COLOUR.colour
