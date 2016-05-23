@@ -1708,6 +1708,11 @@ function load_all_rooms ()
    for bmrow in dbnrowsWRAPPER("SELECT * FROM bookmarks") do
       rooms[bmrow.uid].notes = bmrow.notes
    end   -- finding room
+   for row in dbnrowsWRAPPER("SELECT * FROM room_colors") do
+      rooms[row.roomid].color = row.color
+      rooms[row.roomid].color2 = row.color2
+      rooms[row.roomid].fillbrush = row.fillbrush
+   end
 end
 
 
@@ -1987,6 +1992,69 @@ brush_selection = {
    [miniwin.brush_waves_vertical]="Waves - vertical"
 }
 
+function room_remove_custom_colour(room, uid)
+   local color = room.color
+   local color2 = room.color2
+   local fillbrush = room.fillbrush
+
+   if color and fillbrush and (color2 or (fillbrush == miniwin.brush_solid)) then
+      dbCheckExecute(string.format (
+      "DELETE FROM room_colors WHERE roomid = %s;",
+      fixsql(uid)
+      ))
+      room.color = nil
+      room.color2 = nil
+      room.fillbrush = nil
+      mapper.mapprint("Color for room '"..uid.."' has been reset to terrain+info default. It was previously "..RGBColourToName(color)..((fillbrush ~= miniwin.brush_solid) and (" on "..RGBColourToName(color2)) or "").." using '"..brush_selection[fillbrush].."' brush.")
+      mapper.room_display_params[uid] = nil
+      mapper.draw(current_room)
+   else
+      mapper.mapprint("Room '"..uid.."' had no custom color assigned.")
+   end
+end
+
+function room_edit_custom_colour(room, uid)
+   local color = room.color
+   local color2 = room.color2
+   local fillbrush = room.fillbrush
+
+   color = PickColour(color or 0)
+   if color == -1 then
+      color = nil
+   end
+
+   if color then
+      fillbrush = utils.listbox ("Choose a room texture.\r\nIf you choose a texture other than solid, you will be asked for a second color.", "Texture Picker", 
+         brush_selection, 
+         fillbrush or miniwin.brush_fine_pattern)
+
+      if fillbrush and fillbrush ~= miniwin.brush_solid then
+         color2 = PickColour(color2 or 0)
+         if color2 == -1 then
+            color2 = nil
+         end
+      end
+   end
+
+   if color and fillbrush and (color2 or (fillbrush == miniwin.brush_solid)) then
+      dbCheckExecute(string.format (
+         "INSERT OR REPLACE INTO room_colors (roomid, color, fillbrush, color2) VALUES (%s, %d, %d, %d);",
+         fixsql(uid),
+         color,
+         fillbrush,
+         color2 or 0
+         ))
+      room.color = color
+      room.color2 = color2
+      room.fillbrush = fillbrush
+      mapper.mapprint("Color for room '"..uid.."' is now "..RGBColourToName(color)..((fillbrush ~= miniwin.brush_solid) and (" on "..RGBColourToName(color2)) or "").." using '"..brush_selection[fillbrush].."' brush.")
+      mapper.room_display_params[uid] = nil
+      mapper.draw(current_room)
+   else
+      mapper.mapprint("Custom room color selection cancelled.")
+   end
+end
+
 function room_edit_terrain_colour (room, uid)
    if not room.terrain then
       utils.msgbox("This room does not have a terrain type", "Unknown terrain!", "ok", "!", 1)
@@ -1994,43 +2062,44 @@ function room_edit_terrain_colour (room, uid)
    end -- not known
    
    local environmentname = room.terrain  
-   local color, color2, fillbrush
-   local newcolor, newcolor2, newfillbrush
+   local color = mapper.user_terrain_colour[environmentname].color
+   local color2 = mapper.user_terrain_colour[environmentname].color2
+   local fillbrush = mapper.user_terrain_colour[environmentname].fillbrush
 
-   color = mapper.user_terrain_colour[environmentname].color
-   color2 = mapper.user_terrain_colour[environmentname].color2
-   fillbrush = mapper.user_terrain_colour[environmentname].fillbrush
-
-   newcolor = PickColour(color or 0)
-   if newcolor == -1 then
-      newcolor = color or 0
+   color = PickColour(color or 0)
+   if color == -1 then
+      color = nil
    end
 
-   newfillbrush = utils.listbox ("Choose a tile texture.\r\nIf you choose a texture other than solid, you will be asked for a second color.", "Texture Picker", 
-      brush_selection, 
-      fillbrush or miniwin.brush_fine_pattern) or fillbrush or miniwin.brush_fine_pattern
+   if color then
+      fillbrush = utils.listbox ("Choose a terrain texture.\r\nIf you choose a texture other than solid, you will be asked for a second color.", "Texture Picker", 
+         brush_selection, 
+         fillbrush or miniwin.brush_fine_pattern)
 
-   if newfillbrush ~= miniwin.brush_solid then
-      newcolor2 = PickColour(color2 or 0)
-      if newcolor2 == -1 then
-         newcolor2 = color2 or 0
+      if fillbrush and fillbrush ~= miniwin.brush_solid then
+         color2 = PickColour(color2 or 0)
+         if color2 == -1 then
+            color2 = nil
+         end
       end
    end
-   newcolor2 = newcolor2 or 0
 
-   dbCheckExecute(string.format (
-   "INSERT OR REPLACE INTO terrain (name, color, fillbrush, color2) VALUES (%s, %d, %d, %d);",
-   fixsql(environmentname), 
-   newcolor,
-   newfillbrush,
-   newcolor2
-   ))
-   mapper.mapprint("Color for terrain '"..environmentname.."' is now "..RGBColourToName(newcolor)..((newfillbrush ~= miniwin.brush_solid) and (" on "..RGBColourToName(newcolor2)) or "").." using '"..brush_selection[newfillbrush].."' brush.")
-   
-   mapper.user_terrain_colour[environmentname] = {color = newcolor, color2 = newcolor2, fillbrush = newfillbrush}
-   mapper.room_display_params = {}
+   if color and fillbrush and (color2 or (fillbrush == miniwin.brush_solid)) then
+      dbCheckExecute(string.format (
+         "INSERT OR REPLACE INTO terrain (name, color, fillbrush, color2) VALUES (%s, %d, %d, %d);",
+         fixsql(environmentname), 
+         color,
+         fillbrush,
+         color2 or 0
+         ))
+      mapper.mapprint("Color for terrain '"..environmentname.."' is now "..RGBColourToName(color)..((fillbrush ~= miniwin.brush_solid) and (" on "..RGBColourToName(color2)) or "").." using '"..brush_selection[fillbrush].."' brush.")
+      mapper.user_terrain_colour[environmentname] = {color = color, color2 = color2, fillbrush = fillbrush}
+      mapper.room_display_params = {}
+      mapper.draw(current_room)
+   else
+      mapper.mapprint("Custom terrain color selection cancelled.")
+   end
 
-   mapper.draw(current_room)
 end -- room_edit_terrain_colour
 
 
@@ -2205,7 +2274,25 @@ function room_click (uid, flags)
    
    local handlers = {}
    table.insert(handlers, { name = "Edit Note", func = room_edit_note})
-   table.insert(handlers, { name = "Edit Terrain Colour", func = room_edit_terrain_colour})
+   table.insert(handlers, { name = "Edit ["..room.terrain.."] Terrain Color", func = room_edit_terrain_colour})
+
+   table.insert(handlers, { name = ">Edit Room-specific Color", })
+   if room.color then
+      table.insert(handlers, { name = RGBColourToName(room.color)..((room.fillbrush ~= miniwin.brush_solid) and 
+         (" on "..RGBColourToName(room.color2)) or "")..
+      " using '"..brush_selection[room.fillbrush].."' brush", func = function() end})
+   else
+      table.insert(handlers, { name = "^Not Set", })
+   end
+   table.insert(handlers, { name = "-", })
+   if room.color then
+      table.insert(handlers, { name = "Remove", func = room_remove_custom_colour})
+   else
+      table.insert(handlers, { name = "^Remove", })
+   end
+   table.insert(handlers, { name = "Change", func = room_edit_custom_colour})
+   table.insert(handlers, { name = "<", })
+
    table.insert(handlers, { name = "-", })
    
    table.insert(handlers, { name = ">Change Exit", })
