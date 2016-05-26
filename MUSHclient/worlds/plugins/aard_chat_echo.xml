@@ -325,6 +325,15 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          end
       elseif text == "char.status" then
+         res, char_state = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status.state")
+         if char_state ~= "5" then
+            for i,v in ipairs(msg_buffer) do
+               echo_msg(v)
+            end
+            msg_buffer = {}
+         end
+      elseif text == "char.vitals" then
+         -- some gmcp messages get sent with the MOTD and we want this to happen after
          if not done_init then
             done_init = true
             EnableTrigger("begin_compact_mode", true)
@@ -332,14 +341,6 @@ function OnPluginBroadcast (msg, id, name, text)
             SendNoEcho("compact")
             SendNoEcho("compact")
             SendNoEcho("echo {end compact check}")
-         end
-
-         res, char_state = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status.state")
-         if char_state ~= "5" then
-            for i,v in ipairs(msg_buffer) do
-               echo_msg(v)
-            end
-            msg_buffer = {}
          end
       end
    end
