@@ -1126,7 +1126,7 @@ function draw (uid, fullarea_passthrough)
          BACKGROUND_COLOUR.colour)
    end
 
-   if config.USE_TEXTURES.enabled == true and not daredevil_mode then
+   if config.USE_TEXTURES.enabled == true and not daredevil_mode and not (current_room_is_cont and STITCH_CONTINENTS) then
       -- Load background texture
       local textimage = nil
       local texture = nil
