@@ -15,7 +15,6 @@
 function gmcp(what)
 	result, value = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", what)
 	if result ~= 0 then
-		ColourNote ("orange", "", "Warning: Could not get GMCP value for " .. what)
 		return nil
 	else
 		local luastmt = "ret = " .. value
