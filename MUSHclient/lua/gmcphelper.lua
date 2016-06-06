@@ -13,14 +13,14 @@
 --   Examples: gmcp("room"), gmcp("char.base.tier")
 ---------------------------------------------------------------------------------------------------
 function gmcp(what)
-	result, value = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", what)
-	if result ~= 0 then
-		return nil
-	else
+   result, value = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", what)
+   if result ~= 0 then
+      return nil
+   else
       if value == "" then value = "nil" end
-		loadstring("ret = " .. value)()
-		return ret
-	end -- if
+      loadstring("ret = " .. value)()
+      return ret
+   end -- if
 end -- gmcp
 
 ---------------------------------------------------------------------------------------------------
