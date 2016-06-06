@@ -17,8 +17,8 @@ function gmcp(what)
 	if result ~= 0 then
 		return nil
 	else
-		local luastmt = "ret = " .. value
-		assert (loadstring (luastmt or "")) ()
+      if value == "" then value = "nil" end
+		loadstring("ret = " .. value)()
 		return ret
 	end -- if
 end -- gmcp
