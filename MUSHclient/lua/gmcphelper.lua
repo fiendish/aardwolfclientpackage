@@ -13,15 +13,17 @@
 --   Examples: gmcp("room"), gmcp("char.base.tier")
 ---------------------------------------------------------------------------------------------------
 function gmcp(what)
-	result, value = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", what)
-	if result ~= 0 then
-		ColourNote ("orange", "", "Warning: Could not get GMCP value for " .. what)
-		return nil
-	else
-		local luastmt = "ret = " .. value
-		assert (loadstring (luastmt or "")) ()
-		return ret
-	end -- if
+   result, value = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", what)
+   if result ~= 0 or value == nil or value == "" then
+       -- Changing this to nil for any of the above cases will break older scripts so be mindful.
+      return ""
+   else
+      pcall(loadstring("ret = "..value))
+      if type(ret) ~= "table" then
+         loadstring("ret = \""..value.."\"")()
+      end
+      return ret
+   end -- if
 end -- gmcp
 
 ---------------------------------------------------------------------------------------------------
@@ -91,13 +93,12 @@ end
 ---------------------------------------------------------------------------------------------------
 function gmcpsection(fieldname,nesting) 
    local outval = get_gmcp(fieldname,gmcpdata)
- 
    if (type(outval) == "table") then 
       assert(nesting,"nested table value requested from GMCP. Should be single element.")
       return serialize.save_simple(outval) 
    end
 
-   if type (outval) == "string" then
+   if outval == nil or type(outval) == "string" then
       return outval 
    else
       return tostring (outval)
