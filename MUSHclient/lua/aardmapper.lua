@@ -1763,7 +1763,7 @@ function full_find (dests, walk, no_portals)
          nfinfo = " -[" .. v.reason .. "]"
          mapprint (nfinfo) -- new line
       else
-         if not compact_mode then Note("") end
+         Note("")
       end -- if
    end
 
@@ -1791,7 +1791,7 @@ function quick_find(dests, walk)
          info = "[" .. v.reason .. "]"
          mapprint (" - " .. info) -- new line
       else -- if
-         if not compact_mode then Note("") end
+         Note("")
       end
 
       BroadcastPlugin (999, "repaint")
