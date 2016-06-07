@@ -163,6 +163,14 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    sequence="100"
    script="shownote_toggle"
 ></alias>
+
+<alias
+   match="^mapper compact( (on|off))?$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   script="compact_mode_toggle"
+></alias>
   
 <alias
    match="mapper zoom out"
@@ -777,6 +785,7 @@ local areas = {}
 local environments = {}
 local user_terrain_colour = {}
 local performing_maintenance = false
+compact_mode = ((GetVariable("compact_mode") or "0") == "1") -- default false
 
 room_not_in_database = {}
 room_in_database = {}
@@ -1528,7 +1537,7 @@ BASE_CEXIT_DELAY = 2
 
 function change_cexit_delay(name, line, wildcards)
    temp_cexit_delay = tonumber(wildcards[1])
-   Note("")
+   if not compact_mode then Note("") end
    if temp_cexit_delay == nil or temp_cexit_delay < BASE_CEXIT_DELAY or temp_cexit_delay > 40 then
       Note("CEXIT_DELAY FAILED: Invalid delay given ("..wildcards[1].."). Must be a number from 2 to 40.")
       temp_cexit_delay = nil
@@ -2623,7 +2632,7 @@ function backup_databases(manual)
    Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
    if not checkDatabaseIntegrity(true) then
       Note("ABORTING CURRENT BACKUP")
-      Note("")
+      if not compact_mode then Note("") end
       Repaint()   
       db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
       performing_maintenance = false
@@ -2727,7 +2736,7 @@ function backup_databases(manual)
       Note("ABORTING BACKUP.")
       CorruptionAlert()
    end
-   Note("")
+   if not compact_mode then Note("") end
    db = assert (sqlite3.open(worldPath..".db")) -- re-open database 
    Repaint()
    performing_maintenance = false
@@ -2735,10 +2744,10 @@ function backup_databases(manual)
 end
 
 function CorruptionAlert()
-   Note("")
+   if not compact_mode then Note("") end
    Note("WARNING, PLEASE READ: https://github.com/fiendish/aardwolfclientpackage/wiki/GMCP-driven-world-mapper#database-corruption")
    Note("If the information there does not help you 100%, then try asking on the Tech channel and report this error to Fiendish by email.")
-   Note("")
+   if not compact_mode then Note("") end
 end
 
 -- ec, areaKeys = CallPlugin("b6eae87ccedd84f510b74714", "getkeyword", "The Broken Halls of Horath") puts "horath" into areaKeys
@@ -3179,8 +3188,9 @@ function OnPluginSaveState ()
    mapper.save_state ()
    SetVariable("config","") -- wipe out the old config table
    SetVariable("configs", "configs = " .. serialize.save_simple (mapper.config))
-   SetVariable("quick_mode", (quick_mode and "1") or "0")
-   SetVariable("shownotes", (shownotes and "1") or "0")
+   SetVariable("quick_mode", quick_mode and "1" or "0")
+   SetVariable("shownotes", shownotes and "1" or "0")
+   SetVariable("compact_mode", compact_mode and "1" or "0")
    
    -- close and reopen database
    if db:isopen() then
@@ -3396,8 +3406,11 @@ function got_gmcp_room()
       room = load_room_from_database (room_number)
    end -- not in cache
    
+   local check_compact = ""
+   if not compact_mode then check_compact = "\n" end
+
    if shownotes and room and room.notes and room.notes ~= "" then
-      for _,v in ipairs(ColoursToStyles("*** MAPPER NOTE *** -> "..room.notes.."@w\n\n", "x033")) do
+      for _,v in ipairs(ColoursToStyles("*** MAPPER NOTE *** -> "..room.notes.."@w\n"..check_compact, "x033")) do
          ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
       end
    end
@@ -3629,26 +3642,39 @@ function quick_mode_toggle(name, line, wildcards)
    if (wildcards[2] ~= "") then
       quick_mode = (wildcards[2] == "on")
    end
-   Note("")
+   if not compact_mode then Note("") end
    if quick_mode then
       Note("QUICKLIST is ON: Lists of found targets will display immediately without sorting by distance.")
    else
       Note("QUICKLIST is OFF: Lists of found targets will pathfind each result and sort them by distance.")
    end
-   Note("")
+   if not compact_mode then Note("") end
 end
 
 function shownote_toggle(name, line, wildcards)
    if (wildcards[2] ~= "") then
       shownotes = (wildcards[2] == "on")
    end
-   Note("")
+   if not compact_mode then Note("") end
    if shownotes then
       Note("SHOWNOTES is ON: Notes added to rooms will display automatically upon entrance.")
    else
       Note("SHOWNOTES is OFF: Notes added to rooms will NOT display automatically.")
    end
-   Note("")
+   if not compact_mode then Note("") end
+end
+
+function compact_mode_toggle(name, line, wildcards)
+   if (wildcards[2] ~= "") then
+      compact_mode = (wildcards[2] == "on")
+   end
+   if not compact_mode then Note("") end
+   if compact_mode then
+      Note("COMPACT is ON: Mapper output won't display blank lines. Please report any that might show.")
+   else
+      Note("COMPACT is OFF: Mapper output will display blank lines (default behaviour).")
+   end
+   if not compact_mode then Note("") end
 end
 
 function map_area (name, line, wildcards)
@@ -4201,7 +4227,7 @@ function toggleBackups(on, quiet)
       if ((os.time()-last_auto_backup) >= 86401) then
          Note("It looks like it has been more than 24 hours since your last automatic mapper database backup!")
          Note("Forcing an automatic backup now...")
-         Note("")
+         if not compact_mode then Note("") end
          Repaint()
          automatic_backup()
       end
@@ -4276,6 +4302,8 @@ function OnHelp (name, line, wildcards)
                                  > by distance (default is on)]],
 [[mapper shownotes [on/off]      --> ON will cause any notes in a room to display
                                  > automatically upon entering (default is on)]],
+[[mapper compact [on/off]        --> ON will make it so no blank lines are
+                                 > displayed by the mapper (default is off)]],
 [[mapper backups <off/on>        --> Turn off or on automatic database backups
                                  > The default setting is on]],
 [[mapper backups [un]compressed  --> Turn off or on database backup compression
