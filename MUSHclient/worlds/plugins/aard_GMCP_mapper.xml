@@ -3344,9 +3344,11 @@ function got_gmcp_room()
    
    mapper.current_room = room_number
    local room = get_room(room_number)
+   local check_compact = ""
+   if not compact_mode then check_compact = "\n"
 
    if shownotes and room and room.notes and room.notes ~= "" then
-      for _,v in ipairs(ColoursToStyles("*** MAPPER NOTE *** -> "..room.notes.."@w\n\n", "x033")) do
+      for _,v in ipairs(ColoursToStyles("*** MAPPER NOTE *** -> "..room.notes.."@w\n"..check_compact, "x033")) do
          ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
       end
    end
