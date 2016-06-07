@@ -3923,6 +3923,8 @@ function OnHelp (name, line, wildcards)
                                  > by distance (default is on)]],
 [[mapper shownotes [on/off]      --> ON will cause any notes in a room to display
                                  > automatically upon entering (default is on)]],
+[[mapper compact [on/off]        --> ON will make it so no blank lines are
+                                 > displayed by the mapper (default is off)]],
 [[mapper backups <off/on>        --> Turn off or on automatic database backups
                                  > The default setting is on]],
 [[mapper backups [un]compressed  --> Turn off or on database backup compression
