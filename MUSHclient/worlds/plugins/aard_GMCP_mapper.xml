@@ -1142,7 +1142,7 @@ function show_this_room (name, line, wildcards)
       tprint(room.exits)
       Tell("Exit locks: ")
       if room.exit_locks then
-         if not compact_mode then Note("") end
+         Note("")
          tprint(room.exit_locks)
       else
          Note("none")
@@ -4129,7 +4129,7 @@ you set all portal aspects in one command without being in the target room.]],
                         end
                         marker = marker + #v + #pattern
                      end
-                     if not compact_mode then Note("") end
+                     Note("")
                   end
                end
             end
