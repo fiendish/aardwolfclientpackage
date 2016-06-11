@@ -3,205 +3,647 @@
 
 <muclient>
 <plugin
-   name="Text_Substitutions"
-   author="Fiendish"
-   id="26240e292291e159e1ff3cde"
-   language="Lua"
-   purpose="Replace text with other text"
-   date_written="2011-07-27 01:00:00"
-   requires="4.75"
-   version="1.0"
-   save_state="y"
+	name="Text_Substitutions"
+	author="Fiendish"
+	id="26240e292291e159e1ff3cde"
+	language="Lua"
+	purpose="Replace text with other text"
+	date_written="2011-07-27 01:00:00"
+	requires="4.75"
+	version="1.0"
+	save_state="y"
 >
 
 <description trim="y">
+This plugin substitutes text in server output with something else.
 
-Replaces text in server output with whatever you want.
+It does not cross color code boundaries.
+'#sub {potato} {pants}' will make @Mpotato@Cpants@Rairplane@w become @Mpants@Cpants@Rairplane@w
+but will not do anything to @Mpot@Yato@Cpants@Rairplane@w because, in this one, the word
+potato has a color break inside it.
 
-Does not cross color code boundaries.
-'#sub potato pants' will make @Mpotato@Cpants@Rairplane become @Mpants@Cpants@Rairplane
-but will not do anything to @Mpot@Yato@Cpants@Rairplane.
+Operates at the incoming packet level, so GMCP comm.channel.msg can be modified as well.
 
-Operates at the incoming packet level, so GMCP strings are modified as well.
-
+Type "#sub help" or make a syntax mistake for usage details.
 </description>
 </plugin>
 <aliases>
 
 <alias
-   match="^#sub[ ]*$"
-   enabled="y"
-   regexp="y"
-   sequence="100"
-   ignore_case="y"
-   script="listsub"
+	match="^#subs? *$"
+	enabled="y"
+	regexp="y"
+	sequence="100"
+	ignore_case="y"
+	script="listsub"
 ></alias>
 
 <alias
-   match="^#sub \{(.*)\} \{(.*)\}( (#nocase)| (#alone))* *$"
-   regexp="y"
-   enabled="y"
-   sequence="100"
-   ignore_case="y"
-   script="addsub"
+	match="^#sub +\{(.*)\} *\{(.*)\}( *(#nocase)| *(#alone)| *(#function))* *$"
+	regexp="y"
+	enabled="y"
+	sequence="100"
+	ignore_case="y"
+	script="addsub"
 ></alias>
 
 <alias
-   match="^#sub (.+?) (.+?)( (#nocase)| (#alone))* *$"
-   enabled="y"
-   regexp="y"
-   sequence="101"
-   ignore_case="y"
-   script="addsub"
+	match="^#sub ([\S]+).*$"
+	enabled="y"
+	regexp="y"
+	sequence="200"
+	ignore_case="y"
+	script="helpsub"
 ></alias>
 
 <alias
-   match="^#sub .+$"
-   enabled="y"
-   regexp="y"
-   sequence="200"
-   ignore_case="y"
-   script="helpsub"
+	match="^#unsub +#(\d+)$"
+	regexp="y"
+	enabled="y"
+	sequence="100"
+	ignore_case="y"
+	script="remsub"
 ></alias>
 
 <alias
-   match="^#unsub (.+)$"
-   regexp="y"
-   enabled="y"
-   sequence="100"
-   ignore_case="y"
-   script="remsub"
+	match="^#unsub.*$"
+	enabled="y"
+	regexp="y"
+	sequence="101"
+	ignore_case="y"
+	script="helpsub"
 ></alias>
 
 <alias
-   match="^#unsub *$"
-   enabled="y"
-   regexp="y"
-   sequence="101"
-   ignore_case="y"
-   script="helpsub"
+	match="^#gags? *$"
+	enabled="y"
+	regexp="y"
+	sequence="100"
+	ignore_case="y"
+	script="listgag"
+></alias>
+
+<alias
+	match="^#gag +\{(.*?)\}( *(#nocase)| *(#alone)| *\{(.*?)\})* *$"
+	regexp="y"
+	enabled="y"
+	sequence="100"
+	ignore_case="y"
+	script="addgag"
+></alias>
+
+<alias
+	match="^#gag ([\S]+).*$"
+	enabled="y"
+	regexp="y"
+	sequence="200"
+	ignore_case="y"
+	script="helpsub"
+></alias>
+
+<alias
+	match="^#ungag +#(\d+)$"
+	regexp="y"
+	enabled="y"
+	sequence="100"
+	ignore_case="y"
+	script="remgag"
+></alias>
+
+<alias
+	match="^#ungag.*$"
+	enabled="y"
+	regexp="y"
+	sequence="101"
+	ignore_case="y"
+	script="helpsub"
 ></alias>
 
 </aliases>
 
-<!--  Script  -->
-
 <script>
 <![CDATA[
+-- fix stupid syntax highlighting in SublimeText --> '
+
 require "serialize"
+dofile(GetInfo(60) .. "aardwolf_colors.lua")
 
-subs = {} -- init table
+ -- init tables
+loadstring( GetVariable("subs") or "subs = {}" )()
+loadstring( GetVariable("gags") or "gags = {}" )()
 
-loadstring (GetVariable ("subs") or "") ()
+function usagesub(line, embedded)
+	if not embedded then
+		Note()
+	end
+	AnsiNote(ColoursToANSI("You typed: '@W"..line.."@Y'"))
+	if not embedded then
+		tts_warning()
+	end
+	AnsiNote(ColoursToANSI("@YAvailable commands for the #sub/#gag plugin are:"..
+	"\n@Y #subs             : List all current substitutions"..
+	"\n@Y #gags             : List all current gags"..
+	"\n@Y                   :"..
+	"\n@Y #sub {A} {B}      : Replaces phrase A with phrase B"..
+	"\n@Y #unsub #<number>  : Removes numbered substitution"..
+	"\n@Y                   :"..
+	"\n@Y #gag {A}          : Gag lines with phrase A"..
+	"\n@Y #ungag #<number>  : Removes numbered gag"))
+	if not embedded then
+		AnsiNote(ColoursToANSI("@Y #sub help         : More complete help for this plugin"))
+	end
+	AnsiNote(ColoursToANSI("@Y                   :"..
+	"\n@G Note that you must use curly braces around each phrase for demarcation,"..
+	"\n@G not quotation marks or anything else."..
+	"\n@G Add @C#alone@G to the line to only match at word or color boundaries."..
+	"\n@G Add @C#nocase@G to the line to do case-insensitive matching."))
+	if not embedded then
+		Note()
+	end
+end
+
+function tts_warning()
+	AnsiNote(ColoursToANSI("@cNote: If you are using text to speech, you will need to have enabled"..
+	"\n@call punctuation reading to follow the documentation for this plugin."..
+	"\n@cThe plugin uses some symbols for interaction, and the full help includes"..
+	"\n@cexample Lua plugin code as well."))
+end
 
 function helpsub(name, line, wildcards)
-   ColourNote("yellow","","")
-   ColourNote("yellow","","You typed:   '","white","",line,"yellow","","'")
-   ColourNote("yellow","","Available options for the #sub plugin are:")
-   ColourNote("yellow","","---------------------------------------------------------------")
-   ColourNote("yellow","","#sub            - list all current substitutions")
-   ColourNote("yellow","","")
-   ColourNote("yellow","","#sub a b        - replaces word a with word b")
-   ColourNote("yellow","","#sub {a} {b}    - replaces phrase a with phrase b")
-   ColourNote("lime","","-  Add #alone to your sub line to only match at word boundaries")
-   ColourNote("lime","","-  Add #nocase to your sub line to do case-insensitive matching")
-   ColourNote("lime","","-  example:  #sub {hello} {Howdy} #alone #nocase")
-   ColourNote("lime","","-            will match HeLlO but not othello")
-   ColourNote("yellow","","")
-   ColourNote("yellow","","#unsub a        - removes substitution for a")
-   ColourNote("yellow","","#unsub #number  - removes numbered substitution")
-   ColourNote("yellow","","")
+
+	if wildcards[1] ~= "help" and wildcards[1] ~= "#help" then
+		usagesub(line, false)
+		return
+	end
+
+	local header = "begin help for the #sub/#gag plugin"
+	AnsiNote(ColoursToANSI("\n\n@Y"..string.rep(" ", (60-#header)/2)..header))
+	tts_warning()
+	AnsiNote(ColoursToANSI("\n@w"..GetPluginInfo(GetPluginID(), 3):gsub("(@%w)", "%1@%1").."\n@Y"))
+	usagesub(line, true)
+	AnsiNote(ColoursToANSI(
+	"@G example: @C#sub {hello} {Howdy} #alone #nocase"..
+	"\n@G          This will match HeLlO but not othello."..
+	"\n@G"..
+	"\n@G You can use Lua gsub capture patterns too."..
+	"\n@G example: @C#sub {(player)} {%1 (rude)} #alone #nocase"..
+	"\n@G          This will do almost the same things as"..
+	"\n@G          @C#sub {player} {player (rude)} #alone #nocase"..
+	"\n@G          but it will preserve the original capitalization."..
+	"\n@G"..
+	"\n@G Add @C#function@G to a #sub line to pass matching components to a plugin function"..
+	"\n@G instead of doing a direct replacement."..
+	"\n@G For this, your replacement pattern must be @Wplugin_id:function_name@G."..
+	"\n@G example: @C#sub {player} {12345678901234567890abcd:my_example} #alone #function"..
+	"\n@G          Then in your plugin with ID 12345678901234567890abcd,"..
+	"\n@G          you would add a new my_example function. It could"..
+	"\n@G          be something like:"..
+	"\n@G@C        function my_example(...)"..
+	"\n@G@C          local args = {...}"..
+	"\n@G@C          if my_plugin_variable == 100 then"..
+	"\n@G@C            -- returning a string says replace with this"..
+	"\n@G@C            return args[1]..\" (@@Rbutternut squash$C)\""..
+	"\n@G@C          else"..
+	"\n@G@C            -- returning false or nil says don't do a replacement"..
+	"\n@G@C            return false"..
+	"\n@G@C          end"..
+	"\n@G@C        end"..
+	"\n@G Since gags don't normally have a replacement pattern field, adding one"..
+	"\n@G will make them behave similarly."..
+	"\n@G There is no need to add #function for gags."..
+	"\n@G example: @C#gag {player} {12345678901234567890abcd:my_new_gag} #alone"..
+	"\n@G          Then in your plugin with ID 12345678901234567890abcd,"..
+	"\n@G          you could add a new my_new_gag function like:"..
+	"\n@G@C        function my_new_gag()"..
+	"\n@G@C          local line = CallPlugin(\"26240e292291e159e1ff3cde\",\"current_line\")"..
+	"\n@G@C          if line:sub(1,15) == string.char(255,250,201)..\"comm.channel\" then"..
+	"\n@G@C            -- returning true says gag this if it's a gmcp comm.channel message"..
+	"\n@G@C            return true"..
+	"\n@G@C          else"..
+	"\n@G@C            -- returning false or nil says don't gag"..
+	"\n@G@C            return false"..
+	"\n@G@C          end"..
+	"\n@G@C        end"..
+	"\n@G@C"..
+	"\n@G As shown, using @CCallPlugin(\"26240e292291e159e1ff3cde\", \"current_line\")@G"..
+	"\n@G in your handler function will return the message being processed."..
+	"\n@Y"..string.rep(" ", (60-#header:gsub("begin","end"))/2)..header:gsub("begin","end")))
 end
+
 
 function listsub(name, line, wildcards)
-   ColourNote("yellow","","")
-   ColourNote("yellow",""," Current #subs:")
-   ColourNote("yellow","","/-----------------------------------------------------------------------------\\")
-   for i,v in ipairs(subs) do
-      ColourNote("yellow","",string.format("   %4u",i)..": ","white","",v[1],"yellow",""," --> ","white","",v[2])
-   end
-   ColourNote("yellow","","\\-----------------------------------------------------------------------------/")
-   ColourNote("yellow","","")
+	ColourNote("yellow","","")
+	ColourNote("yellow",""," Current #subs:")
+	ColourNote("yellow","","/-----------------------------------------------------------------------------\\")
+	for i,v in ipairs(subs) do
+		AnsiNote(ColoursToANSI("@Y"..string.format("   %4u",i)..": "..format_sub(v)))
+	end
+	ColourNote("yellow","","\\-----------------------------------------------------------------------------/")
+	ColourNote("yellow","","")
  end
 
-function remsub(name, line, wildcards) 
-   local formerly = nil
-   local found = false
-   local ind = nil
-   local keywords = wildcards[1]
-   
-   if keywords:sub(1,1) == "#" then
-      local ks = subs[tonumber(keywords:sub(2))]
-      if ks then
-         keywords = ks[1]
-      end
-   end
-   
-   for i,v in ipairs(subs) do
-      if v[1] == keywords then
-         formerly = v[2]
-         table.remove(subs, i)
-         found = true
-         break
-      end
-   end
-   ColourNote("yellow","","")
-   if found then
-      ColourNote("yellow","","\""..keywords.."\" un-subbed (formerly \""..formerly.."\")")
-   else
-      ColourNote("yellow","","No existing #sub found for "..wildcards[1])
-   end
-   OnPluginSaveState()
+
+function listgag(name, line, wildcards)
+	ColourNote("yellow","","")
+	ColourNote("yellow",""," Current #gags:")
+	ColourNote("yellow","","/-----------------------------------------------------------------------------\\")
+	for i,v in ipairs(gags) do
+		AnsiNote(ColoursToANSI("@Y"..string.format("   %4u",i)..": "..format_gag(v)))
+	end
+	ColourNote("yellow","","\\-----------------------------------------------------------------------------/")
+	ColourNote("yellow","","")
+ end
+
+
+function find_in(set, original, nocase, alone, use_function)
+	for i,v in ipairs(set) do
+		if v.original == original and v.nocase == nocase and v.alone == alone and v.use_function == use_function then
+			return i
+		end
+	end
 end
+
+
+function remsub(name, line, wildcards, silent)
+	local found_index = tonumber(wildcards[1])
+	local found = found_index and subs[found_index] or false
+
+	if not silent then
+		Note()
+		if found then
+			AnsiNote(ColoursToANSI("@Ysub #"..found_index.." removed. Formerly: ["..format_sub(found).."]"))
+		else
+			ColourNote("yellow","","sub #"..tostring(wildcards[1]).." not found.")
+		end
+	end
+	if found then
+		table.remove(subs,found_index)
+		OnPluginSaveState()
+	end
+end
+
+
+function format_gag(gag)
+	return "\"@W"..gag.original:gsub("@","@@").."@Y\""..(gag.nocase and " #nocase" or "")..(gag.alone and " #alone" or "")..
+				(gag.use_function and (" @Y--> #function \"@W"..gag.use_function:gsub("@","@@").."@Y\"") or "")
+end
+
+
+function format_sub(sub)
+	return "\"@W"..sub.original:gsub("@","@@").."@Y\""..(sub.nocase and " #nocase" or "")..(sub.alone and " #alone" or "")..
+				" @Y--> "..
+				(sub.use_function and "#function " or "").."\"@W"..sub.tostr:gsub("@","@@").."@Y\""
+end
+
+
+function remgag(name, line, wildcards, silent) 
+	local found_index = tonumber(wildcards[1])
+	local found = found_index and gags[found_index] or false
+	
+	if not silent then
+		Note()
+		if found then
+			AnsiNote(ColoursToANSI("@Ygag #"..found_index.." removed. Formerly: ["..format_gag(found).."]"))
+		else
+			ColourNote("yellow","","gag #"..tostring(wildcards[1]).." not found.")
+		end
+	end
+	if found then
+		table.remove(gags,found_index)
+		OnPluginSaveState()
+	end
+end
+
 
 function addsub(name, line, wildcards)
+	local fromstr = wildcards[1]
+	local tostr = wildcards[2]
+	local nocase = wildcards[4] ~= ""
+	local alone = wildcards[5] ~= ""
+	local use_function = wildcards[6] ~= ""
 
-   local fromstr = wildcards[1]
-   local tostr = wildcards[2]
-   
-   if wildcards[4] == "#nocase" then
-      wildcards[1] = string.gsub(wildcards[1], '(%a)', function (v) return '['..string.upper(v)..string.lower(v)..']' end)
-   end
-   if wildcards[5] == "#alone" then
-      wildcards[1] = "([%s%p])"..wildcards[1].."([%s%p])"
-      
-      wildcards[2] = string.gsub(wildcards[2], "%%%%", "%%\0"):gsub("%%([%d]+)", function (v) return "%"..tostring(tonumber(v)+1) end):gsub("%z","%%")
-      wildcards[2] = "%1"..wildcards[2]
-      local num_wilds = 0
-      for wild in string.gmatch(wildcards[1], "%(") do
-         num_wilds = num_wilds+1
-      end
-      wildcards[2] = wildcards[2].."%"..tostring(num_wilds)
-   end
-   
-   ColourNote("yellow", "", "...")
-   if wildcards[4] == "#nocase" or wildcards[5] == "#alone" then
-      ColourNote("yellow", "", "You specified"..((wildcards[4] == "#nocase") and (" "..wildcards[4]) or "")..((wildcards[5] == "#alone") and (" "..wildcards[5]) or "")..", so converting your #sub patterns...")
-      ColourNote("yellow", "", "")
-      ColourNote("yellow", "", "\""..fromstr.."\" --> \""..tostr.."\"")
-      ColourNote("yellow", "", "becomes")
-      ColourNote("yellow", "", "\""..wildcards[1].."\" --> \""..wildcards[2].."\"")
-   end
+	if use_function then
+		local s,e = tostr:find("%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x:%S*")
+		if s ~= 1 or e ~= #tostr then
+			AnsiNote(ColoursToANSI("\n@YYou specified @W#function@Y, but pattern '@W"..tostr.."@Y' does not meet the format requirements."..
+				"\nPlease use {@W24_hexadecimal_digit_plugin_id:plugin_function_name@Y} as indicated in @W#sub help@Y."))
+			return
+		end
+	end
 
-   remsub(nil, nil, {wildcards[1]}, nil)
-   ColourNote("yellow","","\""..wildcards[1].."\" now subbed with \""..wildcards[2].."\"")
+	if nocase then
+		fromstr = string.gsub(fromstr, '(%a)', function (v) return '['..string.upper(v)..string.lower(v)..']' end)
+	end
+	if alone then
+		fromstr = "%f[^%c%z%s%p]"..fromstr.."%f[%c%z%s%p]"
+	end
+	if nocase or alone then
+		ColourNote("yellow", "", "You specified"..(nocase and " #nocase" or "")..(alone and " #alone" or "")..", so converting your #sub patterns...")
+		ColourNote("yellow", "", "")
+		ColourNote("yellow", "", "\""..wildcards[1].."\"")
+		ColourNote("yellow", "", "becomes")
+		ColourNote("yellow", "", "\""..fromstr.."\"")
+	end
 
-   table.insert(subs, {wildcards[1], wildcards[2]})
-   listsub()
-   OnPluginSaveState()
+	local found = find_in(subs, wildcards[1], nocase, alone, use_function)
+	if found then remsub(nil, nil, {found}) end
+
+	table.insert(subs, 
+	{
+		fromstr=fromstr, 
+		tostr=tostr,
+		original=wildcards[1],
+		nocase=nocase,
+		alone=alone,
+		use_function=use_function
+	})
+
+	AnsiNote(ColoursToANSI("@YCreated sub "..#subs..": "..format_sub(subs[#subs])))
+	OnPluginSaveState()
 end
+
+
+function addgag(name, line, wildcards)
+
+	local gagstr = wildcards[1]
+	local nocase = wildcards[3] ~= ""
+	local alone = wildcards[4] ~= ""
+
+	local use_function = wildcards[5] ~= "" and wildcards[5] or nil
+
+	if use_function then
+		local s,e = use_function:find("%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x:%S*")
+		if s ~= 1 or e ~= #use_function then
+			AnsiNote(ColoursToANSI("\n@YYou specified @W#function@Y, but pattern '@W"..use_function.."@Y' does not meet the format requirements."..
+				"\nPlease use {@W24_hexadecimal_digit_plugin_id:plugin_function_name@Y} as indicated in @W#sub help@Y."))
+			return
+		end
+	end
+
+	if nocase then
+		gagstr = string.gsub(gagstr, '(%a)', function (v) return '['..string.upper(v)..string.lower(v)..']' end)
+	end
+	if alone then
+		gagstr = "%f[^%c%z%s%p]"..gagstr.."%f[%c%z%s%p]"
+	end
+	
+	if alone or nocase then
+		ColourNote("yellow", "", "You specified"..(nocase and " #nocase" or "")..(alone and " #alone" or "")..", so converting your #gag pattern...")
+		ColourNote("yellow", "", "")
+		ColourNote("yellow", "", "\""..wildcards[1].."\"")
+		ColourNote("yellow", "", "becomes")
+		ColourNote("yellow", "", "\""..gagstr.."\"")
+	end
+
+	local found = find_in(gags, wildcards[1], nocase, alone, use_function)
+	if found then remgag(nil, nil, {found}) end
+
+	table.insert(gags, {
+		gagstr=gagstr, 
+		original=wildcards[1],
+		nocase=nocase,
+		alone=alone,
+		use_function=use_function
+		})
+
+	AnsiNote(ColoursToANSI("@YCreated gag "..#gags..": "..format_gag(gags[#gags])))
+	OnPluginSaveState()
+end
+
 
 function OnPluginSaveState()
-   SetVariable ("subs", serialize.save ("subs"))
+	SetVariable("subs", serialize.save("subs"))
+	SetVariable("gags", serialize.save("gags"))
 end
 
+
+-- This string.split works like MUSHclient's utils.split, but allows 
+-- any pattern and also allows you to preserve the pattern match entities.
+function string.split(self, pat, add_pattern_matches_to_result)
+	local fields = {}
+	local start = 1
+	self:gsub("()("..pat..")", 
+		function(index,match)
+			table.insert(fields, self:sub(start,index-1))
+			if add_pattern_matches_to_result then
+				table.insert(fields, match)
+			end
+			start = index + #match
+		end
+	)
+	table.insert(fields, self:sub(start))
+	return fields
+end
+
+
+prev_text = ""
+EOL = "\n\r" -- Aardwolf sends LFCR
+
+function OnPluginDisconnect()
+	OnPluginConnect()
+end
+
+
+function OnPluginConnect()
+	dosubs = false
+	prev_text = ""
+end
+
+
+-- proxy_sub("26240e292291e159e1ff3cde:test")
+function proxy_sub(plugin_func_str, prev_color)
+	local callstart = 'local a,b = CallPlugin("'..plugin_func_str:gsub(':', '","')..'"'
+	return function(...)
+		local params = {}
+		for n=1,select('#',...) do
+			params[#params+1] = '"'..select(n,...):gsub('"', '\\"')..'"'
+		end
+		local func = callstart..(#params > 0 and (","..table.concat(params,",")) or "")..'); if a ~= 0 then Note("Error in sub: "..b) else return string.gsub(b,"%$C", "'..prev_color..'") end'
+		return loadstring(func)()
+	end
+end
+
+
+function proxy_gag(plugin_func_str)
+	local callstart = 'local a,b = CallPlugin("'..plugin_func_str:gsub(':', '","')..'"'
+	return function(...)
+		local params = {}
+		for n=1,select('#',...) do
+			params[#params+1] = '"'..select(n,...):gsub('"', '\\"')..'"'
+		end
+		local func = callstart..(#params > 0 and (","..table.concat(params,",")) or "")..'); if a ~= 0 then Note("Error in gag: "..b) else return b end'
+		return loadstring(func)()
+	end
+end
+
+
+function do_gags_against_coded_colors_table(msg_t)
+	for i = 1,#msg_t,2 do
+		local color_bit = msg_t[i]
+		for _,v in ipairs(gags) do
+			if color_bit:find(v.gagstr) then
+				if not v.use_function then
+					return true
+				else
+					return proxy_gag(v.use_function)()
+				end
+			end
+		end
+	end
+	return false
+end
+
+
+function do_subs_against_coded_colors_table(msg_t)
+	for i = 1,#msg_t,2 do
+		local color_bit = msg_t[i]
+		for _,v in ipairs(subs) do
+			local prev_color = msg_t[i-1] or "@x007"
+			local replacement = v.use_function and proxy_sub(v.tostr, prev_color) or v.tostr:gsub("%$C", prev_color)
+			local ok,ret = pcall(string.gsub, color_bit, v.fromstr, replacement)
+			if not ok then 
+				AnsiNote(ColoursToANSI("@YError in sub ["..format_sub(v).."]: "..ret))
+			else 
+				color_bit = ret
+			end
+		end
+		msg_t[i] = color_bit
+	end
+	return table.concat(msg_t)
+end
+
+
+cur_line = ""
+function current_line()
+	return cur_line
+end
+
+
 function OnPluginPacketReceived(sData)
-   if not GetInfo(123) then
-      for _,v in ipairs(subs) do
-         sData = sData:gsub(v[1],v[2])
-      end
-   end
-   return sData
+	if dosubs and not GetInfo(123) then
+		
+		local ends_in_gmcp = false
+		local text = prev_text..sData -- prepend any dangling unprocessed data from the last packet
+
+		-- First we split the packet around subnegotiations to box them out, and then we split non-IAC_SB 
+		-- segments around EOLs to easily count and mark the EOLs so we know where to put the extracted 
+		-- subnegotiations back into the packet after performing our substitutions on some of them.
+		-- The substituted subnegotiations may not go back in exactly the same spot, that's hard to do because
+		-- we need to merge partial main data lines around extracted subnegotiations back together for matching,
+		-- but they will at least go before the right EOL and we'll put them up front to prevent MUSHclient
+		-- from displaying a partially received main message before a Simulated gmcp message that arrives 
+		-- before the newline.
+		
+		local new_packet = {}
+		local subnegs = {}
+		local eols = 1
+		
+		local split_at_subnegs = text:split(string.char(255,250)..".-"..string.char(255,240), true)
+		for i,v in ipairs(split_at_subnegs) do 
+			if v:byte(1) ~= 255 or v:byte(2) ~= 250 then
+				-- split regular data further at EOLs
+				for j,w in ipairs(v:split(EOL, true)) do
+					if w ~= "" then
+						new_packet[#new_packet+1] = w
+					end
+				end
+			else
+				new_packet[#new_packet+1] = v
+			end
+		end
+
+		for i,v in ipairs(new_packet) do
+			if v == EOL then
+				-- Count how many EOLs we find so that we know where to put
+				-- the subnegotiation messages back in after filtering.
+				eols = eols+1
+			elseif v:byte(1) == 255 and v:byte(2) == 250 and v:byte(-2) == 255 and v:byte(-1) == 240 then
+				subnegs[#subnegs+1] = {eols, v}
+				new_packet[i] = "" -- Mask the subnegotiations with empty strings. They get collapsed later by table.concat().
+			end
+		end
+
+		if new_packet[#new_packet] ~= EOL then
+			prev_text = table.remove(new_packet) -- if there's an incomplete message dangling, it will wind up here
+		else
+			prev_text = ""
+		end
+
+		-- Collapse any empty strings we put in place of any subnegotiations
+		-- and then split again on EOLs to get complete output lines.
+		new_packet = table.concat(new_packet):split(EOL, true)
+
+		-- do replacements and gags in the regular text
+		for i,line in ipairs(new_packet) do
+
+			-- Matching #alone patterns at color and line boundaries is easier if
+			-- we can assume that color patterns are uniform. Make it so.
+			local msg_t = canonicalize_colours(AnsiToColours(line)):split("%f[@]@x%d%d%d", true)
+
+			cur_line = line
+			local gagged = do_gags_against_coded_colors_table(msg_t)
+			if not gagged then
+				new_packet[i] = stylesToANSI(ColoursToStyles(do_subs_against_coded_colors_table(msg_t)))
+			else
+				new_packet[i] = ""
+			end
+
+			if gagged and new_packet[i+1] == EOL then
+				-- prevent the gag from leaving a blank line by also removing the following EOL
+				new_packet[i+1] = ""
+			end
+		end
+
+		-- Do replacements and gags in certain subnegotiations.
+		-- We go through them in reverse and then put them in front of the line to make sure that
+		-- a subnegotiation that triggers a Simulate call doesn't simulate to the back of
+		-- incomplete main data.
+		for i = #subnegs,1,-1 do 
+			local subneg = subnegs[i]
+			local line = subneg[2]
+
+			-- GMCP comm.channel.msg
+			if line:byte(3) == 201 and line:sub(4,15) == "comm.channel" then
+				cur_line = line
+
+				-- we work on just the message part
+				local msg_begin, msg_end, msg = line:find('"msg": "(.*[^\\])",')
+				msg_begin = msg_begin + 8
+				msg_end = msg_end - 2
+
+				-- Matching #alone patterns at color and line boundaries is easier if
+				-- we can assume that color patterns are uniform. Make it so.
+				local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
+
+				local gagged = do_gags_against_coded_colors_table(msg_t)
+				if not gagged then
+					line = line:sub(1, msg_begin-1)..do_subs_against_coded_colors_table(msg_t)..line:sub(msg_end+1, -1)
+				else
+					break
+				end
+			end
+
+			-- Subnegotiations go back in before the next line as indicated by counted EOLs. 
+			-- At this point, EOLs are every other table entry.
+			local where_to_inject = (subneg[1]*2) - 1
+			if not new_packet[where_to_inject] then
+				ends_in_gmcp = true
+				new_packet[where_to_inject] = line
+			else
+				new_packet[where_to_inject] = line..new_packet[where_to_inject]
+			end
+		end
+
+		return table.concat(new_packet)
+	end
+end
+
+
+function OnPluginBroadcast (msg, id, name, text)
+	-- got GMCP means we're actually in the game as opposed to just "connected"
+	if (not dosubs) and (id == '3e7dedbe37e44942dd46d264') then
+		dosubs = true
+	end
 end
 
 ]]>
