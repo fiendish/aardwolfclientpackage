@@ -437,7 +437,7 @@ end
 
 
 prev_text = ""
-EOL = "\n\r" -- Aardwolf sends LFCR
+EOL = "\n"
 
 function OnPluginDisconnect()
 	OnPluginConnect()
