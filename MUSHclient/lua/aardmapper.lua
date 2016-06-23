@@ -775,21 +775,22 @@ whitebacked_textures = {
 }
 
 local function xy_to_coord(x,y)
-   return tostring(math.floor (x) + (math.floor (y) * config.WINDOW.width))
+   return math.floor(x) + (math.floor(y) * config.WINDOW.width)
 end
 
 local function draw_room (uid, x, y, metrics)
-   local coords = xy_to_coord(x,y)
    if drawn_uids[uid] then return end
-
-   drawn_coords[xy_to_coord(x,y)] = uid
-   drawn_uids[uid] = true
 
    -- forget it if off screen
    if x < metrics.HALF_ROOM_UP or y <= metrics.HALF_ROOM_UP + font_height or
-      x > config.WINDOW.width - metrics.HALF_ROOM_UP or y > config.WINDOW.height - metrics.HALF_ROOM_UP then
+      x > config.WINDOW.width - metrics.HALF_ROOM_UP or y > config.WINDOW.height - metrics.HALF_ROOM_UP - 2 or
+      ((config.SHOW_ROOM_ID == true) and (y < 2*font_height + metrics.HALF_ROOM_UP) and (x > (config.WINDOW.width-id_box_width)/2) and (x < (config.WINDOW.width+id_box_width)/2)) or
+      ((y > config.WINDOW.height - metrics.HALF_ROOM_UP - font_height - 2) and (x > (config.WINDOW.width-area_box_width)/2) and (x < (config.WINDOW.width+area_box_width)/2)) then
       return
    end -- if
+   
+   drawn_coords[xy_to_coord(x,y)] = uid
+   drawn_uids[uid] = {x,y}
    
    local left, top, right, bottom = x - metrics.HALF_ROOM_DOWN, y - metrics.HALF_ROOM_DOWN, x + metrics.HALF_ROOM_UP, y + metrics.HALF_ROOM_UP
 
@@ -798,7 +799,7 @@ local function draw_room (uid, x, y, metrics)
 
    if room then
       local NEXT_ROOM = metrics.ROOM_SIZE + metrics.DISTANCE_TO_NEXT_ROOM
-      if metrics.DISTANCE_TO_NEXT_ROOM < 4 then
+      if metrics.DISTANCE_TO_NEXT_ROOM < 4 then -- don't draw exit lines
          for dir,exit_uid in pairs(room.exits) do
             local exit_info = metrics.connectors[dir]
             if exit_info then -- want to draw exits in this direction
@@ -962,18 +963,6 @@ local function draw_room (uid, x, y, metrics)
          UNKNOWN_ROOM_COLOUR.colour, pen_dot, 1,  --  dotted single pixel pen
          -1, miniwin.brush_null)  -- opaque, no brush
    end
-
-   WindowAddHotspot(win, uid,
-      left, top, right, bottom,   -- rectangle
-      "",  -- mouseover
-      "",  -- cancelmouseover
-      "",  -- mousedown
-      "",  -- cancelmousedown
-      "mapper.mouseup_room",  -- mouseup
-      daredevil_mode and "" or room_params.hovermessage,
-      miniwin.cursor_hand, 0)  -- hand cursor
-
-   WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
 end -- draw_room
 
 local function draw_zone_exit (exit, barriers)
@@ -1032,14 +1021,9 @@ function halt_drawing(halt)
    dont_draw = halt
 end
 
-function draw_fullarea()
-   draw(current_room, true)
-end
-
-function draw_area(uid, fullarea)
-   -- set up for initial room, in middle
-   drawn_uids, drawn_coords, rooms_to_draw_next, area_exits = {}, {}, {}, {}, {}
-   depth = 0
+function draw_next_batch_of_rooms()
+   -- timing
+   local start_time = utils.timer ()
 
    local metrics
    if current_room_is_cont then
@@ -1050,7 +1034,6 @@ function draw_area(uid, fullarea)
 
    -- insert initial room
    local draw_elapsed = utils.timer()
-   table.insert(rooms_to_draw_next, {uid, config.WINDOW.width / 2, config.WINDOW.height / 2})
    while #rooms_to_draw_next > 0 do
       local this_draw_level = rooms_to_draw_next
       rooms_to_draw_next = {}  -- new generation
@@ -1058,26 +1041,66 @@ function draw_area(uid, fullarea)
          draw_room(room[1], room[2], room[3], metrics)
       end -- for each existing room
       depth = depth + 1
-      if (not fullarea and utils.timer()-draw_elapsed > 0.08) then
+      if (#rooms_to_draw_next > 0 and utils.timer()-draw_elapsed > 0.08) then
          if not running then
-            AddTimer("draw_fullarea", 0, 0, 0.1, "mapper.draw_fullarea()", timer_flag.Enabled + timer_flag.OneShot + timer_flag.Replace + timer_flag.Temporary, "")
-            SetTimerOption("draw_fullarea", "send_to", sendto.script)
+            AddTimer("draw_next_batch_of_rooms"..depth, 0, 0, 0.1, "mapper.draw_next_batch_of_rooms()", timer_flag.Enabled + timer_flag.OneShot + timer_flag.Replace + timer_flag.Temporary, "")
+            SetTimerOption("draw_next_batch_of_rooms"..depth, "send_to", sendto.script)
          end
          break
       end
    end -- while all rooms_to_draw_next
-   if not fullarea and #rooms_to_draw_next == 0 then
-      draw_fullarea()
+
+   -- creating thousands of hotspots is relatively expensive, so if we've hit the time limit and
+   -- are going to make a second-pass timer wait until the second pass is done to do it.
+   -- If we're in a run, for example, we may never get there and save the effort.
+   if #rooms_to_draw_next == 0 then
+      for uid,v in pairs(drawn_uids) do
+         local left, top, right, bottom = v[1] - metrics.HALF_ROOM_DOWN, v[2] - metrics.HALF_ROOM_DOWN, v[1] + metrics.HALF_ROOM_UP, v[2] + metrics.HALF_ROOM_UP
+
+         WindowAddHotspot(win, uid,
+            left, top, right, bottom,   -- rectangle
+            "",  -- mouseover
+            "",  -- cancelmouseover
+            "",  -- mousedown
+            "",  -- cancelmousedown
+            "mapper.mouseup_room",  -- mouseup
+            daredevil_mode and "" or get_room_display_params(uid).hovermessage,
+            miniwin.cursor_hand, 0)  -- hand cursor
+
+         WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
+      end
    end
 
    local barriers = metrics.barriers
    for i, zone_exit in ipairs(area_exits) do
       draw_zone_exit(zone_exit, barriers)
    end -- for
+   local end_time = utils.timer ()
+
+   draw_edge()
+
+   -- timing stuff
+   if timing then
+      local count= 0
+      for k in pairs (drawn_uids) do
+         count = count + 1
+      end
+      print (string.format ("Time to draw %i rooms = %0.3f seconds, search depth = %i", count, end_time - start_time, depth))
+
+      total_times_drawn = total_times_drawn + 1
+      total_time_taken = total_time_taken + end_time - start_time
+
+      print (string.format ("Total times map drawn = %i, average time to draw = %0.3f seconds",
+         total_times_drawn,
+         total_time_taken / total_times_drawn))
+   end -- if
 end
 
 -- draw our map starting at room: uid
-function draw (uid, fullarea_passthrough)
+function draw (uid)
+   -- timing
+   local outer_time = utils.timer ()
+
    if not uid then
       draw_credits()
       return
@@ -1089,11 +1112,7 @@ function draw (uid, fullarea_passthrough)
       return
    end
 
-   -- timing
-   local start_time = utils.timer ()
-
    -- lookup current room
-   local room_params = get_room_display_params(uid)
    local room = get_room(uid)
 
    last_visited[uid] = os.time ()
@@ -1109,7 +1128,7 @@ function draw (uid, fullarea_passthrough)
    windowinfo.window_top = WindowInfo(win, 2) or windowinfo.window_top
    config.WINDOW.width = WindowInfo(win, 3) or config.WINDOW.width
    config.WINDOW.height = WindowInfo(win, 4) or config.WINDOW.height
-   if WindowInfo(win, 5) and not WindowInfo(win, 6) and not fullarea_passthrough then
+   if WindowInfo(win, 5) and not WindowInfo(win, 6) then -- shown and not hidden
       WindowResize(win,
          config.WINDOW.width,
          config.WINDOW.height,
@@ -1154,18 +1173,21 @@ function draw (uid, fullarea_passthrough)
       if textimage ~= nil then
          local iwidth = WindowImageInfo(win,textimage,2)
          local iheight= WindowImageInfo(win,textimage,3)
-         local x = 0
-         local y = 0
-
-         while y < config.WINDOW.height do
+         local x = 2
+         local y = 2+font_height
+         local w = config.WINDOW.width-2
+         local h = config.WINDOW.height-2
+         while y < h do
             x = 0
-            while x < config.WINDOW.width do
+            while x < w do
                WindowDrawImage(win, textimage, x, y, 0, 0, 1)  -- straight copy
                x = x + iwidth
             end
             y = y + iheight
          end
       end
+   else
+      WindowRectOp(win, miniwin.rect_fill, 2, 2, -2, 2+font_height, 0)
    end
 
    -- let them move it around
@@ -1180,8 +1202,6 @@ function draw (uid, fullarea_passthrough)
       miniwin.cursor_arrow,
       0)
    WindowScrollwheelHandler(win, "zzz_zoom", "mapper.zoom_map")
-
-   draw_area(uid, fullarea_passthrough)
 
    local room_name = room.name
    local name_width = WindowTextWidth(win, FONT_ID, room_name)
@@ -1213,7 +1233,7 @@ function draw (uid, fullarea_passthrough)
       ROOM_NAME_BORDER.colour)     -- border colour
       
    if config.SHOW_ROOM_ID then
-      draw_text_box (win, FONT_ID,
+      id_box_width = draw_text_box (win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..uid)) / 2,   -- left
          2+font_height+1,    -- top
          "ID: "..uid, false,             -- what to draw, utf8
@@ -1225,18 +1245,45 @@ function draw (uid, fullarea_passthrough)
    -- area name
 
    local areaname = room.area
-
    if areaname then
-      draw_text_box (win, FONT_ID,
-         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname)) / 2,   -- left
+      local area_name_print = string.gsub(areas[areaname] and areas[areaname].name or areaname, "^%l", string.upper)
+      area_box_width = draw_text_box (win, FONT_ID,
+         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, area_name_print)) / 2,   -- left
          config.WINDOW.height - 3 - font_height,    -- top
-         string.gsub(areas[areaname] and areas[areaname].name or areaname, "^%l", string.upper), false,
+         area_name_print, false,
          AREA_NAME_TEXT.colour,   -- text colour
          AREA_NAME_FILL.colour,   -- fill colour
          AREA_NAME_BORDER.colour) -- border colour
    end -- if area known
 
+   if type (show_help) == "function" then
+      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 5
+      local y = 2
+      local text_width = draw_text_box (win, FONT_ID,
+         x,   -- left
+         y,   -- top
+         "?", false,              -- what to draw, utf8
+         AREA_NAME_TEXT.colour,   -- text colour
+         AREA_NAME_FILL.colour,   -- fill colour
+         AREA_NAME_BORDER.colour) -- border colour
+
+      WindowAddHotspot(win, " $<help>",
+         x-3, y, x+text_width+3, y + font_height,   -- rectangle
+         "",  -- mouseover
+         "",  -- cancelmouseover
+         "",  -- mousedown
+         "",  -- cancelmousedown
+         "mapper.show_help",  -- mouseup
+         "Click for help",
+         miniwin.cursor_help, 0)  -- hand cursor
+   end -- if
+
    -- configure?
+
+   -- make sure window visible
+   WindowShow (win, not window_hidden)
+
+   last_drawn = uid  -- last room number we drew (for zooming)
 
    if draw_configure_box then
       draw_configuration ()
@@ -1261,54 +1308,18 @@ function draw (uid, fullarea_passthrough)
          "mapper.mouseup_configure",  -- mouseup
          "Click to configure map",
          miniwin.cursor_plus, 0)  -- hand cursor
+   
+      drawn_uids, drawn_coords, area_exits = {}, {}, {}
+      rooms_to_draw_next = {{uid, config.WINDOW.width / 2, config.WINDOW.height / 2}}
+      depth = 0
+   
+      draw_next_batch_of_rooms()
    end -- if
 
-   if type (show_help) == "function" then
-      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 5
-      local y = 2
-      local text_width = draw_text_box (win, FONT_ID,
-         x,   -- left
-         y,   -- top
-         "?", false,              -- what to draw, utf8
-         AREA_NAME_TEXT.colour,   -- text colour
-         AREA_NAME_FILL.colour,   -- fill colour
-         AREA_NAME_BORDER.colour) -- border colour
+--   if show_timing then
+      print("Time elapsed drawing ", utils.timer()-outer_time)
+--   end
 
-      WindowAddHotspot(win, " $<help>",
-         x-3, y, x+text_width+3, y + font_height,   -- rectangle
-         "",  -- mouseover
-         "",  -- cancelmouseover
-         "",  -- mousedown
-         "",  -- cancelmousedown
-         "mapper.show_help",  -- mouseup
-         "Click for help",
-         miniwin.cursor_help, 0)  -- hand cursor
-   end -- if
-
-   draw_edge()
-
-   -- make sure window visible
-   WindowShow (win, not window_hidden)
-
-   last_drawn = uid  -- last room number we drew (for zooming)
-
-   local end_time = utils.timer ()
-
-   -- timing stuff
-   if timing then
-      local count= 0
-      for k in pairs (drawn_uids) do
-         count = count + 1
-      end
-      print (string.format ("Time to draw %i rooms = %0.3f seconds, search depth = %i", count, end_time - start_time, depth))
-
-      total_times_drawn = total_times_drawn + 1
-      total_time_taken = total_time_taken + end_time - start_time
-
-      print (string.format ("Total times map drawn = %i, average time to draw = %0.3f seconds",
-         total_times_drawn,
-         total_time_taken / total_times_drawn))
-   end -- if
    BroadcastPlugin (999, "repaint")
 end -- draw
 
@@ -1330,7 +1341,7 @@ function init (t)
 
    show_help = t.show_help     -- "help" function
    room_click = t.room_click   -- RH mouse-click function
-   timing = t.timing           -- true for timing info
+   timing = true           -- true for timing info
    show_up_down = t.show_up_down        -- true to show up or down
 
    -- force some config defaults if not supplied
@@ -2113,6 +2124,7 @@ end
 function resize_release_callback()
    config.WINDOW.width = WindowInfo(win, 3)
    config.WINDOW.height = WindowInfo(win, 4)
+   WindowRectOp (win, 2, 0, 0, 0, 0, 0)
    draw(current_room)
 end
 
