@@ -287,9 +287,9 @@ end
 constructDefaultChannels()
 
 function echo_msg(msg)
-   Simulate(stylesToANSI(ColoursToStyles(msg)).."\r\n")
+   Simulate(ColoursToANSI(msg)..ANSI(0).."\r\n")
    if compact_mode ~= "set" then
-      Simulate("\n\r")
+      Simulate("\r\n")
    end
 end
 
