@@ -583,7 +583,7 @@ function OnPluginPacketReceived(sData)
 			cur_line = line
 			local gagged = do_gags_against_coded_colors_table(msg_t)
 			if not gagged then
-				new_packet[i] = stylesToANSI(ColoursToStyles(do_subs_against_coded_colors_table(msg_t)))
+				new_packet[i] = ColoursToANSI(do_subs_against_coded_colors_table(msg_t))
 			else
 				new_packet[i] = ""
 			end
