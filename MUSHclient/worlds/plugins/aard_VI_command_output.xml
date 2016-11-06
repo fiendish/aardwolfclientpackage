@@ -140,7 +140,13 @@ function capture_activate(name, line, wildcards, styles)
    last_command = Trim(wildcards[1])
    TelnetOptionOff(TELOPT_PAGING)
    SendNoEcho("echo {Begin MC Capture:"..last_command.."}")
-   SendNoEcho(last_command)
+
+   -- execute without echo
+   local original_echo_setting = GetOption("display_my_input")
+   SetOption ("display_my_input", 0)
+   Execute (last_command)
+   SetOption ("display_my_input", original_echo_setting)
+   
    SendNoEcho("echo {End MC Capture:"..last_command.."}")
    TelnetOptionOn(TELOPT_PAGING)
 end
@@ -178,11 +184,15 @@ function end_capture(name, line, wildcards, styles)
    if (last_command ~= "") and (last_command == in_command) then
    
       -- remove leading and trailing blank lines
-      while Trim(temp_buffer[1].msg) == "" do
+      while #temp_buffer>0 and Trim(temp_buffer[1].msg) == "" do
          table.remove(temp_buffer, 1)
       end
-      while Trim(temp_buffer[#temp_buffer].msg) == "" do
+      while #temp_buffer>0 and Trim(temp_buffer[#temp_buffer].msg) == "" do
          table.remove(temp_buffer, #temp_buffer)
+      end
+               
+      if #temp_buffer == 0 then
+         table.insert(temp_buffer, {msg="Failed to capture any MUD output. Are you sure this command goes to the MUD?", date=nil})
       end
       
       if use_notepad then
@@ -203,7 +213,7 @@ function end_capture(name, line, wildcards, styles)
          CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, "Captured output for command ["..last_command.."].")
 
          for i,v in ipairs(temp_buffer) do
-            CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, v.msg, aardwolf_channel_datestring_to_timestamp(v.date))
+            CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, v.msg, v.date and aardwolf_channel_datestring_to_timestamp(v.date) or nil)
          end
          
          CallPlugin("dd10517422bc35b5131a3aa0", "show", "Captured output from command ["..last_command.."] to ["..command_capture.."] capture.")
