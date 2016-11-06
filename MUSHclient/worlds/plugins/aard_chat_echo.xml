@@ -250,7 +250,7 @@ end
 constructDefaultChannels()
 
 function echoStyles(styles)
-   Simulate(stylesToANSI(styles).."\r\n")
+   Simulate(stylesToANSI(styles)..ANSI(0).."\r\n")
 --   for _, v in ipairs(styles) do
 --      ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
 --   end -- for each style run
