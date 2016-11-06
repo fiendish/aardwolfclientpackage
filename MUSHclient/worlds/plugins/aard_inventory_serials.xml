@@ -46,8 +46,11 @@ Makes inventory command slightly more useful by displaying UIDs
    displayInventory()
    EnableTrigger("invdata", false)
    EnableTrigger("end_inv", false)
-   if sent_count == 0 then
+   if inv_sent_count == 0 then
       EnableTrigger("start_inv", false)
+   end
+   if key_sent_count == 0 then
+      EnableTrigger("start_key", false)
    end
 </send>
 </trigger>
@@ -63,12 +66,58 @@ Makes inventory command slightly more useful by displaying UIDs
    script="parseInvdata"
 >
 </trigger>
+
+<trigger
+   enabled="n"
+   match="{keyring}"
+   name="start_key"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+>
+<send>
+   EnableTrigger("keyring", true)
+   EnableTrigger("end_key", true)
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   match="{/keyring}"
+   name="end_key"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+>
+<send>
+   if GetTriggerOption("start_inv", "enabled") == 0 then
+      displayKeyring()
+   end
+   EnableTrigger("keyring", false)
+   EnableTrigger("end_key", false)
+   if key_sent_count == 0 then
+      EnableTrigger("start_key", false)
+   end
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   match="^\s*(\d+),(\w*),(.+),(\d+),(\d+),([01]),(-?\d+),(-?\d+)"
+   name="keyring"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+   send_to="14"
+   script="parseKeyring"
+>
+</trigger>
 </triggers>
 
 <aliases>
 
 <alias
-   match="^(i|in|inv|inve|inven|invent|invento|inventor|inventory)$"
+   match="^ *(i|in|inv|inve|inven|invent|invento|inventor|inventory) *$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -76,12 +125,29 @@ Makes inventory command slightly more useful by displaying UIDs
    send_to="12"
 >
 <send>
-   sent_count = sent_count + 1
+   inv_sent_count = inv_sent_count + 1
+   key_sent_count = key_sent_count + 1
+   EnableTrigger("start_key", true)
    EnableTrigger("start_inv", true)
+   SendNoEcho("keyring data")
    SendNoEcho("invdata")
 </send>
 </alias>
 
+<alias
+   match="^ *keyr(i|in|ing)? l(i|is|ist)? *$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+>
+<send>
+   key_sent_count = key_sent_count + 1
+   EnableTrigger("start_key", true)
+   SendNoEcho("keyring data")
+</send>
+</alias>
 </aliases>
 
 <script>
@@ -98,42 +164,85 @@ function OnPluginEnable()
 end
 
 function OnPluginConnect()
-   sent_count = 0
+   inv_sent_count = 0
+   key_sent_count = 0
 end
 
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 inv = {}
 invsorted = {}
+keys = {}
+keysorted = {}
 
-function parseInvdata(name, line, wildcards, styles)
-   local hash = wildcards[2]..wildcards[3]..wildcards[4]
-   if not inv[hash] then
-      inv[hash] = {}
-      inv[hash][1] = {}
-      inv[hash][2] = {}
+function parse(styles, wildcards, results, sorted)
+   -- Work around ansi mismatch between invdata and keyring data.
+   -- If we got an ansi line, convert the many styles it generates to color codes.
+   if #styles > 1 then
+      table.remove(styles)
+      table.remove(styles, 1)
+      wildcards[3] = StylesToColoursOneLine(styles)
+   end
+   
+   local hash = wildcards[2]..wildcards[3]..wildcards[4] -- flags, name, level
+   if not results[hash] then
+      results[hash] = {{},{}}
       for i,v in ipairs({{"K","@R(K)@w"},{"M","@B(M)@w"},{"G","@W(G)@w"},{"H","@C(H)@w"},{"I","@w(I)"},{"T","@R(T)@w"}}) do
          if wildcards[2]:find(v[1]) then
-            table.insert(inv[hash][2],v[2])
+            table.insert(results[hash][2],v[2]) -- flags
          end
       end
-      inv[hash][3] = wildcards[3]
-      inv[hash][4] = wildcards[4]
-      table.insert(invsorted, inv[hash])
+      results[hash][3] = wildcards[3] -- name
+      results[hash][4] = wildcards[4] -- level
+      table.insert(sorted, results[hash])
    end
-   table.insert(inv[hash][1], wildcards[1])
+   table.insert(results[hash][1], wildcards[1]) -- id
+end
+
+function parseInvdata(name, line, wildcards, styles)
+   parse(styles, wildcards, inv, invsorted)
+end
+
+function parseKeyring(name, line, wildcards, styles)
+   parse(styles, wildcards, keys, keysorted)
+end
+
+function displaySorted(which)
+   local num_items = 0
+   for k,v in ipairs(which) do
+      local num = #v[1]
+      num_items = num_items + num
+      local count = string.format("@W(%2d) @w",num)
+      local line = string.format("%-5s",num > 1 and count or "     ")..table.concat(v[2]).." "..v[3].."@w  ["..((#v[1] < 4 and table.concat(v[1],",")) or "many").."]  ".."@W(@G"..v[4].."@W)@w\r\n"
+      Simulate(ColoursToANSI(line))
+   end
+   return num_items
+end
+
+function displayKeyring()
+   Simulate(ColoursToANSI("@wYour keyring holds:\r\n"))
+   local num_keys = displaySorted(keysorted)
+   Simulate(ColoursToANSI(string.format("@wYou have @Y%d@w items on your keyring (%d unique).@w\r\n", num_keys, #keysorted)))
+   keys = {}
+   keysorted = {}
+   key_sent_count = key_sent_count - 1
 end
 
 function displayInventory()
-   Simulate(stylesToANSI(ColoursToStyles("@wYou are carrying:\r\n")))
-   for k,v in ipairs(invsorted) do
-      local num = #v[1]
-      local count = string.format("@W(%2d) @w",num)
-      local line = string.format("%-5s",num > 1 and count or "     ")..table.concat(v[2]).." "..v[3].."  ["..((#v[1] < 4 and table.concat(v[1],",")) or "many").."]  ".."@W(@G"..v[4].."@W)@w\r\n"
-      Simulate(stylesToANSI(ColoursToStyles(line)))
+   Simulate(ColoursToANSI("@wYou are carrying:\r\n"))
+   displaySorted(invsorted)
+   if #keysorted > 0 then
+      local num_keys = 0
+      for k,v in ipairs(keysorted) do
+         num_keys = num_keys + #v[1]
+      end
+      Simulate(ColoursToANSI(string.format("@C(%2d) @W** Items on Keyring (%d unique) **@w\r\n", num_keys, #keysorted)))
    end
    invsorted = {}
    inv = {}
-   sent_count = sent_count - 1
+   keys = {}
+   keysorted = {}
+   inv_sent_count = inv_sent_count - 1
+   key_sent_count = key_sent_count - 1
 end
 
 function getmemoryusage()

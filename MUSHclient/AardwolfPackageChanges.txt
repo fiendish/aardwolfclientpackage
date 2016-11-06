@@ -1,5 +1,19 @@
 Aardwolf Client Package Major Changes List
 
+r1885 snapshot:
+- misc change: updated to MUSHclient 5.03 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
+- bug fix: disable room desc tags when disabling ascii map plugin
+- misc change: use Execute instead of Send for the player commands in the aard_VI_command_output plugin
+- new feature: detect font monospacedness in the ascii map plugin
+- misc change: autoactivate utf8 mode when loading the ascii map plugin
+- bug fix: no longer error on empty capture in the aard_VI_command_output plugin
+- misc change: request ascii map on death, because the MUD doesn't do that automatically
+- new feature: add compact toggles to the GMCP mapper. Thanks VBMeireles!
+- bug fix: last selected character capture in the copy color codes plugin
+- misc change: use a copyable color for gmcp debug output
+- new feature: several new functions added to aardwolf_colors
+- new feature: inventory serials plugin now supports the keyring
+
 r1871 snapshot:
 - bug fix: update the mapper help for fullportal to match the recent command format change.
 

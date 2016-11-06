@@ -89,7 +89,7 @@ local GMCPDebug = tonumber(GetVariable("GMCPDebug")) or 0
 function gmcpdebug(name, line, wildcards)
    newval = tonumber(wildcards[1])
    if not newval or newval > 2 or newval < 0 then
-      ColourNote("darkorange", "", "GMCPDebug valid values are: 0 - off, 1 - simple, 2 - verbose")
+      ColourNote("#FFAF00", "", "GMCPDebug valid values are: 0 - off, 1 - simple, 2 - verbose")
       return
    end
    GMCPDebug = newval
@@ -99,7 +99,7 @@ function gmcpdebug(name, line, wildcards)
    elseif GMCPDebug == 2 then
       msg = "verbose"
    end
-   ColourNote ("darkorange", "", "GMCPDebug: " .. msg)
+   ColourNote ("#FFAF00", "", "GMCPDebug: " .. msg)
 end
 
 function GMCP_Alias(name, line, wildcards)
@@ -116,7 +116,7 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       return
    end -- if not GMCP
   
-   if GMCPDebug > 0 then ColourNote ("darkorange", "", data) end
+   if GMCPDebug > 0 then ColourNote ("#FFAF00", "", data) end
 
    message, params = string.match (data, "([%a.]+)%s+(.*)")
   
