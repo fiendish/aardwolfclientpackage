@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- MuClient version 4.97 -->
+<!-- MuClient version 5.03 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
 
    auto_say_override_prefix="-"
@@ -59,6 +59,7 @@
    input_background_colour="white"
    input_font_height="9"
    input_font_weight="400"
+   input_font_charset="1"
    input_text_colour="black"
    keypad_enable="y"
    log_output="y"
@@ -94,6 +95,7 @@
    underline_hyperlinks="y"
    unpause_on_send="y"
    use_custom_link_colour="y"
+   utf_8="y"
    warn_if_scripting_inactive="y"
    wrap="y"
    wrap_column="79"
@@ -105,7 +107,7 @@
 <!-- triggers -->
 
 <triggers
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
   >
 </triggers>
@@ -113,7 +115,7 @@
 <!-- aliases -->
 
 <aliases
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
   >
   <alias
@@ -171,7 +173,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- timers -->
 
 <timers
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
   >
 </timers>
@@ -179,7 +181,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- macros -->
 
 <macros
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
   >
 
@@ -272,7 +274,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- variables -->
 
 <variables
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
   >
 </variables>
@@ -280,7 +282,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- colours -->
 
 <colours
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
   >
 
@@ -336,7 +338,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- keypad -->
 
 <keypad
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
   >
 
@@ -445,7 +447,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- printing -->
 
 <printing
-   muclient_version="4.97"
+   muclient_version="5.03"
    world_file_version="15"
   >
 
