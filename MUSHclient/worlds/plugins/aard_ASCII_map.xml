@@ -354,14 +354,32 @@ function DisplayMapPage()
    WindowRectOp(win, 2, 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5,0x303030,0x0000ff) -- fill
    WindowRectOp(win, 1, 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5,0x777777,0x0000ff) -- border
    WindowText (win, font_id, "?", font_width+1, TITLE_HEIGHT+1, 0, 0, 0xffffff)
-   
-   if not page_built then
+   if WindowTextWidth(win, font_id, "i") ~= WindowTextWidth(win, font_id, "w") then
+      line = -font_height-5
+      txt = "This plugin's configured font"
+      txtlen = WindowTextWidth(win,font_id,txt)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      line = line+font_height+5
+      txt = "[ "..font_name.." ]"
+      txtlen = WindowTextWidth(win,font_id,txt)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      line = line+font_height+5
+      txt = "is not a monospace font."
+      txtlen = WindowTextWidth(win,font_id,txt)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      line = line+font_height+5
+      txt = "Right-click here to pick another."
+      txtlen = WindowTextWidth(win,font_id,txt)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)  
+   elseif not page_built then
+      line = -font_height-5
       txt = "Map will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      line = line+font_height+5
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
    else
       -- display each line
       for i, line in ipairs (map_lines) do
@@ -504,6 +522,9 @@ function right_click_menu ()
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
    elseif result == "Also Show Map In Main Output" then
       also_echo_map = (((also_echo_map == 0) and 1) or 0)
+      if also_echo_map == 1 then
+         request_new_map()
+      end
    elseif result == "Reset Defaults" then
       font_name = default_font_name
       font_size = default_font_size
@@ -515,11 +536,14 @@ function right_click_menu ()
       show_title = 1
    elseif result ~= "" then
       maptype = tonumber(result:sub(1,1))
+      Send_GMCP_Packet("maptype "..maptype)
+      request_new_map()
    end -- if
    if result ~= "" then
       -- save and reload
+      OnPluginCommand()
       OnPluginSaveState()
-      OnPluginInstall()
+      OnPluginInstall(true)
    end
 end -- right_click_menu
 
@@ -552,10 +576,26 @@ function OnPluginBroadcast (msg, id, name, text)
          end
       elseif (text == "comm.repop") then
          request_new_map()
+      elseif (text == "char.vitals") then
+         -- the mud doesn't send a map update when you die (part1)
+         myhp = gmcp("char.vitals.hp")
+         if myhp == 1 then
+            if char_state == 11 and not died then
+               died = true
+               request_new_map()
+            end
+         else
+            died = false
+         end
       elseif (text == "char.status") then
-         local char_state = gmcp("char.status.state")
+         char_state = gmcp("char.status.state")
          can_request_map = (char_state == 3 or char_state == 11)
-         if not page_built then
+         if char_state == 11 and myhp == 1 and not died then
+            -- the mud doesn't send a map update when you die (part2)
+            died = true
+            page_built = false
+         end
+         if can_request_map and not page_built then
             request_new_map()
          end
       end
@@ -756,6 +796,7 @@ function OnPluginDisable ()
    WindowShow( win, false )
    if IsConnected() then
       Send_GMCP_Packet("maptype -1")
+      TelnetOptionOff(TELOPT_ROOMDESC_TAGS)
       if (also_echo_map == 0) then
          TelnetOptionOff(TELOPT_MAP)
          TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
@@ -803,7 +844,7 @@ end
 
 setDefaultFont()
 
-function OnPluginInstall()
+function OnPluginInstall(skip_requests)
    --- Pull some state variables.
    title_colour = tonumber (GetVariable ("title_colour")) or title_colour
    height = tonumber (GetVariable ("height")) or default_height
@@ -871,8 +912,10 @@ function OnPluginInstall()
       return
    end -- they didn't enable us last time
 
+   SetOption("utf_8", 1)
+
    -- update on reload
-   if IsConnected() then
+   if IsConnected() and not skip_requests then
       OnPluginConnect()
    end
 end
