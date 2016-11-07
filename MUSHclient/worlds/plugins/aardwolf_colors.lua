@@ -6,8 +6,6 @@ local BLUE = 5
 local MAGENTA = 6 
 local CYAN = 7 
 local WHITE = 8
-local DEFAULT_FOREGROUND = WHITE
-local DEFAULT_BACKGROUND = BLACK
 
 local function init_ansi() 
    -- declaration of produced tables
@@ -25,7 +23,7 @@ local function init_ansi()
    atcode_to_color_value = {
       k = GetNormalColour (BLACK)   ,   -- 0x000000 (not used)
       r = GetNormalColour (RED)     ,   -- 0x000080 
-      g = GetNormalColour (GREEN)   ,   -- 0x008000 
+      g = GetNormalColour (GREEN)   ,   -- 0x008000
       y = GetNormalColour (YELLOW)  ,   -- 0x008080 
       b = GetNormalColour (BLUE)    ,   -- 0x800000 
       m = GetNormalColour (MAGENTA) ,   -- 0x800080 
@@ -164,21 +162,17 @@ end -- StylesToColoursOneLine
 
 -- Converts text with colour codes in it into style runs
 function ColoursToStyles (Text, default_foreground_code, default_background_code)
-   if default_foreground_code then
-      if default_foreground_code ~= "" then
-         default_foreground = atcode_to_color_value[default_foreground_code]
-         default_foreground_code = "@"..default_foreground_code
-      end
+   if default_foreground_code and atcode_to_color_value[default_foreground_code] then
+      default_foreground = atcode_to_color_value[default_foreground_code]
+      default_foreground_code = "@"..default_foreground_code
    else
-      default_foreground_code = color_value_to_atcode[GetNormalColour(DEFAULT_FOREGROUND)]
-      default_foreground = GetNormalColour(DEFAULT_FOREGROUND)
+      default_foreground = GetNormalColour(WHITE)
+      default_foreground_code = "@w"
    end
-   if default_background_code then
+   if default_background_code and atcode_to_color_value[default_background_code] then
       default_background = atcode_to_color_value[default_background_code]
-      default_background_code = "@"..default_background_code
    else
-      default_background_code = color_value_to_atcode[GetNormalColour(DEFAULT_BACKGROUND)]
-      default_background = GetNormalColour(DEFAULT_BACKGROUND)
+      default_background = GetNormalColour(BLACK)
    end
    
    if Text:match ("@") then
@@ -218,7 +212,8 @@ function ColoursToStyles (Text, default_foreground_code, default_background_code
    end -- if any colour codes at all
 
    -- No colour codes, create a single style.
-   return { { text = Text, 
+   return { { text = Text,
+      bold = (default_foreground_code == default_foreground_code:upper()),
       length = #Text, 
       textcolour = default_foreground,
       backcolour = default_background } }
@@ -294,7 +289,7 @@ local ansi_digit_to_bold_atcode = {
 -- Tries to convert ANSI sequences to Aardwolf color codes
 function AnsiToColours(ansi, default_foreground_code)
    if not default_foreground_code then
-      default_foreground_code = color_value_to_atcode[GetNormalColour(DEFAULT_FOREGROUND)]
+      default_foreground_code = "@w"
    end
 
    local ansi_capture = "\027%[([%d;]+)m"
