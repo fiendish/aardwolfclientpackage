@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1886 snapshot:
+- bug fix: recent color improvements introduced a color bleed that is now fixed.
+- bug fix: changing ANSI color display settings could in some instances cause an error message during some color conversion routines.
+
 r1885 snapshot:
 - misc change: updated to MUSHclient 5.03 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - bug fix: disable room desc tags when disabling ascii map plugin
