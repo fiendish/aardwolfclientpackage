@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1887 snapshot:
+- bug fix: GMCP mapper notes display was disfigured by MUSHclient's new deferred noting in callbacks
+
 r1886 snapshot:
 - bug fix: recent color improvements introduced a color bleed that is now fixed.
 - bug fix: changing ANSI color display settings could in some instances cause an error message during some color conversion routines.
