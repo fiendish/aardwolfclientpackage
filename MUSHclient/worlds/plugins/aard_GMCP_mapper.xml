@@ -3410,9 +3410,8 @@ function got_gmcp_room()
    if not compact_mode then check_compact = "\n" end
 
    if shownotes and room and room.notes and room.notes ~= "" then
-      for _,v in ipairs(ColoursToStyles("*** MAPPER NOTE *** -> "..room.notes.."@w\n"..check_compact, "x033")) do
-         ColourTell(RGBColourToName(v.textcolour), RGBColourToName(v.backcolour), v.text)
-      end
+      Simulate("") -- work around the annoying Note deferral in callbacks
+      AnsiNote(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w"..check_compact))
    end
 
    -- re-save if we got information that is different than before
