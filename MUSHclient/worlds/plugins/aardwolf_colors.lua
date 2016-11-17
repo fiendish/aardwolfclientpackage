@@ -144,7 +144,7 @@ function StylesToColoursOneLine (styles, startcol, endcol)
       
       local code = color_value_to_atcode[v.textcolour]
       if code then
-         if v.bold then
+         if v.bold or ((v.style % 2) == 1) then
             if bold_codes[v.textcolour] then
                code = bold_codes[v.textcolour]
             elseif reinit then -- set up again, but limit performance damage
@@ -263,7 +263,7 @@ function stylesToANSI(styles)
    for _,v in ipairs (styles) do
       if v.textcolour then
          if color_value_to_xterm_number[v.textcolour] then
-            table.insert(line, ANSI(v.bold and 1 or 0,38,5,color_value_to_xterm_number[v.textcolour]))
+            table.insert(line, ANSI((v.bold or ((v.style % 2) == 1)) and 1 or 0,38,5,color_value_to_xterm_number[v.textcolour]))
          elseif reinit then -- set up again, but limit performance damage
             reinit = false
             init_ansi()
