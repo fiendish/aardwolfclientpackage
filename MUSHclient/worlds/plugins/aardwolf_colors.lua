@@ -7,20 +7,39 @@ local MAGENTA = 6
 local CYAN = 7 
 local WHITE = 8
 
+local atletter_to_ansi_digit = {
+   r = 31,
+   g = 32,
+   y = 33,
+   b = 34,
+   m = 35,
+   c = 36,
+   w = 37,
+   D = 30,
+   R = 31,
+   G = 32,
+   Y = 33,
+   B = 34,
+   M = 35,
+   C = 36,
+   W = 37
+}
+
 local function init_ansi() 
    -- declaration of produced tables
    color_value_to_atcode = {}
-   atcode_to_color_value = {}
+   atletter_to_color_value = {}
    color_value_to_xterm_number = {}
    xterm_number_to_color_value = extended_colours
-
+   basic_colors_to_atletters = {}
+   
    for i,v in ipairs(xterm_number_to_color_value) do
       color_value_to_xterm_number[v] = i
    end
 
    -- The start of this table uses the colours as defined in the MUSHclient ANSI settings
    -- for visual clarity over xterm numbers, with the defaults shown on the right.
-   atcode_to_color_value = {
+   atletter_to_color_value = {
       k = GetNormalColour (BLACK)   ,   -- 0x000000 (not used)
       r = GetNormalColour (RED)     ,   -- 0x000080 
       g = GetNormalColour (GREEN)   ,   -- 0x008000
@@ -38,8 +57,12 @@ local function init_ansi()
       C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00 
       W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
    }
+   
+   for k,v in pairs(atletter_to_color_value) do
+      basic_colors_to_atletters[v] = k
+   end
 
-   bold_codes = {
+   bold_colors_to_atcodes = {
       [GetBoldColour(BLACK)]   = "@D",
       [GetBoldColour(RED)]     = "@R",
       [GetBoldColour(GREEN)]   = "@G",
@@ -56,19 +79,19 @@ local function init_ansi()
       if not color_value_to_atcode[xterm_colour] then
          color_value_to_atcode[xterm_colour] = string.format("@x%03d",i)
       end
-      atcode_to_color_value[string.format("x%03d",i)] = xterm_colour
-      atcode_to_color_value[string.format("x%02d",i)] = xterm_colour
-      atcode_to_color_value[string.format("x%d",i)] = xterm_colour
+      atletter_to_color_value[string.format("x%03d",i)] = xterm_colour
+      atletter_to_color_value[string.format("x%02d",i)] = xterm_colour
+      atletter_to_color_value[string.format("x%d",i)] = xterm_colour
    end
 
    -- Aardwolf bumps a few very dark xterm colors to brighter values to improve visibility.
    -- This seems like a good idea.
    for i = 232,237 do
-      atcode_to_color_value[string.format("x%d",i)] = xterm_number_to_color_value[238]
+      atletter_to_color_value[string.format("x%d",i)] = xterm_number_to_color_value[238]
    end
    for i = 17,19 do
-      atcode_to_color_value[string.format("x%03d",i)] = xterm_number_to_color_value[19]
-      atcode_to_color_value[string.format("x%d",i)] = xterm_number_to_color_value[19]
+      atletter_to_color_value[string.format("x%03d",i)] = xterm_number_to_color_value[19]
+      atletter_to_color_value[string.format("x%d",i)] = xterm_number_to_color_value[19]
    end
 end
 
@@ -144,9 +167,9 @@ function StylesToColoursOneLine (styles, startcol, endcol)
       
       local code = color_value_to_atcode[v.textcolour]
       if code then
-         if v.bold or ((v.style % 2) == 1) then
-            if bold_codes[v.textcolour] then
-               code = bold_codes[v.textcolour]
+         if v.bold or (v.style and ((v.style % 2) == 1)) then
+            if bold_colors_to_atcodes[v.textcolour] then
+               code = bold_colors_to_atcodes[v.textcolour]
             elseif reinit then -- set up again, but limit performance damage
                reinit = false
                init_ansi()
@@ -162,15 +185,15 @@ end -- StylesToColoursOneLine
 
 -- Converts text with colour codes in it into style runs
 function ColoursToStyles (Text, default_foreground_code, default_background_code)
-   if default_foreground_code and atcode_to_color_value[default_foreground_code] then
-      default_foreground = atcode_to_color_value[default_foreground_code]
+   if default_foreground_code and atletter_to_color_value[default_foreground_code] then
+      default_foreground = atletter_to_color_value[default_foreground_code]
       default_foreground_code = "@"..default_foreground_code
    else
       default_foreground = GetNormalColour(WHITE)
       default_foreground_code = "@w"
    end
-   if default_background_code and atcode_to_color_value[default_background_code] then
-      default_background = atcode_to_color_value[default_background_code]
+   if default_background_code and atletter_to_color_value[default_background_code] then
+      default_background = atletter_to_color_value[default_background_code]
    else
       default_background = GetNormalColour(BLACK)
    end
@@ -203,7 +226,7 @@ function ColoursToStyles (Text, default_foreground_code, default_background_code
             table.insert (astyles, { text = text, 
                bold = (colour == colour:upper()),
                length = #text, 
-               textcolour = atcode_to_color_value[colour] or default_foreground,
+               textcolour = atletter_to_color_value[colour] or default_foreground,
                backcolour = default_background })
          end -- if some text
       end -- for each colour run.
@@ -239,8 +262,8 @@ function canonicalize_colours (s)
       end
    end)
    s = s:gsub ("@([^x])", function(a)
-      if atcode_to_color_value[a] then
-         return color_value_to_atcode[atcode_to_color_value[a]]
+      if atletter_to_color_value[a] then
+         return color_value_to_atcode[atletter_to_color_value[a]]
       end
    end)
    return s
@@ -262,8 +285,16 @@ function stylesToANSI(styles)
    local reinit = true
    for _,v in ipairs (styles) do
       if v.textcolour then
-         if color_value_to_xterm_number[v.textcolour] then
-            table.insert(line, ANSI((v.bold or ((v.style % 2) == 1)) and 1 or 0,38,5,color_value_to_xterm_number[v.textcolour]))
+         if basic_colors_to_atletters[v.textcolour] then
+            local a = basic_colors_to_atletters[v.textcolour]
+            if a == string.upper(a) then
+               table.insert(line, ANSI(1,atletter_to_ansi_digit[a]))
+            else
+               table.insert(line, ANSI(0,atletter_to_ansi_digit[a]))
+            end
+         elseif color_value_to_xterm_number[v.textcolour] then
+            local isbold = (v.bold or (v.style and ((v.style % 2) == 1)))
+            table.insert(line, ANSI(isbold and 1 or 0,38,5,color_value_to_xterm_number[v.textcolour]))
          elseif reinit then -- set up again, but limit performance damage
             reinit = false
             init_ansi()
@@ -348,14 +379,10 @@ function ColoursToANSI(text)
 
    text = text:gsub ("@x(%d%d?%d?)", function(a) return ANSI(0,38,5,a) end)
    text = text:gsub ("@([DRGYBMCW])", function(a)
-      if atcode_to_color_value[a] then
-         return ANSI(1,38,5,color_value_to_xterm_number[atcode_to_color_value[a]])
-      end
+      return ANSI(1,atletter_to_ansi_digit[a])
    end)
    text = text:gsub ("@([rgybmcw])", function(a)
-      if atcode_to_color_value[a] then
-         return ANSI(0,38,5,color_value_to_xterm_number[atcode_to_color_value[a]])
-      end
+      return ANSI(0,atletter_to_ansi_digit[a])
    end)
 
    text = text:gsub("%z", "@")
