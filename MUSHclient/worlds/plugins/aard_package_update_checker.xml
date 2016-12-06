@@ -46,7 +46,7 @@ require "json"
 require "wait"
 
 version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/"..aard_extras.git_branch.."/MUSHclient/"..aard_extras.version_file
-download_url = "https://github.com/fiendish/aardwolfclientpackage/archive/"..aard_extras.git_branch..".zip"
+download_url = "https://fiendish.github.io/aardwolfclientpackage/"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
@@ -128,9 +128,9 @@ function doUpdate(retval, page, status, headers, full_status, requested_url)
       ColourNote("white", "black", "  +-------------------------------","red","black"," Unable to Update ","white","black","------------------------------+")
       ColourNote("white", "black", "  |                                                                               |")
       ColourNote("white", "black", "  |  The GitHub API returned a bad result...                                      |")
-      ColourTell("white", "black", "  |  ")
-      Hyperlink(download_url, download_url, "New MUSHclient Package Download", "white", "black", true)
-      ColourNote("white", "black", "     |")
+      ColourTell("white", "black", "  |")
+      Hyperlink(download_url, "  Visit "..download_url..string.rep(" ", 80-string.len("|  Visit "..download_url)), "New MUSHclient Package Download", "white", "black", true)
+      ColourNote("white", "black", "|")
       ColourNote("white", "black", "  |                                                                               |")
       ColourNote("white", "black", "  +-------------------------------------------------------------------------------+")
       if githubjson_t.message ~= nil then
@@ -270,15 +270,15 @@ function checkIfFinishedDownloading()
          Save()
          wait.time(DELAY)
          
-         ColourNote("white", "black", "+---------------------------------","red","black"," Touch Nothing ","white","black","-------------------------------+")
-         ColourNote("white", "black", "|                                                                               |")
-         ColourNote("white", "black", "|  Overwriting files. Be prepared for failure and hopeful for success.          |")
-         ColourNote("white", "black", "|  If this fails, download the complete new package from...                     |")      
-         ColourTell("white", "black", "|  ")
-         Hyperlink(download_url, download_url, "New MUSHclient Package Download", "white", "black", true)
-         ColourNote("white", "black", "     |")
-         ColourNote("white", "black", "|                                                                               |")
-         ColourNote("white", "black", "+-------------------------------------------------------------------------------+")
+         ColourNote("white", "black", "  +---------------------------------","red","black"," Touch Nothing ","white","black","-------------------------------+")
+         ColourNote("white", "black", "  |                                                                               |")
+         ColourNote("white", "black", "  |  Overwriting files. Be prepared for failure and hopeful for success.          |")
+         ColourNote("white", "black", "  |  If this fails, download the complete new package from...                     |")      
+         ColourTell("white", "black", "  |  ")
+         Hyperlink(download_url, download_url..string.rep(" ", 80-string.len("|  "..download_url)), "New MUSHclient Package Download", "white", "black", true)
+         ColourNote("white", "black", "|")
+         ColourNote("white", "black", "  |                                                                               |")
+         ColourNote("white", "black", "  +-------------------------------------------------------------------------------+")
          Repaint()
       
          print("Auto Updater: Updating Files...")
@@ -406,17 +406,17 @@ function updateDialog(message,list)
       end
    else
       Note("")
-      ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
-      ColourNote("cyan", "", "|               Aardwolf MUSHclient Package Update Checker                 |")
-      ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
-      ColourNote("cyan", "", "|                                                                          |")
-      ColourNote("cyan", "", "| You have chosen to ignore snapshot r"..latest_version.."."..string.rep(" ",75-string.len("| You have chosen to ignore snapshot r"..latest_version..".")).."|")
-      ColourNote("cyan", "", "| You will be alerted again when another snapshot is released.             |")
-      ColourNote("cyan", "", "|                                                                          |")
-      ColourNote("cyan", "", "| Remember, you can always get the latest development release at:          |")
-      ColourNote("cyan", "", "| "..download_url..string.rep(" ", 75-string.len("| "..download_url.." |")).." |")
-      ColourNote("cyan", "", "|                                                                          |")
-      ColourNote("cyan", "", "+--------------------------------------------------------------------------+")
+      ColourNote("cyan", "", "  +--------------------------------------------------------------------------+")
+      ColourNote("cyan", "", "  |               Aardwolf MUSHclient Package Update Checker                 |")
+      ColourNote("cyan", "", "  +--------------------------------------------------------------------------+")
+      ColourNote("cyan", "", "  |                                                                          |")
+      ColourNote("cyan", "", "  |  You have chosen to ignore snapshot r"..latest_version.."."..string.rep(" ",74-string.len("| You have chosen to ignore snapshot r"..latest_version..".")).."|")
+      ColourNote("cyan", "", "  |  You will be alerted again when another snapshot is released.            |")
+      ColourNote("cyan", "", "  |                                                                          |")
+      ColourNote("cyan", "", "  |  Remember, you can always get the latest development release at:         |")
+      ColourNote("cyan", "", "  |  "..download_url..string.rep(" ", 71-string.len(download_url)).." |")
+      ColourNote("cyan", "", "  |                                                                          |")
+      ColourNote("cyan", "", "  +--------------------------------------------------------------------------+")
       Note("")
       SetVariable("ignore_before_version", latest_version)
    end
