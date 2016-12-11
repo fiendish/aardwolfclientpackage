@@ -12,17 +12,16 @@
 	requires="4.75"
 	version="1.0"
 	save_state="y"
+	sequence="-10000"
 >
 
 <description trim="y">
-This plugin substitutes text in server output with something else.
+This plugin substitutes text with something else.
 
 It does not cross color code boundaries.
 '#sub {potato} {pants}' will make @Mpotato@Cpants@Rairplane@w become @Mpants@Cpants@Rairplane@w
 but will not do anything to @Mpot@Yato@Cpants@Rairplane@w because, in this one, the word
 potato has a color break inside it.
-
-Operates at the incoming packet level, so GMCP comm.channel.msg can be modified as well.
 
 Type "#sub help" or make a syntax mistake for usage details.
 </description>
@@ -120,6 +119,24 @@ Type "#sub help" or make a syntax mistake for usage details.
 ></alias>
 
 </aliases>
+
+<triggers>
+  <trigger
+   name="all"
+   enabled="y"
+   match="^(.*)$"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+   send_to="12"
+   script="filter_trigger"
+  ><send>
+     if not GetInfo(123) then
+        StopEvaluatingTriggers(true)
+     end
+   </send>
+  </trigger>
+</triggers>
 
 <script>
 <![CDATA[
@@ -519,130 +536,32 @@ function current_line()
 end
 
 
-function OnPluginPacketReceived(sData)
-	if dosubs and not GetInfo(123) then
-		
-		local ends_in_gmcp = false
-		local text = prev_text..sData -- prepend any dangling unprocessed data from the last packet
-
-		-- First we split the packet around subnegotiations to box them out, and then we split non-IAC_SB 
-		-- segments around EOLs to easily count and mark the EOLs so we know where to put the extracted 
-		-- subnegotiations back into the packet after performing our substitutions on some of them.
-		-- The substituted subnegotiations may not go back in exactly the same spot, that's hard to do because
-		-- we need to merge partial main data lines around extracted subnegotiations back together for matching,
-		-- but they will at least go before the right EOL and we'll put them up front to prevent MUSHclient
-		-- from displaying a partially received main message before a Simulated gmcp message that arrives 
-		-- before the newline.
-		
-		local new_packet = {}
-		local subnegs = {}
-		local eols = 1
-		
-		local split_at_subnegs = text:split(string.char(255,250)..".-"..string.char(255,240), true)
-		for i,v in ipairs(split_at_subnegs) do 
-			if v:byte(1) ~= 255 or v:byte(2) ~= 250 then
-				-- split regular data further at EOLs
-				for j,w in ipairs(v:split(EOL, true)) do
-					if w ~= "" then
-						new_packet[#new_packet+1] = w
-					end
-				end
-			else
-				new_packet[#new_packet+1] = v
-			end
-		end
-
-		for i,v in ipairs(new_packet) do
-			if v == EOL then
-				-- Count how many EOLs we find so that we know where to put
-				-- the subnegotiation messages back in after filtering.
-				eols = eols+1
-			elseif v:byte(1) == 255 and v:byte(2) == 250 and v:byte(-2) == 255 and v:byte(-1) == 240 then
-				subnegs[#subnegs+1] = {eols, v}
-				new_packet[i] = "" -- Mask the subnegotiations with empty strings. They get collapsed later by table.concat().
-			end
-		end
-
-		if new_packet[#new_packet] ~= EOL then
-			prev_text = table.remove(new_packet) -- if there's an incomplete message dangling, it will wind up here
-		else
-			prev_text = ""
-		end
-
-		-- Collapse any empty strings we put in place of any subnegotiations
-		-- and then split again on EOLs to get complete output lines.
-		new_packet = table.concat(new_packet):split(EOL, true)
-
-		-- do replacements and gags in the regular text
-		for i,line in ipairs(new_packet) do
-
-			-- Matching #alone patterns at color and line boundaries is easier if
-			-- we can assume that color patterns are uniform. Make it so.
-			local msg_t = canonicalize_colours(AnsiToColours(line)):split("%f[@]@x%d%d%d", true)
-
-			cur_line = line
-			local gagged = do_gags_against_coded_colors_table(msg_t)
-			if not gagged then
-				new_packet[i] = ColoursToANSI(do_subs_against_coded_colors_table(msg_t))
-			else
-				new_packet[i] = ""
-			end
-
-			if gagged and new_packet[i+1] == EOL then
-				-- prevent the gag from leaving a blank line by also removing the following EOL
-				new_packet[i+1] = ""
-			end
-		end
-
-		-- Do replacements and gags in certain subnegotiations.
-		-- We go through them in reverse and then put them in front of the line to make sure that
-		-- a subnegotiation that triggers a Simulate call doesn't simulate to the back of
-		-- incomplete main data.
-		for i = #subnegs,1,-1 do 
-			local subneg = subnegs[i]
-			local line = subneg[2]
-
-			-- GMCP comm.channel.msg
-			if line:byte(3) == 201 and line:sub(4,15) == "comm.channel" then
-				cur_line = line
-
-				-- we work on just the message part
-				local msg_begin, msg_end, msg = line:find('"msg": "(.*[^\\])",')
-				msg_begin = msg_begin + 8
-				msg_end = msg_end - 2
-
-				-- Matching #alone patterns at color and line boundaries is easier if
-				-- we can assume that color patterns are uniform. Make it so.
-				local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
-
-				local gagged = do_gags_against_coded_colors_table(msg_t)
-				if not gagged then
-					line = line:sub(1, msg_begin-1)..do_subs_against_coded_colors_table(msg_t)..line:sub(msg_end+1, -1)
-				else
-					break
-				end
-			end
-
-			-- Subnegotiations go back in before the next line as indicated by counted EOLs. 
-			-- At this point, EOLs are every other table entry.
-			local where_to_inject = (subneg[1]*2) - 1
-			if not new_packet[where_to_inject] then
-				ends_in_gmcp = true
-				new_packet[where_to_inject] = line
-			else
-				new_packet[where_to_inject] = line..new_packet[where_to_inject]
-			end
-		end
-
-		return table.concat(new_packet)
-	end
+function filter_trigger(name, line, wildcards, styles)
+   if not GetInfo(123) then
+      local new_line = filter_string(StylesToColoursOneLine(styles))
+      if new_line then
+         SetTriggerOption("all", "omit_from_output", "n")
+         Simulate(ColoursToANSI(new_line)..ANSI(0).."\r\n")
+         SetTriggerOption("all", "omit_from_output", "y")
+      end
+   end
 end
 
 
-function OnPluginBroadcast (msg, id, name, text)
-	-- got GMCP means we're actually in the game as opposed to just "connected"
-	if (not dosubs) and (id == '3e7dedbe37e44942dd46d264') then
-		dosubs = true
+-- returns nil if gagged, otherwise returns the modified message
+-- input: string with Aardwolf color codes
+function filter_string(msg)
+	cur_line = msg
+   
+	-- Matching #alone patterns at color and line boundaries is easier if
+	-- we can assume that color patterns are uniform. Make it so.
+	local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
+
+	local gagged = do_gags_against_coded_colors_table(msg_t)
+	if not gagged then
+		return do_subs_against_coded_colors_table(msg_t)
+	else
+		return nil
 	end
 end
 
