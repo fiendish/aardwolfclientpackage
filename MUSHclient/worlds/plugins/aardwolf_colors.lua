@@ -102,6 +102,10 @@ init_ansi()
 -- Negative indices are measured back from the end.
 -- The order of start and end columns does not matter, since the start will always be lower than the end.
 function StylesToColoursOneLine (styles, startcol, endcol)
+   if #styles == 0 then
+      return ""
+   end
+   
    local startcol = startcol or 1
    local endcol = endcol or 99999 -- 99999 is assumed to be long enough to cover ANY style run
    
