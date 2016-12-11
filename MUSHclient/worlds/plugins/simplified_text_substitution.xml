@@ -5,7 +5,7 @@
 <plugin
 	name="Text_Substitutions"
 	author="Fiendish"
-	id="26240e292291e159e1ff3cde"
+	id="48f867c18f6ff1d6d3b52918"
 	language="Lua"
 	purpose="Replace text with other text"
 	date_written="2011-07-27 01:00:00"
@@ -465,6 +465,13 @@ function OnPluginConnect()
 	dosubs = false
 	prev_text = ""
 end
+
+
+function OnPluginListChanged ()
+   if IsPluginInstalled("26240e292291e159e1ff3cde") then
+      UnloadPlugin("26240e292291e159e1ff3cde")
+   end
+end -- OnPluginListChanged
 
 
 -- proxy_sub("26240e292291e159e1ff3cde:test")
