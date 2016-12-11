@@ -450,6 +450,13 @@ function OnPluginConnect()
 end
 
 
+function OnPluginListChanged ()
+   if IsPluginInstalled("48f867c18f6ff1d6d3b52918") then
+      UnloadPlugin("48f867c18f6ff1d6d3b52918")
+   end
+end -- OnPluginListChanged
+
+
 -- proxy_sub("26240e292291e159e1ff3cde:test")
 function proxy_sub(plugin_func_str, prev_color)
 	local callstart = 'local a,b = CallPlugin("'..plugin_func_str:gsub(':', '","')..'"'
