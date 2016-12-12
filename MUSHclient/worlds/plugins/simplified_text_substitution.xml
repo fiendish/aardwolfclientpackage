@@ -125,17 +125,12 @@ Type "#sub help" or make a syntax mistake for usage details.
    name="all"
    enabled="y"
    match="^(.*)$"
-   omit_from_output="y"
+   omit_from_output="n"
    regexp="y"
    sequence="100"
    send_to="12"
    script="filter_trigger"
-  ><send>
-     if not GetInfo(123) then
-        StopEvaluatingTriggers(true)
-     end
-   </send>
-  </trigger>
+  ></trigger>
 </triggers>
 
 <script>
@@ -469,6 +464,8 @@ end
 
 function OnPluginListChanged ()
    if IsPluginInstalled("26240e292291e159e1ff3cde") then
+      ColourNote("yellow","red","You can't have two text substitution plugins active at the same time.")
+      ColourNote("yellow","red","Remove the active one first before adding the other.")
       UnloadPlugin("26240e292291e159e1ff3cde")
    end
 end -- OnPluginListChanged
@@ -545,11 +542,13 @@ end
 
 function filter_trigger(name, line, wildcards, styles)
    if not GetInfo(123) then
-      local new_line = filter_string(StylesToColoursOneLine(styles))
-      if new_line then
-         SetTriggerOption("all", "omit_from_output", "n")
-         Simulate(ColoursToANSI(new_line)..ANSI(0).."\r\n")
-         SetTriggerOption("all", "omit_from_output", "y")
+      local old_line = StylesToColoursOneLine(styles)
+      local new_line = filter_string(old_line)
+      if new_line ~= old_line then
+         DeleteLines(1)
+         if new_line then
+            Simulate(ColoursToANSI(new_line)..ANSI(0).."\r\n")
+         end
       end
    end
 end

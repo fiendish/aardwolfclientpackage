@@ -748,7 +748,6 @@ function sanitize_filename(str)
 end
 
 function stampAndStore(styles)
-    
    local text = ""
    local log_text = ""
 
@@ -757,19 +756,15 @@ function stampAndStore(styles)
       v.text = v.text:gsub("%c","")
       v.length = v.text:len()
    end
-    
-   -- inject timestamp if wanted
-   tstamp = os.date(date_format)
-   timestyle = {text=tstamp, length=string.len(tstamp), textcolour=0xc0c0c0}
-   table.insert(styles,1,timestyle)
+   
+   timestamp = os.date(date_format)
    
    text = StylesToColoursOneLine(styles)
+   local urls = findURLs(strip_colours(timestamp..text))
    
    if (log_to_file == 1) then
-      if (log_timestamps == 0) then
-         local local_styles = copytable.deep(styles)
-         table.remove(local_styles, 1)
-         log_text = StylesToColoursOneLine(local_styles)
+      if (log_timestamps == 1) then
+         log_text = "@w"..timestamp..text
       else
          log_text = text
       end
@@ -788,8 +783,8 @@ function stampAndStore(styles)
       end
    end
 
-   local urls = findURLs(strip_colours(text))
-   
+   table.insert(styles,1,{text=timestamp, length=string.len(timestamp), textcolour=0xc0c0c0})
+
    -- store the raw lines for use during resizing
    if #rawlines >= MAX_LINES then
       table.remove(rawlines, 1)
@@ -810,8 +805,25 @@ function storeFromOutside(msg)
 end
 
 function untagged_info (name, line, wildcards, styles)
-   stampAndStore(styles)
+   local result = filter_if_manual(styles)
+   if result then
+      stampAndStore(result)
+   end
 end -- untagged info
+
+function filter_if_manual(msg)
+   if IsPluginInstalled("48f867c18f6ff1d6d3b52918") then -- if using the manually called #sub plugin
+      if type(msg) == "table" then
+         msg = StylesToColoursOneLine(msg)
+      end
+      rc, msg = CallPlugin("48f867c18f6ff1d6d3b52918", "filter_string", msg)
+   end
+   if type(msg) == "string" then
+      return ColoursToStyles(msg)
+   else
+      return msg
+   end
+end
 
 function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
@@ -828,7 +840,10 @@ function OnPluginBroadcast (msg, id, name, text)
                addNewChannel(chan)
             end
             if channels_table[chan]["capture"] then
-               stampAndStore(ColoursToStyles(msg))
+               local result = filter_if_manual(msg)
+               if result then
+                  stampAndStore(result)
+               end
             end
          end
       end
