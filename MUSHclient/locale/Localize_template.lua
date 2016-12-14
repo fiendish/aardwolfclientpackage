@@ -1,6 +1,6 @@
 -- MUSHclient localization file
 
--- Written: Friday, 23 September 2016 at 18:03:07
+-- Written: Wednesday, 14 December 2016 at 12:05:06
 
 -- Static messages
 
@@ -590,7 +590,7 @@ messages = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/prefspropertypages.cpp:5183
 
--- /cygdrive/c/source/mushclient/doc.cpp:3717
+-- /cygdrive/c/source/mushclient/doc.cpp:3721
   ["Unable to open or read the requested file"] =
     "",
 
@@ -614,7 +614,7 @@ messages = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/prefspropertypages.cpp:7405
 
--- /cygdrive/c/source/mushclient/doc.cpp:7781
+-- /cygdrive/c/source/mushclient/doc.cpp:7785
   ["Unable to edit the script file."] =
     "",
 
@@ -706,331 +706,331 @@ messages = {
   ["Insufficient memory to decompress MCCP text."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:2550
+-- /cygdrive/c/source/mushclient/doc.cpp:2554
   ["Ran out of memory. The world has been closed."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:2720
+-- /cygdrive/c/source/mushclient/doc.cpp:2724
   ["processing hotspot callback"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3289
+-- /cygdrive/c/source/mushclient/doc.cpp:3293
 
--- /cygdrive/c/source/mushclient/doc.cpp:3359
+-- /cygdrive/c/source/mushclient/doc.cpp:3363
   ["Unable to allocate memory for screen font"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3504
+-- /cygdrive/c/source/mushclient/doc.cpp:3508
   ["An error occurred calculating amount to send to world"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3537
+-- /cygdrive/c/source/mushclient/doc.cpp:3541
   ["Sending to world..."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3539
+-- /cygdrive/c/source/mushclient/doc.cpp:3543
   ["Sending..."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3656
+-- /cygdrive/c/source/mushclient/doc.cpp:3660
   ["An error occurred when sending/pasting to this world"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3740
+-- /cygdrive/c/source/mushclient/doc.cpp:3744
 
--- /cygdrive/c/source/mushclient/doc.cpp:3827
+-- /cygdrive/c/source/mushclient/doc.cpp:3831
   ["Cannot open the Clipboard"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3772
+-- /cygdrive/c/source/mushclient/doc.cpp:3776
   ["Unable to get Clipboard data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3784
+-- /cygdrive/c/source/mushclient/doc.cpp:3788
 
--- /cygdrive/c/source/mushclient/doc.cpp:3896
+-- /cygdrive/c/source/mushclient/doc.cpp:3900
   ["Unable to lock memory for Clipboard data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3842
+-- /cygdrive/c/source/mushclient/doc.cpp:3846
   ["Unable to allocate memory for Clipboard data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3853
+-- /cygdrive/c/source/mushclient/doc.cpp:3857
   ["Unable to lock memory for Clipboard text data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3868
+-- /cygdrive/c/source/mushclient/doc.cpp:3872
   ["Unable to set Clipboard text data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3885
+-- /cygdrive/c/source/mushclient/doc.cpp:3889
   ["Unable to allocate memory for Clipboard Unicode data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:3913
+-- /cygdrive/c/source/mushclient/doc.cpp:3917
   ["Unable to set Clipboard Unicode data"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4032
+-- /cygdrive/c/source/mushclient/doc.cpp:4036
 
--- /cygdrive/c/source/mushclient/doc.cpp:4045
+-- /cygdrive/c/source/mushclient/doc.cpp:4049
   ["For assistance with connection problems see: "] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4036
+-- /cygdrive/c/source/mushclient/doc.cpp:4040
   ["How to resolve network connection problems"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4048
+-- /cygdrive/c/source/mushclient/doc.cpp:4052
   ["This message can be suppressed, or displayed in the main window."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4050
+-- /cygdrive/c/source/mushclient/doc.cpp:4054
   ["See the File menu -> Global Preferences -> General to do this."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4184
+-- /cygdrive/c/source/mushclient/doc.cpp:4188
   ["Unexpected phase in HostNameResolved function"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4290
+-- /cygdrive/c/source/mushclient/doc.cpp:4294
   ["Recalculating line positions"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4646
+-- /cygdrive/c/source/mushclient/doc.cpp:4650
   ["Permission denied"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4647
+-- /cygdrive/c/source/mushclient/doc.cpp:4651
   ["Address already in use"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4648
+-- /cygdrive/c/source/mushclient/doc.cpp:4652
   ["Cannot assign requested address"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4649
+-- /cygdrive/c/source/mushclient/doc.cpp:4653
   ["Address family not supported by protocol family"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4650
+-- /cygdrive/c/source/mushclient/doc.cpp:4654
   ["Operation already in progress. "] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4651
+-- /cygdrive/c/source/mushclient/doc.cpp:4655
   ["Software caused connection abort"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4652
+-- /cygdrive/c/source/mushclient/doc.cpp:4656
   ["Connection refused"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4653
+-- /cygdrive/c/source/mushclient/doc.cpp:4657
   ["Connection reset by peer"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4654
+-- /cygdrive/c/source/mushclient/doc.cpp:4658
   ["Destination address required"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4655
+-- /cygdrive/c/source/mushclient/doc.cpp:4659
   ["Bad address"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4656
+-- /cygdrive/c/source/mushclient/doc.cpp:4660
   ["Host is down"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4657
+-- /cygdrive/c/source/mushclient/doc.cpp:4661
   ["No route to host"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4658
+-- /cygdrive/c/source/mushclient/doc.cpp:4662
   ["Operation now in progress"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4659
+-- /cygdrive/c/source/mushclient/doc.cpp:4663
   ["Interrupted function call"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4660
+-- /cygdrive/c/source/mushclient/doc.cpp:4664
   ["Invalid argument"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4661
+-- /cygdrive/c/source/mushclient/doc.cpp:4665
   ["Socket is already connected"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4662
+-- /cygdrive/c/source/mushclient/doc.cpp:4666
   ["Too many open files"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4663
+-- /cygdrive/c/source/mushclient/doc.cpp:4667
   ["Message too long"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4664
+-- /cygdrive/c/source/mushclient/doc.cpp:4668
   ["Network is down"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4665
+-- /cygdrive/c/source/mushclient/doc.cpp:4669
   ["Network dropped connection on reset"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4666
+-- /cygdrive/c/source/mushclient/doc.cpp:4670
   ["Network is unreachable"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4667
+-- /cygdrive/c/source/mushclient/doc.cpp:4671
   ["No buffer space available"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4668
+-- /cygdrive/c/source/mushclient/doc.cpp:4672
   ["Bad protocol option"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4669
+-- /cygdrive/c/source/mushclient/doc.cpp:4673
   ["Socket is not connected"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4670
+-- /cygdrive/c/source/mushclient/doc.cpp:4674
   ["Socket operation on non-socket"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4671
+-- /cygdrive/c/source/mushclient/doc.cpp:4675
   ["Operation not supported"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4672
+-- /cygdrive/c/source/mushclient/doc.cpp:4676
   ["Protocol family not supported"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4673
+-- /cygdrive/c/source/mushclient/doc.cpp:4677
   ["Too many processes"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4674
+-- /cygdrive/c/source/mushclient/doc.cpp:4678
   ["Protocol not supported"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4675
+-- /cygdrive/c/source/mushclient/doc.cpp:4679
   ["Protocol wrong type for socket"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4676
+-- /cygdrive/c/source/mushclient/doc.cpp:4680
   ["Cannot send after socket shutdown"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4677
+-- /cygdrive/c/source/mushclient/doc.cpp:4681
   ["Socket type not supported"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4678
+-- /cygdrive/c/source/mushclient/doc.cpp:4682
   ["Connection timed out"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4679
+-- /cygdrive/c/source/mushclient/doc.cpp:4683
   ["Resource temporarily unavailable"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4680
+-- /cygdrive/c/source/mushclient/doc.cpp:4684
   ["Host not found"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4681
+-- /cygdrive/c/source/mushclient/doc.cpp:4685
   ["Specified event object handle is invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4682
+-- /cygdrive/c/source/mushclient/doc.cpp:4686
   ["One or more parameters are invalid"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4683
+-- /cygdrive/c/source/mushclient/doc.cpp:4687
   ["Invalid procedure table from service provider"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4684
+-- /cygdrive/c/source/mushclient/doc.cpp:4688
   ["Invalid service provider version number"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4685
+-- /cygdrive/c/source/mushclient/doc.cpp:4689
   ["Overlapped operations will complete later"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4686
+-- /cygdrive/c/source/mushclient/doc.cpp:4690
   ["Overlapped I/O event object not in signaled state"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4687
+-- /cygdrive/c/source/mushclient/doc.cpp:4691
   ["Insufficient memory available"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4688
+-- /cygdrive/c/source/mushclient/doc.cpp:4692
   ["Successful WSAStartup not yet performed"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4689
+-- /cygdrive/c/source/mushclient/doc.cpp:4693
   ["Valid name, no data record of requested type"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4690
+-- /cygdrive/c/source/mushclient/doc.cpp:4694
   ["This is a non-recoverable error"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4691
+-- /cygdrive/c/source/mushclient/doc.cpp:4695
   ["Unable to initialize a service provider"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4692
+-- /cygdrive/c/source/mushclient/doc.cpp:4696
   ["System call failure"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4693
+-- /cygdrive/c/source/mushclient/doc.cpp:4697
   ["Network subsystem is unavailable"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4694
+-- /cygdrive/c/source/mushclient/doc.cpp:4698
   ["Non-authoritative host not found"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4695
+-- /cygdrive/c/source/mushclient/doc.cpp:4699
   ["WINSOCK.DLL version out of range"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4696
+-- /cygdrive/c/source/mushclient/doc.cpp:4700
   ["Graceful shutdown in progress"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4697
+-- /cygdrive/c/source/mushclient/doc.cpp:4701
   ["Overlapped operation aborted"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4701
+-- /cygdrive/c/source/mushclient/doc.cpp:4705
   ["Unknown error code"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:4923
+-- /cygdrive/c/source/mushclient/doc.cpp:4927
   ["Recalling..."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:6510
+-- /cygdrive/c/source/mushclient/doc.cpp:6514
 
--- /cygdrive/c/source/mushclient/doc.cpp:6532
+-- /cygdrive/c/source/mushclient/doc.cpp:6536
   ["Send-to-script cannot execute because scripting is not enabled."] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:6601
+-- /cygdrive/c/source/mushclient/doc.cpp:6605
   ["Unable to allocate memory for host name lookup"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:7064
+-- /cygdrive/c/source/mushclient/doc.cpp:7068
 
--- /cygdrive/c/source/mushclient/doc.cpp:7066
+-- /cygdrive/c/source/mushclient/doc.cpp:7070
   ["Proxy server refused authentication"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:7224
+-- /cygdrive/c/source/mushclient/doc.cpp:7228
   ["Proxy server username or password lengths cannot be > 255 characters"] =
     "",
 
@@ -1855,7 +1855,7 @@ formatted = {
 
 -- /cygdrive/c/source/mushclient/dialogs/cmdhist.cpp:246
 
--- /cygdrive/c/source/mushclient/doc.cpp:5798
+-- /cygdrive/c/source/mushclient/doc.cpp:5802
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:5445
 
@@ -3035,100 +3035,100 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2594
+-- /cygdrive/c/source/mushclient/doc.cpp:2598
   ["%s function \"%s\" cannot execute - scripting disabled/parse error."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2606
+-- /cygdrive/c/source/mushclient/doc.cpp:2610
   ["%s function \"%s\" not found or had a previous error."] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2625
+-- /cygdrive/c/source/mushclient/doc.cpp:2629
   ["processing trigger \"%s\" when matching line: \"%s\""] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2784
+-- /cygdrive/c/source/mushclient/doc.cpp:2788
   ["Close log file %s?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:2896
+-- /cygdrive/c/source/mushclient/doc.cpp:2900
   ["Unable to open log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:3175
+-- /cygdrive/c/source/mushclient/doc.cpp:3179
   ["An error occurred writing to log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4005
+-- /cygdrive/c/source/mushclient/doc.cpp:4009
 
--- /cygdrive/c/source/mushclient/doc.cpp:6675
+-- /cygdrive/c/source/mushclient/doc.cpp:6679
   ["Unable to connect to \"%s\", code = %i (%s)\n\nError occurred during phase: %s"] =
     function (a, b, c, d)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4160
+-- /cygdrive/c/source/mushclient/doc.cpp:4164
   ["Unable to resolve host name for \"%s\", code = %i (%s)"] =
     function (a, b, c)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4486
+-- /cygdrive/c/source/mushclient/doc.cpp:4490
   ["This will end your %s session."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4516
+-- /cygdrive/c/source/mushclient/doc.cpp:4520
   ["World internal variables (only) have changed.\n\nSave changes to %s?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4877
+-- /cygdrive/c/source/mushclient/doc.cpp:4881
   ["Are you SURE you want to clear all %i lines in the output window?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:4906
+-- /cygdrive/c/source/mushclient/doc.cpp:4910
   ["Recalling: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5069
+-- /cygdrive/c/source/mushclient/doc.cpp:5073
   ["The %s \"%s\" was not found"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5130
+-- /cygdrive/c/source/mushclient/doc.cpp:5134
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:5498
   ["Recall: %s"] =
@@ -3137,65 +3137,65 @@ formatted = {
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5336
+-- /cygdrive/c/source/mushclient/doc.cpp:5340
   ["The connection to %s is currently being established."] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5342
+-- /cygdrive/c/source/mushclient/doc.cpp:5346
   ["The connection to %s is not open. Attempt to reconnect?"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:5647
+-- /cygdrive/c/source/mushclient/doc.cpp:5651
   ["%s%s packet: %I64d (%i bytes) at %s%s%s"] =
     function (a, b, c, d, e, f, g)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:6616
+-- /cygdrive/c/source/mushclient/doc.cpp:6620
   ["Unable to initiate host name lookup for \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:6829
+-- /cygdrive/c/source/mushclient/doc.cpp:6833
   ["Could not open log file \"%s\""] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:7042
+-- /cygdrive/c/source/mushclient/doc.cpp:7046
   ["Proxy server cannot authenticate, reason: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:7108
+-- /cygdrive/c/source/mushclient/doc.cpp:7112
 
--- /cygdrive/c/source/mushclient/doc.cpp:7146
+-- /cygdrive/c/source/mushclient/doc.cpp:7150
   ["Proxy server refused connection, reason: %s"] =
     function (a)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:7176
+-- /cygdrive/c/source/mushclient/doc.cpp:7180
   ["Unexpected proxy server response %i, expected %i"] =
     function (a, b)
      
       return ""
     end,  -- function
 
--- /cygdrive/c/source/mushclient/doc.cpp:7751
+-- /cygdrive/c/source/mushclient/doc.cpp:7755
   ["Unable to edit file %s."] =
     function (a)
      
@@ -5238,9 +5238,9 @@ times = {
 
 -- /cygdrive/c/source/mushclient/dialogs/world_prefs/configuration.cpp:514
 
--- /cygdrive/c/source/mushclient/doc.cpp:2970
+-- /cygdrive/c/source/mushclient/doc.cpp:2974
 
--- /cygdrive/c/source/mushclient/doc.cpp:6858
+-- /cygdrive/c/source/mushclient/doc.cpp:6862
 
 -- /cygdrive/c/source/mushclient/mushview.cpp:3914
 
@@ -5252,11 +5252,11 @@ times = {
   ["%A, %B %d, %Y, %#I:%M %p"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:5641
+-- /cygdrive/c/source/mushclient/doc.cpp:5645
   ["%A, %B %d, %Y, %#I:%M:%S %p"] =
     "",
 
--- /cygdrive/c/source/mushclient/doc.cpp:6765
+-- /cygdrive/c/source/mushclient/doc.cpp:6769
   ["--- Connected on %A, %B %d, %Y, %#I:%M %p ---"] =
     "",
 
