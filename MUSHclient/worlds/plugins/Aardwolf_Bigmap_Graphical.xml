@@ -574,7 +574,7 @@ end
 
 function updatelocation()
    -- changed continent?
-   if force_update or (old_zone ~= zone) or (in_continent ~= (tonumber(oncont) == 1)) then
+   if force_update or (old_zone ~= zone) or (in_continent ~= (oncont == 1)) then
       force_update = false
       -- grab cached map
       map = continents [zone]
@@ -784,17 +784,16 @@ function OnPluginBroadcast (msg, id, name, text)
          end
       end
       if text == "room.info" then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room")
-         room = assert (loadstring ('return ' .. gmcparg or ""))()
+         room_info = gmcp("room.info")
          -- where we are
-         origx = tonumber (room.info.coord.x)
-         origy = tonumber (room.info.coord.y)
-         zone = tonumber (room.info.coord.id)
-         oncont = room.info.coord.cont
+         origx = tonumber (room_info.coord.x)
+         origy = tonumber (room_info.coord.y)
+         zone = tonumber (room_info.coord.id)
+         oncont = tonumber(room_info.coord.cont)
          x = origx + 1  -- make 1-relative
          y = origy + 1  -- ditto
 
-         if zone ~= -1 and ((mapwin == GetPluginID().."_mapper") or (tonumber(oncont) == 1)) then
+         if zone ~= -1 and ((mapwin == GetPluginID().."_mapper") or (oncont == 1)) then
             updatelocation()
             in_continent = true
          else

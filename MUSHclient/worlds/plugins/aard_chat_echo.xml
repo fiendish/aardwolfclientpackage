@@ -304,13 +304,10 @@ function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == "comm.channel") then
-         res, char_state = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status.state")
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","comm.channel")
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or ""))()
-
-         msg = gmcpval("msg") or ""
-         chan = gmcpval("chan") or ""
+         char_state = gmcp("char.status.state")
+         gmcp_comm = gmcp("comm.channel")
+         msg = gmcp_comm.msg or ""
+         chan = gmcp_comm.chan or ""
          if (echo_donations or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if not channels_table[chan] then
                addNewChannel(chan)
@@ -324,7 +321,7 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          end
       elseif text == "char.status" then
-         res, char_state = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status.state")
+         char_state = gmcp("char.status.state")
          if char_state ~= "5" then
             for i,v in ipairs(msg_buffer) do
                echo_msg(v)

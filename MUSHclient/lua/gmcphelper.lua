@@ -1,11 +1,7 @@
-
 --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 --- gmcphelper.lua
 --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- Below here are the functions that could (probably should) be in a stand-alone gmcphelper.lua
--- module and included as necesssary. I duplicate them in plugin so that each GMCP plugins is
--- as standalone as possible.
---~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+require "serialize"
 
 ---------------------------------------------------------------------------------------------------
 -- FUNCTION:: gmcp
@@ -13,18 +9,31 @@
 --   Examples: gmcp("room"), gmcp("char.base.tier")
 ---------------------------------------------------------------------------------------------------
 function gmcp(what)
-   result, value = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", what)
-   if result ~= 0 or value == nil or value == "" then
-       -- Changing this to nil for any of the above cases will break older scripts so be mindful.
-      return ""
-   else
-      pcall(loadstring("ret = "..value))
-      if type(ret) ~= "table" then
-         loadstring("ret = \""..value.."\"")()
-      end
-      return ret
-   end -- if
+   local ret, datastring = CallPlugin("3e7dedbe37e44942dd46d264", "gmcpdata_as_string", what)
+   pcall(loadstring("data = "..datastring))
+   return data
 end -- gmcp
+
+
+---------------------------------------------------------------------------------------------------
+-- Helper function to send GMCP data.
+---------------------------------------------------------------------------------------------------
+function Send_GMCP_Packet (what)
+   CallPlugin("3e7dedbe37e44942dd46d264", "GMCP_send", what)
+end -- Send_GMCP_Packet
+
+
+
+
+-- everything below this point is deprecated --
+
+
+
+
+
+
+
+
 
 ---------------------------------------------------------------------------------------------------
 -- FUNCTION:: get_gmcp
@@ -64,9 +73,7 @@ end -- function get_gmcp
 --   by a keyword.
 ---------------------------------------------------------------------------------------------------
 function get_last_tag(instr) 
-
    return string.match(instr,"^.*%.(%a+)$") or instr
-
 end -- get_last_tag
 
 ---------------------------------------------------------------------------------------------------
@@ -104,22 +111,3 @@ function gmcpsection(fieldname,nesting)
       return tostring (outval)
    end
 end
-
-function RequestData() 
-   Send_GMCP_Packet("request char")
-end
-
-
----------------------------------------------------------------------------------------------------
--- Helper function to send GMCP data.
----------------------------------------------------------------------------------------------------
-local IAC, SB, SE, DO = 0xFF, 0xFA, 0xF0, 0xFD
-local GMCP      = 201
-
-function Send_GMCP_Packet (what)
-   assert (what, "Send_GMCP_Packet passed a nil message.")
-
-   SendPkt (string.char (IAC, SB, GMCP) .. 
-           (string.gsub (what, "\255", "\255\255")) ..  -- IAC becomes IAC IAC
-            string.char (IAC, SE))
-end -- Send_GMCP_Packet

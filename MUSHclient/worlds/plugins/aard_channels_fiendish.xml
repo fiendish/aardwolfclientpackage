@@ -829,12 +829,9 @@ function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == "comm.channel") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","comm.channel")         
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or ""))()
-
-         msg = gmcpval("msg") or ""
-         chan = gmcpval("chan") or ""
+         gmcpcomm = gmcp("comm.channel")
+         msg = gmcpcomm.msg or ""
+         chan = gmcpcomm.chan or ""
          if (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if not channels_table[chan] then
                addNewChannel(chan)

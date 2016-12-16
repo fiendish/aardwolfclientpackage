@@ -76,6 +76,7 @@ posx       = ""
 posy       = ""
 hotspot_id = ""
 page_built = false
+gmcp_char = {}
 
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
@@ -222,14 +223,12 @@ function DisplayStatsPage()
          end
       end
       
-      DoNextSimpleBar("Health", gmcpval("vitals.hp") or "", gmcpval("maxstats.maxhp") or "")
+      DoNextSimpleBar("Health", gmcp_char.vitals.hp, gmcp_char.maxstats.maxhp)
+      DoNextSimpleBar("Mana", gmcp_char.vitals.mana, gmcp_char.maxstats.maxmana)
+      DoNextSimpleBar("Moves", gmcp_char.vitals.moves, gmcp_char.maxstats.maxmoves)
       
-      DoNextSimpleBar("Mana", gmcpval("vitals.mana") or "", gmcpval("maxstats.maxmana") or "")
-      
-      DoNextSimpleBar("Moves", gmcpval("vitals.moves") or "", gmcpval("maxstats.maxmoves") or "")
-      
-      local tnl = gmcpval("status.tnl") or ""
-      local perlevel = gmcpval("base.perlevel") or ""
+      local tnl = gmcp_char.status.tnl
+      local perlevel = gmcp_char.base.perlevel
       -- switch from "to next level" to "current level experience"
       if (reverseTNL == 0) then
          DoNextSimpleBar("TNL", tnl, perlevel)
@@ -239,9 +238,9 @@ function DisplayStatsPage()
       
       bar = "Enemy"
       if (showBar[bar][2] == true) then
-         fighting = gmcpval("status.enemy")
-         if fighting ~= "" and fighting ~= null then
-            enemypct = gmcpval("status.enemypct")
+         fighting = gmcp_char.status.enemy
+         if fighting ~= "" then
+            enemypct = gmcp_char.status.enemypct
             if enemypct ~= "" then
                if showLabels == 1 then
                   if stacked == 1 then
@@ -284,7 +283,7 @@ function DisplayStatsPage()
       
       bar = "Align"
       if (showBar[bar][2] == true) then
-         alignment = tonumber(gmcpval("status.align"))
+         alignment = tonumber(gmcp_char.status.align)
          if alignment ~= nil then
             zeroed_alignment = alignment+2500
             bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
@@ -476,13 +475,20 @@ function OnPluginBroadcast (msg, id, name, text)
       end
 
       if (text == "char.base" or text == "char.vitals" or text == "char.status" or text == "char.maxstats") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char")
-
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
-
-         page_built = true
-         DisplayStatsPage()
+         if text == "char.base" then 
+            gmcp_char.base = gmcp("char.base")
+         elseif text == "char.vitals" then
+            gmcp_char.vitals = gmcp("char.vitals")
+         elseif text == "char.status" then
+            gmcp_char.status = gmcp("char.status")
+         else
+            gmcp_char.maxstats = gmcp("char.maxstats")
+         end
+         
+         if gmcp_char.base and gmcp_char.vitals and gmcp_char.status and gmcp_char.maxstats then
+            page_built = true
+            DisplayStatsPage()
+         end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
