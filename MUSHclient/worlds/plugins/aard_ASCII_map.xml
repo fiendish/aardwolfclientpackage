@@ -563,11 +563,9 @@ function OnPluginBroadcast (msg, id, name, text)
       end
 
       if (text == "room.info") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
-         coord_data = gmcpdata.coord
-         roomnum = gmcpdata.num
+         room_info = gmcp("room.info")
+         coord_data = room_info.coord
+         roomnum = room_info.num
          if (show_coords == 1) then
             process_coords()
          end
