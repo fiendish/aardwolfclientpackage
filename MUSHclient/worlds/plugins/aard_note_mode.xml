@@ -55,7 +55,7 @@ function toggleStuff(on)
       world.SetOption('enable_aliases', 1)
       world.SetOption('enable_triggers', 1)
       if IsConnected() then
-         TelnetOptionOff(TELOPT_QUIET)
+         Send_GMCP_Packet("tags on")
       end
       previous_state = state
    else
@@ -65,7 +65,7 @@ function toggleStuff(on)
       world.SetOption('enable_aliases', 0)
       world.SetOption('enable_triggers', 0)
       if IsConnected() then
-         TelnetOptionOn(TELOPT_QUIET)
+         Send_GMCP_Packet("tags off")
       end
       previous_state = state
    end
