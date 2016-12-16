@@ -146,11 +146,11 @@ end
 
 function OnPluginBroadcast (msg, id, name, text)
    if docheck and id == "3e7dedbe37e44942dd46d264" and text == "char.status" then
-      char_state = gmcp("char.status.state")
+      char_state = tonumber(gmcp("char.status.state"))
       
-      if (tonumber(char_state) == 3 or
-      tonumber(char_state) == 9 or
-      tonumber(char_state) == 11) then
+      if (char_state == 3 or
+      char_state == 9 or
+      char_state == 11) then
          EnableTriggerGroup("prompts", true)
          SendNoEcho("prompt data")
       end

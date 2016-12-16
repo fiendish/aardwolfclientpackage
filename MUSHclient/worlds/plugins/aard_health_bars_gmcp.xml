@@ -121,6 +121,8 @@ end
 function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
    txt = ""
    if (showBar[bar][2] == true) then
+      local num_val = tonumber(val)
+      local num_maxval = tonumber(maxval)
       if showLabels == 1 then
          if stacked == 1 then
             WindowText(win, font_id, stacked_label or showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
@@ -129,16 +131,17 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
          end
       end
 
-      if tonumber(maxval) and tonumber(val) then
+      if num_maxval and num_val then
          if flip then
-            val = tostring(tonumber(maxval)-tonumber(val))
+            val = tostring(num_maxval-num_val)
+            num_val = tonumber(val)
          end
          if overlay_numbers == 1 or overlay_numbers == 3 or (graphicalMode == 0 and overlay_numbers ~= 2) then
             maxlen = math.max(#maxval, #val)
             txt = string.lpad(val, maxlen, ' ').."/"..string.rpad(maxval,maxlen,' ')
          end
          if overlay_numbers == 2 or overlay_numbers == 3 then
-            txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(val)/tonumber(maxval)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
+            txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*num_val/num_maxval).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
          end
       end
 
@@ -147,8 +150,8 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
          local color2 = showBar[bar][5]
          if bar == "Health" then
             local hpPercent = 100
-            if tonumber(val) and tonumber(maxval) then
-               hpPercent = 100* (tonumber(val) / tonumber(maxval))
+            if num_val and num_maxval then
+               hpPercent = 100* (num_val / num_maxval)
             end
             if thresh1active == 1 then
                if hpPercent < thresh1percent then
@@ -163,7 +166,7 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
                end
             end
          end
-         gauge(win,showBar[bar][3],tonumber(val),tonumber(maxval),xpos+label_width,ypos,bar_width,line_height,color1,0x000000,num_ticks,0x000000,color2,nil,flat_gauges==1)
+         gauge(win,showBar[bar][3],num_val,num_maxval,xpos+label_width,ypos,bar_width,line_height,color1,0x000000,num_ticks,0x000000,color2,nil,flat_gauges==1)
          if overlay_numbers ~= 0 then
             txtlen = WindowTextWidth(win,font_id,txt)
             outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
