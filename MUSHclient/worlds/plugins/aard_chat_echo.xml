@@ -430,10 +430,10 @@ function OnPluginDisable()
 end
 
 function OnPluginConnect()
-   TelnetOptionOff(TELOPT_QUIET)
    TelnetOptionOn(TELOPT_CHANNELS)
    TelnetOptionOn(TELOPT_TELLS)
    TelnetOptionOn(TELOPT_SAYS)
+   Send_GMCP_Packet("tags on")
    Send_GMCP_Packet("gmcpchannels on")
    Send_GMCP_Packet("request char")
 end
