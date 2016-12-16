@@ -249,24 +249,11 @@ string.rpad = function(str, len, char)
 end
 
 function RemoveMembersFromGroupDisplay()
-   group_data = copytable.deep(full_group_data)
-   if (group_data ~= nil) and (group_data["members"] ~= nil) then
-      -- hide self if applicable
-      if (show_self == 0) and (char_data ~= nil) then
-         for i,v in ipairs(group_data["members"]) do
-            if v["name"] == char_data["name"] then
-               table.remove(group_data["members"], i)
-            end
-         end
-      end
-       
-      -- hide other hidden members (inefficient method, but who cares)
-      for k,v in pairs(hidden_members) do
-         for i,v in ipairs(group_data["members"]) do
-            if v["name"] == k then
-               table.remove(group_data["members"], i)
-               break
-            end
+   group_members = {}
+   if (full_group_data ~= nil) then
+      for i,v in ipairs(full_group_data.members) do
+         if not hidden_members[v.name] or ((show_self == 0) and (char_data ~= nil) and (v.name ~= char_data.name)) then
+            table.insert(group_members, v)
          end
       end
    end
@@ -275,10 +262,10 @@ end
 -- put all current group members into the hidden_members list
 function hideAllMembers()
    hidden_members = {}
-   if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
-      for i,v in ipairs(full_group_data["members"]) do
-         if v["name"] ~= char_data["name"] then
-            hidden_members[v["name"]] = true
+   if full_group_data and full_group_data.members and char_data and char_data.name then
+      for i,v in ipairs(full_group_data.members) do
+         if v.name ~= char_data.name then
+            hidden_members[v.name] = true
          end
       end
    end
@@ -319,22 +306,22 @@ function DisplayGroupPage()
          end
       end
    else
-      styles = ColoursToStyles(group_data["groupname"])
+      styles = ColoursToStyles(full_group_data.groupname)
       local x = GAP
       local y = 2
-      local statusBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, group_data["status"])-3*GAP)
-      WindowText(win, font_id, group_data["status"], statusBoundary+2*GAP, y, 0, 0, ((group_data["status"]=="Private" and 0x0000ff) or 0x00ff00), utf8)
+      local statusBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, full_group_data.status)-3*GAP)
+      WindowText(win, font_id, full_group_data.status, statusBoundary+2*GAP, y, 0, 0, ((full_group_data.status=="Private" and 0x0000ff) or 0x00ff00), utf8)
       x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, 0, 0xeeeeee, utf8)
       for _, v in ipairs (styles) do
          x = x + WindowText (win, font_id, v.text, x, y, statusBoundary, 0, v.textcolour)
       end -- for each style run
       y = y + line_height
-      local xpKillsBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, "XP:"..group_data["exp"].." K:"..group_data["kills"])-3*GAP)
-      WindowText(win, font_id, "XP:"..group_data["exp"].." K:"..group_data["kills"], xpKillsBoundary+2*GAP, y, 0,0, 0xeeeeee, utf8)
-      WindowText(win, font_id, "Leader: "..group_data["leader"], GAP, y, xpKillsBoundary, 0, 0xeeeeee, utf8)
+      local xpKillsBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills)-3*GAP)
+      WindowText(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills, xpKillsBoundary+2*GAP, y, 0,0, 0xeeeeee, utf8)
+      WindowText(win, font_id, "Leader: "..full_group_data.leader, GAP, y, xpKillsBoundary, 0, 0xeeeeee, utf8)
       y = title_height
       
-      if #group_data["members"] > 0 then
+      if #group_members > 0 then
          -- MAIN DISPLAY BODY
          local baseX = GAP
          local baseY = y+GAP
@@ -343,13 +330,13 @@ function DisplayGroupPage()
             column_width = column_width+WindowTextWidth(win, font_id, "WWWW")
          end
          num_columns = math.max(math.floor(width / column_width), 1)
-         members_per_col = math.ceil((#group_data["members"])/num_columns)
+         members_per_col = math.ceil((#group_members)/num_columns)
          labels_width = math.max(WindowTextWidth(win, font_id, "HP"), WindowTextWidth(win, font_id, "MN"), WindowTextWidth(win, font_id, "MV"))
          bar_width = column_width - GAP*4 - labels_width
          if overlay_numbers == 0 then
             bar_width = bar_width - WindowTextWidth(win, font_id, "88888/88888")
          end
-         for i,v in ipairs(group_data["members"]) do
+         for i,v in ipairs(group_members) do
             if (i ~= 1) and ((i-1) % members_per_col == 0) then
                baseY = title_height+GAP-1
                y = baseY
@@ -360,20 +347,20 @@ function DisplayGroupPage()
                y = baseY
                x = baseX
             end
-           -- txt = "["..(("P" and v["info"]["status"]["poisoned"] == true) or "_")..
-           --     (("B" and v["info"]["status"]["blind"] == true) or "_")..
-           --     (("W" and v["info"]["status"]["webbed"] == true) or "_")..
-           --     (("C" and v["info"]["status"]["cursed"] == true) or "_")..
-           --     (("*" and v["info"]["status"]["attacked"] == true) or "_").."]"
+           -- txt = "["..(("P" and v.info.status.poisoned == true) or "_")..
+           --     (("B" and v.info.status.blind == true) or "_")..
+           --     (("W" and v.info.status.webbed == true) or "_")..
+           --     (("C" and v.info.status.cursed == true) or "_")..
+           --     (("*" and v.info.status.attacked == true) or "_").."]"
            -- WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
            -- x = x + math.max(WindowTextWidth(win, font_id, "[PBWC*]"), WindowTextWidth(win, font_id, "[_____]")) + GAP
-            txt = "["..string.lpad(v["info"]["lvl"], 3, ' ').."]"
+            txt = "["..string.lpad(v.info.lvl, 3, ' ').."]"
             x = x + WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8) + GAP
-            txt = string.rpad(v["name"], 12, ' ')
-            zeroed_alignment = v["info"]["align"]+2500
-            name_colour = ((zeroed_alignment<=1625 and colorVals["Align"][1]) or ((zeroed_alignment>=3375 and colorVals["Align"][2]) or 0xeeeeee))
+            txt = string.rpad(v.name, 12, ' ')
+            zeroed_alignment = v.info.align+2500
+            name_colour = ((zeroed_alignment<=1625 and colorVals.Align[1]) or ((zeroed_alignment>=3375 and colorVals.Align[2]) or 0xeeeeee))
             x = x + WindowText(win, font_id, txt, x, y, 0, 0, name_colour, utf8) + GAP
-            txt = "Q:"..string.lpad(v["info"]["qt"], 2, ' ')..", ".."TNL:"..string.lpad(v["info"]["tnl"], 5, ' ')
+            txt = "Q:"..string.lpad(v.info.qt, 2, ' ')..", ".."TNL:"..string.lpad(v.info.tnl, 5, ' ')
             WindowText(win, font_id, txt, x, y, 0, 0, 0xeeeeee, utf8)
             y = y + line_height + 1
 
@@ -381,11 +368,11 @@ function DisplayGroupPage()
                x = baseX
                WindowText(win, font_id, "HP", x, y, 0, 0, 0xeeeeee, utf8)
                x = x + labels_width + GAP
-               local hpColor1 = colorVals["Health"][1]
-               local hpColor2 = colorVals["Health"][2]
+               local hpColor1 = colorVals.Health[1]
+               local hpColor2 = colorVals.Health[2]
                local hpPercent = 100
-               if tonumber(v["info"]["hp"]) and tonumber(v["info"]["mhp"]) then
-                  hpPercent = 100* (tonumber(v["info"]["hp"]) / tonumber(v["info"]["mhp"]))
+               if tonumber(v.info.hp) and tonumber(v.info.mhp) then
+                  hpPercent = 100* (tonumber(v.info.hp) / tonumber(v.info.mhp))
                end
                if thresh1active == 1 then
                   if hpPercent < thresh1percent then
@@ -399,8 +386,8 @@ function DisplayGroupPage()
                      hpColor2 = thresh2color
                   end
                end
-               gauge(win, v["name"].."'s HP", tonumber(v["info"]["hp"]), tonumber(v["info"]["mhp"]), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
-               txt = string.lpad(v["info"]["hp"], 5, ' ').."/"..string.rpad(v["info"]["mhp"],5,' ')
+               gauge(win, v.name.."'s HP", tonumber(v.info.hp), tonumber(v.info.mhp), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
+               txt = string.lpad(v.info.hp, 5, ' ').."/"..string.rpad(v.info.mhp,5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
@@ -414,8 +401,8 @@ function DisplayGroupPage()
                x = baseX
                WindowText(win, font_id, "MN", x, y, 0, 0, 0xeeeeee, utf8)
                x = x + labels_width + GAP
-               gauge(win, v["name"].."'s MN", tonumber(v["info"]["mn"]), tonumber(v["info"]["mmn"]), x, y, bar_width, line_height, colorVals["Mana"][1], 0x000000, 0, 0x000000, colorVals["Mana"][2], nil, flat_gauges==1)
-               txt = string.lpad(v["info"]["mn"],5,' ').."/"..string.rpad(v["info"]["mmn"],5,' ')
+               gauge(win, v.name.."'s MN", tonumber(v.info.mn), tonumber(v.info.mmn), x, y, bar_width, line_height, colorVals.Mana[1], 0x000000, 0, 0x000000, colorVals.Mana[2], nil, flat_gauges==1)
+               txt = string.lpad(v.info.mn,5,' ').."/"..string.rpad(v.info.mmn,5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
@@ -429,8 +416,8 @@ function DisplayGroupPage()
                x = baseX
                WindowText(win, font_id, "MV", x, y, 0, 0, 0xeeeeee, utf8)
                x = x + labels_width + GAP
-               gauge(win, v["name"].."'s MV", tonumber(v["info"]["mv"]), tonumber(v["info"]["mmv"]), x, y, bar_width, line_height, colorVals["Moves"][1], 0x000000, 0, 0x000000, colorVals["Moves"][2], nil, flat_gauges==1)
-               txt = string.lpad(v["info"]["mv"],5,' ').."/"..string.rpad(v["info"]["mmv"],5,' ')
+               gauge(win, v.name.."'s MV", tonumber(v.info.mv), tonumber(v.info.mmv), x, y, bar_width, line_height, colorVals.Moves[1], 0x000000, 0, 0x000000, colorVals.Moves[2], nil, flat_gauges==1)
+               txt = string.lpad(v.info.mv,5,' ').."/"..string.rpad(v.info.mmv,5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, 0xeeeeee, utf8)
@@ -485,12 +472,12 @@ function right_click_menu ()
    menustring ="!Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|All Others|No Others|-|"
    local member_count = 0
    local member_names = {}
-   if full_group_data and full_group_data["members"] and char_data and char_data["name"] then
-      for i,v in ipairs(full_group_data["members"]) do
-         if v["name"] ~= char_data["name"] then
-            menustring = menustring..(((hidden_members[v["name"]] == nil) and "+") or "")..v["name"].."|"
+   if full_group_data and full_group_data.members and char_data and char_data.name then
+      for i,v in ipairs(full_group_data.members) do
+         if v.name ~= char_data.name then
+            menustring = menustring..(((hidden_members[v.name] == nil) and "+") or "")..v.name.."|"
             member_count = member_count + 1
-            table.insert(member_names, v["name"])
+            table.insert(member_names, v.name)
          end
       end
    end
@@ -647,9 +634,7 @@ function OnPluginBroadcast (msg, id, name, text)
       end
 
       if (text=="char.base") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base")
-         luastmt = "char_data = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
+         char_data = gmcp("char.base")
          self_built = true
          if group_built then
             RemoveMembersFromGroupDisplay()
@@ -658,9 +643,7 @@ function OnPluginBroadcast (msg, id, name, text)
       end
 
       if (text == "group") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","group")
-         luastmt = "full_group_data = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
+         full_group_data = gmcp("group")
          if (full_group_data.groupname == "") then
             leaveGroup()
          else
