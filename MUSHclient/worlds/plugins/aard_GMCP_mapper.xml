@@ -1317,14 +1317,7 @@ function map_portal_delete (name, line, wildcards)
    
    query = string.format("DELETE FROM exits WHERE fromuid in ('*','**') AND dir = %s;", fixsql(keywords))
    dbCheckExecute(query)
-   if bounce_recall and (bounce_recall.dir == keywords) then
-      Note("Detected matching bounce recall.")
-      map_bouncerecall(nil, nil, {"clear"})
-   end
-   if bounce_portal and (bounce_portal.dir == keywords) then
-      Note("Detected matching bounce portal.")
-      map_bounceportal(nil, nil, {"clear"})
-   end
+   check_bounce_consistency()
 end -- map_portal_delete
 
 function map_portal_purge(name, line, wildcards)
@@ -1369,21 +1362,25 @@ function map_portal_recall (name, line, wildcards)
    local found = false
    for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       if count == pnum then
+      
+         -- toggle between '*' and '**'
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) 
             VALUES (%s, %s, %s, %s);
             ]], 
-            fixsql(row.dir),  -- direction (eg. "n")
-            fixsql(((row.fromuid == "*") and "**") or "*"),  -- toggle between '*' and '**'
+            fixsql(row.dir),      -- direction (eg. "home")
+            fixsql(((row.fromuid == "*") and "**") or "*"),
             fixsql(row.touid),    -- destination room
             fixsql(row.level)
          )
          dbCheckExecute(query)
+         
+         -- remove the old pre-toggle entry
          query = string.format ([[
             DELETE FROM exits WHERE dir=%s AND fromuid=%s AND touid=%s AND level=%s;
             ]], 
-            fixsql(row.dir),  -- direction (eg. "n")
-            fixsql(row.fromuid),  -- remove the old pre-toggle entry
+            fixsql(row.dir),
+            fixsql(row.fromuid),  
             fixsql(row.touid),    -- destination room
             fixsql(row.level)
          )
@@ -1391,6 +1388,7 @@ function map_portal_recall (name, line, wildcards)
          
          world.Note(string.format("\nPORTALRECALL: Recall flag %s portal '%s' to '%s'.\n",((row.fromuid == "*") and "added to") or "removed from",row.dir,(row.name or "N/A")))
          found = true
+         check_bounce_consistency()
       end
       count = count + 1
    end
@@ -3113,26 +3111,7 @@ function after_update_check()
       end
    end
 
-   local bounce_portal_orphaned = (bounce_portal ~= nil)
-   local bounce_recall_orphaned = (bounce_recall ~= nil)
-   if (bounce_portal_orphaned or bounce_recall_orphaned) then
-      for row in dbnrowsWRAPPER(PORTALS_QUERY) do
-         if (bounce_portal_orphaned and (row.dir==bounce_portal.dir)) then
-            bounce_portal_orphaned = false
-         end
-         if (bounce_recall_orphaned and (row.dir==bounce_recall.dir)) then
-            bounce_recall_orphaned = false
-         end
-      end
-      if bounce_portal_orphaned then
-         Note("Detected orphaned bounce portal.")
-         map_bounceportal(nil, nil, {"clear"})
-      end
-      if bounce_recall_orphaned then
-         Note("Detected orphaned bounce recall.")
-         map_bouncerecall(nil, nil, {"clear"})
-      end
-   end
+   check_bounce_consistency()
       
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
@@ -3146,6 +3125,52 @@ function after_update_check()
       OnPluginDisconnect()
    end
 end -- OnPluginInstall
+
+-- check for consistency mistakes with bounce portal/recall flags
+function check_bounce_consistency()
+   local bounce_portal_orphaned = (bounce_portal ~= nil)
+   local bounce_recall_orphaned = (bounce_recall ~= nil)
+   local inconsistent_recall_flag = nil
+   local inconsistent_portal_flag = nil
+   if (bounce_portal_orphaned or bounce_recall_orphaned) then
+      local row_id = 1
+      for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+         if (bounce_portal_orphaned and (row.dir==bounce_portal.dir)) then
+            if (row.fromuid == "*") then
+               bounce_portal_orphaned = false
+            else
+               inconsistent_portal_flag = row_id
+            end
+         end
+         if (bounce_recall_orphaned and (row.dir==bounce_recall.dir)) then
+            if (row.fromuid == "**") then
+               bounce_recall_orphaned = false
+            else
+               inconsistent_recall_flag = row_id
+            end
+         end
+         row_id = row_id+1
+      end
+      if bounce_portal_orphaned then
+         if inconsistent_portal_flag then
+            ColourNote("white", "red", "BOUNCE PORTAL WARNING: Your designated bounce portal #"..inconsistent_portal_flag.." '"..bounce_portal.dir.."' was flagged as a recall, which is inconsistent with correct functioning.")
+         else
+            ColourNote("white", "red", "BOUNCE PORTAL WARNING: Your designated bounce portal '"..bounce_portal.dir.."' did not exist in your mapper portals list.")
+         end
+         ColourNote("white", "red", "BOUNCE PORTAL WARNING: Your mapper bounceportal setting will be cleared. If this is undesired, please correct the aforementioned error and set it again.")
+         map_bounceportal(nil, nil, {"clear"})
+      end
+      if bounce_recall_orphaned then
+         if inconsistent_recall_flag then
+            ColourNote("white", "red", "BOUNCE RECALL WARNING: Your designated bounce recall #"..inconsistent_recall_flag.." '"..bounce_recall.dir.."' was flagged as a non-recall portal, which is inconsistent with correct functioning.")
+         else
+            ColourNote("white", "red", "BOUNCE RECALL WARNING: Your designated bounce recall '"..bounce_recall.dir.."' did not exist in your mapper portals list.")
+         end
+         ColourNote("white", "red", "BOUNCE RECALL WARNING: Your mapper bouncerecall setting will be cleared. If this is undesired, please correct the aforementioned error and set it again.")
+         map_bouncerecall(nil, nil, {"clear"})
+      end
+   end
+end
 
 function OnPluginEnable()
    if not window_hidden then
