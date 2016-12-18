@@ -125,12 +125,18 @@ Type "#sub help" or make a syntax mistake for usage details.
    name="all"
    enabled="y"
    match="^(.*)$"
-   omit_from_output="n"
+   omit_from_output="y"
    regexp="y"
    sequence="100"
    send_to="12"
    script="filter_trigger"
-  ></trigger>
+  >
+<send>
+   if not GetInfo(123) then
+      StopEvaluatingTriggers(true)
+   end
+</send>
+</trigger>
 </triggers>
 
 <script>
@@ -544,11 +550,10 @@ function filter_trigger(name, line, wildcards, styles)
    if not GetInfo(123) then
       local old_line = StylesToColoursOneLine(styles)
       local new_line = filter_string(old_line)
-      if new_line ~= old_line then
-         DeleteLines(1)
-         if new_line then
-            Simulate(ColoursToANSI(new_line)..ANSI(0).."\r\n")
-         end
+      if new_line then
+         SetTriggerOption("all", "omit_from_output", "n")
+         Simulate(ColoursToANSI(new_line)..ANSI(0).."\r\n")
+         SetTriggerOption("all", "omit_from_output", "y")
       end
    end
 end
