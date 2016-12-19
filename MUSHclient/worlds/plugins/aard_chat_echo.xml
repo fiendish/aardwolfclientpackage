@@ -287,13 +287,7 @@ end
 constructDefaultChannels()
 
 function echo_msg(msg)
-   if IsPluginInstalled("48f867c18f6ff1d6d3b52918") then -- if using the manually called #sub plugin
-      rc, msg = CallPlugin("48f867c18f6ff1d6d3b52918", "filter_string", msg)
-      if not msg then
-         return
-      end
-   end
-   Simulate(ColoursToANSI(msg)..ANSI(0).."\r\n")
+   Simulate(ColoursToANSI(msg).."\r\n")
    if compact_mode ~= "set" then
       Simulate("\r\n")
    end
