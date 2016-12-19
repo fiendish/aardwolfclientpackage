@@ -132,9 +132,7 @@ Type "#sub help" or make a syntax mistake for usage details.
    script="filter_trigger"
   >
 <send>
-   if not GetInfo(123) then
-      StopEvaluatingTriggers(true)
-   end
+   StopEvaluatingTriggers(true)
 </send>
 </trigger>
 </triggers>
@@ -547,14 +545,12 @@ end
 
 
 function filter_trigger(name, line, wildcards, styles)
-   if not GetInfo(123) then
-      local old_line = StylesToColoursOneLine(styles)
-      local new_line = filter_string(old_line)
-      if new_line then
-         SetTriggerOption("all", "omit_from_output", "n")
-         Simulate(ColoursToANSI(new_line)..ANSI(0).."\r\n")
-         SetTriggerOption("all", "omit_from_output", "y")
-      end
+   local old_line = StylesToColours(styles)
+   local new_line = filter_string(old_line)
+   if new_line then
+      EnableTrigger("all", false)
+      Simulate(ColoursToANSI(new_line).."\r\n")
+      EnableTrigger("all", true)
    end
 end
 
