@@ -454,7 +454,7 @@ function writeLines ()
       for count = lineStart, lineEnd do
          ax = nil
          zx = nil
-         line_no_colors = strip_colours(StylesToColoursOneLine(lines[count][1]))
+         line_no_colors = strip_colours(StylesToColours(lines[count][1]))
          
          -- create clickable links for urls
          for i,v in ipairs(lines[count][3]) do
@@ -759,7 +759,7 @@ function stampAndStore(styles)
    
    timestamp = os.date(date_format)
    
-   text = StylesToColoursOneLine(styles)
+   text = StylesToColours(styles)
    local urls = findURLs(strip_colours(timestamp..text))
    
    if (log_to_file == 1) then
@@ -797,7 +797,7 @@ end
 
 -- Takes input as a string with embedded Aardwolf color codes. Use via CallPlugin().
 -- See:   http://mushclient.com/scripts/doc.php?function=CallPlugin
--- You can use the function StylesToColoursOneLine(styles_table) from aardwolf_colors.lua
+-- You can use the function StylesToColours(styles_table) from aardwolf_colors.lua
 -- or manually embed your own colors to push any colorized line you want to the log window.
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO")
 function storeFromOutside(msg)
@@ -814,7 +814,7 @@ end -- untagged info
 function filter_if_manual(msg)
    if IsPluginInstalled("48f867c18f6ff1d6d3b52918") then -- if using the manually called #sub plugin
       if type(msg) == "table" then
-         msg = StylesToColoursOneLine(msg)
+         msg = StylesToColours(msg)
       end
       rc, msg = CallPlugin("48f867c18f6ff1d6d3b52918", "filter_string", msg)
    end
@@ -881,7 +881,7 @@ end
 function GetAllBufferedMessages()
    local t = {}
    for _,styles in ipairs(rawlines) do
-      table.insert(t, StylesToColoursOneLine(styles[1]))
+      table.insert(t, StylesToColours(styles[1]))
    end
    SetClipboard(table.concat(t,"\n"))
 end
@@ -999,7 +999,7 @@ function TextareaMoveCallback(flags, hotspot_id)
             local endpos = 99999
             if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
                -- snap to character boundaries instead of selecting arbitrary pixel widths
-               local line_no_colors = strip_colours(StylesToColoursOneLine(lines[copy_line][1]))
+               local line_no_colors = strip_colours(StylesToColours(lines[copy_line][1]))
                startpos = 1
                endpos = #line_no_colors
                -- special deal for the first line
@@ -1028,7 +1028,7 @@ function TextareaMoveCallback(flags, hotspot_id)
             end -- if should show highlight
        
             -- store selected area for later
-            copied_part = StylesToColoursOneLine(lines[copy_line][1], startpos, endpos)
+            copied_part = StylesToColours(lines[copy_line][1], startpos, endpos)
             if copy_line ~= copy_end_line and copy_line ~= #lines and lines[copy_line+1][2] == true then
                -- only put a line break if the next line is from a different message
                copied_part = copied_part.."@w\n"
