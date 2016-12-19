@@ -106,9 +106,6 @@ function StylesToColours(styles, dollarC_resets)
       -- fixup string: change @ to @@
       local text = string.gsub(style.text, "@", "@@")
       local code = color_value_to_atcode[style.textcolour]
-      if dollarC_resets then
-         text = text:gsub("%$C", code or lastcode)
-      end
       if code then
          if style.bold or (style.style and ((style.style % 2) == 1)) then
             if bold_colors_to_atcodes[style.textcolour] then
@@ -119,9 +116,15 @@ function StylesToColours(styles, dollarC_resets)
             end
          end
          
+         if dollarC_resets then
+            text = text:gsub("%$C", code)
+         end
          copystring = copystring..code..text
          lastcode = code
       else
+         if dollarC_resets then
+            text = text:gsub("%$C", lastcode)
+         end
          copystring = copystring..text
       end
    end
