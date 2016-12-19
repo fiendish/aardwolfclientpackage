@@ -97,12 +97,41 @@ end
 
 init_ansi()
 
--- Convert a line of style runs into color codes.
--- The caller may optionally choose to start and stop at arbitrary character indices.
--- Negative indices are measured back from the end.
--- The order of start and end columns does not matter, since the start will always be lower than the end.
-function StylesToColoursOneLine (styles, startcol, endcol)
-   if #styles == 0 then
+
+function StylesToColours(styles, dollarC_resets)
+   local reinit = true
+   local copystring = ""
+   local lastcode = ""
+   for i,style in ipairs(styles) do
+      -- fixup string: change @ to @@
+      local text = string.gsub(style.text, "@", "@@")
+      local code = color_value_to_atcode[style.textcolour]
+      if dollarC_resets then
+         text = text:gsub("%$C", code or lastcode)
+      end
+      if code then
+         if style.bold or (style.style and ((style.style % 2) == 1)) then
+            if bold_colors_to_atcodes[style.textcolour] then
+               code = bold_colors_to_atcodes[style.textcolour]
+            elseif reinit then -- set up basic color table again, but only once per run
+               reinit = false
+               init_ansi()
+            end
+         end
+         
+         copystring = copystring..code..text
+         lastcode = code
+      else
+         copystring = copystring..text
+      end
+   end
+   return copystring
+end
+
+
+require "copytable"
+function TruncateStyles(styles, startcol, endcol)
+   if not styles or #styles == 0 then
       return ""
    end
    
@@ -123,69 +152,56 @@ function StylesToColoursOneLine (styles, startcol, endcol)
       end
    end
 
-   -- start/end order does not matter when calling this function
+   -- start/end order does not matter
    if startcol > endcol then
       startcol, endcol = endcol, startcol
    end
 
-   -- find start and end position in styles
-   local first_style = 0 -- not 1 because we check for foundness next
-   local style_start = 1
-   local last_style = #styles
-   local style_end = styles[#styles].length
+   -- Trim to start and end positions in styles
+   local first_style = 0 -- not 1 because we check for foundness
    local col_counter = 0
+   local new_styles = {}
+   local break_after = false
    for k,v in ipairs(styles) do
-      col_counter = col_counter + v.length
-      if startcol <= col_counter and first_style == 0 then
-         first_style = k
-         style_start = startcol - (col_counter - v.length)
-      end
+      local new_style = copytable.shallow(v)
+      col_counter = col_counter + new_style.length
       if endcol <= col_counter then
-         last_style = k
-         style_end = endcol - (col_counter - v.length)
-         break
+         new_style.text = new_style.text:sub(1, endcol - (col_counter - v.length))
+         new_style.length = #(new_style.text)
+         break_after = true
       end
-   end
-
-   local copystring = ""
-
-   -- startcol larger than the sum length of all styles? return empty string
-   if first_style == 0 then 
-      return copystring 
-   end
-
-   local reinit = true
-   for i = first_style,last_style do
-      local v = styles[i]
-      local text = v.text
-
-      if i == last_style then
-         text = string.sub(text, 1, style_end)
-      end
-      if i == first_style then
-         text = string.sub(text, style_start)
-      end
-
-      -- fixup string: change @ to @@
-      text = string.gsub(text, "@", "@@")
-      
-      local code = color_value_to_atcode[v.textcolour]
-      if code then
-         if v.bold or (v.style and ((v.style % 2) == 1)) then
-            if bold_colors_to_atcodes[v.textcolour] then
-               code = bold_colors_to_atcodes[v.textcolour]
-            elseif reinit then -- set up again, but limit performance damage
-               reinit = false
-               init_ansi()
-            end
+      if startcol <= col_counter then
+         if first_style == 0 then
+            first_style = k
+            new_style.text = new_style.text:sub(startcol - (col_counter - v.length))
+            new_style.length = #(new_style.text)
          end
-         copystring = copystring..code..text
-      else
-         copystring = copystring..text
+         table.insert(new_styles, new_style)
       end
+      if break_after then break end
    end
-   return copystring
+   
+   return new_styles
+end
+
+
+-- Deprecated historical function without purpose. Use StylesToColours.
+-- Use TruncateStyles if you must, but that seems to be pretty uncommon.
+--
+-- Convert a partial line of style runs into color codes.
+-- Yes the "OneLine" part of the function name is meaningless. It stays that way for historical compatibility.
+-- Think of it instead as TruncatedStylesToColours
+-- The caller may optionally choose to start and stop at arbitrary character indices.
+-- Negative indices are measured backward from the end.
+-- The order of start and end columns does not matter, since the start will always be lower than the end.
+function StylesToColoursOneLine (styles, startcol, endcol)
+   if startcol or endcol then
+      return StylesToColours( TruncateStyles(styles, startcol, endcol) )
+   else
+      return StylesToColours( styles )
+   end
 end -- StylesToColoursOneLine
+
 
 -- Converts text with colour codes in it into style runs
 function ColoursToStyles (Text, default_foreground_code, default_background_code)
@@ -202,7 +218,7 @@ function ColoursToStyles (Text, default_foreground_code, default_background_code
       default_background = GetNormalColour(BLACK)
    end
    
-   if Text:match ("@") then
+   if Text:find("@", nil, true) then
       astyles = {}
 
       -- make sure we start with a color
@@ -246,6 +262,7 @@ function ColoursToStyles (Text, default_foreground_code, default_background_code
       backcolour = default_background } }
 end  -- function ColoursToStyles
 
+
 -- Strip all color codes from a string
 function strip_colours (s)
    s = s:gsub ("@@", "\0")  -- change @@ to 0x00
@@ -255,23 +272,27 @@ function strip_colours (s)
    return (s:gsub ("%z", "@")) -- put @ back
 end -- strip_colours
 
+
 -- Convert Aardwolf and short x codes to 3 digit x codes
 function canonicalize_colours (s)
-   s = s:gsub ("@x(%d%d?%d?)", function(a) 
-      local b = tonumber(a)
-      if b and b <= 255 and b >= 0 then
-         return string.format("@x%03d", b)
-      else
-         return ""
-      end
-   end)
-   s = s:gsub ("@([^x])", function(a)
-      if atletter_to_color_value[a] then
-         return color_value_to_atcode[atletter_to_color_value[a]]
-      end
-   end)
+   if s:find("@", nil, true) then
+      s = s:gsub ("@x(%d%d?%d?)", function(a) 
+         local b = tonumber(a)
+         if b and b <= 255 and b >= 0 then
+            return string.format("@x%03d", b)
+         else
+            return ""
+         end
+      end)
+      s = s:gsub ("@([^x])", function(a)
+         if atletter_to_color_value[a] then
+            return color_value_to_atcode[atletter_to_color_value[a]]
+         end
+      end)
+   end
    return s
-end -- strip_colours
+end
+
 
 -- Strip all color codes from a table of styles
 function strip_colours_from_styles(styles)
@@ -282,29 +303,39 @@ function strip_colours_from_styles(styles)
    return table.concat(ret)
 end
 
+
 -- Returns a string with embedded ansi codes.
 -- This can get confused if the player has redefined their color chart.
-function stylesToANSI(styles)
+function stylesToANSI(styles, dollarC_resets)
    local line = {}
    local reinit = true
+   local lastcode = ""
    for _,v in ipairs (styles) do
+      local code = ""
       if v.textcolour then
          if basic_colors_to_atletters[v.textcolour] then
             local a = basic_colors_to_atletters[v.textcolour]
             if a == string.upper(a) then
-               table.insert(line, ANSI(1,atletter_to_ansi_digit[a]))
+               code = ANSI(1,atletter_to_ansi_digit[a])
             else
-               table.insert(line, ANSI(0,atletter_to_ansi_digit[a]))
+               code = ANSI(0,atletter_to_ansi_digit[a])
             end
          elseif color_value_to_xterm_number[v.textcolour] then
             local isbold = (v.bold or (v.style and ((v.style % 2) == 1)))
-            table.insert(line, ANSI(isbold and 1 or 0,38,5,color_value_to_xterm_number[v.textcolour]))
+            code = ANSI(isbold and 1 or 0,38,5,color_value_to_xterm_number[v.textcolour])
          elseif reinit then -- set up again, but limit performance damage
             reinit = false
             init_ansi()
          end
       end
-      table.insert(line, v.text)
+      if code ~= "" then
+         table.insert(line, code)
+         lastcode = code
+      end
+      if dollarC_resets then
+         v.text = v.text:gsub("%$C", lastcode)
+      end
+      table.insert(line, (v.text))
    end
    return table.concat(line)
 end
@@ -372,24 +403,24 @@ end
 
 function ColoursToANSI(text)
    -- return stylesToANSI(ColoursToStyles(text))
+   if text:find("@", nil, true) then
+      text = text:gsub ("@@", "\0") -- change @@ to 0x00
+      text = text:gsub ("@%-", "~") -- fix tildes (historical)
+      text = text:gsub ("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
+      text = text:gsub ("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
+      text = text:gsub ("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
+      text = text:gsub ("@x25[6-9]","") -- strip invalid xterm codes (256+)
+      text = text:gsub ("@[^xrgybmcwDRGYBMCWd]", "")  -- strip hidden garbage
 
-   text = text:gsub ("@@", "\0") -- change @@ to 0x00
-   text = text:gsub ("@%-", "~") -- fix tildes (historical)
-   text = text:gsub ("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
-   text = text:gsub ("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
-   text = text:gsub ("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
-   text = text:gsub ("@x25[6-9]","") -- strip invalid xterm codes (256+)
-   text = text:gsub ("@[^xrgybmcwDRGYBMCWd]", "")  -- strip hidden garbage
+      text = text:gsub ("@x(%d%d?%d?)", function(a) return ANSI(0,38,5,a) end)
+      text = text:gsub ("@([DRGYBMCW])", function(a)
+         return ANSI(1,atletter_to_ansi_digit[a])
+      end)
+      text = text:gsub ("@([rgybmcw])", function(a)
+         return ANSI(0,atletter_to_ansi_digit[a])
+      end)
 
-   text = text:gsub ("@x(%d%d?%d?)", function(a) return ANSI(0,38,5,a) end)
-   text = text:gsub ("@([DRGYBMCW])", function(a)
-      return ANSI(1,atletter_to_ansi_digit[a])
-   end)
-   text = text:gsub ("@([rgybmcw])", function(a)
-      return ANSI(0,atletter_to_ansi_digit[a])
-   end)
-
-   text = text:gsub("%z", "@")
-   
+      text = text:gsub("%z", "@")
+   end   
    return text
 end
