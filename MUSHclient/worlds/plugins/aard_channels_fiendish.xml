@@ -812,7 +812,7 @@ function untagged_info (name, line, wildcards, styles)
 end -- untagged info
 
 function filter_if_manual(msg)
-   if IsPluginInstalled("48f867c18f6ff1d6d3b52918") then -- if using the manually called #sub plugin
+   if GetPluginInfo("48f867c18f6ff1d6d3b52918", 17) then -- if using the manually called #sub plugin
       if type(msg) == "table" then
          msg = StylesToColours(msg)
       end
