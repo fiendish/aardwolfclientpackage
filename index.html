@@ -13,6 +13,15 @@
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <link rel="stylesheet" href="//fiendish.github.io/gh-fork-banner/gh.css">
 <style>
+p{
+    margin:0;
+}
+em {
+   text-decoration: underline;
+}
+strong {
+   color: #233F6C;
+}
 .loading {
   display: inline-block;
   overflow: hidden;
@@ -40,7 +49,10 @@ var fiveMinutes = 5*60;
 var Storage = store.namespace('aardwolfclientpackage').session;
 
 function SetChanges(changes) {
-  $("#changes").text(changes);
+  changes = changes.replace(/\n(\-.*?\:)/g, '\n<strong>$1</strong>')
+  changes = changes.replace(/\n(r.*? snapshot\:)/g, '\n<em>$1</em>')
+  changes = '<p>'+changes.replace(/(?:\r\n\r\n|\r\r|\n\n)/g, '</p><br><p>').replace(/(?:\r\n|\r|\n)/g, '</p><p>')+'</p>';
+  $("#changes").html(changes);
 };
 
 function SetAllReleasesInfo(allReleasesInfo) {
@@ -132,8 +144,7 @@ Extensive documentation for the Aardwolf MUSHclient Package is available at <a h
 <br><br>
 <hr>
 <br>
-<div id="changes" style="  font-family:'Courier New',monospace; white-space:pre;text-align:left"></div>
+<div id="changes" style="font-family:'Courier New',monospace; padding-right:2em; padding-left:2em; text-align:left"></div>
 
 </body>
-
 </html>
