@@ -52,6 +52,10 @@ or: Ctrl + Left-click and select "Copy with Colour"
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+end
+
 -- Thank you, Shaun Biggs, for taking your time to write the CopyScript
 -- (formerly Copy2) function below. It was slightly altered by me to suit
 -- my usage (wordwrapped lines and no \r\n at start of selection). -- Nick Gammon

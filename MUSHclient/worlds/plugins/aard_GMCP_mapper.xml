@@ -4554,12 +4554,9 @@ set all portal aspects in one command without being in the target room.]],
    print("")
 end
 
-require "checkplugin"
 function OnPluginListChanged ()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-end -- OnPluginListChanged
+   dofile "lua/aard_requirements.lua"
+end
 
 function nilToStr(n)
    return (((n ~= nil) and tostring(n)) or "")

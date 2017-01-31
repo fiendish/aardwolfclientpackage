@@ -22,9 +22,8 @@
 
 usedNumbers = {}
 
-require "checkplugin"
 function OnPluginListChanged()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
+   dofile "lua/aard_requirements.lua"
 end
 
 function OnPluginInstall()

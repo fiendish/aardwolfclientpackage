@@ -293,6 +293,11 @@ function echo_msg(msg)
    end
 end
 
+function OnPluginListChanged ()
+   dofile "lua/aard_requirements.lua"
+end
+
+
 msg_buffer = {}
 function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
