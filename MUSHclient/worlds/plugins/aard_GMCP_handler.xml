@@ -66,6 +66,10 @@ require "json"
 require "serialize"
 require "gmcphelper"
 
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+end
+
 local IAC, SB, SE, DO = 0xFF, 0xFA, 0xF0, 0xFD
 local GMCP      = 201
 local GMCPDebug = tonumber(GetVariable("GMCPDebug")) or 0

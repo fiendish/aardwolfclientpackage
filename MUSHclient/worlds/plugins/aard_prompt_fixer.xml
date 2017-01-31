@@ -144,6 +144,10 @@ function prompt_rec (name, line, wildcards, styles)
    end
 end
 
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+end
+
 function OnPluginBroadcast (msg, id, name, text)
    if docheck and id == "3e7dedbe37e44942dd46d264" and text == "char.status" then
       char_state = tonumber(gmcp("char.status.state"))

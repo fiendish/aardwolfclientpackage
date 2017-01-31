@@ -52,6 +52,9 @@
 
 <script>
 <![CDATA[
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+end
 
 --title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10

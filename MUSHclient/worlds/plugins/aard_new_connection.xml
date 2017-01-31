@@ -16,16 +16,6 @@
 </plugin>
 <aliases>
 <alias
-   match="package update check"
-   enabled="y"
-   sequence="100"
-   omit_from_output="y"
-   ignore_case="y"
-   script="activateUpdate"
->
-</alias>
-
-<alias
    match="connect to aardwolf"
    enabled="y"
    sequence="100"
@@ -37,7 +27,6 @@
 </aliases>
 <script>
 <![CDATA[
-SetOption ("omit_date_from_save_files", 1)
 
 require "movewindow"
 
@@ -68,29 +57,10 @@ end -- OnPluginSaveState
 function OnPluginInstall()
 end
 
-function activateUpdate()
-   activateUpdateCheck(false)
-end
-
-function activateUpdateCheck(initial)
-   -- Ask about loading the update checker
-   if (not initial and not IsPluginInstalled("162bba4a5ecef2bb32b5652f")) or (GetVariable("first_time2") ~= "false") then
-      response = utils.msgbox ("The Aardwolf MUSHclient Package contains a plugin that can automatically check for new beta development releases every time you launch MUSHclient. If you choose to enable this plugin, you will get an alert when you launch MUSHclient if a newer development release is available. Would you like to enable this feature now and become an active beta tester for the package?\n\n(Note: You can always change your mind later by manually adding or removing the plugin)", "Aardwolf Package Beta Test Program", "yesno", "?", 1)
-      if response == "yes" then
-         do_plugin_check_now("162bba4a5ecef2bb32b5652f","aard_package_update_checker")
-      else
-         UnloadPlugin("162bba4a5ecef2bb32b5652f")
-      end
-      SetVariable("first_time2", "false")
-   end   
-end
-
-require "checkplugin"
 loaded = false
 function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
    if not loaded then
-      activateUpdateCheck(true)
-      
       showGreeting2 = tonumber(GetVariable("showGreeting2")) or showGreeting2
       if (showGreeting2 == 1) then
          ShowGreeting(true)

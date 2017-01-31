@@ -233,13 +233,9 @@ function ResizeReleaseCallback ()
 end
 
 win = GetPluginID()
-require "checkplugin"
 function OnPluginListChanged ()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
-   do_plugin_check_now("55616ea13339bc68e963e1f8", "aard_chat_echo") -- check we have the echo plugin
-end -- OnPluginListChanged
+   dofile "lua/aard_requirements.lua"
+end
 
 function OnPluginInstall ()
    -- Dummy window to get font characteristics
