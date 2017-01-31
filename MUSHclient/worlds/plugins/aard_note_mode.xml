@@ -28,7 +28,9 @@ Turns off all aliases, triggers and timers while in note writing mode.
 
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
-require "gmcphelper"
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+end
 
 function OnPluginClose()
    toggleStuff(true)

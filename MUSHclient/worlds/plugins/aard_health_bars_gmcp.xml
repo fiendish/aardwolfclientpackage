@@ -610,12 +610,10 @@ end -- OnPluginEnable
 
 
 win = GetPluginID()
-require "checkplugin"
+
 function OnPluginListChanged ()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-end -- OnPluginListChanged
+   dofile "lua/aard_requirements.lua"
+end
 
 function OnPluginWorldOutputResized()
    if (installed == true) and (((GetInfo(281)-windowinfo.window_left) > effectiveWidth) or ((GetInfo(281)-windowinfo.window_left) < width)) then
