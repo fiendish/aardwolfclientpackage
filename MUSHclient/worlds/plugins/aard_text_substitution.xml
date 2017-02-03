@@ -561,7 +561,7 @@ function filter_string(msg)
 	cur_line = msg
    
 	-- Matching #alone patterns at color and line boundaries is easier if
-	-- we can assume that color patterns are uniform. Make it so.
+	-- we canonicalize the color codes first.
 	local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
 
 	local gagged = do_gags_against_coded_colors_table(msg_t)
