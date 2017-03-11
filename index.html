@@ -52,21 +52,6 @@
     color: maroon;
     font-weight: bold;
   }
-  .loading {
-    display: inline-block;
-    overflow: hidden;
-    height: 1.3em;
-    margin-top: -0.3em;
-    line-height: 1.5em;
-    vertical-align: text-bottom;
-  }
-  .loading::after {
-    display: inline-table;
-    white-space: pre;
-    text-align: left;
-    content: "\A.\A..\A...";
-    animation: spin4 2s steps(4) infinite;
-  }
   @keyframes spin4 {
     to {
       transform: translateY( -6.0em);
@@ -95,10 +80,8 @@
   }
 
   function SetLatestReleaseInfo(rname, url, info) {
-    $("#download-button").removeClass("loading");
-    $("#download-button").addClass("ui-button ui-widget ui-corner-all");
-    $("#download-button").attr("href", url);
-    $("#download-button").text("Download Aardwolf_MUSHclient_" + rname + ".exe");
+    $("#download-button").attr("href", url); // leave this in case AppVeyor breaks
+    $("#download-button").text("Download Aardwolf_MUSHclient_" + rname + ".exe"); // leave this in case AppVeyor breaks
     $("#release-info").html(info);
   }
 
@@ -120,8 +103,9 @@
     var rname = Storage.get("rname");
     var url = Storage.get("url");
     var info = Storage.get("info");
+    var latest_rev = "r1887";
 
-    if (allReleasesInfo && rname && url && info) {
+    if ((latest_rev == rname) && allReleasesInfo && rname && url && info) {
       SetAllReleasesInfo(allReleasesInfo);
       SetLatestReleaseInfo(rname, url, info);
     } else {
@@ -172,7 +156,7 @@
   <div id="release-info"></div>
   <div id="all-releases-info"></div>
   <br>
-  <div class="download"><a id="download-button" class="loading" href="https://github.com/fiendish/aardwolfclientpackage/releases/latest">Finding Latest Download. If this message doesn't change soon, click here and get the most recent installer EXE.</a>
+  <div class="download"><a id="download-button" class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r1887/Aardwolf_MUSHclient_r1887.exe">Download Aardwolf_MUSHclient_r1887.exe</a>
     <br>
     <br>
     <span style="font-size:120%">No manual edits necessary! <br>Just install over the same location as your previous version and that's it.</span>
