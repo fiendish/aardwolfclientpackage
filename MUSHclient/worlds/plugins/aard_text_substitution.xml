@@ -141,6 +141,7 @@ Type "#sub help" or make a syntax mistake for usage details.
 <![CDATA[
 -- fix stupid syntax highlighting in SublimeText --> '
 
+require "aard_lua_extras"
 require "serialize"
 dofile(GetInfo(60) .. "aardwolf_colors.lua")
 
@@ -312,10 +313,10 @@ function format_sub(sub)
 end
 
 
-function remgag(name, line, wildcards, silent) 
+function remgag(name, line, wildcards, silent)
 	local found_index = tonumber(wildcards[1])
 	local found = found_index and gags[found_index] or false
-	
+
 	if not silent then
 		Note()
 		if found then
@@ -364,9 +365,9 @@ function addsub(name, line, wildcards)
 	local found = find_in(subs, wildcards[1], nocase, alone, use_function)
 	if found then remsub(nil, nil, {found}) end
 
-	table.insert(subs, 
+	table.insert(subs,
 	{
-		fromstr=fromstr, 
+		fromstr=fromstr,
 		tostr=tostr,
 		original=wildcards[1],
 		nocase=nocase,
@@ -402,7 +403,7 @@ function addgag(name, line, wildcards)
 	if alone then
 		gagstr = "%f[^%c%z%s%p]"..gagstr.."%f[%c%z%s%p]"
 	end
-	
+
 	if alone or nocase then
 		ColourNote("yellow", "", "You specified"..(nocase and " #nocase" or "")..(alone and " #alone" or "")..", so converting your #gag pattern...")
 		ColourNote("yellow", "", "")
@@ -415,7 +416,7 @@ function addgag(name, line, wildcards)
 	if found then remgag(nil, nil, {found}) end
 
 	table.insert(gags, {
-		gagstr=gagstr, 
+		gagstr=gagstr,
 		original=wildcards[1],
 		nocase=nocase,
 		alone=alone,
@@ -433,27 +434,9 @@ function OnPluginSaveState()
 end
 
 
--- This string.split works like MUSHclient's utils.split, but allows 
--- any pattern and also allows you to preserve the pattern match entities.
-function string.split(self, pat, add_pattern_matches_to_result)
-	local fields = {}
-	local start = 1
-	self:gsub("()("..pat..")", 
-		function(index,match)
-			table.insert(fields, self:sub(start,index-1))
-			if add_pattern_matches_to_result then
-				table.insert(fields, match)
-			end
-			start = index + #match
-		end
-	)
-	table.insert(fields, self:sub(start))
-	return fields
-end
-
-
 prev_text = ""
 EOL = "\n"
+
 
 function OnPluginDisconnect()
 	OnPluginConnect()
@@ -526,9 +509,9 @@ function do_subs_against_coded_colors_table(msg_t)
 			local prev_color = msg_t[i-1] or "@x007"
 			local replacement = v.use_function and proxy_sub(v.tostr, prev_color) or v.tostr:gsub("%$C", prev_color)
 			local ok,ret = pcall(string.gsub, color_bit, v.fromstr, replacement)
-			if not ok then 
+			if not ok then
 				AnsiNote(ColoursToANSI("@YError in sub ["..format_sub(v).."]: "..ret))
-			else 
+			else
 				color_bit = ret
 			end
 		end
@@ -559,7 +542,7 @@ end
 -- input: string with Aardwolf color codes
 function filter_string(msg)
 	cur_line = msg
-   
+
 	-- Matching #alone patterns at color and line boundaries is easier if
 	-- we canonicalize the color codes first.
 	local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
