@@ -76,7 +76,7 @@ local GMCPDebug = tonumber(GetVariable("GMCPDebug")) or 0
 
 
 -- You can use CallPlugin to access any gmcp data via this function.
--- example:    
+-- example:
 --   local ret, datastring = CallPlugin("3e7dedbe37e44942dd46d264", "gmcpdata_as_string", "char.status")
 --   pcall(loadstring("status_table = "..datastring))
 --   for k,v in pairs(status_table) do
@@ -109,8 +109,8 @@ function GMCP_send(what)
       print("GMCP_send passed a nil message.")
       return
    end
-   
-   SendPkt (string.char (IAC, SB, GMCP) .. 
+
+   SendPkt (string.char (IAC, SB, GMCP) ..
            (string.gsub (what, "\255", "\255\255")) ..  -- IAC becomes IAC IAC
             string.char (IAC, SE))
 end
@@ -118,12 +118,12 @@ end
 function GMCP_Alias (name, line, wildcards)
    GMCP_send(wildcards[1])
 end
- 
+
 function OnPluginTelnetSubnegotiation (msg_type, data)
    if msg_type ~= GMCP then
       return
    end -- if not GMCP
-  
+
    if GMCPDebug > 0 then ColourNote ("#FFAF00", "", data) end
 
    message, params = string.match (data, "([%a.]+)%s+(.*)")
@@ -131,60 +131,65 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
    if not message then
       return
    end -- if
-  
+
    if not string.match (params, "^[%[{]") then
       params =  "[" .. params .. "]"  -- JSON hack, make msg first element of an array. (I don't think this is needed - fiendish)
-   end -- if 
-   
-   local succ,t = pcall(json.decode,params)
+   end -- if
+
+   local succ, t = pcall(json.decode,params)
 
    if succ and type(t) == "table" then
       gmcpdata = gmcpdata or {}
-      
-      if message == "group" then
-         gmcpdata.group = {}
+
+      -- find where to insert the new data
+      local node = gmcpdata
+      local prev_item = ""
+      for next_item in string.gmatch(message,"%a+") do
+
+         -- some messages don't have invariant structure, so always clear them
+         if (next_item == "room" and message ~= "room.wrongdir") -- don't let room.wrongdir erase current room info
+         or next_item == "comm" or next_item == "group" then
+            node[next_item] = nil
+         end
+
+         node[next_item] = node[next_item] or {}
+         node = node[next_item]
       end
-      
-      local parent = gmcpdata
-      for top_level_item in string.gmatch(message,"%a+") do
-         parent[top_level_item] = parent[top_level_item] or {}
-         parent = parent[top_level_item]
-      end
-      
-      function duplicate(to, from)
+
+      function clone(from, to)
          for k,v in pairs(from) do
             if type(v) == "table" then
-               to[k] = {}
-               duplicate(to[k], from[k])
+               to[k] = to[k] or {}
+               clone(from[k], to[k])
             else
                to[k] = tostring(v)
             end
          end
       end
-      duplicate(parent, t)
+      clone(t, node)
 
-      if GMCPDebug > 1 then 
-         print ("gmcpdata serialized: " .. gmcpdata_as_string("")) 
+      if GMCPDebug > 1 then
+         print ("gmcpdata serialized: " .. gmcpdata_as_string(""))
       end
- 
+
       BroadcastPlugin(1,message)
   else
       ColourNote("white","red","GMCP DATA ERROR: "..t)
   end  -- if
-   
+
 end -- function OnPluginTelnetSubnegotiation
 
 function gmcpdata_at_level(what)
-   local parent = gmcpdata
+   local node = gmcpdata
    for level in string.gmatch(what, "%a+") do
-      if (parent[level] == nil) then return end
-      parent = parent[level]
+      if (node[level] == nil) then return end
+      node = node[level]
    end
-   return parent
+   return node
 end
 
 function OnPluginInstall()
-   BroadcastPlugin(1,"reload") -- reload basically tells other plugins "clear all your gmcp data"
+   BroadcastPlugin(1, "reload") -- reload basically tells other plugins "clear all your gmcp data"
    if IsConnected() then
       -- pretend like we just logged in
       OnPluginConnect()
@@ -208,9 +213,9 @@ function OnPluginTelnetRequest (msg_type, data)
    if msg_type == GMCP and data == "WILL" then
       return true
    end -- if
-  
+
    if msg_type == GMCP and data == "SENT_DO" then
-      Note ("Enabling GMCP.") 
+      Note ("Enabling GMCP.")
       -- This hard-coded block may need to be made into a config table as we add more message types.
       GMCP_send (string.format ('Core.Hello { "client": "MUSHclient", "version": "%s" }', Version().." r"..aard_extras.PackageVersion()))
       GMCP_send ('Core.Supports.Set [ "Char 1", "Comm 1", "Room 1" ]')
@@ -219,18 +224,6 @@ function OnPluginTelnetRequest (msg_type, data)
 
    return false
 end -- function OnPluginTelnetRequest
-
-
----------------------------------------------------------------------------------------------------
--- FUNCTION:: init_gmcpdata
---    Performs 2 functions:
---       1. Define a table of tags we support, including refreshed tags (clear each time) and 
---          regular tags.
---       2. Initialize gmcpdata to have empty tables nested at these levels.
----------------------------------------------------------------------------------------------------
-function init_gmcpdata()
-   -- Not used yet, placeholder to replace room reset data hack with a table.
-end -- init_gmcpdata
 
 function OnPluginDisable()
    EnablePlugin(GetPluginID(), true)
