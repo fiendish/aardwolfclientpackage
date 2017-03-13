@@ -414,7 +414,6 @@ mapper.gotoNextResult(Trim("%1"))
    regexp="y"
 ></alias>
 
-
 <alias
    match="^mapper delete portal (.+)$"
    enabled="y"
@@ -590,6 +589,18 @@ mapper.gotoNextResult(Trim("%1"))
 </send>
 </alias>
 
+<alias
+   match="^mapper underlines?$"
+   enabled="y"
+   regexp="y"
+   send_to="12"
+>
+<send>
+   NoUnderline_hyperlinks = not NoUnderline_hyperlinks
+   Note("Mapper hyperlinks will " ..(NoUnderline_hyperlinks and "no longer" or "now").." be underlined.")
+   SetVariable("NoUnderline_hyperlinks", NoUnderline_hyperlinks and "1" or "0")
+</send>
+</alias>
 </aliases>
 
 <triggers>
@@ -776,6 +787,7 @@ toConfirm = ""
 blinded = false
 mylevel = 0
 mytier = 0
+NoUnderline_hyperlinks = GetVariable("NoUnderline_hyperlinks") == "1"
 window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = ((GetVariable("quick_mode") or "1") == "1") -- default true
@@ -1176,7 +1188,7 @@ function custom_exit_list (name, line, wildcards)
    world.Note (hl)
    for row in dbnrowsWRAPPER(query) do
       line = string.format(fmt,row.area, row.name, row.uid, row.dir, row.touid)
-      Hyperlink(string.format("mapper goto %s",row.uid), line, string.format("%s",row.dir), "", "", false)
+      Hyperlink(string.format("mapper goto %s",row.uid), line, string.format("%s",row.dir), "", "", false, NoUnderline_hyperlinks)
       print("")
       count = count + 1
       BroadcastPlugin(999, "repaint")
@@ -1274,7 +1286,7 @@ function show_known_unmapped_exits (name, line, wildcards)
          count = count + row.cnt
       else
          line = string.format(fmt,row.area, row.name, row.uid, row.dir, row.touid)
-         Hyperlink(string.format("mapper goto %s",row.uid), line, "Click to attempt to walk here", "", "", false)
+         Hyperlink(string.format("mapper goto %s",row.uid), line, "Click to attempt to walk here", "", "", false, NoUnderline_hyperlinks)
          print("")
          count = count + 1
       end -- if count
@@ -1519,7 +1531,7 @@ function map_portal_list ()
          -- make the whole line clickable
          cmd = "mapper goto " .. row.touid
          txt = "click here to run to " .. (row.name or "N/A") .. "\n[ " .. row.dir .. " ]"
-         Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false)
+         Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false, NoUnderline_hyperlinks)
          Note()
       else
          Note(line)
@@ -2561,7 +2573,7 @@ function rotate_backups (manual)
          auto_backup_count = 1
       end
 
-      SetVariable("auto_backup_count",auto_backup_count)
+      SetVariable("auto_backup_count", auto_backup_count)
       SetVariable("last_auto_backup", os.time())
    end
 end
@@ -4337,7 +4349,8 @@ function OnHelp (name, line, wildcards)
 [[mapper zoom in                 --> Zoom in]],
 [[mapper hide                    --> Hide map]],
 [[mapper show                    --> Show map]],
-[[mapper updown                  --> Toggle up/down exit drawing]]
+[[mapper updown                  --> Toggle up/down exit drawing]],
+[[mapper underlines              --> Toggle underlining of clickable hyperlinks]]
 },
 
    ['utils'] = {
