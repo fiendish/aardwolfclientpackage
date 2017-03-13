@@ -26,9 +26,9 @@ Made way more awesome by Fiendish
 
 ===== COMMANDS ========>
 
-bigmap reset         --> removes the entire cache of maps, 
+bigmap reset         --> removes the entire cache of maps,
                        > forcing all maps to require updating again
-                       
+
 bigmap update        --> update the current continent map
 
 bigmap on            --> show the bigmap
@@ -58,7 +58,7 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
 >
 <send>StopEvaluatingTriggers(true)</send>
 </trigger>
-  
+
 <trigger
    enabled="n"
    match="*"
@@ -92,7 +92,7 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
 >
 <send>StopEvaluatingTriggers(true)</send>
 </trigger>
-  
+
 <trigger
    enabled="y"
    match="^\{coords\}(?<zone>\d+)\,(?<x>\d+)\,(?<y>\d+)$"
@@ -103,7 +103,7 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
 >
 <send>StopEvaluatingTriggers(true)</send>
 </trigger>
-  
+
 <trigger
    enabled="y"
    match="^\{coords\}-1$"
@@ -114,7 +114,7 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
 >
 <send>StopEvaluatingTriggers(true)</send>
 </trigger>
-  
+
 </triggers>
 
 <aliases>
@@ -140,7 +140,7 @@ bigmap unmerge       --> split off bigmap from the gmcp mapper
    sequence="100"
    ignore_case="y"
 ></alias>
-  
+
 <alias
    script="map_on_off_alias"
    match="^bigmap( on| off| merge| unmerge)$"
@@ -203,7 +203,7 @@ function remove_cache ()
    SetVariable ("xref", "xref = " .. serialize.save_simple (xref))
 
    ColourNote ("white", "blue", "All bigmap cache has been cleared.")
-   
+
    force_update = true
    updatelocation()
 end -- remove_cache
@@ -219,7 +219,7 @@ end
 function map_on_off_alias (name, line, wildcards)
    if (wildcards[1]:lower() == " on") then
       if (show_map == 1) then
-         ColourNote("yellow", "", "Bigmap already enabled.")      
+         ColourNote("yellow", "", "Bigmap already enabled.")
       else
          show_map = 1
          ColourNote ("yellow", "", "Bigmap enabled.")
@@ -321,7 +321,7 @@ function ConstructMap()
    if not map or #map == 0 then
       return
    end -- no map
-   
+
    local lines = #map
    local columns = 0
    for _, v in ipairs (map [1]) do
@@ -348,13 +348,13 @@ function ConstructMap()
    WindowImageFromWindow(mapwin, "bigmap_continent_"..zone, win)
 
    loadCustomImage()
-   
+
    WindowDelete(win)
 end
 
 function overlay_area_entrances_on_buffer()
    for _,v in ipairs(entrances[zone]) do
-      WindowCircleOp(win, miniwin.circle_rectangle, v[1], v[2], v[1] + square_brush_pixels, v[2] + square_brush_pixels, 
+      WindowCircleOp(win, miniwin.circle_rectangle, v[1], v[2], v[1] + square_brush_pixels, v[2] + square_brush_pixels,
       ColourNameToRGB("cyan"),
       miniwin.pen_solid,
       2, -- line width
@@ -416,8 +416,8 @@ function DrawMap(clearHotspotsFirst)
       WindowShow (mapwin, true)
    end
    movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
-      
-   local x_correction = (WindowInfo(mapwin,3) - startx - startx) / WindowImageInfo(mapwin,image_name,2) -- stretch to x   
+
+   local x_correction = (WindowInfo(mapwin,3) - startx - startx) / WindowImageInfo(mapwin,image_name,2) -- stretch to x
    local y_correction = (WindowInfo(mapwin,4) - starty - startx) / WindowImageInfo(mapwin,image_name,3) -- stretch to y
    local correction = 1
 
@@ -430,9 +430,9 @@ function DrawMap(clearHotspotsFirst)
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
    WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction*WindowImageInfo(mapwin,image_name,2)), starty + (correction*WindowImageInfo(mapwin,image_name,3)), 2)
 
-   local tile_pixels_x = 1 + WindowImageInfo(mapwin,image_name,2)/continent_dimensions[zone].w 
+   local tile_pixels_x = 1 + WindowImageInfo(mapwin,image_name,2)/continent_dimensions[zone].w
    local tile_pixels_y = 1 + WindowImageInfo(mapwin,image_name,3)/continent_dimensions[zone].h
-   
+
    local our_location_x = ((x - 1) * (tile_pixels_x-1) + (tile_pixels_x / 2) )
    local our_location_y = ((y - 1) * (tile_pixels_y-1) + (tile_pixels_y / 2) )
 
@@ -505,8 +505,8 @@ function resize_move_callback()
    elseif (WindowInfo(mapwin, 10) + width > GetInfo(281)) then
       width = GetInfo(281) - WindowInfo(mapwin, 10)
       startx = GetInfo(281)
-   end 
-   
+   end
+
    local height = WindowInfo(mapwin, 4) + posy - starty
    starty = posy
    if (50 > height) then
@@ -518,7 +518,7 @@ function resize_move_callback()
    end
 
    WindowResize(mapwin, width, height, 0x000000)
-   
+
    if mapwin == GetPluginID().."_mapper" then
       unmerged_width = width
       unmerged_height = height
@@ -536,7 +536,7 @@ function add_resize_tag()
    -- draw the resize widget bottom right corner.
    local width  = WindowInfo(mapwin, 3)
    local height = WindowInfo(mapwin, 4)
-   
+
    WindowLine(mapwin, width-4, height-2, width-2, height-4, 0xffffff, 0, 2)
    WindowLine(mapwin, width-5, height-2, width-2, height-5, 0x696969, 0, 1)
    WindowLine(mapwin, width-7, height-2, width-2, height-7, 0xffffff, 0, 2)
@@ -545,12 +545,12 @@ function add_resize_tag()
    WindowLine(mapwin, width-11, height-2, width-2, height-11, 0x696969, 0, 1)
    WindowLine(mapwin, width-13, height-2, width-2, height-13, 0xffffff, 0, 2)
    WindowLine(mapwin, width-14, height-2, width-2, height-14, 0x696969, 0, 1)
-   
+
    -- Hotspot for resizer
    local x = width - 14
    local y = height - 14
    if (WindowHotspotInfo(mapwin, "resize", 1) == nil) then
-      WindowAddHotspot(mapwin, "resize",  
+      WindowAddHotspot(mapwin, "resize",
          x, y, 0, 0,   -- rectangle
          "", "", "resize_mouse_down", "", "",
          "Drag to resize",
@@ -717,7 +717,7 @@ function do_init()
    if mapwin == GetPluginID().."_mapper" then
       WindowDelete(mapwin)
    end
-   
+
    assert (loadstring (GetVariable ("continents") or "")) ()
    assert (loadstring (GetVariable ("xref") or "")) ()
    use_exact_sizes = ( GetVariable("use_exact_sizes") == "1" )
@@ -725,9 +725,9 @@ function do_init()
    unmerged_height = tonumber(GetVariable("unmerged_height"))
    win = GetPluginID ().."_offscreen_buffer"
    mapwin = (((use_gmcp_mapper == 1 and IsPluginInstalled("b6eae87ccedd84f510b74714") and GetPluginInfo("b6eae87ccedd84f510b74714", 17)) and "b6eae87ccedd84f510b74714_mapper") or GetPluginID().."_mapper")
-      
-   windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, miniwin.create_absolute_location, true, nil, {mouseup=MouseUp, 
-      mousedown=LeftClickOnly, dragmove=LeftClickOnly, 
+
+   windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, miniwin.create_absolute_location, true, nil, {mouseup=MouseUp,
+      mousedown=LeftClickOnly, dragmove=LeftClickOnly,
       dragrelease=LeftClickOnly},{x=0, y=0})
 
    if mapwin == GetPluginID().."_mapper" then
@@ -741,7 +741,7 @@ function do_init()
          background_colour)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
    end
-                 
+
    local fonts = utils.getfontfamilies ()
    if fonts.Dina then
       font_size = 8
@@ -755,7 +755,7 @@ function do_init()
    font_id_bold = "bigmap_font_bold"  -- our internal name
 
    check (WindowFont (mapwin, font_id, font_name, font_size, false, false, false, false, 0, 49))  -- normal
-   
+
    font_height = WindowFontInfo (mapwin, font_id, 1) -  WindowFontInfo (mapwin, font_id, 4) + 1 -- height
    font_width = WindowFontInfo (mapwin, font_id, 6)  -- avg width
    descent = WindowFontInfo (mapwin, font_id, 3)
@@ -823,7 +823,7 @@ function OnPluginEnable ()
       Send_GMCP_Packet("request room")
    end -- currently enabled
 end -- OnPluginEnable
-    
+
 function OnPluginDisable ()
    OnPluginSaveState()
    bigmap_enabled = false

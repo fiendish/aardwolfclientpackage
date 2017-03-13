@@ -64,7 +64,7 @@ local function __timeout(requested_url, timeout_after)
    -- clears _all_ requests for the url on _any_ timeout, when we go to the
    -- effort to make sure that multiple simultaneous requests can be made for the same
    -- translation. The answer is because 1) timeouts to googleapis should be rare,
-   -- 2) that was low hanging fruit, 3) I'm lazy, and 4) wtf stop requesting 
+   -- 2) that was low hanging fruit, 3) I'm lazy, and 4) wtf stop requesting
    -- the same translation over and over you fool.
    __requests[requested_url] = nil
    print("Translate timed out requesting: "..requested_url)
@@ -77,30 +77,30 @@ local function __parse_response(retval, page, status, headers, full_status, requ
       print("Maybe try again later, or visit the page in a web browser to see if you receive valid JSON back.")
       return
    end
-   
+
    local message = t[1][1]
    local translated = message[1]
    local original = message[2]
-   
+
    local callback = __pretty_print -- default
    if __requests[requested_url] and #__requests[requested_url] > 0 then
       callback = table.remove(__requests[requested_url], 1)
    end
-   
+
    callback(original, translated)
-   
+
    if __requests[requested_url] and #__requests[requested_url] == 0 then
       __requests[requested_url] = nil
    end
 end
 
 local function __online_translation(src_text, source_language, target_language, function_to_call_with_result)
-  local source_language = source_language or 'auto' 
+  local source_language = source_language or 'auto'
   local target_language = target_language or 'en'
-  
-  local request_url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=" 
+
+  local request_url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl="
             ..source_language.."&tl="..target_language.."&dt=t&q="..url.escape(src_text)
-  
+
   if __requests[request_url] == nil then
      __requests[request_url] = {}
   end

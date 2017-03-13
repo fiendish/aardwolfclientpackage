@@ -65,9 +65,9 @@ default_left = 7
 default_right = 650
 
 -- Variables not saved.
-startx           = ""  
+startx           = ""
 starty           = ""
-posx             = "" 
+posx             = ""
 posy             = ""
 hotspot_id       = ""
 orig_height      = 400  -- saves old height when we collapse window.
@@ -97,7 +97,7 @@ function ResizeMainCallback()
       textrect_right = GetInfo(281)-7
       startx = textrect_right
    end
-   
+
    textrect_bottom = textrect_bottom + posy - starty
    starty = posy
    if ( textrect_bottom-textrect_top < MIN_SIZE) then
@@ -118,7 +118,7 @@ function DragMainCallback()
    posx, posy = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
    local height = GetInfo(293) - GetInfo(291)
    local width = GetInfo(292) - GetInfo(290)
-   
+
    textrect_left = textrect_left + posx - startx
    textrect_right = textrect_left + width
    if (textrect_left <= 7) then
@@ -130,7 +130,7 @@ function DragMainCallback()
    else
       startx = posx
    end
-  
+
    textrect_top = textrect_top + posy - starty
    textrect_bottom = textrect_top+height
    starty = posy
@@ -194,7 +194,7 @@ function OnPluginSaveState ()
    SetVariable("trbottom",textrect_bottom)
 end -- OnPluginSaveState
 
-function reset_aard() 
+function reset_aard()
    textrect_left = default_left
    textrect_right = default_right
    textrect_top = default_top
@@ -213,10 +213,10 @@ end
 function OnPluginDisable ()
    OnPluginSaveState()
    TextRectangle(0,0,0,0,
-      5,  -- BorderOffset, 
-      ColourNameToRGB ("darkgray"),    -- BorderColour, 
-      2,  -- BorderWidth, 
-      ColourNameToRGB ("darkslategray"),  -- OutsideFillColour, 
+      5,  -- BorderOffset,
+      ColourNameToRGB ("darkgray"),    -- BorderColour,
+      2,  -- BorderWidth,
+      ColourNameToRGB ("darkslategray"),  -- OutsideFillColour,
       0) -- OutsideFillStyle (fine hatch)
    SetBackgroundImage("",0)
    WindowShow( textDragger, false )
@@ -241,7 +241,7 @@ function OnPluginInstall()
    textResizer = "      "..win.."txtresize"
    bgwin = "      "..win.."text_background"
    bgoffscreen = "      "..win.."text_background_offscreen"
-   
+
    local dir = GetInfo(66)
    local imgpath = dir .. "worlds\\plugins\\images\\bg1.png"
    if 0 ~= SetBackgroundImage(imgpath,13) then
@@ -261,13 +261,13 @@ function OnPluginInstall()
       WindowImageFromWindow(bgwin, "wolf_logo", bgoffscreen)
       image_ratio = WindowImageInfo(bgwin, "wolf_logo", 2)/WindowImageInfo(bgwin, "wolf_logo", 3)
    end
-      
+
    --- Pull some state variables.
    check_main_background()
 
    -- give main world window time to stabilize its size and position
    AddTimer("checkTimer", 0, 0, 2, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
-   
+
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
@@ -290,7 +290,7 @@ function add_main_resizer()
       WindowPosition(textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 0, 6)
    else
       -- Add another mini-window in bottom right corner for resizer tag.
-      check (WindowCreate (textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5, 
+      check (WindowCreate (textResizer, GetInfo(274) - rstagsize+5, GetInfo(275) - rstagsize+5,
          rstagsize, rstagsize,
          12  , 2, GetNormalColour(1)))
 
@@ -313,7 +313,7 @@ function add_main_resizer()
    WindowShow(textResizer, true)
 end
 
-function add_title_dragger() 
+function add_title_dragger()
    if WindowInfo(textDragger, 1) then -- if it already exists
       --- Reposition the dragger tag.
       WindowPosition(textDragger, GetInfo(272)-6, GetInfo(273)-7, 0, 6)
@@ -322,7 +322,7 @@ function add_title_dragger()
       dragsize = 10
 
       check (WindowCreate (textDragger, GetInfo(272)-6, GetInfo(273)-6, GetInfo(274)-GetInfo(272)+11, dragsize, 12, 2, GetNormalColour(1)))
-      
+
       WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
       WindowDragHandler(textDragger, "dragmain", "DragMainCallback", "DragReleaseMainCallback", 0)
    end
@@ -332,7 +332,7 @@ end
 function OnPluginWorldOutputResized()
    AddTimer("checkTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
 end
-   
+
 function draw_main_window()
 
    -- addresses a problem where new users are trying to play without the window maximized
@@ -340,17 +340,17 @@ function draw_main_window()
    local t_bottom = math.min(textrect_bottom, GetInfo(280)-7)
 
    TextRectangle(textrect_left, textrect_top, t_right, t_bottom,
-      5,  -- BorderOffset, 
-      ColourNameToRGB ("darkgray"),    -- BorderColour, 
-      2,  -- BorderWidth, 
-      0x333333,  -- OutsideFillColour, 
+      5,  -- BorderOffset,
+      ColourNameToRGB ("darkgray"),    -- BorderColour,
+      2,  -- BorderWidth,
+      0x333333,  -- OutsideFillColour,
       miniwin.brush_solid) -- OutsideFillStyle
 
    -- Add a mini-window under main text area so background won't mess it up.
    local trwidth = t_right - textrect_left
    local trheight = t_bottom - textrect_top
 
-   WindowCreate (bgwin, textrect_left - 5, textrect_top - 5, 
+   WindowCreate (bgwin, textrect_left - 5, textrect_top - 5,
       math.max(0, trwidth + 10), math.max(0, trheight + 10),
       12  , 3, GetNormalColour(1))
    WindowShow(bgwin, true)
@@ -364,7 +364,7 @@ function draw_main_window()
          image_height = trwidth/image_ratio
          image_width = trwidth
       end
-      
+
       WindowDrawImage (bgwin, "wolf_logo", (trwidth-image_width)/2, (trheight-image_height)/2, (trwidth+image_width)/2, (trheight+image_height)/2, miniwin.image_stretch)
    end
 

@@ -17,7 +17,7 @@
 
 <description trim="y">
 </description>
-  
+
 </plugin>
 <aliases>
 <alias
@@ -146,7 +146,7 @@ function capture_activate(name, line, wildcards, styles)
    SetOption ("display_my_input", 0)
    Execute (last_command)
    SetOption ("display_my_input", original_echo_setting)
-   
+
    SendNoEcho("echo {End MC Capture:"..last_command.."}")
    TelnetOptionOn(TELOPT_PAGING)
 end
@@ -182,7 +182,7 @@ function end_capture(name, line, wildcards, styles)
    EnableTrigger("blank_line", true)
    EnableTrigger("capture_body", false)
    if (last_command ~= "") and (last_command == in_command) then
-   
+
       -- remove leading and trailing blank lines
       while #temp_buffer>0 and Trim(temp_buffer[1].msg) == "" do
          table.remove(temp_buffer, 1)
@@ -190,18 +190,18 @@ function end_capture(name, line, wildcards, styles)
       while #temp_buffer>0 and Trim(temp_buffer[#temp_buffer].msg) == "" do
          table.remove(temp_buffer, #temp_buffer)
       end
-               
+
       if #temp_buffer == 0 then
          table.insert(temp_buffer, {msg="Failed to capture any MUD output. Are you sure this command goes to the MUD?", date=nil})
       end
-      
+
       if use_notepad then
          local full_capture_string = ""
          for i,v in ipairs(temp_buffer) do
             full_capture_string = full_capture_string..v.msg.."\r\n"
          end
          ReplaceNotepad(command_capture,  "Captured output for command ["..last_command.."].\r\n"..full_capture_string.."End of capture.")
-         
+
          NotepadSaveMethod(command_capture, 2)
          NotepadReadOnly(command_capture, true)
          ActivateNotepad(command_capture)
@@ -215,7 +215,7 @@ function end_capture(name, line, wildcards, styles)
          for i,v in ipairs(temp_buffer) do
             CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, v.msg, v.date and aardwolf_channel_datestring_to_timestamp(v.date) or nil)
          end
-         
+
          CallPlugin("dd10517422bc35b5131a3aa0", "show", "Captured output from command ["..last_command.."] to ["..command_capture.."] capture.")
          CallPlugin("dd10517422bc35b5131a3aa0", "switch_to_capture", command_capture)
       end

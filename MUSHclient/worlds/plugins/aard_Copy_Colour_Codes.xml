@@ -20,8 +20,8 @@
    >
 
 <description trim="y">
-Copies text from the output window to the clipboard, with 
-Aardwolf colour codes. 
+Copies text from the output window to the clipboard, with
+Aardwolf colour codes.
 
 To use: highlight text and then:
 
@@ -65,24 +65,24 @@ end
 function CopyScript(name, line, wildcs)
 
    -- find selection in output window, if any
-   local first_line, last_line = GetSelectionStartLine(), 
+   local first_line, last_line = GetSelectionStartLine(),
                         math.min (GetSelectionEndLine(), GetLinesInBufferCount ())
    local first_column, last_column = GetSelectionStartColumn(), GetSelectionEndColumn()
-  
+
    -- nothing selected, do normal copy
    if first_line <= 0 then
       DoCommand("copy")
       return
    end -- if nothing to copy from output window
-  
+
    cpstr = ""
-  
+
    -- iterate to build up copy text
    for line = first_line, last_line do
       if line < last_line then
-         cpstr = cpstr..StylesToColoursOneLine (GetStyleInfo(line), first_column, GetLineInfo(line).length) 
+         cpstr = cpstr..StylesToColoursOneLine (GetStyleInfo(line), first_column, GetLineInfo(line).length)
          first_column = 1
-      
+
          -- Is this a new line or merely the continuation of a paragraph?
          if GetLineInfo (line, 3) then
             cpstr = cpstr .. "\r\n"
@@ -91,7 +91,7 @@ function CopyScript(name, line, wildcs)
          cpstr = cpstr..StylesToColoursOneLine (GetStyleInfo(line), first_column, last_column-1)
       end -- if
    end  -- for loop
-  
+
    -- Get rid of a spurious extra new line at the start.
    if cpstr:sub (1, 2) == "\r\n" then
       cpstr = cpstr:sub (3)
@@ -99,7 +99,7 @@ function CopyScript(name, line, wildcs)
 
   -- finally can set clipboard contents
   SetClipboard(cpstr)
-  
+
 end -- function CopyScript
 
 AcceleratorTo ("Ctrl+D", "CallPlugin ('04d9e64f835452b045b427a7', 'CopyScript', '')", sendto.script)
