@@ -1241,7 +1241,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
       if current_room ~= uid then
          table.insert(last_result_list, uid)
          Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. uid .. ")",
-            "["..#last_result_list.."] "..room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
+            "["..#last_result_list.."] "..room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false, NoUnderline_hyperlinks)
       else
          Tell(room_name)
       end
@@ -1310,7 +1310,7 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
       if current_room ~= v.uid then
          table.insert(last_result_list, v.uid)
          Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto("..v.uid..")",
-            "["..#last_result_list.."] "..room_name, "Click to speedwalk there", "", "", false)
+            "["..#last_result_list.."] "..room_name, "Click to speedwalk there", "", "", false, NoUnderline_hyperlinks)
       else
          ColourTell(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","[you are here] "..room_name)
       end
