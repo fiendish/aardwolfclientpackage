@@ -30,7 +30,7 @@ Bast and WinkleWinkle.
    match="{prompt fixer begin}"
    sequence="100"
    name="begin"
-   send_to="14"
+   send_to="12"
 >
 <send>
    EnableTriggerGroup("prompts", true)
@@ -46,8 +46,13 @@ Bast and WinkleWinkle.
    match="{prompt fixer end}"
    sequence="100"
    name="end"
-   script="finished"
+   send_to="12"
 >
+<send>
+   EnableTriggerGroup("prompts", false)
+   EnableTrigger("end", false)
+   docheck = false
+</send>
 </trigger>
 
 <trigger
@@ -88,12 +93,6 @@ Bast and WinkleWinkle.
 
 <script>
 <![CDATA[
-function finished()
-   EnableTriggerGroup("prompts", false)
-   EnableTrigger("end", false)
-   docheck = false
-end
-
 require "gmcphelper"
 require "aard_lua_extras"
 
