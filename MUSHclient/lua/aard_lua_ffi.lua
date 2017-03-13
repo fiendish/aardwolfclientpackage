@@ -1,8 +1,8 @@
--- This module simplifies (and hopefully makes a bit safer) use of some Windows APIs 
+-- This module simplifies (and hopefully makes a bit safer) use of some Windows APIs
 -- through the LuaJIT FFI library. See http://luajit.org/ext_ffi.html
 -- Author: Avi Kelman (Fiendish)
--- 
--- Usage Notes: 
+--
+-- Usage Notes:
 --
 -->>
 -- After doing 'require "aard_lua_ffi"' from a script, you get access to the
@@ -12,7 +12,7 @@
 --
 -->>
 -- See the table at the very end for the list of exported functions
--- and their input arguments. 
+-- and their input arguments.
 -- It looks something like:
 --
 -- --
@@ -28,9 +28,9 @@
 --
 -->>
 -- The acceptable_errors input argument on each of the functions is given
--- either nil or a list of Windows error codes that you want to be 
--- ignored by the error checker. This will be function-specific, and 
--- using it requires knowledge of what error codes might be thrown. 
+-- either nil or a list of Windows error codes that you want to be
+-- ignored by the error checker. This will be function-specific, and
+-- using it requires knowledge of what error codes might be thrown.
 -- See the API call documentation linked in the function comments and also
 -- the list of error codes at
 -- https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx
@@ -38,7 +38,7 @@
 -- Some functions will have default reasonable acceptable_errors already set
 -- if you pass in nil.
 --
--- For instance: CreateDirectory has {183} assigned by default, which 
+-- For instance: CreateDirectory has {183} assigned by default, which
 --          ignores the error given if the directory already exists.
 --          To re-enable this error you need to pass in either the empty
 --          list {} or another list of other error codes, but reasonably
@@ -156,14 +156,14 @@ local PathCanonicalizeA = ffi.load("shlwapi.dll").PathCanonicalizeA
 
 local function CheckForWinError(err, acceptable_errors)
    acceptable_errors = acceptable_errors or {}
-   
+
    for i,v in ipairs(acceptable_errors) do
       acceptable_errors[tostring(v)] = true
    end
-   
+
    if err ~= 0 and not acceptable_errors[tostring(err)] then
       print("")
-      
+
       local str = ffi_charstr(1024, 0)
       local errlen = ffi.C.FormatMessageA(ffi.C.FORMAT_MESSAGE_FROM_SYSTEM + ffi.C.FORMAT_MESSAGE_IGNORE_INSERTS, nil, err, 0, str, 1023, nil)
       if errlen == 0 then
@@ -173,47 +173,47 @@ local function CheckForWinError(err, acceptable_errors)
       else
          ColourNote("yellow", "red", "Received Win32 error code:", err, ffi.string(str, errlen))
       end
-      
+
       local author = GetPluginInfo(GetPluginID(), 2) -- GetPluginInfo and GetPluginID are a MUSHclient API call
       if author == nil or author == "" then
          author = "Fiendish"
       end
       ColourNote("yellow", "red", "If you think this shouldn't be considered an error, please tell the script author (maybe "..author.."?).")
-      
+
       ColourNote("yellow", "red", debug.traceback())
       print("")
       return false
    end
-   
+
    return true
 end
 
 local function RestrictPathScope(path)
    local original_path = path
-   
+
    -- clean up path separators
    path = path:gsub("/","\\")
    repeat
       path, num = path:gsub("\\\\", "\\")
    until num == 0
-   
+
    local firstchar = string.sub(original_path,1,1)
    if firstchar == "\\" or firstchar == "/" then
       path = "\\"..path -- put UNC code back
    end
-   
+
    local mushclient_canonical_path = ffi_charstr(1024, 0)
    if not PathCanonicalizeA(mushclient_canonical_path, GetInfo(66)) then -- GetInfo is a MUSHclient API call
       CheckForWinError(ffi.C.GetLastError())
       return false
    end
-   
+
    local canonical_path = ffi_charstr(1024, 0)
    if not PathCanonicalizeA(canonical_path, path) then
       CheckForWinError(ffi.C.GetLastError())
       return false
    end
-   
+
    canonical_path = ffi.string(canonical_path)
    if canonical_path:find(ffi.string(mushclient_canonical_path), nil, true) ~= 1 then
       ColourNote("yellow", "red", "ERROR: A script just tried to operate on a file outside of your MUSHclient directory.")
@@ -232,7 +232,7 @@ local function RestrictPathScope(path)
       print("")
       return false
    end
-   
+
    return true, canonical_path
 end
 
@@ -248,14 +248,14 @@ local function DeleteFile(pathname, recursive, acceptable_errors)
    if not succ then
       return false
    end
-   
+
    acceptable_errors = acceptable_errors or {2, 1026} -- already gone
-   
+
    local SHDeleteFlags = ffi.C.FOF_NOCONFIRMATION + ffi.C.FOF_NOERRORUI + ffi.C.FOF_SILENT
    if not recursive then
       SHDeleteFlags = SHDeleteFlags + ffi.C.FOF_NORECURSION
    end
-   
+
    local fos = ffi.new("SHFILEOPSTRUCTA")
    fos.wFunc = "FO_DELETE"
    fos.pFrom = pathname.."\000"
@@ -272,9 +272,9 @@ local function CreateDirectory(path_to_create, recursive, acceptable_errors)
    if not succ then
       return false
    end
-   
+
    acceptable_errors = acceptable_errors or {183} -- already exists
-   
+
    if recursive then
       return CheckForWinError(SHCreateDirectoryExA(nil, path_to_create, nil), acceptable_errors)
    else
@@ -292,12 +292,12 @@ local function MoveFile(src, dest, acceptable_errors)
    if not succ then
       return false
    end
-   
+
    succ, dest = RestrictPathScope(dest)
    if not succ then
       return false
    end
-   
+
    if 0 == ffi.C.MoveFileA(src, dest) then
       return CheckForWinError(ffi.C.GetLastError(), acceptable_errors)
    end

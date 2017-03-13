@@ -35,7 +35,7 @@ You can also run a manual check by typing:    package update check
 >
 </alias>
 </aliases>
-  
+
 <script>
 <![CDATA[
 
@@ -50,13 +50,13 @@ download_url = "https://fiendish.github.io/aardwolfclientpackage/"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
--- converts special character codes in html source to their ascii 
+-- converts special character codes in html source to their ascii
 -- equivalents for display. Also specially escapes things that need to be.
 function convertHTMLcodesToStandardText(str)
    if not str then
       return nil
    end
-   
+
    local replacements = { -- minimal set. can add more later if needed.
       {"&gt;",">"},
       {"&lt;","<"},
@@ -151,8 +151,8 @@ end
 
 function checkLocalFile()
    succ, local_version, msg = aard_extras.PackageVersionExtended()
-   if not succ then 
-      ErrorMessage = msg 
+   if not succ then
+      ErrorMessage = msg
    end
    return succ
 end
@@ -168,7 +168,7 @@ function checkRemoteFile(page, status)
       ErrorMessage = "Could not access the Aardwolf MUSHclient Package download page to check for the latest version number. Please make sure that you are able to access the version file at "..version_url.." and then type \'PACKAGE UPDATE CHECK\' to try again."
       return false
    end
-   
+
    if not latest_version then -- string.match failed to find the right pattern above
       ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package site. Please alert Fiendish about this."
       return false
@@ -216,4 +216,5 @@ end
 
 ]]>
 </script>
-</muclient>
+</muclient>
+
