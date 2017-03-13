@@ -70,8 +70,9 @@
 
   function SetChanges(changes) {
     changes = changes.replace(/\n(\-.*?\:)/g, '\n<strong>$1</strong>')
-    changes = changes.replace(/\n(r.*? snapshot\:)/g, '\n<em>$1</em>')
+    changes = changes.replace(/\n(r.*? snapshot)/g, '\n<em>$1</em>')
     changes = '<p>' + changes.replace(/(?:\r\n\r\n|\r\r|\n\n)/g, '</p><br><p>').replace(/(?:\r\n|\r|\n)/g, '</p><p>') + '</p>';
+    changes = changes.replace(/(https?\:\/\/[^)\n\s<]+)/g, '<a href="$1">$1</a>');
     $("#changes").html(changes);
   };
 
@@ -103,7 +104,7 @@
     var rname = Storage.get("rname");
     var url = Storage.get("url");
     var info = Storage.get("info");
-    var latest_rev = "r1887";
+    var latest_rev = "r1898";
 
     if ((latest_rev == rname) && allReleasesInfo && rname && url && info) {
       SetAllReleasesInfo(allReleasesInfo);
@@ -156,7 +157,7 @@
   <div id="release-info"></div>
   <div id="all-releases-info"></div>
   <br>
-  <div class="download"><a id="download-button" class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r1887/Aardwolf_MUSHclient_r1887.exe">Download Aardwolf_MUSHclient_r1887.exe</a>
+  <div class="download"><a id="download-button" class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r1898/Aardwolf_MUSHclient_r1898.exe">Download Aardwolf_MUSHclient_r1898.exe</a>
     <br>
     <br>
     <span style="font-size:120%">No manual edits necessary! <br>Just install over the same location as your previous version and that's it.</span>
