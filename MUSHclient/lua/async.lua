@@ -24,13 +24,13 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
    end
 
    thread_id = tostring(GetUniqueNumber())
-   
+
    assert(type(request_url) == "string")
    assert(request_protocol == "HTTP" or request_protocol == "HTTPS")
    assert(type(timeout_after) == "number")
    assert(type(result_callback_function) == "function" or type(result_callback_function) == "string")
    assert(type(callback_on_timeout) == "function" or type(callback_on_timeout) == "string" or callback_on_timeout == nil)
-   
+
    request_urls[thread_id] = request_url
    timeouts[thread_id] = timeout_after
    thread_pool[thread_id] = request(request_url, request_protocol)
@@ -41,13 +41,13 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
    else
       result_callbacks[thread_id] = loadstring(result_callback_function)
    end
-   
+
    if type(callback_on_timeout) == "function" or callback_on_timeout == nil then
       timeout_callbacks[thread_id] = callback_on_timeout
    else
       timeout_callbacks[thread_id] = loadstring(callback_on_timeout)
    end
-   
+
    __checkCompletionFor(thread_id)
 end
 
@@ -55,8 +55,8 @@ end
 
 
 
-function default_timeout_callback(requested_url, timeout) 
-   print("Async Request ["..requested_url.."] Thread Timed Out After "..tostring(timeout).."s") 
+function default_timeout_callback(requested_url, timeout)
+   print("Async Request ["..requested_url.."] Thread Timed Out After "..tostring(timeout).."s")
 end
 
 local network_thread_code = string.dump(function(arg)
@@ -88,14 +88,14 @@ function __checkCompletionFor(thread_id)
          local timeout_callback = timeout_callbacks[thread_id]
          local request_url = request_urls[thread_id]
          local timeout = timeouts[thread_id]
-         
+
          thread_pool[thread_id] = nil
          request_times[thread_id] = nil
          result_callbacks[thread_id] = nil
          timeout_callbacks[thread_id] = nil
          timeouts[thread_id] = nil
          request_urls[thread_id] = nil
-         
+
          if timeout_callback ~= nil then
             timeout_callback(request_url, timeout)
          else
@@ -108,7 +108,7 @@ function __checkCompletionFor(thread_id)
       local retval, page, status, headers, full_status = thread_pool[thread_id]:join()
       local request_url = request_urls[thread_id]
       local callback_func = result_callbacks[thread_id]
-      
+
       result_callbacks[thread_id] = nil
       timeout_callbacks[thread_id] = nil
       thread_pool[thread_id] = nil

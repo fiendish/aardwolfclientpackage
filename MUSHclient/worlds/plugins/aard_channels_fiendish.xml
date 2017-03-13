@@ -23,24 +23,15 @@ USAGE:
 
    chats show       : show chats window
    chats hide       : hide chats window
-  
+
    Left-click a line to copy it to the clipboard
    Left-click-and-drag title bar to move window
    Right-click window to see menu of options
 </description>
-  
+
 </plugin>
 
 <triggers>
-<trigger
-   enabled="n"
-   name="pray"
-   match="^\[ \*\* \(Pray\) \*\* \].+$"
-   regexp="y"
-   script="untagged_info"
-   sequence="100"
-></trigger>
-
 <trigger
    enabled="n"
    name="remort_auction"
@@ -184,7 +175,6 @@ show_donations = tonumber(GetVariable("show_donations")) or 1
 info_on = tonumber(GetVariable("info_on")) or 0
 global_quest_on = tonumber(GetVariable("global_quest_on")) or 0
 remort_auction_on = tonumber(GetVariable("remort_auction_on")) or 0
-pray_on = tonumber(GetVariable("pray_on")) or 1
 warfare_on = tonumber(GetVariable("warfare_on")) or 0
 SetTriggerOption("warfare", "enabled", warfare_on)
 SetTriggerOption("info", "enabled", info_on)
@@ -192,7 +182,6 @@ SetTriggerOption("raidinfo", "enabled", info_on)
 SetTriggerOption("claninfo", "enabled", info_on)
 SetTriggerOption("global_quest", "enabled", global_quest_on)
 SetTriggerOption("remort_auction", "enabled", remort_auction_on)
-SetTriggerOption("pray", "enabled", pray_on)
 
 function reset_aard()
    width = default_width
@@ -220,7 +209,7 @@ function ResizeMoveCallback ()
    elseif (windowinfo.window_left+width > GetInfo(281)) then
       width = GetInfo(281)-windowinfo.window_left
       startx = GetInfo(281)
-   end 
+   end
    height = height+posy-starty
    starty=posy
    if (3*SCROLL_BAR_WIDTH+10+line_height+TITLE_HEIGHT > height) then
@@ -229,7 +218,7 @@ function ResizeMoveCallback ()
    elseif (windowinfo.window_top+height > GetInfo(280)) then
       height = GetInfo(280)-windowinfo.window_top
       starty = GetInfo(280)
-   end 
+   end
    if (utils.timer() - lastRefresh > 0.0333) then
       init(false)
       lastRefresh = utils.timer()
@@ -244,13 +233,9 @@ function ResizeReleaseCallback ()
 end
 
 win = GetPluginID()
-require "checkplugin"
 function OnPluginListChanged ()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")    -- check we have z order plugin
-   do_plugin_check_now("55616ea13339bc68e963e1f8", "aard_chat_echo") -- check we have the echo plugin
-end -- OnPluginListChanged
+   dofile "lua/aard_requirements.lua"
+end
 
 function OnPluginInstall ()
    -- Dummy window to get font characteristics
@@ -280,7 +265,7 @@ function OnPluginInstall ()
 
    header_font_name = font_name
    header_font_size = font_size
-   
+
    win_font = "font"..win
    win_head_font = "fonthead"..win
    check(WindowFont(win, win_font, font_name, font_size))
@@ -290,10 +275,10 @@ function OnPluginInstall ()
    header_font_height = WindowFontInfo(win, win_head_font, 1) - WindowFontInfo(win, win_head_font, 4) + 1
    TITLE_HEIGHT = header_font_height*1.8
    line_height = font_height+1
-   
+
    -- install the window movement handler, get back the window position
    windowinfo  = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-    
+
    init(true)
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
@@ -315,20 +300,20 @@ function init (firstTime)
       -- catch for right-click menu and line selection
       WindowAddHotspot(win, "textarea", 1, TITLE_HEIGHT, width-SCROLL_BAR_WIDTH-1,height-3, "", "", "MouseDown", "CancelMouseDown", "MouseUp", "", 2, 0)
       WindowDragHandler(win, "textarea", "TextareaMoveCallback", "TextareaReleaseCallback", 0x10)
-        
+
       -- mouse wheel handler for scrolling up/down
       WindowScrollwheelHandler(win, "textarea", "wheel_move")
 
       -- add the drag handler so they can move the window around
       movewindow.add_drag_handler(win, 0, 0, 0, TITLE_HEIGHT)
-        
+
       -- scroll bar up/down buttons
       WindowAddHotspot(win, "up", width-SCROLL_BAR_WIDTH, TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
       WindowAddHotspot(win, "down", width-SCROLL_BAR_WIDTH, height-(2*SCROLL_BAR_WIDTH), 0, height-SCROLL_BAR_WIDTH, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
 
       -- add the resize widget hotspot
       WindowAddHotspot(win, "resize", width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)    
+      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
 
       -- re-wrap buffered lines at the new size
       lines = {}
@@ -347,14 +332,14 @@ function init (firstTime)
 
    lineStart = math.max(1, #lines-WINDOW_LINES+2)
    lineEnd = math.max(1, #lines)
-    
+
    -- title rectangle
    header_width = WindowTextWidth(win, win_head_font, "Communication Log")
    WindowGradient(win, 1, 0, width, TITLE_HEIGHT, WINDOW_BACKGROUND_COLOUR, 0x444444, 2)
-   WindowText(win, win_head_font, "Communication Log", (width-header_width)/2, ((TITLE_HEIGHT-header_font_height)/2)-1, width, TITLE_HEIGHT, 0xEEEEEE, false)     
+   WindowText(win, win_head_font, "Communication Log", (width-header_width)/2, ((TITLE_HEIGHT-header_font_height)/2)-1, width, TITLE_HEIGHT, 0xEEEEEE, false)
    WindowLine(win, 0, TITLE_HEIGHT-1, width, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
-   
-   -- resize tag    
+
+   -- resize tag
    WindowRectOp(win, 2, width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR) -- resizer background
    WindowLine(win, width-SCROLL_BAR_WIDTH+1, height-2, width-2, height-SCROLL_BAR_WIDTH+1, 0xffffff, 0, 2)
    WindowLine(win, width-SCROLL_BAR_WIDTH+2, height-2, width-2, height-SCROLL_BAR_WIDTH+2, 0x696969, 0, 1)
@@ -364,7 +349,7 @@ function init (firstTime)
    WindowLine(win, width-SCROLL_BAR_WIDTH+8, height-2, width-2, height-SCROLL_BAR_WIDTH+8, 0x696969, 0, 1)
    WindowLine(win, width-SCROLL_BAR_WIDTH+10, height-2, width-2, height-SCROLL_BAR_WIDTH+10, 0xffffff, 0, 2)
    WindowLine(win, width-SCROLL_BAR_WIDTH+11, height-2, width-2, height-SCROLL_BAR_WIDTH+11, 0x696969, 0, 1)
-    
+
    -- draw border
    WindowRectOp(win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
 
@@ -373,7 +358,6 @@ end
 
 function OnPluginConnect ()
    -- first time after connect, get tags right
-   Send_GMCP_Packet("rawcolor on")
 end --  OnPluginConnect
 
 function OnPluginClose ()
@@ -395,10 +379,10 @@ end -- OnPluginEnable
 
 require "serialize"
 function OnPluginSaveState()
-   -- save window current location for next time  
+   -- save window current location for next time
    SetVariable("enabled", tostring (GetPluginInfo (GetPluginID(), 17)))
    movewindow.save_state(win)
-   
+
    SetVariable("font_name", font_name)
    SetVariable("font_size", font_size)
    SetVariable("date_format", date_format)
@@ -407,7 +391,6 @@ function OnPluginSaveState()
    SetVariable("info_on", info_on)
    SetVariable("global_quest_on", global_quest_on)
    SetVariable("remort_auction_on", remort_auction_on)
-   SetVariable("pray_on", pray_on)
    SetVariable("warfare_on", warfare_on)
    SetVariable("log_to_file", log_to_file)
    SetVariable("log_colour_codes", log_colour_codes)
@@ -467,8 +450,8 @@ function writeLines ()
       for count = lineStart, lineEnd do
          ax = nil
          zx = nil
-         line_no_colors = strip_colours(StylesToColoursOneLine(lines[count][1]))
-         
+         line_no_colors = strip_colours(StylesToColours(lines[count][1]))
+
          -- create clickable links for urls
          for i,v in ipairs(lines[count][3]) do
             local left = TEXT_INSET+WindowTextWidth(win, win_font, string.sub(line_no_colors, 1, v.start-1))
@@ -483,14 +466,14 @@ function writeLines ()
                WindowScrollwheelHandler(win, link_name, "wheel_move")
             end
          end
-         
+
          -- create highlighting parameters when text is selected
          if copy_start_line ~= nil and copy_end_line ~= nil and count >= copy_start_line and count <= copy_end_line then
             ax = (((count == copy_start_line) and math.min(start_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or TEXT_INSET)
             -- end of highlight for this line
             zx = math.min(width-SCROLL_BAR_WIDTH,(((count == copy_end_line) and math.min(end_copying_x, WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET)) or WindowTextWidth(win, win_font, line_no_colors)+TEXT_INSET))
          end
-         
+
          Display_Line( count-lineStart, lines[count][1], ax, zx )
       end
    end
@@ -501,7 +484,7 @@ barPos = ""
 barSize = ""
 totalSteps = ""
 function drawStuff ()
-       
+
    -- Scrollbar base
    WindowRectOp(win, 2, width-SCROLL_BAR_WIDTH, TITLE_HEIGHT, width, -SCROLL_BAR_WIDTH, SCROLL_BACKGROUND_COLOUR) -- scroll bar background
    WindowRectOp(win, 1, width-SCROLL_BAR_WIDTH+1, SCROLL_BAR_WIDTH+TITLE_HEIGHT+1, width-1, height-(2*SCROLL_BAR_WIDTH)-1, SCROLL_DETAIL_COLOUR) -- scroll bar background inset rectangle
@@ -525,10 +508,10 @@ function drawStuff ()
          true, --close
          false)  --alt fill
    end
-    
+
    if (keepscrolling == "down") then
       -- draw bottom scroll button pressed
-      WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), height-(SCROLL_BAR_WIDTH*2), 0, height-SCROLL_BAR_WIDTH-1, 10,  15 + 0x800) 
+      WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), height-(SCROLL_BAR_WIDTH*2), 0, height-SCROLL_BAR_WIDTH-1, 10,  15 + 0x800)
       points = string.format("%i,%i,%i,%i,%i,%i", (width-SCROLL_BAR_WIDTH)+3, (height-SCROLL_BAR_WIDTH)-11,(width-SCROLL_BAR_WIDTH)+7, (height-SCROLL_BAR_WIDTH)-7, (width-SCROLL_BAR_WIDTH)+11,(height-SCROLL_BAR_WIDTH)-11)
       WindowPolygon(win, points,
          0x000000, 0, 1, -- pen (solid, width 1)
@@ -545,11 +528,11 @@ function drawStuff ()
          true, --close
          false) --alt fill
    end
-   
+
    -- The scrollbar position indicator
    totalSteps = #lines
    if (totalSteps <= WINDOW_LINES-1) then
-      totalSteps = 1 
+      totalSteps = 1
    end
    SCROLL_BAR_HEIGHT = (height-(3*SCROLL_BAR_WIDTH)-TITLE_HEIGHT)
    if (not dragscrolling) then
@@ -581,7 +564,7 @@ function wheel_move (flags, hotspot_id)
       if lineStart < #lines-WINDOW_LINES+2 then
          -- down
          lineStart = math.max(1, math.min(#lines-WINDOW_LINES+2, lineStart+3))
-         lineEnd = math.min(#lines, lineStart+WINDOW_LINES-2)    
+         lineEnd = math.min(#lines, lineStart+WINDOW_LINES-2)
          drawStuff()
       end
    elseif lineStart > 1 then
@@ -619,7 +602,7 @@ function add_line ( line, is_beginning_of_message, urls )
    if #lines >= WINDOW_LINES then
       lineStart = lineStart + 1
    end -- if
-   
+
    if #lines > 1 then
       lineEnd = lineEnd + 1
    end -- if
@@ -632,31 +615,31 @@ function fillBuffer(rawstyles, rawurls)
    local length = 0
    local styles = copytable.deep(rawstyles)
    local urls = copytable.deep(rawurls)
-   
+
    -- It turns out you can reduce the function
    -- call time by instantiating functions as local.
-   -- This is really just me being silly. 
+   -- This is really just me being silly.
    local remove = table.remove
    local insert = table.insert
-   
+
    -- Keep pulling out styles and trying to fit them on the current line
    while #styles > 0 do
       -- break off the next style
       local style = remove(styles, 1)
 
       -- make this handle forced newlines like in the flickoff social
-      -- by splitting off and sticking the next part back into the 
+      -- by splitting off and sticking the next part back into the
       -- styles list for the next pass
       foundbreak = false
       newline = string.find(style.text, "\n")
       if newline then
-         insert(styles, 1, {text = string.sub(style.text,newline+1), 
-            length = style.length-newline+1, 
+         insert(styles, 1, {text = string.sub(style.text,newline+1),
+            length = style.length-newline+1,
             textcolour = style.textcolour,
             backcolour = style.backcolour}
          )
--- we're leaving in the newline characters here because we need to be 
--- able to copy them later. I'll clean up the buggy visual later when 
+-- we're leaving in the newline characters here because we need to be
+-- able to copy them later. I'll clean up the buggy visual later when
 -- actually displaying the lines.
          style.length = newline
          style.text = string.sub(style.text,1,newline)
@@ -673,7 +656,7 @@ function fillBuffer(rawstyles, rawurls)
          if foundbreak then
             avail = 0
          end
-      else -- otherwise, have to split style  
+      else -- otherwise, have to split style
          -- look for trailing space (work backwards). remember where space is
          local col = style.length - 1
          local split_col
@@ -692,7 +675,7 @@ function fillBuffer(rawstyles, rawurls)
             end -- if will now fit
             col = col - 1
          end -- while
-         
+
          if split_col then
             -- if we found a place to split, use old style and truncate it.
             -- Also stick the rest back with the same styling back into the styles list
@@ -712,10 +695,10 @@ function fillBuffer(rawstyles, rawurls)
             -- if we're about to start a new style and the
             -- line is completely full, put it back in the list for later
             insert(styles, 1, style)
-         end -- if    
-         avail = 0  -- now we need to wrap    
+         end -- if
+         avail = 0  -- now we need to wrap
       end -- if could/not fit whole thing in
-            
+
       -- out of styles or out of room? add a line for what we have so far
       if #styles == 0 or avail <= 0 then
          if #lines >= MAX_LINES then
@@ -724,7 +707,7 @@ function fillBuffer(rawstyles, rawurls)
             lineStart = lineStart - 1
             lineEnd = lineEnd - 1
          end -- buffer full
-         
+
          local line_urls = {}
          while urls[1] and urls[1].stop <= length do
             insert(line_urls, remove(urls, 1))
@@ -744,7 +727,7 @@ function fillBuffer(rawstyles, rawurls)
                urls[i].stop = urls[i].stop+1
             end
          end
-        
+
          add_line( line_styles, beginning, line_urls )
 
          avail = width - (TEXT_INSET * 2) - 9
@@ -761,22 +744,23 @@ function sanitize_filename(str)
 end
 
 function stampAndStore(styles)
-    
    local text = ""
    local log_text = ""
-    
-   -- inject timestamp if wanted
-   tstamp = os.date(date_format)
-   timestyle = {text=tstamp, length=string.len(tstamp), textcolour=0xc0c0c0}
-   table.insert(styles,1,timestyle)
-   
-   text = StylesToColoursOneLine(styles)
-   
+
+   -- remove control characters
+   for i,v in ipairs(styles) do
+      v.text = v.text:gsub("%c","")
+      v.length = v.text:len()
+   end
+
+   timestamp = os.date(date_format)
+
+   text = StylesToColours(styles)
+   local urls = findURLs(strip_colours(timestamp..text))
+
    if (log_to_file == 1) then
-      if (log_timestamps == 0) then
-         local local_styles = copytable.deep(styles)
-         table.remove(local_styles, 1)
-         log_text = StylesToColoursOneLine(local_styles)
+      if (log_timestamps == 1) then
+         log_text = "@w"..timestamp..text
       else
          log_text = text
       end
@@ -795,47 +779,64 @@ function stampAndStore(styles)
       end
    end
 
-   local urls = findURLs(strip_colours(text))
-   
+   table.insert(styles,1,{text=timestamp, length=string.len(timestamp), textcolour=0xc0c0c0})
+
    -- store the raw lines for use during resizing
    if #rawlines >= MAX_LINES then
       table.remove(rawlines, 1)
    end
    table.insert(rawlines, {[1]=styles, [2]=urls})
-   
+
    fillBuffer(styles, urls)
    drawStuff()
 end
 
 -- Takes input as a string with embedded Aardwolf color codes. Use via CallPlugin().
 -- See:   http://mushclient.com/scripts/doc.php?function=CallPlugin
--- You can use the function StylesToColoursOneLine(styles_table) from aardwolf_colors.lua
+-- You can use the function StylesToColours(styles_table) from aardwolf_colors.lua
 -- or manually embed your own colors to push any colorized line you want to the log window.
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO")
-function storeFromOutside(string)
-   stampAndStore(ColoursToStyles(string))
+function storeFromOutside(msg)
+   stampAndStore(ColoursToStyles(msg))
 end
 
 function untagged_info (name, line, wildcards, styles)
-   stampAndStore(styles)
+   local result = filter_as_needed(styles)
+   if result then
+      stampAndStore(result)
+   end
 end -- untagged info
+
+function filter_as_needed(msg)
+   if GetPluginInfo("48f867c18f6ff1d6d3b52918", 17) then -- if using the #sub plugin
+      if type(msg) == "table" then
+         msg = StylesToColours(msg)
+      end
+      rc, msg = CallPlugin("48f867c18f6ff1d6d3b52918", "filter_string", msg)
+   end
+   if type(msg) == "string" then
+      return ColoursToStyles(msg)
+   else
+      return msg
+   end
+end
 
 function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == "comm.channel") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","comm.channel")         
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or ""))()
-
-         msg = gmcpval("msg") or ""
-         chan = gmcpval("chan") or ""
+         gmcpcomm = gmcp("comm.channel")
+         msg = gmcpcomm.msg or ""
+         chan = gmcpcomm.chan or ""
          if (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if not channels_table[chan] then
                addNewChannel(chan)
             end
             if channels_table[chan]["capture"] then
-               stampAndStore(ColoursToStyles(msg))
+               local result = filter_as_needed(msg)
+               if result then
+                  stampAndStore(result)
+               end
             end
          end
       end
@@ -876,7 +877,7 @@ end
 function GetAllBufferedMessages()
    local t = {}
    for _,styles in ipairs(rawlines) do
-      table.insert(t, StylesToColoursOneLine(styles[1]))
+      table.insert(t, StylesToColours(styles[1]))
    end
    SetClipboard(table.concat(t,"\n"))
 end
@@ -963,16 +964,16 @@ function TextareaMoveCallback(flags, hotspot_id)
       copy_end_line = copy_end_windowline+lineStart
       copy_start_line = temp_start_line
       start_copying_x = temp_start_copying_x
-      
+
       if not copy_start_line then
          -- OS bug causing errors for me. hack around stupid mouse click tracking mess
          return
       end
-      
+
       if (copy_start_line > #lines) then
          start_copying_x = width-SCROLL_BAR_WIDTH
       end
-      
+
       -- the user is selecting backwards, so reverse the start/end orders
       if copy_end_line < temp_start_line then
          local temp = copy_end_line
@@ -981,20 +982,20 @@ function TextareaMoveCallback(flags, hotspot_id)
          temp = end_copying_x
          end_copying_x = start_copying_x
          start_copying_x = temp
-      end -- if        
+      end -- if
       if copy_end_line == copy_start_line and end_copying_x < start_copying_x then
          local temp = end_copying_x
          end_copying_x = start_copying_x
          start_copying_x = temp
       end -- if
-      
+
       for copy_line=copy_start_line,copy_end_line do
          if (lines[copy_line] ~= nil) then
             local startpos = 1
             local endpos = 99999
             if (copy_line-lineStart+1 > 0 and copy_line-lineStart < WINDOW_LINES and copy_line-lineStart < #lines) then
                -- snap to character boundaries instead of selecting arbitrary pixel widths
-               local line_no_colors = strip_colours(StylesToColoursOneLine(lines[copy_line][1]))
+               local line_no_colors = strip_colours(StylesToColours(lines[copy_line][1]))
                startpos = 1
                endpos = #line_no_colors
                -- special deal for the first line
@@ -1021,9 +1022,9 @@ function TextareaMoveCallback(flags, hotspot_id)
                   end
                end
             end -- if should show highlight
-       
+
             -- store selected area for later
-            copied_part = StylesToColoursOneLine(lines[copy_line][1], startpos, endpos)
+            copied_part = StylesToColours(lines[copy_line][1], startpos, endpos)
             if copy_line ~= copy_end_line and copy_line ~= #lines and lines[copy_line+1][2] == true then
                -- only put a line break if the next line is from a different message
                copied_part = copied_part.."@w\n"
@@ -1106,19 +1107,14 @@ function right_click_menu (hotspot_id)
    menustring = menustring .. "|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<"
 
    menustring = menustring .. "|Customize Channels"
-   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((pray_on==1 and "+") or "").."Pray|"..((warfare_on==1 and "+") or "").."WARFARE:|".."<|-"
-   
+   menustring = menustring .. "|>Capture Other Info|"..((info_on==1 and "+") or "").."INFO:|"..((global_quest_on==1 and "+") or "").."Global Quest:|"..((remort_auction_on==1 and "+") or "").."Remort Auction:|"..((show_donations==1 and "+") or "").."Clan Donations|"..((warfare_on==1 and "+") or "").."WARFARE:|".."<|-"
+
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
-      info_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "info", 8)
-      remort_auction_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "remort_auction", 8)
-      pray_echo = not GetPluginTriggerInfo("55616ea13339bc68e963e1f8", "pray", 8)
-      warfare_echo = not GetPluginTriggerInfo("55616ea13339bc68e963e1f8", "warfare", 8)
-      global_quest_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "global_quest", 8)
-      donations_echo = not GetPluginTriggerInfo ("55616ea13339bc68e963e1f8", "donations", 8)
-      menustring = menustring .. "|>Echo Channels In Main Window|Echo All|Echo None|Custom Echo List|-|>Echo Other Info|"..((info_echo and "+") or "").."INFO:|"..((global_quest_echo and "+") or "").."Global Quest:|"..((remort_auction_echo and "+") or "").."Remort Auction:|"..((donations_echo and "+") or "").."Clan Donations|"..((pray_echo and "+") or "").."Pray|"..((warfare_echo and "+") or "").."WARFARE:|".."<|<"
-      echo_skip = 9
+      err,info_echo,global_quest_echo,remort_auction_echo,donations_echo,warfare_echo = CallPlugin("55616ea13339bc68e963e1f8", "getEchos")
+      menustring = menustring .. "|>Echo Channels In Main Window|Echo All|Echo None|Custom Echo List|-|>Echo Other Info|"..((info_echo and "+") or "").."INFO:|"..((global_quest_echo and "+") or "").."Global Quest:|"..((remort_auction_echo and "+") or "").."Remort Auction:|"..((donations_echo and "+") or "").."Clan Donations|"..((warfare_echo and "+") or "").."WARFARE:|".."<|<"
+      echo_skip = 8
    end
-   
+
    menustring = menustring .. "|>Logging To File|"..((log_to_file==1 and "Disable|") or "Enable|")..((log_colour_codes==0 and "+") or "").."Remove Color Codes|"..((log_timestamps==0 and "+") or "").."Remove Timestamps|<|-|Bring To Front|Send To Back"
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
@@ -1133,13 +1129,13 @@ function right_click_menu (hotspot_id)
             ColourNote("yellow", "red", "MUSHclient may have encountered an error trying to open the selected URL. It has been copied to the clipboard.")
             ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
             ColourNote("yellow","",url)
-            ColourNote("cyan","","^---------------------------------------------------------^")         
+            ColourNote("cyan","","^---------------------------------------------------------^")
          end
       elseif numResult == hyperlink_skip then
          SetClipboard(url)
          ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
          ColourNote("yellow","",url)
-         ColourNote("cyan","","^---------------------------------------------------------^")         
+         ColourNote("cyan","","^---------------------------------------------------------^")
       elseif numResult == 1+hyperlink_skip then
          if #copied_text > 0 then
             local declored_text = strip_colours(copied_text)
@@ -1153,7 +1149,7 @@ function right_click_menu (hotspot_id)
             SetClipboard(copied_text)
             ColourNote("cyan","","v-------------------Copied to clipboard-------------------v")
             ColourNote("yellow","",copied_text)
-            ColourNote("cyan","","^---------------------------------------------------------^")  
+            ColourNote("cyan","","^---------------------------------------------------------^")
          end
       elseif numResult == 3+hyperlink_skip then
          GetAllBufferedMessages()
@@ -1232,46 +1228,36 @@ function right_click_menu (hotspot_id)
          show_donations = (((0 == show_donations) and 1) or 0)
          SetVariable("show_donations", show_donations)
       elseif numResult == 15+hyperlink_skip then
-         if pray_on == 0 then
-            ColourNote ("yellow", "", "Pray capturing is now ENABLED.")
-         else
-            ColourNote ("yellow", "", "Pray capturing is now DISABLED.")
-         end
-         EnableTrigger("pray", 0 == pray_on)
-         pray_on = GetTriggerOption("pray","enabled")      
-      elseif numResult == 16+hyperlink_skip then
          if warfare_on == 0 then
             ColourNote ("yellow", "", "Warfare capturing is now ENABLED.")
          else
             ColourNote ("yellow", "", "Warfare capturing is now DISABLED.")
          end
          EnableTrigger("warfare", 0 == warfare_on)
-         warfare_on = GetTriggerOption("warfare","enabled") 
+         warfare_on = GetTriggerOption("warfare","enabled")
       end
-      
+
       if echo_skip ~= 0 then
-         if numResult == 17+hyperlink_skip then
+         if numResult == 16+hyperlink_skip then
             CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "on")
-         elseif numResult == 17+hyperlink_skip+1 then
+         elseif numResult == 16+hyperlink_skip+1 then
             CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "off")
-         elseif numResult == 17+hyperlink_skip+2 then
+         elseif numResult == 16+hyperlink_skip+2 then
             CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "custom")
-         elseif numResult == 17+hyperlink_skip+3 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", info_echo, nil, nil, nil, nil, nil)
-         elseif numResult == 17+hyperlink_skip+4 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, global_quest_echo, nil, nil, nil, nil)
-         elseif numResult == 17+hyperlink_skip+5 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, remort_auction_echo, nil, nil, nil)
-         elseif numResult == 17+hyperlink_skip+6 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, donations_echo, nil, nil)
-         elseif numResult == 17+hyperlink_skip+7 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, nil, pray_echo, nil)
-         elseif numResult == 17+hyperlink_skip+8 then
-            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, nil, nil, warfare_echo)
+         elseif numResult == 16+hyperlink_skip+3 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", info_echo, nil, nil, nil, nil)
+         elseif numResult == 16+hyperlink_skip+4 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, global_quest_echo, nil, nil, nil)
+         elseif numResult == 16+hyperlink_skip+5 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, remort_auction_echo, nil, nil)
+         elseif numResult == 16+hyperlink_skip+6 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, donations_echo, nil)
+         elseif numResult == 16+hyperlink_skip+7 then
+            CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, nil, warfare_echo)
          end
       end
-      
-      if numResult == 17+hyperlink_skip+echo_skip then
+
+      if numResult == 16+hyperlink_skip+echo_skip then
          log_to_file = (((0 == log_to_file) and 1) or 0)
          SetVariable("log_to_file", log_to_file)
          if log_to_file == 0 then
@@ -1279,7 +1265,7 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Logging to file is now ENABLED.")
          end
-      elseif numResult == 18+hyperlink_skip+echo_skip then
+      elseif numResult == 17+hyperlink_skip+echo_skip then
          log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
          SetVariable("log_colour_codes", log_colour_codes)
          if log_colour_codes == 0 then
@@ -1287,7 +1273,7 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Color codes will be included in the log file.")
          end
-      elseif numResult == 19+hyperlink_skip+echo_skip then
+      elseif numResult == 18+hyperlink_skip+echo_skip then
          log_timestamps = (((0 == log_timestamps) and 1) or 0)
          SetVariable("log_timestamps", log_timestamps)
          if log_timestamps == 0 then
@@ -1295,9 +1281,9 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Timestamps will be included in the log file.")
          end
-      elseif numResult == 20+hyperlink_skip+echo_skip then
+      elseif numResult == 19+hyperlink_skip+echo_skip then
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == 21+hyperlink_skip+echo_skip then
+      elseif numResult == 20+hyperlink_skip+echo_skip then
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       end
       OnPluginSaveState()

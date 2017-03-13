@@ -70,12 +70,13 @@ thresh1color = tonumber (GetVariable("thresh1color")) or 0x00ffff
 thresh2color = tonumber (GetVariable("thresh2color")) or 0x0000ff
 
 -- Variables not saved.
-startx     = ""  
+startx     = ""
 starty     = ""
-posx       = "" 
+posx       = ""
 posy       = ""
 hotspot_id = ""
 page_built = false
+gmcp_char = {}
 
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
@@ -120,6 +121,8 @@ end
 function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
    txt = ""
    if (showBar[bar][2] == true) then
+      local num_val = tonumber(val)
+      local num_maxval = tonumber(maxval)
       if showLabels == 1 then
          if stacked == 1 then
             WindowText(win, font_id, stacked_label or showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
@@ -128,16 +131,17 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
          end
       end
 
-      if tonumber(maxval) and tonumber(val) then
+      if num_maxval and num_val then
          if flip then
-            val = tostring(tonumber(maxval)-tonumber(val))
+            val = tostring(num_maxval-num_val)
+            num_val = tonumber(val)
          end
          if overlay_numbers == 1 or overlay_numbers == 3 or (graphicalMode == 0 and overlay_numbers ~= 2) then
             maxlen = math.max(#maxval, #val)
             txt = string.lpad(val, maxlen, ' ').."/"..string.rpad(maxval,maxlen,' ')
          end
          if overlay_numbers == 2 or overlay_numbers == 3 then
-            txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*tonumber(val)/tonumber(maxval)).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
+            txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*num_val/num_maxval).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
          end
       end
 
@@ -146,8 +150,8 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
          local color2 = showBar[bar][5]
          if bar == "Health" then
             local hpPercent = 100
-            if tonumber(val) and tonumber(maxval) then
-               hpPercent = 100* (tonumber(val) / tonumber(maxval))
+            if num_val and num_maxval then
+               hpPercent = 100* (num_val / num_maxval)
             end
             if thresh1active == 1 then
                if hpPercent < thresh1percent then
@@ -162,7 +166,7 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
                end
             end
          end
-         gauge(win,showBar[bar][3],tonumber(val),tonumber(maxval),xpos+label_width,ypos,bar_width,line_height,color1,0x000000,num_ticks,0x000000,color2,nil,flat_gauges==1)
+         gauge(win,showBar[bar][3],num_val,num_maxval,xpos+label_width,ypos,bar_width,line_height,color1,0x000000,num_ticks,0x000000,color2,nil,flat_gauges==1)
          if overlay_numbers ~= 0 then
             txtlen = WindowTextWidth(win,font_id,txt)
             outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
@@ -170,7 +174,7 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
       else
          xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..txt.."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
       end
-      
+
       if stacked == 1 then
          ypos = ypos + line_height + 1
       else
@@ -221,27 +225,25 @@ function DisplayStatsPage()
             bar_width = math.max(1, (effectiveWidth-LEFT_MARGIN)/numBars-LEFT_MARGIN)
          end
       end
-      
-      DoNextSimpleBar("Health", gmcpval("vitals.hp") or "", gmcpval("maxstats.maxhp") or "")
-      
-      DoNextSimpleBar("Mana", gmcpval("vitals.mana") or "", gmcpval("maxstats.maxmana") or "")
-      
-      DoNextSimpleBar("Moves", gmcpval("vitals.moves") or "", gmcpval("maxstats.maxmoves") or "")
-      
-      local tnl = gmcpval("status.tnl") or ""
-      local perlevel = gmcpval("base.perlevel") or ""
+
+      DoNextSimpleBar("Health", gmcp_char.vitals.hp, gmcp_char.maxstats.maxhp)
+      DoNextSimpleBar("Mana", gmcp_char.vitals.mana, gmcp_char.maxstats.maxmana)
+      DoNextSimpleBar("Moves", gmcp_char.vitals.moves, gmcp_char.maxstats.maxmoves)
+
+      local tnl = gmcp_char.status.tnl
+      local perlevel = gmcp_char.base.perlevel
       -- switch from "to next level" to "current level experience"
       if (reverseTNL == 0) then
          DoNextSimpleBar("TNL", tnl, perlevel)
       else
          DoNextSimpleBar("TNL", tnl, perlevel, true, "Exp   :", "Exp:")
       end
-      
+
       bar = "Enemy"
       if (showBar[bar][2] == true) then
-         fighting = gmcpval("status.enemy")
-         if fighting ~= "" and fighting ~= null then
-            enemypct = gmcpval("status.enemypct")
+         fighting = gmcp_char.status.enemy
+         if fighting ~= "" then
+            enemypct = gmcp_char.status.enemypct
             if enemypct ~= "" then
                if showLabels == 1 then
                   if stacked == 1 then
@@ -270,10 +272,10 @@ function DisplayStatsPage()
                end
             end
             if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1) 
+               gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1)
             else
                xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
-            end            
+            end
          end
          if stacked == 1 then
             ypos = ypos + line_height + 1
@@ -281,10 +283,10 @@ function DisplayStatsPage()
             xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
          end
       end
-      
+
       bar = "Align"
       if (showBar[bar][2] == true) then
-         alignment = tonumber(gmcpval("status.align"))
+         alignment = tonumber(gmcp_char.status.align)
          if alignment ~= nil then
             zeroed_alignment = alignment+2500
             bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
@@ -381,7 +383,7 @@ function right_click_menu ()
             stacked = 0
             height = line_height+(TOP_MARGIN*2)
          else
-            stacked = 1   
+            stacked = 1
             height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
          end
       elseif numResult >= 4 and numResult <= 9 then
@@ -448,14 +450,14 @@ function right_click_menu ()
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
       elseif numResult == 36 then
          -- send to back
-         CallPlugin("462b665ecb569efbf261422f","dropMe", win) 
+         CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       elseif numResult == 37 then
          -- reduce size
          font_name = default_font_name
          font_size = default_font_size
          width = MIN_WIDTH
       end -- if
-      
+
       OnPluginSaveState()
       OnPluginInstall()
    end
@@ -471,18 +473,25 @@ function OnPluginBroadcast (msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == 'reload') then
          -- invalidate current data
-         page_built = false 
+         page_built = false
          return
       end
 
       if (text == "char.base" or text == "char.vitals" or text == "char.status" or text == "char.maxstats") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char")
+         if text == "char.base" then
+            gmcp_char.base = gmcp("char.base")
+         elseif text == "char.vitals" then
+            gmcp_char.vitals = gmcp("char.vitals")
+         elseif text == "char.status" then
+            gmcp_char.status = gmcp("char.status")
+         else
+            gmcp_char.maxstats = gmcp("char.maxstats")
+         end
 
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
-
-         page_built = true
-         DisplayStatsPage()
+         if gmcp_char.base and gmcp_char.vitals and gmcp_char.status and gmcp_char.maxstats then
+            page_built = true
+            DisplayStatsPage()
+         end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
@@ -507,7 +516,7 @@ function ResizeMoveCallback()
    elseif (windowinfo.window_left+width > GetInfo(281)) then
       width = GetInfo(281)-windowinfo.window_left
       startx = GetInfo(281)
-   end 
+   end
 
    if (utils.timer() - lastRefresh > 0.0333) then
       SetUpHotspotsAndDraw(false)
@@ -560,7 +569,7 @@ end
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
-   -- save window current location for next time  
+   -- save window current location for next time
    movewindow.save_state (win)
    barTexts = ""
    SetVariable ("stacked", stacked)
@@ -601,12 +610,10 @@ end -- OnPluginEnable
 
 
 win = GetPluginID()
-require "checkplugin"
+
 function OnPluginListChanged ()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-end -- OnPluginListChanged
+   dofile "lua/aard_requirements.lua"
+end
 
 function OnPluginWorldOutputResized()
    if (installed == true) and (((GetInfo(281)-windowinfo.window_left) > effectiveWidth) or ((GetInfo(281)-windowinfo.window_left) < width)) then
@@ -617,7 +624,7 @@ end
 function OnPluginInstall()
    background_colour = tonumber (GetVariable ("background_colour")) or background_colour
    -- make window so I can grab the font info
-   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
+   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour)
 
    font_id = "statmon_font"
 
@@ -695,7 +702,7 @@ function OnPluginInstall()
       check (EnablePlugin(GetPluginID (), false))
       return
    end -- they didn't enable us last time
-   
+
    OnPluginSaveState()
    installed = true
 end
@@ -708,13 +715,13 @@ end
 function SetUpHotspotsAndDraw(firstTime)
    effectiveWidth = math.max(MIN_WIDTH, math.min(width, GetInfo(281)-windowinfo.window_left))
    if (firstTime == true) then
-      check (WindowCreate (win, 
+      check (WindowCreate (win,
             windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
             effectiveWidth,     -- width
             height,  -- height
             windowinfo.window_mode,       -- auto-position: middle right
             windowinfo.window_flags,  -- flags
-            background_colour) )                
+            background_colour) )
       -- Add handler for resizing
       WindowAddHotspot(win, "resize", effectiveWidth-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, effectiveWidth, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
       WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
@@ -726,17 +733,17 @@ function SetUpHotspotsAndDraw(firstTime)
       WindowResize(win, effectiveWidth, height, background_colour)
       WindowMoveHotspot(win, "resize", effectiveWidth-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, effectiveWidth, height)
    end
-   
+
    -- Add the drag handler so they can move the window around
    movewindow.add_drag_handler (win, 0, 0, 0, 0)
- 
+
    DisplayStatsPage()
 end
 
 -------------------------------------------------------------------------------
 --- Calculate width of a line of styled text without drawing it.
 -------------------------------------------------------------------------------
-function styleWidth(styles) 
+function styleWidth(styles)
    local s = ""
    for _,w in ipairs (styles) do
       s = s .. w.text

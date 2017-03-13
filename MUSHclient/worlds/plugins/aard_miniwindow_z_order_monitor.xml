@@ -22,9 +22,8 @@
 
 usedNumbers = {}
 
-require "checkplugin"
 function OnPluginListChanged()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
+   dofile "lua/aard_requirements.lua"
 end
 
 function OnPluginInstall()
@@ -41,15 +40,15 @@ end
 -- To use this:
 -- CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", windowID)
 --
--- windowID MUST conform to the rules for variable names for SetVariable for this to work properly 
--- with one exception: the name may start with a number rather than a 
+-- windowID MUST conform to the rules for variable names for SetVariable for this to work properly
+-- with one exception: the name may start with a number rather than a
 -- letter (if the name is based on a plugin UID, for example)
 function registerMiniwindow(callerID)
    if callerID == nil then
       callerID = ""
    end
    local requestedZNumber = tonumber(GetVariable("a"..callerID))
-   -- If we were previously using a particular spot and nothing else is 
+   -- If we were previously using a particular spot and nothing else is
    -- already using it go ahead and assign that one. Otherwise find another
    -- spot for it.
    if requestedZNumber == nil or (usedNumbers[requestedZNumber] ~= callerID and usedNumbers[requestedZNumber] ~= nil) then
@@ -62,7 +61,7 @@ end
 
 -- Bump the calling miniwindow to the front.
 -- This also collapses the stack to eliminate gaps.
--- To use this: 
+-- To use this:
 -- CallPlugin("462b665ecb569efbf261422f", "boostMe", windowID)
 function boostMe(callerID)
    local newNumbers = {}
