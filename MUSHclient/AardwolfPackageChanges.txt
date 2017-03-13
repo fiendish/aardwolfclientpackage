@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1899 snapshot
+- new feature: The GMCP mapper has an option now to toggle off/on underlining of the hyperlinks.
+- bug fix: Beep on pages when chat echo is off.
+
 r1898 snapshot
 - misc change: Updated to MUSHclient 5.05 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - new feature: There is now a plugin for #sub and #gag (aard_text_substitution.xml). Some people have been asking for this for a very long time. Sorry it took so long. Load it and type "#sub help"
