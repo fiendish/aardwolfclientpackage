@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- MuClient version 5.03 -->
+<!-- MuClient version 5.05 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
 
    auto_say_override_prefix="-"
@@ -57,7 +57,7 @@
    hyperlink_colour="#0080FF"
    indent_paras="y"
    input_background_colour="white"
-   input_font_height="9"
+   input_font_height="10"
    input_font_weight="400"
    input_font_charset="1"
    input_text_colour="black"
@@ -68,7 +68,7 @@
    mud_can_change_options="y"
    note_text_colour="#040000"
    omit_date_from_save_files="y"
-   output_font_height="9"
+   output_font_height="10"
    output_font_weight="400"
    output_font_charset="1"
    paste_delay_per_lines="1"
@@ -82,6 +82,7 @@
    send_keep_alives="y"
    send_mxp_afk_response="y"
    show_connect_disconnect="y"
+   show_underline="y"
    spam_line_count="20"
    tab_completion_lines="200"
    timestamp_input_text_colour="maroon"
@@ -107,7 +108,7 @@
 <!-- triggers -->
 
 <triggers
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
   >
 </triggers>
@@ -115,7 +116,7 @@
 <!-- aliases -->
 
 <aliases
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
   >
   <alias
@@ -173,7 +174,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- timers -->
 
 <timers
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
   >
 </timers>
@@ -181,7 +182,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- macros -->
 
 <macros
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
   >
 
@@ -274,7 +275,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- variables -->
 
 <variables
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
   >
 </variables>
@@ -282,7 +283,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- colours -->
 
 <colours
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
   >
 
@@ -338,7 +339,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- keypad -->
 
 <keypad
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
   >
 
@@ -447,7 +448,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- printing -->
 
 <printing
-   muclient_version="5.03"
+   muclient_version="5.05"
    world_file_version="15"
   >
 
@@ -473,21 +474,23 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 </printing>
 
 <!-- plugins -->
+<include name="aard_text_substitution.xml" plugin="y" />
+<include name="aard_prompt_fixer.xml" plugin="y" />
+<include name="aard_chat_echo.xml" plugin="y" />
+<include name="aard_channels_fiendish.xml" plugin="y" />
 <include name="aard_GMCP_handler.xml" plugin="y" />
 <include name="aard_miniwindow_z_order_monitor.xml" plugin="y" />
 <include name="aard_layout.xml" plugin="y" />
-<include name="aard_helper_aliases.xml" plugin="y" />
 <include name="aard_statmon_gmcp.xml" plugin="y" />
 <include name="aard_group_monitor_gmcp.xml" plugin="y" />
 <include name="aard_health_bars_gmcp.xml" plugin="y" />
-<include name="aard_GMCP_mapper.xml" plugin="y" />
 <include name="aard_Copy_Colour_Codes.xml" plugin="y" />
-<include name="aard_channels_fiendish.xml" plugin="y" />
 <include name="aard_ASCII_map.xml" plugin="y" />
-<include name="Aardwolf_Tick_Timer.xml" plugin="y" />
 <include name="Aardwolf_Bigmap_Graphical.xml" plugin="y" />
 <include name="aard_repaint_buffer.xml" plugin="y" />
 <include name="aard_new_connection.xml" plugin="y" />
-<include name="aard_chat_echo.xml" plugin="y" />
-<include name="aard_prompt_fixer.xml" plugin="y" />
+<include name="aard_inventory_serials.xml" plugin="y" />
+<include name="Hyperlink_URL2.xml" plugin="y" />
+<include name="aard_GMCP_mapper.xml" plugin="y" />
+<include name="aard_package_update_checker.xml" plugin="y" />
 </muclient>

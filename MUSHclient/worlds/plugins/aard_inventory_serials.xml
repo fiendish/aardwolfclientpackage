@@ -153,6 +153,10 @@ Makes inventory command slightly more useful by displaying UIDs
 <script>
 <![CDATA[
 
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+end
+
 function OnPluginInstall()
    if IsConnected() then
       OnPluginConnect()
@@ -182,7 +186,7 @@ function parse(styles, wildcards, results, sorted)
       table.remove(styles, 1)
       wildcards[3] = StylesToColoursOneLine(styles)
    end
-   
+
    local hash = wildcards[2]..wildcards[3]..wildcards[4] -- flags, name, level
    if not results[hash] then
       results[hash] = {{},{}}
