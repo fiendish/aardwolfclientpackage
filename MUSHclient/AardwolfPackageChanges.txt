@@ -1,30 +1,43 @@
 Aardwolf Client Package Major Changes List
 
-r1887 snapshot:
+r1898 snapshot
+- misc change: Updated to MUSHclient 5.05 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
+- new feature: There is now a plugin for #sub and #gag (aard_text_substitution.xml). Some people have been asking for this for a very long time. Sorry it took so long. Load it and type "#sub help"
+- MAJOR change: Channel messages now only arrive over GMCP. Say goodbye to channel tags.
+- new feature: The GMCP handler has been rewritten to make getting gmcp data easier. See https://github.com/fiendish/aardwolfclientpackage/wiki/Using-GMCP
+- new feature: Tags now only get activated for the current session instead of persisting into other logins that possibly aren't made with a client that understands them. I hope this leads to fewer "why are all these tags showing?" queries.
+- new feature: There's now a fun little experiment in lua\online_translation.lua for doing translations between different languages using google translation servers. We'll just have to see how long it takes until they actually shut down free access to the translation API like they said they're going to.
+- misc change: The in-place updater experiment is over. I decided to get rid of it in favor of an installer ( https://fiendish.github.io/aardwolfclientpackage/ ). If you point it at your previous MUSHclient folder, the installer will safely preserve your world, state, and mapper database files.
+- new feature for developers: There are some more functions for dealing with colors in aardwolf_colors.lua
+- bug fix: A few obscure bugs were found in color processing code.
+- bug fix: One more attempt at a prompt-fixing plugin. So help me god, if one more person has a problem with it freezing their output I'm going to picket outside of Lasher's house until he forces all prompts to end in %c without my intervention.
+- bug fix: Fixed some errors in GMCP mapper bounceportal/bouncerecall caused by inconsistency if the portal entry is removed.
+
+r1887 snapshot
 - bug fix: GMCP mapper notes display was disfigured by MUSHclient's new deferred noting in callbacks
 
-r1886 snapshot:
+r1886 snapshot
 - bug fix: recent color improvements introduced a color bleed that is now fixed.
 - bug fix: changing ANSI color display settings could in some instances cause an error message during some color conversion routines.
 
-r1885 snapshot:
+r1885 snapshot
 - misc change: updated to MUSHclient 5.03 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
-- bug fix: disable room desc tags when disabling ascii map plugin
-- misc change: use Execute instead of Send for the player commands in the aard_VI_command_output plugin
-- new feature: detect font monospacedness in the ascii map plugin
-- misc change: autoactivate utf8 mode when loading the ascii map plugin
-- bug fix: no longer error on empty capture in the aard_VI_command_output plugin
-- misc change: request ascii map on death, because the MUD doesn't do that automatically
+- bug fix: disable room desc tags when disabling ascii map plugin.
+- misc change: use Execute instead of Send for the player commands in the aard_VI_command_output plugin.
+- new feature: detect font monospacedness in the ascii map plugin.
+- misc change: autoactivate utf8 mode when loading the ascii map plugin.
+- bug fix: no longer error on empty capture in the aard_VI_command_output plugin.
+- misc change: request ascii map on death, because the MUD doesn't do that automatically.
 - new feature: add compact toggles to the GMCP mapper. Thanks VBMeireles!
-- bug fix: last selected character capture in the copy color codes plugin
-- misc change: use a copyable color for gmcp debug output
-- new feature: several new functions added to aardwolf_colors
-- new feature: inventory serials plugin now supports the keyring
+- bug fix: last selected character capture in the copy color codes plugin.
+- misc change: use a copyable color for gmcp debug output.
+- new feature: several new functions added to aardwolf_colors.
+- new feature: inventory serials plugin now supports the keyring.
 
-r1871 snapshot:
+r1871 snapshot
 - bug fix: update the mapper help for fullportal to match the recent command format change.
 
-r1870 snapshot:
+r1870 snapshot
 - misc change: the statmon miniwindow plugin has more compact labels that waste less space.
 - new feature: the statmon miniwindow has an option for showing gold with commas.
 - misc change: one of the experimental text substitution plugins has been removed. Substitutions without GMCP are just not good.
@@ -36,7 +49,7 @@ r1870 snapshot:
 - new feature: there is a new plugin meant to assist players who use screen readers by capturing the output from game commands and sending it to a MUSHclient notepad. The plugin is called aard_VI_command_output.xml. For now it has an accompanying readme file.
 - misc change: if you accidentally replace the LuaJIT DLL with another one, the package will now alert you. Don't do it. It breaks things.
 
-r1860 snapshot:
+r1860 snapshot
 - misc change: updated to MUSHclient 5.01 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - new feature: ascii map plugin will only automatically request updates if the player is active so they shouldn't keep you from idling out.
 - new feature: mapper backups internally store the date and time of when they were created.
@@ -45,49 +58,49 @@ r1860 snapshot:
 - bug fix: replace old code.google.com links in the new connection plugin.
 - comment: I have the nagging feeling that I've forgotten to include something in this release, but I don't know what.
 
-r1851 snapshot:
+r1851 snapshot
 - bug fix: Windows XP returns error 1026 if an FO_DELETE operation is attempted for a file that doesn't exist (updater)
 - bug fix: string comparisons should be plain (updater)
 
-r1850 snapshot:
+r1850 snapshot
 - misc change: with GMCP mapper cexits it should now be possible to visually draw exits between rooms that are nomap but still actually unique. You have to manually flag the room to ignore exits mismatches and then create a single-letter direction cexit. This will probably fail in funny ways for non-unique rooms.
 - bug fix: ascii map plugin will no longer request map updates if a room description kinda sorta looks like a door opening or closing.
 - bug fix: use luajit's FFI interface to replace calls to os.execute in the package updater plugin with direct Windows API calls because os.execute was freezing MUSHclient for at least one player.
 - bug fix: unload plugins before moving files around with the new updater, because a loaded plugin might be keeping a file locked.
 
-r1845 snapshot:
+r1845 snapshot
 - bug fix: detect file download failures during updates and gently retry a few times.
 - misc change: move version file checks to a more central location to hopefully avoid the file handle being held open accidentally by bad copy+pastes.
 
-r1843 snapshot:
+r1843 snapshot
 - bug fix: two plugins didn't close the version file after opening it, leading to access permission errors in the updater
 
-r1842 snapshot:
+r1842 snapshot
 - bug fix: update plugin now seen working in Windows XP. Wine's xcopy prints "<#> file(s) copied" with a lowercase f, but Windows's xcopy prints "<#> File(s) copied" with a capital F.
 - misc change: confirm at package update whether to update in place or to download the .zip instead
 - new feature: mapper notes room (or mapper notes thisroom) will print mapper notes for just the current room
 
-r1840 snapshot:
+r1840 snapshot
 - bug fix: hopefully fix bad github merge
 
-r1835 snapshot:
+r1835 snapshot
 - new feature: the package update plugin now actually tries to update the package in place for you instead of just pointing to a download link.
 - new feature: using async io with the "async" require is now a lot easier.
 - bug fix: fixes an error on loading the bigmap plugin if the gmcp mapper is absent
 - misc change: updated to MUSHclient 4.99 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
 
-r1830 snapshot:
+r1830 snapshot
 - bug fix: should fix a bug reported with the GMCP mapper where adjacent from starting room cexits weren't being used.
 - misc change: The GMCP mapper is now more thorough about database integrity checks because several reported bugs occured because of database file integrity errors.
 - new feature: The bigmap display now optionally loads custom map images. See https://github.com/fiendish/aardwolfclientpackage/wiki/Bigmap-display#custom-bigmap-images for details.
 
-r1825 snapshot:
+r1825 snapshot
 - bug fix: squish mapper errors in portallevel and portalrecall introduced in r1820
 - misc change: the ASCII map "echo" menu option has been reworded for clarity.
 - new feature: new Show Room Name toggle added to the ASCII map miniwindow
 - new feature: the ASCII map will no longer ask for map updates during a GMCP mapper initiated run.
 
-r1820 snapshot:
+r1820 snapshot
 - new feature: You can now command 'mapper cexits thisroom' to see cexits in the current room.
 - bug fix: ASCII map plugin will no longer request a map update automatically if the player is in note mode or sleeping.
 - misc change: map DB should be slightly smaller
@@ -96,17 +109,17 @@ r1820 snapshot:
 - misc change: some GMCP mapper right-click options now use submenus to directly access options instead of a popup dialog.
 - misc change: updated to MUSHclient 4.98 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
 
-r1816 snapshot:
+r1816 snapshot
 - bug fix: #alias and #trigger world aliases were broken. Apparently world aliases and triggers can't be made with equal signs in the name. Sigh. Oops. Nobody reported this? Maybe nobody uses them.
 
-r1815 snapshot:
+r1815 snapshot
 - info: A change crept into the the previous release that apparently wasn't fully baked yet. The chat echo plugin now runs with a plugin sequence of -5000, which will make it run before everything else, so if you're triggering on channel tags anywhere you'll need to either switch to using GMCP or set your plugin priority lower. See http://mushclient.com/forum/bbshowpost.php?bbsubject_id=12790
 - bug fix: Also make comm log plugin have sequence -5000 so that it catches unechoed lines.
 - bug fix: GMCP mapper should now be better about flagging wrong rooms as noportal/norecall when moving while blind.
 - new feature: GMCP mapper has new aliases for manual noportal/norecall flagging.
 - misc change: GMCP mapper will run instead of portal to an immediately adjacent room.
 
-r1810 snapshot:
+r1810 snapshot
 - new feature: GMCP mapper notes display will now accept color codes.
 - new feature: aardwolf_colors.lua:ColoursToStyles will now treat @d as a reset to default foreground color.
 - new feature: aardwolf_colors.lua:ColoursToStyles now accepts optional parameters to override the default foreground and background colors.
@@ -117,14 +130,14 @@ r1810 snapshot:
 - bug fix: using the new whitelist feature, the garden rooms inside the gardener's brain in FT2 will now display their ASCII map.
 - misc change: updated to MUSHclient 4.97 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
 
-r1805 snapshot:
+r1805 snapshot
 - bug fix: wrong level check in mapper was causing errors when bounce rooms led to paths through certain locked exits
 - misc change: updated to MUSHclient 4.96 ( see release notes http://www.mushclient.com/scripts/showrelnote.php )
 
-r1803 snapshot:
+r1803 snapshot
 - misc change: let mapper work without luajit
 
-r1802 snapshot:
+r1802 snapshot
 - bug fix: default position for stat miniwindow needs to conform to new size
 - misc change: default maptype 1 instead of 2 for new players
 
@@ -336,7 +349,7 @@ r1429 snapshot
 - bug fix: mapper find inputs will have extra white space trimmed off the ends before matching
 - bug fix: mapper aliases will now be anchored properly so that it's no longer trivial to accidentally activate them
 - bug fix: when using mapper options that accept "here" as a keyword (mapper notes/shops/etc), the area key will be a strict match rather than an inclusive one
-- new feature: the mapper now has a "walkto" command which will calculate paths without using any mapper portals 
+- new feature: the mapper now has a "walkto" command which will calculate paths without using any mapper portals
 - new feature: right-click menu options for modifying exits in the mapper window now affect custom exits as well
 - bug fix: removing/renaming the aardwolf logo background image used in the main output produced errors on startup
 
@@ -657,7 +670,7 @@ r414 snapshot
 - new feature: gmcp mapper paths should now work if the player changes the command stack character
 - new feature: bigmap miniwindow display is /finally/ now included in the package with the special ability to merge into the gmcp mapper window (can be pulled into its own window with 'bigmap unmerge')
 
-r397 snapshot 
+r397 snapshot
 (April 2011 release)
 - bug fix: the channel capture window can now handle forced newlines like the ones in the flickoff social
 - new feature: added xterm 256 color support
@@ -714,13 +727,13 @@ r359 snapshot
 r342 snapshot
 - bug fix: saving rooms when using the mapper without a pre-initialized database should no longer cause an error
 
-r340 snapshot 
+r340 snapshot
 (Feb 2011 release)
 - bug fix: color selection (crash) bug in the group monitor plugin should be fixed
 - bug fix: there was a typo in the group monitor empty group message
 - misc change: default to show self in group on first load of the group monitor
 
-r336 snapshot 
+r336 snapshot
 - misc change: updated to MUSHclient 4.72
 - new feature: added clickable links to mapper portals list
 - misc change: updated mapper find display
