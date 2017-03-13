@@ -183,9 +183,9 @@ RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
 
 -- Variables not saved.
-startx      = ""  
+startx      = ""
 starty      = ""
-posx        = "" 
+posx        = ""
 posy        = ""
 font_height = 0
 hidden_members = {}
@@ -212,7 +212,7 @@ end
 function SetUpHotspotsAndDraw(firstTime)
    -- don't use windowcreate after the first time, because it messes with hotspot handlers
    if (firstTime == true) then
-      check (WindowCreate (win, 
+      check (WindowCreate (win,
          windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
          width,     -- width
          height,  -- height
@@ -275,7 +275,7 @@ end
 -- build and draw the group display
 function DisplayGroupPage()
    WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
-   
+
    -- title rectangle
    WindowGradient(win, 2, 2, -2, title_height, title_gradient_col1, title_gradient_col2, 2)
    WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
@@ -320,7 +320,7 @@ function DisplayGroupPage()
       WindowText(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills, xpKillsBoundary+2*GAP, y, 0,0, 0xeeeeee, utf8)
       WindowText(win, font_id, "Leader: "..full_group_data.leader, GAP, y, xpKillsBoundary, 0, 0xeeeeee, utf8)
       y = title_height
-      
+
       if #group_members > 0 then
          -- MAIN DISPLAY BODY
          local baseX = GAP
@@ -426,7 +426,7 @@ function DisplayGroupPage()
                end
                y = y + line_height+1
             end
-            y = y + GAP - 2            
+            y = y + GAP - 2
             WindowLine(win, baseX-GAP, y, baseX+column_width-GAP+1, y, 0xeeeeee, 0, 1) -- horizontal line
             WindowLine(win, baseX+column_width-GAP, baseY-GAP+2, baseX+column_width-GAP, y, 0xeeeeee, 0, 1) -- vertical line
          end
@@ -590,7 +590,7 @@ function right_click_menu ()
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
       elseif numResult == member_count+25 then
          -- send to back
-         CallPlugin("462b665ecb569efbf261422f","dropMe", win)        
+         CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       elseif numResult == member_count+26 then
          -- reset
          font_name        = default_font_name
@@ -674,7 +674,7 @@ function ResizeMoveCallback()
    elseif (windowinfo.window_left+width > GetInfo(281)) then
       width = GetInfo(281)-windowinfo.window_left
       startx = GetInfo(281)
-   end 
+   end
 
    height = height + posy - starty
    starty = posy
@@ -747,12 +747,12 @@ function OnPluginConnect()
 end
 
 function OnPluginSaveState ()
-   -- save window current location for next time  
+   -- save window current location for next time
    movewindow.save_state (win)
 
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    SetVariable ("background_colour", background_colour)
-   SetVariable ("title_colour", title_colour)  
+   SetVariable ("title_colour", title_colour)
    SetVariable ("width", width)
    SetVariable ("height", height)
    SetVariable ("font_name", font_name)
@@ -812,7 +812,7 @@ end
 
 function OnPluginInstall()
    -- make window so I can grab the font info
-   WindowCreate (win, width, height, 1, 1, 0, 0, background_colour) 
+   WindowCreate (win, width, height, 1, 1, 0, 0, background_colour)
 
    font_id        = "font"
    font_id_bold   = "font_bold"
@@ -850,12 +850,12 @@ function OnPluginInstall()
 
    --- install the window movement handler, get back the window position.
    windowinfo = movewindow.install (win, miniwin.pos_center, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-   
+
    if IsConnected() then
       OnPluginConnect()
       Send_GMCP_Packet("request group")
    end
-   
+
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")

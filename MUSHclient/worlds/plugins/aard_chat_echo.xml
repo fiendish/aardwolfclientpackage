@@ -108,7 +108,7 @@ EnableTrigger("compact_mode", false)
    sequence="100"
    send_to="12"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
-   
+
 <trigger
    enabled="n"
    name="raidinfo"
@@ -145,7 +145,7 @@ EnableTrigger("compact_mode", false)
    EnableTriggerGroup("end_gag", false)
 </send>
 </trigger>
-    
+
 <trigger
    enabled="n"
    match=".+"
@@ -383,7 +383,7 @@ function chat_echo (toggle)
          end
       end
    end -- if
-   
+
    OnPluginSaveState()
 end
 

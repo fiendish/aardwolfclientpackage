@@ -1,10 +1,10 @@
 local BLACK = 1
 local RED = 2
-local GREEN = 3  
-local YELLOW = 4 
-local BLUE = 5 
-local MAGENTA = 6 
-local CYAN = 7 
+local GREEN = 3
+local YELLOW = 4
+local BLUE = 5
+local MAGENTA = 6
+local CYAN = 7
 local WHITE = 8
 
 local atletter_to_ansi_digit = {
@@ -25,14 +25,14 @@ local atletter_to_ansi_digit = {
    W = 37
 }
 
-local function init_ansi() 
+local function init_ansi()
    -- declaration of produced tables
    color_value_to_atcode = {}
    atletter_to_color_value = {}
    color_value_to_xterm_number = {}
    xterm_number_to_color_value = extended_colours
    basic_colors_to_atletters = {}
-   
+
    for i,v in ipairs(xterm_number_to_color_value) do
       color_value_to_xterm_number[v] = i
    end
@@ -41,23 +41,23 @@ local function init_ansi()
    -- for visual clarity over xterm numbers, with the defaults shown on the right.
    atletter_to_color_value = {
       k = GetNormalColour (BLACK)   ,   -- 0x000000 (not used)
-      r = GetNormalColour (RED)     ,   -- 0x000080 
+      r = GetNormalColour (RED)     ,   -- 0x000080
       g = GetNormalColour (GREEN)   ,   -- 0x008000
-      y = GetNormalColour (YELLOW)  ,   -- 0x008080 
-      b = GetNormalColour (BLUE)    ,   -- 0x800000 
-      m = GetNormalColour (MAGENTA) ,   -- 0x800080 
-      c = GetNormalColour (CYAN)    ,   -- 0x808000 
-      w = GetNormalColour (WHITE)   ,   -- 0xC0C0C0 
-      D = GetBoldColour   (BLACK)   ,   -- 0x808080 
-      R = GetBoldColour   (RED)     ,   -- 0x0000FF 
-      G = GetBoldColour   (GREEN)   ,   -- 0x00FF00 
-      Y = GetBoldColour   (YELLOW)  ,   -- 0x00FFFF 
-      B = GetBoldColour   (BLUE)    ,   -- 0xFF0000 
-      M = GetBoldColour   (MAGENTA) ,   -- 0xFF00FF 
-      C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00 
+      y = GetNormalColour (YELLOW)  ,   -- 0x008080
+      b = GetNormalColour (BLUE)    ,   -- 0x800000
+      m = GetNormalColour (MAGENTA) ,   -- 0x800080
+      c = GetNormalColour (CYAN)    ,   -- 0x808000
+      w = GetNormalColour (WHITE)   ,   -- 0xC0C0C0
+      D = GetBoldColour   (BLACK)   ,   -- 0x808080
+      R = GetBoldColour   (RED)     ,   -- 0x0000FF
+      G = GetBoldColour   (GREEN)   ,   -- 0x00FF00
+      Y = GetBoldColour   (YELLOW)  ,   -- 0x00FFFF
+      B = GetBoldColour   (BLUE)    ,   -- 0xFF0000
+      M = GetBoldColour   (MAGENTA) ,   -- 0xFF00FF
+      C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00
       W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
    }
-   
+
    for k,v in pairs(atletter_to_color_value) do
       basic_colors_to_atletters[v] = k
    end
@@ -115,7 +115,7 @@ function StylesToColours(styles, dollarC_resets)
                init_ansi()
             end
          end
-         
+
          if dollarC_resets then
             text = text:gsub("%$C", code)
          end
@@ -137,10 +137,10 @@ function TruncateStyles(styles, startcol, endcol)
    if not styles or #styles == 0 then
       return ""
    end
-   
+
    local startcol = startcol or 1
    local endcol = endcol or 99999 -- 99999 is assumed to be long enough to cover ANY style run
-   
+
    -- negative column indices are used to measure back from the end
    if startcol < 0 or endcol < 0 then
       local total_chars = 0
@@ -183,7 +183,7 @@ function TruncateStyles(styles, startcol, endcol)
       end
       if break_after then break end
    end
-   
+
    return new_styles
 end
 
@@ -220,7 +220,7 @@ function ColoursToStyles (Text, default_foreground_code, default_background_code
    else
       default_background = GetNormalColour(BLACK)
    end
-   
+
    if Text:find("@", nil, true) then
       astyles = {}
 
@@ -246,9 +246,9 @@ function ColoursToStyles (Text, default_foreground_code, default_background_code
          end
 
          if #text > 0 then
-            table.insert (astyles, { text = text, 
+            table.insert (astyles, { text = text,
                bold = (colour == colour:upper()),
-               length = #text, 
+               length = #text,
                textcolour = atletter_to_color_value[colour] or default_foreground,
                backcolour = default_background })
          end -- if some text
@@ -260,7 +260,7 @@ function ColoursToStyles (Text, default_foreground_code, default_background_code
    -- No colour codes, create a single style.
    return { { text = Text,
       bold = (default_foreground_code == default_foreground_code:upper()),
-      length = #Text, 
+      length = #Text,
       textcolour = default_foreground,
       backcolour = default_background } }
 end  -- function ColoursToStyles
@@ -279,7 +279,7 @@ end -- strip_colours
 -- Convert Aardwolf and short x codes to 3 digit x codes
 function canonicalize_colours (s)
    if s:find("@", nil, true) then
-      s = s:gsub ("@x(%d%d?%d?)", function(a) 
+      s = s:gsub ("@x(%d%d?%d?)", function(a)
          local b = tonumber(a)
          if b and b <= 255 and b >= 0 then
             return string.format("@x%03d", b)
@@ -400,7 +400,7 @@ function AnsiToColours(ansi, default_foreground_code)
       end
       return color
    end)
-   
+
    return ansi
 end
 
@@ -424,6 +424,6 @@ function ColoursToANSI(text)
       end)
 
       text = text:gsub("%z", "@")
-   end   
+   end
    return text
 end
