@@ -53,9 +53,9 @@ LEFT_MARGIN     = 10
 TOP_MARGIN      = 5
 
 -- Variables not saved.
-startx     = ""  
+startx     = ""
 starty     = ""
-posx       = "" 
+posx       = ""
 posy       = ""
 hotspot_id = ""
 cstyles    = { }
@@ -107,12 +107,14 @@ endbracket = {text="]",textcolour=0xFFFF00}
 
 function BuildStatsPage()
 
+   gmcpchar = gmcp("char")
+
    max_width = 0
    cstyles = {}
 
    --- Check if we have data in each category, but only as much as necessary - once page built we can stop.
-   if (not gmcpdata or (gmcpval("worth") == "" or gmcpval("vitals") == "" or gmcpval("stats") == "" or 
-   gmcpval("status") == "" or gmcpval("maxstats") == "" )) then 
+   if not gmcpchar or not gmcpchar.worth or not gmcpchar.vitals or not gmcpchar.stats or
+   not gmcpchar.status or not gmcpchar.maxstats then
       return
    end
 
@@ -120,142 +122,142 @@ function BuildStatsPage()
       table.insert(cstyles, {
             {text="Str : ",textcolour=label_colors["Strength"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.str")),textcolour=data_colors["Strength"]},
+            {text=string.format("%3d",gmcpchar.stats.str),textcolour=data_colors["Strength"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxstr")),textcolour=data_colors["Strength"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxstr),textcolour=data_colors["Strength"]},
             endbracket,
-            
+
             {text="     Hp  : ",textcolour=label_colors["Health"]},
             bracket,
-            {text=string.format("%6d",gmcpval("vitals.hp")), textcolour=data_colors["Health"]},
+            {text=string.format("%6d",gmcpchar.vitals.hp), textcolour=data_colors["Health"]},
             slash,
-            {text=string.format("%6d",gmcpval("maxstats.maxhp")),textcolour=data_colors["Health"]},
+            {text=string.format("%6d",gmcpchar.maxstats.maxhp),textcolour=data_colors["Health"]},
             endbracket
             })
 
       table.insert(cstyles, {
             {text="Int : ",textcolour=label_colors["Intelligence"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.int")),textcolour=data_colors["Intelligence"]},
+            {text=string.format("%3d",gmcpchar.stats.int),textcolour=data_colors["Intelligence"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxint")),textcolour=data_colors["Intelligence"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxint),textcolour=data_colors["Intelligence"]},
             endbracket,
-            
+
             {text="     Mn  : ",textcolour=label_colors["Mana"]},
             bracket,
-            {text=string.format("%6d",gmcpval("vitals.mana")), textcolour=data_colors["Mana"]},
+            {text=string.format("%6d",gmcpchar.vitals.mana), textcolour=data_colors["Mana"]},
             slash,
-            {text=string.format("%6d",gmcpval("maxstats.maxmana")),textcolour=data_colors["Mana"]},
+            {text=string.format("%6d",gmcpchar.maxstats.maxmana),textcolour=data_colors["Mana"]},
             endbracket
             })
 
       table.insert(cstyles, {
             {text="Wis : ",textcolour=label_colors["Wisdom"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.wis")),textcolour=data_colors["Wisdom"]},
+            {text=string.format("%3d",gmcpchar.stats.wis),textcolour=data_colors["Wisdom"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxwis")),textcolour=data_colors["Wisdom"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxwis),textcolour=data_colors["Wisdom"]},
             endbracket,
-            
+
             {text="     Mvs : ",textcolour=label_colors["Moves"]},
             bracket,
-            {text=string.format("%6d",gmcpval("vitals.moves")), textcolour=data_colors["Moves"]},
+            {text=string.format("%6d",gmcpchar.vitals.moves), textcolour=data_colors["Moves"]},
             slash,
-            {text=string.format("%6d",gmcpval("maxstats.maxmoves")),textcolour=data_colors["Moves"]},
+            {text=string.format("%6d",gmcpchar.maxstats.maxmoves),textcolour=data_colors["Moves"]},
             endbracket
             })
-      
+
       table.insert(cstyles, {
             {text="Dex : ",textcolour=label_colors["Dexterity"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.dex")),textcolour=data_colors["Dexterity"]},
+            {text=string.format("%3d",gmcpchar.stats.dex),textcolour=data_colors["Dexterity"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxdex")),textcolour=data_colors["Dexterity"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxdex),textcolour=data_colors["Dexterity"]},
             endbracket
             })
 
       table.insert(cstyles, {
             {text="Con : ",textcolour=label_colors["Constitution"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.con")),textcolour=data_colors["Constitution"]},
+            {text=string.format("%3d",gmcpchar.stats.con),textcolour=data_colors["Constitution"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxcon")),textcolour=data_colors["Constitution"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxcon),textcolour=data_colors["Constitution"]},
             endbracket,
-            
+
             {text="     HR  : ",textcolour=label_colors["Hitroll"]},
             bracket,
-            {text=string.format("%5d",gmcpval("stats.hr")), textcolour=data_colors["Hitroll"]},
+            {text=string.format("%5d",gmcpchar.stats.hr), textcolour=data_colors["Hitroll"]},
             endbracket
             })
-      
+
       table.insert(cstyles, {
             {text="Luk : ",textcolour=label_colors["Luck"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.luck")),textcolour=data_colors["Luck"]},
+            {text=string.format("%3d",gmcpchar.stats.luck),textcolour=data_colors["Luck"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxluck")),textcolour=data_colors["Luck"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxluck),textcolour=data_colors["Luck"]},
             endbracket,
-            
+
             {text="     DR  : ",textcolour=label_colors["Damroll"]},
             bracket,
-            {text=string.format("%5d",gmcpval("stats.dr")), textcolour=data_colors["Damroll"]},
+            {text=string.format("%5d",gmcpchar.stats.dr), textcolour=data_colors["Damroll"]},
             endbracket
             })
-      
+
       table.insert(cstyles, {})
 
       table.insert(cstyles, {
             {text="TNL : ",textcolour=label_colors["TNL"]},
             bracket,
-            {text=string.format("%5d",gmcpval("status.tnl")), textcolour=data_colors["TNL"]},
+            {text=string.format("%5d",gmcpchar.status.tnl), textcolour=data_colors["TNL"]},
             endbracket,
-            
+
             {text="       Lvl : ",textcolour=label_colors["Level"]},
             bracket,
-            {text=string.format("%5d",gmcpval("status.level")), textcolour=data_colors["Level"]},
+            {text=string.format("%5d",gmcpchar.status.level), textcolour=data_colors["Level"]},
             endbracket,
             })
-            
+
       table.insert(cstyles, {
             {text="QP  : ",textcolour=label_colors["Quest Points"]},
             bracket,
-            {text=string.format("%7d",gmcpval("worth.qp")), textcolour=data_colors["Quest Points"]},
+            {text=string.format("%7d",gmcpchar.worth.qp), textcolour=data_colors["Quest Points"]},
             endbracket,
-            
+
             {text="     TP  : ",textcolour=label_colors["Trivia"]},
             bracket,
-            {text=string.format("%5d",gmcpval("worth.tp")), textcolour=data_colors["Trivia"]},
+            {text=string.format("%5d",gmcpchar.worth.tp), textcolour=data_colors["Trivia"]},
             endbracket,
             })
 
       table.insert(cstyles, {
             {text="Align : ",textcolour=label_colors["Alignment"]},
             bracket,
-            {text=string.format("%5d",gmcpval("status.align")), textcolour=data_colors["Alignment"]},
+            {text=string.format("%5d",gmcpchar.status.align), textcolour=data_colors["Alignment"]},
             endbracket,
-            
+
             {text="     Gold : ",textcolour=label_colors["Gold"]},
             bracket,
-            {text=string.format("%s", commas_in_gold and commas(gmcpval("worth.gold")) or gmcpval("worth.gold")), textcolour=data_colors["Gold"]},
+            {text=string.format("%s", commas_in_gold and commas(gmcpchar.worth.gold) or gmcpchar.worth.gold), textcolour=data_colors["Gold"]},
             endbracket,
             })
 
       table.insert(cstyles, {
             {text="Train : ",textcolour=label_colors["Trains"]},
             bracket,
-            {text=string.format("%5d",gmcpval("worth.trains")), textcolour=data_colors["Trains"]},
+            {text=string.format("%5d",gmcpchar.worth.trains), textcolour=data_colors["Trains"]},
             endbracket,
-            
+
             {text="     Prac : ",textcolour=label_colors["Pracs"]},
             bracket,
-            {text=string.format("%5d",gmcpval("worth.pracs")), textcolour=data_colors["Pracs"]},
+            {text=string.format("%5d",gmcpchar.worth.pracs), textcolour=data_colors["Pracs"]},
             endbracket,
             })
 
-      fighting = gmcpval("status.enemy")
+      fighting = gmcpchar.status.enemy
 
       if fighting ~= "" and fighting ~= null then
-         fstr = string.format("@RFoe : @R(@W%s%%@R) @W%s@w",gmcpval("status.enemypct"),gmcpval("status.enemy"))
+         fstr = string.format("@RFoe : @R(@W%s%%@R) @W%s@w",gmcpchar.status.enemypct,gmcpchar.status.enemy)
          table.insert(cstyles,ColoursToStyles(fstr))
       else
          table.insert(cstyles,{text=""})
@@ -264,129 +266,129 @@ function BuildStatsPage()
       table.insert(cstyles, {
             {text="Str : ",textcolour=label_colors["Strength"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.str")),textcolour=data_colors["Strength"]},
+            {text=string.format("%3d",gmcpchar.stats.str),textcolour=data_colors["Strength"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxstr")),textcolour=data_colors["Strength"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxstr),textcolour=data_colors["Strength"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="Int : ",textcolour=label_colors["Intelligence"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.int")),textcolour=data_colors["Intelligence"]},
+            {text=string.format("%3d",gmcpchar.stats.int),textcolour=data_colors["Intelligence"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxint")),textcolour=data_colors["Intelligence"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxint),textcolour=data_colors["Intelligence"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="Wis : ",textcolour=label_colors["Wisdom"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.wis")),textcolour=data_colors["Wisdom"]},
+            {text=string.format("%3d",gmcpchar.stats.wis),textcolour=data_colors["Wisdom"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxwis")),textcolour=data_colors["Wisdom"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxwis),textcolour=data_colors["Wisdom"]},
             endbracket
       })
-      
+
       table.insert(cstyles, {
             {text="Dex : ",textcolour=label_colors["Dexterity"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.dex")),textcolour=data_colors["Dexterity"]},
+            {text=string.format("%3d",gmcpchar.stats.dex),textcolour=data_colors["Dexterity"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxdex")),textcolour=data_colors["Dexterity"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxdex),textcolour=data_colors["Dexterity"]},
             endbracket
       })
-      
+
       table.insert(cstyles, {
             {text="Con : ",textcolour=label_colors["Constitution"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.con")),textcolour=data_colors["Constitution"]},
+            {text=string.format("%3d",gmcpchar.stats.con),textcolour=data_colors["Constitution"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxcon")),textcolour=data_colors["Constitution"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxcon),textcolour=data_colors["Constitution"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="Luk : ",textcolour=label_colors["Luck"]},
             bracket,
-            {text=string.format("%3d",gmcpval("stats.luck")),textcolour=data_colors["Luck"]},
+            {text=string.format("%3d",gmcpchar.stats.luck),textcolour=data_colors["Luck"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxluck")),textcolour=data_colors["Luck"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxluck),textcolour=data_colors["Luck"]},
             endbracket
       })
-            
+
       table.insert(cstyles, {
             {text="HR  : ",textcolour=label_colors["Hitroll"]},
             bracket,
-            {text=string.format("%5d",gmcpval("stats.hr")), textcolour=data_colors["Hitroll"]},
+            {text=string.format("%5d",gmcpchar.stats.hr), textcolour=data_colors["Hitroll"]},
             endbracket
       })
-      
+
 
       table.insert(cstyles, {
             {text="DR  : ",textcolour=label_colors["Damroll"]},
             bracket,
-            {text=string.format("%5d",gmcpval("stats.dr")), textcolour=data_colors["Damroll"]},
+            {text=string.format("%5d",gmcpchar.stats.dr), textcolour=data_colors["Damroll"]},
             endbracket
       })
 
       table.insert(cstyles,{})
-            
+
       table.insert(cstyles, {
             {text="Train : ",textcolour=label_colors["Trains"]},
             bracket,
-            {text=string.format("%5d",gmcpval("worth.trains")), textcolour=data_colors["Trains"]},
+            {text=string.format("%5d",gmcpchar.worth.trains), textcolour=data_colors["Trains"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="Prac  : ",textcolour=label_colors["Pracs"]},
             bracket,
-            {text=string.format("%5d",gmcpval("worth.pracs")), textcolour=data_colors["Pracs"]},
+            {text=string.format("%5d",gmcpchar.worth.pracs), textcolour=data_colors["Pracs"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="Gold  : ",textcolour=label_colors["Gold"]},
             bracket,
-            {text=string.format("%s",commas_in_gold and commas(gmcpval("worth.gold")) or gmcpval("worth.gold")), textcolour=data_colors["Gold"]},
+            {text=string.format("%s",commas_in_gold and commas(gmcpchar.worth.gold) or gmcpchar.worth.gold), textcolour=data_colors["Gold"]},
             endbracket
       })
-            
+
       table.insert(cstyles, {
             {text="TP    : ",textcolour=label_colors["Trivia"]},
             bracket,
-            {text=string.format("%5d",gmcpval("worth.tp")), textcolour=data_colors["Trivia"]},
+            {text=string.format("%5d",gmcpchar.worth.tp), textcolour=data_colors["Trivia"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="QP    : ",textcolour=label_colors["Quest Points"]},
             bracket,
-            {text=string.format("%7d",gmcpval("worth.qp")), textcolour=data_colors["Quest Points"]},
+            {text=string.format("%7d",gmcpchar.worth.qp), textcolour=data_colors["Quest Points"]},
             endbracket
       })
 
       table.insert(cstyles, {})
-      
+
       table.insert(cstyles, {
             {text="Lvl   : ",textcolour=label_colors["Level"]},
             bracket,
-            {text=string.format("%5d",gmcpval("status.level")), textcolour=data_colors["Level"]},
+            {text=string.format("%5d",gmcpchar.status.level), textcolour=data_colors["Level"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="TNL   : ",textcolour=label_colors["TNL"]},
             bracket,
-            {text=string.format("%5d",gmcpval("status.tnl")), textcolour=data_colors["TNL"]},
+            {text=string.format("%5d",gmcpchar.status.tnl), textcolour=data_colors["TNL"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="Align : ",textcolour=label_colors["Alignment"]},
             bracket,
-            {text=string.format("%5d",gmcpval("status.align")), textcolour=data_colors["Alignment"]},
+            {text=string.format("%5d",gmcpchar.status.align), textcolour=data_colors["Alignment"]},
             endbracket
       })
 
@@ -395,34 +397,34 @@ function BuildStatsPage()
       table.insert(cstyles, {
             {text="Hp  : ",textcolour=label_colors["Health"]},
             bracket,
-            {text=string.format("%3d",gmcpval("vitals.hp")),textcolour=data_colors["Health"]},
+            {text=string.format("%3d",gmcpchar.vitals.hp),textcolour=data_colors["Health"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxhp")),textcolour=data_colors["Health"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxhp),textcolour=data_colors["Health"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="Mn  : ",textcolour=label_colors["Mana"]},
             bracket,
-            {text=string.format("%3d",gmcpval("vitals.mana")),textcolour=data_colors["Mana"]},
+            {text=string.format("%3d",gmcpchar.vitals.mana),textcolour=data_colors["Mana"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxmana")),textcolour=data_colors["Mana"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxmana),textcolour=data_colors["Mana"]},
             endbracket
       })
 
       table.insert(cstyles, {
             {text="Mvs : ",textcolour=label_colors["Moves"]},
             bracket,
-            {text=string.format("%3d",gmcpval("vitals.moves")),textcolour=data_colors["Moves"]},
+            {text=string.format("%3d",gmcpchar.vitals.moves),textcolour=data_colors["Moves"]},
             slash,
-            {text=string.format("%-3d",gmcpval("maxstats.maxmoves")),textcolour=data_colors["Moves"]},
+            {text=string.format("%-3d",gmcpchar.maxstats.maxmoves),textcolour=data_colors["Moves"]},
             endbracket
       })
-      
-      fighting = gmcpval("status.enemy")
+
+      fighting = gmcpchar.status.enemy
 
       if fighting ~= "" and fighting ~= null then
-         fstr = string.format("@RFoe : @R(@W%s%%@R) @W%s@w",gmcpval("status.enemypct"),gmcpval("status.enemy"))
+         fstr = string.format("@RFoe : @R(@W%s%%@R) @W%s@w",gmcpchar.status.enemypct,gmcpchar.status.enemy)
          table.insert(cstyles,ColoursToStyles(fstr))
       else
          table.insert(cstyles,{text=""})
@@ -436,8 +438,8 @@ function BuildStatsPage()
 end -- BuildStatsPage
 
 function Print()
-   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank 
-   
+   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
+
    if not page_built then
       txt = "Stats will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
@@ -454,7 +456,7 @@ function Print()
          Display_Styled_Line (win, font_id, v, left, top)
       end -- for
       if cstyles[#cstyles].text == "" then
-         Display_Styled_Line (win, font_id, {{text="Foe :",textcolour=0x444444}}, left, top)           
+         Display_Styled_Line (win, font_id, {{text="Foe :",textcolour=0x444444}}, left, top)
       end
    end
 
@@ -485,7 +487,7 @@ function Display_Styled_Line (win, font_id, styles, left, top)
    for _, v in ipairs (styles) do
       left = left + WindowText (win, font_id, v.text, left, top, 0, 0, v.textcolour)
    end -- for each style run
-   return left                
+   return left
 end -- Display_Styled_Line
 
 -- right click menu
@@ -629,15 +631,11 @@ function OnPluginBroadcast (msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == 'reload') then
          -- invalidate current data
-         page_built = false 
+         page_built = false
          return
       end
 
       if (text == "char.stats" or text == "char.maxstats" or text == "char.vitals" or text == "char.worth" or text == "char.status") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char")
-
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
          RefreshPage()
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
@@ -662,7 +660,7 @@ function ResizeMoveCallback()
    elseif (windowinfo.window_left+width > GetInfo(281)) then
       width = GetInfo(281)-windowinfo.window_left
       startx = GetInfo(281)
-   end 
+   end
 
    height = height + posy - starty
    starty = posy
@@ -724,7 +722,7 @@ end
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
-   -- save window current location for next time  
+   -- save window current location for next time
    movewindow.save_state (win)
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    SetVariable ("background_colour", background_colour)
@@ -757,17 +755,14 @@ end
 
 
 win = GetPluginID()
-require "checkplugin"
 function OnPluginListChanged ()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
+   dofile "lua/aard_requirements.lua"
 end
 
 
 function OnPluginInstall()
    -- make window so I can grab the font info
-   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour) 
+   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour)
 
    font_id        = "statmon_font"
 
@@ -828,13 +823,13 @@ end
 --=================================================================================
 function SetUpHotspotsAndDraw(firstTime)
    if (firstTime == true) then
-      check (WindowCreate (win, 
+      check (WindowCreate (win,
          windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
          width,     -- width
          height,  -- height
          windowinfo.window_mode,       -- auto-position: middle right
          windowinfo.window_flags,  -- flags
-         background_colour) )                
+         background_colour) )
 
       -- Add handler for resizing
       WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)

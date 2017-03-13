@@ -4,13 +4,13 @@
 <!-- MuClient version 4.59 -->
 
 <!DOCTYPE muclient [
-   <!ENTITY show_vnums "true" > 
-   <!ENTITY show_timing "false" > 
-   <!ENTITY show_completed "true" > 
-   <!ENTITY show_database_mods "false" > 
-   <!ENTITY show_other_areas "false" > 
-   <!ENTITY show_up_down "false" > 
-   <!ENTITY speedwalk_prefix "run" > 
+   <!ENTITY show_vnums "true" >
+   <!ENTITY show_timing "false" >
+   <!ENTITY show_completed "true" >
+   <!ENTITY show_database_mods "false" >
+   <!ENTITY show_other_areas "false" >
+   <!ENTITY show_up_down "false" >
+   <!ENTITY speedwalk_prefix "run" >
 ]>
 
 <muclient>
@@ -46,10 +46,10 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 <!--  Timers  -->
 
 <timers>
-<timer 
+<timer
    name="backup_timer"
    enabled="y"
-   script="automatic_backup" 
+   script="automatic_backup"
    hour="23" minute="59" second="59"
    active_closed="y" >
 </timer>
@@ -171,7 +171,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    sequence="100"
    script="compact_mode_toggle"
 ></alias>
-  
+
 <alias
    match="mapper zoom out"
    enabled="y"
@@ -179,14 +179,14 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    omit_from_output="y"
    script="mapper.zoom_out"
 ></alias>
-  
+
 <alias
    match="mapper zoom in"
    enabled="y"
    sequence="100"
    omit_from_output="y"
    script="mapper.zoom_in"
-></alias>  
+></alias>
 
 <alias
    match="mapper lockexit"
@@ -214,14 +214,14 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    script="map_find"
    regexp="n"
 ></alias>
-    
+
 <alias
    match="^mapper shops?( .+)?$"
    regexp="y"
    enabled="y"
    sequence="100"
    script="map_shops"
-></alias>  
+></alias>
 
 <alias
    match="^mapper train( .+)?$"
@@ -229,7 +229,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    enabled="y"
    sequence="100"
    script="map_trainers"
-></alias>  
+></alias>
 
 <alias
    match="^mapper quest( .+)?$"
@@ -237,7 +237,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    enabled="y"
    sequence="100"
    script="map_quests"
-></alias>  
+></alias>
 
 <alias
    match="^mapper heal( .+)?$"
@@ -245,8 +245,8 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    enabled="y"
    sequence="100"
    script="map_healers"
-></alias>  
-  
+></alias>
+
 <alias
    match="mapper goto *"
    enabled="y"
@@ -267,7 +267,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    sequence="100"
    script="map_where"
 ></alias>
-  
+
 <alias
    match="mapper thisroom"
    enabled="y"
@@ -275,7 +275,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    script="show_this_room"
    regexp="n"
 ></alias>
-  
+
 <alias
    match="^mapper unmapped( .+)?$"
    enabled="y"
@@ -283,7 +283,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    script="show_known_unmapped_exits"
    regexp="y"
 ></alias>
- 
+
 <alias
    match="^mapper notes( (.+))?$"
    enabled="y"
@@ -291,20 +291,20 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    sequence="100"
    script="map_notes"
 ></alias>
-  
+
 <alias
    match="mapper bookmarks"
    enabled="y"
    sequence="100"
    script="map_notes"
 ></alias>
-  
+
 <alias
    match="mapper purgezone*"
    enabled="y"
    sequence="100"
    script="map_purgezone"
-></alias>  
+></alias>
 
 <alias
    match="mapper purgeroom"
@@ -326,22 +326,22 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
    enabled="y"
    sequence="100"
    script="map_clearcache"
-></alias>  
+></alias>
 
 <alias
    match="mapper resume"
    enabled="y"
    sequence="100"
    script="map_resume"
-></alias>  
- 
+></alias>
+
 <alias
    match="mapper stop"
    enabled="y"
    sequence="100"
    script="mapper.cancel_speedwalk"
-></alias>  
-   
+></alias>
+
 <alias
    match="mapper hide"
    enabled="y"
@@ -350,8 +350,8 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 ><send>
    window_hidden = true
    mapper.hide()
-</send></alias>  
-  
+</send></alias>
+
 <alias
    match="mapper show"
    enabled="y"
@@ -360,7 +360,7 @@ LH-click on the "*" button on the upper-left corner for configuration settings.
 ><send>
    window_hidden = false
    mapper.show()
-</send></alias>  
+</send></alias>
 
 <alias
    match="mapper area *"
@@ -397,7 +397,7 @@ mapper.gotoNextResult(Trim("%1"))
    script="map_portal_list"
    regexp="y"
 ></alias>
- 
+
 <alias
    match="^mapper portal (.+)$"
    enabled="y"
@@ -422,7 +422,7 @@ mapper.gotoNextResult(Trim("%1"))
    script="map_portal_delete"
    regexp="y"
 ></alias>
-  
+
 <alias
    match="mapper portalrecall *"
    enabled="y"
@@ -438,36 +438,36 @@ mapper.gotoNextResult(Trim("%1"))
    script="map_portal_level"
    regexp="n"
 ></alias>
-  
+
 <alias
    match="^mapper delete cexits$"
    enabled="y"
    sequence="100"
    script="map_cexits_delete"
    regexp="y"
-></alias>  
-  
+></alias>
+
 <alias
    match="^mapper purge portals$"
    enabled="y"
    sequence="100"
    regexp="y"
    send_to="12"
->  
+>
 <send>
    Note("Are you sure you want to purge all portal exits? To confirm type 'mapper purge portals confirm'.")
    toConfirm = "purge portals"
    EnableAlias("confirm_catch", true)
 </send>
-</alias>  
-  
+</alias>
+
 <alias
    match="^mapper purge cexits$"
    enabled="y"
    sequence="100"
    regexp="y"
    send_to="12"
->  
+>
 <send>
    Note("Are you sure you want to purge all custom mapper exits? To confirm type 'mapper purge cexits confirm'.")
    toConfirm = "purge cexits"
@@ -496,7 +496,7 @@ mapper.gotoNextResult(Trim("%1"))
    EnableAlias("confirm_catch", false)
 </send>
 </alias>
-  
+
 <alias
    match="mapper cexits *"
    enabled="y"
@@ -504,7 +504,7 @@ mapper.gotoNextResult(Trim("%1"))
    script="custom_exit_list"
    regexp="n"
 ></alias>
-  
+
 <alias
    match="mapper cexits"
    enabled="y"
@@ -535,14 +535,14 @@ mapper.gotoNextResult(Trim("%1"))
    sequence="100"
    script="map_areas"
 ></alias>
-  
+
 <alias
    match="mapper areas *"
    enabled="y"
    sequence="100"
    script="map_areas"
 ></alias>
-  
+
 <alias
    match="^mapper addnote( .*)?$"
    regexp="y"
@@ -631,7 +631,7 @@ StopEvaluatingTriggers(true)
    script="mapper.cancel_speedwalk"
    sequence="100"
 ></trigger>
-  
+
 <trigger
    enabled="y"
    match="You are regaining balance and are unable to move."
@@ -645,28 +645,28 @@ StopEvaluatingTriggers(true)
    script="mapper.cancel_speedwalk"
    sequence="100"
 ></trigger>
-  
+
 <trigger
    enabled="y"
    match="You must be standing first."
    script="mapper.cancel_speedwalk"
    sequence="100"
 ></trigger>
-  
+
 <trigger
    enabled="y"
    match="You need to use a boat, fly, or swim underwater to go there."
    script="mapper.cancel_speedwalk"
    sequence="100"
-></trigger> 
-  
+></trigger>
+
 <trigger
    enabled="y"
    match="You can't * while sitting."
    script="mapper.cancel_speedwalk"
    sequence="100"
-></trigger> 
-  
+></trigger>
+
 <trigger
    enabled="y"
    regexp="y"
@@ -674,20 +674,20 @@ StopEvaluatingTriggers(true)
    script="mapper.cancel_speedwalk"
    sequence="100"
 ></trigger>
-   
+
 <trigger
    enabled="y"
    match="There is no exit in that direction."
    script="mapper.cancel_speedwalk"
    sequence="100"
-></trigger> 
-  
+></trigger>
+
 <trigger
    enabled="y"
    match="Alas, you cannot go that way."
    script="mapper.cancel_speedwalk"
    sequence="100"
-></trigger>   
+></trigger>
 
   <trigger
    enabled="y"
@@ -802,7 +802,7 @@ areacount = 0
 coordcount = 0
 directioncount = 0
 environmentcount = 0
-       
+
 directions = {}
 
 function reset_aard()
@@ -896,7 +896,7 @@ function dbcheck (code, query)
          db:exec ("ROLLBACK")      -- rollback any transaction to unlock the database
          error (err, 3)            -- show error in caller's context
    end -- if
-end -- dbcheck 
+end -- dbcheck
 
 function fixsql (s)
    if s then
@@ -919,7 +919,7 @@ function findpathfast(name, line, wildcards)
    local dest = wildcards[2]
    rooms[src] = load_room_from_database(src)
    rooms[dest] = load_room_from_database(dest)
-   
+
    if rooms[src] == nil then
       mapper.mapprint (string.format ("Room %s not known.", src))
    end
@@ -929,13 +929,13 @@ function findpathfast(name, line, wildcards)
    if rooms[src] == nil or rooms[dest] == nil then
       return
    end
-   
+
    local foundpath = findpath(src, dest)
    if foundpath == nil then
       mapper.mapprint (string.format ("Path from %s to %s not found.", wildcards[1], wildcards[2]))
       return
    end
-    
+
    -- turn into speedwalk
    local speedwalk = mapper.build_speedwalk (foundpath, speedwalk_prefix)
 
@@ -964,14 +964,14 @@ function map_bounceportal (name, line, wildcards)
       dbCheckExecute(string.format("DELETE from storage where name is %s;", fixsql("bounce_portal")))
       return
    end
-   
+
    local pnum = tonumber(wildcards[1])
-   
+
    if pnum==nil then
       Note("\nBOUNCEPORTAL FAILED: The required parameter for mapper bounceportal is <portal_index>. Current portal indexes can be found in the 'mapper portals' output.\n")
       return
    end
-   
+
    local count = 1
    local found = false
    for row in dbnrowsWRAPPER(PORTALS_QUERY) do
@@ -1008,14 +1008,14 @@ function map_bouncerecall (name, line, wildcards)
       return
    end
 
-   
+
    local pnum = tonumber(wildcards[1])
-   
+
    if pnum==nil then
       Note("\nBOUNCERECALL FAILED: The required parameter for mapper bouncerecall is <recall_portal_index>. Current portal indexes can be found in the 'mapper portals' output.\n")
       return
    end
-   
+
    local count = 1
    local found = false
    for row in dbnrowsWRAPPER(PORTALS_QUERY) do
@@ -1041,7 +1041,7 @@ function map_areas (name, line, wildcards)
    local query = ""
    local area = wildcards[1] or ""
    local count = 0
-    
+
    local hr = "| keyword    | Area Name                               | Explored |"
    local hl = "+------------+-----------------------------------------+----------+"
    local fmt = "| %10.10s | %-39.39s | %8.8s |"
@@ -1052,7 +1052,7 @@ function map_areas (name, line, wildcards)
       query = string.format("SELECT uid, name FROM areas WHERE name LIKE %s AND uid in (SELECT DISTINCT area FROM rooms) ORDER BY name;", fixsql("%"..area.."%"))
       intro = string.format("The following areas matching '%s' have been mapped:",area)
    end -- if area
-  
+
    Note ("\n"..intro)
    Note (hl)
    Note (hr)
@@ -1068,7 +1068,7 @@ function map_areas (name, line, wildcards)
       count = count + 1
       BroadcastPlugin(999, "repaint")
    end
-  
+
    Note (hl)
    line = string.format ("Found %s areas containing %s rooms mapped.\n", count, total_explored)
    Note (line)
@@ -1142,14 +1142,14 @@ function custom_exit_list (name, line, wildcards)
       intro = "The following rooms have custom exits:"
    else
       if area == "here" then
-         
+
          if current_room and gmcproom.area then
             area = gmcproom.area
          else
             Note("CEXITS HERE ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
             return
          end
- 
+
          query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) is %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by uid", fixsql(area))
          intro = "The following rooms in the current area have custom exits:"
       elseif area == "thisroom" then
@@ -1199,11 +1199,11 @@ function show_this_room (name, line, wildcards)
       Note("Info: "..(room.info or ""))
       Note("Notes: "..(room.notes or ""))
       local flags = ''
-      if room.noportal == 1 then 
-         flags = flags .. ' noportal' 
+      if room.noportal == 1 then
+         flags = flags .. ' noportal'
       end
-      if room.norecall == 1 then 
-         flags = flags .. ' norecall' 
+      if room.norecall == 1 then
+         flags = flags .. ' norecall'
       end
       Note("Flags:", flags)
       Note("Exits: ")
@@ -1233,7 +1233,7 @@ function show_known_unmapped_exits (name, line, wildcards)
    local display_limit = 30
 
    area = Trim(wildcards [1] or "")
-   
+
    if area == "" then
       query = "select area, count(dir) as cnt from rooms inner join exits on rooms.uid = fromuid where touid not in (select uid from rooms) and touid != -1 group by area"
       hr = "| area       | count |"
@@ -1308,23 +1308,16 @@ function map_portal_delete (name, line, wildcards)
    for n in dbnrowsWRAPPER (string.format ("SELECT * FROM exits WHERE fromuid in ('*','**') AND dir = %s", fixsql(keywords))) do
       portal_exists = true
    end
-   
+
    if portal_exists then
       print (string.format("Deleted mapper portal"..(((target_index ~= nil) and " index #"..target_index) or "").." with keywords '%s'.", keywords))
    else
       print (string.format("DELETE FAILED: Did not find a mapper portal with keywords '%s'.", keywords))
    end
-   
+
    query = string.format("DELETE FROM exits WHERE fromuid in ('*','**') AND dir = %s;", fixsql(keywords))
    dbCheckExecute(query)
-   if bounce_recall and (bounce_recall.dir == keywords) then
-      Note("Detected matching bounce recall.")
-      map_bouncerecall(nil, nil, {"clear"})
-   end
-   if bounce_portal and (bounce_portal.dir == keywords) then
-      Note("Detected matching bounce portal.")
-      map_bounceportal(nil, nil, {"clear"})
-   end
+   check_bounce_consistency()
 end -- map_portal_delete
 
 function map_portal_purge(name, line, wildcards)
@@ -1354,43 +1347,48 @@ function level_check(input)
 end
 
 function map_portal_recall (name, line, wildcards)
-   -- flag a portal as using "recall"   
+   -- flag a portal as using "recall"
    local query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('**', '___HERE___', '___EVERYWHERE___')"
    dbCheckExecute(query)
-   
+
    local pnum = tonumber(wildcards[1])
-   
+
    if pnum==nil then
       world.Note("\nPORTALRECALL FAILED: The required parameter for mapper portalrecall is <portal_index>. Current portal indexes can be found in the 'mapper portals' output.\n")
       return
    end
-   
+
    local count = 1
    local found = false
    for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       if count == pnum then
+
+         -- toggle between '*' and '**'
          query = string.format ([[
-            INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) 
+            INSERT OR REPLACE INTO exits (dir, fromuid, touid, level)
             VALUES (%s, %s, %s, %s);
-            ]], 
-            fixsql(row.dir),  -- direction (eg. "n")
-            fixsql(((row.fromuid == "*") and "**") or "*"),  -- toggle between '*' and '**'
+            ]],
+            fixsql(row.dir),      -- direction (eg. "home")
+            fixsql(((row.fromuid == "*") and "**") or "*"),
             fixsql(row.touid),    -- destination room
             fixsql(row.level)
          )
          dbCheckExecute(query)
+
+         -- remove the old pre-toggle entry
          query = string.format ([[
             DELETE FROM exits WHERE dir=%s AND fromuid=%s AND touid=%s AND level=%s;
-            ]], 
-            fixsql(row.dir),  -- direction (eg. "n")
-            fixsql(row.fromuid),  -- remove the old pre-toggle entry
+            ]],
+            fixsql(row.dir),
+            fixsql(row.fromuid),
             fixsql(row.touid),    -- destination room
             fixsql(row.level)
          )
          dbCheckExecute(query)
-         
+
          world.Note(string.format("\nPORTALRECALL: Recall flag %s portal '%s' to '%s'.\n",((row.fromuid == "*") and "added to") or "removed from",row.dir,(row.name or "N/A")))
          found = true
+         check_bounce_consistency()
       end
       count = count + 1
    end
@@ -1402,25 +1400,25 @@ end -- map_recall
 -- first map_portal function was contributed by Spartacus.
 function map_portal (name, line, wildcards)
    -- store portal as an exit from anywhere to the current or given room
-   local destination = wildcards[2] or current_room  
-   
+   local destination = wildcards[2] or current_room
+
    if not destination then
       print ("PORTAL FAILED: No room received from the mud yet. Try using the 'LOOK' command first.")
       return
    end
-   
-   if not load_room_from_database(destination) then 
+
+   if not load_room_from_database(destination) then
       print("PORTAL ["..wildcards[1].."] FAILED: Room "..destination.." is unknown.")
       return
    end
-   
+
    local level = (level_check(wildcards[3]) and wildcards[3]) or tonumber(utils.inputbox (string.format("Please enter the level of your portal to %s, or leave at 0 for the default",destination), "Portal Level", "0", "Courier", 9, {validate=level_check}))
-   
+
    if not level then
       Note("Portal creation cancelled.")
       return
    end
-     
+
    create_portal(wildcards[1], destination, level)
 
 end -- map_portal
@@ -1439,7 +1437,7 @@ function create_portal(keyword, destination, level)
    end
    print (string.format("Storing '%s' as a portal to %s.", keyword, destination))
    print (string.format("\nPortal given minimum level lock of %s.\n", level))
-   query = string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) VALUES (%s, %s, %s, %s);", 
+   query = string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) VALUES (%s, %s, %s, %s);",
       fixsql  (keyword),
       fixsql  ("*"),           -- from anywhere
       fixsql  (destination),
@@ -1451,7 +1449,7 @@ end
 function string:split(pat)
    local fields = {}
    local start = 1
-   self:gsub("()("..pat..")", 
+   self:gsub("()("..pat..")",
       function(c,d)
          table.insert(fields,self:sub(start,c-1))
          start = c + #d
@@ -1462,7 +1460,7 @@ function string:split(pat)
 end
 
 function map_portal_level (name, line, wildcards)
-  
+
    local keys = Trim(wildcards[1]):split("[%s]+")
    local pnum = tonumber(keys[1])
    local level = tonumber(keys[2])
@@ -1471,19 +1469,19 @@ function map_portal_level (name, line, wildcards)
       world.Note("\nPORTALLEVEL FAILED: The parameters for mapper portal level are <portal_index> <min_level>. Current portal indexes can be found in the 'mapper portals' output.\n")
       return
    end
-  
+
    if level < 0 then
       level = 0
    end
- 
+
    local count = 1
    local found = false
    for row in dbnrowsWRAPPER(PORTALS_QUERY) do
       if count == pnum then
          query = string.format ([[
-            INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) 
+            INSERT OR REPLACE INTO exits (dir, fromuid, touid, level)
             VALUES (%s, %s, %s, %s);
-            ]], 
+            ]],
             fixsql(row.dir),  -- direction (eg. "n")
             fixsql(row.fromuid),  -- from '*' or '**'
             fixsql(row.touid),    -- destination room
@@ -1530,7 +1528,7 @@ function map_portal_list ()
    Note (hl)
    Note ("|* Indicates designated bouncerecall/bounceportal |")
    Note ("+-------------------------------------------------+\n")
-   
+
 end -- map_portal_list
 
 BASE_CEXIT_DELAY = 2
@@ -1583,12 +1581,12 @@ function custom_exit (name, line, wildcards)
    }
    local cexit_command = wildcards [1] or ""
    local cexit_start
-  
+
    if cexit_command == "" then
       world.Note("Nothing to do!")
       return
    end -- if cexit_command
-   
+
    -- Note: Since the addition of the ignore_exits_mismatch room flag, I think this is no longer true.
    --       Getting rid of the remap allows one to draw custom exit linkages between nomap rooms.
    ------------------------------------
@@ -1608,7 +1606,7 @@ function custom_exit (name, line, wildcards)
       world.Note ("CEXIT FAILED: You cannot link custom exits from unmappable rooms.")
       return
    end
-  
+
    wait.make (function()
       local cexit_delay = temp_cexit_delay or BASE_CEXIT_DELAY
       local added_waits = 0
@@ -1630,7 +1628,7 @@ function custom_exit (name, line, wildcards)
             dbCheckExecute(string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid) VALUES (%s, %s, %s);",
                fixsql  (cexit_command),  -- direction (eg. "n")
                fixsql  (cexit_start),  -- from current room
-               fixsql  (cexit_dest) -- destination room 
+               fixsql  (cexit_dest) -- destination room
             ))
             rooms[cexit_start].exits[cexit_command] = cexit_dest
             rooms[cexit_start].exit_locks[cexit_command] = "0"
@@ -1645,8 +1643,8 @@ function custom_exit (name, line, wildcards)
 end -- custom_exit
 
 last_area_requested = ""
-function save_room_to_database (uid,room) 
-   
+function save_room_to_database (uid,room)
+
    assert (uid, "No UID supplied to save_room_to_database")
    local area_exists = false
    for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(room.area))) do
@@ -1659,12 +1657,12 @@ function save_room_to_database (uid,room)
       end
       return false
    end
-   
+
    dbCheckExecute(string.format (
          "INSERT OR REPLACE INTO rooms (uid, name, terrain, info, x, y, z, area, noportal, norecall, ignore_exits_mismatch) VALUES (%s, %s, %s, %s, %i, %i, %i, %s, %d, %d, %d);",
-            fixsql (uid), 
+            fixsql (uid),
             fixsql (room.name),
-            fixsql (room.terrain), 
+            fixsql (room.terrain),
             fixsql (room.info),
             room.x or 0, room.y or 0, room.z or 0, fixsql(room.area),
             room.noportal or 0,
@@ -1672,9 +1670,9 @@ function save_room_to_database (uid,room)
             room.ignore_exits_mismatch and 1 or 0
          ))
 
-   local exists = false      
-   for n in dbnrowsWRAPPER(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s", fixsql(uid))) do 
-      exists = true 
+   local exists = false
+   for n in dbnrowsWRAPPER(string.format ("SELECT * FROM rooms_lookup WHERE uid = %s", fixsql(uid))) do
+      exists = true
    end
    -- don't add multiple times, maintaining backwards database compatibility (there's no uniqueness constraint on rooms_lookup.uid)
    if not exists then
@@ -1683,30 +1681,30 @@ function save_room_to_database (uid,room)
       dbCheckExecute(string.format ("DELETE FROM rooms_lookup WHERE uid = %s",fixsql(uid)))
       dbCheckExecute(string.format ("INSERT INTO rooms_lookup (uid, name) VALUES (%s, %s);", fixsql(uid), fixsql(room.name)))
    end
-   
+
    room_not_in_database [uid] = nil
-   
+
    if show_database_mods then
       mapper.mapprint ("Added room", uid, "to database. Name:", room.name)
    end -- if
    return true
 end -- function save_room_to_database
-      
+
 function fix_up_exit ()
    local room = rooms [from_room]
 
-   dbCheckExecute(string.format ("UPDATE exits SET touid = %s WHERE fromuid = %s AND dir = %s;", 
+   dbCheckExecute(string.format ("UPDATE exits SET touid = %s WHERE fromuid = %s AND dir = %s;",
         fixsql  (current_room),     -- destination room
         fixsql  (from_room),       -- from previous room
         fixsql  (last_direction_moved)  -- direction (eg. "n")
    ))
-        
+
 --   if show_database_mods then
       mapper.mapprint ("Fixed exit", last_direction_moved, "from room", from_room, "to be to", current_room)
 --   end -- if
-  
+
    room.exits [last_direction_moved] = current_room
-    
+
    last_direction_moved = nil
    from_room = nil
 end -- fix_up_exit
@@ -1748,7 +1746,7 @@ function map_purgezone (name, line, wildcards)
          found = true
       end   -- finding area uid
    end
-  
+
    if found == false then
       mapper.mapprint("Syntax: mapper purgezone <keyword>\nTry 'mapper areas' for a list of area keywords.\n")
       return
@@ -1784,11 +1782,11 @@ function map_purgeroom (uid, new_area)
          if u == uid then
             v.exits[j] = nil
          end
-      end   
+      end
    end
 end
 
-function map_clearcache() 
+function map_clearcache()
    rooms = {}
    mapper.mapprint ("Cleared local room cache.")
 end
@@ -1829,7 +1827,7 @@ function load_area_from_database (area)
       end
       lastuid = row.uid
    end   -- finding room
-  
+
    for bmrow in dbnrowsWRAPPER(string.format ("SELECT * FROM bookmarks WHERE uid in ('%s')", table.concat(newrooms,"','"))) do
       rooms[bmrow.uid].notes = bmrow.notes
    end   -- finding room
@@ -1840,12 +1838,12 @@ function load_room_from_database (uid)
    local room
    local u = tostring(uid)
    assert (uid, "No UID supplied to load_room_from_database")
-  
+
    -- if not in database, don't look again
    if room_not_in_database [u] then
       return nil
    end -- no point looking
-   
+
    for row in dbnrowsWRAPPER(string.format ("SELECT * FROM rooms WHERE uid = %s", fixsql (u))) do
       room = {
          name = row.name,
@@ -1868,7 +1866,7 @@ function load_room_from_database (uid)
          room.exits [exitrow.dir] = tostring (exitrow.touid)
          room.exit_locks [exitrow.dir] = tostring(exitrow.level)
       end -- for each exit
-      
+
    end   -- finding room
 
    if room then
@@ -1880,14 +1878,14 @@ function load_room_from_database (uid)
       for row in dbnrowsWRAPPER(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (u))) do
          rooms [u].notes = row.notes
       end   -- finding room
-        
+
       return room
    end -- if found
-  
+
    -- room not found in database
    room_not_in_database [u] = true
    return nil
-    
+
 end -- load_room_from_database
 
 function create_tables ()
@@ -1917,7 +1915,7 @@ function create_tables ()
       UNIQUE (uid)
    );
    CREATE INDEX IF NOT EXISTS name_index ON environments (name);
-   
+
    CREATE TABLE IF NOT EXISTS rooms (
       roomid        INTEGER PRIMARY KEY AUTOINCREMENT,
       uid           TEXT NOT NULL,   -- vnum or how the MUD identifies the room
@@ -1937,7 +1935,7 @@ function create_tables ()
    CREATE INDEX IF NOT EXISTS info_index ON rooms (info);
    CREATE INDEX IF NOT EXISTS terrain_index ON rooms (terrain);
    CREATE INDEX IF NOT EXISTS area_index ON rooms (area);
-   CREATE INDEX IF NOT EXISTS rname_index ON rooms (name);  
+   CREATE INDEX IF NOT EXISTS rname_index ON rooms (name);
 
    CREATE TABLE IF NOT EXISTS exits (
       dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
@@ -1951,13 +1949,13 @@ function create_tables ()
    CREATE INDEX IF NOT EXISTS fromuid_index ON exits (fromuid);
    CREATE INDEX IF NOT EXISTS touid_index   ON exits (touid);
    ]])
-  
+
    -- Since the MUD sends terrain as a string and not as an integer,
    -- it was wrong to originally produce rooms with integer terrains.
    -- Or maybe it's wrong for the MUD to send strings. Either way, we now
    -- have databases with inconsistent data. So let's make it consistent.
    dbCheckExecute("UPDATE OR IGNORE rooms SET terrain = ifnull((SELECT name FROM environments WHERE environments.uid = rooms.terrain), rooms.terrain);")
-  
+
    -- check if rooms_lookup table exists
    dbCheckExecute([[
    BEGIN TRANSACTION;
@@ -1976,7 +1974,7 @@ function check_rooms_flags()
          flag_exists[a.name] = true
       end
    end
-   
+
    for k, v in pairs(flag_exists) do
       if not v then
          local sql = 'ALTER TABLE rooms ADD ' .. k .. ' INTEGER'
@@ -1986,7 +1984,7 @@ function check_rooms_flags()
 end -- function check_rooms_flags
 
 function get_room (uid)
-     
+
    -- look it up
    local ourroom = rooms [uid]
 
@@ -1994,7 +1992,7 @@ function get_room (uid)
    if not ourroom then
       ourroom = load_room_from_database (uid)
       rooms [uid] = ourroom -- cache for later
-  
+
       if not ourroom then
          return nil
       end -- if
@@ -2011,27 +2009,27 @@ function get_room (uid)
       end
       room.area = areas[room.area].name or string.format ("%s", room.area or "<unknown>")
    end
-   
+
    if uid == current_room then
       current_area = room.area
    end -- if
-  
-   -- build hover message  
+
+   -- build hover message
    local environmentname = room.terrain
    if tonumber (environmentname) then
       environmentname = environments [tonumber (environmentname)]
    end -- convert to name
-  
+
    local terrain = ""
    if environmentname and environmentname ~= "" then
       terrain = "\nTerrain: " .. capitalize (environmentname)
    end -- if terrain known
-  
+
    local info = ""
    if room.info and room.info ~= "" then
       info = "\nInfo: " .. capitalize (room.info)
    end -- if info known
-  
+
    local notes = ""
    if room.notes and room.notes ~= "" then
       notes = "\nNote: " .. room.notes
@@ -2047,21 +2045,21 @@ function get_room (uid)
    if flags ~= "" then
       flags = "\nFlags: "..string.gsub(flags," ",", ")
    end
-  
+
    local texits = {}
    for dir in pairs (room.exits) do
       table.insert (texits, dir)
    end -- for
    table.sort (texits)
-   
+
    local areaname = room.area
    if tonumber (areaname) then
       areaname = areas [tonumber (areaname)].name
    end -- convert to name
-    
+
    room.hovermessage = string.format (
       "%s\tExits: %s\nRoom: %s\nArea: %s%s%s%s%s",
-      room.name, 
+      room.name,
       table.concat (texits, ", "),
       uid,
       areaname,
@@ -2072,7 +2070,7 @@ function get_room (uid)
       -- depth,
       -- table.concat (path, ",")
       )
-      
+
    room.borderpen = 0 -- solid
    room.borderpenwidth = 1
    room.fillcolour = 0xff0000
@@ -2109,7 +2107,7 @@ function get_room (uid)
          room.fillcolour = mapper.SAFEROOM_FILL_COLOUR.colour
          room.fillbrush = 0  -- solid
       end -- if
-   end  
+   end
    -- use terrain colour
    if environmentname and environmentname ~= "" and not special_room then
       if user_terrain_colour [environmentname] then
@@ -2132,42 +2130,42 @@ function get_room (uid)
       room.bordercolour = mapper.PK_BORDER_COLOUR.colour
       room.borderpenwidth = 3
    end -- not in this area
-  
-   return room      
-      
+
+   return room
+
 end -- get_room
 
 function room_edit_note (room, uid, newnotes)
 
-   if uid == nil and current_room ~= nil then 
+   if uid == nil and current_room ~= nil then
       uid = current_room
       room = rooms[current_room]
    end
-   
+
    if uid == nil then -- still nothing?
       print("No room received from the mud yet. Try using the 'LOOK' command first.")
       return
    end
 
    local notes, found
-  
+
    for row in dbnrowsWRAPPER(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
       notes = row.notes
       found = true
    end   -- finding room
-  
+
    if newnotes == nil or newnotes == "" then
-      if found then  
+      if found then
          newnotes = utils.inputbox ("Modify room comment (clear it to delete from database)", room.name, notes)
       else
          newnotes = utils.inputbox ("Enter room comment (creates a note for this room)", room.name, notes)
       end -- if
    end
-   
+
    if not newnotes then
       return
-   end -- if cancelled 
-  
+   end -- if cancelled
+
    if newnotes == "" then
       if not found then
          mapper.mapprint ("No comment entered, note not saved.")
@@ -2178,16 +2176,16 @@ function room_edit_note (room, uid, newnotes)
          fixsql (uid)
          ))
          mapper.mapprint ("Note for room", uid, "deleted. Was previously:", notes)
-         rooms [uid].notes = nil   
+         rooms [uid].notes = nil
          mapper.draw (current_room)
          return
       end -- if
    end -- if
-  
+
    if notes == newnotes then
       return -- no change made
    end -- if
-  
+
    if found then
       dbCheckExecute(string.format (
       "UPDATE bookmarks SET notes = %s WHERE uid = %s;",
@@ -2198,15 +2196,15 @@ function room_edit_note (room, uid, newnotes)
    else
       dbCheckExecute(string.format (
       "INSERT INTO bookmarks (uid, notes) VALUES (%s, %s);",
-      fixsql (uid), 
+      fixsql (uid),
       fixsql (newnotes)
       ))
       mapper.mapprint ("Note added to room", uid, ":", newnotes)
-   end -- if    
-   
+   end -- if
+
    rooms [uid].notes = newnotes
    mapper.draw (current_room)
-   
+
 end -- room_edit_note
 
 function room_edit_terrain_colour (room, uid)
@@ -2215,28 +2213,28 @@ function room_edit_terrain_colour (room, uid)
       utils.msgbox ("This room does not have a terrain type", "Unknown terrain!", "ok", "!", 1)
       return
    end -- not known
-   
+
    local environmentname = room.terrain
    if tonumber (environmentname) then
       environmentname = environments [tonumber (environmentname)]
    end -- convert to name
-  
+
    local colour
    local colourtype = terrain_colours [environmentname]
-    
-   if colourtype then 
+
+   if colourtype then
       colour = colour_lookup [colourtype]
    end -- if type known
 
    if user_terrain_colour [environmentname] then
       colour = user_terrain_colour [environmentname]
    end -- if already have user colour
-  
+
    local newcolour = PickColour (colour or 0x000000)
    if newcolour == -1 or newcolour == colour then
       return
    end -- cancelled
-  
+
    if user_terrain_colour [environmentname] then
       dbCheckExecute(string.format (
       "UPDATE terrain SET color = %s WHERE name = %s;",
@@ -2247,12 +2245,12 @@ function room_edit_terrain_colour (room, uid)
    else
       dbCheckExecute(string.format (
       "INSERT INTO terrain (name, color) VALUES (%s, %s);",
-      fixsql (environmentname), 
+      fixsql (environmentname),
       fixsql (newcolour)
       ))
       mapper.mapprint ("Colour for terrain '" .. environmentname .. "' is now", RGBColourToName (newcolour))
-   end -- if    
-   
+   end -- if
+
    user_terrain_colour [environmentname] = newcolour
 
    mapper.draw (current_room)
@@ -2268,14 +2266,14 @@ function room_delete_exit (room, uid, exit)
 
       -- construct available exits list for display
       for k,v in pairs (room.exits) do
-         available [k] = k .. " --> " .. room.exits [k] 
+         available [k] = k .. " --> " .. room.exits [k]
       end -- for
-      
+
       if next (available) == nil then
          utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
          return
       end -- not known
-     
+
       local chosen_exit = utils.listbox ("Choose exit to delete", "Exits ...", available )
       if not chosen_exit then
          return
@@ -2284,17 +2282,17 @@ function room_delete_exit (room, uid, exit)
 
    dbCheckExecute(string.format ([[
       DELETE FROM exits WHERE dir = %s AND fromuid = %s;
-      ]], 
+      ]],
       fixsql (chosen_exit),  -- direction (eg. "n")
       fixsql (uid)  -- from current room
    ))
    mapper.mapprint ("Deleted exit '"..chosen_exit.."' from room "..uid.." from database.")
-  
+
    -- update in-memory table
    rooms[uid] = load_room_from_database(uid)
-  
+
    mapper.draw (current_room)
-   
+
 end -- room_delete_exit
 
 
@@ -2306,14 +2304,14 @@ function room_change_exit (room, uid, exit)
 
       -- construct available exits list for display
       for k,v in pairs (room.exits) do
-         available [k] = k .. " --> " .. room.exits [k] 
+         available [k] = k .. " --> " .. room.exits [k]
       end -- for
-     
+
       if next (available) == nil then
          utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
          return
       end -- not known
-     
+
       local chosen_exit = utils.listbox ("Choose exit to change destination of:", "Exits ...", available )
       if not chosen_exit then
          return
@@ -2325,39 +2323,39 @@ function room_change_exit (room, uid, exit)
    if not exit_destination then
       return
    end -- cancelled
-  
+
    -- look it up
    local dest_room = rooms [exit_destination]
-  
+
    -- not cached - see if in database
    if not dest_room then
       dest_room = load_room_from_database (exit_destination)
       rooms [exit_destination] = dest_room -- cache for later
    end -- not in cache
-  
+
    if not dest_room then
       utils.msgbox ("Room " .. exit_destination .. " does not exist.", "Room does not exist!", "ok", "!", 1)
       return
    end -- if still not there
-   
+
    if exit_destination ~= room.exits[chosen_exit] then
       dbCheckExecute(string.format ([[
          UPDATE exits SET touid = %s WHERE dir = %s AND fromuid = %s;
-         ]], 
+         ]],
          fixsql (exit_destination),
          fixsql (chosen_exit),  -- direction (eg. "n")
          fixsql (uid)  -- from current room
       ))
-         
+
       mapper.mapprint ("Modified exit", chosen_exit, "from room", uid, "to be to room", exit_destination, "in database.")
-     
+
       -- update in-memory table
       rooms [uid].exits [chosen_exit] = exit_destination
       mapper.draw (current_room)
    else
       mapper.mapprint ("Destination unchanged for exit '"..chosen_exit.."'.")
    end
-      
+
 end -- room_change_exit
 
 function room_lock_exit (room, uid, exit)
@@ -2365,16 +2363,16 @@ function room_lock_exit (room, uid, exit)
       uid = current_room
       room = rooms[uid]
    end
-   
+
    if uid == nil then -- still nothing? abort!
       print("No room received from the mud yet. Try using the 'LOOK' command first.")
       return
    end
-   
+
    -- construct available exits list for display
    local available = {}
    for k,v in pairs (room.exits) do
-      available [k] = k .. " --> " .. room.exits [k] 
+      available [k] = k .. " --> " .. room.exits [k]
    end -- for
 
    local chosen_exit = exit
@@ -2383,19 +2381,19 @@ function room_lock_exit (room, uid, exit)
          utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
          return
       end -- not known
-     
+
       chosen_exit = utils.listbox ("Choose exit to lock:", "Exits ...", available )
       if not chosen_exit then
          return
       end -- cancelled
    end
-   
+
    exit_level = tostring(tonumber(utils.inputbox ("Enter level lock for " .. chosen_exit, room.name, room.exit_locks[chosen_exit],nil,nil,{validate=positive_integer_check}))) -- use tonumber to strip off any ".0"
 
    if exit_level == "nil" then
       return
    end -- cancelled
-   
+
    if not rooms [uid].exit_locks then
       rooms [uid].exit_locks = {}
    end
@@ -2403,12 +2401,12 @@ function room_lock_exit (room, uid, exit)
    if exit_level ~= rooms[uid].exit_locks[chosen_exit] then
       dbCheckExecute(string.format ([[
          UPDATE exits SET level = %s WHERE dir = %s AND fromuid = %s;
-         ]], 
+         ]],
          fixsql (exit_level),
          fixsql (chosen_exit), -- direction (eg. "n")
          fixsql (uid) -- from current room
       ))
-         
+
       mapper.mapprint ("Set level lock on exit", available [chosen_exit], "from room", uid, "to be", exit_level, "in database.")
    else
       mapper.mapprint ("Level lock unchanged for exit '"..chosen_exit.."'.")
@@ -2417,7 +2415,7 @@ function room_lock_exit (room, uid, exit)
    -- update in-memory table
    rooms[uid].exit_locks[chosen_exit] = exit_level
    mapper.draw (current_room)
-   
+
 end -- room_lock_exit
 
 function room_click (uid, flags)
@@ -2426,25 +2424,25 @@ function room_click (uid, flags)
    if not uid then
       return nil
    end -- if
-  
+
    -- look it up
    local room = rooms [uid]
-  
+
    -- not cached - see if in database
    if not room then
       room = load_room_from_database (uid)
       rooms [uid] = room -- cache for later
    end -- not in cache
-  
+
    if not room then
       return
    end -- if still not there
-   
+
    local handlers = {}
    table.insert(handlers, { name = "Edit Note", func = room_edit_note})
    table.insert(handlers, { name = "Edit Terrain Colour", func = room_edit_terrain_colour})
    table.insert(handlers, { name = "-", })
-   
+
    table.insert(handlers, { name = ">Change Exit", })
    for ex, to in pairs(room.exits) do
       table.insert(handlers, { name = ex.." -> "..to, func = room_change_exit, param = ex})
@@ -2464,9 +2462,9 @@ function room_click (uid, flags)
       table.insert(handlers, { name = ex.." -> "..to, func = room_delete_exit, param = ex})
    end
    table.insert(handlers, { name = "<", })
-   
+
    table.insert(handlers, { name = "Delete Room", func = room_purgeroom})
-      
+
    rc, a, b, c = CallPlugin("60840c9013c7cc57777ae0ac", "getCurrentState")
    if rc == 0 and a == true then
       if b == 1 then
@@ -2477,7 +2475,7 @@ function room_click (uid, flags)
          table.insert(handlers, {name = "Merge Continent Bigmap Into GMCP Mapper", func = function() Execute("bigmap merge") end })
       end
    end
-      
+
    local t, tf = {}, {}
    for i, v in ipairs(handlers) do
       table.insert (t, v.name)
@@ -2485,18 +2483,18 @@ function room_click (uid, flags)
          table.insert(tf, v)
       end
    end -- for
-      
-   local choice = WindowMenu (mapper.win, 
-                        WindowInfo (mapper.win, 14), 
-                        WindowInfo (mapper.win, 15), 
+
+   local choice = WindowMenu (mapper.win,
+                        WindowInfo (mapper.win, 14),
+                        WindowInfo (mapper.win, 15),
                         "!"..table.concat (t, "|"))
-   
+
    if choice ~= "" then
       local f = tf[tonumber(choice)]
       if f then
          f.func(room, uid, f.param)
       end -- if handler found
-   end                        
+   end
 end -- room_click
 
 auto_backup_count = tonumber(GetVariable("auto_backup_count")) or 0
@@ -2633,7 +2631,7 @@ function backup_databases(manual)
    if not checkDatabaseIntegrity(true) then
       Note("ABORTING CURRENT BACKUP")
       if not compact_mode then Note("") end
-      Repaint()   
+      Repaint()
       db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
       performing_maintenance = false
       satisfy_broadcast_queue()
@@ -2641,7 +2639,7 @@ function backup_databases(manual)
    end
    Note("BACKING UP DATABASE")
    Repaint()
-   
+
    backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
    firstBackup = backupPath..".db.Backup"
    local ffi
@@ -2652,7 +2650,7 @@ function backup_databases(manual)
       bool CopyFileA(const char* lpExistingFileName, const char * lpNewFileName, bool bFailIfExists);
       unsigned long GetLastError(void);
       ]]
-      
+
       succ = ffi.C.CreateDirectoryA(GetInfo(66).."db_backups\\", nil)
       err_no = ffi.C.GetLastError()
    else
@@ -2661,14 +2659,14 @@ function backup_databases(manual)
    if succ == false and err_no ~= 183 and err_no ~= 127 then
       -- error
       ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66).."db_backups\\\n")
-   else 
+   else
       -- successfully created the backup directory
-      
+
       -- record when the backup occurs
       dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("backup_date"), fixsql(os.date("%b %d, %Y - %X"))))
-      
+
       db:close() -- always close the database before copying
-      
+
       -- make new backup
       if use_compression == 1 then
 
@@ -2697,7 +2695,7 @@ function backup_databases(manual)
             end
             success = true
          end
-      else 
+      else
          -- no compression, just copy
          if type(jit) == 'table' then
             succ = ffi.C.CopyFileA(worldPath..".db", firstBackup, false)
@@ -2728,7 +2726,7 @@ function backup_databases(manual)
          end
       end
    end
-   
+
    if success then
       rotate_backups(manual) -- rotate backup folders (obviously)
       Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
@@ -2737,7 +2735,7 @@ function backup_databases(manual)
       CorruptionAlert()
    end
    if not compact_mode then Note("") end
-   db = assert (sqlite3.open(worldPath..".db")) -- re-open database 
+   db = assert (sqlite3.open(worldPath..".db")) -- re-open database
    Repaint()
    performing_maintenance = false
    satisfy_broadcast_queue()
@@ -2769,12 +2767,12 @@ function fix_exits_table_v7()
          level_column_exists = true
       end
    end
-   
+
    local query = [[
    BEGIN TRANSACTION;
-   
+
    ALTER TABLE exits RENAME TO exits_backup;
-   
+
    CREATE TABLE exits (
       dir         TEXT    NOT NULL, -- direction, eg. "n", "s"
       fromuid     TEXT    NOT NULL, -- exit from which room (in rooms table)
@@ -2844,17 +2842,17 @@ function drop_db_columns(db_table, drop_columns, extra_directives)
       query = query..col["name"].." "..col["type"]..(col["notnull"] == 1 and " NOT NULL" or "")..(col["dflt_value"] ~= nil and (" DEFAULT "..col["dflt_value"]) or "")..",\n"
    end
    query = query..extra_directives..");\n"
-   query = query.."INSERT INTO "..db_table.." SELECT "..columns_string.." FROM t1_backup;\n" 
+   query = query.."INSERT INTO "..db_table.." SELECT "..columns_string.." FROM t1_backup;\n"
    query = query.."DROP TABLE t1_backup;\n"
    query = query.."COMMIT;"
-   
+
    dbCheckExecute(query)
 end
 
 function OnPluginInstall ()
    SetVariable("backup_timer_enabled", GetVariable("backup_timer_enabled") or "1")
    last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
-  
+
    SetOption ("tool_tip_visible_time", 10000) -- prolong the tooltip display
 
    configs = {}  -- in case not found
@@ -2868,7 +2866,7 @@ function OnPluginInstall ()
 
    -- get saved configuration
    assert (loadstring (GetVariable ("configs") or "")) ()
-  
+
    -- initialize mapper engine
    mapper.init { findpath = findpath,
       config = configs,            -- colours, timing etc.
@@ -2880,18 +2878,18 @@ function OnPluginInstall ()
       show_other_areas = show_other_areas,  -- want to see areas other than the current one?
       show_up_down = show_up_down,          -- want to follow up/down exits?
       speedwalk_prefix = speedwalk_prefix,  -- how to speedwalk
-   } 
-    
-   -- open databases on disk 
+   }
+
+   -- open databases on disk
    worldPath = GetInfo(66)..sanitize_filename(WorldName())
 
    db = assert (sqlite3.open(worldPath..".db"))
    db:busy_timeout(100)
-      
+
    if not checkDatabaseIntegrity(true) then
       return
    end
-  
+
    dbCheckExecute("PRAGMA journal_mode=WAL;")
 
    for row in dbnrowsWRAPPER("PRAGMA user_version") do
@@ -2929,7 +2927,7 @@ function update_db_schema(db_user_version)
       BroadcastPlugin (999, "repaint")
       -- add bookmarks and terrain tables to the main db since we're
       -- ditching the second db file
-      dbCheckExecute([[  
+      dbCheckExecute([[
       CREATE TABLE IF NOT EXISTS bookmarks (
          id          INTEGER PRIMARY KEY AUTOINCREMENT,
          uid         TEXT    NOT NULL,   -- vnum of room
@@ -2947,7 +2945,7 @@ function update_db_schema(db_user_version)
       ]])
       dbCheckExecute("PRAGMA user_version = 4;")
    end
-   
+
    if db_user_version < 5 then
       print("Updating mapper database schema to v5...")
       BroadcastPlugin (999, "repaint")
@@ -2964,7 +2962,7 @@ function update_db_schema(db_user_version)
       ]])
       dbCheckExecute("PRAGMA user_version = 6;")
    end
-   
+
    if db_user_version < 7 then
       print("Updating mapper database schema to v7...")
       BroadcastPlugin (999, "repaint")
@@ -2988,7 +2986,7 @@ function update_db_schema(db_user_version)
    end
 
    -- I guess we skipped over v8. No big deal.
-   
+
    if db_user_version < 9 then
       print("Updating mapper database schema to v9 (v8 skipped)...")
       BroadcastPlugin (999, "repaint")
@@ -3075,7 +3073,7 @@ function after_update_check()
             fixsql(row.name),row.color))
          end
       end
-      
+
       db_bm:close()
       ok, err = os.remove(worldPath.."_bookmarks.db")
       if not ok then
@@ -3093,18 +3091,18 @@ function after_update_check()
       }
       areas [row.uid] = area
    end   -- finding areas
-  
+
    -- grab all user terrain info
    for row in dbnrowsWRAPPER("SELECT * FROM terrain") do
       user_terrain_colour [row.name] = row.color
    end -- finding terrains
- 
+
    -- grab all environment names
    for row in dbnrowsWRAPPER("SELECT * FROM environments") do
       environments [tonumber (row.uid)] = row.name
       terrain_colours [row.name] = tonumber (row.color)
    end -- finding environments
-  
+
    --~    bounce_recall = {dir="home",uid=21335}
    --~    bounce_portal = {dir="enter",uid=26151}
    for row in dbnrowsWRAPPER("SELECT * FROM storage") do
@@ -3113,27 +3111,8 @@ function after_update_check()
       end
    end
 
-   local bounce_portal_orphaned = (bounce_portal ~= nil)
-   local bounce_recall_orphaned = (bounce_recall ~= nil)
-   if (bounce_portal_orphaned or bounce_recall_orphaned) then
-      for row in dbnrowsWRAPPER(PORTALS_QUERY) do
-         if (bounce_portal_orphaned and (row.dir==bounce_portal.dir)) then
-            bounce_portal_orphaned = false
-         end
-         if (bounce_recall_orphaned and (row.dir==bounce_recall.dir)) then
-            bounce_recall_orphaned = false
-         end
-      end
-      if bounce_portal_orphaned then
-         Note("Detected orphaned bounce portal.")
-         map_bounceportal(nil, nil, {"clear"})
-      end
-      if bounce_recall_orphaned then
-         Note("Detected orphaned bounce recall.")
-         map_bouncerecall(nil, nil, {"clear"})
-      end
-   end
-      
+   check_bounce_consistency()
+
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
@@ -3146,6 +3125,52 @@ function after_update_check()
       OnPluginDisconnect()
    end
 end -- OnPluginInstall
+
+-- check for consistency mistakes with bounce portal/recall flags
+function check_bounce_consistency()
+   local bounce_portal_orphaned = (bounce_portal ~= nil)
+   local bounce_recall_orphaned = (bounce_recall ~= nil)
+   local inconsistent_recall_flag = nil
+   local inconsistent_portal_flag = nil
+   if (bounce_portal_orphaned or bounce_recall_orphaned) then
+      local row_id = 1
+      for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+         if (bounce_portal_orphaned and (row.dir==bounce_portal.dir)) then
+            if (row.fromuid == "*") then
+               bounce_portal_orphaned = false
+            else
+               inconsistent_portal_flag = row_id
+            end
+         end
+         if (bounce_recall_orphaned and (row.dir==bounce_recall.dir)) then
+            if (row.fromuid == "**") then
+               bounce_recall_orphaned = false
+            else
+               inconsistent_recall_flag = row_id
+            end
+         end
+         row_id = row_id+1
+      end
+      if bounce_portal_orphaned then
+         if inconsistent_portal_flag then
+            ColourNote("white", "red", "BOUNCE PORTAL WARNING: Your designated bounce portal #"..inconsistent_portal_flag.." '"..bounce_portal.dir.."' was flagged as a recall, which is inconsistent with correct functioning.")
+         else
+            ColourNote("white", "red", "BOUNCE PORTAL WARNING: Your designated bounce portal '"..bounce_portal.dir.."' did not exist in your mapper portals list.")
+         end
+         ColourNote("white", "red", "BOUNCE PORTAL WARNING: Your mapper bounceportal setting will be cleared. If this is undesired, please correct the aforementioned error and set it again.")
+         map_bounceportal(nil, nil, {"clear"})
+      end
+      if bounce_recall_orphaned then
+         if inconsistent_recall_flag then
+            ColourNote("white", "red", "BOUNCE RECALL WARNING: Your designated bounce recall #"..inconsistent_recall_flag.." '"..bounce_recall.dir.."' was flagged as a non-recall portal, which is inconsistent with correct functioning.")
+         else
+            ColourNote("white", "red", "BOUNCE RECALL WARNING: Your designated bounce recall '"..bounce_recall.dir.."' did not exist in your mapper portals list.")
+         end
+         ColourNote("white", "red", "BOUNCE RECALL WARNING: Your mapper bouncerecall setting will be cleared. If this is undesired, please correct the aforementioned error and set it again.")
+         map_bouncerecall(nil, nil, {"clear"})
+      end
+   end
+end
 
 function OnPluginEnable()
    if not window_hidden then
@@ -3191,34 +3216,34 @@ function OnPluginSaveState ()
    SetVariable("quick_mode", quick_mode and "1" or "0")
    SetVariable("shownotes", shownotes and "1" or "0")
    SetVariable("compact_mode", compact_mode and "1" or "0")
-   
+
    -- close and reopen database
    if db:isopen() then
       db:close()
       db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    end
 end -- OnPluginSaveState
- 
+
 terrain_colours = {}
 
 -- ANSI colours lookup (for terrain_colours)
 colour_lookup = {
-   [0] =   ColourNameToRGB  "black",  
-   [1] =   ColourNameToRGB  "maroon", 
-   [2] =   ColourNameToRGB  "green",  
-   [3] =   ColourNameToRGB  "olive",  
-   [4] =   ColourNameToRGB  "navy",   
-   [5] =   ColourNameToRGB  "purple", 
-   [6] =   ColourNameToRGB  "teal",   
-   [7] =   ColourNameToRGB  "silver", 
-   [8] =   ColourNameToRGB  "gray",   
-   [9] =   ColourNameToRGB  "red",    
-   [10] =  ColourNameToRGB  "lime",   
-   [11] =  ColourNameToRGB  "yellow", 
-   [12] =  ColourNameToRGB  "blue",   
+   [0] =   ColourNameToRGB  "black",
+   [1] =   ColourNameToRGB  "maroon",
+   [2] =   ColourNameToRGB  "green",
+   [3] =   ColourNameToRGB  "olive",
+   [4] =   ColourNameToRGB  "navy",
+   [5] =   ColourNameToRGB  "purple",
+   [6] =   ColourNameToRGB  "teal",
+   [7] =   ColourNameToRGB  "silver",
+   [8] =   ColourNameToRGB  "gray",
+   [9] =   ColourNameToRGB  "red",
+   [10] =  ColourNameToRGB  "lime",
+   [11] =  ColourNameToRGB  "yellow",
+   [12] =  ColourNameToRGB  "blue",
    [13] =  ColourNameToRGB  "magenta",
-   [14] =  ColourNameToRGB  "cyan",   
-   [15] =  ColourNameToRGB  "white",  
+   [14] =  ColourNameToRGB  "cyan",
+   [15] =  ColourNameToRGB  "white",
 } -- end of colour_lookup
 
 running = false
@@ -3256,7 +3281,7 @@ end
 
 function manual_norecall(room_id, norecall)
    local room = load_room_from_database(room_id)
-   if room ~= nil then 
+   if room ~= nil then
       room.norecall = norecall
       save_room_to_database(room_id, room)
       Note("No-recall flag "..(norecall == 1 and "set on" or "removed from").." room "..room_id..".")
@@ -3267,10 +3292,10 @@ end
 
 function manual_noportal(room_id, noportal)
    local room = load_room_from_database(room_id)
-   if room ~= nil then 
+   if room ~= nil then
       room.noportal = noportal
       save_room_to_database(room_id, room)
-      Note("No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".") 
+      Note("No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".")
    else
       Note("NOPORTAL ERROR: Room "..room_id.." is not in the database.")
    end
@@ -3286,10 +3311,10 @@ function ignore_mismatch(room_id, ignore_exits_mismatch)
    end
    if room_id then
       local room = load_room_from_database(room_id)
-      if room ~= nil then 
+      if room ~= nil then
          room.ignore_exits_mismatch = ignore_exits_mismatch
          save_room_to_database(room_id, room)
-         Note("Ignore exits mismatch flag "..(ignore_exits_mismatch and "set on" or "removed from").." room "..room_id..".") 
+         Note("Ignore exits mismatch flag "..(ignore_exits_mismatch and "set on" or "removed from").." room "..room_id..".")
       else
          Note("IGNORE EXITS MISMATCH ERROR: Room "..room_id.." is not in the database.")
       end
@@ -3332,7 +3357,7 @@ function noportal_room()
       flagType = "noportal"
       check_blindness()
    end
-end 
+end
 
 function check_blindness()
    room_at_bounceback = current_room
@@ -3351,15 +3376,15 @@ end
 lastarea = ""
 function got_gmcp_room()
    local room_number = gmcpval("num")
-   if not(room_number) then 
+   if not(room_number) then
       return
    end
-   
+
    if current_room_is_cont ~= (gmcpval("coord.cont") == "1") then
       current_room_is_cont = (gmcpval("coord.cont") == "1")
       mapper.halt_drawing(bigmap_override and current_room_is_cont)
    end
-  
+
    gmcproom = {
       name = strip_colours(gmcpval("name")),
       area = gmcpval("zone"),
@@ -3388,9 +3413,9 @@ function got_gmcp_room()
    if room_number == "-1" then
       room_number = "nomap_"..gmcproom.name.."_"..gmcproom.area
    end
-   
+
    current_room = room_number
-   
+
    local area_exists = false
    for n in dbnrowsWRAPPER (string.format ("SELECT uid FROM areas where uid=%s", fixsql(gmcproom.area))) do
       area_exists = true
@@ -3399,18 +3424,17 @@ function got_gmcp_room()
       last_area_requested = gmcproom.area
       Send_GMCP_Packet("request area")
    end
-   
+
    local room = rooms [room_number]
    -- not cached - see if in database
    if not room then
       room = load_room_from_database (room_number)
    end -- not in cache
-   
+
    local check_compact = ""
    if not compact_mode then check_compact = "\n" end
 
    if shownotes and room and room.notes and room.notes ~= "" then
-      Simulate("") -- work around the annoying Note deferral in callbacks
       AnsiNote(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w"..check_compact))
    end
 
@@ -3428,13 +3452,13 @@ function got_gmcp_room()
                   same_exits == false then
       if same_area then
 --          print("same area")
---          if room then 
+--          if room then
 --             print("ROOM")
---             tprint(room) 
+--             tprint(room)
 --          end
 --          print("GMCPROOM")
 --          tprint(gmcproom)
-         
+
          gmcproom.exits = (room.exits or {})
          gmcproom.exit_locks = (room.exit_locks or {})
          gmcproom.notes = nilToStr(room.notes)
@@ -3443,9 +3467,9 @@ function got_gmcp_room()
       elseif room and nilToStr(room.area) ~= "" and areas[nilToStr(room.area)] then
          -- replacement area
 --         print("different area")
---         if room then 
+--         if room then
 --            print("ROOM")
---            tprint(room) 
+--            tprint(room)
 --         end
 --         print("GMCPROOM")
 --         tprint(gmcproom)
@@ -3468,20 +3492,20 @@ function got_gmcp_room()
          if not same_exits or not same_area then
             save_room_exits(room_number)
          end
-      end     
-      dbCheckExecute("COMMIT;") 
-      
+      end
+      dbCheckExecute("COMMIT;")
+
       if not success then
          return
       end
    end -- if room not there
-  
+
    mapper.draw(room_number)
 
    if expected_exit == "0" and from_room then
       fix_up_exit ()
    end -- exit was wrong
-   
+
    return
 end
 
@@ -3496,7 +3520,7 @@ function update_gmcp_area()
 
    dbCheckExecute (string.format (
       "REPLACE INTO areas (uid, name, texture, color, flags) VALUES (%s, %s, %s, %s, %s);",
-      fixsql (areaid), 
+      fixsql (areaid),
       fixsql (areaname),
       fixsql (texture),
       fixsql (color),
@@ -3515,7 +3539,7 @@ function update_gmcp_area()
    return
 end
 
-function save_room_exits(uid) 
+function save_room_exits(uid)
    if rooms[uid] == nil then
       return
    end
@@ -3523,11 +3547,11 @@ function save_room_exits(uid)
       for dir,touid in pairs(gmcpdata.exits) do
          if dir then
             dbCheckExecute (string.format ([[
-               INSERT OR REPLACE INTO exits (dir, fromuid, touid) 
+               INSERT OR REPLACE INTO exits (dir, fromuid, touid)
                VALUES (%s, %s, %s);
                ]], fixsql  (dir),  -- direction (eg. "n")
                fixsql  (uid),  -- from current room
-               fixsql  (touid) -- destination room 
+               fixsql  (touid) -- destination room
             ))
 
             if show_database_mods then
@@ -3540,7 +3564,7 @@ function save_room_exits(uid)
             rooms[uid].exits[dir] = touid
          else
             mapper.maperror ("Cannot make sense of:", exit)
-         end -- if can decode    
+         end -- if can decode
       end -- for each exit
    end -- have exits.
 end -- save_room_exits
@@ -3554,12 +3578,12 @@ function update_gmcp_sectors()
       ]], v.id, fixsql(v.name), v.color))
    end
    dbCheckExecute("COMMIT;")
-   
+
    for row in dbnrowsWRAPPER("SELECT * FROM environments") do
       environments [tonumber (row.uid)] = row.name
       terrain_colours [row.name] = tonumber (row.color)
    end -- finding environments
-   
+
    mapper.draw (current_room)
 end
 
@@ -3618,14 +3642,14 @@ function OnPluginBroadcast (msg, id, name, text)
             fighting_state = false
          end
       end -- running
-    
+
       if (text == "room.area") then
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.area")
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          update_gmcp_area()
       end
-      
+
       if (text == "room.sectors") then
          res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.sectors")
          luastmt = "gmcp_sectors_list = " .. gmcparg
@@ -3704,7 +3728,7 @@ function map_area (name, line, wildcards)
 
    local rooms = {}
    local count = 0
-   
+
    local key = Trim(wildcards[1])
    local name = "%"..key.."%"
    if string.sub(key,1,1) == "\"" and string.sub(key,-1) == "\"" then
@@ -3745,7 +3769,7 @@ function map_find (name, line, wildcards)
       table.insert(rooms, {uid=row.uid, reason=true})
       count = count + 1
    end   -- finding room
-      
+
    -- see if nearby
    mapper.find (name,
       rooms,  -- function
@@ -3762,13 +3786,13 @@ end -- map_find
 function map_find_special(which_ones, which_area)
    local wanted_items = {}
 
-   for _, v in ipairs (which_ones) do 
-      wanted_items [v:lower ()] = true 
+   for _, v in ipairs (which_ones) do
+      wanted_items [v:lower ()] = true
    end
-            
+
    local rooms = {}
    local count = 0
-  
+
    res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
    luastmt = "gmcpdata = " .. gmcparg
    assert(loadstring (luastmt or "")) ()
@@ -3795,7 +3819,7 @@ function map_find_special(which_ones, which_area)
          local wanted = false
          local t = {}
          for item in string.gmatch (row.info, "[^,]+") do
-            if wanted_items [item:lower ()] then 
+            if wanted_items [item:lower ()] then
                wanted = true
                table.insert (t, capitalize (item))
             end -- if
@@ -3806,7 +3830,7 @@ function map_find_special(which_ones, which_area)
          end -- if
       end -- if
    end   -- finding room
-  
+
    -- find such places
    mapper.find (table.concat(which_ones,","),
       rooms,
@@ -3818,7 +3842,7 @@ function map_find_special(which_ones, which_area)
       true         -- quick list
    )
 end -- map_find_special
-            
+
 function map_shops (name, line, wildcards)
    map_find_special ({ "shop", "bank", }, wildcards[1])
 end -- map_shops
@@ -3839,7 +3863,7 @@ end -- map_healers
 function map_goto (name, line, wildcards)
 
    if not mapper.check_connected() then
-      return 
+      return
    end
    local wanted = string.match(wildcards[1], "^(nomap_.+)$") or tonumber(wildcards [1])
    if not wanted or (type(wanted) == "number" and  wanted < 0) then
@@ -3851,7 +3875,7 @@ function map_goto (name, line, wildcards)
       mapper.mapprint ("You are already in that room.")
       return
    end -- if
-  
+
    -- find desired room
    mapper.find (nil,
       {{uid=wanted, reason=true}},
@@ -3871,17 +3895,17 @@ function map_where (name, line, wildcards)
    end -- if
 
    local wanted = tonumber(wildcards [1])
-  
+
    if not wanted then
       mapper.mapprint ("The mapper where command expects a room id number as input.")
       return
    end
-  
+
    if current_room and wanted == current_room then
       mapper.mapprint ("You are already in that room.")
       return
    end -- if
-  
+
    local paths = {}
    local foundpath = findpath(current_room, wanted)
    if foundpath ~= nil then
@@ -3889,16 +3913,16 @@ function map_where (name, line, wildcards)
    end
 
    local uid, item = next (paths, nil) -- extract first (only) path
-  
+
    -- nothing? room not found
    if not item then
       mapper.mapprint (string.format ("Room %s not found", wanted))
       return
    end -- if
-  
+
    -- turn into speedwalk
    local speedwalk = mapper.build_speedwalk (item.path, speedwalk_prefix)
-  
+
    -- display it
    if speedwalk ~= nil then
       mapper.mapprint (string.format ("Path to %s is:\n%s\n", wanted, speedwalk))
@@ -3910,12 +3934,12 @@ end -- map_where
 function map_resume (name, line, wildcards)
 
    local wanted = tonumber(mapper.last_hyperlink_uid or mapper.last_speedwalk_uid)
-  
+
    if not wanted then
       mapper.print "No outstanding speedwalks or hyperlinks."
       return
    end -- if nothing to do
-   
+
    wanted = tostring(wanted)
    -- find desired room
    mapper.find (nil,
@@ -3959,13 +3983,13 @@ function map_notes (name, line, wildcards)
          mapper.mapprint("Searching all areas")
       end
    end
-   
+
    -- build table of special places (with info in them)
    for row in dbnrowsWRAPPER(q) do
       table.insert(rooms,{uid=row.uid, reason=row.notes})
       count = count + 1
    end   -- finding room
-  
+
    -- find such places
    mapper.find ("[NOTE]",
       rooms,
@@ -4002,23 +4026,23 @@ function findpath(src, dst, noportals, norecalls)
    local ftd = {}
    local f = ""
    local next_room = 0
-  
+
    if type(src) ~= "number" then
       src = string.match(src, "^(nomap_.+)$") or tonumber(src)
    end
    if type(dst) ~= "number" then
       dst = string.match(dst, "^(nomap_.+)$") or tonumber(dst)
    end
-   
+
    if src == dst or src == nil or dst == nil then
       return {}
    end
-   
+
    src = tostring(src)
    dst = tostring(dst)
-   
+
    table.insert(rooms_list, fixsql(dst))
-  
+
    local visited = ""
    local main_status = GetInfo(53)
    while not found and depth < max_depth do
@@ -4030,11 +4054,11 @@ function findpath(src, dst, noportals, norecalls)
          rooms_list = {}
          for k,v in pairs(ftd) do
             table.insert(rooms_list, fixsql(v.fromuid))
-         end -- for from, to, dir      
+         end -- for from, to, dir
       end -- if depth
 
       -- prune the search space
-      if visited ~= "" then 
+      if visited ~= "" then
          visited = visited..","..table.concat(rooms_list, ",")
       else
          if noportals then
@@ -4045,14 +4069,14 @@ function findpath(src, dst, noportals, norecalls)
          end
          visited = visited..table.concat(rooms_list, ",")
       end
-    
+
       -- get all exits to any room in the previous set
       local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc",table.concat(rooms_list,","), visited,mylevel,mylevel+(mytier*10))
       local dcount = 0
       room_sets[depth] = {}
       for row in dbnrowsWRAPPER(q) do
          dcount = dcount + 1
-         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
+         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get
          -- used preferentially to normal ones (1 char)
          room_sets[depth][row.fromuid] = {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
          if row.fromuid == "*" or (row.fromuid == "**" and f ~= "*" and f ~= src) or row.fromuid == src then
@@ -4066,16 +4090,16 @@ function findpath(src, dst, noportals, norecalls)
          return -- there is no path from here to there
       end -- if dcount
    end -- while
-  
+
    if found == false then
       return
    end
-  
+
    -- We've gotten back to the starting room from our destination. Now reconstruct the path.
    local path = {}
    -- set ftd to the first from,to,dir set where from was either our start room or * or **
    ftd = room_sets[found_depth][f]
-   
+
    if (f == "*" and rooms[src].noportal == 1) or (f == "**" and rooms[src].norecall == 1) then
       if rooms[src].norecall ~= 1 and bounce_recall ~= nil then
          table.insert(path, bounce_recall)
@@ -4136,7 +4160,7 @@ function findNearestJumpRoom(src, dst, target_type)
    local visited = ""
    local path_type = ""
 
-   table.insert(rooms_list, fixsql(src))  
+   table.insert(rooms_list, fixsql(src))
    local main_status = GetInfo(53)
    while not found and depth < max_depth do
       SetStatus(main_status.." (searching jump depth "..depth..")")
@@ -4144,12 +4168,12 @@ function findNearestJumpRoom(src, dst, target_type)
       depth = depth + 1
 
       -- prune the search space
-      if visited ~= "" then 
+      if visited ~= "" then
          visited = visited..","..table.concat(rooms_list, ",")
       else
          visited = table.concat(rooms_list, ",")
       end
-    
+
       -- get all exits to any room in the previous set
       local q = string.format ("select fromuid, touid, dir, norecall, noportal from exits,rooms where rooms.uid = exits.touid and exits.fromuid in (%s) and exits.touid not in (%s) and exits.level <= %s order by length(exits.dir) asc",
                   table.concat(rooms_list,","), visited, mylevel)
@@ -4157,7 +4181,7 @@ function findNearestJumpRoom(src, dst, target_type)
       for row in dbnrowsWRAPPER(q) do
          dcount = dcount + 1
          table.insert(rooms_list, fixsql(row.touid))
-         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get 
+         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get
          -- used preferentially to normal ones (1 char)
          if ((bounce_portal ~= nil or target_type == "*") and row.noportal ~= 1) or ((bounce_recall ~= nil or target_type == "**") and row.norecall ~= 1) or row.touid == dst then
             path_type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
@@ -4175,7 +4199,7 @@ function findNearestJumpRoom(src, dst, target_type)
          return -- there is no path to a portalable or recallable room
       end -- if dcount
    end -- while
-   
+
    if found == false then
       return
    end
@@ -4205,7 +4229,7 @@ directions = {
    u=true,
    d=true
 }
-  
+
 -- try to detect when we send a movement command
 function OnPluginSent (sText)
    if valid_direction [sText] then
@@ -4216,7 +4240,7 @@ function OnPluginSent (sText)
             from_room = current_room
          end -- if
       end -- if
-   end -- if 
+   end -- if
 end -- function
 
 function toggleBackups(on, quiet)
@@ -4375,7 +4399,7 @@ set all portal aspects in one command without being in the target room.]],
                                  > wants to recall or home from a
                                  > portal-friendly norecall room. For this to
                                  > work properly you must indicate which mapper
-                                 > portals use recall or home with the 
+                                 > portals use recall or home with the
                                  > portalrecall command listed above.
                                  > Find the indices with 'mapper portals']],
 [[mapper bouncerecall <index>    --> Specifies which home/recall mapper portal to
@@ -4441,7 +4465,7 @@ set all portal aspects in one command without being in the target room.]],
    ['moving'] = {
 ['header'] = [[===== MOVING ====================>]],
 [[mapper goto <room id>          --> Run to a room by its room number]],
-[[mapper walkto <room id>        --> Run to a room by its room number without 
+[[mapper walkto <room id>        --> Run to a room by its room number without
                                  > using any mapper portals]],
 [[mapper resume                  --> Initiate a new run to the previous target]]
 }
@@ -4487,7 +4511,7 @@ set all portal aspects in one command without being in the target room.]],
       elseif wildcards[2]:find("search ") == 1 then
          local st, en = wildcards[2]:find("search ")
          local pattern = Trim(wildcards[2]:sub(en+1))
-         ColourTell("cornflower","black","Searching help for: ")         
+         ColourTell("cornflower","black","Searching help for: ")
          ColourNote("red","black",pattern)
          if pattern ~= "" then
             for k,v in pairs(help_table) do
@@ -4529,12 +4553,9 @@ set all portal aspects in one command without being in the target room.]],
    print("")
 end
 
-require "checkplugin"
 function OnPluginListChanged ()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-end -- OnPluginListChanged
+   dofile "lua/aard_requirements.lua"
+end
 
 function nilToStr(n)
    return (((n ~= nil) and tostring(n)) or "")

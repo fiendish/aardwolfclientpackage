@@ -70,18 +70,18 @@ and made more awesomer.
 </aliases>
 
 <triggers>
-   
+
 <trigger
    enabled="y"
    match="<MAPSTART>"
    script="map_redirect"
    omit_from_output="y"
    name="map_start"
-   sequence="100"   
+   sequence="100"
    send_to="12"
 ><send>StopEvaluatingTriggers(true)</send>
 </trigger>
-  
+
 <trigger
    enabled="n"
    match="*"
@@ -92,7 +92,7 @@ and made more awesomer.
    send_to="12"
 ><send>StopEvaluatingTriggers(true)</send>
 </trigger>
-  
+
 <trigger
    enabled="y"
    match="<MAPEND>"
@@ -102,7 +102,7 @@ and made more awesomer.
    sequence="5"
    send_to="12"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
-  
+
 <trigger
    enabled="y"
    match="You open *."
@@ -110,7 +110,7 @@ and made more awesomer.
    script="request_new_map"
    group="room_change"
 ></trigger>
-  
+
 <trigger
    enabled="y"
    match="You close *."
@@ -126,7 +126,7 @@ and made more awesomer.
    script="request_new_map"
    group="room_change"
 ></trigger>
-  
+
 <trigger
    enabled="y"
    match="* closes*."
@@ -134,7 +134,7 @@ and made more awesomer.
    script="request_new_map"
    group="room_change"
 ></trigger>
-  
+
 <trigger
    enabled="y"
    match="You can now sense anger in your immediate area."
@@ -147,7 +147,7 @@ and made more awesomer.
    enabled="y"
    match="{rdesc}"
    omit_from_output="y"
-   sequence="100"   
+   sequence="100"
    send_to="12"
 ><send>EnableTriggerGroup("room_change", false)</send>
 </trigger>
@@ -156,7 +156,7 @@ and made more awesomer.
    enabled="y"
    match="{/rdesc}"
    omit_from_output="y"
-   sequence="100"   
+   sequence="100"
    send_to="12"
 ><send>EnableTriggerGroup("room_change", true)</send>
 </trigger>
@@ -183,16 +183,16 @@ map_lines = {}
 coord_data= {}
 show_coords = 0
 
-                                                
+
 --title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
 TITLE_HEIGHT    = 0
 
 -- Variables not saved.
-startx           = ""  
+startx           = ""
 starty           = ""
-posx             = "" 
+posx             = ""
 posy             = ""
 hotspot_id       = ""
 page_built       = false
@@ -308,7 +308,7 @@ end
 
 function SetUpHotspotsAndDraw(firstTime)
    if (firstTime == true) then
-      check (WindowCreate (win, 
+      check (WindowCreate (win,
          windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
          width,   -- width
          height,  -- height
@@ -349,7 +349,7 @@ function DisplayMapPage()
       WindowGradient (win, 2, 2, -2, TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
       WindowLine(win,0,TITLE_HEIGHT,width,TITLE_HEIGHT,0xeeeeee,0,1)
    end
-   
+
    -- show the widget for the legend popup
    WindowRectOp(win, 2, 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5,0x303030,0x0000ff) -- fill
    WindowRectOp(win, 1, 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5,0x777777,0x0000ff) -- border
@@ -370,7 +370,7 @@ function DisplayMapPage()
       line = line+font_height+5
       txt = "Right-click here to pick another."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)  
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
    elseif not page_built then
       line = -font_height-5
       txt = "Map will appear here"
@@ -387,7 +387,7 @@ function DisplayMapPage()
             Display_Line (i, line)
          end
       end -- for
-                
+
       -- tack on coordinates after the map displays
       if (show_coords == 1 and coords ~= nil) then
          Display_Line (#map_lines+show_exits, coords)
@@ -412,7 +412,7 @@ function DisplayMapPage()
    WindowShow (win, true)
    --Redraw()
    BroadcastPlugin (999, "repaint")
-                 
+
 end -- Display_Map
 
 function process_coords ()
@@ -450,7 +450,7 @@ function process_coords ()
    style.len = #style.text
    style.textcolour = 0x00D600
    style.style = 0
-   table.insert (tstyle, style)  
+   table.insert (tstyle, style)
    coords = tstyle
 end
 
@@ -558,16 +558,14 @@ function OnPluginBroadcast (msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == 'reload') then
          -- invalidate current data
-         page_built = false 
+         page_built = false
          return
       end
 
       if (text == "room.info") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
-         coord_data = gmcpdata.coord
-         roomnum = gmcpdata.num
+         room_info = gmcp("room.info")
+         coord_data = room_info.coord
+         roomnum = room_info.num
          if (show_coords == 1) then
             process_coords()
          end
@@ -578,7 +576,7 @@ function OnPluginBroadcast (msg, id, name, text)
          request_new_map()
       elseif (text == "char.vitals") then
          -- the mud doesn't send a map update when you die (part1)
-         myhp = gmcp("char.vitals.hp")
+         myhp = tonumber(gmcp("char.vitals.hp"))
          if myhp == 1 then
             if char_state == 11 and not died then
                died = true
@@ -588,7 +586,7 @@ function OnPluginBroadcast (msg, id, name, text)
             died = false
          end
       elseif (text == "char.status") then
-         char_state = gmcp("char.status.state")
+         char_state = tonumber(gmcp("char.status.state"))
          can_request_map = (char_state == 3 or char_state == 11)
          if char_state == 11 and myhp == 1 and not died then
             -- the mud doesn't send a map update when you die (part2)
@@ -626,7 +624,7 @@ function ResizeMoveCallback()
    elseif (windowinfo.window_left+width > GetInfo(281)) then
       width = GetInfo(281)-windowinfo.window_left
       startx = GetInfo(281)
-   end 
+   end
 
    height = height + posy - starty
    starty = posy
@@ -669,7 +667,7 @@ function MouseOver (flags, hotspotid)
    local left =  WindowInfo (win, 10)
    local top =  WindowInfo (win, 11)
 
-   -- what to say - one line per table entry, with imbedded colour codes  
+   -- what to say - one line per table entry, with imbedded colour codes
    info = {
       "@WMap Legend:@w",
       "",
@@ -686,7 +684,7 @@ function MouseOver (flags, hotspotid)
       " @G[@W?@G]@w - Clan public hall exit     @RD@w  - Donation room",
       "",
       "@WMajor Terrains:@w",
-      "",     
+      "",
       " [ ]   Inside                   . .   City",
       " @g, `@w   Field                    @G; ;@w   Hills",
       " @y/ \\@w   Mountain                 @B~ ~@w   Water",
@@ -698,9 +696,9 @@ function MouseOver (flags, hotspotid)
       " @R/ \\@w   Volcano                  @b% %@w   Cave",
       " # #   Dungeon                  @g( *@w   Forest",
    }
-                
+
    heading = ""
-  
+
    if windowinfo.window_left < 300 then
       align_left = true
       align_right = false
@@ -714,7 +712,7 @@ function MouseOver (flags, hotspotid)
    align_bottom = false
    capitalize = true
 
-   -- show it  
+   -- show it
    mw.popup (infowin,           -- window name to use
          heading_font_id,   -- font to use for the heading
          popup_font_id,           -- font to use for each line
@@ -726,7 +724,7 @@ function MouseOver (flags, hotspotid)
          capitalize,        -- if true, force the first letter to upper case
          align_right,       -- if true, align right side on "Left" parameter
          align_bottom)      -- if true, align bottom side on "Top" parameter
-         
+
 end -- mouseover
 
 function CancelMouseOver (flags, hotspotid)
@@ -763,7 +761,7 @@ function OnPluginConnect()
    TelnetOptionOn(TELOPT_ROOM_NAMES)
    TelnetOptionOn(TELOPT_EXIT_NAMES)
    TelnetOptionOn(TELOPT_ROOMDESC_TAGS)
-   TelnetOptionOff(TELOPT_QUIET)
+   Send_GMCP_Packet("tags on")
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
    Send_GMCP_Packet("maptype "..maptype)
    Send_GMCP_Packet("request char")
@@ -773,9 +771,9 @@ end
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
-   movewindow.save_state (win)   -- save window current location for next time  
+   movewindow.save_state (win)   -- save window current location for next time
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   SetVariable ("title_colour", title_colour)  
+   SetVariable ("title_colour", title_colour)
    SetVariable ("width", width)
    SetVariable ("height", height)
    SetVariable ("showcoords", show_coords)
@@ -814,12 +812,9 @@ function OnPluginEnable ()
 end -- OnPluginEnable
 
 win = GetPluginID()
-require "checkplugin"
 function OnPluginListChanged ()
-   do_plugin_check_now ("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- check we have the repaint buffer plugin
-   do_plugin_check_now ("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- check we have GMCP plugin
-   do_plugin_check_now ("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- check we have z order plugin
-end -- OnPluginListChanged
+   dofile "lua/aard_requirements.lua"
+end
 
 function setDefaultFont()
    local fonts = utils.getfontfamilies ()
@@ -855,7 +850,7 @@ function OnPluginInstall(skip_requests)
    also_echo_map = tonumber (GetVariable("also_echo_map")) or 0
 
    -- make window so I can grab the font info
-   WindowCreate (win, 1, 1, width, height, 0, 0, background_colour) 
+   WindowCreate (win, 1, 1, width, height, 0, 0, background_colour)
 
    font_id        = "mapper_font"
    font_id_bold   = "mapper_bold"
@@ -886,25 +881,25 @@ function OnPluginInstall(skip_requests)
    SetUpHotspotsAndDraw(true)
 
    -- Info (Legend) window
-  
+
    -- our window frame/background colours
    border_colour = ColourNameToRGB "dimgray"
-  
+
    -- a unique ID
    infowin = "~~~~~~"..GetPluginID () .. ":info" -- name hack to make the popup go on top of everything
 
    -- font IDs
-   popup_font_id = "popup_font"  
+   popup_font_id = "popup_font"
    heading_font_id = "popup_heading_font"
- 
+
    -- load fonts - mouseover window
    WindowCreate (infowin, 0, 0, 1, 1, 0, 0, 0)   -- make 1-pixel wide window
    WindowSetZOrder(infowin, 99999)
-   
+
    -- install the fonts  (49 is modern / fixed pitch)
-   WindowFont (infowin, popup_font_id, font_name, font_size, false, false, false, false, 0, 49) 
+   WindowFont (infowin, popup_font_id, font_name, font_size, false, false, false, false, 0, 49)
    WindowFont (infowin, heading_font_id, font_name, font_size + 2, false, false, false, false, 0, 49)
-   
+
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")

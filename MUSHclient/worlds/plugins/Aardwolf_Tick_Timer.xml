@@ -48,7 +48,7 @@ function OnPluginInstall ()
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
       check (EnablePlugin(GetPluginID (), false))
       return
-   end -- they didn't enable us last time  
+   end -- they didn't enable us last time
 end -- OnPluginInstall
 
 -- pull in telnet option handling
@@ -57,7 +57,7 @@ dofile (GetPluginInfo (GetPluginID (), 20) .. "telnet_options.lua")
 function OnPluginDisable ()
    OnPluginSaveState()
 end -- OnPluginSaveState
-  
+
 function OnPluginEnable ()
    OnPluginSaveState()
 end

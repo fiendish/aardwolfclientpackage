@@ -27,7 +27,7 @@ function OnPluginBroadcast (msg, id, name, text)
    if (msg == 999 and text == "repaint") then
       repaint_on_tick = true
       if (utils.timer() - last_repaint_time > .1) then
-         repaint_on_tick = false        
+         repaint_on_tick = false
          Repaint()
          last_repaint_time = utils.timer()
       end
@@ -37,7 +37,7 @@ end
 -- if ticks are coming through, then we have enough time to repaint again
 function OnPluginTick()
    if repaint_on_tick == true then
-      repaint_on_tick = false        
+      repaint_on_tick = false
       Repaint()
       last_repaint_time = utils.timer()
    end
