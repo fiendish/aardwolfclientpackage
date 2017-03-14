@@ -1024,7 +1024,7 @@ function TextareaMoveCallback(flags, hotspot_id)
             end -- if should show highlight
 
             -- store selected area for later
-            copied_part = StylesToColours(lines[copy_line][1], startpos, endpos)
+            copied_part = StylesToColours(TruncateStyles(lines[copy_line][1], startpos, endpos))
             if copy_line ~= copy_end_line and copy_line ~= #lines and lines[copy_line+1][2] == true then
                -- only put a line break if the next line is from a different message
                copied_part = copied_part.."@w\n"
