@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r1900 snapshot:
+r1900 snapshot
 - bug fix: Copying selected text in the communication log was not truncating the text properly.
 - bug fix: The group window was erroring on send to back, and other related functions.
 - bug fix: The communication log window was not capturing unechoed infos.
