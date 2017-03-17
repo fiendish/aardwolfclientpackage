@@ -12,9 +12,10 @@
    requires="4.75"
    version="1.0"
    save_state="y"
-   sequence="-9000"
+   sequence="-8999"
 >
-
+<!-- sequence must be before 0 to not double trigger world triggers -->
+<!-- sequence must be after channels plugin to capture unechoed info -->
 <description trim="y">
 USAGE:
 
