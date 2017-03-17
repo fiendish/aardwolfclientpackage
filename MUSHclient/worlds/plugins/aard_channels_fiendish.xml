@@ -15,9 +15,9 @@
    requires="4.73"
    version="2.0"
    save_state="y"
-   sequence="-5000"
+   sequence="-9000"
 >
-
+<!-- sequence must be before echo plugin to capture unechoed info -->
 <description trim="y">
 USAGE:
 
