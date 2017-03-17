@@ -736,8 +736,7 @@ end
 function leaveGroup ()
    invitations = {}
    group_built = false
-   full_group_data = {}
-   group_data = {}
+   full_group_data = nil
    SetUpHotspotsAndDraw(true)
 end
 
