@@ -32,7 +32,7 @@ AUTOMATIC MAPPER by Fiendish
 ** This is a very improved GMCP version of the original ATCP mapper by Nick Gammon.
 ** Some GMCP specific code added by Lasher.
 ** A few features contributed by Spartacus.
-** Many major improvements made to Nick's original design by Fiendish.
+** Many major improvements made to the original design by Fiendish.
 
 The window can be dragged to a new location by dragging the room name.
 LH-click on a room to speedwalk to it. RH-click on a room for options.
@@ -2863,6 +2863,10 @@ end
 
 function OnPluginInstall ()
    SetVariable("backup_timer_enabled", GetVariable("backup_timer_enabled") or "1")
+   if GetVariable("backup_timer_enabled") ~= "1" then
+      toggleBackups(false, true)
+   end
+
    last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
 
    SetOption ("tool_tip_visible_time", 10000) -- prolong the tooltip display
