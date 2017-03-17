@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1900 snapshot:
+- bug fix: Copying selected text in the communication log was not truncating the text properly.
+- bug fix: The group window was erroring on send to back, and other related functions.
+- bug fix: The communication log window was not capturing unechoed infos.
+- bug fix: Multiline triggers will now work in conjunction with the text substitution plugin.
+- bug fix: The GMCP mapper backups were not staying disabled if you disabled them.
+
 r1899 snapshot
 - new feature: The GMCP mapper has an option now to toggle off/on underlining of the hyperlinks.
 - bug fix: Beep on pages when chat echo is off.
