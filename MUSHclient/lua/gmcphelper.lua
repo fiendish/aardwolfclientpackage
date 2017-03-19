@@ -36,6 +36,23 @@ end -- Send_GMCP_Packet
 
 
 ---------------------------------------------------------------------------------------------------
+-- FUNCTION:: gmcp
+--   Returns, in DWIM manner, the GMCP data from matching category.
+--   Examples: gmcp("room"), gmcp("char.base.tier")
+---------------------------------------------------------------------------------------------------
+function gmcp(what)
+	result, value = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval", what)
+	if result ~= 0 then
+		ColourNote ("orange", "", "Warning: Could not get GMCP value for " .. what)
+		return nil
+	else
+		local luastmt = "ret = " .. value
+		assert (loadstring (luastmt or "")) ()
+		return ret
+	end -- if
+end -- gmcp
+
+---------------------------------------------------------------------------------------------------
 -- FUNCTION:: get_gmcp
 --   Reverse of parse_gmcp - takes a value like "room.info.exits.n" and checks each level for
 --   the next table and then for the actual value.
