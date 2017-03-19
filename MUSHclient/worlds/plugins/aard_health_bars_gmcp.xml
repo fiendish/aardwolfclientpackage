@@ -415,12 +415,12 @@ function right_click_menu ()
          end
       elseif numResult >= 5 and numResult <= 10 then
          -- activate/de-activate
-         showBar[barIndex[numResult-3]][2] = not showBar[barIndex[numResult-3]][2]
+         showBar[barIndex[numResult-4]][2] = not showBar[barIndex[numResult-4]][2]
       elseif numResult >= 11 and numResult <= 22 then
          -- change colors
-         local colourIndex = 4
+         local colourIndex = 5
          if (numResult % 2 == 1) then
-            colourIndex = 5
+            colourIndex = 4
          end
          local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex])
          if newcolour ~= -1 then
