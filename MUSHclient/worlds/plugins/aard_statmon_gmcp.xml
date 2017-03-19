@@ -462,17 +462,28 @@ function Print()
 
    -- draw edge frame.
    WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   if flat_theme == 1 then
+      --WindowRectOp (win, 1, 1, 1, -1, -1, 0x444444, 15)
+   else
+      WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   end
 
    -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+   if flat_theme == 1 then
+      resize_color_1 = 0x303030
+      resize_color_2 = 0x1c1c1c
+   else
+      resize_color_1 = 0xffffff
+      resize_color_2 = 0x696969
+   end
+   WindowLine(win, width-3, height-2, width-2, height-3, resize_color_1, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, resize_color_2, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, resize_color_1, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, resize_color_2, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, resize_color_1, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, resize_color_2, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, resize_color_1, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, resize_color_2, 0, 1)
 
    BroadcastPlugin (999, "repaint")
 end
@@ -498,7 +509,7 @@ function right_click_menu ()
       colorstring = colorstring..">"..v.."|"..v.." Label ("..RGBColourToName(label_colors[v])..")|"..v.." Data ("..RGBColourToName(data_colors[v])..")|<|"
    end
 
-   menustring = "Flip Orientation|Change Font|>Colors|"..colorstring.."<|"..(commas_in_gold and "+" or "").."Commas in Gold|-|Bring To Front|Send To Back|-|Reset Defaults"
+   menustring = "Flip Orientation|Change Font|"..((flat_theme==1 and "+") or "").."Flat Theme|>Colors|"..colorstring.."<|"..(commas_in_gold and "+" or "").."Commas in Gold|-|Bring To Front|Send To Back|-|Reset Defaults"
 
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
@@ -546,6 +557,19 @@ function right_click_menu ()
             SetUpHotspotsAndDraw()
          end
       end
+   elseif result == "Flat Theme" then
+      if flat_theme == 0 then
+         ColourNote ("yellow", "", "Flat Theme for status monitor is ENABLED.")
+         background_colour = 0x1c1c1c
+         border_colour = 0x303030
+      else  
+         ColourNote ("yellow", "", "Flat Theme for status monitor is DISABLED.")
+         background_colour = 0x000000 
+         border_colour = 0xcccccc 
+      end
+      flat_theme = (((0 == flat_theme) and 1) or 0)
+      SetVariable("flat_theme", flat_theme)
+      OnPluginInstall()
    elseif string.find(result,"Label") then
       local item = string.sub(result,1,string.find(result,"Label")-2)
       if item == "All" then
@@ -608,6 +632,7 @@ function right_click_menu ()
       font_size        = default_font_size
       height           = default_height
       width            = default_width
+      flat_theme       = 0
       stacked = 0
       label_colors = copytable.deep(label_color_defaults)
       data_colors = copytable.deep(data_color_defaults)
@@ -730,6 +755,7 @@ function OnPluginSaveState ()
    SetVariable ("height", height)
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
+   SetVariable ("flat_theme", flat_theme)
    SetVariable ("stacked", stacked)
    SetVariable ("commas_in_gold", commas_in_gold and 1 or 0)
    SetVariable ("label_colors", serialize.save("label_colors"))
@@ -788,6 +814,7 @@ function OnPluginInstall()
    commas_in_gold = tonumber(GetVariable("commas_in_gold")) == 1
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
+   flat_theme = tonumber(GetVariable("flat_theme")) or 0
 
    --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
@@ -800,7 +827,7 @@ function OnPluginInstall()
    max_height = (line_height*(((stacked == 1) and 12) or 23))+(TOP_MARGIN+1)
 
    --- Pull some state variables.
-   background_colour = tonumber (GetVariable ("background_colour")) or background_colour
+   --background_colour = tonumber (GetVariable ("background_colour")) or background_colour
    height = tonumber (GetVariable ("height")) or default_height
    orig_height = height
    width = tonumber (GetVariable ("width")) or default_width

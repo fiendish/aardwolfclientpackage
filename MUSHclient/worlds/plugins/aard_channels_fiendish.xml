@@ -142,14 +142,25 @@ height = tonumber(GetVariable("WINDOW_HEIGHT")) or default_height
 log_to_file = tonumber(GetVariable("log_to_file")) or 0
 log_colour_codes = tonumber(GetVariable("log_colour_codes")) or 1
 log_timestamps = tonumber(GetVariable("log_timestamps")) or 1
+flat_theme = tonumber(GetVariable("flat_theme")) or 0
 
 -- colours
-WINDOW_BACKGROUND_COLOUR = GetNormalColour(1)
+if flat_theme == 1 then
+   WINDOW_BACKGROUND_COLOUR = 0x1c1c1c
+   WINDOW_BORDER_COLOUR = 0x303030
+   SCROLL_BACKGROUND_COLOUR = 0x1c1c1c
+   SCROLL_BAR_COLOUR = 0x303030
+   SCROLL_DETAIL_COLOUR = 0x111111
+else
+   WINDOW_BACKGROUND_COLOUR = GetNormalColour(1)
+   WINDOW_BORDER_COLOUR = 0xE8E8E8
+   SCROLL_BACKGROUND_COLOUR = 0xE8E8E8
+   SCROLL_BAR_COLOUR = 0x111111
+   SCROLL_DETAIL_COLOUR = 0x000000
+end
+
 WINDOW_TEXT_COLOUR = 0xffffff
-SCROLL_BACKGROUND_COLOUR = 0xE8E8E8
-SCROLL_BAR_COLOUR = 0x111111
-SCROLL_DETAIL_COLOUR = 0x000000
-WINDOW_BORDER_COLOUR = 0xE8E8E8
+
 
 -- offset of text from edge
 TEXT_INSET = 5
@@ -171,6 +182,7 @@ windowinfo = ""
 startx = ""
 starty = ""
 
+
 show_donations = tonumber(GetVariable("show_donations")) or 1
 info_on = tonumber(GetVariable("info_on")) or 0
 global_quest_on = tonumber(GetVariable("global_quest_on")) or 0
@@ -188,6 +200,7 @@ function reset_aard()
    height = default_height
    font_name = default_font_name
    font_size = default_font_size
+   flat_theme = 0
    windowinfo.window_left = default_x
    windowinfo.window_top = default_y
    WindowPosition(win, default_x, default_y, 0, 18)
@@ -335,23 +348,40 @@ function init (firstTime)
 
    -- title rectangle
    header_width = WindowTextWidth(win, win_head_font, "Communication Log")
-   WindowGradient(win, 1, 0, width, TITLE_HEIGHT, WINDOW_BACKGROUND_COLOUR, 0x444444, 2)
+   if flat_theme == 1 then
+      WindowGradient(win, 2, 2, -2, TITLE_HEIGHT, 0x444444, 0x444444, 2)
+   else
+      WindowGradient(win, 1, 0, width, TITLE_HEIGHT, WINDOW_BACKGROUND_COLOUR, 0x444444, 2)
+      WindowLine(win, 0, TITLE_HEIGHT-1, width, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
+   end
    WindowText(win, win_head_font, "Communication Log", (width-header_width)/2, ((TITLE_HEIGHT-header_font_height)/2)-1, width, TITLE_HEIGHT, 0xEEEEEE, false)
-   WindowLine(win, 0, TITLE_HEIGHT-1, width, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
-
+   
    -- resize tag
-   WindowRectOp(win, 2, width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR) -- resizer background
-   WindowLine(win, width-SCROLL_BAR_WIDTH+1, height-2, width-2, height-SCROLL_BAR_WIDTH+1, 0xffffff, 0, 2)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+2, height-2, width-2, height-SCROLL_BAR_WIDTH+2, 0x696969, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+4, height-2, width-2, height-SCROLL_BAR_WIDTH+4, 0xffffff, 0, 2)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+5, height-2, width-2, height-SCROLL_BAR_WIDTH+5, 0x696969, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+7, height-2, width-2, height-SCROLL_BAR_WIDTH+7, 0xffffff, 0, 2)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+8, height-2, width-2, height-SCROLL_BAR_WIDTH+8, 0x696969, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+10, height-2, width-2, height-SCROLL_BAR_WIDTH+10, 0xffffff, 0, 2)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+11, height-2, width-2, height-SCROLL_BAR_WIDTH+11, 0x696969, 0, 1)
+   if flat_theme == 1 then
+      resize_color_1 = 0x303030
+      resize_color_2 = 0x1c1c1c
+   else
+      resize_color_1 = 0xffffff
+      resize_color_2 = 0x696969
+   end
+   WindowRectOp(win, 2, width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, 0, 0, 0x1c1c1c) -- resizer background
+   WindowLine(win, width-SCROLL_BAR_WIDTH+1, height-2, width-2, height-SCROLL_BAR_WIDTH+1, resize_color_1, 0, 2)
+   WindowLine(win, width-SCROLL_BAR_WIDTH+2, height-2, width-2, height-SCROLL_BAR_WIDTH+2, resize_color_2, 0, 1)
+   WindowLine(win, width-SCROLL_BAR_WIDTH+4, height-2, width-2, height-SCROLL_BAR_WIDTH+4, resize_color_1, 0, 2)
+   WindowLine(win, width-SCROLL_BAR_WIDTH+5, height-2, width-2, height-SCROLL_BAR_WIDTH+5, resize_color_2, 0, 1)
+   WindowLine(win, width-SCROLL_BAR_WIDTH+7, height-2, width-2, height-SCROLL_BAR_WIDTH+7, resize_color_1, 0, 2)
+   WindowLine(win, width-SCROLL_BAR_WIDTH+8, height-2, width-2, height-SCROLL_BAR_WIDTH+8, resize_color_2, 0, 1)
+   WindowLine(win, width-SCROLL_BAR_WIDTH+10, height-2, width-2, height-SCROLL_BAR_WIDTH+10, resize_color_1, 0, 2)
+   WindowLine(win, width-SCROLL_BAR_WIDTH+11, height-2, width-2, height-SCROLL_BAR_WIDTH+11, resize_color_2, 0, 1)
 
    -- draw border
-   WindowRectOp(win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
+   if flat_theme == 1 then
+      WindowRectOp (win, 1, 0, 0, 0, 0, 0x303030, 15)
+      WindowRectOp (win, 1, 1, 1, -1, -1, 0x444444, 15)
+   else
+      WindowRectOp(win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
+      WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   end 
 
    drawStuff()
 end
@@ -385,6 +415,7 @@ function OnPluginSaveState()
 
    SetVariable("font_name", font_name)
    SetVariable("font_size", font_size)
+   SetVariable("flat_theme", flat_theme)
    SetVariable("date_format", date_format)
    SetVariable("WINDOW_WIDTH", width)
    SetVariable("WINDOW_HEIGHT", height)
@@ -491,7 +522,11 @@ function drawStuff ()
 
    if (keepscrolling == "up") then
       -- draw top scroll button pressed
-      WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 10,  15 + 0x800) -- up arrow pushed
+      if flat_theme == 1 then
+         WindowRectOp(win, 4, (width-SCROLL_BAR_WIDTH), TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 0x444444, 0x666666) -- up arrow pushed
+      else
+         WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), TITLE_HEIGHT, 0, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 10, 15 + 0x800) -- up arrow pushed
+      end
       points = string.format("%i,%i,%i,%i,%i,%i", (width-SCROLL_BAR_WIDTH)+3, TITLE_HEIGHT+9,(width-SCROLL_BAR_WIDTH)+7, TITLE_HEIGHT+5,(width-SCROLL_BAR_WIDTH)+11, TITLE_HEIGHT+9)
       WindowPolygon(win, points,
          0x000000, 0, 1, -- pen (solid, width 1)
@@ -500,7 +535,11 @@ function drawStuff ()
          false) -- alt fill
    else
       -- draw top scroll button unpressed
-      WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), TITLE_HEIGHT, width, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 5, 15 + 0x800)
+      if flat_theme == 1 then
+         WindowRectOp(win, 4, (width-SCROLL_BAR_WIDTH), TITLE_HEIGHT, width, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 0x303030 , 0x444444)
+      else
+         WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), TITLE_HEIGHT, width, TITLE_HEIGHT+SCROLL_BAR_WIDTH, 5, 15 + 0x800)
+      end
       points = string.format("%i,%i,%i,%i,%i,%i", (width-SCROLL_BAR_WIDTH)+3, TITLE_HEIGHT+9,(width-SCROLL_BAR_WIDTH)+7, TITLE_HEIGHT+5,(width-SCROLL_BAR_WIDTH)+11, TITLE_HEIGHT+9)
       WindowPolygon(win, points,
          0x000000, 0, 1,   -- pen (solid, width 1)
@@ -511,7 +550,11 @@ function drawStuff ()
 
    if (keepscrolling == "down") then
       -- draw bottom scroll button pressed
-      WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), height-(SCROLL_BAR_WIDTH*2), 0, height-SCROLL_BAR_WIDTH-1, 10,  15 + 0x800)
+      if flat_theme == 1 then
+         WindowRectOp(win, 4, (width-SCROLL_BAR_WIDTH), height-(SCROLL_BAR_WIDTH*2), 0, height-SCROLL_BAR_WIDTH-1, 0x444444,  0x666666)
+      else
+         WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), height-(SCROLL_BAR_WIDTH*2), 0, height-SCROLL_BAR_WIDTH-1, 10, 15 + 0x800)
+      end
       points = string.format("%i,%i,%i,%i,%i,%i", (width-SCROLL_BAR_WIDTH)+3, (height-SCROLL_BAR_WIDTH)-11,(width-SCROLL_BAR_WIDTH)+7, (height-SCROLL_BAR_WIDTH)-7, (width-SCROLL_BAR_WIDTH)+11,(height-SCROLL_BAR_WIDTH)-11)
       WindowPolygon(win, points,
          0x000000, 0, 1, -- pen (solid, width 1)
@@ -520,7 +563,11 @@ function drawStuff ()
          false) -- alt fill
    else
       -- draw bottom scroll button unpressed
-      WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), height-(SCROLL_BAR_WIDTH*2), width, height-SCROLL_BAR_WIDTH, 5,  15 + 0x800)
+      if flat_theme == 1 then
+         WindowRectOp(win, 4, (width-SCROLL_BAR_WIDTH), height-(SCROLL_BAR_WIDTH*2), width, height-SCROLL_BAR_WIDTH, 0x303030, 0x444444)
+      else
+         WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), height-(SCROLL_BAR_WIDTH*2), 0, height-SCROLL_BAR_WIDTH-1, 5, 15 + 0x800)
+      end
       points = string.format("%i,%i,%i,%i,%i,%i", (width-SCROLL_BAR_WIDTH)+3, (height-SCROLL_BAR_WIDTH)-11,(width-SCROLL_BAR_WIDTH)+7, (height-SCROLL_BAR_WIDTH)-7, (width-SCROLL_BAR_WIDTH)+11,(height-SCROLL_BAR_WIDTH)-11)
       WindowPolygon(win, points,
          0x000000, 0, 1,   -- pen (solid, width 1)
@@ -548,7 +595,11 @@ function drawStuff ()
       WindowAddHotspot(win, "scroller", (width-SCROLL_BAR_WIDTH), barPos, width, barPos+barSize, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
       WindowDragHandler(win, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
    end
-   WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), barPos, width, barPos+barSize, 5, 15 + 0x800) -- scrollbar position indicator
+   if flat_theme == 1 then
+      WindowRectOp(win, 4, (width-SCROLL_BAR_WIDTH), barPos, width, barPos+barSize, 0x303030, 0x444444) -- scrollbar position indicator
+   else
+      WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), barPos, width, barPos+barSize, 5, 15 + 0x800) -- scrollbar position indicator
+   end
 
    -- reset hyperlinks if the text moves
    for k,v in pairs(hyperlinks) do
@@ -1103,7 +1154,7 @@ function right_click_menu (hotspot_id)
       menustring = menustring.."Go to URL: "..hyperlinks[hotspot_id].."|Copy URL to Clipboard|-|"
       url = hyperlinks[hotspot_id]
    end
-   menustring = menustring.."Copy Selected Without Colors|Copy Selected|Copy All|-|Change Font"
+   menustring = menustring.."Copy Selected Without Colors|Copy Selected|Copy All|-|Change Font|"..((flat_theme==1 and "+") or "").."Flat Theme"
    menustring = menustring .. "|>Timestamp|"..((date_format=="" and "+") or "").."No Timestamps|"..((date_format=="[%d %b %H:%M:%S] " and "+") or "").."30 Aug 13:29:49|"..((date_format=="[%d %b %I:%M:%S%p] " and "+") or "").."30 Aug 01:20:12PM|"..((date_format=="[%H:%M:%S] " and "+") or "").."13:29:08|"..((date_format=="[%I:%M:%S%p] " and "+") or "").."1:22:06 PM|<"
 
    menustring = menustring .. "|Customize Channels"
@@ -1164,21 +1215,40 @@ function right_click_menu (hotspot_id)
             OnPluginInstall()
          end
       elseif numResult == 5+hyperlink_skip then
+         if flat_theme == 0 then
+            ColourNote ("yellow", "", "Flat Theme for communication window is ENABLED.")
+            WINDOW_BACKGROUND_COLOUR = 0x1c1c1c
+            WINDOW_BORDER_COLOUR = 0x303030
+            SCROLL_BACKGROUND_COLOUR = 0x303030
+            SCROLL_BAR_COLOUR = 0x1c1c1c
+            SCROLL_DETAIL_COLOUR = 0x111111
+         else  
+            ColourNote ("yellow", "", "Flat Theme for communication window is DISABLED.")
+            WINDOW_BACKGROUND_COLOUR = GetNormalColour(1)
+            WINDOW_BORDER_COLOUR = 0xE8E8E8
+            SCROLL_BACKGROUND_COLOUR = 0xE8E8E8
+            SCROLL_BAR_COLOUR = 0x111111
+            SCROLL_DETAIL_COLOUR = 0x000000
+         end
+         flat_theme = (((0 == flat_theme) and 1) or 0)
+         SetVariable("flat_theme", flat_theme)
+         OnPluginInstall()
+      elseif numResult == 6+hyperlink_skip then
          date_format = ""
          ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
-      elseif numResult == 6+hyperlink_skip then
+      elseif numResult == 7+hyperlink_skip then
          date_format = "[%d %b %H:%M:%S] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
-      elseif numResult == 7+hyperlink_skip then
+      elseif numResult == 8+hyperlink_skip then
          date_format = "[%d %b %I:%M:%S%p] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
-      elseif numResult == 8+hyperlink_skip then
+      elseif numResult == 9+hyperlink_skip then
          date_format = "[%H:%M:%S] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
-      elseif numResult == 9+hyperlink_skip then
+      elseif numResult == 10+hyperlink_skip then
          date_format = "[%I:%M:%S%p] "
          ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
-      elseif numResult == 10+hyperlink_skip then
+      elseif numResult == 11+hyperlink_skip then
          local tbl = {}
          local defaults = {}
          local i = 1
@@ -1193,7 +1263,7 @@ function right_click_menu (hotspot_id)
                channels_table[v]["capture"] = capture_result[i]
             end
          end
-      elseif numResult == 11+hyperlink_skip then
+      elseif numResult == 12+hyperlink_skip then
          if info_on == 0 then
             ColourNote ("yellow", "", "INFO capturing is now ENABLED.")
          else
@@ -1203,7 +1273,7 @@ function right_click_menu (hotspot_id)
          EnableTrigger("raidinfo", 0 == info_on)
          EnableTrigger("claninfo", 0 == info_on)
          info_on = GetTriggerOption("info","enabled")
-      elseif numResult == 12+hyperlink_skip then
+      elseif numResult == 13+hyperlink_skip then
          if global_quest_on == 0 then
             ColourNote ("yellow", "", "Global Quest capturing is now ENABLED.")
          else
@@ -1211,7 +1281,7 @@ function right_click_menu (hotspot_id)
          end
          EnableTrigger("global_quest", 0 == global_quest_on)
          global_quest_on = GetTriggerOption("global_quest","enabled")
-      elseif numResult == 13+hyperlink_skip then
+      elseif numResult == 14+hyperlink_skip then
          if remort_auction_on == 0 then
             ColourNote ("yellow", "", "Remort Auction capturing is now ENABLED.")
          else
@@ -1219,7 +1289,7 @@ function right_click_menu (hotspot_id)
          end
          EnableTrigger("remort_auction", 0 == remort_auction_on)
          remort_auction_on = GetTriggerOption("remort_auction","enabled")
-      elseif numResult == 14+hyperlink_skip then
+      elseif numResult == 15+hyperlink_skip then
          if show_donations == 0 then
             ColourNote ("yellow", "", "Clan donation capturing is now ENABLED.")
          else
@@ -1227,7 +1297,7 @@ function right_click_menu (hotspot_id)
          end
          show_donations = (((0 == show_donations) and 1) or 0)
          SetVariable("show_donations", show_donations)
-      elseif numResult == 15+hyperlink_skip then
+      elseif numResult == 16+hyperlink_skip then
          if warfare_on == 0 then
             ColourNote ("yellow", "", "Warfare capturing is now ENABLED.")
          else
@@ -1257,7 +1327,7 @@ function right_click_menu (hotspot_id)
          end
       end
 
-      if numResult == 16+hyperlink_skip+echo_skip then
+      if numResult == 17+hyperlink_skip+echo_skip then
          log_to_file = (((0 == log_to_file) and 1) or 0)
          SetVariable("log_to_file", log_to_file)
          if log_to_file == 0 then
@@ -1265,7 +1335,7 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Logging to file is now ENABLED.")
          end
-      elseif numResult == 17+hyperlink_skip+echo_skip then
+      elseif numResult == 18+hyperlink_skip+echo_skip then
          log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
          SetVariable("log_colour_codes", log_colour_codes)
          if log_colour_codes == 0 then
@@ -1273,7 +1343,7 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Color codes will be included in the log file.")
          end
-      elseif numResult == 18+hyperlink_skip+echo_skip then
+      elseif numResult == 19+hyperlink_skip+echo_skip then
          log_timestamps = (((0 == log_timestamps) and 1) or 0)
          SetVariable("log_timestamps", log_timestamps)
          if log_timestamps == 0 then
@@ -1281,9 +1351,9 @@ function right_click_menu (hotspot_id)
          else
             ColourNote ("yellow", "", "Timestamps will be included in the log file.")
          end
-      elseif numResult == 19+hyperlink_skip+echo_skip then
-         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
       elseif numResult == 20+hyperlink_skip+echo_skip then
+         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      elseif numResult == 21+hyperlink_skip+echo_skip then
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
       end
       OnPluginSaveState()
