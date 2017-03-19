@@ -596,7 +596,7 @@ function drawStuff ()
       WindowDragHandler(win, "scroller", "ScrollerMoveCallback", "ScrollerReleaseCallback", 0)
    end
    if flat_theme == 1 then
-      WindowRectOp(win, 4, (width-SCROLL_BAR_WIDTH), barPos, width, barPos+barSize, 0x303030, 0x444444) -- scrollbar position indicator
+      WindowRectOp(win, 4, (width-SCROLL_BAR_WIDTH), barPos, width, barPos+barSize, 0x444444, 0x333333) -- scrollbar position indicator
    else
       WindowRectOp(win, 5, (width-SCROLL_BAR_WIDTH), barPos, width, barPos+barSize, 5, 15 + 0x800) -- scrollbar position indicator
    end
