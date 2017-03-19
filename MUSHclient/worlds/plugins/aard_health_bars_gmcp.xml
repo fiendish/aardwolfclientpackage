@@ -422,9 +422,9 @@ function right_click_menu ()
          if (numResult % 2 == 1) then
             colourIndex = 4
          end
-         local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex])
+         local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-10)/2)]][colourIndex])
          if newcolour ~= -1 then
-            showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex] = newcolour
+            showBar[barIndex[math.ceil((numResult-10)/2)]][colourIndex] = newcolour
          end
       elseif numResult == 23 then
          thresh1active = (((thresh1active == 0) and 1) or 0)
