@@ -44,7 +44,6 @@ require "gauge"
 require "gmcphelper"
 require "serialize"
 
-
 default_width         = 1137
 default_x             = 0
 default_y             = 552
@@ -68,9 +67,14 @@ thresh2percent = tonumber (GetVariable("thresh2percent")) or 20
 thresh1color = tonumber (GetVariable("thresh1color")) or 0x00ffff
 thresh2color = tonumber (GetVariable("thresh2color")) or 0x0000ff
 
---flat_theme = tonumber (GetVariable("flat_theme")) or 0
-background_colour     = 0x000000
-border_color          = 0xcccccc
+flat_theme = tonumber (GetVariable("flat_theme")) or 0
+if flat_theme == 1 then
+   background_colour = 0x1c1c1c
+   border_color = 0x303030
+else  
+   background_colour = 0x000000 
+   border_color = 0xcccccc 
+end
 
 -- Variables not saved.
 startx     = ""

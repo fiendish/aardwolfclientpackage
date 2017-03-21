@@ -67,6 +67,7 @@ require "gauge"
 require "pairsbykeys"
 require "mw"
 
+
 local FONT_ID     = "fn"  -- internal font identifier
 local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
 local CONFIG_FONT_ID = "cfn"
@@ -170,8 +171,7 @@ local function build_room_info ()
 end -- build_room_info
 
 -- assorted colours
-BACKGROUND_COLOUR     = { name = "Area Background",  colour = ColourNameToRGB "#11111"}
-ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
+-- Area and Room colors initialized in init() for theme support
 EXIT_COLOUR           = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
 EXIT_COLOUR_UP_DOWN   = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
 ROOM_NOTE_COLOUR      = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen"}
@@ -1042,6 +1042,14 @@ function init (t)
    show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
    speedwalk_prefix = t.speedwalk_prefix  -- how to speedwalk (prefix)
+
+   if config.FLAT_THEME.enabled == false then
+     BACKGROUND_COLOUR     = { name = "Area Background", colour = ColourNameToRGB "#11111"}
+     ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
+   else
+     BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#1c1c1c"}
+     ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#303030"}
+   end
 
    -- force some config defaults if not supplied
    for k, v in pairs (default_config) do

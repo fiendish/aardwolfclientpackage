@@ -41,8 +41,14 @@ require "commas"
 require "gmcphelper"
 require "copytable"
 
-background_colour     = 0x000000
-border_colour         = 0xcccccc
+flat_theme = tonumber (GetVariable("flat_theme")) or 0
+if flat_theme == 1 then
+   background_colour = 0x1c1c1c
+   border_colour = 0x303030
+else  
+   background_colour = 0x000000 
+   border_colour = 0xcccccc 
+end
 default_width         = 209
 default_height        = 287
 default_x             = 658

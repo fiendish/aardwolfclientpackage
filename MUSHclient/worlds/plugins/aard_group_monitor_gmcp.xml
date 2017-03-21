@@ -142,6 +142,8 @@ require "gmcphelper"
 require "copytable"
 require "serialize"
 
+flat_theme = tonumber (GetVariable("flat_theme")) or 0
+
 if flat_theme == 1 then
    background_colour = 0x1c1c1c
    border_color = 0x303030
