@@ -142,7 +142,20 @@ require "gmcphelper"
 require "copytable"
 require "serialize"
 
-background_colour = tonumber (GetVariable ("background_colour")) or 0x000000
+flat_theme = tonumber (GetVariable("flat_theme")) or 0
+
+if flat_theme == 1 then
+   background_colour = 0x1c1c1c
+   border_color = 0x303030
+   title_gradient_col1 = 0x303030
+   title_gradient_col2 = 0x303030
+else
+   background_colour = 0x000000
+   border_color = 0xdddddd
+   title_gradient_col1 = 0x000000
+   title_gradient_col2 = 0x444444
+end
+
 title_colour = tonumber (GetVariable ("title_colour")) or 0x292929
 default_x = 868
 default_y = 336
@@ -160,9 +173,6 @@ overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 0
 GAP = 3
 font_size = 0
 font_name = ""
-border_color = 0xdddddd
-title_gradient_col1 = 0x000000
-title_gradient_col2 = 0x444444
 group_members = {}
 group_info = {}
 
@@ -278,7 +288,9 @@ function DisplayGroupPage()
 
    -- title rectangle
    WindowGradient(win, 2, 2, -2, title_height, title_gradient_col1, title_gradient_col2, 2)
-   WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
+   if flat_theme == 0 then
+      WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
+   end
 
    if not group_built then
       if next(invitations) == nil then
@@ -439,17 +451,26 @@ function DisplayGroupPage()
 
    -- draw edge frame.
    WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   if flat_theme == 0 then
+      WindowRectOp (win, 1, 1, 1, -1, -1, 0x444444, 15)
+   end
 
    -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+   if flat_theme == 1 then
+      resize_col_1 = 0x303030
+      resize_col_2 = 0x1c1c1c
+   else
+      resize_col_1 = 0xffffff
+      resize_col_2 = 0x696969
+   end
+   WindowLine(win, width-3, height-2, width-2, height-3, resize_col_1, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, resize_col_2, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, resize_col_1, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, resize_col_2, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, resize_col_1, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, resize_col_2, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, resize_col_1, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, resize_col_2, 0, 1)
 
    BroadcastPlugin (999, "repaint")
 
@@ -469,7 +490,7 @@ end
 
 function right_click_menu ()
 
-   menustring ="!Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|All Others|No Others|-|"
+   menustring ="!Change Font|"..((flat_theme==1 and "+") or "").."Flat Theme|>Show Players|"..((show_self==1 and "+") or "").."Include Self|All Others|No Others|-|"
    local member_count = 0
    local member_names = {}
    if full_group_data and full_group_data.members and char_data and char_data.name then
@@ -497,6 +518,17 @@ function right_click_menu ()
             font_size = wanted_font.size
          end
       elseif numResult == 2 then
+         if flat_theme == 0 then
+            ColourNote ("yellow", "", "Flat Theme for group monitor is ENABLED.")
+            background_colour = 0x1c1c1c
+            border_color = 0x303030
+         else  
+            ColourNote ("yellow", "", "Flat Theme for group monitor is DISABLED.")
+            background_colour = 0x000000 
+            border_color = 0xcccccc 
+         end
+         flat_theme = (((0 == flat_theme) and 1) or 0)
+      elseif numResult == 3 then
          -- show/hide self
          show_self = (((show_self == 0) and 1) or 0)
          if (show_self == 0) then
@@ -504,17 +536,17 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see your own status in the group monitor.")
          end
-      elseif numResult == 3 then
+      elseif numResult == 4 then
          -- remove all from the hidden list
          hidden_members = {}
-      elseif numResult == 4 then
+      elseif numResult == 5 then
          -- add all to the hidden list
          hideAllMembers()
-      elseif numResult >= 5 and numResult <= member_count+4 then
+      elseif numResult >= 7 and numResult <= member_count+5 then
          -- add/remove members in the hidden list
          local adjustedNumResult = numResult - 4
          hidden_members[member_names[adjustedNumResult]] = (((hidden_members[member_names[adjustedNumResult]]== nil) and true) or nil)
-      elseif numResult >= member_count+5 and numResult <= member_count+12 then
+      elseif numResult >= member_count+6 and numResult <= member_count+13 then
          -- change color settings
          local adjustedNumResult = numResult-member_count-4
          local colourIndex = 2
@@ -525,7 +557,7 @@ function right_click_menu ()
          if newcolour ~= -1 then
             colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex] = newcolour
          end
-      elseif numResult == member_count+13 then
+      elseif numResult == member_count+14 then
          -- show/hide HP info
          show_hp = (((show_hp == 0) and 1) or 0)
          if (show_hp == 0) then
@@ -533,7 +565,7 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see HP info in the group monitor.")
          end
-      elseif numResult == member_count+14   then
+      elseif numResult == member_count+15   then
          -- show/hide MANA info
          show_mn = (((show_mn == 0) and 1) or 0)
          if (show_mn == 0) then
@@ -541,7 +573,7 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see MN info in the group monitor.")
          end
-      elseif numResult == member_count+15 then
+      elseif numResult == member_count+16 then
          -- show/hide MOVES info
          show_mv = (((show_mv == 0) and 1) or 0)
          if (show_mv == 0) then
@@ -549,15 +581,15 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see MV info in the group monitor.")
          end
-      elseif numResult == member_count+16 then
+      elseif numResult == member_count+17 then
          -- use flat/shaded gauges
          flat_gauges = (((flat_gauges == 0) and 1) or 0)
-      elseif numResult == member_count+17 then
+      elseif numResult == member_count+18 then
          -- toggle overlay numbers on top of gauges
          overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
-      elseif numResult == member_count+18 then
-         thresh1active = (((thresh1active == 0) and 1) or 0)
       elseif numResult == member_count+19 then
+         thresh1active = (((thresh1active == 0) and 1) or 0)
+      elseif numResult == member_count+20 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -565,14 +597,14 @@ function right_click_menu ()
             end
             thresh1percent = tonumber(perc)
          end
-      elseif numResult == member_count+20 then
+      elseif numResult == member_count+21 then
          local newColor = PickColour (thresh1color)
          if newcolor ~= -1 then
             thresh1color = newColor
          end
-      elseif numResult == member_count+21 then
-         thresh2active = (((thresh2active == 0) and 1) or 0)
       elseif numResult == member_count+22 then
+         thresh2active = (((thresh2active == 0) and 1) or 0)
+      elseif numResult == member_count+23 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -580,24 +612,25 @@ function right_click_menu ()
             end
             thresh2percent = tonumber(perc)
          end
-      elseif numResult == member_count+23 then
+      elseif numResult == member_count+24 then
          local newColor = PickColour (thresh2color)
          if newcolor ~= -1 then
             thresh2color = newColor
          end
-      elseif numResult == member_count+24 then
+      elseif numResult == member_count+25 then
          -- bring to front
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == member_count+25 then
+      elseif numResult == member_count+26 then
          -- send to back
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-      elseif numResult == member_count+26 then
+      elseif numResult == member_count+27 then
          -- reset
          font_name        = default_font_name
          font_size        = default_font_size
          height           = default_height
          width            = default_width
          show_coords      = 0
+         flat_theme       = 0
       end -- if
 
       RemoveMembersFromGroupDisplay()
@@ -756,6 +789,7 @@ function OnPluginSaveState ()
    SetVariable ("height", height)
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
+   SetVariable ("flat_theme", flat_theme)
    SetVariable ("show_self", show_self)
    SetVariable ("show_hp", show_hp)
    SetVariable ("show_mn", show_mn)
@@ -837,6 +871,7 @@ function OnPluginInstall()
 
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
+   flat_theme = tonumber(GetVariable("flat_theme")) or 0
 
    --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
