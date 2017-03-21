@@ -170,11 +170,19 @@ require "gmcphelper"
 require "movewindow"
 require "mw"
 
-background_colour     = GetNormalColour(1)
+flat_theme = tonumber(GetVariable("flat_theme")) or 0
+if flat_theme == 1 then
+  background_colour = 0x1c1c1c
+  border_color = 0x444444
+  title_gradient_col1 = 0x303030
+  title_gradient_col2 = 0x303030
+else
+  background_colour     = GetNormalColour(1)
+  border_color        = 0xdddddd
+  title_gradient_col1 = GetNormalColour(1)
+  title_gradient_col2 = 0x444444
+end
 title_colour          = 0x292929
-border_color          = 0xdddddd
-title_gradient_col1   = GetNormalColour(1)
-title_gradient_col2   = 0x444444
 default_width         = 209
 default_height        = 263
 default_x             = 658
@@ -347,7 +355,9 @@ function DisplayMapPage()
    if show_title == 1 then
       -- title rectangle
       WindowGradient (win, 2, 2, -2, TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
-      WindowLine(win,0,TITLE_HEIGHT,width,TITLE_HEIGHT,0xeeeeee,0,1)
+      if flat_theme == 0 then
+         WindowLine(win,0,TITLE_HEIGHT,width,TITLE_HEIGHT,0xeeeeee,0,1)
+      end
    end
 
    -- show the widget for the legend popup
@@ -396,17 +406,26 @@ function DisplayMapPage()
 
    -- draw edge frame.
    WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   if flat_theme == 0 then
+      WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   end
 
    -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+   if flat_theme == 1 then
+      resize_col_1 = 0x303030
+      resize_col_2 = 0x1c1c1c
+   else
+      resize_col_1 = 0xffffff
+      resize_col_2 = 0x696969
+   end
+   WindowLine(win, width-3, height-2, width-2, height-3, resize_col_1, 0, 2)
+   WindowLine(win, width-4, height-2, width-2, height-4, resize_col_2, 0, 1)
+   WindowLine(win, width-6, height-2, width-2, height-6, resize_col_1, 0, 2)
+   WindowLine(win, width-7, height-2, width-2, height-7, resize_col_2, 0, 1)
+   WindowLine(win, width-9, height-2, width-2, height-9, resize_col_1, 0, 2)
+   WindowLine(win, width-10, height-2, width-2, height-10, resize_col_2, 0, 1)
+   WindowLine(win, width-12, height-2, width-2, height-12, resize_col_1, 0, 2)
+   WindowLine(win, width-13, height-2, width-2, height-13, resize_col_2, 0, 1)
 
    -- show it now (or refresh)
    WindowShow (win, true)
@@ -484,7 +503,9 @@ end -- Display_Line
 -- right click menu
 function right_click_menu ()
 
-   menustring = "Change Font|>Map Type|"
+   menustring = "Change Font|"
+   menustring = menustring .. ((flat_theme==1 and "+") or "").."Flat Theme|"
+   menustring = menustring .. ">Map Type|"
    menustring = menustring .. ((maptype == 0 and "+") or "") .. "0 - Standard ASCII based map|"
    menustring = menustring .. ((maptype == 1 and "+") or "") .. "1 - Solid single line map|"
    menustring = menustring .. ((maptype == 2 and "+") or "") .. "2 - Solid double line map|"
@@ -516,6 +537,21 @@ function right_click_menu ()
          font_name = wanted_font.name
          font_size = wanted_font.size
       end
+   elseif result == "Flat Theme" then
+      if flat_theme == 0 then
+         ColourNote ("yellow", "", "Flat Theme for ascii map is ENABLED.")
+         background_colour = 0x1c1c1c
+         border_color = 0x303030
+         title_gradient_col1 = 0x303030 
+         title_gradient_col2 = 0x303030
+      else  
+         ColourNote ("yellow", "", "Flat Theme for ascii map is DISABLED.")
+         background_colour = 0x000000 
+         border_color = 0xcccccc
+         title_gradient_col1 = GetNormalColour(1)
+         title_gradient_col2 = 0x444444
+      end
+      flat_theme = (((0 == flat_theme) and 1) or 0) 
    elseif result == "Bring To Front" then
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == "Send To Back" then
@@ -781,6 +817,7 @@ function OnPluginSaveState ()
    SetVariable ("showtitle", show_title)
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
+   SetVariable ("flat_theme", flat_theme)
    SetVariable ("also_echo_map", also_echo_map)
    SetVariable ("maptype", maptype)
 end -- OnPluginSaveState
@@ -848,6 +885,7 @@ function OnPluginInstall(skip_requests)
    show_exits = tonumber (GetVariable ("showexits")) or 0
    show_title = tonumber (GetVariable ("showtitle")) or 1
    also_echo_map = tonumber (GetVariable("also_echo_map")) or 0
+   flat_theme = tonumber (GetVariable("flat_theme")) or 0
 
    -- make window so I can grab the font info
    WindowCreate (win, 1, 1, width, height, 0, 0, background_colour)

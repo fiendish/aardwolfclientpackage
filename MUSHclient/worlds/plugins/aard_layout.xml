@@ -46,6 +46,14 @@
    sequence="100"
    ignore_case="y"
 ></alias>
+
+<alias
+   script="flat_theme_init"
+   match="flat_theme"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
 </aliases>
 
 <!--  Script  -->
@@ -192,13 +200,27 @@ function OnPluginSaveState ()
    SetVariable("trright",textrect_right)
    SetVariable("trtop",textrect_top)
    SetVariable("trbottom",textrect_bottom)
+   SetVariable("flat_theme", flat_theme)
 end -- OnPluginSaveState
+
+function flat_theme_init()
+   if flat_theme == 0 then
+      ColourNote ("yellow", "", "Flat Theme for main window is ENABLED.")
+   else  
+      ColourNote ("yellow", "", "Flat Theme for main window is DISABLED.")
+   end
+   flat_theme = (((0 == flat_theme) and 1) or 0)
+   OnPluginEnable()
+   WindowDelete(textResizer)
+   add_main_resizer()
+end
 
 function reset_aard()
    textrect_left = default_left
    textrect_right = default_right
    textrect_top = default_top
    textrect_bottom = default_bottom
+   flat_theme = 0
    OnPluginSaveState()
    check_main_background()
 end
@@ -235,6 +257,14 @@ end -- OnPluginEnable
 -- This is the place to initialize stuff you need in the main plugin.
 --=================================================================================
 function OnPluginInstall()
+   flat_theme = tonumber(GetVariable("flat_theme")) or 0
+
+   if flat_theme == 1 then
+      background_colour = 0x1c1c1c
+   else
+      background_colour = 0x000000
+   end
+
    --- Get a unique name for main window and resizer window.
    win = GetPluginID ()  -- get a unique name
    textDragger = "      "..win.."txtdragger"
@@ -248,8 +278,8 @@ function OnPluginInstall()
       ColourNote("yellow","red","Error loading background image.")
    end
 
-   WindowCreate (bgwin, 0, 0, 0, 0, 12, 3, GetNormalColour(1))
-   WindowCreate (bgoffscreen, 0, 0, 0, 0, 12, 3, GetNormalColour(1))
+   WindowCreate (bgwin, 0, 0, 0, 0, 12, 3, background_colour)
+   WindowCreate (bgoffscreen, 0, 0, 0, 0, 12, 3, background_colour)
 
    local logopath = dir .. "worlds\\plugins\\images\\aardbg13.png"
    if WindowLoadImage (bgoffscreen, "wolf_logo", logopath) == 0 then
@@ -295,16 +325,23 @@ function add_main_resizer()
          12  , 2, GetNormalColour(1)))
 
       -- draw the resize widget bottom right corner.
-      WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, 0xffffff, 0, 2)
-      WindowLine(textResizer, rstagsize-2, rstagsize-0, rstagsize-0, rstagsize-2, 0x696969, 0, 1)
-      WindowLine(textResizer, rstagsize-4, rstagsize-0, rstagsize-0, rstagsize-4, 0xffffff, 0, 2)
-      WindowLine(textResizer, rstagsize-5, rstagsize-0, rstagsize-0, rstagsize-5, 0x696969, 0, 1)
-      WindowLine(textResizer, rstagsize-7, rstagsize-0, rstagsize-0, rstagsize-7, 0xffffff, 0, 2)
-      WindowLine(textResizer, rstagsize-8, rstagsize-0, rstagsize-0, rstagsize-8, 0x696969, 0, 1)
-      WindowLine(textResizer, rstagsize-10, rstagsize-0, rstagsize-0, rstagsize-10, 0xffffff, 0, 2)
-      WindowLine(textResizer, rstagsize-11, rstagsize-0, rstagsize-0, rstagsize-11, 0x696969, 0, 1)
-      WindowLine(textResizer, rstagsize-12, rstagsize-0, rstagsize-0, rstagsize-12, 0xffffff, 0, 1)
-      WindowLine(textResizer, rstagsize-13, rstagsize-0, rstagsize-0, rstagsize-13, 0xffffff, 0, 1)
+      if flat_theme == 1 then
+         resize_color_1 = 0x303030
+         resize_color_2 = 0x1c1c1c
+      else
+         resize_color_1 = 0xffffff
+         resize_color_2 = 0x696969
+      end
+      WindowLine(textResizer, rstagsize-1, rstagsize-0, rstagsize-0, rstagsize-1, resize_color_1, 0, 2)
+      WindowLine(textResizer, rstagsize-2, rstagsize-0, rstagsize-0, rstagsize-2, resize_color_2, 0, 1)
+      WindowLine(textResizer, rstagsize-4, rstagsize-0, rstagsize-0, rstagsize-4, resize_color_1, 0, 2)
+      WindowLine(textResizer, rstagsize-5, rstagsize-0, rstagsize-0, rstagsize-5, resize_color_2, 0, 1)
+      WindowLine(textResizer, rstagsize-7, rstagsize-0, rstagsize-0, rstagsize-7, resize_color_1, 0, 2)
+      WindowLine(textResizer, rstagsize-8, rstagsize-0, rstagsize-0, rstagsize-8, resize_color_2, 0, 1)
+      WindowLine(textResizer, rstagsize-10, rstagsize-0, rstagsize-0, rstagsize-10, resize_color_1, 0, 2)
+      WindowLine(textResizer, rstagsize-11, rstagsize-0, rstagsize-0, rstagsize-11, resize_color_2, 0, 1)
+      WindowLine(textResizer, rstagsize-12, rstagsize-0, rstagsize-0, rstagsize-12, resize_color_1, 0, 1)
+      WindowLine(textResizer, rstagsize-13, rstagsize-0, rstagsize-0, rstagsize-13, resize_color_1, 0, 1)
 
       -- Add a drag handler to this window, effectively allows textrectangle to be resized.
       WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
@@ -339,11 +376,21 @@ function draw_main_window()
    local t_right = math.min(textrect_right,GetInfo(281)-7)
    local t_bottom = math.min(textrect_bottom, GetInfo(280)-7)
 
+   if flat_theme == 1 then
+      offset = 3
+      border_colour = 0x303030
+      outside_colour = 0x444444
+   else
+      offset = 5
+      border_colour = ColourNameToRGB("darkgray")
+      outside_colour = 0x333333
+   end
+
    TextRectangle(textrect_left, textrect_top, t_right, t_bottom,
-      5,  -- BorderOffset,
-      ColourNameToRGB ("darkgray"),    -- BorderColour,
+      offset,  -- BorderOffset,
+      border_colour,    -- BorderColour,
       2,  -- BorderWidth,
-      0x333333,  -- OutsideFillColour,
+      outside_colour,  -- OutsideFillColour,
       miniwin.brush_solid) -- OutsideFillStyle
 
    -- Add a mini-window under main text area so background won't mess it up.
@@ -352,7 +399,7 @@ function draw_main_window()
 
    WindowCreate (bgwin, textrect_left - 5, textrect_top - 5,
       math.max(0, trwidth + 10), math.max(0, trheight + 10),
-      12  , 3, GetNormalColour(1))
+      12  , 3, background_colour)
    WindowShow(bgwin, true)
 
    if image_ratio ~= nil then
@@ -365,7 +412,9 @@ function draw_main_window()
          image_width = trwidth
       end
 
-      WindowDrawImage (bgwin, "wolf_logo", (trwidth-image_width)/2, (trheight-image_height)/2, (trwidth+image_width)/2, (trheight+image_height)/2, miniwin.image_stretch)
+      if flat_theme == 0 then
+         WindowDrawImage (bgwin, "wolf_logo", (trwidth-image_width)/2, (trheight-image_height)/2, (trwidth+image_width)/2, (trheight+image_height)/2, miniwin.image_stretch)
+      end
    end
 
    add_title_dragger()
