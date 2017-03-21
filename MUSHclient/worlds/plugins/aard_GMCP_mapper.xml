@@ -2135,12 +2135,12 @@ function get_room (uid)
 
    if uid == current_room then
       room.bordercolour = mapper.OUR_ROOM_COLOUR.colour
-      room.borderpenwidth = 3
+      room.borderpenwidth = 2
    elseif room.area ~= current_area then
       room.bordercolour = mapper.DIFFERENT_AREA_COLOUR.colour
    elseif room.info and string.match(room.info, "pk") then
       room.bordercolour = mapper.PK_BORDER_COLOUR.colour
-      room.borderpenwidth = 3
+      room.borderpenwidth = 2
    end -- not in this area
 
    return room
