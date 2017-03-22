@@ -73,6 +73,8 @@ local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
 local CONFIG_FONT_ID = "cfn"
 local CONFIG_FONT_ID_UL = "cfnu"
 
+local FLAT_THEME = tonumber(GetVariable("FLAT_THEME")) or 0 
+
 -- size of room box
 local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 12
 
@@ -171,7 +173,13 @@ local function build_room_info ()
 end -- build_room_info
 
 -- assorted colours
--- Area and Room colors initialized in init() for theme support
+if FLAT_THEME == 0 then
+   BACKGROUND_COLOUR     = { name = "Area Background", colour = ColourNameToRGB "#11111"}
+   ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
+else
+   BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#1c1c1c"}
+   ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#303030"}
+end
 EXIT_COLOUR           = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
 EXIT_COLOUR_UP_DOWN   = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
 ROOM_NOTE_COLOUR      = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen"}
@@ -209,8 +217,6 @@ default_config = {
 
    -- how far from where we are standing to draw (rooms)
    SCAN = { depth = 300 },
-
-   FLAT_THEME = {enabled = false},
 
    -- show custom tiling background textures
    USE_TEXTURES = { enabled = true },
@@ -334,7 +340,7 @@ local function draw_configuration ()
    local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID,
       {config.FONT.name .. " " .. config.FONT.size,
       ((config.USE_TEXTURES.enabled and "On") or "Off"),
-      ((config.FLAT_THEME.enabled and "On") or "Off"),
+      ((FLAT_THEME and "On") or "Off"),
       "- +",
       tostring (config.SCAN.depth)},
       true))
@@ -421,7 +427,8 @@ local function draw_configuration ()
 
    -- flat Theme
    WindowText(config_win, CONFIG_FONT_ID, "Flat Theme", x, y, 0, 0, 0x000000)
-   WindowText(config_win, CONFIG_FONT_ID_UL, ((config.FLAT_THEME.enabled and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.FLAT_THEME.enabled  and "On") or "Off"))/2, y, 0, 0, 0x808080)
+   if FLAT_THEME then text="On" else text="Off" end
+   WindowText(config_win, CONFIG_FONT_ID_UL, ((FLAT_THEME==1 and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((FLAT_THEME==0 and "On") or "Off"))/2, y, 0, 0, 0x808080)
 
    -- flat theme hotspot
    WindowAddHotspot(config_win,
@@ -754,7 +761,7 @@ local function draw_zone_exit (exit)
    local x, y, def = exit.x, exit.y, exit.def
    local offset = ROOM_SIZE
    local pen_width = 5
-   if config.FLAT_THEME.enabled == true then
+   if FLAT_THEME == 1 then
       pen_width = 2
    end
       
@@ -1042,15 +1049,7 @@ function init (t)
    show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
    speedwalk_prefix = t.speedwalk_prefix  -- how to speedwalk (prefix)
-
-   if config.FLAT_THEME.enabled == false then
-     BACKGROUND_COLOUR     = { name = "Area Background", colour = ColourNameToRGB "#11111"}
-     ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
-   else
-     BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#1c1c1c"}
-     ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#303030"}
-   end
-
+   
    -- force some config defaults if not supplied
    for k, v in pairs (default_config) do
       config[k] = config[k] or v
@@ -1197,6 +1196,7 @@ end -- hide
 function save_state ()
    SetVariable("ROOM_SIZE", ROOM_SIZE)
    SetVariable("DISTANCE_TO_NEXT_ROOM", DISTANCE_TO_NEXT_ROOM)
+   SetVariable("FLAT_THEME", FLAT_THEME)
    if WindowInfo(win,1) and WindowInfo(win,5) then
       movewindow.save_state (win)
    end
@@ -1669,12 +1669,12 @@ function mouseup_change_depth (flags, hotspot_id)
 end -- mouseup_change_depth
 
 function mouseup_flat_theme (flags, hotspot_id)
-   if config.FLAT_THEME.enabled == true then
-      config.FLAT_THEME.enabled = false
+   if FLAT_THEME == 1 then
+      FLAT_THEME = 0 
       BACKGROUND_COLOUR     = { name = "Area Background", colour = ColourNameToRGB "#11111"}
       ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
    else
-      config.FLAT_THEME.enabled = true
+      FLAT_THEME = 1 
       BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#1c1c1c"}
       ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#303030"}
    end
@@ -1767,7 +1767,7 @@ function add_resize_tag()
    local width  = WindowInfo(win, 3)
    local height = WindowInfo(win, 4)
    
-   if config.FLAT_THEME.enabled == true then
+   if FLAT_THEME == 1 then
       resize_col_1 = 0x303030
       resize_col_2 = 0x1c1c1c
    else
@@ -1801,7 +1801,7 @@ end -- draw resize tag.
 
 function draw_edge()
    -- draw edge frame.
-   if config.FLAT_THEME.enabled == true then
+   if FLAT_THEME == 1 then
       check (WindowRectOp (win, 1, 0, 0, 0, 0, 0x303030, 15))
    else
       check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
