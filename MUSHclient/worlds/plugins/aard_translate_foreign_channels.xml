@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="TranslateForeignChannels"
+   author="Fiendish"
+   id="f553c80154d48ea139b1d192"
+   language="Lua"
+   date_written="2017-01-24 09:43:19"
+   requires="4.90"
+   version="1.0"
+>
+</plugin>
+<script>
+require "gmcphelper"
+local translate = require "online_translation"
+dofile(GetInfo(60) .. "aardwolf_colors.lua")
+
+function print_if_different(original, translated)
+   if original ~= translated then
+      print("\""..original.."\" ---- translates to ---> \""..translated.."\"")
+   end
+end
+
+function OnPluginBroadcast (msg, id, name, text)
+   -- Look for GMCP channel messages.
+   if (id == '3e7dedbe37e44942dd46d264') and (text == "comm.channel") then
+      gmcpcomm = gmcp("comm.channel")
+      msg = gmcpcomm.msg or ""
+      chan = gmcpcomm.chan or ""
+      translate(strip_colours(msg), "auto", "en", print_if_different)
+   end
+end
+
+</script>
+</muclient>
