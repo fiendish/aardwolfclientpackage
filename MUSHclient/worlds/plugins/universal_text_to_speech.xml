@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="Universal_Text_To_Speech"
+   author="Fiendish"
+   id="463242566069ebfd1b379ec1"
+   language="Lua"
+   purpose="Automatically speak output text"
+   date_written="2017-01-01 19:53:01"
+   requires="4.60"
+   version="1.0"
+   >
+<description>
+Text to speech support using the Tolk speech and braille abstraction library.
+https://github.com/dkager/tolk
+</description>
+</plugin>
+
+<aliases>
+  <alias 
+   match="tts_stop" 
+   enabled="y" 
+   send_to="12" 
+   sequence="100"
+  >
+  <send>silence()</send>
+  </alias>
+  
+  <alias
+   match="tts_note *"
+   enabled="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>say("%1", false)</send>
+  </alias>
+    
+  <alias
+   match="tts_interrupt *"
+   enabled="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>say("%1", true)</send>
+  </alias>
+  
+  <alias
+   script="tts_toggle"
+   match="tts"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+</aliases>
+
+<script>
+<![CDATA[
+AcceleratorTo("Ctrl+Space", "CallPlugin('"..GetPluginID().."', 'silence')", sendto.script)
+
+local ffi = require "ffi"
+
+-- https://github.com/dkager/tolk
+if ffi.abi("32bit") then
+   tolk_path = 'screen_reader_dlls/x86/Tolk.dll'
+else
+   tolk_path = 'screen_reader_dlls/x64/Tolk.dll'
+end
+local tolk_api = ffi.load(tolk_path)
+
+ffi.cdef[[
+	int MultiByteToWideChar(unsigned int CodePage, unsigned int dwFlags, const char* lpMultiByteStr, int cbMultiByte, wchar_t* lpWideCharStr, int cchWideChar);
+   int WideCharToMultiByte(unsigned int CodePage, unsigned int dwFlags, const wchar_t* lpWideCharStr, int cchWideChar, const char* lpMultiByteStr, int cbMultiByte, const char * lpDefaultChar, bool lpUsedDefaultChar);
+	void __cdecl Tolk_TrySAPI(bool);
+	void __cdecl Tolk_Load();
+	bool __cdecl Tolk_IsLoaded();
+	void __cdecl Tolk_Unload();
+	void __cdecl Tolk_PreferSAPI(bool);
+	const wchar_t * __cdecl Tolk_DetectScreenReader();
+	bool __cdecl Tolk_HasSpeech();
+	bool __cdecl Tolk_HasBraille();
+	bool __cdecl Tolk_Output(const wchar_t *str, bool interrupt);
+	bool __cdecl Tolk_Speak(const wchar_t *str, bool interrupt);
+	bool __cdecl Tolk_Braille(const wchar_t *str);
+	bool __cdecl Tolk_IsSpeaking();
+	bool __cdecl Tolk_Silence();
+]]
+
+local CP_UTF8 = 65001
+local tts_enabled = false
+
+local text_filters = {
+   {"[:]%-?[D%)%]]", ", smiley. "}, -- western emoticons
+   {"[:;]%-?[%(%[]", ", sad-face. "}, -- western emoticons
+   {";%-?[D%)%]]", ", winks. "}, -- western emoticons
+   {"[:;]%-?[pP9b]", " sticks-tongue-out. "}, -- western emoticons
+   {"8%-[D%)%]]", ", smiley. "}, -- 8- western emoticons
+   {"8%-[%(%[]", ", sad-face. "}, -- 8- western emoticons
+   {"8%-[pP9b]]", ", sticks-tongue-out. "}, -- 8- western emoticons
+   {"%^_%^", ", smiley. "}, -- another emoticon
+   {"%-_%-", ", sad-face. "}, -- another emoticon
+   {string.rep("[%p\\/|_%-%(%)%[%]%{%}%%%+%^%#%$~><%*`_]", 3).."+", " "}, -- symbol garbage
+   {string.rep("[%-%+%^=#$~><%*`_:]", 2).."+", " "}, -- symbol garbage
+   {"|", " "}, -- symbol garbage
+   -- fix contextual pronunciation
+   {"[pP]lugin", "pluggin"}, -- plug, not pluge
+   {"([%[%(%{])", " %1"}, -- "()()"
+   {"([%]%}%)])", "%1 "}, -- "()()"
+   {"(%d)%*(%d)", "%1 times %2"}, -- "*"
+   {"([%d,]+%.?[%d]*)%/(%a)", "%1 per %2"}, -- "#/a"
+   {"%f[%a][dD][bB]", ", D B, "}, -- stop saying decibels
+   {"%f[%a]afk%f[%A]", " AFK "}, -- spell it
+   {"%f[%a]omg%f[%A]", " OMG "}, -- spell it
+   {"%f[%a][vV][iI]%f[%A]", " V I "}, -- spell it
+   {"%f[%a]pwned", " p'owned "}, -- say it
+   {"thx", " thanks "}, -- say it
+   {"%f[%a]%u+%f[%A]", function(a) if a:sub(2):find("[AEIOUY]") then return string.lower(a) else return a end end}, -- say GLACIATES and ROFL, but still spell AFK and OMG
+   {"%f[%a][pP]file", " P file"},
+   {"%f[%a][gG]clan", " G clan"},
+   {"%f[%a][gG]tell", " G tell"},
+   {"%f[%a][fF]talk", " F talk"},
+   {"%f[%a][gG]clan", " G clan"},
+   {"%f[%a][gG]social", " G social"},
+   {"%f[%a][rR]auction", " R auction"},
+   {"%f[%a][gG]ametalk", " game-talk"},
+   {"%f[%a][nN]obletalk", " noble-talk"}, 
+   {"%f[%a][tT]iertalk", " tier-talk"},
+   {"%f[%a][rR]acetalk", " race-talk"},
+   {"%f[%a][cC]lantalk", " clan-talk"},
+   {"%f[%a][pP]okerinfo", " poker-info"},
+   {"%f[%a][mM]afiainfo", " mafia-info"},
+   {"%f[%a][aA]ylor", " aylor "} -- Aylorian->ALIEN??? hahahaha what
+}
+
+function do_filtering(msg)
+   for i,sub in ipairs(text_filters) do
+      msg = msg:gsub(sub[1], sub[2])
+   end
+   if msg:gsub("[%p%s]+", "") == "" then
+      return ""
+   else
+      return msg
+   end
+end
+
+-- convert wchar_t[] to lua str
+function widestr_to_luastr(wstr)
+   local size_needed = ffi.C.WideCharToMultiByte(CP_UTF8, 0, wstr, -1, nil, 0, nil, false)
+   local str = ffi.new("char[?]", size_needed)
+   ffi.C.WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, size_needed, nil, false)
+   return ffi.string(str)
+end
+
+-- convert lua str to wchar_t[]
+function luastr_to_widestr(str)
+   local size_needed = ffi.C.MultiByteToWideChar(CP_UTF8, 0, str, -1, nil, 0)
+   local wstr = ffi.new("wchar_t[?]", size_needed)
+   ffi.C.MultiByteToWideChar(CP_UTF8, 0, str, #str, wstr, size_needed)
+   return wstr
+end
+
+function say(text, interrupt)
+   if not text then 
+      return 
+   end
+   
+   text = do_filtering(text)
+   
+	if text:find("^%s*$") then
+		return
+	end
+	
+	local to_read = luastr_to_widestr(text)
+	tolk_api.Tolk_Output(to_read, interrupt or false)
+	-- print(widestr_to_luastr(to_read)) -- debug
+end
+
+function silence()
+   tolk_api.Tolk_Silence()
+end
+
+local reader = nil
+local loaded = false
+
+function OnPluginListChanged()
+   if not loaded then
+      tolk_api.Tolk_TrySAPI(true)
+      tolk_api.Tolk_Load()
+      tts_enabled = tolk_api.Tolk_IsLoaded()
+      
+      local reader = widestr_to_luastr(tolk_api.Tolk_DetectScreenReader())
+      say("You are using "..reader.." text to speech.", true)
+      
+      loaded = true
+   end
+end
+
+function OnPluginScreendraw(line_type, log, line)
+	if tts_enabled and line_type < 1 then
+		say(line)
+	end
+end
+
+function tts_toggle(name, line, wildcards)
+	tts_enabled = not tts_enabled
+   if not tts_enabled then
+   	silence()
+	end
+	say(string.format("Speech %s.", tts_enabled and "on" or "off"), true)
+end
+
+function OnPluginTabComplete(word)
+	if tts_enabled then
+		say(word, true)
+	end
+end
+
+function OnPluginClose()
+   OnPluginDisable()
+end
+
+function OnPluginDisable()
+   tolk_api.Tolk_Unload()
+   loaded = false
+end
+
+]]>    
+ </script> 
+</muclient>
