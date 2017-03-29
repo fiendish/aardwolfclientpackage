@@ -427,3 +427,26 @@ function ColoursToANSI(text)
    end
    return text
 end
+
+
+
+
+-- OLD.
+colour_conversion = {
+   k = GetNormalColour (BLACK)   ,   -- 0x000000
+   r = GetNormalColour (RED)     ,   -- 0x000080
+   g = GetNormalColour (GREEN)   ,   -- 0x008000
+   y = GetNormalColour (YELLOW)  ,   -- 0x008080
+   b = GetNormalColour (BLUE)    ,   -- 0x800000
+   m = GetNormalColour (MAGENTA) ,   -- 0x800080
+   c = GetNormalColour (CYAN)    ,   -- 0x808000
+   w = GetNormalColour (WHITE)   ,   -- 0xC0C0C0
+   K = GetBoldColour   (BLACK)   ,   -- 0x808080
+   R = GetBoldColour   (RED)     ,   -- 0x0000FF
+   G = GetBoldColour   (GREEN)   ,   -- 0x00FF00
+   Y = GetBoldColour   (YELLOW)  ,   -- 0x00FFFF
+   B = GetBoldColour   (BLUE)    ,   -- 0xFF0000
+   M = GetBoldColour   (MAGENTA) ,   -- 0xFF00FF
+   C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00
+   W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
+}  -- end conversion table
