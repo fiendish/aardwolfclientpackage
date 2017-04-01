@@ -864,19 +864,18 @@ function draw (uid)
    local add_dots = false
 
    -- truncate name if too long
-   while name_width > (config.WINDOW.width - 20 - WindowTextWidth (win, FONT_ID, "*?")) do
-      -- get rid of last word
-      local s = string.match (" " .. room_name .. "...", "(%s%S*)$")
-      if not s or #s == 0 then
+   local available_width = (config.WINDOW.width - 20 - WindowTextWidth (win, FONT_ID, "*?"))
+   while name_width > available_width do
+      room_name = room_name:sub(1, -3)
+      name_width = WindowTextWidth (win, FONT_ID, room_name .. "...")
+      add_dots = true
+      if room_name == "" then
          break
       end
-      room_name = room_name:sub (1, - (#s - 2))  -- except the last 3 dots but add the space
-      name_width = WindowTextWidth (win, FONT_ID, room_name .. " ...")
-      add_dots = true
    end -- while
 
    if add_dots then
-      room_name = room_name .. " ..."
+      room_name = room_name .. "..."
    end -- if
 
    -- room name
