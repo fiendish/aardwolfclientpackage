@@ -6,9 +6,10 @@ and title fonts that get used everywhere in order to unify the visual style
 and provide a way to customize that style easily.
 
 Steps for use:
-1) From inside your other plugins, call: require "mw_theme_base"
-2) Use variable names as spelled out below (theme.WINDOW_BACKGROUND, theme.WINDOW_BORDER, etc.)
+1) From inside your other plugins, call: require "mw_theme_base".
+2) Use variable names as spelled out below (theme.WINDOW_BACKGROUND, theme.WINDOW_BORDER, etc.).
 3) Link some action in your plugin with either the choose_theme or the list_themes and load_theme functions.
+4) Make your own themes (copy lua/mw_themes/default.lua to a new *.lua file and customize the colors).
 --]]
 
 theme_dir = GetInfo(66).."lua\\mw_themes\\"
