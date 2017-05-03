@@ -486,40 +486,6 @@ function ColoursToANSI (text)
 end
 
 
-function test_colors ()
-   str = "@Rbold @rfalse @x9bold @x1false @x196false @x88false"
-   print("<BEGIN>")
-   print(str)
-   require "tprint"
-   print("StylesToColours(ColoursToStyles) -- ")
-   print(str, " original")
-   print(StylesToColoursOneLine(ColoursToStyles(str), 1, 9))
-   SetNormalColour(RED, 128)
-   SetBoldColour(RED, 128)
-   print("r128R128", StylesToColours(ColoursToStyles(str)))
-
-   SetNormalColour(RED, 135)
-   print("r135R128", StylesToColours(ColoursToStyles(str)))
-
-   print('C2A', ColoursToANSI(str))
-   print('C2A2C', AnsiToColours(ColoursToANSI(str)))
-
-   print('C2S2A', stylesToANSI(ColoursToStyles(str)))
-   print('C2S2A2C', AnsiToColours(stylesToANSI(ColoursToStyles(str))))
-
-   print('stripstyles', strip_colours_from_styles(ColoursToStyles(str)))
-   print('stripcolors', strip_colours(str))
-
-   print('canon', canonicalize_colours(str))
-
-   SetNormalColour(RED, 128)
-   SetBoldColour(RED, 255)
-   start = utils.timer()
-   init_basic_colors()
-   print("init 1x", string.format("%.07f", utils.timer() - start))
-   print("<END>")
-end
-
 -- EVERYTHING BELOW HERE IS DEPRECATED. DO NOT USE. --
 
 -- Historical function without purpose. Use StylesToColours.
