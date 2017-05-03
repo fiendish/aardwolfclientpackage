@@ -7,133 +7,183 @@ local MAGENTA = 6
 local CYAN = 7
 local WHITE = 8
 
-local atletter_to_ansi_digit = {
-   r = 31,
-   g = 32,
-   y = 33,
-   b = 34,
-   m = 35,
-   c = 36,
-   w = 37,
-   D = 30,
-   R = 31,
-   G = 32,
-   Y = 33,
-   B = 34,
-   M = 35,
-   C = 36,
-   W = 37
+
+local code_to_ansi_digit = {
+   ["@r"] = 31,
+   ["@g"] = 32,
+   ["@y"] = 33,
+   ["@b"] = 34,
+   ["@m"] = 35,
+   ["@c"] = 36,
+   ["@w"] = 37,
+   ["@D"] = 30,
+   ["@R"] = 31,
+   ["@G"] = 32,
+   ["@Y"] = 33,
+   ["@B"] = 34,
+   ["@M"] = 35,
+   ["@C"] = 36,
+   ["@W"] = 37
 }
 
-local function init_ansi()
-   -- declaration of produced tables
-   color_value_to_atcode = {}
-   atletter_to_color_value = {}
-   color_value_to_xterm_number = {}
-   xterm_number_to_color_value = extended_colours
-   basic_colors_to_atletters = {}
+local ansi_digit_to_dim_code = {
+   [31] = "@r",
+   [32] = "@g",
+   [33] = "@y",
+   [34] = "@b",
+   [35] = "@m",
+   [36] = "@c",
+   [37] = "@w"
+}
 
-   for i,v in ipairs(xterm_number_to_color_value) do
-      color_value_to_xterm_number[v] = i
-   end
+local ansi_digit_to_bold_code = {
+   [30] = "@D",
+   [31] = "@R",
+   [32] = "@G",
+   [33] = "@Y",
+   [34] = "@B",
+   [35] = "@M",
+   [36] = "@C",
+   [37] = "@W"
+}
 
-   -- The start of this table uses the colours as defined in the MUSHclient ANSI settings
-   -- for visual clarity over xterm numbers, with the defaults shown on the right.
-   atletter_to_color_value = {
-      k = GetNormalColour (BLACK)   ,   -- 0x000000 (not used)
-      r = GetNormalColour (RED)     ,   -- 0x000080
-      g = GetNormalColour (GREEN)   ,   -- 0x008000
-      y = GetNormalColour (YELLOW)  ,   -- 0x008080
-      b = GetNormalColour (BLUE)    ,   -- 0x800000
-      m = GetNormalColour (MAGENTA) ,   -- 0x800080
-      c = GetNormalColour (CYAN)    ,   -- 0x808000
-      w = GetNormalColour (WHITE)   ,   -- 0xC0C0C0
-      D = GetBoldColour   (BLACK)   ,   -- 0x808080
-      R = GetBoldColour   (RED)     ,   -- 0x0000FF
-      G = GetBoldColour   (GREEN)   ,   -- 0x00FF00
-      Y = GetBoldColour   (YELLOW)  ,   -- 0x00FFFF
-      B = GetBoldColour   (BLUE)    ,   -- 0xFF0000
-      M = GetBoldColour   (MAGENTA) ,   -- 0xFF00FF
-      C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00
-      W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
+local first_15_to_code = {}
+local code_to_xterm = {}
+for k,v in pairs(ansi_digit_to_dim_code) do
+   first_15_to_code[k-30] = v  -- 1...7
+end
+for k,v in pairs(ansi_digit_to_bold_code) do
+   first_15_to_code[k-22] = v  -- 8...15
+end
+for k,v in pairs(first_15_to_code) do
+   code_to_xterm[v] = string.format("@x%03d",k)
+end
+
+local bold_codes = {
+   ["@D"]=true, ["@R"]=true, ["@G"]=true, ["@Y"]=true, ["@B"]=true,
+   ["@M"]=true, ["@C"]=true, ["@W"]=true
+}
+for i = 9,15 do
+   bold_codes[string.format("@x%03d",i)] = true
+   bold_codes[string.format("@x%02d",i)] = true
+   bold_codes[string.format("@x%d",i)] = true
+end
+
+
+local code_to_client_color = {}
+local client_color_to_dim_code = {}
+local client_color_to_bold_code = {}
+
+local function init_basic_to_color ()
+   default_black = GetNormalColour(BLACK)
+
+   code_to_client_color = {
+      ["@r"] = GetNormalColour(RED),
+      ["@g"] = GetNormalColour(GREEN),
+      ["@y"] = GetNormalColour(YELLOW),
+      ["@b"] = GetNormalColour(BLUE),
+      ["@m"] = GetNormalColour(MAGENTA),
+      ["@c"] = GetNormalColour(CYAN),
+      ["@w"] = GetNormalColour(WHITE),
+      ["@D"] = GetBoldColour(BLACK),
+      ["@R"] = GetBoldColour(RED),
+      ["@G"] = GetBoldColour(GREEN),
+      ["@Y"] = GetBoldColour(YELLOW),
+      ["@B"] = GetBoldColour(BLUE),
+      ["@M"] = GetBoldColour(MAGENTA),
+      ["@C"] = GetBoldColour(CYAN),
+      ["@W"] = GetBoldColour(WHITE)
+   }
+end
+
+local function init_color_to_basic ()
+   client_color_to_dim_code = {
+      [code_to_client_color["@r"]] = "@r",
+      [code_to_client_color["@g"]] = "@g",
+      [code_to_client_color["@y"]] = "@y",
+      [code_to_client_color["@b"]] = "@b",
+      [code_to_client_color["@m"]] = "@m",
+      [code_to_client_color["@c"]] = "@c",
+      [code_to_client_color["@w"]] = "@w"
    }
 
-   for k,v in pairs(atletter_to_color_value) do
-      basic_colors_to_atletters[v] = k
-   end
-
-   bold_colors_to_atcodes = {
-      [GetBoldColour(BLACK)]   = "@D",
-      [GetBoldColour(RED)]     = "@R",
-      [GetBoldColour(GREEN)]   = "@G",
-      [GetBoldColour(YELLOW)]  = "@Y",
-      [GetBoldColour(BLUE)]    = "@B",
-      [GetBoldColour(MAGENTA)] = "@M",
-      [GetBoldColour(CYAN)]    = "@C",
-      [GetBoldColour(WHITE)]   = "@W"
+   client_color_to_bold_code = {
+      [code_to_client_color["@D"]] = "@D",
+      [code_to_client_color["@R"]] = "@R",
+      [code_to_client_color["@G"]] = "@G",
+      [code_to_client_color["@Y"]] = "@Y",
+      [code_to_client_color["@B"]] = "@B",
+      [code_to_client_color["@M"]] = "@M",
+      [code_to_client_color["@C"]] = "@C",
+      [code_to_client_color["@W"]] = "@W"
    }
+end
 
-   -- Set up xterm color conversions using the xterm_number_to_color_value global array
+local function init_basic_colors ()
+   init_basic_to_color()
+   init_color_to_basic()
+end
+
+local xterm_number_to_client_color = extended_colours
+local client_color_to_xterm_number = {}
+local client_color_to_xterm_code = {}
+local x_to_client_color = {}
+
+local function init_xterm_colors ()
    for i = 0,255 do
-      local xterm_colour = xterm_number_to_color_value[i]
-      if not color_value_to_atcode[xterm_colour] then
-         color_value_to_atcode[xterm_colour] = string.format("@x%03d",i)
-      end
-      atletter_to_color_value[string.format("x%03d",i)] = xterm_colour
-      atletter_to_color_value[string.format("x%02d",i)] = xterm_colour
-      atletter_to_color_value[string.format("x%d",i)] = xterm_colour
+      local color = xterm_number_to_client_color[i]
+
+      x_to_client_color[string.format("@x%03d",i)] = color
+      x_to_client_color[string.format("@x%02d",i)] = color
+      x_to_client_color[string.format("@x%d",i)] = color
+
+      client_color_to_xterm_number[color] = i
+      client_color_to_xterm_code[color] = string.format("@x%03d",i)
    end
 
-   -- Aardwolf bumps a few very dark xterm colors to brighter values to improve visibility.
-   -- This seems like a good idea.
-   for i = 232,237 do
-      atletter_to_color_value[string.format("x%d",i)] = xterm_number_to_color_value[238]
+   -- Aardwolf bumps a few very dark xterm colors to brighter values to improve
+   -- visibility. This seems like a good idea.
+   local color19 = xterm_number_to_client_color[19]
+   local color238 = xterm_number_to_client_color[238]
+   for i = 17,18 do
+      x_to_client_color[string.format("@x%03d",i)] = color19
+      x_to_client_color[string.format("@x%d",i)] = color19
    end
-   for i = 17,19 do
-      atletter_to_color_value[string.format("x%03d",i)] = xterm_number_to_color_value[19]
-      atletter_to_color_value[string.format("x%d",i)] = xterm_number_to_color_value[19]
+   for i = 232,237 do
+      x_to_client_color[string.format("@x%d",i)] = color238
    end
 end
 
-init_ansi()
+init_xterm_colors()
+init_basic_colors()
 
-
-function StylesToColours(styles, dollarC_resets)
-   local reinit = true
-   local copystring = ""
+function StylesToColours (styles, dollarC_resets)
+   init_basic_colors()
+   local line = {}
    local lastcode = ""
    for i,style in ipairs(styles) do
-      -- fixup string: change @ to @@
+      local bold = style.bold or (style.style and ((style.style % 2) == 1))
       local text = string.gsub(style.text, "@", "@@")
-      local code = color_value_to_atcode[style.textcolour]
-      if code then
-         if style.bold or (style.style and ((style.style % 2) == 1)) then
-            if bold_colors_to_atcodes[style.textcolour] then
-               code = bold_colors_to_atcodes[style.textcolour]
-            elseif reinit then -- set up basic color table again, but only once per run
-               reinit = false
-               init_ansi()
-            end
-         end
+      local textcolor = style.textcolour
+      local code = style.fromx
+                   or bold and client_color_to_bold_code[textcolor]
+                   or client_color_to_dim_code[textcolor]
+                   or client_color_to_xterm_code[textcolor]
 
-         if dollarC_resets then
-            text = text:gsub("%$C", code)
-         end
-         copystring = copystring..code..text
+      if code then
          lastcode = code
-      else
-         if dollarC_resets then
-            text = text:gsub("%$C", lastcode)
-         end
-         copystring = copystring..text
       end
+      if dollarC_resets then
+         text = text:gsub("%$C", lastcode)
+      end
+      table.insert(line, (code or "")..text)
    end
-   return copystring
+   return table.concat(line)
 end
 
 
 require "copytable"
-function TruncateStyles(styles, startcol, endcol)
+function TruncateStyles (styles, startcol, endcol)
    if not styles or #styles == 0 then
       return ""
    end
@@ -188,69 +238,75 @@ function TruncateStyles(styles, startcol, endcol)
 end
 
 
--- Deprecated historical function without purpose. Use StylesToColours.
--- Use TruncateStyles if you must, but that seems to be pretty uncommon.
---
--- Convert a partial line of style runs into color codes.
--- Yes the "OneLine" part of the function name is meaningless. It stays that way for historical compatibility.
--- Think of it instead as TruncatedStylesToColours
--- The caller may optionally choose to start and stop at arbitrary character indices.
--- Negative indices are measured backward from the end.
--- The order of start and end columns does not matter, since the start will always be lower than the end.
-function StylesToColoursOneLine (styles, startcol, endcol)
-   if startcol or endcol then
-      return StylesToColours( TruncateStyles(styles, startcol, endcol) )
-   else
-      return StylesToColours( styles )
-   end
-end -- StylesToColoursOneLine
-
-
 -- Converts text with colour codes in it into style runs
-function ColoursToStyles (Text, default_foreground_code, default_background_code)
-   if default_foreground_code and atletter_to_color_value[default_foreground_code] then
-      default_foreground = atletter_to_color_value[default_foreground_code]
+function ColoursToStyles (input, default_foreground_code, default_background_code)
+   init_basic_to_color()
+   if default_foreground_code and default_foreground_code:sub(1,1) ~= "@" then
       default_foreground_code = "@"..default_foreground_code
-   else
-      default_foreground = GetNormalColour(WHITE)
-      default_foreground_code = "@w"
    end
-   if default_background_code and atletter_to_color_value[default_background_code] then
-      default_background = atletter_to_color_value[default_background_code]
+   if default_background_code and default_background_code:sub(1,1) ~= "@" then
+      default_background_code = "@"..default_background_code
+   end
+   local default_bold = false
+   local default_foreground = code_to_client_color[default_foreground_code] or x_to_client_color[default_foreground_code]
+   if not default_foreground then
+      default_foreground = code_to_client_color["@w"]
+      default_foreground_code = "@w"
    else
-      default_background = GetNormalColour(BLACK)
+      default_bold = bold_codes[default_foreground_code] or false
+      default_foreground_code = default_foreground_code
+   end
+   local default_background = code_to_client_color[default_background_code] or x_to_client_color[default_background_code]
+   if not default_background then
+      default_background = default_black
    end
 
-   if Text:find("@", nil, true) then
-      astyles = {}
+   if input:find("@", nil, true) then
+      local astyles = {}
 
       -- make sure we start with a color
-      if Text:sub(1, 1) ~= "@" then
-         Text = default_foreground_code .. Text
+      if input:sub(1, 1) ~= "@" then
+         input = default_foreground_code .. input
       end -- if
 
-      Text = Text:gsub ("@@", "\0") -- change @@ to 0x00
-      Text = Text:gsub ("@%-", "~") -- fix tildes (historical)
-      Text = Text:gsub ("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
-      Text = Text:gsub ("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
-      Text = Text:gsub ("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
-      Text = Text:gsub ("@x25[6-9]","") -- strip invalid xterm codes (256+)
-      Text = Text:gsub ("@[^xrgybmcwDRGYBMCWd]", "")  -- strip hidden garbage
+      input = input:gsub("@@", "\0") -- change @@ to 0x00
+      input = input:gsub("@%-", "~") -- fix tildes (historical)
+      input = input:gsub("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
+      input = input:gsub("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
+      input = input:gsub("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
+      input = input:gsub("@x25[6-9]","") -- strip invalid xterm codes (256+)
+      input = input:gsub("@[^xrgybmcwDRGYBMCW]", "")  -- strip hidden garbage
 
-      for colour, text in Text:gmatch ("@(%a)([^@]+)") do
-         text = text:gsub ("%z", "@") -- put any @ characters back
+      for code, text in input:gmatch("(@%a)([^@]+)") do
+         local from_x = nil
+         text = text:gsub("%z", "@") -- put any @ characters back
 
-         if colour == "x" then -- xterm 256 colors
-            code,text = text:match("(%d%d?%d?)(.*)")
-            colour = colour..code
+         if code == "@x" then -- xterm 256 colors
+            num,text = text:match("(%d%d?%d?)(.*)")
+            code = code..num
+            -- Aardwolf treats x1...x15 as normal ANSI colors.
+            -- That behavior does not match MUSHclient's.
+            num = tonumber(num)
+            from_x = code
+            if num <= 15 then
+               textcolor = code_to_client_color[first_15_to_code[num]]
+            else
+               textcolor = x_to_client_color[code]
+            end
+         else
+            textcolor = code_to_client_color[code]
          end
 
          if #text > 0 then
-            table.insert (astyles, { text = text,
-               bold = (colour == colour:upper()),
+            table.insert(astyles,
+            {
+               fromx = from_x,
+               text = text,
+               bold = bold_codes[code] or false,
                length = #text,
-               textcolour = atletter_to_color_value[colour] or default_foreground,
-               backcolour = default_background })
+               textcolour = textcolor or default_foreground,
+               backcolour = default_background
+            })
          end -- if some text
       end -- for each colour run.
 
@@ -258,28 +314,30 @@ function ColoursToStyles (Text, default_foreground_code, default_background_code
    end -- if any colour codes at all
 
    -- No colour codes, create a single style.
-   return { { text = Text,
-      bold = (default_foreground_code == default_foreground_code:upper()),
-      length = #Text,
+   return {{
+      text = input,
+      bold = default_bold,
+      length = #input,
       textcolour = default_foreground,
-      backcolour = default_background } }
+      backcolour = default_background
+   }}
 end  -- function ColoursToStyles
 
 
 -- Strip all color codes from a string
 function strip_colours (s)
-   s = s:gsub ("@@", "\0")  -- change @@ to 0x00
-   s = s:gsub ("@%-", "~")    -- fix tildes (historical)
-   s = s:gsub ("@x%d?%d?%d?", "") -- strip valid and invalid xterm color codes
-   s = s:gsub ("@.([^@]*)", "%1") -- strip normal color codes and hidden garbage
-   return (s:gsub ("%z", "@")) -- put @ back
+   s = s:gsub("@@", "\0")  -- change @@ to 0x00
+   s = s:gsub("@%-", "~")    -- fix tildes (historical)
+   s = s:gsub("@x%d?%d?%d?", "") -- strip valid and invalid xterm color codes
+   s = s:gsub("@.([^@]*)", "%1") -- strip normal color codes and hidden garbage
+   return (s:gsub("%z", "@")) -- put @ back (has parentheses on purpose)
 end -- strip_colours
 
 
 -- Convert Aardwolf and short x codes to 3 digit x codes
 function canonicalize_colours (s)
    if s:find("@", nil, true) then
-      s = s:gsub ("@x(%d%d?%d?)", function(a)
+      s = s:gsub("@x(%d%d?%d?)", function(a)
          local b = tonumber(a)
          if b and b <= 255 and b >= 0 then
             return string.format("@x%03d", b)
@@ -287,10 +345,8 @@ function canonicalize_colours (s)
             return ""
          end
       end)
-      s = s:gsub ("@([^x])", function(a)
-         if atletter_to_color_value[a] then
-            return color_value_to_atcode[atletter_to_color_value[a]]
-         end
+      s = s:gsub("(@[^x])", function(a)
+         return code_to_xterm[a]
       end)
    end
    return s
@@ -298,7 +354,7 @@ end
 
 
 -- Strip all color codes from a table of styles
-function strip_colours_from_styles(styles)
+function strip_colours_from_styles (styles)
    local ret = {}
    for i,v in ipairs(styles) do
       table.insert(ret, v.text)
@@ -309,56 +365,45 @@ end
 
 -- Returns a string with embedded ansi codes.
 -- This can get confused if the player has redefined their color chart.
-function stylesToANSI(styles, dollarC_resets)
+function stylesToANSI (styles, dollarC_resets)
    local line = {}
-   local reinit = true
    local lastcode = ""
-   for _,v in ipairs (styles) do
+   init_basic_colors()
+   for _,v in ipairs(styles) do
       local code = ""
-      if v.textcolour then
-         if basic_colors_to_atletters[v.textcolour] then
-            local a = basic_colors_to_atletters[v.textcolour]
-            if a == string.upper(a) then
-               code = ANSI(1,atletter_to_ansi_digit[a])
-            else
-               code = ANSI(0,atletter_to_ansi_digit[a])
-            end
-         elseif color_value_to_xterm_number[v.textcolour] then
-            local isbold = (v.bold or (v.style and ((v.style % 2) == 1)))
-            code = ANSI(isbold and 1 or 0,38,5,color_value_to_xterm_number[v.textcolour])
-         elseif reinit then -- set up again, but limit performance damage
-            reinit = false
-            init_ansi()
+      local textcolor = v.textcolour
+      if textcolor then
+         local isbold = (v.bold or (v.style and ((v.style % 2) == 1)))
+         if v.fromx then
+            code = ANSI(isbold and 1 or 0, 38, 5, v.fromx:sub(3))
+         elseif isbold and client_color_to_bold_code[textcolor] then
+            local a = client_color_to_bold_code[textcolor]
+            code = ANSI(1, code_to_ansi_digit[a])
+         elseif client_color_to_dim_code[textcolor] then
+            local a = client_color_to_dim_code[textcolor]
+            code = ANSI(0, code_to_ansi_digit[a])
+         elseif client_color_to_xterm_number[textcolor] then
+            code = ANSI(isbold and 1 or 0, 38, 5, client_color_to_xterm_number[textcolor])
          end
       end
       if code ~= "" then
-         table.insert(line, code)
          lastcode = code
       end
       if dollarC_resets then
          v.text = v.text:gsub("%$C", lastcode)
       end
-      table.insert(line, (v.text))
+      table.insert(line, code..v.text)
    end
    return table.concat(line)
 end
 
--- Aardwolf bold colors
-local ansi_digit_to_bold_atcode = {
-   [30] = "@D",
-   [31] = "@R",
-   [32] = "@G",
-   [33] = "@Y",
-   [34] = "@B",
-   [35] = "@M",
-   [36] = "@C",
-   [37] = "@W"
-}
 
 -- Tries to convert ANSI sequences to Aardwolf color codes
-function AnsiToColours(ansi, default_foreground_code)
+function AnsiToColours (ansi, default_foreground_code)
    if not default_foreground_code then
       default_foreground_code = "@w"
+   elseif default_foreground_code:sub(1,1) ~= "@" then
+      default_foreground_code = "@"..default_foreground_code
    end
 
    local ansi_capture = "\027%[([%d;]+)m"
@@ -376,8 +421,8 @@ function AnsiToColours(ansi, default_foreground_code)
          elseif nc == 5 and xstage == 1 then
             xstage = 2
          elseif xstage == 2 then -- xterm 256 color
-            if bold and ansi_digit_to_bold_atcode[nc+30] then
-               color = ansi_digit_to_bold_atcode[nc+30]
+            if bold and ansi_digit_to_bold_code[nc+30] then
+               color = ansi_digit_to_bold_code[nc+30]
             else
                color = string.format("@x%03d", nc)
             end
@@ -386,14 +431,14 @@ function AnsiToColours(ansi, default_foreground_code)
             bold = true
             xstage = 0
          elseif nc == 0 then
-            bold = false
+            bold = bold_codes[default_foreground_code] or false
             -- not actually sure if we should set color here or not
             color = default_foreground_code
          elseif nc <= 37 and nc >= 30 then -- regular color
-            if bold and ansi_digit_to_bold_atcode[nc] then
-               color = ansi_digit_to_bold_atcode[nc]
+            if bold then
+               color = ansi_digit_to_bold_code[nc]
             else
-               color = string.format("@x%03d", nc-30)
+               color = ansi_digit_to_dim_code[nc]
             end
             xstage = 0
          end
@@ -404,23 +449,35 @@ function AnsiToColours(ansi, default_foreground_code)
    return ansi
 end
 
-function ColoursToANSI(text)
+function ColoursToANSI (text)
    -- return stylesToANSI(ColoursToStyles(text))
    if text:find("@", nil, true) then
-      text = text:gsub ("@@", "\0") -- change @@ to 0x00
-      text = text:gsub ("@%-", "~") -- fix tildes (historical)
-      text = text:gsub ("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
-      text = text:gsub ("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
-      text = text:gsub ("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
-      text = text:gsub ("@x25[6-9]","") -- strip invalid xterm codes (256+)
-      text = text:gsub ("@[^xrgybmcwDRGYBMCWd]", "")  -- strip hidden garbage
+      text = text:gsub("@@", "\0") -- change @@ to 0x00
+      text = text:gsub("@%-", "~") -- fix tildes (historical)
+      text = text:gsub("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
+      text = text:gsub("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
+      text = text:gsub("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
+      text = text:gsub("@x25[6-9]","") -- strip invalid xterm codes (256+)
+      text = text:gsub("@[^xrgybmcwDRGYBMCW]", "")  -- strip hidden garbage
 
-      text = text:gsub ("@x(%d%d?%d?)", function(a) return ANSI(0,38,5,a) end)
-      text = text:gsub ("@([DRGYBMCW])", function(a)
-         return ANSI(1,atletter_to_ansi_digit[a])
+      text = text:gsub("@x(%d%d?%d?)", function(a)
+         local num_a = tonumber(a)
+         -- Aardwolf treats x1...x15 as normal ANSI codes
+         if num_a <= 15 then
+            if num_a >= 9 then
+               return ANSI(1, num_a+22)
+            else
+               return ANSI(0, num_a+30)
+            end
+         else
+            return ANSI(bold,38,5,a)
+         end
       end)
-      text = text:gsub ("@([rgybmcw])", function(a)
-         return ANSI(0,atletter_to_ansi_digit[a])
+      text = text:gsub("(@[DRGYBMCW])", function(a)
+         return ANSI(1,code_to_ansi_digit[a])
+      end)
+      text = text:gsub("(@[rgybmcw])", function(a)
+         return ANSI(0,code_to_ansi_digit[a])
       end)
 
       text = text:gsub("%z", "@")
@@ -429,24 +486,76 @@ function ColoursToANSI(text)
 end
 
 
+function test_colors ()
+   str = "@Rbold @rfalse @x9bold @x1false @x196false @x88false"
+   print("<BEGIN>")
+   print(str)
+   require "tprint"
+   print("StylesToColours(ColoursToStyles) -- ")
+   print(str, " original")
+   print(StylesToColoursOneLine(ColoursToStyles(str), 1, 9))
+   SetNormalColour(RED, 128)
+   SetBoldColour(RED, 128)
+   print("r128R128", StylesToColours(ColoursToStyles(str)))
+
+   SetNormalColour(RED, 135)
+   print("r135R128", StylesToColours(ColoursToStyles(str)))
+
+   print('C2A', ColoursToANSI(str))
+   print('C2A2C', AnsiToColours(ColoursToANSI(str)))
+
+   print('C2S2A', stylesToANSI(ColoursToStyles(str)))
+   print('C2S2A2C', AnsiToColours(stylesToANSI(ColoursToStyles(str))))
+
+   print('stripstyles', strip_colours_from_styles(ColoursToStyles(str)))
+   print('stripcolors', strip_colours(str))
+
+   print('canon', canonicalize_colours(str))
+
+   SetNormalColour(RED, 128)
+   SetBoldColour(RED, 255)
+   start = utils.timer()
+   init_basic_colors()
+   print("init 1x", string.format("%.07f", utils.timer() - start))
+   print("<END>")
+end
+
+-- EVERYTHING BELOW HERE IS DEPRECATED. DO NOT USE. --
+
+-- Historical function without purpose. Use StylesToColours.
+-- Use TruncateStyles if you must, but that seems to be rather uncommon.
+--
+-- Convert a partial line of style runs into color codes.
+-- Yes the "OneLine" part of the function name is meaningless. It stays that way for historical compatibility.
+-- Think of it instead as TruncatedStylesToColours
+-- The caller may optionally choose to start and stop at arbitrary character indices.
+-- Negative indices are measured backward from the end.
+-- The order of start and end columns does not matter, since the start will always be lower than the end.
+function StylesToColoursOneLine (styles, startcol, endcol)
+   if startcol or endcol then
+      return StylesToColours( TruncateStyles(styles, startcol, endcol) )
+   else
+      return StylesToColours( styles )
+   end
+end -- StylesToColoursOneLine
 
 
--- OLD.
+-- should have been marked local to prevent external use
 colour_conversion = {
-   k = GetNormalColour (BLACK)   ,   -- 0x000000
-   r = GetNormalColour (RED)     ,   -- 0x000080
-   g = GetNormalColour (GREEN)   ,   -- 0x008000
-   y = GetNormalColour (YELLOW)  ,   -- 0x008080
-   b = GetNormalColour (BLUE)    ,   -- 0x800000
-   m = GetNormalColour (MAGENTA) ,   -- 0x800080
-   c = GetNormalColour (CYAN)    ,   -- 0x808000
-   w = GetNormalColour (WHITE)   ,   -- 0xC0C0C0
-   K = GetBoldColour   (BLACK)   ,   -- 0x808080
-   R = GetBoldColour   (RED)     ,   -- 0x0000FF
-   G = GetBoldColour   (GREEN)   ,   -- 0x00FF00
-   Y = GetBoldColour   (YELLOW)  ,   -- 0x00FFFF
-   B = GetBoldColour   (BLUE)    ,   -- 0xFF0000
-   M = GetBoldColour   (MAGENTA) ,   -- 0xFF00FF
-   C = GetBoldColour   (CYAN)    ,   -- 0xFFFF00
-   W = GetBoldColour   (WHITE)   ,   -- 0xFFFFFF
+   k = GetNormalColour(BLACK)   ,   -- 0x000000
+   r = GetNormalColour(RED)     ,   -- 0x000080
+   g = GetNormalColour(GREEN)   ,   -- 0x008000
+   y = GetNormalColour(YELLOW)  ,   -- 0x008080
+   b = GetNormalColour(BLUE)    ,   -- 0x800000
+   m = GetNormalColour(MAGENTA) ,   -- 0x800080
+   c = GetNormalColour(CYAN)    ,   -- 0x808000
+   w = GetNormalColour(WHITE)   ,   -- 0xC0C0C0
+   K = GetBoldColour(BLACK)   ,   -- 0x808080
+   R = GetBoldColour(RED)     ,   -- 0x0000FF
+   G = GetBoldColour(GREEN)   ,   -- 0x00FF00
+   Y = GetBoldColour(YELLOW)  ,   -- 0x00FFFF
+   B = GetBoldColour(BLUE)    ,   -- 0xFF0000
+   M = GetBoldColour(MAGENTA) ,   -- 0xFF00FF
+   C = GetBoldColour(CYAN)    ,   -- 0xFFFF00
+   W = GetBoldColour(WHITE)   ,   -- 0xFFFFFF
 }  -- end conversion table
