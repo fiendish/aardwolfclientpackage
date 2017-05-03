@@ -781,7 +781,7 @@ toConfirm = ""
 blinded = false
 mylevel = 0
 mytier = 0
-NoUnderline_hyperlinks = GetVariable("NoUnderline_hyperlinks") == "1"
+NoUnderline_hyperlinks = GetVariable("NoUnderline_hyperlinks") ~= "0" -- default true
 window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = ((GetVariable("quick_mode") or "1") == "1") -- default true
