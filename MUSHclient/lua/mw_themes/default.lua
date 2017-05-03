@@ -1,3 +1,5 @@
+-- You can copy this file to create your own themes.
+
 return {
     WINDOW_BACKGROUND = ColourNameToRGB ("#000000"), -- for miniwindow body
     WINDOW_BORDER = ColourNameToRGB("#E8E8E8"), -- for miniwindow body
