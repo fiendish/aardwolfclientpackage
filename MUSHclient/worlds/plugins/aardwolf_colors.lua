@@ -470,7 +470,7 @@ function ColoursToANSI (text)
                return ANSI(0, num_a+30)
             end
          else
-            return ANSI(bold,38,5,a)
+            return ANSI(0,38,5,num_a)
          end
       end)
       text = text:gsub("(@[DRGYBMCW])", function(a)
