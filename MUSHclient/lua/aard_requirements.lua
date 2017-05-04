@@ -10,14 +10,14 @@ do_plugin_check_now("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor
 do_plugin_check_now("55616ea13339bc68e963e1f8", "aard_chat_echo") -- gmcp channels in main display
 
 -- Activate certain world file settings
-settings_to_activate_at_least_once = {
+aardclient_settings_to_activate_at_least_once = {
    "show_underline", -- needed for hyperlink underlining
    "underline_hyperlinks", -- oddly enough also needed for hyperlink underlining
    "omit_date_from_save_files",  -- slightly less clutter in settings files
    "utf_8" -- needed for alternate maptypes in main output
 }
 
-for i,v in ipairs(settings_to_activate_at_least_once) do
+for i,v in ipairs(aardclient_settings_to_activate_at_least_once) do
    if GetVariable("aardclient_activated_"..v) ~= "done" then
       SetOption (v, 1)
       SetVariable("aardclient_activated_"..v, "done")
