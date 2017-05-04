@@ -34,6 +34,23 @@ You can also run a manual check by typing:    package update check
    script="manualCheck"
 >
 </alias>
+
+<alias
+   match="checkversion"
+   enabled="y"
+   send_to="12"
+   sequence="100"
+>
+<send>
+   local succ, version, msg = aard_extras.PackageVersionExtended()
+   if succ then
+      ColourNote("white", "blue", msg)
+   else
+      ColourNote("white","red", msg)
+   end
+</send>
+</alias>
+
 </aliases>
 
 <script>

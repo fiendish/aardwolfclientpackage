@@ -1,5 +1,17 @@
 Aardwolf Client Package Major Changes List
 
+r1910 snapshot
+- bug fix: The chat echo plugin will now show all channels in main output if it doesn't detect any chat capture miniwindows.
+- bug fix: The chat echo plugin will wait for a safe char.status.state before checking your compact settings.
+- bug fix: A few of the new client settings that are force-enabled will only be activated once instead of every launch.
+- misc change: The GMCP mapper will default to not drawing underlines on its hyperlinks because it is unsightly to have so many in a dense list.
+- bug fix: Color handling functions should now be responsive to ANSI color settings changes in your client.
+- bug fix: Fixes an infinite loop when resizing the mapper miniwindow to its minimum size.
+- bug fix: Fixes compatibility with old versions of some 3rd party plugins that were looking for a colors-related variable I had removed.
+- new feature: Adds a new demonstration plugin for translating non-English languages on your ftalk channel. (aard_translate_foreign_friends.xml)
+- new feature: Adds a new universal (hopefully) text to speech/braille plugin (and DLLs) using the Tolk speech and braille abstraction API. Also adds a SAPI-only plugin for when you definitely know you don't have a screen reader intalled. (universal_text_to_speech.xml and SAPI.xml)
+- misc change: Removed a bunch of crufty plugins that are just sitting around in the installer, unrelated to the project. This will not remove them from pre-existing installations.
+
 r1900 snapshot
 - bug fix: Copying selected text in the communication log was not truncating the text properly.
 - bug fix: The group window was erroring on send to back, and other related functions.

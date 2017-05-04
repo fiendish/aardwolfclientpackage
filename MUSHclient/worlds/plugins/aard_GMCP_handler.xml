@@ -182,7 +182,7 @@ end -- function OnPluginTelnetSubnegotiation
 function gmcpdata_at_level(what)
    local node = gmcpdata
    for level in string.gmatch(what, "%a+") do
-      if (node[level] == nil) then return end
+      if (type(node) ~= "table" or node[level] == nil) then return end
       node = node[level]
    end
    return node

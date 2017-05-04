@@ -16,10 +16,10 @@
 <muclient>
 <plugin
    name="Aardwolf_GMCP_Mapper"
-   author="Multiple"
+   author="Fiendish"
    id="b6eae87ccedd84f510b74714"
    language="Lua"
-   purpose="Draws GMCP map for Aardwolf"
+   purpose="GMCP map builder for Aardwolf"
    date_written="2010-09-01 16:37:14"
    requires="4.73"
    version="2.0"
@@ -33,12 +33,6 @@ AUTOMATIC MAPPER by Fiendish
 ** Some GMCP specific code added by Lasher.
 ** A few features contributed by Spartacus.
 ** Many major improvements made to the original design by Fiendish.
-
-The window can be dragged to a new location by dragging the room name.
-LH-click on a room to speedwalk to it. RH-click on a room for options.
-
-LH-click on the "*" button on the upper-left corner for configuration settings.
-(click again on the [x] to close configuration)
 ]]>
 </description>
 </plugin>
@@ -787,7 +781,7 @@ toConfirm = ""
 blinded = false
 mylevel = 0
 mytier = 0
-NoUnderline_hyperlinks = GetVariable("NoUnderline_hyperlinks") == "1"
+NoUnderline_hyperlinks = GetVariable("NoUnderline_hyperlinks") ~= "0" -- default true
 window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = ((GetVariable("quick_mode") or "1") == "1") -- default true

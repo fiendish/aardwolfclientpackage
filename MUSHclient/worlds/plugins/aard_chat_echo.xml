@@ -174,10 +174,14 @@ EnableTrigger("compact_mode", false)
    send_to="12"
 >
 <send>
-EnableTriggerGroup("end_gag", true)
-SendNoEcho("echo {begin compact check}")
-Send("%1")
-SendNoEcho("echo {end compact check}")
+if can_check_compact() then
+   EnableTriggerGroup("end_gag", true)
+   SendNoEcho("echo {begin compact check}")
+   Send("%1")
+   SendNoEcho("echo {end compact check}")
+else
+   Send("%1")
+end
 </send>
 </alias>
 
@@ -214,6 +218,26 @@ EnableTrigger("global_quest", not echo_global_quest)
 EnableTrigger("remort_auction", not echo_remort_auction)
 EnableTrigger("donations", not echo_donations)
 EnableTrigger("warfare", not echo_warfare)
+
+never_hide = true
+list_of_filter_enablers = {}
+function enable_hiding(true_false, enabler_id)
+   list_of_filter_enablers[enabler_id] = true_false or nil
+   num_enablers = 0
+   for k,v in pairs(list_of_filter_enablers) do
+      num_enablers = num_enablers + 1
+   end
+   if num_enablers > 0 then
+      never_hide = false
+   else
+      never_hide = true
+   end
+end
+
+compact_uncheckable_states = {[""]=true, ["1"]=true, ["2"]=true, ["4"]=true, ["5"]=true, ["6"]=true, ["7"]=true, ["8"]=true}
+function can_check_compact()
+   return not compact_uncheckable_states[gmcp("char.status.state")]
+end
 
 function hideEchos(info, global_quest, remort_auction, donations, warfare)
    if info ~= nil then
@@ -296,6 +320,9 @@ end
 
 function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
+   for k,v in pairs(list_of_filter_enablers) do
+      enable_hiding(GetPluginInfo(k, 17), k)
+   end
 end
 
 
@@ -311,11 +338,12 @@ function OnPluginBroadcast (msg, id, name, text)
          if msg:find("\a") and (GetOption("enable_beeps") == 1) then
             Sound(GetInfo(50))
          end
-         if (echo_donations or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+
+         if (never_hide or echo_donations or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if not channels_table[chan] then
                addNewChannel(chan)
             end
-            if channels_table[chan]["echo"] then
+            if never_hide or channels_table[chan]["echo"] then
                if char_state ~= "5" then
                   echo_msg(msg)
                else
@@ -325,21 +353,23 @@ function OnPluginBroadcast (msg, id, name, text)
          end
       elseif text == "char.status" then
          char_state = gmcp("char.status.state")
-         if char_state ~= "5" then
-            for i,v in ipairs(msg_buffer) do
-               echo_msg(v)
-            end
-            msg_buffer = {}
-         end
-      elseif text == "char.vitals" then
          -- some gmcp messages get sent with the MOTD and we want this to happen after
-         if not done_init then
+         if not done_init and can_check_compact() then
             done_init = true
             Note("Checking compact setting.")
             SendNoEcho("echo {begin compact check}")
             SendNoEcho("compact")
             SendNoEcho("compact")
             SendNoEcho("echo {end compact check}")
+         end
+         if char_state ~= "5" then -- show messages that were buffered while in note mode
+            if #msg_buffer > 0 then
+               Note("Replaying all channel messages received while in note writing mode...")
+            end
+            for i,v in ipairs(msg_buffer) do
+               echo_msg(v)
+            end
+            msg_buffer = {}
          end
       end
    end

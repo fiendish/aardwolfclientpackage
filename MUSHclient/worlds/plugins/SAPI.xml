@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="SAPI_Text_To_Speech"
+   author="Avi Kelman (Fiendish)"
+   id="463242566069ebfd1b379ec1"
+   language="Lua"
+   purpose="Speaks incoming text using SAPI."
+   date_written="2010-09-01"
+   requires="4.60"
+   version="2.0"
+   save_state="y"
+   >
+   
+<description trim="y">
+Text To Speech Plug-in Commands:
+
+ sapi on                 : turn on automatic speaking of MUD output.
+ sapi off                : turn off automatic speaking of MUD output.
+ sapi skip               : skips one sentence in output stream.
+ sapi clear              : clear the speech output queue.
+ sapi faster             : speeds speech up.
+ sapi slower             : slows speech down.
+ sapi rate [number]      : check or set speech rate to [number].
+ sapi list voices        : list the available TTS voices.
+ sapi voice [number]     : check or set to the given TTS voice number.
+ sapi test               : speak a test phrase.
+ sapi filtering [number] : check or set punctuation filtering level to [number].
+ sapi say [text]         : speak the given text.
+
+Scripts can also speak stuff by doing:
+
+ CallPlugin ("463242566069ebfd1b379ec1", "say", "What to say")
+</description>
+</plugin>
+
+<aliases>
+  <alias
+   match="sapi on"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.unmute()
+   </send>
+  </alias>
+
+  <alias
+   match="sapi off"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.mute()
+   </send>
+  </alias>
+  
+  <alias
+   match="sapi faster"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   SetVariable("engine_Rate", tostring(sapi_interface.faster()))
+   </send>
+  </alias>
+  
+  <alias
+   match="sapi slower"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   
+   SetVariable("engine_Rate", tostring(sapi_interface.slower()))
+   </send>
+  </alias>
+    
+  <alias
+   match="sapi voice*"
+   regexp="n"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   local arg = Trim("%1")
+   if arg == "" then
+      sapi_interface.say_current_voice()
+   else
+      local index,id = sapi_interface.set_voice_by_number(arg)
+      SetVariable("engine_Voice_ID", tostring(id))
+   end
+   </send>
+  </alias>
+  
+  <alias
+   match="sapi list voices"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.list_voices()
+   </send>
+  </alias>
+    
+  <alias
+   match="sapi test"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.speech_demo()
+   </send>
+  </alias>
+  
+  <alias
+   match="sapi rate*"
+   enabled="n"
+   regexp="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   local arg = Trim("%1")
+   if arg == "" then
+      sapi_interface.say_current_rate()
+   else
+      SetVariable("engine_Rate", tostring(sapi_interface.set_rate(arg)))
+   end
+   </send>
+  </alias>
+  
+  <alias
+   match="sapi skip"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.skip_sentence()
+   </send>
+  </alias>
+
+  <alias
+   match="sapi clear"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.skip_all()
+   </send>
+  </alias>
+  
+  <alias
+   match="sapi say *"
+   regexp="n"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.say("%1")
+   </send>
+  </alias>
+    
+  <alias
+   match="sapi help"
+   regexp="n"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.say("This help is being spoken but not printed to the screen. To print it to the screen, use: sapi help printed.")
+   sapi_interface.say(GetPluginInfo(GetPluginID(), 3), true)
+   </send>
+  </alias>
+
+  <alias
+   match="sapi help printed"
+   regexp="n"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="99"
+   group="speech"
+   send_to="12"
+  ><send>
+   print(GetPluginInfo(GetPluginID(), 3), true)
+   </send>
+  </alias>
+
+  <alias
+   match="sapi debug"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   sapi_interface.print_spoken()
+   </send>
+  </alias>
+  
+  <alias
+   match="sapi filtering*"
+   regexp="n"
+   enabled="n"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+   group="speech"
+   send_to="12"
+  ><send>
+   local arg = Trim("%1")
+   if arg == "" then
+      sapi_interface.say_current_filtering_level()
+   else
+      SetVariable("filtering_level", tostring(sapi_interface.set_filtering_level(arg)))
+   end
+   </send>
+  </alias>
+</aliases>
+
+<triggers>
+</triggers>
+
+<script>
+<![CDATA[
+
+function OnPluginInstall ()
+   sapi_interface = require "sapi_interface"
+   
+   if sapi_interface == -1 then
+      print([[
+      Could not open SAPI.
+      Note for Linux and Mac OS users...
+      SAPI speech functionality depends on the Microsoft Speech API.
+      This is not included by default in Wine, and SpeechSDK51.exe must be separately installed.
+      You can download it from http://download.microsoft.com/download/B/4/3/B4314928-7B71-4336-9DE7-6FA4CF00B7B3/SpeechSDK51.exe
+      ]])
+      sapi_interface = nil
+      return
+   end
+
+   if sapi_interface == -2 then
+      print("No SAPI voices found.")
+      sapi_interface = nil
+      return
+   end
+
+   local new_filter = tonumber(GetVariable("filtering_level"))
+   if new_filter then
+      sapi_interface.set_filtering_level(new_filter, true)
+   end
+   
+   local new_rate = tonumber(GetVariable("engine_Rate"))
+   if new_rate then
+      sapi_interface.set_rate(new_rate, true)
+   end
+   
+   local new_voice = GetVariable("engine_Voice_ID")
+   if new_voice then
+      sapi_interface.set_voice_by_id(new_voice, true)
+   end
+
+   EnableGroup("speech", true)
+
+   -- customize for aardwolf
+   for i,v in ipairs({
+      {"%f[%a][pP]file", " P file"},
+      {"%f[%a][gG]clan", " G clan"},
+      {"%f[%a][gG]tell", " G tell"},
+      {"%f[%a][fF]talk", " F talk"},
+      {"%f[%a][gG]clan", " G clan"},
+      {"%f[%a][gG]social", " G social"},
+      {"%f[%a][rR]auction", " R auction"},
+      {"%f[%a][gG]ametalk", " game-talk"},
+      {"%f[%a][nN]obletalk", " noble-talk"}, 
+      {"%f[%a][tT]iertalk", " tier-talk"},
+      {"%f[%a][rR]acetalk", " race-talk"},
+      {"%f[%a][cC]lantalk", " clan-talk"},
+      {"%f[%a][pP]okerinfo", " poker-info"},
+      {"%f[%a][mM]afiainfo", " mafia-info"},
+      {"%f[%a][aA]ylor", " aylor "} -- Aylorian->ALIEN??? hahahaha what
+   }) do
+      table.insert(sapi_interface.replacements, v)
+   end
+   -- end customize for aardwolf
+   
+   sapi_interface.say("SAPI Plugin installed and is ready")
+   sapi_interface.speech_demo()
+end
+
+local installed = false
+function OnPluginListChanged()
+   if not installed then
+      installed = true  -- to prevent reading MUSHclient's Added/Reinstalled plugin messages
+   end
+end
+
+-- here to draw the screen
+function OnPluginScreendraw (t, log, line)
+   if installed and sapi_interface and (t == 0 or t == 1) then
+      sapi_interface.say(line)
+   end
+end
+
+function OnPluginTabComplete (line)
+   if sapi_interface then
+      sapi_interface.say(line)
+   end
+end
+
+]]>
+</script>
+</muclient>
