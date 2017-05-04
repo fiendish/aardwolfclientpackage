@@ -9,12 +9,16 @@ do_plugin_check_now("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- GMCP 
 do_plugin_check_now("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- z order manager
 do_plugin_check_now("55616ea13339bc68e963e1f8", "aard_chat_echo") -- gmcp channels in main display
 
--- Activate certain world file settings
+-- Activate various useful world file settings
+
+-- These get activated always
+SetOption("omit_date_from_save_files", 1)  -- slightly less clutter in settings files
+SetOption("utf_8", 1)  -- needed for alternate maptypes in main output
+
+-- These get activated at least once, but not after that
 aardclient_settings_to_activate_at_least_once = {
-   "show_underline", -- needed for hyperlink underlining
-   "underline_hyperlinks", -- oddly enough also needed for hyperlink underlining
-   "omit_date_from_save_files",  -- slightly less clutter in settings files
-   "utf_8" -- needed for alternate maptypes in main output
+   "show_underline",  -- needed for hyperlink underlining
+   "underline_hyperlinks"  -- oddly enough also needed for hyperlink underlining
 }
 
 for i,v in ipairs(aardclient_settings_to_activate_at_least_once) do
