@@ -235,6 +235,7 @@ end
 win = GetPluginID()
 function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
+   CallPlugin ("55616ea13339bc68e963e1f8", "enable_hiding", true, GetPluginID())
 end
 
 function OnPluginInstall ()
@@ -401,7 +402,6 @@ end --  OnPluginSaveState
 
 function OnPluginDisable()
    WindowShow( win, false )
-   UnloadPlugin("55616ea13339bc68e963e1f8")
    OnPluginSaveState()
 end --  OnPluginDisable
 
