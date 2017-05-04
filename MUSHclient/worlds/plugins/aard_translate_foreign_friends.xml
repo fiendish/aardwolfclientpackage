@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Translate_Friends"
+   author="Fiendish"
+   id="f553c80154d48ea139b1d192"
+   language="Lua"
+   date_written="2017-01-24 09:43:19"
+   requires="4.90"
+   version="1.0"
+>
+<description trim="y">
+Translates non-English languages spoken on your ftalk into English.
+</description>
+</plugin>
+<script>
+require "gmcphelper"
+local translate = require "online_translation"
+dofile(GetInfo(60) .. "aardwolf_colors.lua")
+
+function print_if_different(original, translated)
+   if original:lower() ~= translated:lower() then
+      print("\""..original.."\" ---- translates to ---> \""..translated.."\"")
+   end
+end
+
+function OnPluginBroadcast (msg, id, name, text)
+   -- Look for GMCP channel messages.
+   if (id == '3e7dedbe37e44942dd46d264') and (text == "comm.channel") then
+      gmcpcomm = gmcp("comm.channel")
+      player = gmcpcomm.player or ""
+      msg = Trim(strip_colours(gmcpcomm.msg or ""))
+      chan = gmcpcomm.chan or ""
+
+      if (player ~= "") and (chan == "ftalk") then
+         -- comm.channel gmcp info injects the player speaking prefix into the message, so first remove it
+         end_of_name = ({msg:find(player..": ")})[2]
+         if end_of_name then
+            msg = msg:sub(end_of_name+1)
+
+            -- and remove the surrounding quotation marks
+            if msg:sub(1,1) == "'" then
+               msg = msg:sub(2)
+            end
+            if msg:sub(-1) == "'" then
+               msg = msg:sub(1,-2)
+            end
+
+            -- then translate with automatic language detection
+            translate(msg, "auto", "en", print_if_different)
+         end
+      end
+   end
+end
+
+</script>
+</muclient>
