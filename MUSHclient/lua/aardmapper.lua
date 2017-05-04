@@ -67,10 +67,13 @@ require "gauge"
 require "pairsbykeys"
 require "mw"
 
+
 local FONT_ID     = "fn"  -- internal font identifier
 local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
 local CONFIG_FONT_ID = "cfn"
 local CONFIG_FONT_ID_UL = "cfnu"
+
+local FLAT_THEME = tonumber(GetVariable("FLAT_THEME")) or 0 
 
 -- size of room box
 local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 12
@@ -170,8 +173,13 @@ local function build_room_info ()
 end -- build_room_info
 
 -- assorted colours
-BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#111111"}
-ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
+if FLAT_THEME == 0 then
+   BACKGROUND_COLOUR     = { name = "Area Background", colour = ColourNameToRGB "#11111"}
+   ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
+else
+   BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#1c1c1c"}
+   ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#303030"}
+end
 EXIT_COLOUR           = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
 EXIT_COLOUR_UP_DOWN   = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
 ROOM_NOTE_COLOUR      = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen"}
@@ -322,7 +330,7 @@ end -- get_number_from_user
 
 local function draw_configuration ()
 
-   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", "Area Textures", "Room size"}
+   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Flat Theme", "Depth", "Area Textures", "Room size"}
    local width =  max_text_width (config_win, CONFIG_FONT_ID, config_entries , true)
    local GAP = 5
 
@@ -332,6 +340,7 @@ local function draw_configuration ()
    local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID,
       {config.FONT.name .. " " .. config.FONT.size,
       ((config.USE_TEXTURES.enabled and "On") or "Off"),
+      ((FLAT_THEME and "On") or "Off"),
       "- +",
       tostring (config.SCAN.depth)},
       true))
@@ -415,6 +424,24 @@ local function draw_configuration ()
       "Click to change font",
       miniwin.cursor_hand, 0)  -- hand cursor
    y = y + font_height
+
+   -- flat Theme
+   WindowText(config_win, CONFIG_FONT_ID, "Flat Theme", x, y, 0, 0, 0x000000)
+   if FLAT_THEME then text="On" else text="Off" end
+   WindowText(config_win, CONFIG_FONT_ID_UL, ((FLAT_THEME==1 and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((FLAT_THEME==0 and "On") or "Off"))/2, y, 0, 0, 0x808080)
+
+   -- flat theme hotspot
+   WindowAddHotspot(config_win,
+      "$<flat_theme>",
+      x + GAP,
+      y,
+      x + frame_width,
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.mouseup_flat_theme",  -- mouseup
+      "Click to toggle use of the flat theme",
+      miniwin.cursor_hand, 0)  -- hand cursor
+   y = y + font_height
+
 
    -- area textures
    WindowText(config_win, CONFIG_FONT_ID, "Area Textures", x, y, 0, 0, 0x000000)
@@ -733,8 +760,12 @@ end -- changed_room
 local function draw_zone_exit (exit)
    local x, y, def = exit.x, exit.y, exit.def
    local offset = ROOM_SIZE
-
-   WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("yellow"), miniwin.pen_solid + 0x0200, 5)
+   local pen_width = 5
+   if FLAT_THEME == 1 then
+      pen_width = 2
+   end
+      
+   WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("yellow"), miniwin.pen_solid + 0x0200, pen_width)
    WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("green"), miniwin.pen_solid + 0x0200, 1)
 end --  draw_zone_exit
 
@@ -1017,7 +1048,7 @@ function init (t)
    show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
    speedwalk_prefix = t.speedwalk_prefix  -- how to speedwalk (prefix)
-
+   
    -- force some config defaults if not supplied
    for k, v in pairs (default_config) do
       config[k] = config[k] or v
@@ -1164,6 +1195,7 @@ end -- hide
 function save_state ()
    SetVariable("ROOM_SIZE", ROOM_SIZE)
    SetVariable("DISTANCE_TO_NEXT_ROOM", DISTANCE_TO_NEXT_ROOM)
+   SetVariable("FLAT_THEME", FLAT_THEME)
    if WindowInfo(win,1) and WindowInfo(win,5) then
       movewindow.save_state (win)
    end
@@ -1635,6 +1667,19 @@ function mouseup_change_depth (flags, hotspot_id)
    draw (current_room)
 end -- mouseup_change_depth
 
+function mouseup_flat_theme (flags, hotspot_id)
+   if FLAT_THEME == 1 then
+      FLAT_THEME = 0 
+      BACKGROUND_COLOUR     = { name = "Area Background", colour = ColourNameToRGB "#11111"}
+      ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
+   else
+      FLAT_THEME = 1 
+      BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#1c1c1c"}
+      ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#303030"}
+   end
+   draw (current_room)
+end -- mouseup_flat_theme
+
 function mouseup_change_area_textures (flags, hotspot_id)
    if config.USE_TEXTURES.enabled == true then
       config.USE_TEXTURES.enabled = false
@@ -1720,15 +1765,23 @@ function add_resize_tag()
    -- draw the resize widget bottom right corner.
    local width  = WindowInfo(win, 3)
    local height = WindowInfo(win, 4)
+   
+   if FLAT_THEME == 1 then
+      resize_col_1 = 0x303030
+      resize_col_2 = 0x1c1c1c
+   else
+      resize_col_1 = 0xffffff
+      resize_col_2 = 0x696969
+   end
 
-   WindowLine(win, width-4, height-2, width-2, height-4, 0xffffff, 0, 2)
-   WindowLine(win, width-5, height-2, width-2, height-5, 0x696969, 0, 1)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0xffffff, 0, 2)
-   WindowLine(win, width-8, height-2, width-2, height-8, 0x696969, 0, 1)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0xffffff, 0, 2)
-   WindowLine(win, width-11, height-2, width-2, height-11, 0x696969, 0, 1)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0xffffff, 0, 2)
-   WindowLine(win, width-14, height-2, width-2, height-14, 0x696969, 0, 1)
+   WindowLine(win, width-4, height-2, width-2, height-4, resize_col_1, 0, 2)
+   WindowLine(win, width-5, height-2, width-2, height-5, resize_col_2, 0, 1)
+   WindowLine(win, width-7, height-2, width-2, height-7, resize_col_1, 0, 2)
+   WindowLine(win, width-8, height-2, width-2, height-8, resize_col_2, 0, 1)
+   WindowLine(win, width-10, height-2, width-2, height-10, resize_col_1, 0, 2)
+   WindowLine(win, width-11, height-2, width-2, height-11, resize_col_2, 0, 1)
+   WindowLine(win, width-13, height-2, width-2, height-13, resize_col_1, 0, 2)
+   WindowLine(win, width-14, height-2, width-2, height-14, resize_col_2, 0, 1)
 
    -- Hotspot for resizer.
    local x = width - 14
@@ -1747,6 +1800,10 @@ end -- draw resize tag.
 
 function draw_edge()
    -- draw edge frame.
-   check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
-   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
+   if FLAT_THEME == 1 then
+      check (WindowRectOp (win, 1, 0, 0, 0, 0, 0x303030, 15))
+   else
+      check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
+      check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
+   end
 end

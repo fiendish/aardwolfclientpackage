@@ -44,8 +44,6 @@ require "gauge"
 require "gmcphelper"
 require "serialize"
 
-background_colour     = 0x000000
-border_color          = 0xcccccc
 default_width         = 1137
 default_x             = 0
 default_y             = 552
@@ -68,6 +66,15 @@ thresh1percent = tonumber (GetVariable("thresh1percent")) or 40
 thresh2percent = tonumber (GetVariable("thresh2percent")) or 20
 thresh1color = tonumber (GetVariable("thresh1color")) or 0x00ffff
 thresh2color = tonumber (GetVariable("thresh2color")) or 0x0000ff
+
+flat_theme = tonumber (GetVariable("flat_theme")) or 0
+if flat_theme == 1 then
+   background_colour = 0x1c1c1c
+   border_color = 0x303030
+else  
+   background_colour = 0x000000 
+   border_color = 0xcccccc 
+end
 
 -- Variables not saved.
 startx     = ""
@@ -97,6 +104,7 @@ function reset_aard()
    width = default_width
    font_name = default_font_name
    font_size = default_font_size
+   flat_theme = 0
    windowinfo.window_left = default_x
    windowinfo.window_top = default_y
    WindowPosition(win, default_x, default_y, 0, 18)
@@ -320,17 +328,28 @@ function DisplayStatsPage()
 
    -- draw edge frame.
    WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   if flat_theme == 1 then
+      --WindowRectOp (win, 1, 1, 1, -1, -1, 0x444444, 15)
+   else
+      WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   end
 
    -- draw the resize widget bottom right corner.
-   WindowLine(win, effectiveWidth-3, height-2, effectiveWidth-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, effectiveWidth-4, height-2, effectiveWidth-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, effectiveWidth-6, height-2, effectiveWidth-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, effectiveWidth-7, height-2, effectiveWidth-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, effectiveWidth-9, height-2, effectiveWidth-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, effectiveWidth-10, height-2, effectiveWidth-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, effectiveWidth-12, height-2, effectiveWidth-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, effectiveWidth-13, height-2, effectiveWidth-2, height-13, 0x696969, 0, 1)
+   if flat_theme == 1 then
+      resize_color_1 = 0x303030
+      resize_color_2 = 0x1c1c1c
+   else
+      resize_color_1 = 0xffffff
+      resize_color_2 = 0x696969
+   end
+   WindowLine(win, effectiveWidth-3, height-2, effectiveWidth-2, height-3, resize_color_1, 0, 2)
+   WindowLine(win, effectiveWidth-4, height-2, effectiveWidth-2, height-4, resize_color_2, 0, 1)
+   WindowLine(win, effectiveWidth-6, height-2, effectiveWidth-2, height-6, resize_color_1, 0, 2)
+   WindowLine(win, effectiveWidth-7, height-2, effectiveWidth-2, height-7, resize_color_2, 0, 1)
+   WindowLine(win, effectiveWidth-9, height-2, effectiveWidth-2, height-9, resize_color_1, 0, 2)
+   WindowLine(win, effectiveWidth-10, height-2, effectiveWidth-2, height-10, resize_color_2, 0, 1)
+   WindowLine(win, effectiveWidth-12, height-2, effectiveWidth-2, height-12, resize_color_1, 0, 2)
+   WindowLine(win, effectiveWidth-13, height-2, effectiveWidth-2, height-13, resize_color_2, 0, 1)
 
    BroadcastPlugin (999, "repaint")
 end -- DisplayStatsPage
@@ -338,6 +357,7 @@ end -- DisplayStatsPage
 -- right click menu
 function right_click_menu ()
    menustring ="!Change Font|"
+   menustring = menustring..((flat_theme==1 and "+") or "").."Flat Theme|"
    if showLabels == 1 then
       menustring = menustring.."Hide Labels|"
    else
@@ -375,9 +395,20 @@ function right_click_menu ()
             font_size = wanted_font.size
          end
       elseif numResult == 2 then
+         if flat_theme == 0 then
+            ColourNote ("yellow", "", "Flat Theme for status monitor is ENABLED.")
+            background_colour = 0x1c1c1c
+            border_color = 0x303030
+         else  
+            ColourNote ("yellow", "", "Flat Theme for status monitor is DISABLED.")
+            background_colour = 0x000000 
+            border_color = 0xcccccc 
+         end
+         flat_theme = (((0 == flat_theme) and 1) or 0)
+      elseif numResult == 3 then
          -- show/hide labels
          showLabels = (((showLabels == 0) and 1) or 0)
-      elseif numResult == 3 then
+      elseif numResult == 4 then
          -- stack/unstack bars
          if stacked == 1 then
             stacked = 0
@@ -386,22 +417,22 @@ function right_click_menu ()
             stacked = 1
             height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
          end
-      elseif numResult >= 4 and numResult <= 9 then
+      elseif numResult >= 5 and numResult <= 10 then
          -- activate/de-activate
-         showBar[barIndex[numResult-3]][2] = not showBar[barIndex[numResult-3]][2]
-      elseif numResult >= 10 and numResult <= 21 then
+         showBar[barIndex[numResult-4]][2] = not showBar[barIndex[numResult-4]][2]
+      elseif numResult >= 11 and numResult <= 22 then
          -- change colors
-         local colourIndex = 4
+         local colourIndex = 5
          if (numResult % 2 == 1) then
-            colourIndex = 5
+            colourIndex = 4
          end
-         local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex])
+         local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-10)/2)]][colourIndex])
          if newcolour ~= -1 then
-            showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex] = newcolour
+            showBar[barIndex[math.ceil((numResult-10)/2)]][colourIndex] = newcolour
          end
-      elseif numResult == 22 then
-         thresh1active = (((thresh1active == 0) and 1) or 0)
       elseif numResult == 23 then
+         thresh1active = (((thresh1active == 0) and 1) or 0)
+      elseif numResult == 24 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -409,14 +440,14 @@ function right_click_menu ()
             end
             thresh1percent = tonumber(perc)
          end
-      elseif numResult == 24 then
+      elseif numResult == 25 then
          local newColor = PickColour (thresh1color)
          if newcolor ~= -1 then
             thresh1color = newColor
          end
-      elseif numResult == 25 then
-         thresh2active = (((thresh2active == 0) and 1) or 0)
       elseif numResult == 26 then
+         thresh2active = (((thresh2active == 0) and 1) or 0)
+      elseif numResult == 27 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -424,34 +455,34 @@ function right_click_menu ()
             end
             thresh2percent = tonumber(perc)
          end
-      elseif numResult == 27 then
+      elseif numResult == 28 then
          local newColor = PickColour (thresh2color)
          if newcolor ~= -1 then
             thresh2color = newColor
          end
-      elseif numResult == 28 then
+      elseif numResult == 29 then
          -- reverse tnl
          reverseTNL = (((reverseTNL == 0) and 1) or 0)
-      elseif numResult == 29 then
+      elseif numResult == 30 then
          -- text mode
          graphicalMode = (((graphicalMode == 0) and 1) or 0)
-      elseif numResult == 30 then
-         flat_gauges = (((flat_gauges == 0) and 1) or 0)
       elseif numResult == 31 then
-         overlay_numbers = 0
+         flat_gauges = (((flat_gauges == 0) and 1) or 0)
       elseif numResult == 32 then
-         overlay_numbers = 1
+         overlay_numbers = 0
       elseif numResult == 33 then
-         overlay_numbers = 2
+         overlay_numbers = 1
       elseif numResult == 34 then
-         overlay_numbers = 3
+         overlay_numbers = 2
       elseif numResult == 35 then
+         overlay_numbers = 3
+      elseif numResult == 36 then
          -- bring to front
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == 36 then
+      elseif numResult == 37 then
          -- send to back
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-      elseif numResult == 37 then
+      elseif numResult == 38 then
          -- reduce size
          font_name = default_font_name
          font_size = default_font_size
@@ -581,6 +612,7 @@ function OnPluginSaveState ()
    SetVariable ("height", height)
    SetVariable ("font_name", font_name)
    SetVariable ("font_size", font_size)
+   SetVariable ("flat_theme", flat_theme)
    SetVariable ("showBar", serialize.save ("showBar"))
    SetVariable ("graphicalMode", graphicalMode)
    SetVariable ("flat_gauges", flat_gauges)
@@ -622,7 +654,7 @@ function OnPluginWorldOutputResized()
 end
 
 function OnPluginInstall()
-   background_colour = tonumber (GetVariable ("background_colour")) or background_colour
+   --background_colour = tonumber (GetVariable ("background_colour")) or background_colour
    -- make window so I can grab the font info
    WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour)
 
@@ -649,6 +681,7 @@ function OnPluginInstall()
 
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
+   flat_theme = tonumber(GetVariable("flat_theme")) or 0
 
    --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
