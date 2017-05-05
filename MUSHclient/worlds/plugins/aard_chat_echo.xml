@@ -29,40 +29,14 @@ USAGE:
 <triggers>
 <trigger
    enabled="y"
-   name="begin_compact_mode"
-   match="^{begin compact check}$"
-   regexp="y"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>
-EnableTrigger("compact_mode", true)
-</send>
-</trigger>
-
-<trigger
-   enabled="n"
    name="compact_mode"
    match="^Compact mode (.+)\.$"
    regexp="y"
    omit_from_output="n"
    sequence="100"
-   send_to="14"
-><send>
-compact_mode = "%1"
-</send>
-</trigger>
-
-<trigger
-   enabled="y"
-   name="end_compact_mode"
-   match="^{end compact check}$"
-   regexp="y"
-   omit_from_output="y"
-   sequence="100"
    send_to="12"
 ><send>
-EnableTrigger("compact_mode", false)
+compact_mode = "%1"
 </send>
 </trigger>
 
@@ -165,26 +139,6 @@ EnableTrigger("compact_mode", false)
 </triggers>
 
 <aliases>
-<alias
-   match="^(compact? ?.*)"
-   enabled="y"
-   regexp="y"
-   sequence="100"
-   ignore_case="y"
-   send_to="12"
->
-<send>
-if can_check_compact() then
-   EnableTriggerGroup("end_gag", true)
-   SendNoEcho("echo {begin compact check}")
-   Send("%1")
-   SendNoEcho("echo {end compact check}")
-else
-   Send("%1")
-end
-</send>
-</alias>
-
 <alias
    script="chat_echo_wrap"
    match="^chats? echo( on| off| custom)?$"
@@ -357,10 +311,8 @@ function OnPluginBroadcast (msg, id, name, text)
          if not done_init and can_check_compact() then
             done_init = true
             Note("Checking compact setting.")
-            SendNoEcho("echo {begin compact check}")
             SendNoEcho("compact")
             SendNoEcho("compact")
-            SendNoEcho("echo {end compact check}")
          end
          if char_state ~= "5" then -- show messages that were buffered while in note mode
             if #msg_buffer > 0 then
