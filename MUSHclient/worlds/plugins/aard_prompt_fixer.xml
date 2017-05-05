@@ -27,7 +27,7 @@ Bast and WinkleWinkle.
    enabled="n"
    regexp="y"
    omit_from_output="y"
-   match="{prompt fixer begin}"
+   match="{prompt fixer begin}$"
    sequence="100"
    name="begin"
    send_to="12"
@@ -43,15 +43,15 @@ Bast and WinkleWinkle.
    enabled="n"
    regexp="y"
    omit_from_output="y"
-   match="{prompt fixer end}"
+   match="{prompt fixer end}$"
    sequence="100"
    name="end"
    send_to="12"
 >
 <send>
+   docheck = false
    EnableTriggerGroup("prompts", false)
    EnableTrigger("end", false)
-   docheck = false
 </send>
 </trigger>
 
@@ -73,7 +73,7 @@ Bast and WinkleWinkle.
    omit_from_output="y"
    match="^Regular Battle Prompt  : (.*)$"
    sequence="100"
-   name="bprompt"
+   name="battleprompt"
    script="prompt_rec"
    group="prompts"
 >
@@ -87,6 +87,21 @@ Bast and WinkleWinkle.
    sequence="110"
    group="prompts"
 >
+</trigger>
+
+<trigger
+   enabled="y"
+   regexp="y"
+   match="^(Battle p|P)rompt set to:? (.*)$"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   p = Trim("%2")
+   if p:sub(-2) ~= "%c" then
+      do_prompt_check()
+   end
+</send>
 </trigger>
 
 </triggers>
@@ -128,7 +143,7 @@ function prompt_rec (name, line, wildcards, styles)
          print()
          print("You might want to restart MUSHclient now to let scripts reinitialize.")
          table.insert(adjusted, name)
-         SendNoEcho(name.." "..prompt)
+         Send((name == "battleprompt" and "bprompt" or "prompt").." "..prompt)
       end
    end
 end
@@ -137,18 +152,22 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
+function do_prompt_check()
+   char_state = tonumber(gmcp("char.status.state"))
+
+   if (char_state == 3
+       or char_state == 9
+       or char_state == 11) then
+      EnableTrigger("begin", true)
+      SendNoEcho("echo {prompt fixer begin}")
+      SendNoEcho("prompt data")
+      SendNoEcho("echo {prompt fixer end}")
+   end
+end
+
 function OnPluginBroadcast (msg, id, name, text)
    if docheck and id == "3e7dedbe37e44942dd46d264" and text == "char.status" then
-      char_state = tonumber(gmcp("char.status.state"))
-
-      if (char_state == 3 or
-      char_state == 9 or
-      char_state == 11) then
-         EnableTrigger("begin", true)
-         SendNoEcho("echo {prompt fixer begin}")
-         SendNoEcho("prompt data")
-         SendNoEcho("echo {prompt fixer end}")
-      end
+      do_prompt_check()
    end
 end
 
