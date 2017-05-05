@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1912 snapshot
+- misc change: New MUSHclient 5.06 prerelease build. ( https://github.com/nickgammon/mushclient/commit/2d7a2bb47f157eea39b42d2a2023b38a70225fd5 )
+- bug fix: I was noticing a few funny echos, so I shrunk the compact check code a bit to do the same with less.
+- new feature: The prompt fixer plugin will now also catch when the player changes their prompt to remove the trailing %c.
+
 r1910 snapshot
 - bug fix: The chat echo plugin will now show all channels in main output if it doesn't detect any chat capture miniwindows.
 - bug fix: The chat echo plugin will wait for a safe char.status.state before checking your compact settings.
@@ -16,8 +21,9 @@ r1900 snapshot
 - bug fix: Copying selected text in the communication log was not truncating the text properly.
 - bug fix: The group window was erroring on send to back, and other related functions.
 - bug fix: The communication log window was not capturing unechoed infos.
-- bug fix: Multiline triggers will now work in conjunction with the text substitution plugin.
+- bug fix: Multiline triggers will now work in conjunction with the text substitution plugin. ( https://github.com/nickgammon/mushclient/commit/d9706abe79c384e641da197f19f016c9c4f262fc )
 - bug fix: The GMCP mapper backups were not staying disabled if you disabled them.
+- misc change: Updating to the MUSHclient 5.06 prerelease build for the multiline trigger fix.
 
 r1899 snapshot
 - new feature: The GMCP mapper has an option now to toggle off/on underlining of the hyperlinks.
@@ -26,7 +32,7 @@ r1899 snapshot
 r1898 snapshot
 - misc change: Updated to MUSHclient 5.05 (see release notes http://www.mushclient.com/scripts/showrelnote.php )
 - new feature: There is now a plugin for #sub and #gag (aard_text_substitution.xml). Some people have been asking for this for a very long time. Sorry it took so long. Load it and type "#sub help"
-- MAJOR change: Channel messages now only arrive over GMCP. Say goodbye to channel tags.
+- MAJOR CHANGE: Channel messages now only arrive over GMCP. Say goodbye to channel tags.
 - new feature: The GMCP handler has been rewritten to make getting gmcp data easier. See https://github.com/fiendish/aardwolfclientpackage/wiki/Using-GMCP
 - new feature: Tags now only get activated for the current session instead of persisting into other logins that possibly aren't made with a client that understands them. I hope this leads to fewer "why are all these tags showing?" queries.
 - new feature: There's now a fun little experiment in lua\online_translation.lua for doing translations between different languages using google translation servers. We'll just have to see how long it takes until they actually shut down free access to the translation API like they said they're going to.
