@@ -112,6 +112,77 @@ Makes inventory command slightly more useful by displaying UIDs
    script="parseKeyring"
 >
 </trigger>
+
+<trigger
+   enabled="n"
+   match="{vault}"
+   name="start_vault"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+>
+<send>
+   EnableTrigger("vault", true)
+   EnableTrigger("end_vault1", true)
+   EnableTrigger("end_vault2", true)
+</send>
+</trigger>
+
+<trigger
+   enabled="y"
+   match="You must be in a bank room to access your vault."
+   name="no_vault"
+   omit_from_output="n"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   vault_sent_count = vault_sent_count - 1
+   if vault_sent_count == 0 then
+      EnableTrigger("start_vault", false)
+   end
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   match="{/vault}"
+   name="end_vault1"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   regexp="y"
+   match="^{vaultcounts}(\d+),(\d+),(\d+){/vaultcounts}$"
+   name="end_vault2"
+   omit_from_output="y"
+   sequence="100"
+   send_to="14"
+>
+<send>
+   displayVault("%1", "%2", "%3")
+   EnableTrigger("vault", false)
+   EnableTrigger("end_vault1", false)
+   EnableTrigger("end_vault2", false)
+   if vault_sent_count == 0 then
+      EnableTrigger("start_vault", false)
+   end
+</send>
+</trigger>
+
+<trigger
+   enabled="n"
+   match="^\s*(\d+),(\w*),(.+),(\d+),(\d+),([01]),(-?\d+),(-?\d+)"
+   name="vault"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+   send_to="14"
+   script="parseVault"
+>
+</trigger>
 </triggers>
 
 <aliases>
@@ -148,6 +219,21 @@ Makes inventory command slightly more useful by displaying UIDs
    SendNoEcho("keyring data")
 </send>
 </alias>
+
+<alias
+   match="^ *vau(l|lt)? l(i|is|ist)? *$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+>
+<send>
+   vault_sent_count = vault_sent_count + 1
+   EnableTrigger("start_vault", true)
+   SendNoEcho("vault data")
+</send>
+</alias>
 </aliases>
 
 <script>
@@ -170,6 +256,7 @@ end
 function OnPluginConnect()
    inv_sent_count = 0
    key_sent_count = 0
+   vault_sent_count = 0
 end
 
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
@@ -177,6 +264,8 @@ inv = {}
 invsorted = {}
 keys = {}
 keysorted = {}
+vault = {}
+vaultsorted = {}
 
 function parse(styles, wildcards, results, sorted)
    -- Work around ansi mismatch between invdata and keyring data.
@@ -210,6 +299,10 @@ function parseKeyring(name, line, wildcards, styles)
    parse(styles, wildcards, keys, keysorted)
 end
 
+function parseVault(name, line, wildcards, styles)
+   parse(styles, wildcards, vault, vaultsorted)
+end
+
 function displaySorted(which)
    local num_items = 0
    for k,v in ipairs(which) do
@@ -220,6 +313,15 @@ function displaySorted(which)
       Simulate(ColoursToANSI(line))
    end
    return num_items
+end
+
+function displayVault(num_items, num_including_kept, capacity)
+   Simulate(ColoursToANSI("@wYour vault holds:\r\n"))
+   local num_vaulted = displaySorted(vaultsorted)
+   Simulate(ColoursToANSI(string.format("@wYou are using @Y%d@w of @Y%d@w item slots in your vault.@w\r\n", num_items, capacity)))
+   vault = {}
+   vaultsorted = {}
+   vault_sent_count = vault_sent_count - 1
 end
 
 function displayKeyring()
