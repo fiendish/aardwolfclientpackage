@@ -45,6 +45,7 @@ You can also run a manual check by typing:    package update check
    local succ, version, msg = aard_extras.PackageVersionExtended()
    if succ then
       ColourNote("white", "blue", msg)
+      remember()
    else
       ColourNote("white","red", msg)
    end
@@ -66,6 +67,13 @@ version_url = "https://raw.githubusercontent.com/fiendish/aardwolfclientpackage/
 download_url = "https://fiendish.github.io/aardwolfclientpackage/"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
+
+function remember()
+   ColourTell("yellow", "", "Remember, the latest development release is always available at: ")
+   Hyperlink(download_url, download_url, "Installer Download Page", "yellow", "", true)
+   Note("")
+   Note("")
+end
 
 -- converts special character codes in html source to their ascii
 -- equivalents for display. Also specially escapes things that need to be.
@@ -210,6 +218,7 @@ function showUpdate()
          return false
       else
          ColourNote("yellow", "", "Your package version r"..local_version.." appears to be up-to-date.")
+         remember()
       end
    else
       ErrorMessage = "Impossible Error"
