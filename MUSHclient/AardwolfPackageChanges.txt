@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1913 snapshot
+- new feature: The inventory serials plugin now does vault items too.
+
 r1912 snapshot
 - misc change: New MUSHclient 5.06 prerelease build. ( https://github.com/nickgammon/mushclient/commit/2d7a2bb47f157eea39b42d2a2023b38a70225fd5 )
 - bug fix: I was noticing a few funny echos, so I shrunk the compact check code a bit to do the same with less.
