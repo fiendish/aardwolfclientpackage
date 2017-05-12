@@ -117,7 +117,7 @@
             var asset = releases[i].assets[0];
             downloadCount += asset.download_count;
           }
-          var allReleasesInfo = "<span style='opacity: 0.5'>( All installer versions together, <span class='number'>" + downloadCount.toLocaleString() + "</span> times. )";
+          var allReleasesInfo = "<span style='opacity: 0.5'>-- All installer versions combined since r1871 (the first installer build), <span class='number'>" + downloadCount.toLocaleString() + "</span> times. --";
           Storage.set('allReleasesInfo', allReleasesInfo, fiveMinutes);
 
           SetAllReleasesInfo(allReleasesInfo);
