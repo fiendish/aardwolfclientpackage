@@ -12,7 +12,8 @@
   date_written="2006-04-01" 
   date_modified="2010-12-22"
   requires="4.42"
-  version="3.1">
+  save_state="y"
+  version="3.2">
 
 <description trim="y">
 <![CDATA[
@@ -82,6 +83,22 @@ You now have a line with detected URLs changed into hyperlinks, and the original
 --]]
 
 -- CODE SECTION --
+
+function OnPluginInstall()
+   -- These get activated at least once, but not after that
+   client_settings_to_activate_at_least_once = {
+      "show_underline",  -- needed for showing underlines
+      "underline_hyperlinks"  -- used to modulate the 7th flag to hyperlink calls
+   }
+
+   for i,v in ipairs(client_settings_to_activate_at_least_once) do
+      if GetVariable("client_activated_"..v) ~= "done" then
+         SetOption(v, 1)
+         SetVariable("client_activated_"..v, "done")
+      end
+   end
+   DoAfterSpecial(1, 'Save("")', sendto.script)
+end
 
 -- Returns an array {start, end, text}
 function findURLs(text)
@@ -206,6 +223,7 @@ function onURL (name, line, wildcards, styles)
 				,RGBColourToName(v.textcolour) -- Foreground color
 				,RGBColourToName(v.backcolour) -- Background color
 				,1 -- Boolean: Open as a URL?
+				,GetOption("underline_hyperlinks") == 0 and true or false
 			)
 		else
 			ColourTell(
