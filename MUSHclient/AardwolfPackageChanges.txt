@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r1914 snapshot:
+r1914 snapshot
 - bug fix: A few of the new client settings that are force-enabled will only be activated once instead of every launch, but for real this time.
 
 r1913 snapshot
