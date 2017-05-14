@@ -104,7 +104,7 @@
     var rname = Storage.get("rname");
     var url = Storage.get("url");
     var info = Storage.get("info");
-    var latest_rev = "r1913";
+    var latest_rev = "r1914";
 
     if ((latest_rev == rname) && allReleasesInfo && rname && url && info) {
       SetAllReleasesInfo(allReleasesInfo);
@@ -117,7 +117,7 @@
             var asset = releases[i].assets[0];
             downloadCount += asset.download_count;
           }
-          var allReleasesInfo = "<span style='opacity: 0.5'>-- All installer versions combined since r1871 (the first installer build), <span class='number'>" + downloadCount.toLocaleString() + "</span> times. --";
+          var allReleasesInfo = "<span style='opacity: 0.5'>( All installer versions together, <span class='number'>" + downloadCount.toLocaleString() + "</span> times. )";
           Storage.set('allReleasesInfo', allReleasesInfo, fiveMinutes);
 
           SetAllReleasesInfo(allReleasesInfo);
@@ -157,7 +157,7 @@
   <div id="release-info"></div>
   <div id="all-releases-info"></div>
   <br>
-  <div class="download"><a id="download-button" class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r1913/Aardwolf_MUSHclient_r1913.exe">Download Aardwolf_MUSHclient_r1913.exe</a>
+  <div class="download"><a id="download-button" class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r1914/Aardwolf_MUSHclient_r1914.exe">Download Aardwolf_MUSHclient_r1914.exe</a>
     <br>
     <br>
     <span style="font-size:120%">No manual edits necessary! <br>Just install over the same location as your previous version and that's it.</span>
