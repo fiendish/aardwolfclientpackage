@@ -87,6 +87,7 @@ function ResizeMainCallback()
    if GetVariable("lock_down_miniwindows") == "1" then
       return
    end
+   end_startup_check()
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
    textrect_right = textrect_right + posx - startx
    startx = posx
@@ -115,6 +116,7 @@ function DragMainCallback()
    if GetVariable("lock_down_miniwindows") == "1" then
       return
    end
+   end_startup_check()
    posx, posy = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
    local height = GetInfo(293) - GetInfo(291)
    local width = GetInfo(292) - GetInfo(290)
@@ -262,18 +264,25 @@ function OnPluginInstall()
       image_ratio = WindowImageInfo(bgwin, "wolf_logo", 2)/WindowImageInfo(bgwin, "wolf_logo", 3)
    end
 
-   --- Pull some state variables.
-   check_main_background()
-
-   -- give main world window time to stabilize its size and position
-   AddTimer("checkTimer", 0, 0, 2, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
-
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
       ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
       check (EnablePlugin(GetPluginID (), false))
       return
    end -- they didn't enable us last time
+
+   --- init display
+   check_main_background()
+
+   -- give main world window time to stabilize its size and position
+   startup_time = utils.timer()
+   AddTimer("startupCheckTimer", 0, 0, 0.3, "", timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
+   -- ten seconds is probably overkill, but it should be pretty harmless
+   DoAfterSpecial(10, 'end_startup_check()', sendto.script)
+end
+
+function end_startup_check()
+   DeleteTimer("startupCheckTimer")
 end
 
 function check_main_background()
@@ -314,23 +323,24 @@ function add_main_resizer()
 end
 
 function add_title_dragger()
-   if WindowInfo(textDragger, 1) then -- if it already exists
-      --- Reposition the dragger tag.
-      WindowPosition(textDragger, GetInfo(272)-6, GetInfo(273)-7, 0, 6)
+   -- Add mini-window at top with draghandler for dragging the main output around.
+   dragsize = 15
+   border = GetInfo(277)+GetInfo(276)
+
+   WindowCreate(textDragger, GetInfo(272)-border, GetInfo(273)-border, GetInfo(274)-GetInfo(272)+(2*border), dragsize, 0, 22, GetNormalColour(1))
+
+   if WindowHotspotInfo(textDragger, "dragmain", 13) then
+      WindowMoveHotspot(textDragger, "dragmain", 0, 0, 0, 0)
    else
-      -- Add another mini-window at top for dragging bar.
-      dragsize = 10
-
-      check (WindowCreate (textDragger, GetInfo(272)-6, GetInfo(273)-6, GetInfo(274)-GetInfo(272)+11, dragsize, 12, 2, GetNormalColour(1)))
-
       WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
       WindowDragHandler(textDragger, "dragmain", "DragMainCallback", "DragReleaseMainCallback", 0)
    end
+
    WindowShow(textDragger,true)
 end
 
 function OnPluginWorldOutputResized()
-   AddTimer("checkTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
+   AddTimer("resizeCheckTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
 end
 
 function draw_main_window()
