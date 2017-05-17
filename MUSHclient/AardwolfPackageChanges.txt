@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1916 snapshot
+- bug fix: Main output sizing at startup should be more reliable now.
+- bug fix: New MUSHclient 5.06 prerelease build that hopefully finally fixes the bug where miniwindows would sometimes turn black. ( https://mushclient.com/forum/bbshowpost.php?id=11315 )
+
 r1914 snapshot
 - bug fix: A few of the new client settings that are force-enabled will only be activated once instead of every launch, but for real this time.
 
