@@ -154,11 +154,11 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseMainCallback()
-   OnPluginSaveState()
+   SaveLayout()
 end
 
 function DragReleaseMainCallback()
-   OnPluginSaveState()
+   SaveLayout()
 end
 
 ---------------------------------------------------------------------------------
@@ -187,33 +187,27 @@ end
 ---------------------------------------------------------------------------------
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
-function OnPluginSaveState ()
-   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-
+function SaveLayout()
    SetVariable("trleft",textrect_left)
    SetVariable("trright",textrect_right)
    SetVariable("trtop",textrect_top)
    SetVariable("trbottom",textrect_bottom)
-end -- OnPluginSaveState
+end
+
+function SaveEnabled()
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+end
 
 function reset_aard()
    textrect_left = default_left
    textrect_right = default_right
    textrect_top = default_top
    textrect_bottom = default_bottom
-   OnPluginSaveState()
+   SaveLayout()
    check_main_background()
 end
 
 function OnPluginClose()
-   OnPluginDisable()
-   WindowDelete(textDragger)
-   WindowDelete(textResizer)
-   WindowDelete(bgwin)
-end
-
-function OnPluginDisable ()
-   OnPluginSaveState()
    TextRectangle(0,0,0,0,
       5,  -- BorderOffset,
       ColourNameToRGB ("darkgray"),    -- BorderColour,
@@ -221,13 +215,18 @@ function OnPluginDisable ()
       ColourNameToRGB ("darkslategray"),  -- OutsideFillColour,
       0) -- OutsideFillStyle (fine hatch)
    SetBackgroundImage("",0)
-   WindowShow( textDragger, false )
-   WindowShow( textResizer, false )
-   WindowShow( bgwin, false)
+   WindowDelete(textDragger)
+   WindowDelete(textResizer)
+   WindowDelete(bgwin)
+end
+
+function OnPluginDisable ()
+   OnPluginClose()
+   SaveEnabled()
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-   OnPluginSaveState()
+   SaveEnabled()
    OnPluginInstall()
 end -- OnPluginEnable
 
@@ -237,6 +236,10 @@ end -- OnPluginEnable
 -- This is the place to initialize stuff you need in the main plugin.
 --=================================================================================
 function OnPluginInstall()
+   if GetOption("auto_resize_command_window") == 1 then
+      SetCommandWindowHeight(GetOption("auto_resize_minimum_lines")*(GetInfo(214)+4))
+   end
+
    --- Get a unique name for main window and resizer window.
    win = GetPluginID ()  -- get a unique name
    textDragger = "      "..win.."txtdragger"
@@ -344,7 +347,6 @@ function OnPluginWorldOutputResized()
 end
 
 function draw_main_window()
-
    -- addresses a problem where new users are trying to play without the window maximized
    local t_right = math.min(textrect_right,GetInfo(281)-7)
    local t_bottom = math.min(textrect_bottom, GetInfo(280)-7)
