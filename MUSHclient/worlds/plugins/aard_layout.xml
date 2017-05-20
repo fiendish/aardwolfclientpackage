@@ -204,7 +204,7 @@ function reset_aard()
    textrect_top = default_top
    textrect_bottom = default_bottom
    SaveLayout()
-   check_main_background()
+   check_geometry()
 end
 
 function OnPluginClose()
@@ -236,10 +236,6 @@ end -- OnPluginEnable
 -- This is the place to initialize stuff you need in the main plugin.
 --=================================================================================
 function OnPluginInstall()
-   if GetOption("auto_resize_command_window") == 1 then
-      SetCommandWindowHeight(GetOption("auto_resize_minimum_lines")*(GetInfo(214)+4))
-   end
-
    --- Get a unique name for main window and resizer window.
    win = GetPluginID ()  -- get a unique name
    textDragger = "      "..win.."txtdragger"
@@ -275,11 +271,11 @@ function OnPluginInstall()
    end -- they didn't enable us last time
 
    --- init display
-   check_main_background()
+   check_geometry()
 
    -- give main world window time to stabilize its size and position
    startup_time = utils.timer()
-   AddTimer("startupCheckTimer", 0, 0, 0.3, "", timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
+   AddTimer("startupCheckTimer", 0, 0, 0.3, "", timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
    -- ten seconds is probably overkill, but it should be pretty harmless
    DoAfterSpecial(10, 'end_startup_check()', sendto.script)
 end
@@ -288,7 +284,12 @@ function end_startup_check()
    DeleteTimer("startupCheckTimer")
 end
 
-function check_main_background()
+function check_geometry()
+   if GetOption("auto_resize_command_window") == 1 then
+      numlines = select(2, GetCommand():gsub("\r\n", "")) + 1
+      SetCommandWindowHeight((numlines * GetInfo(214)) + 4)
+   end
+
    textrect_top = math.max(0, tonumber(GetVariable("trtop")) or default_top)
    textrect_bottom = math.min(GetInfo(280), tonumber(GetVariable("trbottom")) or default_bottom)
    textrect_left = math.max(0, tonumber(GetVariable("trleft")) or default_left)
@@ -343,7 +344,7 @@ function add_title_dragger()
 end
 
 function OnPluginWorldOutputResized()
-   AddTimer("resizeCheckTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
+   AddTimer("resizeCheckTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
 end
 
 function draw_main_window()
