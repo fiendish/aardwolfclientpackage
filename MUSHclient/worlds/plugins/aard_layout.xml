@@ -154,11 +154,11 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseMainCallback()
-   OnPluginSaveState()
+   SaveLayout()
 end
 
 function DragReleaseMainCallback()
-   OnPluginSaveState()
+   SaveLayout()
 end
 
 ---------------------------------------------------------------------------------
@@ -187,33 +187,27 @@ end
 ---------------------------------------------------------------------------------
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
-function OnPluginSaveState ()
-   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-
+function SaveLayout()
    SetVariable("trleft",textrect_left)
    SetVariable("trright",textrect_right)
    SetVariable("trtop",textrect_top)
    SetVariable("trbottom",textrect_bottom)
-end -- OnPluginSaveState
+end
+
+function SaveEnabled()
+   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+end
 
 function reset_aard()
    textrect_left = default_left
    textrect_right = default_right
    textrect_top = default_top
    textrect_bottom = default_bottom
-   OnPluginSaveState()
-   check_main_background()
+   SaveLayout()
+   check_geometry()
 end
 
 function OnPluginClose()
-   OnPluginDisable()
-   WindowDelete(textDragger)
-   WindowDelete(textResizer)
-   WindowDelete(bgwin)
-end
-
-function OnPluginDisable ()
-   OnPluginSaveState()
    TextRectangle(0,0,0,0,
       5,  -- BorderOffset,
       ColourNameToRGB ("darkgray"),    -- BorderColour,
@@ -221,13 +215,18 @@ function OnPluginDisable ()
       ColourNameToRGB ("darkslategray"),  -- OutsideFillColour,
       0) -- OutsideFillStyle (fine hatch)
    SetBackgroundImage("",0)
-   WindowShow( textDragger, false )
-   WindowShow( textResizer, false )
-   WindowShow( bgwin, false)
+   WindowDelete(textDragger)
+   WindowDelete(textResizer)
+   WindowDelete(bgwin)
+end
+
+function OnPluginDisable ()
+   OnPluginClose()
+   SaveEnabled()
 end --  OnPluginDisable
 
 function OnPluginEnable ()
-   OnPluginSaveState()
+   SaveEnabled()
    OnPluginInstall()
 end -- OnPluginEnable
 
@@ -272,11 +271,11 @@ function OnPluginInstall()
    end -- they didn't enable us last time
 
    --- init display
-   check_main_background()
+   check_geometry()
 
    -- give main world window time to stabilize its size and position
    startup_time = utils.timer()
-   AddTimer("startupCheckTimer", 0, 0, 0.3, "", timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
+   AddTimer("startupCheckTimer", 0, 0, 0.3, "", timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
    -- ten seconds is probably overkill, but it should be pretty harmless
    DoAfterSpecial(10, 'end_startup_check()', sendto.script)
 end
@@ -285,7 +284,12 @@ function end_startup_check()
    DeleteTimer("startupCheckTimer")
 end
 
-function check_main_background()
+function check_geometry()
+   if GetOption("auto_resize_command_window") == 1 then
+      numlines = select(2, GetCommand():gsub("\r\n", "")) + 1
+      SetCommandWindowHeight((numlines * GetInfo(214)) + 4)
+   end
+
    textrect_top = math.max(0, tonumber(GetVariable("trtop")) or default_top)
    textrect_bottom = math.min(GetInfo(280), tonumber(GetVariable("trbottom")) or default_bottom)
    textrect_left = math.max(0, tonumber(GetVariable("trleft")) or default_left)
@@ -340,11 +344,10 @@ function add_title_dragger()
 end
 
 function OnPluginWorldOutputResized()
-   AddTimer("resizeCheckTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_main_background")
+   AddTimer("resizeCheckTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
 end
 
 function draw_main_window()
-
    -- addresses a problem where new users are trying to play without the window maximized
    local t_right = math.min(textrect_right,GetInfo(281)-7)
    local t_bottom = math.min(textrect_bottom, GetInfo(280)-7)
