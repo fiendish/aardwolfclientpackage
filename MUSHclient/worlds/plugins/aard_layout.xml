@@ -286,8 +286,15 @@ end
 
 function check_geometry()
    if GetOption("auto_resize_command_window") == 1 then
-      numlines = select(2, GetCommand():gsub("\r\n", "")) + 1
-      SetCommandWindowHeight((numlines * GetInfo(214)) + 4)
+      input_font_name = GetInfo(23)
+      input_font_size = GetOption("input_font_height")
+      input_text = GetCommand()
+      WindowFont(bgwin, "input_font", input_font_name, input_font_size, false, false, false, false)
+      input_text_width = WindowTextWidth(bgwin, "input_font", input_text, false)
+      input_bar_width = GetInfo(281)
+      num_newlines = select(2, input_text:gsub("\r\n", "")) + 1
+      num_lines = math.max(math.ceil(input_text_width/input_bar_width), num_newlines)
+      SetCommandWindowHeight((num_lines * GetInfo(214)) + 4)
    end
 
    textrect_top = math.max(0, tonumber(GetVariable("trtop")) or default_top)
