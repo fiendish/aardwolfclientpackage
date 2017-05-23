@@ -285,9 +285,8 @@ function end_startup_check()
 end
 
 function check_geometry()
-   if GetOption("auto_resize_command_window") == 1 then
-      numlines = select(2, GetCommand():gsub("\r\n", "")) + 1
-      SetCommandWindowHeight((numlines * GetInfo(214)) + 4)
+   if (GetOption("auto_resize_command_window") == 1) and (GetCommand() == "") then
+      SetCommandWindowHeight(GetInfo(214) + 4)
    end
 
    textrect_top = math.max(0, tonumber(GetVariable("trtop")) or default_top)
