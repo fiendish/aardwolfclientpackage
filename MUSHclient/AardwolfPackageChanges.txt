@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1919 snapshot
+- bug fix: Bast had changed something in his eq miniwindow to match a change I had made at the same time as I was making a change to match what he had had before, which ended up breaking it again. Let's fix it here to save him more hassle.
+
 r1918 snapshot
 - bug fix: The fix in r1917 had an unintentional side effect of preventing the display of command inputs longer than the width of the window. They should show wrapped onto the next line, but were accidentally being hidden instead. This should be fixed.
 

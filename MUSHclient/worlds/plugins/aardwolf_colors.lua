@@ -525,3 +525,5 @@ colour_conversion = {
    C = GetBoldColour(CYAN)    ,   -- 0xFFFF00
    W = GetBoldColour(WHITE)   ,   -- 0xFFFFFF
 }  -- end conversion table
+
+atletter_to_color_value = colour_conversion -- lol. https://github.com/endavis/bastmush/commit/6f8aec07449a55a65ccece05c1ab3a0139d70e54
