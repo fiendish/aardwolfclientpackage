@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1918 snapshot
+- bug fix: The fix in r1917 had an unintentional side effect of preventing the display of command inputs longer than the width of the window. They should show wrapped onto the next line, but were accidentally being hidden instead. This should be fixed.
+
 r1917 snapshot
 - bug fix: Main output sizing at startup should be more reliable now.
 
