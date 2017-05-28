@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1920 snapshot
+- bug fix: Unescaped %c in the plugin trigger send box caused the prompt fixer plugin to error if you tried to change your prompt while some lines of text were copied to the OS clipboard.
+
 r1919 snapshot
 - bug fix: Bast had changed something in his eq miniwindow to match a change I had made at the same time as I was making a change to match what he had had before, which ended up breaking it again. Let's fix it here to save him more hassle.
 
