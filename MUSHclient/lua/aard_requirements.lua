@@ -4,6 +4,8 @@ require "checkplugin"
 -- Guarantee various useful world file settings
 SetOption("omit_date_from_save_files", 1)  -- slightly less clutter in settings files
 SetOption("utf_8", 1)  -- needed for alternate maptypes in main output
+SetAlphaOption("terminal_identification", "MUSHclient-Aard") -- helps Lasher count for the 'clients' in-game command
+
 
 -- Load plugins which are either necessary for the package to function or unobjectionably utile.
 do_plugin_check_now("162bba4a5ecef2bb32b5652f", "aard_package_update_checker") -- package update checker
