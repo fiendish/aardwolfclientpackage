@@ -98,6 +98,10 @@ AUTOMATIC MAPPER by Fiendish
       use_compression = 0
       SetVariable("use_compression", use_compression)
       Note("Mapper backups will not be compressed. This will make backups faster but take up a bit more space.")
+   elseif "%1" == " quiet" then
+      quiet_backups = not quiet_backups
+      SetVariable("quiet_backups", quiet_backups and "1" or "0")
+      Note("Mapper automatic backups will now be "..(quiet_backups and "quiet" or "visible")..".")
    else
       Note("Invalid option for mapper backups. The current automated backup setting is '"..((GetTimerInfo("backup_timer", 6) and "on") or "off").."'. Try 'mapper backups on' or 'mapper backups off' to set your desired preference.")
    end
@@ -786,6 +790,7 @@ window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = ((GetVariable("quick_mode") or "1") == "1") -- default true
 shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
+quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
 local rooms = {}
 local areas = {}
 local environments = {}
@@ -2575,7 +2580,7 @@ end
 function automatic_backup()
    if fighting_state == true then
       AddTimer("backup_timer", 0, 0, 5, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
-      print("Mapper database automatic backup delayed due to combat. Will try again in 5 seconds.")
+      maybe_Note("Mapper database automatic backup delayed due to combat. Will try again in 5 seconds.")
    else
       AddTimer("backup_timer", 23, 59, 59, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
       backup_databases(false)
@@ -2596,7 +2601,7 @@ function quote(str)
 end
 
 function checkDatabaseIntegrity(full_check, second_run)
-   Note("CHECKING MAP DATABASE INTEGRITY")
+   maybe_Note("CHECKING MAP DATABASE INTEGRITY")
    Repaint()
    -- If needed, force wal_checkpoint databases to make sure everything gets written out
    -- this is a harmless no-op if not using journal_mode=WAL
@@ -2607,8 +2612,8 @@ function checkDatabaseIntegrity(full_check, second_run)
       integrity_check_query = "PRAGMA integrity_check;"
    end
    for row in dbnrowsWRAPPER(integrity_check_query) do
-      tprint(row)
       if row.integrity_check ~= "ok" then
+         tprint(row)
          integrityCheck = false
       end
    end
@@ -2623,19 +2628,25 @@ function checkDatabaseIntegrity(full_check, second_run)
       CorruptionAlert()
       return false
    end
-   Note("MAP DATABASE INTEGRITY CHECK PASSED")
+   maybe_Note("MAP DATABASE INTEGRITY CHECK PASSED", second_run)
    if second_run then
       ColourNote("white", "blue", "WHEW! LUCKY!")
    end
    return true
 end
 
+function maybe_Note(msg, force)
+   if not quiet_backups or force then
+      Note(msg)
+   end
+end
+
 function backup_databases(manual)
    performing_maintenance = true
    local success = false
-   Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
+   maybe_Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!", manual)
    if not checkDatabaseIntegrity(true) then
-      Note("ABORTING CURRENT BACKUP")
+      maybe_Note("ABORTING CURRENT BACKUP", manual)
       if not compact_mode then Note("") end
       Repaint()
       db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
@@ -2643,7 +2654,7 @@ function backup_databases(manual)
       satisfy_broadcast_queue()
       return
    end
-   Note("BACKING UP DATABASE")
+   maybe_Note("BACKING UP DATABASE", manual)
    Repaint()
 
    backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
@@ -2680,7 +2691,7 @@ function backup_databases(manual)
          local n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
          local execute_string = "pushd "..quote(GetInfo(66)).." & zip -j -v -T "..quote(firstBackup..".zip").." "..quote(worldPath..".db").." >"..quote(n).." 2>&1 & popd"
          os.execute(execute_string)
-         -- It's not so simple to catch errors from os.execute, so just display the system output here
+         -- It's not so simple to catch errors from os.execute, so just record the system output
          local lines = {}
          for line in io.lines (n) do
             table.insert(lines,line)
@@ -2697,7 +2708,7 @@ function backup_databases(manual)
             -- failure
          else
             for i,v in ipairs(lines) do
-               Note(v) -- less intense output
+               maybe_Note(v, manual) -- less intense output
             end
             success = true
          end
@@ -2735,7 +2746,7 @@ function backup_databases(manual)
 
    if success then
       rotate_backups(manual) -- rotate backup folders (obviously)
-      Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
+      maybe_Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.", manual)
    else
       Note("ABORTING BACKUP.")
       CorruptionAlert()
@@ -2749,7 +2760,7 @@ end
 
 function CorruptionAlert()
    if not compact_mode then Note("") end
-   Note("WARNING, PLEASE READ: https://github.com/fiendish/aardwolfclientpackage/wiki/GMCP-driven-world-mapper#database-corruption")
+   Note("WARNING, PLEASE READ THE DATA CORRUPTION GUIDE AT: https://github.com/fiendish/aardwolfclientpackage/wiki/GMCP-driven-world-mapper#database-corruption")
    Note("If the information there does not help you 100%, then try asking on the Tech channel and report this error to Fiendish by email.")
    if not compact_mode then Note("") end
 end
@@ -3186,7 +3197,7 @@ function OnPluginEnable()
    if not window_hidden then
       mapper.show()
    else
-      Note("------ Your mapper is active but hidden. --------")
+      Note("GMCP Mapper Status: Your mapper is active but hidden.")
    end
    if IsConnected() then
       OnPluginConnect()
@@ -4272,7 +4283,7 @@ end
 
 function OnPluginConnect ()
    if not db:isopen() then
-      Note("GMCP Mapper: Reconnected; opening map database.")
+      maybe_Note("GMCP Mapper: Reconnected; opening map database.")
       db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    end
    if GetVariable("backup_timer_enabled") == "1" then
@@ -4299,7 +4310,7 @@ function OnPluginDisconnect ()
       sent_busy = false
    end
    if db:isopen() then
-      Note("GMCP Mapper: Disconnected; closing map database.")
+      maybe_Note("GMCP Mapper: Disconnected; closing map database.")
       db:close()
    end
    if GetVariable("backup_timer_enabled") == "1" then
@@ -4330,15 +4341,17 @@ function OnHelp (name, line, wildcards)
    local help_table = {
    ['config'] = {
 ['header'] = [[===== CONFIGURATION =============>]],
-[[mapper quicklist [on/off]      --> ON will cause search results to display much
-                                 > faster, but the results will not be sorted
-                                 > by distance (default is on)]],
-[[mapper shownotes [on/off]      --> ON will cause any notes in a room to display
+[[mapper quicklist [on/off]      --> ON will cause search results to display
+                                 > much faster, but the results will not be
+                                 > sorted by distance (default is on)]],
+[[mapper shownotes [on/off]      --> ON will cause room notes to display
                                  > automatically upon entering (default is on)]],
 [[mapper compact [on/off]        --> ON will make it so no blank lines are
                                  > displayed by the mapper (default is off)]],
 [[mapper backups <off/on>        --> Turn off or on automatic database backups
                                  > The default setting is on]],
+[[mapper backups quiet           --> Toggle whether messages are shown during
+                                 > backups]],
 [[mapper backups [un]compressed  --> Turn off or on database backup compression
                                  > The default setting is uncompressed (off)]],
 [[mapper help                    --> This help
@@ -4348,7 +4361,7 @@ function OnHelp (name, line, wildcards)
 [[mapper hide                    --> Hide map]],
 [[mapper show                    --> Show map]],
 [[mapper updown                  --> Toggle up/down exit drawing]],
-[[mapper underlines              --> Toggle underlining of clickable hyperlinks]]
+[[mapper underlines              --> Toggle underlining of clickable links]]
 },
 
    ['utils'] = {
@@ -4359,8 +4372,8 @@ function OnHelp (name, line, wildcards)
 [[mapper addnote                 --> Add a new note to the current room]],
 [[mapper addnote <note>          --> Ditto, but skips the dialog]],
 [[mapper purgezone <area>        --> Remove an area from the map database]],
-[[mapper purgeroom               --> Purge the current room from the map database]],
-[[mapper ignore mismatch <true/false> --> Don't overwrite the room in the database
+[[mapper purgeroom               --> Purge the current room from the database]],
+[[mapper ignore mismatch <true/false> --> Don't change the room in the database
                                       > if only the exits are "wrong"]]
 },
 
@@ -4379,7 +4392,7 @@ function OnHelp (name, line, wildcards)
                                  > (ex: 'mapper cexit open south;;south')]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits]],
-[[mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
+[[mapper cexit_wait <seconds>    --> Wait this number of seconds instead of
                                  > the standard 2 when constructing the next
                                  > cexit (between 2 and 30)]],
 [[mapper lockexit                --> Bring up the exit level-locking dialog
@@ -4390,15 +4403,15 @@ function OnHelp (name, line, wildcards)
 ['header'] = [[===== PORTAL ACTIONS ============>]],
 [[mapper portals                 --> List known hand-held portals
                                  > Recall-flagged portals (below) show in red]],
-[[mapper portal <command>        --> Link a hand-held portal alias to the current
+[[mapper portal <command>        --> Link a handheld portal to the current
                                  > room as a special exit from everwhere else
                                  > (ex: 'mapper portal recall' at recall).
                                  > To stack commands use ;; as separator
-                                 > to get around the line break parser
+                                 > to get around the line-break parser
                                  > (ex: 'mapper portal hold amulet;;enter').]],
 [[]],
-[[There is also 'mapper fullportal {<command>} {<room_id>} <level>' which lets you
-set all portal aspects in one command without being in the target room.]],
+[[There is also 'mapper fullportal {<command>} {<room_id>} <level>' which lets
+you set all portal aspects in one command without being in the target room.]],
 [[]],
 [[+---- NORECALL/NOPORTAL ROOM ASSISTANCE -------------------------------------+]],
 [[mapper portalrecall <index>    --> Flag/unflag a portal as using a recall or
