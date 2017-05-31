@@ -382,13 +382,9 @@ end
 
 function unload()
    silence()
-   if tolk_api and tolk_api.Tolk_IsLoaded() then
-      tolk_api.Tolk_Unload()
-   end
    tolk_api = nil
-   sapi_interface = false
+   sapi_interface = nil
    collectgarbage("collect")
-   EnableGroup("sapi", false)
 end
 
 function OnPluginScreendraw(line_type, log, line)
@@ -412,7 +408,6 @@ function OnPluginTabComplete(word)
 end
 
 function OnPluginClose()
-   print("CLOSING")
    unload()
 end
 
