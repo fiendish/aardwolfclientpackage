@@ -6,6 +6,10 @@ SetOption("omit_date_from_save_files", 1)  -- slightly less clutter in settings 
 SetOption("utf_8", 1)  -- needed for alternate maptypes in main output
 SetAlphaOption("terminal_identification", "MUSHclient-Aard") -- helps Lasher count for the 'clients' in-game command
 
+db = sqlite3.open(GetInfo(82))  -- open preferences
+db:exec 'UPDATE prefs SET value = 0 WHERE name = "OpenActivityWindow"' -- stop opening the activity window
+db:close()  -- close
+utils.reload_global_prefs()
 
 -- Load plugins which are either necessary for the package to function or unobjectionably utile.
 do_plugin_check_now("162bba4a5ecef2bb32b5652f", "aard_package_update_checker") -- package update checker
