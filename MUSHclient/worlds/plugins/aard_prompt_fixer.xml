@@ -120,7 +120,7 @@ dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 adjusted = {}
 -- received a prompt line in the config output
 function prompt_rec (name, line, wildcards, styles)
-   prompt = Trim(wildcards[1])
+   prompt = wildcards[1]
    if prompt:sub(-2) ~= "%c" then
       while styles[#styles].length == 0 do
          styles[#styles] = nil
@@ -128,7 +128,9 @@ function prompt_rec (name, line, wildcards, styles)
       prompt = StylesToColours(styles)
       prompt = Trim(string.split(prompt, ":%s+", false, 1)[2])
 
-      prompt = prompt.."%c"
+      if prompt:sub(-2) ~= "%c" then
+         prompt = prompt.."%c"
+      end
       if #strip_colours(prompt) > 80 then
          print()
          ColourNote("white", "red", "The Aardwolf MUSHclient Package wants to adjust your "..name.." to end in '%c', but it is too long.")
