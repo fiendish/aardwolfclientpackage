@@ -2682,16 +2682,33 @@ function backup_databases(manual)
       -- record when the backup occurs
       dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("backup_date"), fixsql(os.date("%b %d, %Y - %X"))))
 
-      db:close() -- always close the database before copying
+      if db:isopen() then
+         db:close() -- always close the database before copying
+      end
 
       -- make new backup
       if use_compression == 1 then
 
-         -- use pushd/popd here because cd can't @!#($$# access UNC directory paths
-         local n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
+         local n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching execute output
+
+         -- It's not so simple to catch errors from this, so record the system output and look at it later.
+         -- Use pushd/popd because cd can't @!#($$# access UNC paths.
          local execute_string = "pushd "..quote(GetInfo(66)).." & zip -j -v -T "..quote(firstBackup..".zip").." "..quote(worldPath..".db").." >"..quote(n).." 2>&1 & popd"
-         os.execute(execute_string)
-         -- It's not so simple to catch errors from os.execute, so just record the system output
+         utils.shellexecute("cmd", "/C "..execute_string, "", "open", 0)
+
+         -- wait forcefully for shellexecute to complete *cry*
+         function file_exists(name)
+            local f=io.open(name,"r")
+            if f~=nil then io.close(f) return true else return false end
+         end
+         local zipstarttime = utils.timer()
+         while not file_exists(n) do
+            if utils.timer() - zipstarttime > 30 then
+               -- we have to give up EVENTUALLY
+               break
+            end
+         end
+
          local lines = {}
          for line in io.lines (n) do
             table.insert(lines,line)
