@@ -752,6 +752,10 @@ function OnPluginSaveState ()
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    SetVariable ("background_colour", background_colour)
    SetVariable ("title_colour", title_colour)
+   if WindowInfo(win, 3) and WindowInfo(win, 4) then
+      width = WindowInfo(win, 3)
+      height = WindowInfo(win, 4)
+   end
    SetVariable ("width", width)
    SetVariable ("height", height)
    SetVariable ("font_name", font_name)
