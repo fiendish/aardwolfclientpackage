@@ -221,8 +221,10 @@ function reset_aard()
 end
 
 kinda_busy = 0
+requesting = false
 function request_new_map()
-   if GetTimerOption("activity_timer", "enabled") == 1 and can_request_map and kinda_busy == 0 then
+   if GetTimerOption("activity_timer", "enabled") == 1 and can_request_map and not requesting and kinda_busy == 0 then
+      requesting = true
       SendNoEcho ("map")
    end
 end
@@ -236,6 +238,7 @@ function map_redirect (name, line, wildcards, styles)
    elseif name == "map_end" then
       EnableTrigger ("multi_line_map", false)  -- no more lines to go
       page_built = true
+      requesting = false
       DisplayMapPage () --end of map from MUD, display the window
 
       if (also_echo_map == 1) or always_echo_rooms[roomnum] then
@@ -559,6 +562,7 @@ function OnPluginBroadcast (msg, id, name, text)
       if (text == 'reload') then
          -- invalidate current data
          page_built = false
+         can_request_map = true
          return
       end
 
@@ -593,7 +597,7 @@ function OnPluginBroadcast (msg, id, name, text)
             died = true
             page_built = false
          end
-         if can_request_map and not page_built then
+         if not page_built then
             request_new_map()
          end
       end
@@ -774,6 +778,10 @@ function OnPluginSaveState ()
    movewindow.save_state (win)   -- save window current location for next time
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    SetVariable ("title_colour", title_colour)
+   if WindowInfo(win, 3) and WindowInfo(win, 4) then
+      width = WindowInfo(win, 3)
+      height = WindowInfo(win, 4)
+   end
    SetVariable ("width", width)
    SetVariable ("height", height)
    SetVariable ("showcoords", show_coords)

@@ -1166,6 +1166,8 @@ function save_state ()
    SetVariable("DISTANCE_TO_NEXT_ROOM", DISTANCE_TO_NEXT_ROOM)
    if WindowInfo(win,1) and WindowInfo(win,5) then
       movewindow.save_state (win)
+      config.WINDOW.width = WindowInfo(win, 3)
+      config.WINDOW.height = WindowInfo(win, 4)
    end
 end -- save_state
 

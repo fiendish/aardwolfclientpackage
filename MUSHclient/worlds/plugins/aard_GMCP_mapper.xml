@@ -3248,7 +3248,7 @@ function OnPluginSaveState ()
       -- then we probably caught ourselves in a botched run or something
       mapper.config.SCAN.depth = temp_scan_depth
    end
-   mapper.save_state ()
+   mapper.save_state()
    SetVariable("config","") -- wipe out the old config table
    SetVariable("configs", "configs = " .. serialize.save_simple (mapper.config))
    SetVariable("quick_mode", quick_mode and "1" or "0")
