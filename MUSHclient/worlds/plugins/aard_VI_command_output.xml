@@ -12,7 +12,7 @@
    requires="4.70"
    version="1.0"
    save_state="y"
-   sequence="10000"
+   sequence="100"
 >
 
 <description trim="y">
