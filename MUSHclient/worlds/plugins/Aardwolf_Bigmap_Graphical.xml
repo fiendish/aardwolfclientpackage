@@ -770,6 +770,12 @@ function OnPluginSaveState ()
    if (mapwin == GetPluginID().."_mapper") then
       movewindow.save_state (mapwin)
    end
+   if WindowInfo(mapwin, 3) and WindowInfo(mapwin, 4) then
+      unmerged_width = WindowInfo(mapwin, 3)
+      unmerged_height = WindowInfo(mapwin, 4)
+      SetVariable("unmerged_width", unmerged_width)
+      SetVariable("unmerged_height", unmerged_height)
+   end
 end -- function OnPluginSaveState
 
 function OnPluginBroadcast (msg, id, name, text)

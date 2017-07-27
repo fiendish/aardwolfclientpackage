@@ -577,6 +577,10 @@ function OnPluginSaveState ()
    SetVariable ("reverseTNL", reverseTNL)
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    SetVariable ("background_colour", background_colour)
+   if WindowInfo(win, 3) and WindowInfo(win, 4) then
+      width = WindowInfo(win, 3)
+      height = WindowInfo(win, 4)
+   end
    SetVariable ("width", width)
    SetVariable ("height", height)
    SetVariable ("font_name", font_name)
@@ -594,7 +598,6 @@ function OnPluginSaveState ()
 end -- OnPluginSaveState
 
 function OnPluginClose()
-   OnPluginDisable()
    WindowDelete(win)
 end
 
@@ -703,7 +706,6 @@ function OnPluginInstall()
       return
    end -- they didn't enable us last time
 
-   OnPluginSaveState()
    installed = true
 end
 

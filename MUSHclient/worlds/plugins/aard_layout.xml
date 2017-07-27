@@ -23,8 +23,8 @@
 <aliases>
 
 <alias
-   script="LayoutLock"
-   match="^aard layout( lock| unlock)?"
+   script="LayoutCommand"
+   match="^aard layout( lock| unlock| save| forget| restore| list| help)?( .*)?"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -74,13 +74,161 @@ orig_height      = 400  -- saves old height when we collapse window.
 MIN_SIZE         = 50
 rstagsize        = 15
 
-function LayoutLock(name, line, wildcards)
+require "serialize"
+
+function LayoutHelp()
+   print("Aardwolf MUSHclient Layout Command Help")
+   print("--------------------------------------------------------------------------------")
+   print("aard layout lock               :  prevent dragging miniwindows")
+   print("aard layout unlock             :  allow dragging miniwindows")
+   print("aard layout save <keyword>     :  store the current layout as the given keyword")
+   print("aard layout restore <keyword>  :  restore the layout for the given keyword")
+   print("aard layout forget <keyword>   :  forget the layout for the given keyword")
+   print("aard layout list               :  list all stored layout keywords")
+   print("aard layout help               :  show this command help")
+   print("")
+   LockStatus()
+   print("")
+end
+
+function LockStatus()
+   print("Current layout lock status:", ((GetVariable("lock_down_miniwindows") == "1") and "LOCKED") or "UNLOCKED")
+end
+
+function LayoutCommand(name, line, wildcards)
    if wildcards[1] == " lock" then
       SetVariable("lock_down_miniwindows", "1")
+      LockStatus()
    elseif wildcards[1] == " unlock" then
       SetVariable("lock_down_miniwindows", "0")
+      LockStatus()
+   elseif wildcards[1] == " save" then
+      key = Trim(wildcards[2])
+      if key ~= "" then
+         LayoutStore(key)
+      else
+         LayoutHelp()
+      end
+   elseif wildcards[1] == " restore" then
+      key = Trim(wildcards[2])
+      if key ~= "" then
+         LayoutRestore(key)
+      else
+         LayoutHelp()
+      end
+   elseif wildcards[1] == " list" then
+      LayoutList()
+   elseif wildcards[1] == " forget" then
+      key = Trim(wildcards[2])
+      if key ~= "" then
+         LayoutForget(key)
+      else
+         LayoutHelp()
+      end
+   elseif wildcards[1] == "" or wildcards[1] == " help" then
+      LayoutHelp()
    end
-   print("\nCurrent layout lock status:", ((GetVariable("lock_down_miniwindows") == "1") and "LOCKED") or "UNLOCKED","\n")
+end
+
+function FetchLayouts()
+   loadstring("_layouts = "..(GetVariable("all_layouts") or "{}"))()
+   return _layouts
+end
+
+function LayoutList()
+   all_layouts = FetchLayouts()
+
+   numlayouts = 0
+   for k,v in pairs(all_layouts) do
+      numlayouts = numlayouts + 1
+   end
+
+   print("")
+   if numlayouts > 0 then
+      print("Available layout keys are:")
+      print("--------------------------")
+      for key,layout in pairs(all_layouts) do
+         print(key)
+      end
+   else
+      print("No layouts have been saved yet.")
+   end
+   print("")
+end
+
+function LayoutForget(key)
+   all_layouts = FetchLayouts()
+   if all_layouts[key] then
+      all_layouts[key] = nil
+      SetVariable("all_layouts", serialize.save_simple(all_layouts))
+      print("Layout with key '"..key.."' has been forgotten.")
+   else
+      print("No layout found for key '"..key.."'.")
+   end
+end
+
+function LayoutStore(key)
+   all_layouts = FetchLayouts()
+   miniwindows = WindowList()
+   if miniwindows then
+      current_layout = {
+         ["aard_layout_trect"] = {
+               ["trleft"] = textrect_left,
+               ["trright"] = textrect_right,
+               ["trtop"] = textrect_top,
+               ["trbottom"] = textrect_bottom
+         }
+      }
+      for _,mwid in ipairs(miniwindows) do
+         current_layout[mwid] = {
+            ["left"] = WindowInfo(mwid, 10),
+            ["top"] = WindowInfo(mwid, 11),
+            ["width"] = WindowInfo(mwid, 3),
+            ["height"] = WindowInfo(mwid, 4)
+         }
+      end
+      all_layouts[key] = current_layout
+      SetVariable("all_layouts", serialize.save_simple(all_layouts))
+      print("Current layout stored as key '"..key.."'.")
+   else
+      print("No miniwindows found. Not saving layout '"..key.."'.")
+   end -- if any
+end
+
+function LayoutRestore(key)
+   all_layouts = FetchLayouts()
+   layout = all_layouts[key]
+   if layout then
+      trect = layout["aard_layout_trect"]
+      textrect_left = trect["trleft"]
+      textrect_right = trect["trright"]
+      textrect_top = trect["trtop"]
+      textrect_bottom = trect["trbottom"]
+      SaveLayout()
+      check_geometry()
+      for mwid,rect in pairs(layout) do
+         if mwid ~= "aard_layout_trect" then
+            bg = WindowInfo(mwid, 9)
+            if bg then
+               pid = WindowInfo(mwid, 23)
+               if pid ~= GetPluginID() then
+                  show = WindowInfo(mwid, 5)
+                  if rect["left"] ~= WindowInfo(mwid, 10) or rect["top"] ~= WindowInfo(mwid, 11) or rect["width"] ~= WindowInfo(mwid, 3) or rect["height"] ~= WindowInfo(mwid, 4) then
+                     WindowPosition(mwid, rect["left"], rect["top"], 0, 18)
+                     WindowResize(mwid, rect["width"], rect["height"], 0)
+                     Repaint() -- hack because WindowPosition doesn't immediately update coordinates
+                     WindowShow(mwid, show)
+                     CallPlugin(pid, "SaveState")
+                     DoAfterSpecial(0.1, "ReloadPlugin('"..pid.."')", sendto.script)
+                  end
+               end
+            end
+         end
+      end
+      print("Layout for key '"..key.."' has been restored.")
+   else
+      print("No layout found for key '"..key.."'.")
+   end
 end
 
 function ResizeMainCallback()
@@ -188,10 +336,10 @@ end
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
 function SaveLayout()
-   SetVariable("trleft",textrect_left)
-   SetVariable("trright",textrect_right)
-   SetVariable("trtop",textrect_top)
-   SetVariable("trbottom",textrect_bottom)
+   SetVariable("trleft", textrect_left)
+   SetVariable("trright", textrect_right)
+   SetVariable("trtop", textrect_top)
+   SetVariable("trbottom", textrect_bottom)
 end
 
 function SaveEnabled()
@@ -237,11 +385,11 @@ end -- OnPluginEnable
 --=================================================================================
 function OnPluginInstall()
    --- Get a unique name for main window and resizer window.
-   win = GetPluginID ()  -- get a unique name
-   textDragger = "      "..win.."txtdragger"
-   textResizer = "      "..win.."txtresize"
-   bgwin = "      "..win.."text_background"
-   bgoffscreen = "      "..win.."text_background_offscreen"
+   win = "      "..GetPluginID()  -- get a unique name
+   textDragger = win.."txtdragger"
+   textResizer = win.."txtresize"
+   bgwin = win.."text_background"
+   bgoffscreen = win.."text_background_offscreen"
 
    local dir = GetInfo(66)
    local imgpath = dir .. "worlds\\plugins\\images\\bg1.png"

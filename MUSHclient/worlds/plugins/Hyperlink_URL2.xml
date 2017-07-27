@@ -13,6 +13,7 @@
   date_modified="2010-12-22"
   requires="4.42"
   save_state="y"
+  sequence="10000"
   version="3.2">
 
 <description trim="y">

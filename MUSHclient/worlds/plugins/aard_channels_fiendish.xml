@@ -387,6 +387,10 @@ function OnPluginSaveState()
    SetVariable("font_name", font_name)
    SetVariable("font_size", font_size)
    SetVariable("date_format", date_format)
+   if WindowInfo(win, 3) and WindowInfo(win, 4) then
+      width = WindowInfo(win, 3)
+      height = WindowInfo(win, 4)
+   end
    SetVariable("WINDOW_WIDTH", width)
    SetVariable("WINDOW_HEIGHT", height)
    SetVariable("info_on", info_on)
