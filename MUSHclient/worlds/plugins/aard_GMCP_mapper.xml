@@ -98,6 +98,10 @@ AUTOMATIC MAPPER by Fiendish
       use_compression = 0
       SetVariable("use_compression", use_compression)
       Note("Mapper backups will not be compressed. This will make backups faster but take up a bit more space.")
+   elseif "%1" == " quiet" then
+      quiet_backups = not quiet_backups
+      SetVariable("quiet_backups", quiet_backups and "1" or "0")
+      Note("Mapper automatic backups will now be "..(quiet_backups and "quiet" or "visible")..".")
    else
       Note("Invalid option for mapper backups. The current automated backup setting is '"..((GetTimerInfo("backup_timer", 6) and "on") or "off").."'. Try 'mapper backups on' or 'mapper backups off' to set your desired preference.")
    end
@@ -786,6 +790,7 @@ window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = ((GetVariable("quick_mode") or "1") == "1") -- default true
 shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
+quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
 local rooms = {}
 local areas = {}
 local environments = {}
@@ -2575,7 +2580,7 @@ end
 function automatic_backup()
    if fighting_state == true then
       AddTimer("backup_timer", 0, 0, 5, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
-      print("Mapper database automatic backup delayed due to combat. Will try again in 5 seconds.")
+      maybe_Note("Mapper database automatic backup delayed due to combat. Will try again in 5 seconds.")
    else
       AddTimer("backup_timer", 23, 59, 59, "", timer_flag.Replace + timer_flag.Enabled + timer_flag.ActiveWhenClosed, "automatic_backup")
       backup_databases(false)
@@ -2596,7 +2601,7 @@ function quote(str)
 end
 
 function checkDatabaseIntegrity(full_check, second_run)
-   Note("CHECKING MAP DATABASE INTEGRITY")
+   maybe_Note("CHECKING MAP DATABASE INTEGRITY")
    Repaint()
    -- If needed, force wal_checkpoint databases to make sure everything gets written out
    -- this is a harmless no-op if not using journal_mode=WAL
@@ -2607,8 +2612,8 @@ function checkDatabaseIntegrity(full_check, second_run)
       integrity_check_query = "PRAGMA integrity_check;"
    end
    for row in dbnrowsWRAPPER(integrity_check_query) do
-      tprint(row)
       if row.integrity_check ~= "ok" then
+         tprint(row)
          integrityCheck = false
       end
    end
@@ -2623,133 +2628,186 @@ function checkDatabaseIntegrity(full_check, second_run)
       CorruptionAlert()
       return false
    end
-   Note("MAP DATABASE INTEGRITY CHECK PASSED")
+   maybe_Note("MAP DATABASE INTEGRITY CHECK PASSED", second_run)
    if second_run then
       ColourNote("white", "blue", "WHEW! LUCKY!")
    end
    return true
 end
 
+function maybe_Note(msg, force)
+   if not quiet_backups or force then
+      Note(msg)
+   end
+end
+
 function backup_databases(manual)
-   performing_maintenance = true
-   local success = false
-   Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!")
-   if not checkDatabaseIntegrity(true) then
-      Note("ABORTING CURRENT BACKUP")
-      if not compact_mode then Note("") end
+   wait.make(function()
+
+      performing_maintenance = true
+      local success = false
+      maybe_Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!", manual)
+      if not checkDatabaseIntegrity(true) then
+         maybe_Note("ABORTING CURRENT BACKUP", manual)
+         if not compact_mode then Note("") end
+         Repaint()
+         db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
+         performing_maintenance = false
+         satisfy_broadcast_queue()
+         return
+      end
+      maybe_Note("BACKING UP DATABASE", manual)
       Repaint()
-      db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
-      performing_maintenance = false
-      satisfy_broadcast_queue()
-      return
-   end
-   Note("BACKING UP DATABASE")
-   Repaint()
 
-   backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
-   firstBackup = backupPath..".db.Backup"
-   local ffi
-   if type(jit) == 'table' then
-      ffi = require("ffi")
-      ffi.cdef[[
-      bool CreateDirectoryA(const char *lpPathName, void *lpSecurityAttributes);
-      bool CopyFileA(const char* lpExistingFileName, const char * lpNewFileName, bool bFailIfExists);
-      unsigned long GetLastError(void);
-      ]]
+      backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
+      firstBackup = backupPath..".db.Backup"
+      local ffi
+      if type(jit) == 'table' then
+         ffi = require("ffi")
+         ffi.cdef[[
+         bool CreateDirectoryA(const char *lpPathName, void *lpSecurityAttributes);
+         bool CopyFileA(const char* lpExistingFileName, const char * lpNewFileName, bool bFailIfExists);
+         unsigned long GetLastError(void);
+         ]]
 
-      succ = ffi.C.CreateDirectoryA(GetInfo(66).."db_backups\\", nil)
-      err_no = ffi.C.GetLastError()
-   else
-      succ, err_no = utils.shellexecute("cmd", "/C mkdir db_backups", GetInfo(66), "open", 0)
-   end
-   if succ == false and err_no ~= 183 and err_no ~= 127 then
-      -- error
-      ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66).."db_backups\\\n")
-   else
-      -- successfully created the backup directory
-
-      -- record when the backup occurs
-      dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("backup_date"), fixsql(os.date("%b %d, %Y - %X"))))
-
-      db:close() -- always close the database before copying
-
-      -- make new backup
-      if use_compression == 1 then
-
-         -- use pushd/popd here because cd can't @!#($$# access UNC directory paths
-         local n = GetInfo(66).."aard_package_temp_file.txt" -- temp file for catching os.execute output
-         local execute_string = "pushd "..quote(GetInfo(66)).." & zip -j -v -T "..quote(firstBackup..".zip").." "..quote(worldPath..".db").." >"..quote(n).." 2>&1 & popd"
-         os.execute(execute_string)
-         -- It's not so simple to catch errors from os.execute, so just display the system output here
-         local lines = {}
-         for line in io.lines (n) do
-            table.insert(lines,line)
-         end
-         os.remove (n) -- remove temp file
-
-         if not lines[#lines] or not string.find(lines[#lines], "zip OK") then
-            -- something went wrong with the compression
-            -- we expect to see some lines with the last line showing a passing test
-            ColourNote("yellow","red", "ERROR executing system command: "..execute_string.."\n")
-            for i,v in ipairs(lines) do
-               ColourNote("yellow","red",v) -- flaming output
-            end
-            -- failure
-         else
-            for i,v in ipairs(lines) do
-               Note(v) -- less intense output
-            end
-            success = true
-         end
+         succ = ffi.C.CreateDirectoryA(GetInfo(66).."db_backups\\", nil)
+         err_no = ffi.C.GetLastError()
       else
-         -- no compression, just copy
-         if type(jit) == 'table' then
-            succ = ffi.C.CopyFileA(worldPath..".db", firstBackup, false)
-            err_no = ffi.C.GetLastError()
+         succ, err_no = utils.shellexecute("cmd", "/C mkdir db_backups", GetInfo(66), "open", 0)
+      end
+      if succ == false and err_no ~= 183 and err_no ~= 127 then
+         -- error
+         ColourNote("yellow","red", "ERROR ("..err_no..") trying to CreateDirectory: "..GetInfo(66).."db_backups\\\n")
+      else
+         -- successfully created the backup directory
+
+         -- record when the backup occurs
+         dbCheckExecute(string.format("INSERT OR REPLACE INTO storage (name, data) VALUES (%s,%s);", fixsql("backup_date"), fixsql(os.date("%b %d, %Y - %X"))))
+
+         if db:isopen() then
+            db:close() -- always close the database before copying
+         end
+
+         -- make new backup
+         if use_compression == 1 then
+
+            local tmp = GetInfo(66).."aard_package_temp_file.txt" -- temp file for recording output
+            -- It's not so simple to catch errors from this, so record the output and look at it later.
+            -- Use pushd/popd because cd can't @!#($$# access UNC paths.
+            local execute_string = "pushd "..quote(GetInfo(66)).." & zip -j -v -T -lf "..quote(tmp).." "..quote(firstBackup..".zip").." "..quote(worldPath..".db").." & popd"
+
+            function file_exists(name)
+               local f=io.open(name,"r")
+               if f~=nil then io.close(f) return true else return false end
+            end
+            function file_is_writable(name)
+               local f=io.open(name,"w")
+               if f~=nil then io.close(f) return true else return false end
+            end
+
+            if file_exists(tmp) and not file_is_writable(tmp) then
+               ColourNote("yellow","red", "ERROR executing system command: "..execute_string.."\n")
+               ColourNote("yellow", "red", "Log file "..quote(tmp).." is not writeable. Do you have write permission?") -- flaming output
+               -- failure
+            else
+               utils.shellexecute("cmd", "/C "..execute_string, "", "open", 0)
+
+               local zip_done = false
+               local zip_error = false
+               local zipstarttime = utils.timer()
+               local zip_lines
+               while not zip_done do
+                  zip_lines = {}
+                  if file_exists(tmp) then
+                     for line in io.lines(tmp) do
+                        table.insert(zip_lines, line)
+                     end
+                     os.remove(tmp) -- remove temp file
+                  end
+
+                  for _,line in ipairs(zip_lines) do
+                     if line:find("zip warning") or line:find("zip error") or line:find("zip I/O error") then
+                        zip_done = true
+                        zip_error = true
+                     end
+                     if line:find("zip OK") then
+                        zip_done = true
+                     end
+                  end
+
+                  if zip_done then break end
+                  if utils.timer() - zipstarttime > 30 then
+                     -- we have to give up EVENTUALLY
+                     break
+                  end
+                  wait.time(0.1)
+               end
+
+               if zip_error then
+                  -- something went wrong with the compression
+                  -- we expect to see some lines with the last line showing a passing test
+                  ColourNote("yellow","red", "ERROR executing system command: "..execute_string.."\n")
+                  for _,v in ipairs(zip_lines) do
+                     ColourNote("yellow", "red", v) -- flaming output
+                  end
+                  -- failure
+               else
+                  for _,v in ipairs(zip_lines) do
+                     maybe_Note(v, manual) -- less intense output
+                  end
+                  success = true
+               end
+            end
          else
-            -- succ, err_no =  utils.shellexecute("cmd", "/C copy "..worldPath..".db "..firstBackup, "", "open", 0);
-            local inp, outp, errmsg
-            succ = false
-            inp, errmsg, err_no = io.open(worldPath..".db", "rb")
-            if err_no == nil then
-               outp, errmsg, err_no = io.open(firstBackup, "wb")
+            -- no compression, just copy
+            if type(jit) == 'table' then
+               succ = ffi.C.CopyFileA(worldPath..".db", firstBackup, false)
+               err_no = ffi.C.GetLastError()
+            else
+               -- succ, err_no =  utils.shellexecute("cmd", "/C copy "..worldPath..".db "..firstBackup, "", "open", 0);
+               local inp, outp, errmsg
+               succ = false
+               inp, errmsg, err_no = io.open(worldPath..".db", "rb")
                if err_no == nil then
-                  local data = inp:read("*all")
-                  outp:write(data)
-                  outp:close()
-                  inp:close()
-                  succ = true
+                  outp, errmsg, err_no = io.open(firstBackup, "wb")
+                  if err_no == nil then
+                     local data = inp:read("*all")
+                     outp:write(data)
+                     outp:close()
+                     inp:close()
+                     succ = true
+                  end
+               end
+               if succ == false then
+                  ColourNote("yellow","red", "ERROR: "..errmsg)
                end
             end
             if succ == false then
-               ColourNote("yellow","red", "ERROR: "..errmsg)
+               ColourNote("yellow","red", "ERROR ("..err_no..") trying to copy database from '"..worldPath..".db' to '"..firstBackup.."'")
+            else
+               success = true
             end
          end
-         if succ == false then
-            ColourNote("yellow","red", "ERROR ("..err_no..") trying to copy database from '"..worldPath..".db' to '"..firstBackup.."'")
-         else
-            success = true
-         end
       end
-   end
 
-   if success then
-      rotate_backups(manual) -- rotate backup folders (obviously)
-      Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.")
-   else
-      Note("ABORTING BACKUP.")
-      CorruptionAlert()
-   end
-   if not compact_mode then Note("") end
-   db = assert (sqlite3.open(worldPath..".db")) -- re-open database
-   Repaint()
-   performing_maintenance = false
-   satisfy_broadcast_queue()
+      if success then
+         rotate_backups(manual) -- rotate backup folders (obviously)
+         maybe_Note("FINISHED DATABASE BACKUP. YOU MAY NOW GO BACK TO MUDDING.", manual)
+      else
+         Note("ABORTING BACKUP.")
+         CorruptionAlert()
+      end
+      if not compact_mode then Note("") end
+      db = assert (sqlite3.open(worldPath..".db")) -- re-open database
+      Repaint()
+      performing_maintenance = false
+      satisfy_broadcast_queue()
+   end)
 end
 
 function CorruptionAlert()
    if not compact_mode then Note("") end
-   Note("WARNING, PLEASE READ: https://github.com/fiendish/aardwolfclientpackage/wiki/GMCP-driven-world-mapper#database-corruption")
+   Note("WARNING, PLEASE READ THE DATA CORRUPTION GUIDE AT: https://github.com/fiendish/aardwolfclientpackage/wiki/GMCP-driven-world-mapper#database-corruption")
    Note("If the information there does not help you 100%, then try asking on the Tech channel and report this error to Fiendish by email.")
    if not compact_mode then Note("") end
 end
@@ -3186,7 +3244,7 @@ function OnPluginEnable()
    if not window_hidden then
       mapper.show()
    else
-      Note("------ Your mapper is active but hidden. --------")
+      Note("GMCP Mapper Status: Your mapper is active but hidden.")
    end
    if IsConnected() then
       OnPluginConnect()
@@ -3220,7 +3278,7 @@ function OnPluginSaveState ()
       -- then we probably caught ourselves in a botched run or something
       mapper.config.SCAN.depth = temp_scan_depth
    end
-   mapper.save_state ()
+   mapper.save_state()
    SetVariable("config","") -- wipe out the old config table
    SetVariable("configs", "configs = " .. serialize.save_simple (mapper.config))
    SetVariable("quick_mode", quick_mode and "1" or "0")
@@ -4272,7 +4330,7 @@ end
 
 function OnPluginConnect ()
    if not db:isopen() then
-      Note("GMCP Mapper: Reconnected; opening map database.")
+      maybe_Note("GMCP Mapper: Reconnected; opening map database.")
       db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
    end
    if GetVariable("backup_timer_enabled") == "1" then
@@ -4293,13 +4351,14 @@ end -- OnPluginConnect
 
 sent_busy = false
 function OnPluginDisconnect ()
+   fighting_state = false
    mapper.cancel_speedwalk ()
    if sent_busy then
       BroadcastPlugin(999, "ok_you_can_go_now")
       sent_busy = false
    end
    if db:isopen() then
-      Note("GMCP Mapper: Disconnected; closing map database.")
+      maybe_Note("GMCP Mapper: Disconnected; closing map database.")
       db:close()
    end
    if GetVariable("backup_timer_enabled") == "1" then
@@ -4330,15 +4389,17 @@ function OnHelp (name, line, wildcards)
    local help_table = {
    ['config'] = {
 ['header'] = [[===== CONFIGURATION =============>]],
-[[mapper quicklist [on/off]      --> ON will cause search results to display much
-                                 > faster, but the results will not be sorted
-                                 > by distance (default is on)]],
-[[mapper shownotes [on/off]      --> ON will cause any notes in a room to display
+[[mapper quicklist [on/off]      --> ON will cause search results to display
+                                 > much faster, but the results will not be
+                                 > sorted by distance (default is on)]],
+[[mapper shownotes [on/off]      --> ON will cause room notes to display
                                  > automatically upon entering (default is on)]],
 [[mapper compact [on/off]        --> ON will make it so no blank lines are
                                  > displayed by the mapper (default is off)]],
 [[mapper backups <off/on>        --> Turn off or on automatic database backups
                                  > The default setting is on]],
+[[mapper backups quiet           --> Toggle whether messages are shown during
+                                 > backups]],
 [[mapper backups [un]compressed  --> Turn off or on database backup compression
                                  > The default setting is uncompressed (off)]],
 [[mapper help                    --> This help
@@ -4348,7 +4409,7 @@ function OnHelp (name, line, wildcards)
 [[mapper hide                    --> Hide map]],
 [[mapper show                    --> Show map]],
 [[mapper updown                  --> Toggle up/down exit drawing]],
-[[mapper underlines              --> Toggle underlining of clickable hyperlinks]]
+[[mapper underlines              --> Toggle underlining of clickable links]]
 },
 
    ['utils'] = {
@@ -4359,8 +4420,8 @@ function OnHelp (name, line, wildcards)
 [[mapper addnote                 --> Add a new note to the current room]],
 [[mapper addnote <note>          --> Ditto, but skips the dialog]],
 [[mapper purgezone <area>        --> Remove an area from the map database]],
-[[mapper purgeroom               --> Purge the current room from the map database]],
-[[mapper ignore mismatch <true/false> --> Don't overwrite the room in the database
+[[mapper purgeroom               --> Purge the current room from the database]],
+[[mapper ignore mismatch <true/false> --> Don't change the room in the database
                                       > if only the exits are "wrong"]]
 },
 
@@ -4379,7 +4440,7 @@ function OnHelp (name, line, wildcards)
                                  > (ex: 'mapper cexit open south;;south')]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits]],
-[[mapper cexit_wait <seconds>    --> Wait the given number of seconds instead of
+[[mapper cexit_wait <seconds>    --> Wait this number of seconds instead of
                                  > the standard 2 when constructing the next
                                  > cexit (between 2 and 30)]],
 [[mapper lockexit                --> Bring up the exit level-locking dialog
@@ -4390,15 +4451,15 @@ function OnHelp (name, line, wildcards)
 ['header'] = [[===== PORTAL ACTIONS ============>]],
 [[mapper portals                 --> List known hand-held portals
                                  > Recall-flagged portals (below) show in red]],
-[[mapper portal <command>        --> Link a hand-held portal alias to the current
+[[mapper portal <command>        --> Link a handheld portal to the current
                                  > room as a special exit from everwhere else
                                  > (ex: 'mapper portal recall' at recall).
                                  > To stack commands use ;; as separator
-                                 > to get around the line break parser
+                                 > to get around the line-break parser
                                  > (ex: 'mapper portal hold amulet;;enter').]],
 [[]],
-[[There is also 'mapper fullportal {<command>} {<room_id>} <level>' which lets you
-set all portal aspects in one command without being in the target room.]],
+[[There is also 'mapper fullportal {<command>} {<room_id>} <level>' which lets
+you set all portal aspects in one command without being in the target room.]],
 [[]],
 [[+---- NORECALL/NOPORTAL ROOM ASSISTANCE -------------------------------------+]],
 [[mapper portalrecall <index>    --> Flag/unflag a portal as using a recall or
