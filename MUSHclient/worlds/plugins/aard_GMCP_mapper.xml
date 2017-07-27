@@ -4351,6 +4351,7 @@ end -- OnPluginConnect
 
 sent_busy = false
 function OnPluginDisconnect ()
+   fighting_state = false
    mapper.cancel_speedwalk ()
    if sent_busy then
       BroadcastPlugin(999, "ok_you_can_go_now")
