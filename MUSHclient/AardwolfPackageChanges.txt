@@ -1,5 +1,14 @@
 Aardwolf Client Package Major Changes List
 
+r1927 snapshot
+- new feature: Aardwolf_Main_Layout (aard_layout.xml) now has the ability to save and restore named layouts. Read 'aard layout help' for commands. Plugins that save intermediate/proxy/local variables instead of the actual miniwindow coordinates may be incompatible until changed. The included plugins have been updated appropriately.
+- new feature: The GMCP mapper has a 'mapper backups quiet' toggle for fastidious players who don't want to see messages when the automatic backup is running. Manual backups still show messages.
+- misc change: The GMCP mapper compressed backups will hopefully now stay in the background when a different app is full-screened.
+- bug fix: GMCP mapper backups will not continue to be blocked by a persistent 'fighting' status if the player gets disconnected.
+- bug fix: VI command output capturing plugin will run before the URL hyperlinking plugin, so that the untriggerable hyperlinks don't interfere with capturing.
+- bug fix: Umpteenth prompt fixer plugin bug fix. Dangling spaces after %c weren't being removed. It'd be real nice if Aardwolf just forced all prompts to always end in %c so this plugin could finally die.
+- bug fix: MUSHclient's activity window has always worthless. Force that to not open at launch anymore.
+
 r1920 snapshot
 - bug fix: Unescaped %c in the plugin trigger send box caused the prompt fixer plugin to error if you tried to change your prompt while some lines of text were copied to the OS clipboard.
 
