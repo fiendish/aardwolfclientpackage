@@ -160,7 +160,7 @@
   <div class="download"><a id="download-button" class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%.exe">Download Aardwolf_MUSHclient_%%REV%%.exe</a>
     <br>
     <br>
-    <span style="font-size:120%">No manual edits necessary! <br>Just install over the same location as your previous version and that's it.</span>
+    <span style="font-size:120%">No manual edits, imports, or file copies necessary! <br>Just install over the same location as your previous version and that's it.</span>
   </div>
   <br>
   <br> Extensive documentation for the Aardwolf MUSHclient Package is available at <a href="https://github.com/fiendish/aardwolfclientpackage/wiki">https://github.com/fiendish/aardwolfclientpackage/wiki</a>
