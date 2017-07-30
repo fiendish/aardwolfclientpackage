@@ -229,6 +229,17 @@ https://github.com/dkager/tolk
 <script>
 <![CDATA[
 AcceleratorTo("Ctrl+Space", "CallPlugin('"..GetPluginID().."', 'silence')", sendto.script)
+AcceleratorTo("Ctrl+1", "CallPlugin('"..GetPluginID().."', 'playback', 1)", sendto.script)
+AcceleratorTo("Ctrl+2", "CallPlugin('"..GetPluginID().."', 'playback', 2)", sendto.script)
+AcceleratorTo("Ctrl+3", "CallPlugin('"..GetPluginID().."', 'playback', 3)", sendto.script)
+AcceleratorTo("Ctrl+4", "CallPlugin('"..GetPluginID().."', 'playback', 4)", sendto.script)
+AcceleratorTo("Ctrl+5", "CallPlugin('"..GetPluginID().."', 'playback', 5)", sendto.script)
+AcceleratorTo("Ctrl+6", "CallPlugin('"..GetPluginID().."', 'playback', 6)", sendto.script)
+AcceleratorTo("Ctrl+7", "CallPlugin('"..GetPluginID().."', 'playback', 7)", sendto.script)
+AcceleratorTo("Ctrl+8", "CallPlugin('"..GetPluginID().."', 'playback', 8)", sendto.script)
+AcceleratorTo("Ctrl+9", "CallPlugin('"..GetPluginID().."', 'playback', 9)", sendto.script)
+AcceleratorTo("Ctrl+0", "CallPlugin('"..GetPluginID().."', 'playback', 0)", sendto.script)
+
 
 function do_filtering(msg)
    for i,sub in ipairs(text_filters) do
@@ -387,9 +398,20 @@ function unload()
    collectgarbage("collect")
 end
 
+history = {}
+function playback(line)
+   if line then
+      say(history[line])
+   end
+end
+
 function OnPluginScreendraw(line_type, log, line)
 	if tts_enabled and line_type < 1 then
 		say(line)
+      if Trim(line) ~= "" then
+         table.insert(history, 1, line)
+         history[11] = nil
+      end
 	end
 end
 
