@@ -4077,6 +4077,10 @@ function findpath(src, dst, noportals, norecalls)
    if not rooms[src] then
       rooms[src] = load_room_from_database(src)
    end
+   if not rooms[src] then
+      return
+   end
+
    local walk_one = nil
    for dir,touid in pairs(rooms[src].exits) do
       if tostring(touid) == tostring(dst) and tonumber(rooms[src].exit_locks[dir]) <= mylevel and ((walk_one == nil) or (#dir > #walk_one)) then
