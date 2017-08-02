@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1930 snapshot
+- bug fix: Don't crash the GMCP mapper when clicking on a room's ghost after deleting it.
+- bug fix: A poorly chosen variable name in aard_requirements.lua was very likely to conflict with anything else using a database. This caused transaction errors in the GMCP mapper and possibly other plugins.
+- new feature: Universal text to speech plugin now has Ctrl+1 through Ctrl+0 macros for replaying the ten most recently shown lines.
+
 r1927 snapshot
 - new feature: Aardwolf_Main_Layout (aard_layout.xml) now has the ability to save and restore named layouts. Read 'aard layout help' for commands. Plugins that save intermediate/proxy/local variables instead of the actual miniwindow coordinates may be incompatible until changed. The included plugins have been updated appropriately.
 - new feature: The GMCP mapper has a 'mapper backups quiet' toggle for fastidious players who don't want to see messages when the automatic backup is running. Manual backups still show messages.
