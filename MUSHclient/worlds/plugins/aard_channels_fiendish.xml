@@ -193,13 +193,10 @@ SetTriggerOption("global_quest", "enabled", global_quest_on)
 SetTriggerOption("remort_auction", "enabled", remort_auction_on)
 
 function reset_aard()
-   width = default_width
-   height = default_height
    font_name = default_font_name
    font_size = default_font_size
-   windowinfo.window_left = default_x
-   windowinfo.window_top = default_y
    WindowPosition(win, default_x, default_y, 0, 18)
+   WindowResize(win, default_width, default_height, WINDOW_BACKGROUND_COLOUR)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    OnPluginSaveState()
    OnPluginInstall()
