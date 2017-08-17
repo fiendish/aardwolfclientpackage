@@ -86,16 +86,12 @@ for k,v in pairs(data_color_defaults) do
    data_colors[k] = data_colors[k] or v
 end
 
-
 function reset_aard()
    stacked = 0
-   width = default_width
-   height = default_height
    font_name = default_font_name
    font_size = default_font_size
-   windowinfo.window_left = default_x
-   windowinfo.window_top = default_y
    WindowPosition(win, default_x, default_y, 0, 18)
+   WindowResize(win, default_width, default_height, background_colour)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    OnPluginSaveState()
    OnPluginInstall()
