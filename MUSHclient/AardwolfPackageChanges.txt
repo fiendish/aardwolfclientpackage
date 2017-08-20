@@ -2,7 +2,7 @@ Aardwolf Client Package Major Changes List
 
 r1935 snapshot
 - bug fix: Some people had reported miniwindows not staying in the right place after r1927. It turns out that this was actually a bug in the official version of movewindow.lua. The fix for this has also been reported to Nick Gammon.
-- bug fix: resetaard miniwindow sizes should now be correctly default again after being somewhat broken by changes made for the layout profile feature.
+- bug fix: 'resetaard' should now correctly default miniwindow sizes again after being somewhat broken by changes made for the layout profile feature.
 - new feature: The inventory serials plugin now has a mode toggle. Type 'inventory serials help' to see more.
 - new feature: Thanks to Mendaloth, the channel capture plugin will now also capture remote socials. Adding a toggle for this is very low priority.
 
