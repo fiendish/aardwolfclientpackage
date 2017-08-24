@@ -262,7 +262,7 @@ local function make_check_map_position_handler (mwi)
     local win = mwi.win
 
     if not WindowInfo (win, 1) then
-      ColourNote ("white", "red", "Error in make_check_map_position_handler: no window named: " .. win)
+--      ColourNote ("white", "red", "Error in make_check_map_position_handler: no window named: " .. win)
       return
     end -- no such window
 
