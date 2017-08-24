@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1936 snapshot
+- bug fix: Fixed an error saving the bigmap position while not merged into the GMCP mapper miniwindow.
+
 r1935 snapshot
 - bug fix: Some people had reported miniwindows not staying in the right place after r1927. It turns out that this was actually a bug in the official version of movewindow.lua. The fix for this has also been reported to Nick Gammon.
 - bug fix: 'resetaard' should now correctly default miniwindow sizes again after being somewhat broken by changes made for the layout profile feature.
