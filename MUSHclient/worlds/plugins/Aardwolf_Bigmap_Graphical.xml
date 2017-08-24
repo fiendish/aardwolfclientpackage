@@ -405,7 +405,7 @@ function DrawMap(clearHotspotsFirst)
    local image_name = "bigmap_continent_"..zone
    if (mapwin == GetPluginID().."_mapper") then
       local window_width, window_height
-      if not use_exact_sizes and unmerged_width ~= nil and unmerged_height ~= nil then
+      if not use_exact_sizes and unmerged_width ~= nil and unmerged_width ~= 0 and unmerged_height ~= nil and unmerged_height ~= 0 then
          window_width = unmerged_width
          window_height = unmerged_height
       else
@@ -726,7 +726,7 @@ function do_init()
    win = GetPluginID ().."_offscreen_buffer"
    mapwin = (((use_gmcp_mapper == 1 and IsPluginInstalled("b6eae87ccedd84f510b74714") and GetPluginInfo("b6eae87ccedd84f510b74714", 17)) and "b6eae87ccedd84f510b74714_mapper") or GetPluginID().."_mapper")
 
-   windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, miniwin.create_absolute_location, true, nil, {mouseup=MouseUp,
+   windowinfo = movewindow.install(mapwin, miniwin.pos_top_left, miniwin.create_absolute_location, mapwin ~= GetPluginID().."_mapper", nil, {mouseup=MouseUp,
       mousedown=LeftClickOnly, dragmove=LeftClickOnly,
       dragrelease=LeftClickOnly},{x=0, y=0})
 
@@ -767,10 +767,8 @@ function OnPluginSaveState ()
    SetVariable ("xref", "xref = " .. serialize.save_simple (xref))
    SetVariable("use_gmcp_mapper", tostring(use_gmcp_mapper))
    SetVariable("show_map", show_map)
-   if (mapwin == GetPluginID().."_mapper") then
-      movewindow.save_state (mapwin)
-   end
-   if WindowInfo(mapwin, 3) and WindowInfo(mapwin, 4) then
+   if (mapwin == GetPluginID().."_mapper" and WindowInfo(mapwin, 3)) then
+      movewindow.save_state(mapwin)
       unmerged_width = WindowInfo(mapwin, 3)
       unmerged_height = WindowInfo(mapwin, 4)
       SetVariable("unmerged_width", unmerged_width)
