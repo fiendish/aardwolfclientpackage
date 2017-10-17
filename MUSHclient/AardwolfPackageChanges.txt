@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1938 snapshot
+- bug fix: Don't only lock miniwindow positions (when using aard layout lock) if they have a preprocessor function defined.
+
 r1937 snapshot
 - bug fix: Remove an innocuous but scary looking and unnecessary alert message in the movewindow code.
 
