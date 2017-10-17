@@ -164,10 +164,8 @@ local function make_dragmove_handler (mwi)
     local win = mwi.win
 
     -- see if other action wanted
-    if mwi.preprocess.dragmove then
-      if (GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1") or mwi.preprocess.dragmove (flags, hotspot_id, win) then
-         return
-      end -- if handled already
+    if (GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1")  or (mwi.preprocess.dragmove and mwi.preprocess.dragmove(flags, hotspot_id, win)) then
+       return
     end -- if handler
 
     -- find where it is now
