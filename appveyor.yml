@@ -30,7 +30,7 @@ install:
 
     Move-Item .\MUSHclient\worlds\Aardwolf_no_visuals.mcl .\MUSHclient\worlds\Aardwolf.mcl -force
 
-    $VIAPPOUT = 'OutFile "Aardwolf_MUSHclient_${PackageVersion}_VI.exe"'
+    $VIAPPOUT = 'OutFile "Aardwolf_MUSHclient_${PackageVersion}_no_visuals.exe"'
 
     (Get-Content aardmush_installer.nsi) | ForEach-Object { $_ -replace "OutFile.+" , "$VIAPPOUT" } | Set-Content aardmush_installer.nsi
 
