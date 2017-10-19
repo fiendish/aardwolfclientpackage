@@ -217,7 +217,10 @@ function OnPluginTelnetRequest (msg_type, data)
    if msg_type == GMCP and data == "SENT_DO" then
       Note ("Enabling GMCP.")
       -- This hard-coded block may need to be made into a config table as we add more message types.
-      GMCP_send (string.format ('Core.Hello { "client": "MUSHclient", "version": "%s" }', Version().." r"..aard_extras.PackageVersion()))
+      GMCP_send (
+         string.format ('Core.Hello { "client": "MUSHclient", "version": "%s" }',
+                        Version().." r"..aard_extras.PackageVersion()..(aard_req_novisuals_mode and " VI" or ""))
+      )
       GMCP_send ('Core.Supports.Set [ "Char 1", "Comm 1", "Room 1" ]')
       return true
    end -- if GMCP login needed (just sent DO)
