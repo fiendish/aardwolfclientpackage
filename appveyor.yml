@@ -19,6 +19,15 @@ install:
 
     & "C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi
 
+    function Insert-Content {
+      param ( [String]$Path )
+      process {
+        $( ,$_; Get-Content $Path -ea SilentlyContinue) | Out-File $Path
+      }
+    }
+
+    "aard_req_novisuals_mode = true  -- this line added by the no-visuals installer`n" | Insert-Content .\MUSHclient\lua\aard_requirements.lua
+
     Move-Item .\MUSHclient\worlds\Aardwolf_no_visuals.mcl .\MUSHclient\worlds\Aardwolf.mcl -force
 
     $VIAPPOUT = 'OutFile "Aardwolf_MUSHclient_${PackageVersion}_VI.exe"'
