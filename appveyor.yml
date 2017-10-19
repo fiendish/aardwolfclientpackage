@@ -26,7 +26,7 @@ install:
       }
     }
 
-    "aard_req_novisuals_mode = true  -- this line added by the no-visuals installer`n" | Insert-Content .\MUSHclient\lua\aard_requirements.lua
+    "aard_req_novisuals_mode = true  -- this line added by the no-visuals installer`r`n" | Insert-Content .\MUSHclient\lua\aard_requirements.lua
 
     Move-Item .\MUSHclient\worlds\Aardwolf_no_visuals.mcl .\MUSHclient\worlds\Aardwolf.mcl -force
 
