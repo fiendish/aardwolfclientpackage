@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- MuClient version 5.06-pre -->
+<!-- MuClient version 5.05 -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
 
    auto_say_override_prefix="-"
    beep_sound="sounds\beep-01.wav"
    chat_name="Name-not-set"
    command_stack_character=";"
-   id="c905cd7c09f8444a5972c2ba"
+   id="e0eb198d8d5698e3b2f61483"
    input_font_name="Courier New"
    mapping_failure="Alas, you cannot go that way."
    name="Aardwolf"
@@ -108,7 +108,7 @@
 <!-- triggers -->
 
 <triggers
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
   >
 </triggers>
@@ -116,7 +116,7 @@
 <!-- aliases -->
 
 <aliases
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
   >
   <alias
@@ -174,7 +174,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- timers -->
 
 <timers
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
   >
 </timers>
@@ -182,7 +182,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- macros -->
 
 <macros
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
   >
 
@@ -275,7 +275,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- variables -->
 
 <variables
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
   >
 </variables>
@@ -283,7 +283,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- colours -->
 
 <colours
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
   >
 
@@ -307,8 +307,8 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
    <colour seq="3" rgb="lime" />
    <colour seq="4" rgb="yellow" />
    <colour seq="5" rgb="blue" />
-   <colour seq="6" rgb="fuchsia" />
-   <colour seq="7" rgb="aqua" />
+   <colour seq="6" rgb="magenta" />
+   <colour seq="7" rgb="cyan" />
    <colour seq="8" rgb="white" />
 
  </bold>
@@ -324,7 +324,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
   <colour seq="6" name="Custom6" text="#FF80C0" back="black" />
   <colour seq="7" name="Custom7" text="red" back="black" />
   <colour seq="8" name="Custom8" text="#0080C0" back="black" />
-  <colour seq="9" name="Custom9" text="fuchsia" back="black" />
+  <colour seq="9" name="Custom9" text="magenta" back="black" />
   <colour seq="10" name="Custom10" text="#804040" back="black" />
   <colour seq="11" name="Custom11" text="#FF8040" back="black" />
   <colour seq="12" name="Custom12" text="teal" back="black" />
@@ -339,7 +339,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- keypad -->
 
 <keypad
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
   >
 
@@ -448,7 +448,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <!-- printing -->
 
 <printing
-   muclient_version="5.06-pre"
+   muclient_version="5.05"
    world_file_version="15"
   >
 
@@ -482,8 +482,8 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <include name="aard_Copy_Colour_Codes.xml" plugin="y" />
 <include name="aard_repaint_buffer.xml" plugin="y" />
 <include name="aard_inventory_serials.xml" plugin="y" />
+<include name="Hyperlink_URL2.xml" plugin="y" />
 <include name="aard_GMCP_mapper.xml" plugin="y" />
 <include name="aard_package_update_checker.xml" plugin="y" />
 <include name="universal_text_to_speech.xml" plugin="y" />
-<include name="Hyperlink_URL2.xml" plugin="y" />
 </muclient>
