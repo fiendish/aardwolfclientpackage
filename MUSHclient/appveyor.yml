@@ -1,0 +1,61 @@
+version: 1.0.{build}
+branches:
+  only:
+  - MUSHclient
+skip_tags: true
+skip_branch_with_pr: true
+image: Visual Studio 2015
+clone_depth: 1
+environment:
+  auth_token:
+    secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
+install:
+- ps: >-
+    Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
+
+    Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/get_version.nsi'
+
+    Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/hello.rtf'
+
+    & "C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi
+
+    Get-ChildItem .\Aardwolf_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+build: off
+before_deploy:
+- ps: >-
+    $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
+
+
+    git config --global credential.helper store
+
+    Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:auth_token):x-oauth-basic@github.com`n"
+
+    git config --global user.name "fiendish"
+
+    git config --global user.email "patcherton.fixesthings@gmail.com"
+
+
+    git remote set-branches --add origin 'gh-pages' 2>&1 | write-host
+
+    git fetch --depth 1 origin gh-pages 2>&1 | write-host
+
+    git checkout gh-pages 2>&1 | write-host
+
+    (Get-Content index.template).replace("%%REV%%", "$env:PACKAGE_VERSION") | Set-Content index.html
+
+    git add index.html 2>&1 | write-host
+
+    git commit -q -m "automatic rev update $env:PACKAGE_VERSION"
+
+    git push -q origin gh-pages
+deploy:
+- provider: GitHub
+  tag: $(PACKAGE_VERSION)
+  auth_token:
+    secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
+  artifact: /Aardwolf_MUSHclient_r.*\.exe/
+  force_update: true
+  on:
+    branch: MUSHclient
+after_deploy:
+- cmd:
