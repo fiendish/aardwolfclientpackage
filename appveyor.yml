@@ -19,6 +19,14 @@ install:
 
     & "C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi
 
+    Move-Item .\MUSHclient\worlds\Aardwolf_no_visuals.mcl .\MUSHclient\worlds\Aardwolf.mcl -force
+
+    $VIAPPOUT = 'OutFile "Aardwolf_MUSHclient_${PackageVersion}_VI.exe"'
+
+    (Get-Content aardmush_installer.nsi) | ForEach-Object { $_ -replace "OutFile.+" , "$VIAPPOUT" } | Set-Content aardmush_installer.nsi
+
+    & "C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi
+
     Get-ChildItem .\Aardwolf_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 build: off
 before_deploy:
