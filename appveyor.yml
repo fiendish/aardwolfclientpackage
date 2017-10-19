@@ -22,7 +22,7 @@ install:
     function Insert-Content {
       param ( [String]$Path )
       process {
-        $( ,$_; Get-Content $Path -ea SilentlyContinue) | Out-File $Path
+        $( ,$_; Get-Content $Path -ea SilentlyContinue) | Out-File -encoding ASCII $Path
       }
     }
 
