@@ -81,8 +81,6 @@
   }
 
   function SetLatestReleaseInfo(rname, url, info) {
-    $("#download-button").attr("href", url); // leave this in case AppVeyor breaks
-    $("#download-button").text("Download Aardwolf_MUSHclient_" + rname + ".exe"); // leave this in case AppVeyor breaks
     $("#release-info").html(info);
   }
 
@@ -157,10 +155,17 @@
   <div id="release-info"></div>
   <div id="all-releases-info"></div>
   <br>
-  <div class="download"><a id="download-button" class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%.exe">Download Aardwolf_MUSHclient_%%REV%%.exe</a>
+  <div class="download">
+    <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%_no_visuals.exe">Download the %%REV%% non-visual base for screen readers</a>
+    or
+    <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%.exe">Download %%REV%% with full visuals</a>
     <br>
     <br>
-    <span style="font-size:120%">No manual edits, imports, or file copies necessary! <br>Just install over the same location as your previous version and that's it.</span>
+    <span style="font-size:120%">
+        Unless switching between the visual and non-visual versions, no manual edits, imports, or file copies are necessary. <br>You can just install over the same location as your previous Aardwolf MUSHclient install and that's it.
+        <br><br>
+        The visual and non-visual installers use different world files, and world files are not replaced by the installers if they already exist. <br>To switch between versions you need to either delete your previous world file first or install to a new location.
+    </span>
   </div>
   <br>
   <br> Extensive documentation for the Aardwolf MUSHclient Package is available at <a href="https://github.com/fiendish/aardwolfclientpackage/wiki">https://github.com/fiendish/aardwolfclientpackage/wiki</a>
