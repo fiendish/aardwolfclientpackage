@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="Aardwolf_New_Connection_No_UI"
+   author="Fiendish"
+   id="9f796334ab9ed476ef44f1dc"
+   language="Lua"
+   purpose="Welcome players to the new client package"
+   date_written="2010-11-22 18:32:06"
+   requires="4.73"
+   version="1.0"
+   save_state="y"
+>
+</plugin>
+<script>
+<![CDATA[
+
+function OnPluginInstall()
+   Note("Welcome to the Aardwolf MUSHclient Package.")
+   Note("Please send all client feedback to Fiendish in the game.")
+end
+
+loaded = false
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+   if not loaded then
+      Connect()
+   end
+   loaded = true
+end
+
+]]>
+</script>
+</muclient>
