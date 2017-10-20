@@ -114,8 +114,12 @@
         .done(function (releases) {
           var downloadCount = 0;
           for (var i = 0; i < releases.length; i++) {
-            var asset = releases[i].assets[0];
-            downloadCount += asset.download_count;
+            for (var j = 0; j < releases[i].assets.length; j++) {
+              var asset = releases[i].assets[j];
+              if (asset.name.endsWith(".exe")) {
+                downloadCount += asset.download_count;
+              }
+            }
           }
           var allReleasesInfo = "<span style='opacity: 0.5'>All installer versions combined since r1871 (the first installer build), <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
           Storage.set('allReleasesInfo', allReleasesInfo, fiveMinutes);
