@@ -238,7 +238,7 @@ AcceleratorTo("Ctrl+6", "CallPlugin('"..GetPluginID().."', 'playback', 6)", send
 AcceleratorTo("Ctrl+7", "CallPlugin('"..GetPluginID().."', 'playback', 7)", sendto.script)
 AcceleratorTo("Ctrl+8", "CallPlugin('"..GetPluginID().."', 'playback', 8)", sendto.script)
 AcceleratorTo("Ctrl+9", "CallPlugin('"..GetPluginID().."', 'playback', 9)", sendto.script)
-AcceleratorTo("Ctrl+0", "CallPlugin('"..GetPluginID().."', 'playback', 0)", sendto.script)
+AcceleratorTo("Ctrl+0", "CallPlugin('"..GetPluginID().."', 'playback', 10)", sendto.script)
 
 
 function do_filtering(msg)
@@ -387,7 +387,7 @@ function OnPluginInstall()
       sapi_fallback()
    else
       local reader = widestr_to_luastr(tolk_api.Tolk_DetectScreenReader())
-      say("You are using "..reader.." text to speech.", true)
+      say("The universal T T S plug-in is now using "..reader.." speech.", true)
    end
 end
 
