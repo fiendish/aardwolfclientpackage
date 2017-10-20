@@ -44,8 +44,10 @@
   .download {
     padding: 10px;
     display: inline-block;
-    color: green;
-    border: 2px solid;
+    font-size:120%;
+    width: 80%;
+    text-align: left;
+    min-width: 400px;
   }
   .number {
     font-family: sans-serif;
@@ -154,18 +156,29 @@
   <h1>Aardwolf MUSHclient Package Installer</h1>
   <div id="release-info"></div>
   <div id="all-releases-info"></div>
-  <br>
-  <div class="download">
-    <p style="font-size:120%">
-        Unless switching between the visual and non-visual versions, no manual edits, imports, or file copies are necessary. <br>You can just install over the same location as your previous Aardwolf MUSHclient install and that's it.
-        <br><br>
-        The visual and non-visual installers use different world files, and world files are not replaced by the installers if they already exist. <br>To switch world files you need to either delete your previous world file first or install to a new location.
-    </p>
-    <br>
+  <div>
+    <div class="download">
+    <h3>Important details:</h3>
+    <ol>
+        <li>
+        This page has download links for two variants of the Aardwolf MUSHclient Package installer.<br> The only difference between them is that the one called the "non-visual base" installer initially loads a different default set of plugins in the Aardwolf world file, eschewing graphical plugins that are incompatible with text to speech interaction. It still includes the mapper plugin, just with the visual map display hidden.
+        </li>
+        <br>
+        <li>
+        The visual and non-visual installers mostly just install different world files, and your existing world files are never overwritten by the installers in order to preserve your personal changes. To install a new world file, you need to either delete your previous world file first or install to a new location. But if you've already been using the Aardwolf MUSHclient Package, and you're happy with its configuration, and you're just updating to a newer release version, then you don't really need to worry about which installer download you use.
+        </li>
+        <br>
+        <li>
+        Because these installers do not overwrite your personal mapper database file, world file, or state files, you no longer need to do any of the old manual file edits, imports, or copies to complete an upgrade. <span style="color:forestgreen">You can just install over the same location as your previous Aardwolf MUSHclient install and that's it.</span> If you're concerned about accidents, just make a backup copy first.
+        </li>
+        </ol>
+    </div>
+    <div>
     <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r1938/Aardwolf_MUSHclient_r1938_no_visuals.exe">Download the r1938 non-visual base for screen readers</a>
-    or
+    &nbsp;&nbsp;or&nbsp;&nbsp;
     <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r1938/Aardwolf_MUSHclient_r1938.exe">Download r1938 with full visuals</a>
-  </div>
+    </div>
+</div>
   <br>
   <br> Extensive documentation for the Aardwolf MUSHclient Package is available at <a href="https://github.com/fiendish/aardwolfclientpackage/wiki">https://github.com/fiendish/aardwolfclientpackage/wiki</a> and assistance is provided in-game on the tech channel.
   <br>
