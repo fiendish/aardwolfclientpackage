@@ -198,14 +198,18 @@ Makes inventory command slightly more useful by displaying item serial numbers
    group="commands"
 >
 <send>
-   inv_sent_count = inv_sent_count + 1
-   key_sent_count = key_sent_count + 1
-   EnableTrigger("start_key", true)
-   EnableTrigger("start_inv", true)
-   SendNoEcho("keyring data")
-   SendNoEcho("invdata")
-   if manually_requested then
-      EnableAliasGroup("commands", false)
+   if not manually_requested and not visible_always then
+      SendNoEcho("%0")
+      if show_hint then
+         hint_message()
+      end
+   else
+      inv_sent_count = inv_sent_count + 1
+      key_sent_count = key_sent_count + 1
+      EnableTrigger("start_key", true)
+      EnableTrigger("start_inv", true)
+      SendNoEcho("keyring data")
+      SendNoEcho("invdata")
    end
 </send>
 </alias>
@@ -220,11 +224,15 @@ Makes inventory command slightly more useful by displaying item serial numbers
    group="commands"
 >
 <send>
-   key_sent_count = key_sent_count + 1
-   EnableTrigger("start_key", true)
-   SendNoEcho("keyring data")
-   if manually_requested then
-      EnableAliasGroup("commands", false)
+   if not manually_requested and not visible_always then
+      SendNoEcho("%0")
+      if show_hint then
+         hint_message()
+      end
+   else
+      key_sent_count = key_sent_count + 1
+      EnableTrigger("start_key", true)
+      SendNoEcho("keyring data")
    end
 </send>
 </alias>
@@ -239,17 +247,21 @@ Makes inventory command slightly more useful by displaying item serial numbers
    group="commands"
 >
 <send>
-   vault_sent_count = vault_sent_count + 1
-   EnableTrigger("start_vault", true)
-   SendNoEcho("vault data")
-   if manually_requested then
-      EnableAliasGroup("commands", false)
+   if not manually_requested and not visible_always then
+      SendNoEcho("%0")
+      if show_hint then
+         hint_message()
+      end
+   else
+      vault_sent_count = vault_sent_count + 1
+      EnableTrigger("start_vault", true)
+      SendNoEcho("vault data")
    end
 </send>
 </alias>
 
 <alias
-   match="^((i|in|inv|inve|inven|invent|invento|inventor|inventory)|(keyr(i|in|ing)? l(i|is|ist)?)|(vau(l|lt)? l(i|is|ist)?)) serials( help| off| on)?$"
+   match="^((i|in|inv|inve|inven|invent|invento|inventor|inventory)|(keyr(i|in|ing)? l(i|is|ist)?)|(vau(l|lt)? l(i|is|ist)?)) serials( help| off| on| hint clear)?$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -261,7 +273,8 @@ Makes inventory command slightly more useful by displaying item serial numbers
 <script>
 <![CDATA[
 
-visible_always = tonumber(GetVariable("visible_always")) ~= 0  -- default true
+visible_always = tonumber(GetVariable("visible_always")) ~= 1  -- default false
+show_hint = tonumber(GetVariable("show_hint")) ~= 0 -- default true
 manually_requested = false
 
 function OnPluginListChanged()
@@ -272,28 +285,44 @@ function OnPluginInstall()
    if IsConnected() then
       OnPluginConnect()
    end
-   EnableAliasGroup("commands", visible_always)
+end
+
+function hint_message()
+   Note("")
+   Note("The Aardwolf MUSHclient Package includes a plugin for displaying object serial numbers in your inventory.")
+   Note("The information can give you more precise control over which items you give/drop/wear/etc.")
+   ColourNote("", "", "To learn more about object serial numbers, type '", "yellow", "", "help ObjectId", "", "", "'.")
+   Note("")
+   ColourNote("", "", "To review the commands for this plugin and stop seeing this informational message, type '", "yellow", "", "inventory serials help", "", "", "'.")
 end
 
 function show_help()
-   Note("--------------------------------------")
+   Note("")
    Note("Aardwolf Inventory Serials Plugin Help")
    Note("--------------------------------------")
    Note("")
    Note("Command syntax:")
-   ColourNote("yellow", "", ">", "", "","  inventory serials <on/off>")
-   Note("      - Show or don't show item serial numbers by default when viewing inventory")
-   ColourNote("yellow", "", ">", "", "","  (inventory|keyring list|vault list) serials")
-   Note("      - Request the display of item serial numbers once")
-
+   Note("")
+   ColourNote("yellow", "", "   inventory serials <on/off>")
+   Note("        Whether to always automatically include item serial numbers when listing inventory.")
+   Note("")
+   ColourNote("yellow", "", "   inventory serials")
+   ColourNote("yellow", "", "   keyring list serials")
+   ColourNote("yellow", "", "   vault list serials")
+   Note("        Request the display of item serial numbers once.")
+   Note("")
+   ColourNote("yellow", "", "   inventory serials help")
+   Note("        Print this help.")
    Note("")
    Note("Current status:")
-   Tell("Item serial numbers always shown by default? ")
-   ColourNote(visible_always and "lime" or "red", "", visible_always and "[YES]" or "[NO]")
+   Tell("Always include item serial numbers when listing inventory? ")
+   ColourNote(visible_always and "lime" or "red", "", visible_always and "Yes" or "No")
+   Note("--------------------------------------")
    Note("")
 end
 
 function serials_command(name, line, wildcards)
+   -- wildcard indices:
    -- 1 is full command minus the serials bit
    -- 2 is inv
    -- 3 is keyring
@@ -306,21 +335,23 @@ function serials_command(name, line, wildcards)
       else
          manually_requested = true
       end
-      EnableAliasGroup("commands", true)
       Execute(wildcards[1])
       manually_requested = false
    elseif cmd == "off" and wildcards[2] ~= "" then
-      ColourNote("","","Inventory, vault list, and keyring list ","red","","[will not]","",""," display item serial numbers unless specifically requested (For help, type 'inventory serials help').")
+      ColourNote("","","Inventory, vault list, and keyring list ","red","","[will not]","",""," display item serial numbers now unless specifically requested. (For help, type ","yellow", "", "'inventory serials help'","","",")")
       visible_always = false
       SetVariable("visible_always", 0)
-      EnableAliasGroup("commands", false)
    elseif cmd == "on" and wildcards[2] ~= "" then
-      ColourNote("","","Inventory, vault list, and keyring list ","lime","","[will]","",""," always display item serial numbers.")
+      ColourNote("","","Inventory, vault list, and keyring list ","lime","","[will]","",""," now always display item serial numbers. (For help, type ","yellow", "", "'inventory serials help'","","",")")
       visible_always = true
       SetVariable("visible_always", 1)
-      EnableAliasGroup("commands", true)
    elseif cmd == "help" then
       show_help()
+      show_hint = false
+      SetVariable("show_hint", 0)
+   elseif cmd == "hint clear" then
+      show_hint = false
+      SetVariable("show_hint", 0)
    end
 end
 
