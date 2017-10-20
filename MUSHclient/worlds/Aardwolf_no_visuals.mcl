@@ -477,6 +477,7 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <include name="aard_text_substitution.xml" plugin="y" />
 <include name="aard_prompt_fixer.xml" plugin="y" />
 <include name="aard_chat_echo.xml" plugin="y" />
+<include name="aard_VI_command_output.xml" plugin="y" />
 <include name="aard_GMCP_handler.xml" plugin="y" />
 <include name="aard_miniwindow_z_order_monitor.xml" plugin="y" />
 <include name="aard_Copy_Colour_Codes.xml" plugin="y" />
@@ -486,4 +487,5 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <include name="aard_GMCP_mapper.xml" plugin="y" />
 <include name="aard_package_update_checker.xml" plugin="y" />
 <include name="universal_text_to_speech.xml" plugin="y" />
+<include name="aard_new_connection_no_UI.xml" plugin="y" />
 </muclient>
