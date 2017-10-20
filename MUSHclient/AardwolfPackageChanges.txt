@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1940 snapshot
+- new feature: We're testing out a new second installer for VI players that bypasses purely visual plugins that might interfere with screen readers and also loads (hopefully) text to speech by default.
+- misc change: The inventory serials plugin will no longer be active by default. It will still be loaded and will inform the player of its existence until the player looks at it.
+
 r1938 snapshot
 - bug fix: Don't only lock miniwindow positions (when using aard layout lock) if they have a preprocessor function defined.
 
