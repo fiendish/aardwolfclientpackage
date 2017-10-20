@@ -162,7 +162,7 @@
   <div id="all-releases-info"></div>
   <div>
     <div class="download">
-    <h3>Important details:</h3>
+    <h2>Important details:</h2>
     <ol>
         <li>
         This page has download links for two variants of the Aardwolf MUSHclient Package installer.<br> The only difference between them is that the one called the "non-visual base" installer initially loads a different default set of plugins in the Aardwolf world file, eschewing graphical plugins that are incompatible with text to speech interaction. It still includes the mapper plugin, just with the visual map display hidden.
