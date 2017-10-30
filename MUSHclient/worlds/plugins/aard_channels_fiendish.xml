@@ -757,9 +757,9 @@ function stampAndStore(styles)
    local text = ""
    local log_text = ""
 
-   -- remove control characters
+   -- remove most control characters, but preserve newlines
    for i,v in ipairs(styles) do
-      v.text = v.text:gsub("%c","")
+      v.text = v.text:gsub("[^%g%s\n]","")
       v.length = v.text:len()
    end
 
