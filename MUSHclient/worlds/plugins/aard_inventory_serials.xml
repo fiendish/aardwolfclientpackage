@@ -275,7 +275,6 @@ Makes inventory command slightly more useful by displaying item serial numbers
 
 visible_always = tonumber(GetVariable("visible_always")) == 1  -- default false
 show_hint = tonumber(GetVariable("show_hint")) ~= 0 -- default true
-print("SHOW HINT", show_hint, "VISIBLE ALWAYS", visible_always)
 manually_requested = false
 
 function OnPluginListChanged()
