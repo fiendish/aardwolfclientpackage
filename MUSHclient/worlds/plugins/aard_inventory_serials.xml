@@ -199,10 +199,10 @@ Makes inventory command slightly more useful by displaying item serial numbers
 >
 <send>
    if not manually_requested and not visible_always then
-      SendNoEcho("%0")
       if show_hint then
          hint_message()
       end
+      SendNoEcho("%0")
    else
       inv_sent_count = inv_sent_count + 1
       key_sent_count = key_sent_count + 1
@@ -225,10 +225,10 @@ Makes inventory command slightly more useful by displaying item serial numbers
 >
 <send>
    if not manually_requested and not visible_always then
-      SendNoEcho("%0")
       if show_hint then
          hint_message()
       end
+      SendNoEcho("%0")
    else
       key_sent_count = key_sent_count + 1
       EnableTrigger("start_key", true)
@@ -248,10 +248,10 @@ Makes inventory command slightly more useful by displaying item serial numbers
 >
 <send>
    if not manually_requested and not visible_always then
-      SendNoEcho("%0")
       if show_hint then
          hint_message()
       end
+      SendNoEcho("%0")
    else
       vault_sent_count = vault_sent_count + 1
       EnableTrigger("start_vault", true)
@@ -273,8 +273,9 @@ Makes inventory command slightly more useful by displaying item serial numbers
 <script>
 <![CDATA[
 
-visible_always = tonumber(GetVariable("visible_always")) ~= 1  -- default false
+visible_always = tonumber(GetVariable("visible_always")) == 1  -- default false
 show_hint = tonumber(GetVariable("show_hint")) ~= 0 -- default true
+print("SHOW HINT", show_hint, "VISIBLE ALWAYS", visible_always)
 manually_requested = false
 
 function OnPluginListChanged()
@@ -291,9 +292,9 @@ function hint_message()
    Note("")
    Note("The Aardwolf MUSHclient Package includes a plugin for displaying object serial numbers in your inventory.")
    Note("The information can give you more precise control over which items you give/drop/wear/etc.")
-   ColourNote("", "", "To learn more about object serial numbers, type '", "yellow", "", "help ObjectId", "", "", "'.")
    Note("")
    ColourNote("", "", "To review the commands for this plugin and stop seeing this informational message, type '", "yellow", "", "inventory serials help", "", "", "'.")
+   ColourNote("", "", "To learn more about object serial numbers in general, type '", "yellow", "", "help ObjectId", "", "", "'.")
 end
 
 function show_help()
