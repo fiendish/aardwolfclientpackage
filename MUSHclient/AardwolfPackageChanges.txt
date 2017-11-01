@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1942 snapshot:
+- bug fix: I think the inventory serials activation change from r1940 should actually happen now.
+- bug fix: Multiline socials in the communication log were accidentally uglified around r1886. This should unbreak them.
+
 r1940 snapshot
 - new feature: We're testing out a new second installer for VI players that bypasses purely visual plugins that might interfere with screen readers and also loads (hopefully) text to speech by default.
 - misc change: The inventory serials plugin will no longer be active by default. It will still be loaded and will inform the player of its existence until the player looks at it.
