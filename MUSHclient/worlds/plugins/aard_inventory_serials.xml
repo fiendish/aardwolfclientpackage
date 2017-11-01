@@ -261,7 +261,7 @@ Makes inventory command slightly more useful by displaying item serial numbers
 </alias>
 
 <alias
-   match="^((i|in|inv|inve|inven|invent|invento|inventor|inventory)|(keyr(i|in|ing)? l(i|is|ist)?)|(vau(l|lt)? l(i|is|ist)?)) serials( help| off| on| hint clear)?$"
+   match="^((i|in|inv|inve|inven|invent|invento|inventor|inventory)|(keyr(i|in|ing)? l(i|is|ist)?)|(vau(l|lt)? l(i|is|ist)?)) serials?( help| off| on| hint clear)?$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -276,6 +276,7 @@ Makes inventory command slightly more useful by displaying item serial numbers
 visible_always = tonumber(GetVariable("visible_always")) == 1  -- default false
 show_hint = tonumber(GetVariable("show_hint")) ~= 0 -- default true
 manually_requested = false
+times_hinted = 0
 
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
@@ -288,12 +289,22 @@ function OnPluginInstall()
 end
 
 function hint_message()
+   times_hinted = times_hinted + 1
+   if times_hinted == 3 then
+      show_hint = false
+      SetVariable("show_hint", 0)
+   end
    Note("")
    Note("The Aardwolf MUSHclient Package includes a plugin for displaying object serial numbers in your inventory.")
    Note("The information can give you more precise control over which items you give/drop/wear/etc.")
    Note("")
-   ColourNote("", "", "To review the commands for this plugin and stop seeing this informational message, type '", "yellow", "", "inventory serials help", "", "", "'.")
+   ColourNote("", "", "To review the commands for this plugin and stop seeing this message, type '", "yellow", "", "inventory serials help", "", "", "'.")
    ColourNote("", "", "To learn more about object serial numbers in general, type '", "yellow", "", "help ObjectId", "", "", "'.")
+   if show_hint then
+      ColourNote("", "", "This message will show ","red","",tostring(3-times_hinted),"",""," more time"..(times_hinted<2 and "s." or "."))
+   else
+      Note("This message will not show any more.")
+   end
 end
 
 function show_help()
