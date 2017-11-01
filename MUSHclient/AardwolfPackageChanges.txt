@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r1942 snapshot:
+r1942 snapshot
 - bug fix: I think the inventory serials activation change from r1940 should actually happen now.
 - bug fix: Multiline socials in the communication log were accidentally uglified around r1886. This should unbreak them.
 
