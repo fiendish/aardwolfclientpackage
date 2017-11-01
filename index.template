@@ -176,6 +176,7 @@
         </ol>
     </div>
     <div>
+    Quit MUSHclient before running any update installer.<br><br>
     <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%_no_visuals.exe">Download the %%REV%% non-visual base for screen readers</a>
     &nbsp;&nbsp;or&nbsp;&nbsp;
     <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%.exe">Download %%REV%% with full visuals</a>
