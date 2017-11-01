@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1943 snapshot
+- misc change: The inventory serials hint message will only display 3 times and then go away on its own.
+
 r1942 snapshot
 - bug fix: I think the inventory serials activation change from r1940 should actually happen now.
 - bug fix: Multiline socials in the communication log were accidentally uglified around r1886. This should unbreak them.
