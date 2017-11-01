@@ -1,3 +1,5 @@
+-- Bits of this code and ideas were borrowed and remixed from the MUSHclient community. https://www.mushclient.com/forum/?id=9385 and others.
+
 require "wait"
 require "copytable"
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
@@ -710,7 +712,6 @@ function TextRect:rightClickMenu(hotspot_id)
          result = result - inner_count
          func = inner_count + 1
       end
-      print(result, inner_count, func)
       menu_functions[func](self, hotspot_id, result)
    end
 end
