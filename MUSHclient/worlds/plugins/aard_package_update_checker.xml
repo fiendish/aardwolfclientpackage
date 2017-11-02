@@ -45,10 +45,10 @@ You can also run a manual check by typing:    package update check
    local succ, version, msg = aard_extras.PackageVersionExtended()
    if succ then
       ColourNote("white", "blue", msg)
-      remember()
    else
       ColourNote("white","red", msg)
    end
+   remember()
 </send>
 </alias>
 
@@ -149,7 +149,7 @@ loaded = false
 thread = nil
 function OnPluginListChanged()
    if not loaded then
-      -- only fire on start after loading all plugins
+      dofile "lua/aard_requirements.lua"
       loaded = true
       async.doAsyncRemoteRequest(version_url, main, "HTTPS", 120)
    end
@@ -217,11 +217,10 @@ function showUpdate()
          ErrorMessage = "The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Contact Fiendish about this message, because clearly this situation is impossible. :/"
          return false
       else
-         ColourNote("yellow", "", "Your package version r"..local_version.." appears to be up-to-date.")
+         ColourNote("yellow", "", "Your package version r"..aard_extras.PackageVersionFull().." appears to be up-to-date.")
          remember()
       end
    else
-      ErrorMessage = "Impossible Error"
       return false
    end
    return true
