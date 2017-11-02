@@ -18,8 +18,7 @@ end -- function findURL
 version_file = "AardwolfPackageChanges.txt"
 git_branch = "MUSHclient"
 function PackageVersion()
-   local ver = "missing"
-   -- borrowed from the package update checker
+   local ver = nil
    local file,err = io.open(version_file, "r")
    if file then -- the file exists
       --- read the snapshot revision from the third line
@@ -28,24 +27,34 @@ function PackageVersion()
       line = file:read("*l") -- read one line
       file:close()
       if line then -- if we got something
-         ver = tonumber(string.match(line, "r(%d+)")) or "modified"
+         ver = tonumber(string.match(line, "r(%d+)"))
+         err = nil
       end
    end
 
    return ver, err
 end
 
+function PackageVersionFull()
+   local ver, err = PackageVersion()
+   if ver then
+      ver = ver..(aard_req_novisuals_mode and "_VI" or "")
+   end
+   return ver or "ERROR"
+end
+
 function PackageVersionExtended()
    local version, err = PackageVersion()
    local msg = ""
    local succ = false
-   if version == "missing" then -- the file is missing or unreadable
-      msg = "The file "..version_file.." appears to be missing or unreadable (this is bad), so the version check cannot proceed.\nThe system gave the error: "..err
-   elseif version == "modified" then
-      msg = "The file "..version_file.." appears to have been modified (this is bad), so the version check cannot proceed."
+   if not version then -- the file is missing or unreadable
+      msg = "The file "..version_file.." appears to be missing or unreadable (this is bad), so the version check cannot proceed."
+      if err then
+         msg = msg.."\nThe system gave the error: "..err
+      end
    else
       succ = true
-      msg = "You are currently using Aardwolf MUSHclient Package version: r"..version
+      msg = "You are currently using Aardwolf MUSHclient Package version: r"..PackageVersionFull()
    end
 
    return succ, version, msg
