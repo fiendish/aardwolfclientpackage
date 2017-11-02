@@ -219,7 +219,7 @@ function OnPluginTelnetRequest (msg_type, data)
       -- This hard-coded block may need to be made into a config table as we add more message types.
       GMCP_send (
          string.format ('Core.Hello { "client": "MUSHclient", "version": "%s" }',
-                        Version().." r"..aard_extras.PackageVersion()..(aard_req_novisuals_mode and " VI" or ""))
+                        Version().." r"..aard_extras.PackageVersionFull())
       )
       GMCP_send ('Core.Supports.Set [ "Char 1", "Comm 1", "Room 1" ]')
       return true
