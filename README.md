@@ -5,4 +5,4 @@ Documentation and help can by found on the project wiki at https://github.com/fi
 
 Further help can be found in-game on the tech channel.
 
-![screenshot of the client](https://github.com/fiendish/aardwolfclientpackage/wiki/images/screenshot1.png)
+![screenshot of the client](https://github.com/fiendish/aardwolfclientpackage/wiki/images/screenshot1.png) 
