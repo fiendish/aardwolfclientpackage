@@ -43,6 +43,7 @@ install:
     7z a Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip .\MUSHclient
 
     Get-ChildItem .\Aardwolf_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
     Get-ChildItem .\Aardwolf_MUSHclient_r*.zip -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 
     git checkout -- .
