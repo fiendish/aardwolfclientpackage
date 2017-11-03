@@ -80,7 +80,7 @@ deploy:
   auth_token:
     secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
   artifact: /Aardwolf_MUSHclient_r.*\.exe/
-  force_update: true
+  force_update: false
   on:
     branch: MUSHclient
 after_deploy:
