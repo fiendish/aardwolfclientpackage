@@ -13,7 +13,7 @@ install:
 - ps: >-
     $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
 
-    7z a Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
+    7z a -tzip -mx=9 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
 
     Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
 
@@ -40,7 +40,7 @@ install:
 
     & "C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi
 
-    7z a Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip .\MUSHclient
+    7z a -tzip -mx=9 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip .\MUSHclient
 
     Get-ChildItem .\Aardwolf_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 
