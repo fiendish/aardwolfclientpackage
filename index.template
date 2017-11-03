@@ -44,7 +44,7 @@
     padding-left: 2em;
     text-align: left;
   }
-  .download {
+  .description {
     padding: 10px;
     display: inline-block;
     font-size:120%;
@@ -116,9 +116,7 @@
           for (var i = 0; i < releases.length; i++) {
             for (var j = 0; j < releases[i].assets.length; j++) {
               var asset = releases[i].assets[j];
-              if (asset.name.endsWith(".exe")) {
-                downloadCount += asset.download_count;
-              }
+              downloadCount += asset.download_count;
             }
           }
           var allReleasesInfo = "<span style='opacity: 0.5'>All installer versions combined since r1871 (the first installer build), <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
@@ -161,8 +159,8 @@
   <div id="release-info"></div>
   <div id="all-releases-info"></div>
   <div>
-    <div class="download">
-    <h2>Important details:</h2>
+    <div class="description">
+    <h2>Important installer details:</h2>
     <ol>
         <li>
         This page has download links for two variants of the Aardwolf MUSHclient Package installer.<br> The only difference between them is that the one called the "non-visual base" installer initially loads a different default set of plugins in the Aardwolf world file, eschewing graphical plugins that are incompatible with text to speech interaction. It still includes the mapper plugin, just with the visual map display hidden.
@@ -180,6 +178,12 @@
     <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%_no_visuals.exe">Download the %%REV%% non-visual base for screen readers</a>
     &nbsp;&nbsp;or&nbsp;&nbsp;
     <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%.exe">Download %%REV%% with full visuals</a>
+    </div>
+    <div class="description">
+    <h3>Need zip archives instead?</h3>
+    <div style="max-width:50em">
+    Upgrading with a zipped copy of the new MUSHclient directory is more complicated than with one of the installers above, but if for some reason you require it, read <a href="unzip_upgrading.html">Unzip Upgrading</a>.
+    </div>
     </div>
 </div>
   <br>

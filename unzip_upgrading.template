@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Aardwolf MUSHclient Package Unzip Upgrading</title>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="//fiendish.github.io/gh-fork-banner/gh.css">
+  <style>
+
+  html, body {
+    padding: 0px;
+    top: 0px;
+    margin: 0px;
+  }
+  .wall {
+    padding: 10px 20px 10px 20px;
+    margin-left:50px;
+    min-width:400px;
+    max-width:900px;
+    color: #222222;
+    background-color: #edf0f3;
+  }
+  b {
+    color:rgb(53, 47, 92);
+  }
+  h1 {
+    margin: 0px;
+    text-align : center;
+    font-size:20pt;
+    padding : 5px;
+    border : 1px solid Black;
+    background-color : #D7C4A4;
+  }
+
+  .github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}
+  </style>
+</head>
+<body>
+    <div class="wall">
+    <h1>Upgrading the client with a new unzipped archive</h1>
+    <p><b>Important: These steps should all be carried out with MUSHclient closed down - it should not be running while files are copied.</b></p>
+
+    <div style="text-align: center">
+    You can download a zip archive version of the Aardwolf MUSHclient Package here    <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%_no_visuals_no_install.zip">Download a zip of %%REV%% non-visual base for screen readers</a>
+    &nbsp;&nbsp;or&nbsp;&nbsp;
+    <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%_no_install.zip">Download a zip of %%REV%% with full visuals</a>
+    </div>
+
+    <p>When you download a newly updated version of the client you may want to keep your mapper files and other settings from previous versions. We recommend copying over only the mapper files and reconfiguring everything else, but the following steps will help you.</p>
+    <p><b>Installation:</b></br>Unzip the client into a new directory. A good naming convention to use is either the release number of the client (for example, r1825) or a combination of the date such as 'mush02012012'. Recommended approach would be to use the release number. In the example below, all Mushclient releases are under 'd:\mush' and the various versions are under that.</p>
+    <img src='http://www.aardwolf.com/images/mushclient-directories.jpg' title='Mushclient directories' alt='Mushclient directories'/>
+    <br>
+    <p><b>Mapper Files:</b></br>Assuming your world name is the default 'Aardwolf', copy the Aardwolf.db.* files and (if it exists) the Aardwolf_bookmarks.db file from the old directory to the new directory:</p>
+    <img src='http://www.aardwolf.com/images/mud-mapper-database-files.jpg' title='Mud mapper database files' alt='Mud mapper database files'/>
+    <br><br>
+    <p><b>Plugin Configuration:</b></br>Each plugin has its own 'state' file which stores the configuration for that plugin, including the size and position of the windows. Because new variables can often be added with newer releases, it is usually safer to use the state files with the new version and resize the windows / reconfigure the plugins yourself. If you really want to copy all your settings from the old version to the new version, copy the entire contents of the world\plugins\state direcory.</p>
+    <img src='http://www.aardwolf.com/images/mushclient-plugin-state.jpg' title='Mushclient MUD State Files' alt='Mushclient MUD state files'/>
+    <br><br>
+    <p><b>Mushclient Preferences:</b></br>The Mushclient preferences are stored in the database file 'mushclient_prefs.sqlite'. Copy this file from the main mushclient directory of your previous install to the new install to preserve previous Mushclient preferences.</p>
+    <img src='http://www.aardwolf.com/images/mushclient-preferences.jpg' title='Mushclient Preferences' alt='Mushclient Preferences'/>
+    <br><br>
+    <p><b>World Configuration:</b></br>If you have created a lot of aliases and triggers within the main world, you will want to import your settings from the old Aarwolf.mcl file.</p>
+    <p>On the newly installed version of Mushclient, select the 'File' menu then 'Import'. Make sure that all of the import options are checked. Then press the 'File' button.</p>
+
+    <img src='http://www.aardwolf.com/images/mushclient-import-aardwolf.jpg' title='Mushclient Import Settings' alt='Mushclient Import Settings'/>
+    <br><br>
+    <p>Locate the 'Aardwolf.mcl' file in the old version and click 'open':</p>
+    <img src='http://www.aardwolf.com/images/mushclient-aardwolf-world-location.jpg' title='Aardwolf MUD world file' alt='Aardwolf MUD world file'/>
+    <br><br>
+    <p>You will get some errors about being unable to load plugins - these are ok, you don't want the plugins from the old version to load because updated versions are already loaded in the new version.</p>
+    <br>
+    <img src='http://www.aardwolf.com/images/mushclient-import-errors.jpg' title='Mushclient Import Errors' alt='Mushclient Import Errors'/>
+    <br><br>
+    <p>Finally, if you had any plugins installed that are not part of the Aardwolf package, you will need to copy them over and install them manually. We'll assume that if you do, you already know how to manually install the remaining plugins. If you need help, there is always the tech board.</p>
+    </div>
+
+    <a href="https://github.com/fiendish/aardwolfclientpackage" class="github-corner" aria-label="View source on Github"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+</body>
+</html>
