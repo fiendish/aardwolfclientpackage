@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1944 snapshot
+- misc change: Display an indicator of having the non-visual version in 'checkversion' output.
+
 r1943 snapshot
 - misc change: The inventory serials hint message will only display 3 times and then go away on its own.
 
