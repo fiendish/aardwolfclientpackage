@@ -80,7 +80,7 @@ deploy:
   tag: $(PACKAGE_VERSION)
   auth_token:
     secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
-  artifact: /Aardwolf_MUSHclient_r.*\.exe/
+  artifact: /Aardwolf_MUSHclient_r.*\.(exe|zip)/
   force_update: true
   on:
     branch: MUSHclient
