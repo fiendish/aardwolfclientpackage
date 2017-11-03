@@ -70,7 +70,11 @@ before_deploy:
 
     (Get-Content index.template).replace("%%REV%%", "$env:PACKAGE_VERSION") | Set-Content index.html
 
+    (Get-Content unzip_upgrading.template).replace("%%REV%%", "$env:PACKAGE_VERSION") | Set-Content unzip_upgrading.html
+
     git add index.html 2>&1 | write-host
+
+    git add unzip_upgrading.html 2>&1 | write-host
 
     git commit -q -m "automatic rev update $env:PACKAGE_VERSION"
 
