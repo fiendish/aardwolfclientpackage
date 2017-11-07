@@ -79,7 +79,7 @@ and made more awesomer.
    name="map_start"
    sequence="100"
    send_to="12"
-><send>StopEvaluatingTriggers(true)</send>
+><send>StopEvaluatingTriggers()</send>
 </trigger>
 
 <trigger
@@ -90,7 +90,7 @@ and made more awesomer.
    omit_from_output="y"
    sequence="10"
    send_to="12"
-><send>StopEvaluatingTriggers(true)</send>
+><send>StopEvaluatingTriggers()</send>
 </trigger>
 
 <trigger
@@ -101,8 +101,11 @@ and made more awesomer.
    name="map_end"
    sequence="5"
    send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
+><send>
+StopEvaluatingTriggers()
+EnableTriggerGroup("end_gag", true)
+</send>
+</trigger>
 <trigger
    enabled="y"
    match="You open *."
@@ -160,6 +163,37 @@ and made more awesomer.
    send_to="12"
 ><send>EnableTriggerGroup("room_change", true)</send>
 </trigger>
+
+<trigger
+enabled="n"
+match="^$"
+regexp="y"
+name="end_gag_omit"
+group="end_gag"
+omit_from_output="y"
+sequence="100"
+send_to="12"
+>
+<send>
+EnableTriggerGroup("end_gag", false)
+</send>
+</trigger>
+
+<trigger
+enabled="n"
+match=".+"
+regexp="y"
+name="end_gag_keep"
+group="end_gag"
+omit_from_output="n"
+sequence="101"
+send_to="12"
+>
+<send>
+EnableTriggerGroup("end_gag", false)
+</send>
+</trigger>
+
 
 </triggers>
 
@@ -223,7 +257,8 @@ requesting = false
 function request_new_map()
    if GetTimerOption("activity_timer", "enabled") == 1 and can_request_map and not requesting and kinda_busy == 0 then
       requesting = true
-      SendNoEcho ("map")
+      SendNoEcho("map")
+      EnableTriggerGroup("end_gag", true)
    end
 end
 
@@ -913,7 +948,7 @@ function OnPluginInstall(skip_requests)
       return
    end -- they didn't enable us last time
 
-   SetOption("utf_8", 1)
+   SetOption("utf_8", 1)  -- needed for alternate maptypes in output
 
    -- update on reload
    if IsConnected() and not skip_requests then
