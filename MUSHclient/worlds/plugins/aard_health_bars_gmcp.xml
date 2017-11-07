@@ -43,6 +43,7 @@ require "movewindow"
 require "gauge"
 require "gmcphelper"
 require "serialize"
+require "colors"
 
 background_colour     = 0x000000
 border_color          = 0xcccccc
@@ -288,6 +289,13 @@ function DisplayStatsPage()
          if alignment ~= nil then
             zeroed_alignment = alignment+2500
             bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
+            if bar_colour ~= prev_bar_colour then
+               local bch = string.format("%06X", bar_colour)
+               local reverse = "#"..bch:sub(5,6)..bch:sub(3,4)..bch:sub(1,2)
+               local c = colors.new(reverse):hue_offset(-15):lighten_by(0.60):to_rgb()
+               dark_bar_colour = ColourNameToRGB(c)
+            end
+            prev_bar_colour = bar_colour
             if showLabels == 1 then
                if stacked == 1 then
                   WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
@@ -297,7 +305,7 @@ function DisplayStatsPage()
             end
             if graphicalMode == 1 then
                WindowLine (win, xpos+label_width+math.max(0,line_height/2), math.ceil(ypos+line_height/2), xpos+label_width+math.max(0,bar_width-line_height/2), math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
-               WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, bar_colour/2, 0, 2, bar_colour, 0)
+               WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, dark_bar_colour, 0, 2, bar_colour, 0)
 
                -- add ticks at alignment change boundaries
                local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width);
