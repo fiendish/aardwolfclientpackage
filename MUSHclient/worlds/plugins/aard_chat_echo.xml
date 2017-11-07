@@ -270,6 +270,7 @@ function echo_msg(msg)
    if compact_mode ~= "set" then
       Simulate("\r\n")
    end
+   EnableTriggerGroup("end_gag", true) -- gags trailing blank line
 end
 
 function OnPluginListChanged ()
@@ -328,7 +329,7 @@ function OnPluginBroadcast (msg, id, name, text)
 end
 
 function untagged_info (name, line, wildcards, styles)
-   EnableTriggerGroup("end_gag", true) -- gags the trailing blank line if compact is off
+   EnableTriggerGroup("end_gag", true) -- gags trailing blank line
 end
 
 function chat_echo (toggle)

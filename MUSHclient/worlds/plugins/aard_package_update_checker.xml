@@ -58,7 +58,6 @@ You can also run a manual check by typing:    package update check
 <![CDATA[
 
 aard_extras = require "aard_lua_extras"
-require "aard_lua_ffi"
 async = require "async"
 require "json"
 require "wait"
@@ -69,7 +68,7 @@ window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
 function remember()
-   ColourTell("yellow", "", "Remember, the latest development release is always available at: ")
+   ColourTell("yellow", "", "Remember, the latest development snapshot is always available at: ")
    Hyperlink(download_url, download_url, "Installer Download Page", "yellow", "", true)
    Note("")
    Note("")
@@ -117,16 +116,18 @@ function updateDialog(message,list)
       ColourNote("cyan", "", "  |               Aardwolf MUSHclient Package Update Checker                 |")
       ColourNote("cyan", "", "  +--------------------------------------------------------------------------+")
       ColourNote("cyan", "", "  |                                                                          |")
-      ColourNote("cyan", "", "  |  You have chosen to ignore version r"..latest_version.."."..string.rep(" ",74-string.len("| You have chosen to ignore version r"..latest_version..".")).."|")
-      ColourNote("cyan", "", "  |  You will be alerted again when another snapshot is released.            |")
+      local ignoreline = "  |  You have chosen to ignore the r"..latest_version.." snapshot."
+      ColourNote("cyan", "", ignoreline..string.rep(" ",77-string.len(ignoreline)).."|")
+      ColourNote("cyan", "", "  |  You will not be alerted again for this version.                         |")
       ColourNote("cyan", "", "  |                                                                          |")
-      ColourNote("cyan", "", "  |  Remember, you can always get the latest development release at:         |")
+      ColourNote("cyan", "", "  |  Remember, you can always get the latest development snapshot at:        |")
       ColourTell("cyan", "", "  |  ")
       Hyperlink(download_url, download_url, "Installer Download Page", "cyan", "", true)
       ColourNote("cyan", "", string.rep(" ", 71-string.len(download_url)).." |")
       ColourNote("cyan", "", "  |                                                                          |")
       ColourNote("cyan", "", "  +--------------------------------------------------------------------------+")
       Note("")
+      SetVariable("last_cancel", os.time())
       SetVariable("ignore_before_version", latest_version)
    end
 end
@@ -139,7 +140,7 @@ function errorMessage(msg)
    if msg:find("plugin network") then
       Execute("checkversion")
    end
-   ColourNote("white","red", "\nThe latest development release is always available at:")
+   ColourNote("white","red", "\nThe latest development snapshot is always available at:")
    Hyperlink(download_url, download_url, "Installer Download Page", "white", "red", true)
    Note("")
    Note("")
@@ -156,12 +157,17 @@ function OnPluginListChanged()
 end
 
 function manualCheck()
+   SetVariable("last_cancel", 0)
    SetVariable("ignore_before_version", 0)
    DeleteTemporaryTimers()
    async.doAsyncRemoteRequest(version_url, main, "HTTPS", 120)
 end
 
 function main(retval, page, status, headers, full_status, request_url)
+   last_cancel = tonumber(GetVariable("last_cancel")) or os.time()
+   if (os.time() - last_cancel) < (60*60*24*7) then -- wait at least a week between update prompts
+      return
+   end
    ignore_before_version = tonumber(GetVariable("ignore_before_version")) or 0
    SetStatus("Checking online for Aardwolf MUSHclient Package updates")
    ErrorMessage = ""
@@ -211,7 +217,7 @@ function showUpdate()
       if local_version < latest_version then
          final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your "..aard_extras.version_file.." file>\r\n")
          final_update_list = "( Get it from: "..download_url.." )\r\n\r\n"..convertHTMLcodesToStandardText(final_update_list)
-         message = "There is a new Aardwolf MUSHclient Package version available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
+         message = "There is a new Aardwolf MUSHclient Package snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
       elseif local_version > latest_version then
          ErrorMessage = "The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Contact Fiendish about this message, because clearly this situation is impossible. :/"
