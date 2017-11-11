@@ -10,48 +10,57 @@ environment:
   auth_token:
     secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
 install:
-- ps: >-
-    $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
-
-    7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
-
-    Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
-
-    Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/get_version.nsi'
-
-    Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/hello.rtf'
-
-    & "C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi
-
-    function Insert-Content {
-      param ( [String]$Path )
-      process {
-        $( ,$_; Get-Content $Path -ea SilentlyContinue) | Out-File -encoding ASCII $Path
-      }
-    }
-
-    "aard_req_novisuals_mode = true  -- this line added by the no-visuals installer`r`n" | Insert-Content .\MUSHclient\lua\aard_requirements.lua
-
-    Move-Item .\MUSHclient\worlds\Aardwolf_no_visuals.mcl .\MUSHclient\worlds\Aardwolf.mcl -force
-
-    $VIAPPOUT = 'OutFile "Aardwolf_MUSHclient_${PackageVersion}_no_visuals.exe"'
-
-    (Get-Content aardmush_installer.nsi) | ForEach-Object { $_ -replace "OutFile.+" , "$VIAPPOUT" } | Set-Content aardmush_installer.nsi
-
-    & "C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi
-
-    7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip .\MUSHclient
-
-    Get-ChildItem .\Aardwolf_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-
-    Get-ChildItem .\Aardwolf_MUSHclient_r*.zip -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-
-    git checkout -- .
+- cmd: '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86'
+- cmd: git clone -b v2.1 --single-branch --depth=1 https://github.com/LuaJIT/LuaJIT.git C:\luajit
+- cmd: git clone --depth=1 https://github.com/zhaozg/lua-openssl.git c:\lua-openssl
+- cmd: git clone https://github.com/moteus/lua-llthreads2.git C:\llthreads2
+- ps: pushd c:\luajit\src
+- ps: (Get-Content msvcbuild.bat) | ForEach-Object { $_ -replace " /MD " , " /MT " } | Set-Content msvcbuild.bat
+- cmd: ./msvcbuild.bat
+- cmd: copy luajit.exe C:\
+- cmd: copy lua51.* C:\
+- ps: popd
+- ps: pushd c:\lua-openssl
+- ps: (Get-Content Makefile.win) | ForEach-Object { $_ -replace '"' , '' } | Set-Content Makefile.win
+- ps: (Get-Content config.win) | ForEach-Object { $_ -replace '"' , '' } | Set-Content config.win
+- ps: (Get-Content config.win) | ForEach-Object { $_ -replace " /MD " , " /MT " } | Set-Content config.win
+- ps: (Get-Content config.win) | ForEach-Object { $_ -replace "libeay32" , "VC\static\libeay32MT" } | Set-Content config.win
+- ps: (Get-Content config.win) | ForEach-Object { $_ -replace "ssleay32" , "VC\static\ssleay32MT" } | Set-Content config.win
+- ps: (Get-Content config.win) | ForEach-Object { $_ -replace "LUA_INC=.+" , "LUA_INC=C:\luajit\src" } | Set-Content config.win
+- ps: (Get-Content config.win) | ForEach-Object { $_ -replace "LUA_LIB=.+" , "LUA_LIB=C:\lua51.lib" } | Set-Content config.win
+- cmd: nmake -f Makefile.win
+- cmd: copy src\openssl.dll c:\
+- ps: popd
+- ps: pushd C:\
+- cmd: cl /nologo /MT /O2 -c -Fol52util.obj -Ic:\luajit\src c:\llthreads2\src\l52util.c -DLLTHREAD_MODULE_NAME=llthreads2
+- cmd: cl /nologo /MT /O2 -c -Follthread.obj -Ic:\luajit\src c:\llthreads2\src\llthread.c -DLLTHREAD_MODULE_NAME=llthreads2
+- cmd: link -dll -export:luaopen_llthreads2 -out:llthreads2.dll lua51.lib l52util.obj llthread.obj kernel32.lib
+- ps: popd
+- ps: pushd C:\projects\aardwolfclientpackage
+- ps: |
+      Move-Item C:\*.dll MUSHclient -force
+      $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
+      7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
+      Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
+      Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/get_version.nsi'
+      Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/hello.rtf'
+- cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi'
+- ps: |
+      function Insert-Content { param ( [String]$Path ); process { $( ,$_; Get-Content $Path -ea SilentlyContinue) | Out-File -encoding ASCII $Path } }
+      "aard_req_novisuals_mode = true  -- this line added by the no-visuals installer`r`n" | Insert-Content .\MUSHclient\lua\aard_requirements.lua
+      Move-Item .\MUSHclient\worlds\Aardwolf_no_visuals.mcl .\MUSHclient\worlds\Aardwolf.mcl -force
+      $env:VIAPPOUT = 'OutFile "Aardwolf_MUSHclient_${PackageVersion}_no_visuals.exe"'
+      (Get-Content aardmush_installer.nsi) | ForEach-Object { $_ -replace "OutFile.+" , "$env:VIAPPOUT" } | Set-Content aardmush_installer.nsi
+- cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi'
+- ps: |
+      7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip .\MUSHclient
+      Get-ChildItem .\Aardwolf_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+      Get-ChildItem .\Aardwolf_MUSHclient_r*.zip -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+      git checkout -- .
 build: off
 before_deploy:
 - ps: >-
     $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
-
 
     git config --global credential.helper store
 
@@ -60,7 +69,6 @@ before_deploy:
     git config --global user.name "fiendish"
 
     git config --global user.email "patcherton.fixesthings@gmail.com"
-
 
     git remote set-branches --add origin 'gh-pages' 2>&1 | write-host
 
