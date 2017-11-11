@@ -1,5 +1,5 @@
 module("async", package.seeall)
-local _llthreads = require("llthreads")
+local _llthreads = require("llthreads2")
 require "socket.http" -- just make sure they can load
 require "ssl.https" -- just make sure they can load
 
