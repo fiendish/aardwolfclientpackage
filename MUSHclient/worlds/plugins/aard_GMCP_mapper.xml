@@ -2607,12 +2607,12 @@ function checkDatabaseIntegrity(full_check, second_run)
    -- this is a harmless no-op if not using journal_mode=WAL
    dbCheckExecute("PRAGMA wal_checkpoint(FULL);")
    local integrityCheck = true
-   local integrity_check_query = "PRAGMA quick_check;"
+   local integrity_check_pragma = "quick_check"
    if full_check then
-      integrity_check_query = "PRAGMA integrity_check;"
+      integrity_check_pragma = "integrity_check"
    end
-   for row in dbnrowsWRAPPER(integrity_check_query) do
-      if row.integrity_check ~= "ok" then
+   for row in dbnrowsWRAPPER("PRAGMA "..integrity_check_pragma..";") do
+      if row[integrity_check_pragma] ~= "ok" then
          tprint(row)
          integrityCheck = false
       end
