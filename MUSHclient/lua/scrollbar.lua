@@ -31,6 +31,12 @@ function ScrollBar:initButtons()
    WindowAddHotspot(self.window, self:generateHotspotName("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, "", "", "ScrollBar.mouseDownDownArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
 end
 
+function ScrollBar:unInit()
+   WindowDeleteHotspot(self.window, self:generateHotspotName("up"))
+   WindowDeleteHotspot(self.window, self:generateHotspotName("down"))
+   WindowDeleteHotspot(self.window, self:generateHotspotName("scroller"))
+end
+
 function ScrollBar:setRect(left, top, width, height)
    self.left = left
    self.top = top
