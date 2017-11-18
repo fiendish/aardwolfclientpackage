@@ -446,9 +446,11 @@ function TextRect:_deleteHyperlinks()
    self.hyperlinks = {}
 end
 
-function TextRect:deleteHotspots()
+function TextRect:unInit()
    -- unload all hotspots
-   WindowDeleteHotspot(self.window, self.area_hotspot)
+   if self.area_hotspot then
+      WindowDeleteHotspot(self.window, self.area_hotspot)
+   end
    self:_deleteHyperlinks()
    self.area_hotspot = nil
 end
