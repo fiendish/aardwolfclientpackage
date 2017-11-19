@@ -14,7 +14,8 @@ ScrollBar_mt = { __index = ScrollBar }
 
 function ScrollBar.new(window, name, left, top, width, height)
    new_sb = setmetatable(copytable.deep(ScrollBar_defaults), ScrollBar_mt)
-   new_sb.name = "ScrollBar_"..window.."_"..name
+   new_sb.id = "ScrollBar_"..window.."_"..tostring(GetUniqueNumber())
+   new_sb.name = name
    new_sb.window = window
    new_sb.left = left
    new_sb.top = top
@@ -27,14 +28,14 @@ end
 function ScrollBar:initButtons()
    -- scroll bar up/down button hotspots
    self.has_arrow_buttons = true
-   WindowAddHotspot(self.window, self:generateHotspotName("up"), self.left, self.top, self.left + self.width, self.top + self.width, "", "", "ScrollBar.mouseDownUpArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
-   WindowAddHotspot(self.window, self:generateHotspotName("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, "", "", "ScrollBar.mouseDownDownArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
+   WindowAddHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.left + self.width, self.top + self.width, "", "", "ScrollBar.mouseDownUpArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
+   WindowAddHotspot(self.window, self:generateHotspotID("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, "", "", "ScrollBar.mouseDownDownArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
 end
 
 function ScrollBar:unInit()
-   WindowDeleteHotspot(self.window, self:generateHotspotName("up"))
-   WindowDeleteHotspot(self.window, self:generateHotspotName("down"))
-   WindowDeleteHotspot(self.window, self:generateHotspotName("scroller"))
+   WindowDeleteHotspot(self.window, self:generateHotspotID("up"))
+   WindowDeleteHotspot(self.window, self:generateHotspotID("down"))
+   WindowDeleteHotspot(self.window, self:generateHotspotID("scroller"))
 end
 
 function ScrollBar:setRect(left, top, width, height)
@@ -42,8 +43,8 @@ function ScrollBar:setRect(left, top, width, height)
    self.top = top
    self.width = width
    self.height = height
-   WindowMoveHotspot(self.window, self:generateHotspotName("up"), self.left, self.top, self.left + self.width, self.top + self.width)
-   WindowMoveHotspot(self.window, self:generateHotspotName("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height)
+   WindowMoveHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.left + self.width, self.top + self.width)
+   WindowMoveHotspot(self.window, self:generateHotspotID("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height)
    self:draw()
 end
 
@@ -134,8 +135,8 @@ function ScrollBar:draw()
       self.size = scroll_height
    end
    if (not self.dragging_scrollbar) then
-      WindowAddHotspot(self.window, self:generateHotspotName("scroller"), self.left, position, self.left + self.width, position + self.size, "", "", "ScrollBar.mouseDown", "", "ScrollBar.mouseUp", "", 1, 0)
-      WindowDragHandler(self.window, self:generateHotspotName("scroller"), "ScrollBar.dragMove", "ScrollBar.dragRelease", 0)
+      WindowAddHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.left + self.width, position + self.size, "", "", "ScrollBar.mouseDown", "", "ScrollBar.mouseUp", "", 1, 0)
+      WindowDragHandler(self.window, self:generateHotspotID("scroller"), "ScrollBar.dragMove", "ScrollBar.dragRelease", 0)
    end
    WindowRectOp(self.window, 5, self.left, position, self.left + self.width, position + self.size, 5, 15 + 0x800)
    BroadcastPlugin(999, "repaint")
@@ -143,7 +144,7 @@ end
 
 function ScrollBar.mouseDown(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
-   sb.start_pos = WindowHotspotInfo(sb.window, sb:generateHotspotName("scroller"), 2) - WindowInfo(sb.window, 15)
+   sb.start_pos = WindowHotspotInfo(sb.window, sb:generateHotspotID("scroller"), 2) - WindowInfo(sb.window, 15)
    sb.dragging_scrollbar = true
 end
 
@@ -201,10 +202,10 @@ function ScrollBar.mouseUp(flags, hotspot_id)
    return true
 end
 
-function ScrollBar:generateHotspotName(name)
-   local hotspot_name = self.name.."_hotspot_"..name
-   ScrollBar.hotspot_map[hotspot_name] = self
-   return hotspot_name
+function ScrollBar:generateHotspotID(id)
+   local hotspot_id = self.id.."_hotspot_"..id
+   ScrollBar.hotspot_map[hotspot_id] = self
+   return hotspot_id
 end
 
 -- Scroll through the contents step by step. Used when pressing the up/down arrow buttons.
