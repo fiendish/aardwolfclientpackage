@@ -242,6 +242,7 @@ function removeTab()
    table.remove(tabs_scrollbars, current_tab)
    table.remove(tabs_captures, current_tab)
 
+   WindowDeleteHotspot(win, "tab"..tostring(num_tabs))
    num_tabs = num_tabs - 1
    setTab(current_tab)
 end
@@ -346,11 +347,8 @@ function drawTabs (mouseover)
    for i,_ in ipairs(tabs_captures) do
       local name = tostring(i)
       local tab_width = WindowTextWidth(win, win_head_font, name) + (tab_padding * 2)
-      local lcolor = WINDOW_BORDER_COLOUR
-      local bcolor = 0x444444
-      if i ~= mouseover then
-         lcolor = 0x444444
-         bcolor = TAB_BACKGROUND_COLOUR
+
+      if not WindowHotspotInfo(win, "tab"..tostring(i), 1) then
          WindowAddHotspot(win, "tab"..tostring(i), tab_left, TITLE_HEIGHT + 2, tab_left + tab_width, TITLE_HEIGHT * 3, "tabMouseOver", "tabCancelMouseOver", "tabMouseDown", nil, nil, "", 1, 0)
       end
 
@@ -358,6 +356,13 @@ function drawTabs (mouseover)
          active_left = tab_left
          active_width = tab_width
       else
+         local lcolor = WINDOW_BORDER_COLOUR
+         local bcolor = 0x444444
+         if i ~= mouseover then
+            lcolor = 0x444444
+            bcolor = TAB_BACKGROUND_COLOUR
+         end
+
          WindowCircleOp(
             win, miniwin.circle_round_rectangle,
             tab_left, TITLE_HEIGHT + 2, tab_left + tab_width, TITLE_HEIGHT * 3, -- coords

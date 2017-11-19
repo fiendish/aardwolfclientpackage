@@ -26,7 +26,8 @@ TextRect_mt = { __index = TextRect }
 
 function TextRect.new(window, name, left, top, width, height, max_lines, scrollable, background_color, padding, font_name, font_size)
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
-   new_tr.name = "TextRect_"..window.."_"..name
+   new_tr.id = "TextRect_"..window.."_"..tostring(GetUniqueNumber())
+   new_tr.name = name
    new_tr.window = window
    new_tr.left = left
    new_tr.top = top
@@ -47,7 +48,7 @@ function TextRect.new(window, name, left, top, width, height, max_lines, scrolla
 end
 
 function TextRect:loadFont(name, size)
-   self.font = self.name.."_font"
+   self.font = self.id.."_font"
    self.font_name = name
    self.font_size = size
 
@@ -327,13 +328,13 @@ function TextRect:draw(cleanup_first)
                local right = left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, v.start-1, v.stop-1))
                local top = self.padded_top + ((count - self.display_start_line) * self.line_height)-1
                local bottom = top + self.line_height + 1
-               local link_name = self:generateHotspotName(table.concat({v.text, " ", count, " ", v.start, " ", v.stop}))
+               local link_id = self:generateHotspotID(table.concat({v.text, " ", count, " ", v.start, " ", v.stop}))
 
-               if not WindowHotspotInfo(self.window, link_name, 1) then
-                  self.hyperlinks[link_name] = v.text
-                  WindowAddHotspot(self.window, link_name, left, top, math.min(right, self.padded_left+self.padded_width), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
-                  WindowDragHandler(self.window, link_name, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
-                  WindowScrollwheelHandler(self.window, link_name, "TextRect.wheelMove")
+               if not WindowHotspotInfo(self.window, link_id, 1) then
+                  self.hyperlinks[link_id] = v.text
+                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_left+self.padded_width), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
+                  WindowDragHandler(self.window, link_id, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
+                  WindowScrollwheelHandler(self.window, link_id, "TextRect.wheelMove")
                end
             end
          end
@@ -375,14 +376,11 @@ function TextRect:setRect(left, top, width, height)
    self.padded_top = self.top + self.padding
    self.padded_width = self.width - self.padding
    self.padded_height = self.height - self.padding
-   if not self.area_hotspot then
-      self:initArea()
-   else
+   if self.area_hotspot then
       WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.left+self.width, self.top+self.height)
    end
    self.rect_lines = math.floor(self.padded_height / self.line_height)
    self:doUpdateCallbacks()
-   self:draw(false)
 end
 
 function TextRect:setScroll(no_callbacks, new_pos)
@@ -429,12 +427,13 @@ end
 
 function TextRect:initArea()
    --highlight, right click, scrolling
-   self.area_hotspot = self:generateHotspotName("textarea")
-   WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.left + self.width, self.top + self.height, "", "", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "", 2, 0)
+   self.area_hotspot = self:generateHotspotID("textarea")
+   WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.left + self.width, self.top + self.height, "", "", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "", miniwin.cursor_ibeam, 0)
    WindowDragHandler(self.window, self.area_hotspot, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
    if self.scrollable then
       WindowScrollwheelHandler(self.window, self.area_hotspot, "TextRect.wheelMove")
    end
+   self.hyperlinks = {}
 end
 
 function TextRect:_deleteHyperlinks()
@@ -760,9 +759,9 @@ function TextRect:copyFull()
    SetClipboard(table.concat(t,"@w\n").."@w")
 end
 
-function TextRect:generateHotspotName(name)
-   local hotspot_name = self.name.."_hotspot_"..name
-   TextRect.hotspot_map[hotspot_name] = self
-   return hotspot_name
+function TextRect:generateHotspotID(id)
+   local hotspot_id = self.id.."_hotspot_"..id
+   TextRect.hotspot_map[hotspot_id] = self
+   return hotspot_id
 end
 
