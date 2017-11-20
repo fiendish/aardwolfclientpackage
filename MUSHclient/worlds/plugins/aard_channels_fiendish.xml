@@ -182,7 +182,7 @@ SCROLL_BAR_COLOUR = 0x111111
 SCROLL_DETAIL_COLOUR = 0x000000
 WINDOW_BORDER_COLOUR = 0xE8E8E8
 
-local init_channel_names = {"advice","answer","auction","barter","claninfo","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","ltalk","market","mobsay","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
+local init_channel_names = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","rp","say","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
@@ -644,14 +644,14 @@ function OnPluginBroadcast (msg, id, name, text)
          msg = gmcpcomm.msg or ""
          chan = gmcpcomm.chan or ""
          if (show_donations == 1 or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
-            if not channels_table[chan] then
-               addNewChannel(chan)
-            end
-            if channels_table[chan]["capture"] then
+            if (not channels_table[chan]) or channels_table[chan]["capture"] then
                local styles = filter_as_needed(msg)
                if styles then
                   stampAndLog(styles)
                   for tab,channels in ipairs(tabs_captures) do
+                     if not channels[chan] then
+                        addNewChannel(chan)
+                     end
                      if channels[chan]["capture"] then
                         store(styles, tab)
                      end
@@ -825,8 +825,10 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       EnableTrigger("warfare", 0 == warfare_on)
       warfare_on = GetTriggerOption("warfare","enabled")
    elseif result == 18+echo_skip-noremove then
-      CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      tabs_rects[current_tab]:clear()
    elseif result == 19+echo_skip-noremove then
+      CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+   elseif result == 20+echo_skip-noremove then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
    end
    OnPluginSaveState()
@@ -869,6 +871,7 @@ function extend_rightclick_menu_string(tr)
       "WARFARE:",
       "<",
       "<",
+      "Clear Tab",
       "-",
       "Bring to Front",
       "Send to Back"

@@ -258,6 +258,12 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
    end -- while we still have styles left
 end
 
+function TextRect:clear()
+   self.raw_lines = {}
+   self.num_raw_lines = 0
+   self:reWrapLines()
+end
+
 function TextRect:reWrapLines()
    local raw_index = 0
    local start_line = self.display_start_line
