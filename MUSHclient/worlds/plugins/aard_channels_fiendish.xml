@@ -182,7 +182,7 @@ SCROLL_BAR_COLOUR = 0x111111
 SCROLL_DETAIL_COLOUR = 0x000000
 WINDOW_BORDER_COLOUR = 0xE8E8E8
 
-local init_channel_names = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","rp","say","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
+local init_channel_names = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
