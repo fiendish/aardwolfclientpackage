@@ -92,6 +92,7 @@ USAGE:
    regexp="y"
    omit_from_output="n"
    script="rsocial"
+   name="remote_socials"
    sequence="100"
 ></trigger>
 
@@ -169,8 +170,9 @@ SCROLL_BAR_COLOUR = 0x111111
 SCROLL_DETAIL_COLOUR = 0x000000
 WINDOW_BORDER_COLOUR = 0xE8E8E8
 
-local init_nonchannel_names = {"warfare", "info", "raidinfo", "claninfo", "global_quest", "remort_auction", "show_donations"}
-local init_channel_names = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","remote_socials","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
+local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction", "remote_socials"}
+local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations", ["remote_socials"]="Remote Socials"}
+local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
@@ -201,15 +203,16 @@ end
 function addDefaultNonChannels()
    for tab,channels in ipairs(tabs_channel_captures) do
       tabs_nonchannel_captures[tab] = tabs_nonchannel_captures[tab] or {}
-      for i,v in ipairs(init_nonchannel_names) do
+      for i,v in ipairs(init_nonchannel_keys) do
          tabs_nonchannel_captures[tab][v] = tabs_nonchannel_captures[tab][v] or {["capture"]=true}
       end
    end
 
+   EnableTrigger("remote_socials", check_nonchannel_trigger("remote_socials"))
    EnableTrigger("warfare", check_nonchannel_trigger("warfare"))
    EnableTrigger("info", check_nonchannel_trigger("info"))
-   EnableTrigger("raidinfo", check_nonchannel_trigger("info"))
-   EnableTrigger("claninfo", check_nonchannel_trigger("info"))
+   EnableTrigger("raidinfo", check_nonchannel_trigger("raidinfo"))
+   EnableTrigger("claninfo", check_nonchannel_trigger("claninfo"))
    EnableTrigger("global_quest", check_nonchannel_trigger("global_quest"))
    EnableTrigger("remort_auction", check_nonchannel_trigger("remort_auction"))
 end
@@ -222,7 +225,7 @@ function addNewChannel(chan)
 end
 
 function addDefaultChannels()
-   for i,v in ipairs(init_channel_names) do
+   for i,v in ipairs(init_channel_keys) do
       addNewChannel(v)
    end
    addDefaultNonChannels()
@@ -359,8 +362,8 @@ function init ()
    -- register with the z-order monitor
    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
 
-   font_name = GetVariable("font_name")
-   font_size = tonumber(GetVariable("font_size"))
+   font_name = GetVariable("font_name") or default_font_name
+   font_size = tonumber(GetVariable("font_size")) or default_font_size
 
    tabs_rects = {}
    tabs_scrollbars = {}
@@ -570,7 +573,7 @@ end
 
 function sanitize_filename(str)
    str = string.gsub(str, "[^%w%s()_-]", "")
-   return Trim(str)
+   return Trim(str or "")
 end
 
 function stampAndLog(styles)
@@ -613,9 +616,12 @@ function stampAndLog(styles)
    end
 end
 
-function stampAndStore(styles, chan)
-   stampAndLog(styles)
-   storeChannel(styles, chan)
+function stampAndStore(msg, chan)
+   local styles = filter_as_needed(msg)
+   if styles then
+      stampAndLog(styles)
+      storeChannel(styles, chan)
+   end
 end
 
 -- Takes input as a string with embedded Aardwolf color codes. Use via CallPlugin().
@@ -634,15 +640,12 @@ function rsocial (name, line, wildcards, styles)
 	-- Remote socials will always start with a dark cyan or bright magenta *
 	-- Checking color cuts down on non-socials ending up in the chat log...
 	if (styles[1].textcolour == GetNormalColour(7) or styles[1].textcolour == GetBoldColour(6)) then
-		stampAndStore(filter_as_needed(styles), "remote_socials")
+		stampAndStore(styles, "remote_socials")
 	end
 end
 
 function untagged_info (name, line, wildcards, styles)
-   local result = filter_as_needed(styles)
-   if result then
-      stampAndStore(result, name)
-   end
+   stampAndStore(styles, name)
 end -- untagged info
 
 function filter_as_needed(msg)
@@ -710,12 +713,9 @@ function OnPluginBroadcast (msg, id, name, text)
          gmcpcomm = gmcp("comm.channel")
          msg = gmcpcomm.msg or ""
          chan = gmcpcomm.chan or ""
-         if (check_nonchannel_trigger("show_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+         if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if (not channels_table[chan]) or channels_table[chan]["capture"] then
-               local styles = filter_as_needed(msg)
-               if styles then
-                  stampAndStore(styles, chan)
-               end
+               stampAndStore(msg, chan)
             end
          end
       end
@@ -848,46 +848,33 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
          end
       end
    elseif result == 14+echo_skip-noremove then
-      local on = not tabs_nonchannel_captures[current_tab]["info"]["capture"]
-      tabs_nonchannel_captures[current_tab]["info"]["capture"] = on
+      local tbl = init_nonchannel_pairs
+      local defaults = {}
+      -- local i = 1
+      for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
+         -- tbl[i] = k
+         defaults[k] = v["capture"]
+         -- i = i+1
+      end
 
-      ColourNote ("yellow", "", "INFO capturing in the active tab is now "..(on and "ENABLED." or "DISABLED."))
-
-      on = check_nonchannel_trigger("info")
-      EnableTrigger("info", on)
-      EnableTrigger("raidinfo", on)
-      EnableTrigger("claninfo", on)
-   elseif result == 15+echo_skip-noremove then
-      local on = not tabs_nonchannel_captures[current_tab]["global_quest"]["capture"]
-      tabs_nonchannel_captures[current_tab]["global_quest"]["capture"] = on
-
-      ColourNote ("yellow", "", "Global Quest capturing in the active tab is now "..(on and "ENABLED." or "DISABLED."))
-
+      local capture_result = utils.multilistbox ("Choose which non-channel messages to capture to this communication log tab.", "Communication Log Channel Selection", tbl, defaults)
+      if capture_result and next(capture_result) then -- cancel if the list is empty
+         for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
+            v["capture"] = capture_result[k]
+         end
+      end
+      EnableTrigger("info", check_nonchannel_trigger("info"))
+      EnableTrigger("raidinfo", check_nonchannel_trigger("raidinfo"))
+      EnableTrigger("claninfo", check_nonchannel_trigger("claninfo"))
       EnableTrigger("global_quest", check_nonchannel_trigger("global_quest"))
-   elseif result == 16+echo_skip-noremove then
-      local on = not tabs_nonchannel_captures[current_tab]["remort_auction"]["capture"]
-      tabs_nonchannel_captures[current_tab]["remort_auction"]["capture"] = on
-
-      ColourNote ("yellow", "", "Remort Auction capturing in the active tab is now "..(on and "ENABLED." or "DISABLED."))
-
       EnableTrigger("remort_auction", check_nonchannel_trigger("remort_auction"))
-   elseif result == 17+echo_skip-noremove then
-      local on = not tabs_nonchannel_captures[current_tab]["show_donations"]["capture"]
-      tabs_nonchannel_captures[current_tab]["show_donations"]["capture"] = on
-
-      ColourNote ("yellow", "", "Clan donation capturing in the active tab is now "..(on and "ENABLED." or "DISABLED."))
-   elseif result == 18+echo_skip-noremove then
-      local on = not tabs_nonchannel_captures[current_tab]["warfare"]["capture"]
-      tabs_nonchannel_captures[current_tab]["warfare"]["capture"] = on
-
-      ColourNote ("yellow", "", "Warfare capturing in the active tab is now "..(on and "ENABLED." or "DISABLED."))
-
       EnableTrigger("warfare", check_nonchannel_trigger("warfare"))
-   elseif result == 19+echo_skip-noremove then
+      EnableTrigger("remote_socials", check_nonchannel_trigger("remote_socials"))
+   elseif result == 15+echo_skip-noremove then
       tabs_rects[current_tab]:clear()
-   elseif result == 20+echo_skip-noremove then
+   elseif result == 16+echo_skip-noremove then
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-   elseif result == 21+echo_skip-noremove then
+   elseif result == 17+echo_skip-noremove then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
    end
    OnPluginSaveState()
@@ -922,14 +909,8 @@ function extend_rightclick_menu_string(tr)
       "-",
       "Name This Tab",
       ">Tab Capture Settings",
-      "Custom Channels List",
-      ">Capture Non-channel Info",
-      "INFO:",
-      "Global Quest:",
-      "Remort Auction:",
-      "Clan Donations",
-      "WARFARE:",
-      "<",
+      "Edit Channel Captures",
+      "Edit Non-channel Captures",
       "<",
       "Clear Tab",
       "-",
@@ -948,12 +929,6 @@ function extend_rightclick_menu_string(tr)
    if log_timestamps == 1 then check(ms, 12) end
 
    if num_tabs < 2 then disable(ms, 16) end
-
-   if tabs_nonchannel_captures[current_tab]["info"]["capture"] then check(ms, 22) end
-   if tabs_nonchannel_captures[current_tab]["global_quest"]["capture"]  then check(ms, 23) end
-   if tabs_nonchannel_captures[current_tab]["remort_auction"]["capture"]  then check(ms, 24) end
-   if tabs_nonchannel_captures[current_tab]["show_donations"]["capture"]  then check(ms, 25) end
-   if tabs_nonchannel_captures[current_tab]["warfare"]["capture"]  then check(ms, 26) end
 
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
       local echo_menu_strings = {
