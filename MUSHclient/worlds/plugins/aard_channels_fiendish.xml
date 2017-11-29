@@ -133,9 +133,11 @@ require "movewindow"
 require "gmcphelper"
 require "text_rect"
 require "scrollbar"
+require "mw_theme_base"
+
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
-
+local gap = 3
 SCROLL_BAR_WIDTH = 15
 MAX_LINES = 10000 -- how many lines to store in scrollback
 
@@ -160,15 +162,6 @@ height = tonumber(GetVariable("WINDOW_HEIGHT")) or default_height
 log_to_file = tonumber(GetVariable("log_to_file")) or 0
 log_colour_codes = tonumber(GetVariable("log_colour_codes")) or 1
 log_timestamps = tonumber(GetVariable("log_timestamps")) or 1
-
--- colours
-TAB_BACKGROUND_COLOUR = 0x696969
-WINDOW_BACKGROUND_COLOUR = GetNormalColour(1)
-WINDOW_TEXT_COLOUR = 0xffffff
-SCROLL_BACKGROUND_COLOUR = 0xE8E8E8
-SCROLL_BAR_COLOUR = 0x111111
-SCROLL_DETAIL_COLOUR = 0x000000
-WINDOW_BORDER_COLOUR = 0xE8E8E8
 
 local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction", "remote_socials"}
 local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations", ["remote_socials"]="Remote Socials"}
@@ -279,34 +272,11 @@ function removeTab()
    setTab(current_tab)
 end
 
-function loadFont(win, reference, font_name, font_size)
-   local fonts = utils.getfontfamilies ()
-   if not fonts.Dina then
-      AddFont(GetInfo (66) .. "\\Dina.fon")
-      fonts = utils.getfontfamilies()
-   end -- if Dina not installed
-
-   if not fonts[font_name] then
-      if fonts["Dina"] then
-         font_size = 8
-         font_name = "Dina"
-      elseif fonts ["Courier New"] then
-         font_size = 9
-         font_name = "Courier New" -- the actual font
-      else
-         font_size = 9
-         font_name = "Lucida Console"
-      end -- if
-   end
-
-   check(WindowFont(win, reference, font_name, font_size))
-end
-
 function reset_aard()
    font_name = default_font_name
    font_size = default_font_size
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, default_height, TAB_BACKGROUND_COLOUR)
+   WindowResize(win, default_width, default_height, theme.INACTIVE_BODY)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    OnPluginSaveState()
    OnPluginInstall()
@@ -317,7 +287,7 @@ function OnPluginInstall ()
 
    -- create window with position from movewindow
    windowinfo  = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, TAB_BACKGROUND_COLOUR)
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.INACTIVE_BODY)
 
    -- add the resize widget
    WindowAddHotspot(win, "resize", width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, width, height, nil, nil, "MouseDown", nil, nil, "", 6, 0)
@@ -327,37 +297,29 @@ function OnPluginInstall ()
 
    init()
    setupDisplay()
+
+   -- add the drag handler so they can move the window around
+   movewindow.add_drag_handler(win, 0, 0, 0, title_height)
+   
    OnPluginEnable()
 end
 
-function trStart()
-   local tr_left = 1
-   local tr_top = TITLE_HEIGHT
-   if num_tabs > 1 then
-      tr_top = tr_top + TITLE_HEIGHT
-   end
-   return tr_left, tr_top
-end
-
 function trShape()
-   local tr_width = width - SCROLL_BAR_WIDTH - 1
-   local tr_height = height - TITLE_HEIGHT - 1
+   local tr_left = 1
+   local tr_top = title_height
+   tab_top = title_height + gap - 2 
    if num_tabs > 1 then
-      tr_height = tr_height - TITLE_HEIGHT
+      tr_top = tab_top + (2*gap) + head_font_height + 2
    end
-   return tr_width, tr_height
+
+   local tr_width = width - SCROLL_BAR_WIDTH - 1
+   local tr_height = height - tr_top - 1
+   return tr_left, tr_top, tr_width, tr_height
 end
 
 function init ()
-   win_head_font = "fonthead"..win
-
-   loadFont(win, win_head_font, head_font_name, head_font_size)
-
-   header_font_height = WindowFontInfo(win, win_head_font, 1) - WindowFontInfo(win, win_head_font, 4) + 1
-   TITLE_HEIGHT = math.floor(header_font_height*1.8)
-
-   -- add the drag handler so they can move the window around
-   movewindow.add_drag_handler(win, 0, 0, 0, TITLE_HEIGHT)
+   head_font = LoadTitleFont(win)
+   head_font_height = TextHeight(win, head_font)
 
    -- register with the z-order monitor
    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
@@ -374,56 +336,58 @@ function drawTabs (mouseover)
    local tab_padding = 30
    local active_left = nil
    local active_width = nil
-   WindowRectOp(win, miniwin.rect_fill, 1, TITLE_HEIGHT, width-2, 2*TITLE_HEIGHT, TAB_BACKGROUND_COLOUR)
+   WindowRectOp(win, miniwin.rect_fill, 0, title_height, 0, title_height + (3*gap) + head_font_height, theme.INACTIVE_BODY)
 
    for i,_ in ipairs(tabs_channel_captures) do
       local name = tabs_names[i] or tostring(i)
-      local tab_width = WindowTextWidth(win, win_head_font, name) + (tab_padding * 2)
+      local tab_width = WindowTextWidth(win, head_font, name) + (tab_padding * 2)
 
       if not WindowHotspotInfo(win, "tab"..tostring(i), 1) then
-         WindowAddHotspot(win, "tab"..tostring(i), tab_left, TITLE_HEIGHT + 2, tab_left + tab_width, TITLE_HEIGHT * 3, "tabMouseOver", "tabCancelMouseOver", "tabMouseDown", nil, nil, "", 1, 0)
+         WindowAddHotspot(win, "tab"..tostring(i), tab_left, tab_top, tab_left + tab_width, tab_top + (3*gap) + head_font_height, "tabMouseOver", "tabCancelMouseOver", "tabMouseDown", nil, nil, "", 1, 0)
       end
 
       if i == current_tab then
          active_left = tab_left
          active_width = tab_width
       else
-         local lcolor = WINDOW_BORDER_COLOUR
-         local bcolor = 0x444444
+         local edge_color = theme.BODY_CONTRAST
+         local bg_color
          if i ~= mouseover then
-            lcolor = 0x444444
             if tabs_activity[i] then
-               bcolor = 0x00008b
+               bg_color = theme.INACTIVE_BODY_ACTIVITY
             else
-               bcolor = TAB_BACKGROUND_COLOUR
+               bg_color = theme.INACTIVE_BODY
             end
+         else
+            -- reversed coloration during mouseover
+            bg_color = theme.INACTIVE_BODY_HOVER   
          end
 
          WindowCircleOp(
             win, miniwin.circle_round_rectangle,
-            tab_left, TITLE_HEIGHT + 2, tab_left + tab_width, TITLE_HEIGHT * 3, -- coords
-            lcolor, miniwin.pen_solid, 1,          -- pen
-            bcolor, miniwin.brush_solid,  -- brush
+            tab_left, tab_top, tab_left + tab_width, tab_top + (4*gap) + (2*head_font_height), -- coords
+            edge_color, miniwin.pen_solid, 1,          -- pen
+            bg_color, miniwin.brush_solid,             -- brush
             16,   -- width of the ellipse used to draw the rounded corner
-            TITLE_HEIGHT*2   -- height of the ellipse used to draw the rounded corner
+            (4*gap) + (2*head_font_height)  -- height of the ellipse used to draw the rounded corner
          )
       end
 
       tab_left = tab_left + tab_padding
-      tab_left = tab_left + WindowText(win, win_head_font, name, tab_left, TITLE_HEIGHT + 4, width, TITLE_HEIGHT * 2, 0xEEEEEE, false)
+      tab_left = tab_left + WindowText(win, head_font, name, tab_left, tab_top + gap, width, title_height + (3*gap) + head_font_height, theme.BODY_CONTRAST, false)
       tab_left = tab_left + tab_padding
    end
 
-   WindowLine(win, 0, (TITLE_HEIGHT * 2) - 1, width, (TITLE_HEIGHT * 2) - 1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
+   WindowLine(win, 0, tab_top + (2*gap) + head_font_height + 1, width, tab_top + (2*gap) + head_font_height + 1, theme.BODY_CONTRAST, 0 + 0x0200, 1)
    WindowCircleOp(
       win, miniwin.circle_round_rectangle,
-      active_left, TITLE_HEIGHT + 2, active_left + active_width, TITLE_HEIGHT * 3, -- coords
-      WINDOW_BORDER_COLOUR, miniwin.pen_solid, 1,          -- pen
-      WINDOW_BACKGROUND_COLOUR, miniwin.brush_solid,  -- brush
+      active_left, tab_top, active_left + active_width, tab_top + (4*gap) + (2*head_font_height), -- coords
+      theme.BODY_CONTRAST, miniwin.pen_solid, 1,          -- pen
+      theme.BODY, miniwin.brush_solid,  -- brush
       16,   -- width of the ellipse used to draw the rounded corner
-      TITLE_HEIGHT*2   -- height of the ellipse used to draw the rounded corner
+      (4*gap) + (2*head_font_height)   -- height of the ellipse used to draw the rounded corner
    )
-   WindowText(win, win_head_font, tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, TITLE_HEIGHT + 4, width, TITLE_HEIGHT * 2, 0xEEEEEE, false)
+   WindowText(win, head_font, tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap, width, title_height + (3*gap) + head_font_height, theme.BODY_CONTRAST, false)
 
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
@@ -442,29 +406,9 @@ function tabMouseDown (flags, hotspot_id)
 end
 
 function drawBackground ()
-   -- draw the title bar
-   header_width = WindowTextWidth(win, win_head_font, "Communication Log")
-   WindowGradient(win, 1, 0, width, TITLE_HEIGHT, WINDOW_BACKGROUND_COLOUR, 0x444444, 2)
-   WindowText(win, win_head_font, "Communication Log", (width-header_width)/2, ((TITLE_HEIGHT-header_font_height)/2)-1, width, TITLE_HEIGHT, 0xEEEEEE, false)
-   WindowLine(win, 0, TITLE_HEIGHT-1, width, TITLE_HEIGHT-1, WINDOW_BORDER_COLOUR, 0 + 0x0200, 1)
-
-   drawResizer()
-
-   -- draw border
-   WindowRectOp(win, 1, 0, 0, 0, 0, WINDOW_BORDER_COLOUR)
-end
-
-function drawResizer ()
-   -- draw the resize widget
-   WindowRectOp(win, 2, width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, 0, 0, SCROLL_BACKGROUND_COLOUR)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+1, height-2, width-1, height-SCROLL_BAR_WIDTH, 0xffffff, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+2, height-2, width-1, height-SCROLL_BAR_WIDTH+1, 0x696969, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+4, height-2, width-1, height-SCROLL_BAR_WIDTH+3, 0xffffff, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+5, height-2, width-1, height-SCROLL_BAR_WIDTH+4, 0x696969, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+7, height-2, width-1, height-SCROLL_BAR_WIDTH+6, 0xffffff, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+8, height-2, width-1, height-SCROLL_BAR_WIDTH+7, 0x696969, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+10, height-2, width-1, height-SCROLL_BAR_WIDTH+9, 0xffffff, 0, 1)
-   WindowLine(win, width-SCROLL_BAR_WIDTH+11, height-2, width-1, height-SCROLL_BAR_WIDTH+10, 0x696969, 0, 1)
+   WindowRectOp(win, 1, 0, 0, width+1, 0, theme.BODY_CONTRAST)   -- draw border   
+   title_height = DrawTitleBar(win, "Communication Log", nil, true)
+   DrawResizeTag(win, width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH)
 end
 
 function ResizeMoveCallback ()
@@ -474,8 +418,8 @@ function ResizeMoveCallback ()
    posx, posy = WindowInfo(win, 17), WindowInfo(win, 18)
    width = width+posx-startx
    startx = posx
-   if (WindowTextWidth(win, win_head_font, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH > width) then
-      width = WindowTextWidth(win, win_head_font, "WWWCOMMUNICATION")+2*SCROLL_BAR_WIDTH
+   if (WindowTextWidth(win, head_font, "Communication Log")+2*SCROLL_BAR_WIDTH > width) then
+      width = WindowTextWidth(win, head_font, "Communication Log")+2*SCROLL_BAR_WIDTH
       startx = windowinfo.window_left+width
    elseif (windowinfo.window_left+width > GetInfo(281)) then
       width = GetInfo(281)-windowinfo.window_left
@@ -483,8 +427,8 @@ function ResizeMoveCallback ()
    end
    height = height+posy-starty
    starty=posy
-   if (3*SCROLL_BAR_WIDTH+3*TITLE_HEIGHT > height) then
-      height = 3*SCROLL_BAR_WIDTH+3*TITLE_HEIGHT
+   if (3*SCROLL_BAR_WIDTH+3*title_height > height) then
+      height = 3*SCROLL_BAR_WIDTH+3*title_height
       starty = windowinfo.window_top+height
    elseif (windowinfo.window_top+height > GetInfo(280)) then
       height = GetInfo(280)-windowinfo.window_top
@@ -507,10 +451,9 @@ function ResizeReleaseCallback ()
 end
 
 function setupDisplay ()
-   WindowResize(win, width, height, WINDOW_BACKGROUND_COLOUR)
+   WindowResize(win, width, height, theme.BODY)
    drawBackground()
-   tr_left, tr_top = trStart()
-   tr_width, tr_height = trShape()
+   tr_left, tr_top, tr_width, tr_height = trShape()
    for i = 1,num_tabs do
       if tabs_rects[i] then
          tabs_rects[i]:setRect(tr_left, tr_top, tr_width, tr_height)
@@ -752,9 +695,8 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
          SetVariable("font_name", font_name)
          SetVariable("font_size", font_size)
          for i = 1,num_tabs do
-            local tri = tabs_rects[i]
-            tri:loadFont(font_name, font_size)
-            tri:reWrapLines()
+            tabs_rects[i]:loadFont(font_name, font_size)
+            tabs_rects[i]:reWrapLines()
          end
       end
    elseif result == 2 then
