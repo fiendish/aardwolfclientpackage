@@ -1,11 +1,10 @@
 require "commas"
+require "mw_theme_base"
 
 ScrollBar = {
    hotspot_map = {}
 }
 ScrollBar_defaults = {
-   theme_background = ColourNameToRGB("silver"),
-   theme_detail = ColourNameToRGB("black"),
    total_steps = 1,
    visible_steps = 1,
    step = 1
@@ -76,46 +75,43 @@ function ScrollBar:draw()
    end
 
    -- draw the background
-   WindowRectOp(self.window, 2, self.left, self.top + self.width, self.left + self.width, self.top + self.height - self.width, self.theme_background) -- scroll bar background
-   WindowRectOp(self.window, 1, self.left + 1, self.top + self.width + 1, self.left + self.width - 1, self.top + self.height - self.width - 1, self.theme_detail) -- scroll bar background inset rectangle
+   WindowRectOp(self.window, 2, self.left, self.top + self.width, self.left + self.width, self.top + self.height - self.width, theme.INACTIVE_BODY) -- scroll bar background
+   WindowRectOp(self.window, 1, self.left + 1, self.top + self.width + 1, self.left + self.width - 1, self.top + self.height - self.width - 1, theme.BODY_CONTRAST) -- scroll bar background inset rectangle
 
    local mid_x = (self.width - 2)/2
 
    -- draw the up button
-   local button_style = miniwin.rect_edge_at_all + miniwin.rect_option_fill_middle
-   local button_edge = miniwin.rect_edge_raised
    local points = ""
 
    if (self.keepscrolling == "up") then
-      button_edge = miniwin.rect_edge_sunken
+      Draw3DRect(self.window, self.left, self.top, self.left + self.width, self.top + self.width, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x) + 1, self.top + math.ceil(self.width/4 + 0.5) + 2, self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.top + round_banker(self.width/2) + 2,
          self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.top + round_banker(self.width/2) + 2,
          self.left + math.ceil(mid_x) + 1, self.top + math.ceil(self.width/4 + 0.5) + 2 )
    else
+      Draw3DRect(self.window, self.left, self.top, self.left + self.width, self.top + self.width, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x), self.top + math.ceil(self.width/4 + 0.5) + 1, self.left + math.floor(mid_x) - math.floor(mid_x/2), self.top + round_banker(self.width/2) + 1,
          self.left + math.ceil(mid_x) + math.floor(mid_x/2), self.top + round_banker(self.width/2) + 1,
          self.left + math.ceil(mid_x), self.top + math.ceil(self.width/4 + 0.5) + 1)
    end
-   WindowRectOp(self.window, 5, self.left, self.top, self.left + self.width, self.top + self.width, button_edge, button_style)
-   WindowPolygon(self.window, points, 0x000000, miniwin.pen_solid + miniwin.pen_join_miter, 1, 0x000000, 0, true, false)
+   WindowPolygon(self.window, points, theme.THREE_D_SURFACE_DETAIL, miniwin.pen_solid + miniwin.pen_join_miter, 1, theme.THREE_D_SURFACE_DETAIL, 0, true, false)
 
    -- draw the down button
-   button_edge = miniwin.rect_edge_raised
    if (self.keepscrolling == "down") then
-      button_edge = miniwin.rect_edge_sunken
+      Draw3DRect(self.window, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x) + 1, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5), self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.top + self.height - 1 - round_banker(self.width/2),
          self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.top + self.height - 1 - round_banker(self.width/2),
          self.left + math.ceil(mid_x) + 1, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5))
    else
+      Draw3DRect(self.window, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x), self.top + self.height - 2 - math.ceil(self.width/4 + 0.5), self.left + math.floor(mid_x) - math.floor(mid_x/2), self.top + self.height - 2 - round_banker(self.width/2),
          self.left + math.ceil(mid_x) + math.floor(mid_x/2), self.top + self.height - 2 - round_banker(self.width/2),
          self.left + math.ceil(mid_x), self.top + self.height - 2 - math.ceil(self.width/4 + 0.5))
    end
-   WindowRectOp(self.window, 5, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, button_edge, button_style)
    WindowPolygon(self.window, points, 0x000000, 0, 1, 0x000000, 0, true, false)
 
    -- draw the content indicator
@@ -138,7 +134,7 @@ function ScrollBar:draw()
       WindowAddHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.left + self.width, position + self.size, "", "", "ScrollBar.mouseDown", "", "ScrollBar.mouseUp", "", 1, 0)
       WindowDragHandler(self.window, self:generateHotspotID("scroller"), "ScrollBar.dragMove", "ScrollBar.dragRelease", 0)
    end
-   WindowRectOp(self.window, 5, self.left, position, self.left + self.width, position + self.size, 5, 15 + 0x800)
+   Draw3DRect(self.window, self.left, position, self.left + self.width, position + self.size)
    BroadcastPlugin(999, "repaint")
 end
 

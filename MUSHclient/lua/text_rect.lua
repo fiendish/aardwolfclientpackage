@@ -265,12 +265,15 @@ function TextRect:clear()
 end
 
 function TextRect:reWrapLines()
+   if self.num_wrapped_lines == 0 then
+      return
+   end
+
    local raw_index = 0
    local start_line = self.display_start_line
    local end_line = self.display_end_line
-   if self.num_wrapped_lines > 0 then
-      raw_index = self.wrapped_lines[self.display_start_line][4]
-   end
+
+   raw_index = self.wrapped_lines[self.display_start_line][4]
 
    self.wrapped_lines = {}
    self.num_wrapped_lines = 0
