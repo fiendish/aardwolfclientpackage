@@ -282,6 +282,11 @@ function reset_aard()
    OnPluginInstall()
 end
 
+function OnPluginListChanged ()
+   dofile "lua/aard_requirements.lua"
+   CallPlugin ("55616ea13339bc68e963e1f8", "enable_hiding", true, GetPluginID())
+end
+
 function OnPluginInstall ()
    win = GetPluginID()
 
@@ -559,11 +564,13 @@ function stampAndLog(styles)
    end
 end
 
-function stampAndStore(msg, chan)
-   local styles = filter_as_needed(msg)
-   if styles then
-      stampAndLog(styles)
-      storeChannel(styles, chan)
+function stampAndStore(msg, chan, filter)
+   if filter then
+      msg = filter_as_needed(msg)
+   end
+   if msg then
+      stampAndLog(msg)
+      storeChannel(msg, chan)
    end
 end
 
@@ -658,7 +665,7 @@ function OnPluginBroadcast (msg, id, name, text)
          chan = gmcpcomm.chan or ""
          if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if (not channels_table[chan]) or channels_table[chan]["capture"] then
-               stampAndStore(msg, chan)
+               stampAndStore(msg, chan, true)
             end
          end
       end
@@ -742,23 +749,15 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
 
    local echo_skip = 0
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
-      echo_skip = 8
+      echo_skip = 4
       if result == 10 then
          CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "on")
       elseif result == 11 then
          CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "off")
       elseif result == 12 then
-         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "custom")
+         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "channels")
       elseif result == 13 then
-         CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", info_echo, nil, nil, nil, nil)
-      elseif result == 14 then
-         CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, global_quest_echo, nil, nil, nil)
-      elseif result == 15 then
-         CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, remort_auction_echo, nil, nil)
-      elseif result == 16 then
-         CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, donations_echo, nil)
-      elseif result == 17 then
-         CallPlugin("55616ea13339bc68e963e1f8", "hideEchos", nil, nil, nil, nil, warfare_echo)
+         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "nonchannels")
       end
    end
 
@@ -769,38 +768,33 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
    elseif result == 11+echo_skip-noremove then
       removeTab()
    elseif result == 12+echo_skip-noremove then
-      local name = Trim(utils.inputbox ( "Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(current_tab)))
+      local name = Trim(utils.inputbox ( "Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab)))
       if name ~= "" then
          tabs_names[current_tab] = name
          drawTabs()
       end
    elseif result == 13+echo_skip-noremove then
-      local tbl = {}
       local defaults = {}
-      local i = 1
-      for k,v in pairsByKeys(tabs_channel_captures[current_tab]) do
-         tbl[i] = k
-         defaults[i] = v["capture"]
-         i = i+1
+      local tbl = {}
+      for k,v in pairs(tabs_channel_captures[current_tab]) do
+         tbl[k] = k
+         defaults[k] = v["capture"]
       end
+
       local capture_result = utils.multilistbox ("Choose which channels to capture to this communication log tab.", "Communication Log Channel Selection", tbl, defaults)
-      if capture_result and next(capture_result) then -- cancel if the list is empty
+      if capture_result then
          for i,v in ipairs(tbl) do
             tabs_channel_captures[current_tab][v]["capture"] = capture_result[i]
          end
       end
    elseif result == 14+echo_skip-noremove then
-      local tbl = init_nonchannel_pairs
       local defaults = {}
-      -- local i = 1
       for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
-         -- tbl[i] = k
          defaults[k] = v["capture"]
-         -- i = i+1
       end
 
-      local capture_result = utils.multilistbox ("Choose which non-channel messages to capture to this communication log tab.", "Communication Log Channel Selection", tbl, defaults)
-      if capture_result and next(capture_result) then -- cancel if the list is empty
+      local capture_result = utils.multilistbox ("Choose which non-channel messages to capture to this communication log tab.", "Communication Log Channel Selection", init_nonchannel_pairs, defaults)
+      if capture_result then
          for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
             v["capture"] = capture_result[k]
          end
@@ -877,25 +871,12 @@ function extend_rightclick_menu_string(tr)
          ">Echo In Main Window Settings",
          "Echo All",
          "Echo None",
-         "Custom Channels List",
          "-",
-         ">Echo Non-channel Info",
-         "INFO:",
-         "Global Quest:",
-         "Remort Auction:",
-         "Clan Donations",
-         "WARFARE:",
-         "<",
+         "Edit Channel Echoes",
+         "Edit Non-channel Echoes",
          "<"
       }
       local ems = echo_menu_strings
-
-      err,info_echo,global_quest_echo,remort_auction_echo,donations_echo,warfare_echo = CallPlugin("55616ea13339bc68e963e1f8", "getEchos")
-      if info_echo then check(ems, 7) end
-      if global_quest_echo then check(ems, 8) end
-      if remort_auction_echo then check(ems, 9) end
-      if donations_echo then check(ems, 10) end
-      if warfare_echo then check(ems, 11) end
 
       for i,v in ipairs(echo_menu_strings) do
          table.insert(menu_strings, 13+i, v)
