@@ -1,65 +1,28 @@
--- You can copy this file to create your own themes.
+-- Copy this file to create your own custom themes, but please do not modify this file.
 
 return {
-    WINDOW_BACKGROUND = ColourNameToRGB ("#000000"), -- for miniwindow body
-    WINDOW_BORDER = ColourNameToRGB("#E8E8E8"), -- for miniwindow body
+   BODY = 0x000000,                   -- where you put all your main stuff
+   BODY_CONTRAST = 0xe8e8e8,          -- elements that should stand out from the body
+   INACTIVE_BODY = 0x696969,          -- body frame that has been deactivated
+   INACTIVE_BODY_HOVER = 0x444444, -- elements that should stand out from INACTIVE_BODY
+   INACTIVE_BODY_ACTIVITY = 0x00008b, -- indicate that a deactive body frame might become active if you click
 
-    HIGHLIGHT=ColourNameToRGB("#FFFFFF"), -- for 3D surfaces
-    FACE=ColourNameToRGB("#D4D0C8"), -- for 3D surfaces
-    FACE_GRADIENT=ColourNameToRGB("#D4D0C8"), -- add gradient to surfaces
-    INNERSHADOW=ColourNameToRGB("#808080"), -- for 3D surfaces
-    OUTERSHADOW = ColourNameToRGB("#404040"), -- for 3D surfaces
+   TITLE_FONTS = {                    -- for miniwindow title bar
+      {["name"]="Dina", ["size"]=8},
+      {["name"]="Courier New", ["size"]=9},
+      {["name"]="Lucida Console", ["size"]=9}
+   },
+   TITLE_PADDING = 5,                 -- for miniwindow title bar
 
-    BACK_FACE = ColourNameToRGB ("#E8E8E8"), -- for contrasting details
-    DETAIL = ColourNameToRGB ("#000000"), -- for contrasting details
-
-    TITLE_HEIGHT = 17, -- for miniwindow title area
-    SUBTITLE_HEIGHT = 17, -- for miniwindow title area
-    TITLE_FONT_NAME = "Dina", -- for miniwindow title area
-    TITLE_FONT_SIZE = 8 -- for miniwindow title area
+   THREE_D_SURFACE = 0xced0cf,        -- for 3D surfaces
+   THREE_D_OUTERHIGHLIGHT = 0xffffff, -- for 3D surfaces
+   THREE_D_INNERHIGHLIGHT = 0xdfe0e2, -- for 3D surfaces
+   THREE_D_INNERSHADOW = 0x888c8f,    -- for 3D surfaces
+   THREE_D_OUTERSHADOW = 0x404040,    -- for 3D surfaces
+   THREE_D_SURFACE_DETAIL = 0x050608, -- for contrasting details drawn on 3D surfaces
 }
 
 -- SEE EXAMPLES IN COMMENT BELOW
 
---[[
--- DEFAULT THEME
-return {
-    WINDOW_BACKGROUND = ColourNameToRGB ("#000000"), -- for miniwindow body
-    WINDOW_BORDER = ColourNameToRGB("#E8E8E8"), -- for miniwindow body
-
-    HIGHLIGHT=ColourNameToRGB("#FFFFFF"), -- for 3D surfaces
-    FACE=ColourNameToRGB("#D4D0C8"), -- for 3D surfaces
-    FACE_GRADIENT=ColourNameToRGB("#D4D0C8"), -- add gradient to surfaces
-    INNERSHADOW=ColourNameToRGB("#808080"), -- for 3D surfaces
-    OUTERSHADOW = ColourNameToRGB("#404040"), -- for 3D surfaces
-
-    BACK_FACE = ColourNameToRGB ("#E8E8E8"), -- for contrasting details
-    DETAIL = ColourNameToRGB ("#000000"), -- for contrasting details
-
-    TITLE_HEIGHT = 17, -- for miniwindow title area
-    SUBTITLE_HEIGHT = 17, -- for miniwindow title area
-    TITLE_FONT_NAME = "Dina", -- for miniwindow title area
-    TITLE_FONT_SIZE = 8 -- for miniwindow title area
-}
-
--- HOT PINK
-return {
-    WINDOW_BACKGROUND = ColourNameToRGB ("#000000"), -- for miniwindow body
-    WINDOW_BORDER = ColourNameToRGB("#F52887"), -- for miniwindow body
-
-    HIGHLIGHT=ColourNameToRGB("#F52887"), -- for 3D surfaces
-    FACE=ColourNameToRGB("#000000"), -- for 3D surfaces
-    FACE_GRADIENT=ColourNameToRGB("#661166"), -- add gradient to surfaces
-    INNERSHADOW=ColourNameToRGB("#000000"), -- for 3D surfaces
-    OUTERSHADOW = ColourNameToRGB("#F52887"), -- for 3D surfaces
-
-    BACK_FACE = ColourNameToRGB ("#773355"), -- for contrasting details
-    DETAIL = ColourNameToRGB ("#F52887"), -- for contrasting details
-
-    TITLE_HEIGHT = 17, -- for miniwindow title area
-    SUBTITLE_HEIGHT = 17, -- for miniwindow title area
-    TITLE_FONT_NAME = "Dina", -- for miniwindow title area
-    TITLE_FONT_SIZE = 8 -- for miniwindow title area
-}
 --]]
 
