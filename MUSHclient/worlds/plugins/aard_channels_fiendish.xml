@@ -826,7 +826,7 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
    elseif result == 11+echo_skip-noremove then
       removeTab()
    elseif result == 12+echo_skip-noremove then
-      local name = Trim(utils.inputbox ( "Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(current_tab)))
+      local name = Trim(utils.inputbox ( "Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab)))
       if name ~= "" then
          tabs_names[current_tab] = name
          drawTabs()
