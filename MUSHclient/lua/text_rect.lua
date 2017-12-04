@@ -92,7 +92,6 @@ function TextRect:addStyles(styles)
 
    -- add to wrapped lines table for display
    self:wrapLine(styles, urls, self.num_raw_lines)
-   self:doUpdateCallbacks()
 end
 
 function TextRect:doUpdateCallbacks()
@@ -100,7 +99,7 @@ function TextRect:doUpdateCallbacks()
       for _, cb in ipairs(self.update_callbacks) do
          local obj = cb[1]
          local func = cb[2]
-         func(obj, true, self.display_start_line, self.rect_lines, self.num_wrapped_lines)
+         func(obj, self.display_start_line, self.rect_lines, self.num_wrapped_lines)
       end
    end
 end
@@ -265,12 +264,14 @@ function TextRect:clear()
 end
 
 function TextRect:reWrapLines()
-   local raw_index = 0
-   local start_line = self.display_start_line
-   local end_line = self.display_end_line
-   if self.num_wrapped_lines > 0 then
-      raw_index = self.wrapped_lines[self.display_start_line][4]
+   if self.num_wrapped_lines == 0 then
+      return
    end
+
+   local raw_index = 0
+   local start_line = self.display_start_line or 1
+
+   raw_index = self.wrapped_lines[start_line][4]
 
    self.wrapped_lines = {}
    self.num_wrapped_lines = 0
@@ -282,11 +283,10 @@ function TextRect:reWrapLines()
    end
 
    self.start_line = start_line
+   self.display_start_line = start_line
    self.end_line = math.max(1, math.min(start_line + self.rect_lines - 1, self.num_wrapped_lines))
-   self.display_start_line = self.start_line
    self.display_end_line = self.end_line
    self:draw()
-   self:doUpdateCallbacks()
 end
 
 function TextRect:drawLine(line, styles, backfill_start, backfill_end)
@@ -307,7 +307,7 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
    end
 end
 
-function TextRect:draw(cleanup_first)
+function TextRect:draw(cleanup_first, inside_callback)
    if cleanup_first ~= false then -- default true
       self:_deleteHyperlinks()
    end
@@ -354,6 +354,11 @@ function TextRect:draw(cleanup_first)
          self:drawLine(count - self.display_start_line, self.wrapped_lines[count][1], ax, zx )
       end
    end
+
+   if not inside_callback then
+      self:doUpdateCallbacks()
+   end
+
    BroadcastPlugin(999, "repaint")
 end
 
@@ -386,23 +391,14 @@ function TextRect:setRect(left, top, width, height)
       WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.left+self.width, self.top+self.height)
    end
    self.rect_lines = math.floor(self.padded_height / self.line_height)
-   self:doUpdateCallbacks()
 end
 
-function TextRect:setScroll(no_callbacks, new_pos)
-   local oldstart = self.start_line
-   local oldend = self.end_line
+function TextRect:setScroll(new_pos)
    self.start_line = math.max(1, math.min(new_pos, self.num_wrapped_lines - self.rect_lines + 1))
    self.end_line = math.min(self.start_line + self.rect_lines - 1, self.num_wrapped_lines)
    self.display_start_line = self.start_line
    self.display_end_line = self.end_line
-   local changed = (oldstart ~= self.start_line) or (oldend ~= self.end_line)
-
-   if changed and (not no_callbacks) then
-      self:doUpdateCallbacks()
-   end
-
-   self:draw(changed)
+   self:draw(true, true)
 end
 
 -- Scroll through the window contents line by line. Used when dragging out of text area
@@ -424,7 +420,6 @@ function TextRect:scroll()
                self.display_end_line = self.end_line
             end
          end
-         self:doUpdateCallbacks()
          self:draw(false)
          wait.time(0.01)
       end
@@ -636,7 +631,6 @@ function TextRect.wheelMove(flags, hotspot_id)
       tr.display_end_line = tr.end_line
       tr:draw()
    end -- if
-   tr:doUpdateCallbacks()
 end
 
 function TextRect.linkHover(flags, hotspot_id)

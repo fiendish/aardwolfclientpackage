@@ -19,9 +19,9 @@
 <description trim="y">
 USAGE:
 
-   chats echo on      : show all chats in main window
-   chats echo off     : do not show any chats in main window
-   chats echo custom  : select a custom list of chats to show in the main window
+   chats echo on      : show all channels in main window
+   chats echo off     : do not show any channels in main window
+   chats echo custom  : select a custom list of channels to show in the main window
 </description>
 
 </plugin>
@@ -158,13 +158,18 @@ function enable_hiding(true_false, enabler_id)
    end
    if num_enablers > 0 then
       never_hide = false
+      addDefaultNonChannels()
    else
       never_hide = true
+      for i,v in ipairs(GetTriggerList()) do
+         EnableTrigger(v, false)
+      end
+--      EnableTriggerGroup("untagged_info", false)
    end
 end
 
-local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction", "remote_socials"}
-local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations", ["remote_socials"]="Remote Socials"}
+local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction"}
+local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations"}
 local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 channels_table = {}
 nonchannels_table = {}
@@ -177,8 +182,8 @@ function addNewChannel(name)
    end
 end
 
-function check_nonchannel_trigger(key)
-   if nonchannels_table[key]["echo"] then
+function other_should_echo(name)
+   if never_hide or nonchannels_table[name]["echo"] then
       return true
    end
    return false
@@ -187,14 +192,8 @@ end
 function addDefaultNonChannels()
    for i,v in ipairs(init_nonchannel_keys) do
       nonchannels_table[v] = nonchannels_table[v] or {["echo"]=true}
+      EnableTrigger(v, not other_should_echo(v))
    end
-
-   EnableTrigger("warfare", check_nonchannel_trigger("warfare"))
-   EnableTrigger("info", check_nonchannel_trigger("info"))
-   EnableTrigger("raidinfo", check_nonchannel_trigger("raidinfo"))
-   EnableTrigger("claninfo", check_nonchannel_trigger("claninfo"))
-   EnableTrigger("global_quest", check_nonchannel_trigger("global_quest"))
-   EnableTrigger("remort_auction", check_nonchannel_trigger("remort_auction"))
 end
 
 function addDefaultChannels()
@@ -237,7 +236,7 @@ function OnPluginBroadcast (msg, id, name, text)
             Sound(GetInfo(50))
          end
 
-         if (never_hide or check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+         if (never_hide or other_should_echo("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if not channels_table[chan] then
                addNewChannel(chan)
             end
@@ -252,18 +251,18 @@ function OnPluginBroadcast (msg, id, name, text)
       elseif text == "char.status" then
          local char_state = tonumber(gmcp("char.status.state"))
          -- some gmcp messages get sent with the MOTD and we need this to happen only when fully in
-         if (not done_init) and (state) and (state >= 3) and (state ~= 12) then
+         if (not done_init) and (char_state) and (char_state >= 3) and (char_state ~= 12) then
             done_init = true
             Send_GMCP_Packet("config compact")
          end
          if char_state ~= 5 then -- show messages that were buffered while in note mode
             if #msg_buffer > 0 then
                Note("Replaying all channel messages received while in note writing mode...")
+               for i,v in ipairs(msg_buffer) do
+                  echo_msg(v)
+               end
+               msg_buffer = {}
             end
-            for i,v in ipairs(msg_buffer) do
-               echo_msg(v)
-            end
-            msg_buffer = {}
          end
       end
    end
@@ -285,14 +284,14 @@ function chat_echo (toggle)
       for k,v in pairs(channels_table) do
          channels_table[k]["echo"] = true
       end
-      ColourNote ("yellow", "", "All chats are now SHOWN in the main window.")
+      ColourNote ("yellow", "", "All channels are now SHOWN in the main window.")
       ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
       Note("")
    elseif toggle == "off" then
       for k,v in pairs(channels_table) do
          channels_table[k]["echo"] = nil
       end
-      ColourNote ("yellow", "", "All chats are now HIDDEN in the main window.")
+      ColourNote ("yellow", "", "All channels are now HIDDEN in the main window.")
       ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
       Note("")
    elseif toggle == "channels" then
@@ -319,14 +318,9 @@ function chat_echo (toggle)
       if echo_result then
          for k,v in pairs(nonchannels_table) do
             v["echo"] = echo_result[k]
+            EnableTrigger(k, not other_should_echo(k))
          end
       end
-      EnableTrigger("warfare", check_nonchannel_trigger("warfare"))
-      EnableTrigger("info", check_nonchannel_trigger("info"))
-      EnableTrigger("raidinfo", check_nonchannel_trigger("raidinfo"))
-      EnableTrigger("claninfo", check_nonchannel_trigger("claninfo"))
-      EnableTrigger("global_quest", check_nonchannel_trigger("global_quest"))
-      EnableTrigger("remort_auction", check_nonchannel_trigger("remort_auction"))
    end -- if
 
    OnPluginSaveState()
@@ -343,10 +337,12 @@ function OnPluginSaveState()
 end
 
 function OnPluginInstall()
+   done_init = false
    OnPluginEnable()
 end
 
 function OnPluginEnable ()
+   done_init = false
    -- if we are connected when the plugin loads, it must have been reloaded while playing
    if IsConnected() then
       OnPluginConnect()
@@ -361,18 +357,14 @@ end
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 function OnPluginDisable()
+   done_init = false
    if IsConnected() then
-      TelnetOptionOff(TELOPT_CHANNELS)
-      TelnetOptionOff(TELOPT_TELLS)
-      TelnetOptionOff(TELOPT_SAYS)
       Send_GMCP_Packet("gmcpchannels off")
    end
 end
 
 function OnPluginConnect()
-   TelnetOptionOn(TELOPT_CHANNELS)
-   TelnetOptionOn(TELOPT_TELLS)
-   TelnetOptionOn(TELOPT_SAYS)
+   done_init = false
    Send_GMCP_Packet("tags on")
    Send_GMCP_Packet("gmcpchannels on")
    Send_GMCP_Packet("request char")
