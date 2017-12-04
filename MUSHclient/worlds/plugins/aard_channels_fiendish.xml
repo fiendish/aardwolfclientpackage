@@ -90,7 +90,6 @@ USAGE:
    enabled="y"
    match="^\*.+$"
    regexp="y"
-   omit_from_output="n"
    script="rsocial"
    name="remote_socials"
    sequence="100"
@@ -182,9 +181,20 @@ loadstring(GetVariable("tabs_nonchannel_captures") or "")()
 tabs_names = {}
 loadstring(GetVariable("tabs_names") or "")()
 
+function reduce_diverse_channels()
+   channels_table = {}
+   for tab,channels in ipairs(tabs_channel_captures) do
+      for chan,v in pairs(channels) do
+         if v["capture"] then
+            channels_table[chan] = {["capture"]=true}
+         end
+      end
+   end
+end
+
 function check_nonchannel_trigger(key)
    local on = false
-   for i,nonchannels in ipairs(tabs_nonchannel_captures) do
+   for tab,nonchannels in ipairs(tabs_nonchannel_captures) do
       if nonchannels[key]["capture"] then
          on = true
          break
@@ -211,9 +221,11 @@ function addDefaultNonChannels()
 end
 
 function addNewChannel(chan)
-   channels_table[chan] = channels_table[chan] or {["capture"]=true}
    for tab,channels in ipairs(tabs_channel_captures) do
       channels[chan] = channels[chan] or {["capture"]=true}
+      if channels[chan]["capture"] then
+         channels_table[chan] = {["capture"]=true}
+      end
    end
 end
 
@@ -224,11 +236,11 @@ function addDefaultChannels()
    addDefaultNonChannels()
 end
 addDefaultChannels()
-
+reduce_diverse_channels()
 
 function makeRect(i, tr_left, tr_top, tr_width, tr_height)
    tabs_rects[i] = TextRect.new(win, "tr"..tostring(i), tr_left, tr_top, tr_width, tr_height, 1000, true, ColourNameToRGB("black"), 3, "Dina", 10)
-   tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), tr_left + tr_width, tr_top, SCROLL_BAR_WIDTH, height-tr_top-SCROLL_BAR_WIDTH)
+   tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), tr_left + tr_width, tr_top, SCROLL_BAR_WIDTH, tr_height-SCROLL_BAR_WIDTH)
 
    tabs_rects[i]:addUpdateCallback(tabs_scrollbars[i], tabs_scrollbars[i].setScroll)
    tabs_scrollbars[i]:addUpdateCallback(tabs_rects[i], tabs_rects[i].setScroll)
@@ -305,14 +317,14 @@ function OnPluginInstall ()
 
    -- add the drag handler so they can move the window around
    movewindow.add_drag_handler(win, 0, 0, 0, title_height)
-   
+
    OnPluginEnable()
 end
 
 function trShape()
    local tr_left = 1
    local tr_top = title_height
-   tab_top = title_height + gap - 2 
+   tab_top = title_height + gap - 2
    if num_tabs > 1 then
       tr_top = tab_top + (2*gap) + head_font_height + 2
    end
@@ -337,63 +349,64 @@ function init ()
 end
 
 function drawTabs (mouseover)
-   local tab_left = 5
-   local tab_padding = 30
-   local active_left = nil
-   local active_width = nil
-   WindowRectOp(win, miniwin.rect_fill, 0, title_height, 0, title_height + (3*gap) + head_font_height, theme.INACTIVE_BODY)
+   if num_tabs > 1 then
+      local tab_left = 5
+      local tab_padding = 30
+      local active_left = nil
+      local active_width = nil
+      WindowRectOp(win, miniwin.rect_fill, 0, title_height, 0, title_height + (3*gap) + head_font_height, theme.INACTIVE_BODY)
 
-   for i,_ in ipairs(tabs_channel_captures) do
-      local name = tabs_names[i] or tostring(i)
-      local tab_width = WindowTextWidth(win, head_font, name) + (tab_padding * 2)
+      for i,_ in ipairs(tabs_channel_captures) do
+         local name = tabs_names[i] or tostring(i)
+         local tab_width = WindowTextWidth(win, head_font, name) + (tab_padding * 2)
 
-      if not WindowHotspotInfo(win, "tab"..tostring(i), 1) then
-         WindowAddHotspot(win, "tab"..tostring(i), tab_left, tab_top, tab_left + tab_width, tab_top + (3*gap) + head_font_height, "tabMouseOver", "tabCancelMouseOver", "tabMouseDown", nil, nil, "", 1, 0)
-      end
-
-      if i == current_tab then
-         active_left = tab_left
-         active_width = tab_width
-      else
-         local edge_color = theme.BODY_CONTRAST
-         local bg_color
-         if i ~= mouseover then
-            if tabs_activity[i] then
-               bg_color = theme.INACTIVE_BODY_ACTIVITY
-            else
-               bg_color = theme.INACTIVE_BODY
-            end
-         else
-            -- reversed coloration during mouseover
-            bg_color = theme.INACTIVE_BODY_HOVER   
+         if not WindowHotspotInfo(win, "tab"..tostring(i), 1) then
+            WindowAddHotspot(win, "tab"..tostring(i), tab_left, tab_top, tab_left + tab_width, tab_top + (3*gap) + head_font_height, "tabMouseOver", "tabCancelMouseOver", "tabMouseDown", nil, nil, "", 1, 0)
          end
 
-         WindowCircleOp(
-            win, miniwin.circle_round_rectangle,
-            tab_left, tab_top, tab_left + tab_width, tab_top + (4*gap) + (2*head_font_height), -- coords
-            edge_color, miniwin.pen_solid, 1,          -- pen
-            bg_color, miniwin.brush_solid,             -- brush
-            16,   -- width of the ellipse used to draw the rounded corner
-            (4*gap) + (2*head_font_height)  -- height of the ellipse used to draw the rounded corner
-         )
+         if i == current_tab then
+            active_left = tab_left
+            active_width = tab_width
+         else
+            local edge_color = theme.BODY_CONTRAST
+            local bg_color
+            if i ~= mouseover then
+               if tabs_activity[i] then
+                  bg_color = theme.INACTIVE_BODY_ACTIVITY
+               else
+                  bg_color = theme.INACTIVE_BODY
+               end
+            else
+               -- reversed coloration during mouseover
+               bg_color = theme.INACTIVE_BODY_HOVER
+            end
+
+            WindowCircleOp(
+               win, miniwin.circle_round_rectangle,
+               tab_left, tab_top, tab_left + tab_width, tab_top + (4*gap) + (2*head_font_height), -- coords
+               edge_color, miniwin.pen_solid, 1,          -- pen
+               bg_color, miniwin.brush_solid,             -- brush
+               16,   -- width of the ellipse used to draw the rounded corner
+               (4*gap) + (2*head_font_height)  -- height of the ellipse used to draw the rounded corner
+            )
+         end
+
+         tab_left = tab_left + tab_padding
+         tab_left = tab_left + WindowText(win, head_font, name, tab_left, tab_top + gap, width, title_height + (3*gap) + head_font_height, theme.BODY_CONTRAST, false)
+         tab_left = tab_left + tab_padding
       end
 
-      tab_left = tab_left + tab_padding
-      tab_left = tab_left + WindowText(win, head_font, name, tab_left, tab_top + gap, width, title_height + (3*gap) + head_font_height, theme.BODY_CONTRAST, false)
-      tab_left = tab_left + tab_padding
+      WindowLine(win, 0, tab_top + (2*gap) + head_font_height + 1, width, tab_top + (2*gap) + head_font_height + 1, theme.BODY_CONTRAST, 0 + 0x0200, 1)
+      WindowCircleOp(
+         win, miniwin.circle_round_rectangle,
+         active_left, tab_top, active_left + active_width, tab_top + (4*gap) + (2*head_font_height), -- coords
+         theme.BODY_CONTRAST, miniwin.pen_solid, 1,          -- pen
+         theme.BODY, miniwin.brush_solid,  -- brush
+         16,   -- width of the ellipse used to draw the rounded corner
+         (4*gap) + (2*head_font_height)   -- height of the ellipse used to draw the rounded corner
+      )
+      WindowText(win, head_font, tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap, width, title_height + (3*gap) + head_font_height, theme.BODY_CONTRAST, false)
    end
-
-   WindowLine(win, 0, tab_top + (2*gap) + head_font_height + 1, width, tab_top + (2*gap) + head_font_height + 1, theme.BODY_CONTRAST, 0 + 0x0200, 1)
-   WindowCircleOp(
-      win, miniwin.circle_round_rectangle,
-      active_left, tab_top, active_left + active_width, tab_top + (4*gap) + (2*head_font_height), -- coords
-      theme.BODY_CONTRAST, miniwin.pen_solid, 1,          -- pen
-      theme.BODY, miniwin.brush_solid,  -- brush
-      16,   -- width of the ellipse used to draw the rounded corner
-      (4*gap) + (2*head_font_height)   -- height of the ellipse used to draw the rounded corner
-   )
-   WindowText(win, head_font, tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap, width, title_height + (3*gap) + head_font_height, theme.BODY_CONTRAST, false)
-
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
 end
@@ -411,7 +424,7 @@ function tabMouseDown (flags, hotspot_id)
 end
 
 function drawBackground ()
-   WindowRectOp(win, 1, 0, 0, width+1, 0, theme.BODY_CONTRAST)   -- draw border   
+   WindowRectOp(win, 1, 0, 0, width+1, 0, theme.BODY_CONTRAST)   -- draw border
    title_height = DrawTitleBar(win, "Communication Log", nil, true)
    DrawResizeTag(win, width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH)
 end
@@ -456,13 +469,13 @@ function ResizeReleaseCallback ()
 end
 
 function setupDisplay ()
-   WindowResize(win, width, height, theme.BODY)
+   WindowResize(win, width, height, theme.BODY_CONTRAST)
    drawBackground()
    tr_left, tr_top, tr_width, tr_height = trShape()
    for i = 1,num_tabs do
       if tabs_rects[i] then
          tabs_rects[i]:setRect(tr_left, tr_top, tr_width, tr_height)
-         tabs_scrollbars[i]:setRect(tr_left + tr_width, tr_top, SCROLL_BAR_WIDTH, height-tr_top-SCROLL_BAR_WIDTH)
+         tabs_scrollbars[i]:setRect(tr_left + tr_width, tr_top, SCROLL_BAR_WIDTH, tr_height-SCROLL_BAR_WIDTH)
       else
          makeRect(i, tr_left, tr_top, tr_width, tr_height)
       end
@@ -524,13 +537,16 @@ function sanitize_filename(str)
    return Trim(str or "")
 end
 
+re = require "re"
+
 function stampAndLog(styles)
    local text = ""
    local log_text = ""
 
-   -- remove most control characters, but preserve newlines
+   -- remove control characters, but preserve newlines,
+   -- and don't use %g because that clobbers multibyte symbols
    for i,v in ipairs(styles) do
-      v.text = v.text:gsub("[^%g%s\n]","")
+      v.text = v.text:gsub("[^%C\n]","")
       v.length = v.text:len()
    end
 
@@ -564,13 +580,17 @@ function stampAndLog(styles)
    end
 end
 
-function stampAndStore(msg, chan, filter)
-   if filter then
+function stampAndStore(msg, chan, is_gmcp)
+   if is_gmcp then
       msg = filter_as_needed(msg)
    end
    if msg then
       stampAndLog(msg)
-      storeChannel(msg, chan)
+      if is_gmcp then
+         storeChannel(msg, chan)
+      else
+         storeNonChannel(msg, chan)
+      end
    end
 end
 
@@ -616,6 +636,7 @@ function storeTab(styles, tab)
    tabs_rects[tab]:addStyles(styles)
    if tab == current_tab then
       tabs_rects[tab]:draw()
+      tabs_scrollbars[tab]:draw()
    else
       if not tabs_activity[tab] then
          tabs_activity[tab] = true
@@ -768,7 +789,8 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
    elseif result == 11+echo_skip-noremove then
       removeTab()
    elseif result == 12+echo_skip-noremove then
-      local name = Trim(utils.inputbox ( "Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab)))
+      local name = utils.inputbox("Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab))
+      name = Trim(name or "")
       if name ~= "" then
          tabs_names[current_tab] = name
          drawTabs()
@@ -783,10 +805,11 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
 
       local capture_result = utils.multilistbox ("Choose which channels to capture to this communication log tab.", "Communication Log Channel Selection", tbl, defaults)
       if capture_result then
-         for i,v in ipairs(tbl) do
-            tabs_channel_captures[current_tab][v]["capture"] = capture_result[i]
+         for k,v in pairs(tabs_channel_captures[current_tab]) do
+            v["capture"] = capture_result[k]
          end
       end
+      reduce_diverse_channels()
    elseif result == 14+echo_skip-noremove then
       local defaults = {}
       for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
