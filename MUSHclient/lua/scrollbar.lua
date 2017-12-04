@@ -1,11 +1,10 @@
 require "commas"
+require "mw_theme_base"
 
 ScrollBar = {
    hotspot_map = {}
 }
 ScrollBar_defaults = {
-   theme_background = ColourNameToRGB("silver"),
-   theme_detail = ColourNameToRGB("black"),
    total_steps = 1,
    visible_steps = 1,
    step = 1
@@ -21,21 +20,26 @@ function ScrollBar.new(window, name, left, top, width, height)
    new_sb.top = top
    new_sb.width = width
    new_sb.height = height
-   new_sb:draw()
    return new_sb
 end
 
 function ScrollBar:initButtons()
    -- scroll bar up/down button hotspots
-   self.has_arrow_buttons = true
    WindowAddHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.left + self.width, self.top + self.width, "", "", "ScrollBar.mouseDownUpArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
    WindowAddHotspot(self.window, self:generateHotspotID("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, "", "", "ScrollBar.mouseDownDownArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
 end
 
+function ScrollBar:_delHotspot(key)
+   local id = self:generateHotspotID(key)
+   ScrollBar.hotspot_map[id] = nil
+   WindowDeleteHotspot(self.window, id)
+end
+
 function ScrollBar:unInit()
-   WindowDeleteHotspot(self.window, self:generateHotspotID("up"))
-   WindowDeleteHotspot(self.window, self:generateHotspotID("down"))
-   WindowDeleteHotspot(self.window, self:generateHotspotID("scroller"))
+   self.has_hotspots = false
+   self:_delHotspot("up")
+   self:_delHotspot("down")
+   self:_delHotspot("scroller")
 end
 
 function ScrollBar:setRect(left, top, width, height)
@@ -45,7 +49,6 @@ function ScrollBar:setRect(left, top, width, height)
    self.height = height
    WindowMoveHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.left + self.width, self.top + self.width)
    WindowMoveHotspot(self.window, self:generateHotspotID("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height)
-   self:draw()
 end
 
 function ScrollBar:doUpdateCallbacks()
@@ -53,69 +56,67 @@ function ScrollBar:doUpdateCallbacks()
       for _, cb in ipairs(self.update_callbacks) do
          local obj = cb[1]
          local func = cb[2]
-         func(obj, true, self.step)
+         func(obj, self.step)
       end
    end
 end
 
-function ScrollBar:setScroll(no_callbacks, step, visible_steps, total_steps)
+function ScrollBar:setScroll(step, visible_steps, total_steps)
    self.step = step or self.step
    self.visible_steps = visible_steps or self.visible_steps
    self.total_steps = total_steps or self.total_steps
-
-   if (not no_callbacks) then
-      self:doUpdateCallbacks()
-   end
-
-   self:draw()
+   self:draw(true)
 end
 
-function ScrollBar:draw()
-   if not self.has_arrow_buttons then
+function ScrollBar:draw(inside_callback)
+   if not self.has_hotspots then
       self:initButtons()
    end
 
    -- draw the background
-   WindowRectOp(self.window, 2, self.left, self.top + self.width, self.left + self.width, self.top + self.height - self.width, self.theme_background) -- scroll bar background
-   WindowRectOp(self.window, 1, self.left + 1, self.top + self.width + 1, self.left + self.width - 1, self.top + self.height - self.width - 1, self.theme_detail) -- scroll bar background inset rectangle
+   WindowCircleOp(
+      self.window, miniwin.circle_rectangle,
+      self.left, self.top + self.width, self.left + self.width, self.top + self.height - self.width,
+      theme.INACTIVE_BODY, miniwin.pen_solid, 1,
+      theme.THREE_D_SURFACE, miniwin.brush_fine_pattern) -- brush
+
+--   WindowRectOp(self.window, 2, self.left, self.top + self.width, self.left + self.width, self.top + self.height - self.width, theme.INACTIVE_BODY) -- scroll bar background
+   WindowRectOp(self.window, 1, self.left + 2, self.top + self.width + 2, self.left + self.width - 2, self.top + self.height - self.width - 2, theme.BODY_CONTRAST) -- scroll bar background inset rectangle
 
    local mid_x = (self.width - 2)/2
 
    -- draw the up button
-   local button_style = miniwin.rect_edge_at_all + miniwin.rect_option_fill_middle
-   local button_edge = miniwin.rect_edge_raised
    local points = ""
 
    if (self.keepscrolling == "up") then
-      button_edge = miniwin.rect_edge_sunken
+      Draw3DRect(self.window, self.left, self.top, self.left + self.width, self.top + self.width, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x) + 1, self.top + math.ceil(self.width/4 + 0.5) + 2, self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.top + round_banker(self.width/2) + 2,
          self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.top + round_banker(self.width/2) + 2,
          self.left + math.ceil(mid_x) + 1, self.top + math.ceil(self.width/4 + 0.5) + 2 )
    else
+      Draw3DRect(self.window, self.left, self.top, self.left + self.width, self.top + self.width, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x), self.top + math.ceil(self.width/4 + 0.5) + 1, self.left + math.floor(mid_x) - math.floor(mid_x/2), self.top + round_banker(self.width/2) + 1,
          self.left + math.ceil(mid_x) + math.floor(mid_x/2), self.top + round_banker(self.width/2) + 1,
          self.left + math.ceil(mid_x), self.top + math.ceil(self.width/4 + 0.5) + 1)
    end
-   WindowRectOp(self.window, 5, self.left, self.top, self.left + self.width, self.top + self.width, button_edge, button_style)
-   WindowPolygon(self.window, points, 0x000000, miniwin.pen_solid + miniwin.pen_join_miter, 1, 0x000000, 0, true, false)
+   WindowPolygon(self.window, points, theme.THREE_D_SURFACE_DETAIL, miniwin.pen_solid + miniwin.pen_join_miter, 1, theme.THREE_D_SURFACE_DETAIL, 0, true, false)
 
    -- draw the down button
-   button_edge = miniwin.rect_edge_raised
    if (self.keepscrolling == "down") then
-      button_edge = miniwin.rect_edge_sunken
+      Draw3DRect(self.window, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x) + 1, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5), self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.top + self.height - 1 - round_banker(self.width/2),
          self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.top + self.height - 1 - round_banker(self.width/2),
          self.left + math.ceil(mid_x) + 1, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5))
    else
+      Draw3DRect(self.window, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x), self.top + self.height - 2 - math.ceil(self.width/4 + 0.5), self.left + math.floor(mid_x) - math.floor(mid_x/2), self.top + self.height - 2 - round_banker(self.width/2),
          self.left + math.ceil(mid_x) + math.floor(mid_x/2), self.top + self.height - 2 - round_banker(self.width/2),
          self.left + math.ceil(mid_x), self.top + self.height - 2 - math.ceil(self.width/4 + 0.5))
    end
-   WindowRectOp(self.window, 5, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, button_edge, button_style)
    WindowPolygon(self.window, points, 0x000000, 0, 1, 0x000000, 0, true, false)
 
    -- draw the content indicator
@@ -134,12 +135,19 @@ function ScrollBar:draw()
       position = self.top + self.width
       self.size = scroll_height
    end
-   if (not self.dragging_scrollbar) then
+   if (not self.has_hotspots) then
       WindowAddHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.left + self.width, position + self.size, "", "", "ScrollBar.mouseDown", "", "ScrollBar.mouseUp", "", 1, 0)
       WindowDragHandler(self.window, self:generateHotspotID("scroller"), "ScrollBar.dragMove", "ScrollBar.dragRelease", 0)
+   else
+      WindowMoveHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.left + self.width, position + self.size)
    end
-   WindowRectOp(self.window, 5, self.left, position, self.left + self.width, position + self.size, 5, 15 + 0x800)
+   Draw3DRect(self.window, self.left, position, self.left + self.width, position + self.size)
    BroadcastPlugin(999, "repaint")
+   self.has_hotspots = true
+
+   if not inside_callback then
+      self:doUpdateCallbacks()
+   end
 end
 
 function ScrollBar.mouseDown(flags, hotspot_id)
@@ -179,7 +187,6 @@ function ScrollBar.dragMove(flags, hotspot_id)
       local space_per_step = available_space / (sb.total_steps - sb.visible_steps)
       sb.step = math.floor(position / space_per_step) + 1
    end
-   sb:doUpdateCallbacks()
    sb:draw()
 end
 
@@ -222,7 +229,6 @@ function ScrollBar:scroll()
             end
          end
          self:draw()
-         self:doUpdateCallbacks()
          wait.time(0.01)
       end
    end)
