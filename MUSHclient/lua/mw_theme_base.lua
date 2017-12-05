@@ -57,6 +57,12 @@ load_theme(GetVariable("theme_file") or theme_file, true)
 
 -- Replacement for WindowRectOp action 5, which allows for a 3D look while maintaining color theme.
 function Draw3DRect (win, left, top, right, bottom, sunken)
+   if right > 0 then
+      right = right + 1
+   end
+   if bottom > 0 then
+      bottom = bottom + 1
+   end
    WindowRectOp(win, 2, left, top, right, bottom, theme.THREE_D_SURFACE)
    if not sunken then
       WindowLine(win, left, top+1, right, top+1, theme.THREE_D_INNERHIGHLIGHT, 0x0200, 1)
@@ -66,7 +72,7 @@ function Draw3DRect (win, left, top, right, bottom, sunken)
       WindowLine(win, right-2, top, right-2, bottom-2, theme.THREE_D_INNERSHADOW, 0x0200, 1)
 
       WindowLine(win, left, top, right, top, theme.THREE_D_OUTERHIGHLIGHT, 0x0200, 1)
-      WindowLine(win, left, top, left, bottom, theme.THREE_D_OUTERHIGHLIGHT, 0x0200, 1)      
+      WindowLine(win, left, top, left, bottom, theme.THREE_D_OUTERHIGHLIGHT, 0x0200, 1)
 
       WindowLine(win, left, bottom-1, right, bottom-1, theme.THREE_D_OUTERSHADOW, 0x0200, 1)
       WindowLine(win, right-1, top, right-1, bottom-1, theme.THREE_D_OUTERSHADOW, 0x0200, 1)
@@ -74,12 +80,9 @@ function Draw3DRect (win, left, top, right, bottom, sunken)
       WindowLine(win, left, top+1, right, top+1, theme.THREE_D_INNERSHADOW, 0x0200, 1)
       WindowLine(win, left+1, top, left+1, bottom, theme.THREE_D_INNERSHADOW, 0x0200, 1)
 
-      WindowLine(win, left, bottom-2, right, bottom-2, theme.THREE_D_INNERHIGHLIGHT, 0x0200, 1)
-      WindowLine(win, right-2, top, right-2, bottom-2, theme.THREE_D_INNERHIGHLIGHT, 0x0200, 1)
-      
       WindowLine(win, left, top, right, top, theme.THREE_D_OUTERSHADOW, 0x0200, 1)
       WindowLine(win, left, top, left, bottom, theme.THREE_D_OUTERSHADOW, 0x0200, 1)
-      
+
       WindowLine(win, left, bottom-1, right, bottom-1, theme.THREE_D_OUTERHIGHLIGHT, 0x0200, 1)
       WindowLine(win, right-1, top, right-1, bottom-1, theme.THREE_D_OUTERHIGHLIGHT, 0x0200, 1)
    end
@@ -109,7 +112,7 @@ function LoadTitleFont(win)
          break
       end
    end
-   
+
    theme.TITLE_HEIGHT = TextHeight(win, theme.TITLE_FONT) + (2 * theme.TITLE_PADDING) + 4
    return theme.TITLE_FONT
 end
@@ -129,8 +132,8 @@ function DrawTitleBar(win, title, text_alignment, full_width)
          win,
          0,
          0,
-         WindowInfo(win, 3),
-         theme.TITLE_HEIGHT
+         WindowInfo(win, 3)-1,
+         theme.TITLE_HEIGHT-1
       )
    else
       Draw3DRect(
