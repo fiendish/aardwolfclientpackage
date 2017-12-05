@@ -78,7 +78,7 @@ function ScrollBar:draw(inside_callback)
       self.window, miniwin.circle_rectangle,
       self.left, self.top + self.width + 1, self.left + self.width + 1, self.top + self.height - self.width,
       theme.THREE_D_TRACK_COLOR1, miniwin.pen_solid, 1,
-      theme.THREE_D_TRACK_COLOR2, theme.THREE_D_TRACK_BRUSH) -- brush
+      theme.THREE_D_TRACK_COLOR2, theme.VERTICAL_TRACK_BRUSH) -- brush
 
    local mid_x = (self.width - 2)/2
 
