@@ -465,6 +465,7 @@ function ResizeReleaseCallback ()
    for i = 1,num_tabs do
       tabs_rects[i]:reWrapLines()
    end
+   movewindow.add_drag_handler(win, 0, 0, 0, title_height)
    WindowMoveHotspot(win, "resize", width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, width, 0)
 end
 
