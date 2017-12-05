@@ -240,7 +240,7 @@ reduce_diverse_channels()
 
 function makeRect(i, tr_left, tr_top, tr_width, tr_height)
    tabs_rects[i] = TextRect.new(win, "tr"..tostring(i), tr_left, tr_top, tr_width, tr_height, 1000, true, ColourNameToRGB("black"), 3, "Dina", 10)
-   tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), tr_left + tr_width, tr_top, SCROLL_BAR_WIDTH, tr_height-SCROLL_BAR_WIDTH)
+   tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), width-SCROLL_BAR_WIDTH-1, tr_top-1, SCROLL_BAR_WIDTH, tr_height-SCROLL_BAR_WIDTH)
 
    tabs_rects[i]:addUpdateCallback(tabs_scrollbars[i], tabs_scrollbars[i].setScroll)
    tabs_scrollbars[i]:addUpdateCallback(tabs_rects[i], tabs_rects[i].setScroll)
@@ -329,7 +329,7 @@ function trShape()
       tr_top = tab_top + (2*gap) + head_font_height + 2
    end
 
-   local tr_width = width - SCROLL_BAR_WIDTH - 1
+   local tr_width = width - SCROLL_BAR_WIDTH -3
    local tr_height = height - tr_top - 1
    return tr_left, tr_top, tr_width, tr_height
 end
@@ -396,7 +396,7 @@ function drawTabs (mouseover)
          tab_left = tab_left + tab_padding
       end
 
-      WindowLine(win, 0, tab_top + (2*gap) + head_font_height + 1, width, tab_top + (2*gap) + head_font_height + 1, theme.BODY_CONTRAST, 0 + 0x0200, 1)
+      WindowLine(win, 0, tab_top + (2*gap) + head_font_height + 1, width - SCROLL_BAR_WIDTH - 1, tab_top + (2*gap) + head_font_height + 1, theme.BODY_CONTRAST, 0 + 0x0200, 1)
       WindowCircleOp(
          win, miniwin.circle_round_rectangle,
          active_left, tab_top, active_left + active_width, tab_top + (4*gap) + (2*head_font_height), -- coords
@@ -424,9 +424,9 @@ function tabMouseDown (flags, hotspot_id)
 end
 
 function drawBackground ()
-   WindowRectOp(win, 1, 0, 0, width+1, 0, theme.BODY_CONTRAST)   -- draw border
+   WindowRectOp(win, 1, 0, 0, width-SCROLL_BAR_WIDTH-1, 0, theme.BODY_CONTRAST)   -- draw border
    title_height = DrawTitleBar(win, "Communication Log", nil, true)
-   DrawResizeTag(win, width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH)
+   DrawResizeTag(win, width-SCROLL_BAR_WIDTH-1, height-SCROLL_BAR_WIDTH-1, SCROLL_BAR_WIDTH)
 end
 
 function ResizeMoveCallback ()
@@ -469,13 +469,13 @@ function ResizeReleaseCallback ()
 end
 
 function setupDisplay ()
-   WindowResize(win, width, height, theme.BODY_CONTRAST)
+   WindowResize(win, width, height, theme.INACTIVE_BODY)
    drawBackground()
    tr_left, tr_top, tr_width, tr_height = trShape()
    for i = 1,num_tabs do
       if tabs_rects[i] then
          tabs_rects[i]:setRect(tr_left, tr_top, tr_width, tr_height)
-         tabs_scrollbars[i]:setRect(tr_left + tr_width, tr_top, SCROLL_BAR_WIDTH, tr_height-SCROLL_BAR_WIDTH)
+         tabs_scrollbars[i]:setRect(width-SCROLL_BAR_WIDTH-1, tr_top-1, SCROLL_BAR_WIDTH, tr_height-SCROLL_BAR_WIDTH)
       else
          makeRect(i, tr_left, tr_top, tr_width, tr_height)
       end
