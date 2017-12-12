@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1947 snapshot
+- bug fix: Move TTS DLLs to top level, to make them easier to find
+
 r1946 snapshot
 - bug fix: Channel transitions and hidden map requests were causing extra blank lines to appear sometimes. Those should be gone now.
 - misc change: The color of the border ring around the dot in the alignment indicator in the health bars plugin sometimes didn't coordinate with the chosen alignment color. It is calculated differently now and should match more reliably.
