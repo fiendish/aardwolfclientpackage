@@ -106,17 +106,17 @@ function ScrollBar:draw(inside_callback)
    if (self.keepscrolling == "down") then
       Draw3DRect(self.window, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
-         self.left + math.floor(mid_x) + 2, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5),
-         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 2, self.top + self.height - 1 - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 2, self.top + self.height - 1 - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + 2, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5))
+         self.left + math.floor(mid_x) + 2, self.top + self.height - math.ceil(self.width/4 + 0.5),
+         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 2, self.top + self.height - round_banker(self.width/2),
+         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 2, self.top + self.height - round_banker(self.width/2),
+         self.left + math.ceil(mid_x) + 2, self.top + self.height - math.ceil(self.width/4 + 0.5))
    else
       Draw3DRect(self.window, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
-         self.left + math.floor(mid_x) + 1, self.top + self.height - 2 - math.ceil(self.width/4 + 0.5),
-         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.top + self.height - 2 - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.top + self.height - 2 - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + 1, self.top + self.height - 2 - math.ceil(self.width/4 + 0.5))
+         self.left + math.floor(mid_x) + 1, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5),
+         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.top + self.height - 1 - round_banker(self.width/2),
+         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.top + self.height - 1 - round_banker(self.width/2),
+         self.left + math.ceil(mid_x) + 1, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5))
    end
    WindowPolygon(self.window, points, theme.THREE_D_SURFACE_DETAIL, miniwin.pen_solid + miniwin.pen_join_miter, 1, theme.THREE_D_SURFACE_DETAIL, 0, true, false)
 

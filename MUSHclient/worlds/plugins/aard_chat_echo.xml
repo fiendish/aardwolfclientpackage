@@ -365,7 +365,6 @@ end
 
 function OnPluginConnect()
    done_init = false
-   Send_GMCP_Packet("tags on")
    Send_GMCP_Packet("gmcpchannels on")
    Send_GMCP_Packet("request char")
 end
