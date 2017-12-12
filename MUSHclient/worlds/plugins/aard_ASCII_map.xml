@@ -793,12 +793,12 @@ end
 
 function OnPluginConnect()
    page_built = false
+   Send_GMCP_Packet("tags on")
    TelnetOptionOn(TELOPT_MAP)
    TelnetOptionOff(TELOPT_SHORTMAP)
    TelnetOptionOn(TELOPT_ROOM_NAMES)
    TelnetOptionOn(TELOPT_EXIT_NAMES)
    TelnetOptionOn(TELOPT_ROOMDESC_TAGS)
-   Send_GMCP_Packet("tags on")
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
    Send_GMCP_Packet("maptype "..maptype)
    Send_GMCP_Packet("request char")

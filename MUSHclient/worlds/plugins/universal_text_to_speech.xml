@@ -330,7 +330,7 @@ function OnPluginInstall()
    else
       tolk_path = 'screen_reader_dlls/x64/Tolk.dll'
    end
-   tolk_api = ffi.load(tolk_path)
+   tolk_api = ffi.load(GetInfo(66)..tolk_path)
 
    CP_UTF8 = 65001
 
