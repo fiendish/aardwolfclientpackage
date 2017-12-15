@@ -330,7 +330,7 @@ function OnPluginInstall()
    else
       tolk_path = 'screen_reader_dlls/x64/Tolk.dll'
    end
-   tolk_api = ffi.load(GetInfo(66)..tolk_path)
+   tolk_api = ffi.load(tolk_path)
 
    CP_UTF8 = 65001
 
@@ -406,7 +406,7 @@ function playback(line)
 end
 
 function OnPluginScreendraw(line_type, log, line)
-	if tts_enabled and line_type < 1 then
+	if tts_enabled and line_type < 2 then
 		say(line)
       if Trim(line) ~= "" then
          table.insert(history, 1, line)
