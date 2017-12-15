@@ -406,7 +406,7 @@ function playback(line)
 end
 
 function OnPluginScreendraw(line_type, log, line)
-	if tts_enabled and line_type < 1 then
+	if tts_enabled and line_type < 2 then
 		say(line)
       if Trim(line) ~= "" then
          table.insert(history, 1, line)
