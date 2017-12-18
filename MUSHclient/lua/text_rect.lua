@@ -24,19 +24,22 @@ TextRect_defaults = {
 }
 TextRect_mt = { __index = TextRect }
 
-function TextRect.new(window, name, left, top, width, height, max_lines, scrollable, background_color, padding, font_name, font_size)
+function TextRect.new(window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size)
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..tostring(GetUniqueNumber())
    new_tr.name = name
    new_tr.window = window
    new_tr.left = left
    new_tr.top = top
-   new_tr.width = width
-   new_tr.height = height
+   new_tr.right = right
+   new_tr.bottom = bottom
+   new_tr.width = right-left
+   new_tr.height = bottom-top
    new_tr.scrollable = scrollable
    new_tr.padding = padding or new_tr.padding
    new_tr.padded_left = new_tr.left + new_tr.padding
    new_tr.padded_top = new_tr.top + new_tr.padding
+   new_tr.padded_right = new_tr.right - new_tr.padding
    new_tr.padded_width = new_tr.width - new_tr.padding
    new_tr.padded_height = new_tr.height - new_tr.padding
    new_tr.max_lines = max_lines or new_tr.max_lines
@@ -142,13 +145,13 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       end
 
       local whole_width = WindowTextWidth(self.window, self.font, style.text)
-      local width = whole_width
+      local t_width = whole_width
 
       -- if it fits, copy whole style in
-      if width <= available then
+      if t_width <= available then
          insert(line_styles, style)
          length = length + style.length
-         available = available - width
+         available = available - t_width
          if foundbreak then
             available = 0
          end
@@ -159,8 +162,8 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          local fit_col = nil
          while col < style.length do
             if sub(style.text, col, col) == " " then
-               width = WindowTextWidth(self.window, self.font, sub(style.text, 1, col-1))
-               if width > available then
+               t_width = WindowTextWidth(self.window, self.font, sub(style.text, 1, col-1))
+               if t_width > available then
                   break
                else
                   fit_col = col -- found a space where we can split
@@ -172,8 +175,8 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
             if available == self.padded_width then -- starts at the beginning of the line
                -- step backward from the last measured col
                while col > 1 do
-                  width = WindowTextWidth(self.window, self.font, sub(style.text, 1, col))
-                  if width <= available then
+                  t_width = WindowTextWidth(self.window, self.font, sub(style.text, 1, col))
+                  if t_width <= available then
                      fit_col = col
                      break
                   end
@@ -249,7 +252,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          self.num_wrapped_lines = self.num_wrapped_lines + 1
 
          -- prep for next line
-         available = self.width
+         available = self.padded_width
          line_styles = {}
          length = 0
          beginning = false
@@ -302,7 +305,7 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
          if string.sub(v.text, -1) == "\n" then
             t = string.sub(v.text, 1, -2)
          end
-         left = left + WindowText(self.window, self.font, t, left, top, self.padded_width + self.padded_left, self.padded_height + self.padded_top, v.textcolour)
+         left = left + WindowText(self.window, self.font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour)
       end
    end
 end
@@ -315,7 +318,7 @@ function TextRect:draw(cleanup_first, inside_callback)
    if not self.area_hotspot then
       self:initArea()
    end
-   WindowRectOp(self.window, 2, self.left, self.top, self.left + self.width, self.top + self.height, self.background_color) -- clear
+   WindowRectOp(self.window, 2, self.left, self.top, self.right, self.bottom+1, self.background_color) -- clear
    local ax = nil
    local zx = nil
    local line_no_colors = ""
@@ -338,7 +341,7 @@ function TextRect:draw(cleanup_first, inside_callback)
 
                if not WindowHotspotInfo(self.window, link_id, 1) then
                   self.hyperlinks[link_id] = v.text
-                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_left+self.padded_width), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
+                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
                   WindowDragHandler(self.window, link_id, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
                   WindowScrollwheelHandler(self.window, link_id, "TextRect.wheelMove")
                end
@@ -349,7 +352,7 @@ function TextRect:draw(cleanup_first, inside_callback)
          if self.copy_start_line ~= nil and self.copy_end_line ~= nil and count >= self.copy_start_line and count <= self.copy_end_line then
             ax = (((count == self.copy_start_line) and math.min(self.start_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)) or self.padded_left)
             -- end of highlight for this line
-            zx = math.min(self.padded_width + self.padded_left, (((count == self.copy_end_line) and math.min(self.end_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)) or WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left))
+            zx = math.min(self.padded_right, (((count == self.copy_end_line) and math.min(self.end_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)) or WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left))
          end
          self:drawLine(count - self.display_start_line, self.wrapped_lines[count][1], ax, zx )
       end
@@ -377,18 +380,21 @@ function TextRect:snapToBottom()
    return start_line, end_line
 end
 
-function TextRect:setRect(left, top, width, height)
-   local changed = (self.width ~= width) or (self.height ~= height) or (self.left ~= left) or (self.top ~= top)
+function TextRect:setRect(left, top, right, bottom)
+   local changed = (self.right ~= right) or (self.bottom ~= bottom) or (self.left ~= left) or (self.top ~= top)
    self.left = left
    self.top = top
-   self.width = width
-   self.height = height
+   self.right = right
+   self.bottom = bottom
+   self.width = right-left
+   self.height = bottom-top
    self.padded_left = self.left + self.padding
    self.padded_top = self.top + self.padding
+   self.padded_right = self.right - self.padding
    self.padded_width = self.width - self.padding
    self.padded_height = self.height - self.padding
    if self.area_hotspot then
-      WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.left+self.width, self.top+self.height)
+      WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.bottom)
    end
    self.rect_lines = math.floor(self.padded_height / self.line_height)
 end
@@ -429,7 +435,7 @@ end
 function TextRect:initArea()
    --highlight, right click, scrolling
    self.area_hotspot = self:generateHotspotID("textarea")
-   WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.left + self.width, self.top + self.height, "", "", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "", miniwin.cursor_ibeam, 0)
+   WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "", miniwin.cursor_ibeam, 0)
    WindowDragHandler(self.window, self.area_hotspot, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
    if self.scrollable then
       WindowScrollwheelHandler(self.window, self.area_hotspot, "TextRect.wheelMove")
@@ -501,9 +507,9 @@ function TextRect.dragMove(flags, hotspot_id)
 
    -- get the entire last line if we drag off the bottom
    if tr.copy_end_line <= tr.end_line then
-      tr.end_copying_x = math.max(tr.left, math.min(tr.end_copying_x, tr.left + tr.width))
+      tr.end_copying_x = math.max(tr.left, math.min(tr.end_copying_x, tr.right))
    else
-      tr.end_copying_x = tr.left + tr.width
+      tr.end_copying_x = tr.right
    end
 
    if not tr.copy_start_line then
@@ -513,7 +519,7 @@ function TextRect.dragMove(flags, hotspot_id)
    end
 
    if (tr.copy_start_line > #tr.wrapped_lines) then
-      tr.start_copying_x = tr.left + tr.width
+      tr.start_copying_x = tr.right
    end
 
    -- the user is selecting backwards, so reverse the start/end orders
@@ -593,7 +599,7 @@ function TextRect.dragMove(flags, hotspot_id)
             tr:scroll()
          end
          return
-      elseif ypos > tr.top + tr.height then
+      elseif ypos > tr.bottom then
          if tr.keepscrolling ~= "down" then
             tr.keepscrolling = "down"
             tr:scroll()
