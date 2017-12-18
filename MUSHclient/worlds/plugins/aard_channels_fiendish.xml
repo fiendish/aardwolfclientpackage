@@ -137,7 +137,7 @@ require "scrollbar"
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
 local gap = 3
-SCROLL_BAR_WIDTH = 16
+SCROLL_BAR_WIDTH = theme.RESIZER_SIZE
 MAX_LINES = 10000 -- how many lines to store in scrollback
 
 -- date_format = "[%d %b %H:%M:%S] "   -- [30 Aug 13:29:49]   date and time 24 hour
@@ -238,9 +238,9 @@ end
 addDefaultChannels()
 reduce_diverse_channels()
 
-function makeRect(i, tr_left, tr_top, tr_width, tr_height)
-   tabs_rects[i] = TextRect.new(win, "tr"..tostring(i), tr_left, tr_top, tr_width, tr_height, 1000, true, ColourNameToRGB("black"), 3, "Dina", 10)
-   tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), width-SCROLL_BAR_WIDTH-1, tr_top-1, SCROLL_BAR_WIDTH, tr_height-SCROLL_BAR_WIDTH)
+function makeRect(i, tr_left, tr_top, tr_right, tr_bottom)
+   tabs_rects[i] = TextRect.new(win, "tr"..tostring(i), tr_left, tr_top, tr_right, tr_bottom, 1000, true, theme.BODY, 3, "Dina", 10)
+   tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), tr_right, tr_top, draw_right, draw_bottom-SCROLL_BAR_WIDTH)
 
    tabs_rects[i]:addUpdateCallback(tabs_scrollbars[i], tabs_scrollbars[i].setScroll)
    tabs_scrollbars[i]:addUpdateCallback(tabs_rects[i], tabs_rects[i].setScroll)
@@ -315,23 +315,20 @@ function OnPluginInstall ()
    init()
    setupDisplay()
 
-   -- add the drag handler so they can move the window around
-   movewindow.add_drag_handler(win, 0, 0, 0, title_height)
-
    OnPluginEnable()
 end
 
 function trShape()
-   local tr_left = 1
-   local tr_top = title_height
-   tab_top = title_height + gap - 2
+   local tr_left = draw_left
+   local tr_top = draw_top
+   tab_top = draw_top + 2
    if num_tabs > 1 then
       tr_top = tab_top + (2*gap) + head_font_height + 2
    end
 
-   local tr_width = width - SCROLL_BAR_WIDTH -3
-   local tr_height = height - tr_top - 1
-   return tr_left, tr_top, tr_width, tr_height
+   local tr_right = draw_right - SCROLL_BAR_WIDTH + 1
+   local tr_bottom = draw_bottom
+   return tr_left, tr_top, tr_right, tr_bottom
 end
 
 function init ()
@@ -350,11 +347,11 @@ end
 
 function drawTabs (mouseover)
    if num_tabs > 1 then
-      local tab_left = 5
-      local tab_padding = 30
+      local tab_left = draw_left+5
+      local tab_padding = theme.DYNAMIC_BUTTON_PADDING
       local active_left = nil
       local active_width = nil
-      WindowRectOp(win, miniwin.rect_fill, 1, title_height, width-1, title_height + (3*gap) + head_font_height, theme.BUTTON)
+      WindowRectOp(win, miniwin.rect_fill, draw_left, draw_top, draw_right+1, draw_top + (3*gap) + head_font_height, theme.BUTTON)
 
       for i,_ in ipairs(tabs_channel_captures) do
          local name = tabs_names[i] or tostring(i)
@@ -368,11 +365,10 @@ function drawTabs (mouseover)
             active_left = tab_left
             active_width = tab_width
          else
-            local edge_color = theme.LINES
             local bg_color
             if i ~= mouseover then
                if tabs_activity[i] then
-                  bg_color = theme.BUTTON_ACTIVITY
+                  bg_color = theme.BUTTON_HOT
                else
                   bg_color = theme.BUTTON
                end
@@ -384,7 +380,7 @@ function drawTabs (mouseover)
             WindowCircleOp(
                win, miniwin.circle_round_rectangle,
                tab_left, tab_top, tab_left + tab_width, tab_top + (4*gap) + (2*head_font_height), -- coords
-               edge_color, miniwin.pen_solid, 1,          -- pen
+               theme.THREE_D_HIGHLIGHT, miniwin.pen_solid, 1,          -- pen
                bg_color, miniwin.brush_solid,             -- brush
                16,   -- width of the ellipse used to draw the rounded corner
                (4*gap) + (2*head_font_height)  -- height of the ellipse used to draw the rounded corner
@@ -392,20 +388,20 @@ function drawTabs (mouseover)
          end
 
          tab_left = tab_left + tab_padding
-         tab_left = tab_left + WindowText(win, head_font, name, tab_left, tab_top + gap, width, title_height + (3*gap) + head_font_height, theme.LINES, false)
+         tab_left = tab_left + WindowText(win, head_font, name, tab_left, tab_top + gap, draw_right, draw_top + (3*gap) + head_font_height, theme.THREE_D_HIGHLIGHT, false)
          tab_left = tab_left + tab_padding
       end
 
-      WindowLine(win, 0, tab_top + (2*gap) + head_font_height + 1, width, tab_top + (2*gap) + head_font_height + 1, theme.LINES, 0 + 0x0200, 1)
+      WindowLine(win, draw_left, tab_top + (2*gap) + head_font_height + 1, draw_right+1, tab_top + (2*gap) + head_font_height + 1, theme.THREE_D_HIGHLIGHT, 0 + 0x0200, 1)
       WindowCircleOp(
          win, miniwin.circle_round_rectangle,
          active_left, tab_top, active_left + active_width, tab_top + (4*gap) + (2*head_font_height), -- coords
-         theme.LINES, miniwin.pen_solid, 1,          -- pen
+         theme.THREE_D_HIGHLIGHT, miniwin.pen_solid, 1,          -- pen
          theme.BODY, miniwin.brush_solid,  -- brush
          16,   -- width of the ellipse used to draw the rounded corner
          (4*gap) + (2*head_font_height)   -- height of the ellipse used to draw the rounded corner
       )
-      WindowText(win, head_font, tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap, width, title_height + (3*gap) + head_font_height, theme.LINES, false)
+      WindowText(win, head_font, tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap, draw_right, draw_top + (3*gap) + head_font_height, theme.BODY_TEXT, false)
    end
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
@@ -424,9 +420,8 @@ function tabMouseDown (flags, hotspot_id)
 end
 
 function drawBackground ()
-   WindowRectOp(win, 1, 0, 0, width, 0, theme.LINES)   -- draw border
-   title_height = DrawTitleBar(win, "Communication Log", nil, true)
-   DrawResizeTag(win, width-SCROLL_BAR_WIDTH-1, height-SCROLL_BAR_WIDTH-1, SCROLL_BAR_WIDTH)
+   draw_left, draw_top, draw_right, draw_bottom = DressWindow(win, "Communication Log", nil, 2)
+   movewindow.add_drag_handler(win, 0, 0, 0, draw_top)
 end
 
 function ResizeMoveCallback ()
@@ -445,8 +440,8 @@ function ResizeMoveCallback ()
    end
    height = height+posy-starty
    starty=posy
-   if (3*SCROLL_BAR_WIDTH+3*title_height > height) then
-      height = 3*SCROLL_BAR_WIDTH+3*title_height
+   if (3*SCROLL_BAR_WIDTH + 70 > height) then
+      height = 3*SCROLL_BAR_WIDTH + 70
       starty = windowinfo.window_top+height
    elseif (windowinfo.window_top+height > GetInfo(280)) then
       height = GetInfo(280)-windowinfo.window_top
@@ -465,20 +460,19 @@ function ResizeReleaseCallback ()
    for i = 1,num_tabs do
       tabs_rects[i]:reWrapLines()
    end
-   movewindow.add_drag_handler(win, 0, 0, 0, title_height)
-   WindowMoveHotspot(win, "resize", width-SCROLL_BAR_WIDTH, height-SCROLL_BAR_WIDTH, width, 0)
+   WindowMoveHotspot(win, "resize", draw_right-SCROLL_BAR_WIDTH, draw_bottom-SCROLL_BAR_WIDTH, 0, 0)
 end
 
 function setupDisplay ()
-   WindowResize(win, width, height, theme.BODY)
+   WindowResize(win, width, height, 0x00ff00)
    drawBackground()
-   tr_left, tr_top, tr_width, tr_height = trShape()
+   tr_left, tr_top, tr_right, tr_bottom = trShape()
    for i = 1,num_tabs do
       if tabs_rects[i] then
-         tabs_rects[i]:setRect(tr_left, tr_top, tr_width, tr_height)
-         tabs_scrollbars[i]:setRect(width-SCROLL_BAR_WIDTH-1, tr_top-1, SCROLL_BAR_WIDTH, tr_height-SCROLL_BAR_WIDTH)
+         tabs_rects[i]:setRect(tr_left, tr_top, tr_right, tr_bottom)
+         tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-SCROLL_BAR_WIDTH)
       else
-         makeRect(i, tr_left, tr_top, tr_width, tr_height)
+         makeRect(i, tr_left, tr_top, tr_right, tr_bottom)
       end
    end
    drawTabs()
