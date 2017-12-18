@@ -11,22 +11,24 @@ ScrollBar_defaults = {
 }
 ScrollBar_mt = { __index = ScrollBar }
 
-function ScrollBar.new(window, name, left, top, width, height)
+function ScrollBar.new(window, name, left, top, right, bottom)
    new_sb = setmetatable(copytable.deep(ScrollBar_defaults), ScrollBar_mt)
    new_sb.id = "ScrollBar_"..window.."_"..tostring(GetUniqueNumber())
    new_sb.name = name
    new_sb.window = window
    new_sb.left = left
    new_sb.top = top
-   new_sb.width = width
-   new_sb.height = height
+   new_sb.right = right
+   new_sb.bottom = bottom
+   new_sb.width = right-left
+   new_sb.height = bottom-top
    return new_sb
 end
 
 function ScrollBar:initButtons()
    -- scroll bar up/down button hotspots
-   WindowAddHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.left + self.width, self.top + self.width, "", "", "ScrollBar.mouseDownUpArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
-   WindowAddHotspot(self.window, self:generateHotspotID("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, "", "", "ScrollBar.mouseDownDownArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
+   WindowAddHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.right, self.top + self.width, "", "", "ScrollBar.mouseDownUpArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
+   WindowAddHotspot(self.window, self:generateHotspotID("down"), self.left, self.bottom - self.width, self.right, self.bottom, "", "", "ScrollBar.mouseDownDownArrow", "ScrollBar.cancelMouseDown", "ScrollBar.mouseUp", "", 1, 0)
 end
 
 function ScrollBar:_delHotspot(key)
@@ -42,13 +44,15 @@ function ScrollBar:unInit()
    self:_delHotspot("scroller")
 end
 
-function ScrollBar:setRect(left, top, width, height)
+function ScrollBar:setRect(left, top, right, bottom)
    self.left = left
    self.top = top
-   self.width = width
-   self.height = height
-   WindowMoveHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.left + self.width, self.top + self.width)
-   WindowMoveHotspot(self.window, self:generateHotspotID("down"), self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height)
+   self.right = right
+   self.bottom = bottom
+   self.width = right-left
+   self.height = bottom-top
+   WindowMoveHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.right, self.top + self.width)
+   WindowMoveHotspot(self.window, self:generateHotspotID("down"), self.left, self.bottom - self.width, self.right, self.bottom)
 end
 
 function ScrollBar:doUpdateCallbacks()
@@ -76,9 +80,9 @@ function ScrollBar:draw(inside_callback)
    -- draw the background
    WindowCircleOp(
       self.window, miniwin.circle_rectangle,
-      self.left, self.top + self.width + 1, self.left + self.width + 1, self.top + self.height - self.width,
-      theme.THREE_D_TRACK_COLOR1, miniwin.pen_solid, 1,
-      theme.THREE_D_TRACK_COLOR2, theme.VERTICAL_TRACK_BRUSH) -- brush
+      self.left, self.top + self.width + 1, self.right + 1, self.bottom - self.width,
+      theme.SCROLL_TRACK_COLOR1, miniwin.pen_solid, 1,
+      theme.SCROLL_TRACK_COLOR2, theme.VERTICAL_TRACK_BRUSH) -- brush
 
    local mid_x = (self.width - 2)/2
 
@@ -86,14 +90,14 @@ function ScrollBar:draw(inside_callback)
    local points = ""
 
    if (self.keepscrolling == "up") then
-      Draw3DRect(self.window, self.left, self.top, self.left + self.width, self.top + self.width, true)
+      Draw3DRect(self.window, self.left, self.top, self.right, self.top + self.width, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x) + 2, self.top + math.ceil(self.width/4 + 0.5) + 2,
          self.left + math.floor(mid_x) - math.floor(mid_x/2) + 2, self.top + round_banker(self.width/2) + 2,
          self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 2, self.top + round_banker(self.width/2) + 2,
          self.left + math.ceil(mid_x) + 2, self.top + math.ceil(self.width/4 + 0.5) + 2 )
    else
-      Draw3DRect(self.window, self.left, self.top, self.left + self.width, self.top + self.width, false)
+      Draw3DRect(self.window, self.left, self.top, self.right, self.top + self.width, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
          self.left + math.floor(mid_x) + 1, self.top + math.ceil(self.width/4 + 0.5) + 1,
          self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.top + round_banker(self.width/2) + 1,
@@ -104,19 +108,19 @@ function ScrollBar:draw(inside_callback)
 
    -- draw the down button
    if (self.keepscrolling == "down") then
-      Draw3DRect(self.window, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, true)
+      Draw3DRect(self.window, self.left, self.bottom - self.width, self.right, self.bottom, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
-         self.left + math.floor(mid_x) + 2, self.top + self.height - math.ceil(self.width/4 + 0.5),
-         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 2, self.top + self.height - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 2, self.top + self.height - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + 2, self.top + self.height - math.ceil(self.width/4 + 0.5))
+         self.left + math.floor(mid_x) + 2, self.bottom - math.ceil(self.width/4 + 0.5),
+         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 2, self.bottom - round_banker(self.width/2),
+         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 2, self.bottom - round_banker(self.width/2),
+         self.left + math.ceil(mid_x) + 2, self.bottom - math.ceil(self.width/4 + 0.5))
    else
-      Draw3DRect(self.window, self.left, self.top + self.height - self.width, self.left + self.width, self.top + self.height, false)
+      Draw3DRect(self.window, self.left, self.bottom - self.width, self.right, self.bottom, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
-         self.left + math.floor(mid_x) + 1, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5),
-         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.top + self.height - 1 - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.top + self.height - 1 - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + 1, self.top + self.height - 1 - math.ceil(self.width/4 + 0.5))
+         self.left + math.floor(mid_x) + 1, self.bottom - 1 - math.ceil(self.width/4 + 0.5),
+         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 1, self.bottom - 1 - round_banker(self.width/2),
+         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.bottom - 1 - round_banker(self.width/2),
+         self.left + math.ceil(mid_x) + 1, self.bottom - 1 - math.ceil(self.width/4 + 0.5))
    end
    WindowPolygon(self.window, points, theme.THREE_D_SURFACE_DETAIL, miniwin.pen_solid + miniwin.pen_join_miter, 1, theme.THREE_D_SURFACE_DETAIL, 0, true, false)
 
@@ -129,20 +133,20 @@ function ScrollBar:draw(inside_callback)
       local available_space = scroll_height - self.size
       local space_per_step = available_space / slots
       position = self.top + self.width + math.ceil(space_per_step * self.step)
-      if position > self.top + self.height - self.width - self.size then
-         position = self.top + self.height - self.width - self.size
+      if position > self.bottom - self.width - self.size then
+         position = self.bottom - self.width - self.size
       end
    else
       position = self.top + self.width + 1
       self.size = scroll_height
    end
    if (not self.has_hotspots) then
-      WindowAddHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.left + self.width, position + self.size, "", "", "ScrollBar.mouseDown", "", "ScrollBar.mouseUp", "", 1, 0)
+      WindowAddHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.right, position + self.size, "", "", "ScrollBar.mouseDown", "", "ScrollBar.mouseUp", "", 1, 0)
       WindowDragHandler(self.window, self:generateHotspotID("scroller"), "ScrollBar.dragMove", "ScrollBar.dragRelease", 0)
    else
-      WindowMoveHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.left + self.width, position + self.size)
+      WindowMoveHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.right, position + self.size)
    end
-   Draw3DRect(self.window, self.left, position, self.left + self.width, position + self.size)
+   Draw3DRect(self.window, self.left, position, self.right, position + self.size, false)
    BroadcastPlugin(999, "repaint")
    self.has_hotspots = true
 
@@ -180,7 +184,7 @@ function ScrollBar.dragMove(flags, hotspot_id)
    local top_coord = mouse_y + sb.start_pos
    local bottom_coord = top_coord + sb.size
    local available_begin = sb.top + sb.width
-   local available_end = sb.top + sb.height - sb.width - sb.size
+   local available_end = sb.bottom - sb.width - sb.size
    local position = math.min(math.max(top_coord, available_begin), available_end) - available_begin
    sb.dragging_scrollbar = true
    local available_space = sb.height - (2 * sb.width) - sb.size
