@@ -40,8 +40,9 @@ function TextRect.new(window, name, left, top, right, bottom, max_lines, scrolla
    new_tr.padded_left = new_tr.left + new_tr.padding
    new_tr.padded_top = new_tr.top + new_tr.padding
    new_tr.padded_right = new_tr.right - new_tr.padding
-   new_tr.padded_width = new_tr.width - new_tr.padding
-   new_tr.padded_height = new_tr.height - new_tr.padding
+   new_tr.padded_bottom = new_tr.bottom - new_tr.padding
+   new_tr.padded_width = new_tr.width - (2*new_tr.padding)
+   new_tr.padded_height = new_tr.height - (2*new_tr.padding)
    new_tr.max_lines = max_lines or new_tr.max_lines
    new_tr.font_name = font_name or new_tr.font_name
    new_tr.font_size = font_size or new_tr.font_size
@@ -391,8 +392,9 @@ function TextRect:setRect(left, top, right, bottom)
    self.padded_left = self.left + self.padding
    self.padded_top = self.top + self.padding
    self.padded_right = self.right - self.padding
-   self.padded_width = self.width - self.padding
-   self.padded_height = self.height - self.padding
+   self.padded_bottom = self.bottom - self.padding
+   self.padded_width = self.width - (2*self.padding)
+   self.padded_height = self.height - (2*self.padding)
    if self.area_hotspot then
       WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.bottom)
    end
