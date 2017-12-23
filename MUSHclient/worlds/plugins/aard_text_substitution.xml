@@ -169,10 +169,10 @@ function usagesub(line, embedded)
    if not embedded then
       AnsiNote(ColoursToANSI("@Y #sub help         : More complete help for this plugin"))
    end
-   AnsiNote(ColoursToANSI("\n@G Note that you must use curly braces around each phrase for demarcation,"..
-   "\n@G not quotation marks or anything else."..
-   "\n@G Add @C#alone@G to the line to only match at word or color boundaries."..
-   "\n@G Add @C#nocase@G to the line to do case-insensitive matching."))
+   AnsiNote(ColoursToANSI("\n@w Note that you must use curly braces around each phrase for demarcation,"..
+   "\n@w not quotation marks or anything else."..
+   "\n@w Add @C#alone@w to the line to only match at word or color boundaries."..
+   "\n@w Add @C#nocase@w to the line to do case-insensitive matching."))
    if not embedded then
       Note()
    end
@@ -198,52 +198,52 @@ function helpsub(name, line, wildcards)
    AnsiNote(ColoursToANSI("\n@w"..GetPluginInfo(GetPluginID(), 3):gsub("(@%w)", "%1@%1").."\n@Y"))
    usagesub(line, true)
    AnsiNote(ColoursToANSI(
-   "@G example: @C#sub {hello} {Howdy} #alone #nocase"..
-   "\n@G          This will match HeLlO but not othello."..
-   "\n@G"..
-   "\n@G You can use Lua gsub capture patterns too."..
-   "\n@G example: @C#sub {(player)} {%1 (rude)} #alone #nocase"..
-   "\n@G          This will do almost the same things as"..
-   "\n@G          @C#sub {player} {player (rude)} #alone #nocase"..
-   "\n@G          but it will preserve the original capitalization."..
-   "\n@G          For more on these patterns read https://www.lua.org/pil/20.2.html"..
-   "\n@G"..
-   "\n@G Add @C#function@G to a #sub line to pass matching components to a plugin function"..
-   "\n@G instead of doing a direct replacement."..
-   "\n@G For this, your replacement pattern must be @Wplugin_id:function_name@G."..
-   "\n@G example: @C#sub {player} {12345678901234567890abcd:my_example} #alone #function"..
-   "\n@G          Then in your plugin with ID 12345678901234567890abcd,"..
-   "\n@G          you would add a new my_example function. It could"..
-   "\n@G          be something like:"..
-   "\n@G@C        function my_example(...)"..
-   "\n@G@C          local args = {...}"..
-   "\n@G@C          if my_plugin_variable == 100 then"..
-   "\n@G@C            -- returning a string says replace with this"..
-   "\n@G@C            return args[1]..\" (@@Rbutternut squash$C)\""..
-   "\n@G@C          else"..
-   "\n@G@C            -- returning false or nil says don't do a replacement"..
-   "\n@G@C            return false"..
-   "\n@G@C          end"..
-   "\n@G@C        end"..
-   "\n@G Since gags don't normally have a replacement pattern field, adding one"..
-   "\n@G will make them behave similarly."..
-   "\n@G There is no need to add #function for gags."..
-   "\n@G example: @C#gag {player} {12345678901234567890abcd:my_new_gag} #alone"..
-   "\n@G          Then in your plugin with ID 12345678901234567890abcd,"..
-   "\n@G          you could add a new my_new_gag function like:"..
-   "\n@G@C        function my_new_gag()"..
-   "\n@G@C          local line = CallPlugin(\"26240e292291e159e1ff3cde\",\"current_line\")"..
-   "\n@G@C          if line:sub(1,15) == string.char(255,250,201)..\"comm.channel\" then"..
-   "\n@G@C            -- returning true says gag this if it's a gmcp comm.channel message"..
-   "\n@G@C            return true"..
-   "\n@G@C          else"..
-   "\n@G@C            -- returning false or nil says don't gag"..
-   "\n@G@C            return false"..
-   "\n@G@C          end"..
-   "\n@G@C        end"..
-   "\n@G@C"..
-   "\n@G As shown, using @CCallPlugin(\"26240e292291e159e1ff3cde\", \"current_line\")@G"..
-   "\n@G in your handler function will return the message being processed."..
+   "@w example: @C#sub {hello} {Howdy} #alone #nocase"..
+   "\n@w          This will match HeLlO but not othello."..
+   "\n@w"..
+   "\n@w You can use Lua gsub capture patterns too."..
+   "\n@w example: @C#sub {(player)} {%1 (rude)} #alone #nocase"..
+   "\n@w          This will do almost the same things as"..
+   "\n@w          @C#sub {player} {player (rude)} #alone #nocase"..
+   "\n@w          but it will preserve the original capitalization."..
+   "\n@w          For more on these patterns read https://www.lua.org/pil/20.2.html"..
+   "\n@w"..
+   "\n@w Add @C#function@w to a #sub line to pass matching components to a plugin function"..
+   "\n@w instead of doing a direct replacement."..
+   "\n@w For this, your replacement pattern must be @Wplugin_id:function_name@w."..
+   "\n@w example: @C#sub {player} {12345678901234567890abcd:my_example} #alone #function"..
+   "\n@w          Then in your plugin with ID 12345678901234567890abcd,"..
+   "\n@w          you would add a new my_example function. It could"..
+   "\n@w          be something like:"..
+   "\n@w@C        function my_example(...)"..
+   "\n@w@C          local args = {...}"..
+   "\n@w@C          if my_plugin_variable == 100 then"..
+   "\n@w@C            -- returning a string says replace with this"..
+   "\n@w@C            return args[1]..\" (@@Rbutternut squash$C)\""..
+   "\n@w@C          else"..
+   "\n@w@C            -- returning false or nil says don't do a replacement"..
+   "\n@w@C            return false"..
+   "\n@w@C          end"..
+   "\n@w@C        end"..
+   "\n@w Since gags don't normally have a replacement pattern field, adding one"..
+   "\n@w will make them behave similarly."..
+   "\n@w There is no need to add #function for gags."..
+   "\n@w example: @C#gag {player} {12345678901234567890abcd:my_new_gag} #alone"..
+   "\n@w          Then in your plugin with ID 12345678901234567890abcd,"..
+   "\n@w          you could add a new my_new_gag function like:"..
+   "\n@w@C        function my_new_gag()"..
+   "\n@w@C          local line = CallPlugin(\"26240e292291e159e1ff3cde\",\"current_line\")"..
+   "\n@w@C          if line:sub(1,15) == string.char(255,250,201)..\"comm.channel\" then"..
+   "\n@w@C            -- returning true says gag this if it's a gmcp comm.channel message"..
+   "\n@w@C            return true"..
+   "\n@w@C          else"..
+   "\n@w@C            -- returning false or nil says don't gag"..
+   "\n@w@C            return false"..
+   "\n@w@C          end"..
+   "\n@w@C        end"..
+   "\n@w@C"..
+   "\n@w As shown, using @CCallPlugin(\"26240e292291e159e1ff3cde\", \"current_line\")@w"..
+   "\n@w in your handler function will return the message being processed."..
    "\n@Y"..string.rep(" ", (60-#header:gsub("begin","end"))/2)..header:gsub("begin","end")))
 end
 
