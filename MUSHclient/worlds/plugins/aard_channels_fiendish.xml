@@ -88,7 +88,7 @@ USAGE:
 
 <trigger
    enabled="y"
-   match="^\*.+$"
+   match="^\*.+[^*]$"
    regexp="y"
    omit_from_output="n"
    script="rsocial"
