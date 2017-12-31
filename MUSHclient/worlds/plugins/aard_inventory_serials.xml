@@ -261,7 +261,7 @@ Makes inventory command slightly more useful by displaying item serial numbers
 </alias>
 
 <alias
-   match="^((i|in|inv|inve|inven|invent|invento|inventor|inventory)|(keyr(i|in|ing)? l(i|is|ist)?)|(vau(l|lt)? l(i|is|ist)?)) serials?( help| off| on| hint clear)?$"
+   match="^((i|in|inv|inve|inven|invent|invento|inventor|inventory)|(keyr(i|in|ing)? l(i|is|ist)?)|(vau(l|lt)? l(i|is|ist)?)) serials?( help| off| on| (color) (.*)| hint clear)?$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -272,11 +272,30 @@ Makes inventory command slightly more useful by displaying item serial numbers
 </aliases>
 <script>
 <![CDATA[
+dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+
+function update_colorname(code)
+   styles = ColoursToStyles(code.."@"..code)
+   if #styles > 0 then
+      styles[1].text = ""
+      styles[1].lenth = 0
+      colorname = RGBColourToName(styles[1].textcolour)
+      serials_color = StylesToColours({styles[1]})
+      return true
+   else
+      return false
+   end
+end
 
 visible_always = tonumber(GetVariable("visible_always")) == 1  -- default false
 show_hint = tonumber(GetVariable("show_hint")) ~= 0 -- default true
 manually_requested = false
 times_hinted = 0
+serials_color = GetVariable("serials_color") or "@w"
+while not update_colorname(serials_color) do
+   serials_color = "@w"
+   SetVariable("serials_color", serials_color)
+end
 
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
@@ -322,12 +341,16 @@ function show_help()
    ColourNote("yellow", "", "   vault list serials")
    Note("        Request the display of item serial numbers once.")
    Note("")
+   ColourNote("yellow", "", "   inventory serials color <Aardwolf color code>")
+   Note("        Which color to display serial numbers in.")
+   Note("")
    ColourNote("yellow", "", "   inventory serials help")
    Note("        Print this help.")
    Note("")
    Note("Current status:")
    Tell("Always include item serial numbers when listing inventory? ")
    ColourNote(visible_always and "lime" or "red", "", visible_always and "Yes" or "No")
+   ColourNote("", "", "Serial numbers will be displayed in color: ", colorname, "", serials_color)
    Note("--------------------------------------")
    Note("")
 end
@@ -339,8 +362,23 @@ function serials_command(name, line, wildcards)
    -- 3 is keyring
    -- 6 is vault
    -- 9 is help/off/on
+   -- 10 is color command
+   -- 11 is color code
+
    cmd = Trim(wildcards[9])
-   if cmd == "" then
+   colorset = Trim(wildcards[10])
+   colorcode = Trim(wildcards[11])
+   if colorset ~= "" then
+      if colorcode:sub(1,1) ~= "@" then
+         colorcode = "@"..colorcode
+      end
+      if ((string.sub(colorcode,2,2) == "x") or (#colorcode <= 2)) and update_colorname(colorcode) then
+         SetVariable("serials_color", serials_color)
+         ColourNote("", "", "You have set inventory serial numbers to display using the color code: ", colorname, "", serials_color, "", "", ".")
+      else
+         Note("Could not use the color code: "..colorcode.." for serial numbers. Is it a valid color code?")
+      end
+   elseif cmd == "" then
       if visible_always then
          ColourNote("", "", "You already display item serial numbers by default. For help, type ","yellow", "", "'inventory serials help'","","",".")
       else
@@ -376,7 +414,6 @@ function OnPluginConnect()
    vault_sent_count = 0
 end
 
-dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 inv = {}
 invsorted = {}
 keys = {}
@@ -426,7 +463,7 @@ function displaySorted(which)
       local num = #v[1]
       num_items = num_items + num
       local count = string.format("@W(%2d) @w",num)
-      local line = string.format("%-5s",num > 1 and count or "     ")..table.concat(v[2]).." "..v[3].."@w  ["..((#v[1] < 4 and table.concat(v[1],",")) or "many").."]  ".."@W(@G"..v[4].."@W)@w\r\n"
+      local line = string.format("%-5s",num > 1 and count or "     ")..table.concat(v[2]).." "..v[3]..serials_color.."  ["..((#v[1] < 4 and table.concat(v[1],",")) or "many").."]  ".."@W(@G"..v[4].."@W)@w\r\n"
       Simulate(ColoursToANSI(line))
    end
    return num_items
