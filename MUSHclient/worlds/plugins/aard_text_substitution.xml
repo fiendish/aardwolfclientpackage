@@ -153,10 +153,9 @@ function apply_pattern_as_trigger(original_pattern, nocase, alone)
    if nocase then
       flags = flags + trigger_flag.IgnoreCase
    end
-
    addxml.trigger(
       {
-         match = original_pattern,
+         match = original_pattern:gsub("([^%%]?)%%([^%%])", "%1\\%2"), -- replace % escapes with \ escapes
          enabled = true,
          regexp = true,
          sequence = 100,
@@ -239,12 +238,11 @@ function helpsub(name, line, wildcards)
    "@w example: @C#sub {hello} {Howdy} #alone #nocase"..
    "\n@w          This will match HeLlO but not othello."..
    "\n@w"..
-   "\n@w You can use Lua gsub capture patterns too."..
+   "\n@w Parentheses will act as captures. Use '%' to escape literal '(', ')', and '%'."..
    "\n@w example: @C#sub {(player)} {%1 (rude)} #alone #nocase"..
    "\n@w          This will do almost the same things as"..
    "\n@w          @C#sub {player} {player (rude)} #alone #nocase"..
    "\n@w          but it will preserve the original capitalization."..
-   "\n@w          For more on these patterns read https://www.lua.org/pil/20.2.html"..
    "\n@w"..
    "\n@w Add @C#function@w to a #sub line to pass matching components to a plugin function"..
    "\n@w instead of doing a direct replacement."..
