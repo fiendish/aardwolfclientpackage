@@ -47,7 +47,7 @@ Type "#sub help" or make a syntax mistake for usage details.
 ></alias>
 
 <alias
-   match="^#sub ([\S]+).*$"
+   match="^#subs? ([\S]+).*$"
    enabled="y"
    regexp="y"
    sequence="200"
@@ -120,22 +120,24 @@ Type "#sub help" or make a syntax mistake for usage details.
 
 </aliases>
 
-<triggers>
-  <trigger
-   name="all"
-   enabled="y"
-   match="^(.*)$"
-   omit_from_output="y"
-   regexp="y"
-   sequence="100"
-   send_to="12"
-   script="filter_trigger"
-  >
-<send>
-   StopEvaluatingTriggers(true)
-</send>
-</trigger>
-</triggers>
+<!--
+   <triggers>
+   <trigger
+      name="all"
+      enabled="y"
+      match="^(.*)$"
+      omit_from_output="y"
+      regexp="y"
+      sequence="100"
+      send_to="12"
+      script="filter_trigger"
+   >
+   <send>
+      StopEvaluatingTriggers(true)
+   </send>
+   </trigger>
+   </triggers>
+-->
 
 <script>
 <![CDATA[
@@ -145,9 +147,45 @@ require "aard_lua_extras"
 require "serialize"
 dofile(GetInfo(60) .. "aardwolf_colors.lua")
 
- -- init tables
+require "addxml"
+function apply_pattern_as_trigger(original_pattern, nocase, alone)
+   local flags = trigger_flag.Enabled + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.RegularExpression + trigger_flag.Temporary
+   if nocase then
+      flags = flags + trigger_flag.IgnoreCase
+   end
+
+   addxml.trigger(
+      {
+         match = original_pattern,
+         enabled = true,
+         regexp = true,
+         sequence = 100,
+         omit_from_output = true,
+         omit_from_log = true,
+         name = "A"..GetUniqueID()..GetUniqueID(), -- need a name to set group
+         script = "filter_trigger",
+         send_to = sendto.script,
+         send = "StopEvaluatingTriggers(true)",
+         group = "all"
+      }
+   )
+end
+
+function set_triggers()
+   DeleteTriggerGroup("all")
+   for i,sub in ipairs(subs) do
+      apply_pattern_as_trigger(sub.original, sub.nocase, sub.alone)
+   end
+   for i,gag in ipairs(gags) do
+      apply_pattern_as_trigger(gag.original, gag.nocase, gag.alone)
+   end
+end
+
+-- init tables
 loadstring( GetVariable("subs") or "subs = {}" )()
 loadstring( GetVariable("gags") or "gags = {}" )()
+
+set_triggers()
 
 function usagesub(line, embedded)
    if not embedded then
@@ -294,7 +332,8 @@ function remsub(name, line, wildcards, silent)
       end
    end
    if found then
-      table.remove(subs,found_index)
+      table.remove(subs, found_index)
+      set_triggers()
       OnPluginSaveState()
    end
 end
@@ -327,10 +366,10 @@ function remgag(name, line, wildcards, silent)
    end
    if found then
       table.remove(gags,found_index)
+      set_triggers()
       OnPluginSaveState()
    end
 end
-
 
 function addsub(name, line, wildcards)
    local fromstr = wildcards[1]
@@ -374,6 +413,8 @@ function addsub(name, line, wildcards)
       alone=alone,
       use_function=use_function
    })
+
+   apply_pattern_as_trigger(wildcards[1], nocase, alone)
 
    AnsiNote(ColoursToANSI("@YCreated sub "..#subs..": "..format_sub(subs[#subs])))
    OnPluginSaveState()
@@ -422,6 +463,8 @@ function addgag(name, line, wildcards)
       alone=alone,
       use_function=use_function
       })
+
+   apply_pattern_as_trigger(wildcards[1], nocase, alone)
 
    AnsiNote(ColoursToANSI("@YCreated gag "..#gags..": "..format_gag(gags[#gags])))
    OnPluginSaveState()
@@ -531,9 +574,9 @@ function filter_trigger(name, line, wildcards, styles)
    local old_line = StylesToColours(styles)
    local new_line = filter_string(old_line)
    if new_line then
-      EnableTrigger("all", false)
+      EnableTriggerGroup("all", false)
       Simulate(ColoursToANSI(new_line).."\r\n")
-      EnableTrigger("all", true)
+      EnableTriggerGroup("all", true)
    end
 end
 
