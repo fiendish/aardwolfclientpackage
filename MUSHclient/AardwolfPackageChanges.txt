@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r1950 snapshot
+- misc change: Included DLLs are now compiled statically, removing the need for MSVCR100.DLL (which was interfering with TTS performance for some users for some reason).
+- misc change: The text substitution plugin should now have less impact on client performance.
+- misc change: The universal TTS plugin will no longer do text substitutions if you are using a real screen reader and not just plain Microsoft Speech.
+- new feature: An "ftts" alias will toggle a setting to silence speech in the universal TTS plugin when MUSHclient is in the background.
+- bug fix: The communication log will no longer capture the DSR repop message.
+- bug fix: universal TTS plugin now also reads plugin messages in addition to server output.
+
 r1947 snapshot
 - bug fix: Move TTS DLLs to top level, to make them easier to find
 
