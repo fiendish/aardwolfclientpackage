@@ -62,6 +62,17 @@ https://github.com/dkager/tolk
   </alias>
 
   <alias
+   script="tts_focus_toggle"
+   match="ftts"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
    match="sapi faster"
    enabled="n"
    omit_from_log="y"
@@ -71,8 +82,8 @@ https://github.com/dkager/tolk
    send_to="12"
    ignore_case="y"
   ><send>
-   if sapi_interface then
-      SetVariable("engine_Rate", tostring(sapi_interface.faster()))
+   if sapi then
+      SetVariable("engine_Rate", tostring(sapi.faster()))
    end
    </send>
   </alias>
@@ -87,8 +98,8 @@ https://github.com/dkager/tolk
    send_to="12"
    ignore_case="y"
   ><send>
-   if sapi_interface then
-      SetVariable("engine_Rate", tostring(sapi_interface.slower()))
+   if sapi then
+      SetVariable("engine_Rate", tostring(sapi.slower()))
    end
    </send>
   </alias>
@@ -104,12 +115,12 @@ https://github.com/dkager/tolk
    send_to="12"
    ignore_case="y"
   ><send>
-   if sapi_interface then
+   if sapi then
       local arg = Trim("%1")
       if arg == "" then
-         sapi_interface.say_current_voice()
+         sapi.say_current_voice()
       else
-         local index,id = sapi_interface.set_voice_by_number(arg)
+         local index,id = sapi.set_voice_by_number(arg)
          SetVariable("engine_Voice_ID", tostring(id))
       end
    end
@@ -126,8 +137,8 @@ https://github.com/dkager/tolk
    send_to="12"
    ignore_case="y"
   ><send>
-   if sapi_interface then
-      sapi_interface.list_voices()
+   if sapi then
+      sapi.list_voices()
    end
    </send>
   </alias>
@@ -142,8 +153,8 @@ https://github.com/dkager/tolk
    send_to="12"
    ignore_case="y"
   ><send>
-   if sapi_interface then
-      sapi_interface.speech_demo()
+   if sapi then
+      sapi.speech_demo()
    end
    </send>
   </alias>
@@ -159,12 +170,12 @@ https://github.com/dkager/tolk
    send_to="12"
    ignore_case="y"
   ><send>
-   if sapi_interface then
+   if sapi then
       local arg = Trim("%1")
       if arg == "" then
-         sapi_interface.say_current_rate()
+         sapi.say_current_rate()
       else
-         SetVariable("engine_Rate", tostring(sapi_interface.set_rate(arg)))
+         SetVariable("engine_Rate", tostring(sapi.set_rate(arg)))
       end
    end
    </send>
@@ -181,9 +192,9 @@ https://github.com/dkager/tolk
    send_to="12"
    ignore_case="y"
   ><send>
-   if sapi_interface then
-      sapi_interface.say("This help is being spoken but not printed to the screen. To print it to the screen, use: sapi help printed.")
-      sapi_interface.say(sapi_help(), true)
+   if sapi then
+      sapi.say("This help is being spoken but not printed to the screen. To print it to the screen, use: sapi help printed.")
+      sapi.say(sapi_help(), true)
    end
    </send>
   </alias>
@@ -214,12 +225,12 @@ https://github.com/dkager/tolk
    send_to="12"
    ignore_case="y"
   ><send>
-   if sapi_interface then
+   if sapi then
       local arg = Trim("%1")
       if arg == "" then
-         sapi_interface.say_current_filtering_level()
+         sapi.say_current_filtering_level()
       else
-         SetVariable("filtering_level", tostring(sapi_interface.set_filtering_level(arg)))
+         SetVariable("filtering_level", tostring(sapi.set_filtering_level(arg)))
       end
    end
    </send>
@@ -240,18 +251,6 @@ AcceleratorTo("Ctrl+8", "CallPlugin('"..GetPluginID().."', 'playback', 8)", send
 AcceleratorTo("Ctrl+9", "CallPlugin('"..GetPluginID().."', 'playback', 9)", sendto.script)
 AcceleratorTo("Ctrl+0", "CallPlugin('"..GetPluginID().."', 'playback', 10)", sendto.script)
 
-
-function do_filtering(msg)
-   for i,sub in ipairs(text_filters) do
-      msg = msg:gsub(sub[1], sub[2])
-   end
-   if msg:gsub("[%p%s]+", "") == "" then
-      return ""
-   else
-      return msg
-   end
-end
-
 -- convert wchar_t[] to lua str
 function widestr_to_luastr(wstr)
    local size_needed = ffi.C.WideCharToMultiByte(CP_UTF8, 0, wstr, -1, nil, 0, nil, false)
@@ -269,38 +268,32 @@ function luastr_to_widestr(str)
 end
 
 function say(text, interrupt)
-   if not text then
+   if (not text) or text:find("^%s*$") then
       return
    end
-
-   text = do_filtering(text)
-
-	if text:find("^%s*$") then
-		return
-	end
 
    if interrupt then
       silence()
    end
 
    -- print(text) -- debug
-   if sapi_interface then
-      sapi_interface.say(text)
-   elseif tolk_api and tolk_api.Tolk_IsLoaded() then
-   	tolk_api.Tolk_Output(luastr_to_widestr(text), interrupt or false)
+   if sapi then
+      sapi.say(text)
+   elseif tolk and tolk.Tolk_IsLoaded() then
+   	tolk.Tolk_Output(luastr_to_widestr(text), interrupt or false)
 	end
 end
 
 function silence()
-   if sapi_interface then
-      sapi_interface.skip_all()
-   elseif tolk_api and tolk_api.Tolk_IsLoaded() then
-      tolk_api.Tolk_Silence()
+   if sapi then
+      sapi.skip_all()
+   elseif tolk and tolk.Tolk_IsLoaded() then
+      tolk.Tolk_Silence()
    end
 end
 
 function OnPluginInstall()
-   sapi_interface = false
+   sapi = false
    EnableGroup("sapi", false)
 
    -- LuaJIT FFI
@@ -330,71 +323,28 @@ function OnPluginInstall()
    else
       tolk_path = 'screen_reader_dlls/x64/Tolk.dll'
    end
-   tolk_api = ffi.load(tolk_path)
+   tolk = ffi.load(tolk_path)
 
    CP_UTF8 = 65001
 
-   if tolk_api then
-      text_filters = {
-         {"[:]%-?[D%)%]]", ", smiley. "}, -- western emoticons
-         {"[:;]%-?[%(%[]", ", sad-face. "}, -- western emoticons
-         {";%-?[D%)%]]", ", winks. "}, -- western emoticons
-         {"[:;]%-?[pP9b]", " sticks-tongue-out. "}, -- western emoticons
-         {"8%-[D%)%]]", ", smiley. "}, -- 8- western emoticons
-         {"8%-[%(%[]", ", sad-face. "}, -- 8- western emoticons
-         {"8%-[pP9b]]", ", sticks-tongue-out. "}, -- 8- western emoticons
-         {"%^_%^", ", smiley. "}, -- another emoticon
-         {"%-_%-", ", sad-face. "}, -- another emoticon
-         {string.rep("[%p\\/|_%-%(%)%[%]%{%}%%%+%^%#%$~><%*`_]", 3).."+", " "}, -- symbol garbage
-         {string.rep("[%-%+%^=#$~><%*`_:]", 2).."+", " "}, -- symbol garbage
-         {"|", " "}, -- symbol garbage
-         -- fix contextual pronunciation
-         {"[pP]lugin", "pluggin"}, -- plug, not pluge
-         {"([%[%(%{])", " %1"}, -- "()()"
-         {"([%]%}%)])", "%1 "}, -- "()()"
-         {"(%d)%*(%d)", "%1 times %2"}, -- "*"
-         {"([%d,]+%.?[%d]*)%/(%a)", "%1 per %2"}, -- "#/a"
-         {"%f[%a][dD][bB]", ", D B, "}, -- stop saying decibels
-         {"%f[%a]afk%f[%A]", " AFK "}, -- spell it
-         {"%f[%a]omg%f[%A]", " OMG "}, -- spell it
-         {"%f[%a][vV][iI]%f[%A]", " V I "}, -- spell it
-         {"%f[%a]pwned", " p'owned "}, -- say it
-         {"thx", " thanks "}, -- say it
-         {"%f[%a]%u+%f[%A]", function(a) if a:sub(2):find("[AEIOUY]") then return string.lower(a) else return a end end}, -- say GLACIATES and ROFL, but still spell AFK and OMG
-         {"%f[%a][pP]file", " P file"},
-         {"%f[%a][gG]clan", " G clan"},
-         {"%f[%a][gG]tell", " G tell"},
-         {"%f[%a][fF]talk", " F talk"},
-         {"%f[%a][gG]clan", " G clan"},
-         {"%f[%a][gG]social", " G social"},
-         {"%f[%a][rR]auction", " R auction"},
-         {"%f[%a][gG]ametalk", " game-talk"},
-         {"%f[%a][nN]obletalk", " noble-talk"},
-         {"%f[%a][tT]iertalk", " tier-talk"},
-         {"%f[%a][rR]acetalk", " race-talk"},
-         {"%f[%a][cC]lantalk", " clan-talk"},
-         {"%f[%a][pP]okerinfo", " poker-info"},
-         {"%f[%a][mM]afiainfo", " mafia-info"},
-         {"%f[%a][aA]ylor", " aylor "} -- Aylorian->ALIEN??? hahahaha what
-      }
-
-      tolk_api.Tolk_TrySAPI(false)
-      tolk_api.Tolk_Load()
-      tts_enabled = tolk_api.Tolk_IsLoaded()
+   if tolk then
+      tolk.Tolk_TrySAPI(false)
+      tolk.Tolk_Load()
+      tts_enabled = tolk.Tolk_IsLoaded() and tolk.Tolk_HasSpeech()
    end
 
-   if not tolk_api or not tts_enabled or not tolk_api.Tolk_HasSpeech() then
-      sapi_fallback()
+   if tts_enabled then
+      local reader = widestr_to_luastr(tolk.Tolk_DetectScreenReader())
+      say("The universal T T S plug-in is using "..reader.." speech.", true)
    else
-      local reader = widestr_to_luastr(tolk_api.Tolk_DetectScreenReader())
-      say("The universal T T S plug-in is now using "..reader.." speech.", true)
+      sapi_fallback()
    end
 end
 
 function unload()
    silence()
-   tolk_api = nil
-   sapi_interface = nil
+   tolk = nil
+   sapi = nil
    collectgarbage("collect")
 end
 
@@ -413,6 +363,28 @@ function OnPluginScreendraw(line_type, log, line)
          history[11] = nil
       end
 	end
+end
+
+function tts_focus_toggle()
+   if GetVariable("ftts") ~= "1" then
+      Note("TTS will now be disabled when switching windows.")
+      SetVariable("ftts", 1)
+   else
+      Note("TTS will now stay active when switching windows.")
+      SetVariable("ftts", 0)
+   end
+end
+
+function OnPluginLoseFocus()
+   if GetVariable("ftts") == "1" then
+      tts_enabled = false
+   end
+end
+
+function OnPluginGetFocus()
+   if GetVariable("ftts") == "1" and (tolk or sapi) then
+      tts_enabled = true
+   end
 end
 
 function tts_toggle(name, line, wildcards)
@@ -434,9 +406,9 @@ function OnPluginClose()
 end
 
 function sapi_fallback()
-   sapi_interface = require "sapi_interface"
+   sapi = require "sapi_interface"
 
-   if sapi_interface == -1 then
+   if sapi == -1 then
       print([[
       Could not open SAPI.
       Note for Linux and Mac OS users...
@@ -444,57 +416,57 @@ function sapi_fallback()
       This is not included by default in Wine, and SpeechSDK51.exe must be separately installed.
       You can download it from http://download.microsoft.com/download/B/4/3/B4314928-7B71-4336-9DE7-6FA4CF00B7B3/SpeechSDK51.exe
       ]])
-      sapi_interface = nil
+      sapi = nil
       return
    end
 
-   if sapi_interface == -2 then
+   if sapi == -2 then
       print("No SAPI voices found.")
-      sapi_interface = nil
+      sapi = nil
       return
    end
 
    local new_filter = tonumber(GetVariable("filtering_level"))
    if new_filter then
-      sapi_interface.set_filtering_level(new_filter, true)
+      sapi.set_filtering_level(new_filter, true)
    end
 
    local new_rate = tonumber(GetVariable("engine_Rate"))
    if new_rate then
-      sapi_interface.set_rate(new_rate, true)
+      sapi.set_rate(new_rate, true)
    end
 
    local new_voice = GetVariable("engine_Voice_ID")
    if new_voice then
-      sapi_interface.set_voice_by_id(new_voice, true)
+      sapi.set_voice_by_id(new_voice, true)
    end
 
-   -- customize for aardwolf
-   for i,v in ipairs({
-      {"%f[%a][pP]file", " P file"},
-      {"%f[%a][gG]clan", " G clan"},
-      {"%f[%a][gG]tell", " G tell"},
-      {"%f[%a][fF]talk", " F talk"},
-      {"%f[%a][gG]clan", " G clan"},
-      {"%f[%a][gG]social", " G social"},
-      {"%f[%a][rR]auction", " R auction"},
-      {"%f[%a][gG]ametalk", " game-talk"},
-      {"%f[%a][nN]obletalk", " noble-talk"},
-      {"%f[%a][tT]iertalk", " tier-talk"},
-      {"%f[%a][rR]acetalk", " race-talk"},
-      {"%f[%a][cC]lantalk", " clan-talk"},
-      {"%f[%a][pP]okerinfo", " poker-info"},
-      {"%f[%a][mM]afiainfo", " mafia-info"},
-      {"%f[%a][aA]ylor", " aylor "} -- Aylorian->ALIEN??? hahahaha what
-   }) do
-      table.insert(sapi_interface.replacements, v)
-   end
+   -- -- Add a few basic SAPI customizations
+   -- for i,v in ipairs({
+   --    {"%f[%a][pP]file", " P file"},
+   --    {"%f[%a][gG]clan", " G clan"},
+   --    {"%f[%a][gG]tell", " G tell"},
+   --    {"%f[%a][fF]talk", " F talk"},
+   --    {"%f[%a][gG]clan", " G clan"},
+   --    {"%f[%a][gG]social", " G social"},
+   --    {"%f[%a][rR]auction", " R auction"},
+   --    {"%f[%a][gG]ametalk", " game-talk"},
+   --    {"%f[%a][nN]obletalk", " noble-talk"},
+   --    {"%f[%a][tT]iertalk", " tier-talk"},
+   --    {"%f[%a][rR]acetalk", " race-talk"},
+   --    {"%f[%a][cC]lantalk", " clan-talk"},
+   --    {"%f[%a][pP]okerinfo", " poker-info"},
+   --    {"%f[%a][mM]afiainfo", " mafia-info"},
+   --    {"%f[%a][aA]ylor", " aylor "} -- Aylorian->ALIEN??? hahahaha what
+   -- }) do
+   --    table.insert(sapi.replacements, v)
+   -- end
 
    tts_enabled = true
    EnableGroup("sapi", true)
-   sapi_interface.say("You are using Microsoft SAPI for text to speech. If you were hoping to send your text through a screen reader engine such as JAWS, N V D A, or Windows Eyes, and it didn't work, try restarting MUSHclient.")
-   sapi_interface.say("Type \"sapi help\" for a list of SAPI configuration commands.")
-   sapi_interface.speech_demo()
+   sapi.say("You are using Microsoft SAPI for text to speech. If you were hoping to send your text through a screen reader engine such as JAWS, N V D A, or Windows Eyes, and it didn't work, try restarting MUSHclient.")
+   sapi.say("Type \"sapi help\" for a list of SAPI configuration commands.")
+   sapi.speech_demo()
 end
 
 function sapi_help()
