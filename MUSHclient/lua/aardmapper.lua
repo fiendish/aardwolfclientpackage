@@ -1121,7 +1121,7 @@ function zoom_in ()
       DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM + 2
       build_room_info ()
       draw (last_drawn)
-      OnPluginSaveState()
+      SaveState()
    end -- if
 end -- zoom_in
 
@@ -1132,7 +1132,7 @@ function zoom_out ()
       DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM - 2
       build_room_info ()
       draw (last_drawn)
-      OnPluginSaveState()
+      SaveState()
    end -- if
 end -- zoom_out
 
@@ -1572,7 +1572,7 @@ end -- mouseup_configure
 
 function mouseup_close_configure (flags, hotspot_id)
    draw_configure_box = false
-   OnPluginSaveState()
+   SaveState()
    draw (current_room)
 end -- mouseup_player
 

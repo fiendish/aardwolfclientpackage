@@ -93,7 +93,7 @@ function reset_aard()
    WindowPosition(win, default_x, default_y, 0, 18)
    WindowResize(win, default_width, default_height, background_colour)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
-   OnPluginSaveState()
+   SaveState()
    OnPluginInstall()
 end
 
@@ -550,14 +550,14 @@ function right_click_menu ()
             for i,v in pairs(label_colors) do
                label_colors[i] = newcolour
             end
-            OnPluginSaveState()
+            SaveState()
             RefreshPage()
          end
       else
          local newcolour = PickColour(label_colors[item])
          if newcolour ~= -1 then
             label_colors[item] = newcolour
-            OnPluginSaveState()
+            SaveState()
             RefreshPage()
          end
       end
@@ -569,14 +569,14 @@ function right_click_menu ()
             for i,v in pairs(label_colors) do
                data_colors[i] = newcolour
             end
-            OnPluginSaveState()
+            SaveState()
             RefreshPage()
          end
       else
          local newcolour = PickColour(data_colors[item])
          if newcolour ~= -1 then
             data_colors[item] = newcolour
-            OnPluginSaveState()
+            SaveState()
             RefreshPage()
          end
       end
@@ -608,7 +608,7 @@ function right_click_menu ()
       label_colors = copytable.deep(label_color_defaults)
       data_colors = copytable.deep(data_color_defaults)
       movewindow.save_state(win)
-      OnPluginSaveState()
+      SaveState()
       OnPluginInstall()
       BuildStatsPage()
       if (page_built) then

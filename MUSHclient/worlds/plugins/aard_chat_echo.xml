@@ -371,7 +371,7 @@ function chat_echo (toggle)
       end
    end -- if
 
-   OnPluginSaveState()
+   SaveState()
 end
 
 function chat_echo_wrap (name, line, wildcards)
