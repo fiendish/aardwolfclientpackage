@@ -266,7 +266,7 @@ function map_on_off_alias (name, line, wildcards)
          ColourNote("yellow", "", "Bigmap UNMERGED from the mapper into its own window.")
       end
    end -- if
-   OnPluginSaveState()
+   SaveState()
    OnPluginInstall()
 end -- map_on_off_alias
 
@@ -829,7 +829,7 @@ function OnPluginEnable ()
 end -- OnPluginEnable
 
 function OnPluginDisable ()
-   OnPluginSaveState()
+   SaveState()
    bigmap_enabled = false
    if (mapwin == GetPluginID().."_mapper") then
       WindowShow (mapwin, false)
