@@ -1,7 +1,8 @@
 module("async", package.seeall)
 local _llthreads = require("llthreads2")
-require "socket.http" -- just make sure they can load
-require "ssl.https" -- just make sure they can load
+require "socket.http" -- just make sure that this can load so we don't get a surprise later
+require "ssl.https" -- just make sure that this can load so we don't get a surprise later
+local _ltn12 = require "ltn12"
 
 local thread_pool = {}
 local requests = {}
@@ -12,8 +13,9 @@ local timeouts = {}
 
 -- This is really the function you should use instead of calling request directly.
 -- result_callback_function gets arguments (retval, page, status, headers, full_status, requested_url, request_body)
+-- You can set result_callback_function to nil if you just want to print everything that comes back to the screen.
 -- callback_on_timeout function gets arguments (requested_url, timeout_after)
--- request_protocol is either HTTP or HTTPS
+-- request_protocol is HTTP or HTTPS
 -- timeout_after is in seconds
 function doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
    if request_protocol == nil then
@@ -21,6 +23,9 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
    end
    if timeout_after == nil then
       timeout_after = 30
+   end
+   if result_callback_function == nil then
+      result_callback_function = default_result_callback
    end
 
    thread_id = tostring(GetUniqueNumber())
@@ -53,32 +58,72 @@ end
 
 
 
+function HEAD(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout)
+   local request_body = { method = "HEAD" }
+   doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
+end
 
+function GETFILE(request_url, result_callback_function, request_protocol, file_name, timeout_after, callback_on_timeout)
+   local request_body = { sink = _ltn12.sink.file(io.open(file_name, "wb")) }
+   doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
+end
+
+
+
+
+function default_result_callback(...)
+   require "tprint"
+   tprint({...})
+end
 
 function default_timeout_callback(requested_url, timeout)
    print("Async Request ["..requested_url.."] Thread Timed Out After "..tostring(timeout).."s")
 end
 
 local network_thread_code = string.dump(function(arg)
-    local args = arg
-    local _socketeer = nil
-    if args.protocol == "HTTPS" then
-       _socketeer = require("ssl.https")
-    elseif args.protocol == "HTTP" then
-       _socketeer = require("socket.http")
-    else
-       return false
-    end
+   local args = arg
+   local _socketeer = nil
+   if args.protocol == "HTTPS" then
+      _socketeer = require("ssl.https")
+   elseif args.protocol == "HTTP" then
+      _socketeer = require("socket.http")
+   else
+      return false
+   end
 
-    local page, status, headers, full_status = _socketeer.request(args.url, args.body)
-    return page, status, headers, full_status
+   local body = args["body"]
+   local page, status, headers, full_status
+
+   if type(body) == "table" then
+      _ltn12 = require "ltn12"
+
+      body.url = args.url
+
+      if type(body.sink) == "string" then  -- write to file
+         body.sink = _ltn12.sink.file(io.open(body.sink, "wb"))
+      end
+
+      if type(body.source) == "string" then
+         body.headers = body.headers or {}
+         body.headers["content-length"] = tostring(#body.source)
+         body.headers["content-type"] = body.headers["content-type"] or "application/x-www-form-urlencoded"
+         body.method = "POST"
+         body.source = _ltn12.source.string(body.source)
+      end
+
+      page, status, headers, full_status = _socketeer.request(body)
+   else
+      page, status, headers, full_status = _socketeer.request(args.url, body)
+   end
+
+   return page, status, headers, full_status
 end)
 
 -- makes an asynchronous HTTP or HTTPS request to a URL
 function request(url, protocol, body)
-    local thread = _llthreads.new(network_thread_code, {url=url, protocol=protocol, body=body})
-    thread:start()
-    return thread
+   local thread = _llthreads.new(network_thread_code, {url=url, protocol=protocol, body=body})
+   thread:start()
+   return thread
 end
 
 function __checkCompletionFor(thread_id)
