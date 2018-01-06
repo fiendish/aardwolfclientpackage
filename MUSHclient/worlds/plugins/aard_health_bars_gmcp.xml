@@ -101,7 +101,7 @@ function reset_aard()
    WindowResize(win, default_width, WindowInfo(win, 4), background_colour)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    stacked = 0
-   OnPluginSaveState()
+   SaveState()
    OnPluginInstall()
 end
 
@@ -464,7 +464,7 @@ function right_click_menu ()
          width = MIN_WIDTH
       end -- if
 
-      OnPluginSaveState()
+      SaveState()
       OnPluginInstall()
    end
 end -- right_click_menu
@@ -608,13 +608,13 @@ function OnPluginClose()
 end
 
 function OnPluginDisable ()
-   OnPluginSaveState()
+   SaveState()
    WindowShow( win, false )
 end --  OnPluginDisable
 
 function OnPluginEnable ()
    WindowShow (win, true)
-   OnPluginSaveState()
+   SaveState()
 end -- OnPluginEnable
 
 
