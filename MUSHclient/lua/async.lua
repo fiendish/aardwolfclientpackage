@@ -17,6 +17,7 @@ local timeouts = {}
 -- callback_on_timeout function gets arguments (requested_url, timeout_after)
 -- request_protocol is HTTP or HTTPS
 -- timeout_after is in seconds
+-- request_body is either nil, a string (which will switch the HTTP method to POST instead of the default GET), or a table of additional HTTP request parameters such as source/sink/method/headers. See http://w3.impa.br/~diego/software/luasocket/http.html for more details
 function doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
    if request_protocol == nil then
       request_protocol = "HTTPS"
