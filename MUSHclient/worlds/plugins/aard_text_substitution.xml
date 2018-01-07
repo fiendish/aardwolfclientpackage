@@ -332,7 +332,7 @@ function remsub(name, line, wildcards, silent)
    if found then
       table.remove(subs, found_index)
       set_triggers()
-      OnPluginSaveState()
+      SaveState()
    end
 end
 
@@ -365,7 +365,7 @@ function remgag(name, line, wildcards, silent)
    if found then
       table.remove(gags,found_index)
       set_triggers()
-      OnPluginSaveState()
+      SaveState()
    end
 end
 
@@ -415,7 +415,7 @@ function addsub(name, line, wildcards)
    apply_pattern_as_trigger(wildcards[1], nocase, alone)
 
    AnsiNote(ColoursToANSI("@YCreated sub "..#subs..": "..format_sub(subs[#subs])))
-   OnPluginSaveState()
+   SaveState()
 end
 
 
@@ -465,7 +465,7 @@ function addgag(name, line, wildcards)
    apply_pattern_as_trigger(wildcards[1], nocase, alone)
 
    AnsiNote(ColoursToANSI("@YCreated gag "..#gags..": "..format_gag(gags[#gags])))
-   OnPluginSaveState()
+   SaveState()
 end
 
 
