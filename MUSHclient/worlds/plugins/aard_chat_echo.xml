@@ -28,19 +28,6 @@ USAGE:
 
 <triggers>
 <trigger
-   enabled="y"
-   name="compact_mode"
-   match="^Compact mode (.+)\.$"
-   regexp="y"
-   omit_from_output="n"
-   sequence="100"
-   send_to="12"
-><send>
-compact_mode = "%1"
-</send>
-</trigger>
-
-<trigger
    enabled="n"
    name="warfare"
    match="^(WARFARE|GENOCIDE):.+$"
@@ -165,14 +152,8 @@ echo_global_quest = GetVariable("echo_global_quest_2") ~= "0"
 echo_remort_auction = GetVariable("echo_remort_auction_2") ~= "0"
 echo_donations = GetVariable("echo_donations_2") ~= "0"
 echo_warfare = GetVariable("echo_warfare_2") ~= "0"
-EnableTrigger("info", not echo_info)
-EnableTrigger("raidinfo", not echo_info)
-EnableTrigger("claninfo", not echo_info)
-EnableTrigger("global_quest", not echo_global_quest)
-EnableTrigger("remort_auction", not echo_remort_auction)
-EnableTrigger("donations", not echo_donations)
-EnableTrigger("warfare", not echo_warfare)
 
+-- only hide echoes if at least one capture window is active
 never_hide = true
 list_of_filter_enablers = {}
 function enable_hiding(true_false, enabler_id)
@@ -183,10 +164,24 @@ function enable_hiding(true_false, enabler_id)
    end
    if num_enablers > 0 then
       never_hide = false
+      if not aard_req_novisuals_mode then
+         EnableTrigger("info", not echo_info)
+         EnableTrigger("raidinfo", not echo_info)
+         EnableTrigger("claninfo", not echo_info)
+         EnableTrigger("global_quest", not echo_global_quest)
+         EnableTrigger("remort_auction", not echo_remort_auction)
+         EnableTrigger("donations", not echo_donations)
+         EnableTrigger("warfare", not echo_warfare)
+      end
    else
       never_hide = true
+      for i,v in ipairs(GetTriggerList()) do
+         EnableTrigger(v, false)
+      end
    end
 end
+
+enable_hiding(false, GetPluginID())
 
 compact_uncheckable_states = {[""]=true, ["1"]=true, ["2"]=true, ["4"]=true, ["5"]=true, ["6"]=true, ["7"]=true, ["8"]=true}
 function can_check_compact()
@@ -285,7 +280,9 @@ msg_buffer = {}
 function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
-      if (text == "comm.channel") then
+      if (text == "config") then
+         compact_mode = gmcp("config.compact")
+      elseif (text == "comm.channel") then
          char_state = gmcp("char.status.state")
          gmcp_comm = gmcp("comm.channel")
          msg = gmcp_comm.msg or ""
@@ -312,8 +309,7 @@ function OnPluginBroadcast (msg, id, name, text)
          if not done_init and can_check_compact() then
             done_init = true
             Note("Checking compact setting.")
-            SendNoEcho("compact")
-            SendNoEcho("compact")
+            Send_GMCP_Packet("config compact")
          end
          if char_state ~= "5" then -- show messages that were buffered while in note mode
             if #msg_buffer > 0 then
