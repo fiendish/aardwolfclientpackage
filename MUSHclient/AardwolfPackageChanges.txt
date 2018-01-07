@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1955 snapshot
+- misc change: A lot of plugin variables will save more immediately now, which should prevent some configuration loss in the event of a crash.
+- bug fix: People have reported that the chat echo plugin was gagging certain non-channel messages when it should have been showing them. My best guess at solving this involves making sure that they are turned on for everyone. If you want them omitted from output, hide them again.
+- new feature: async.lua now has HEAD and GETFILE functions for getting just header information without file contents and for downloading directly to a file, respectively.
+- new feature: async.lua's doAsyncRemoteRequest function can take an additional argument (string or table) to control how the request is sent. See inline comments and implementation of HEAD and GETFILE functions.
+- misc change: Lua socket code has been updated to enable SNI in TLS requests and to harden the communicated cipher suite.
+
 r1950 snapshot
 - misc change: Included DLLs are now compiled statically, removing the need for MSVCR100.DLL (which was interfering with TTS performance for some users for some reason).
 - misc change: The text substitution plugin should now have less impact on client performance.
