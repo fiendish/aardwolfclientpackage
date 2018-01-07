@@ -25,9 +25,6 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
    if timeout_after == nil then
       timeout_after = 30
    end
-   if result_callback_function == nil then
-      result_callback_function = default_result_callback
-   end
 
    thread_id = tostring(GetUniqueNumber())
 
@@ -57,8 +54,6 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
    __checkCompletionFor(thread_id)
 end
 
-
-
 function HEAD(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout)
    local request_body = { method = "HEAD" }
    doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
@@ -72,10 +67,6 @@ end
 
 
 
-function default_result_callback(...)
-   require "tprint"
-   tprint({...})
-end
 
 function default_timeout_callback(requested_url, timeout)
    print("Async Request ["..requested_url.."] Thread Timed Out After "..tostring(timeout).."s")
