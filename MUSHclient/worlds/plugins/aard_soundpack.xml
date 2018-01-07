@@ -1,0 +1,1820 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="Aardwolf_Soundpack"
+   author="Pwar"
+   id="23832d1089f727f5f34abad8"
+   language="Lua"
+   purpose="Provide customizable comm and event sounds/triggers"
+   date_written="2017-12-2 13:00:25"
+   requires="4.76"
+   version="1.1"
+   save_state="y"
+   >
+<description trim="y">
+<![CDATA[
+
+>    spset
+        - Display events, their current volume, wav file, panning option and description
+
+>    spset [event]
+        - display current saved settings for specified event
+
+>    spset [event] volume [0-100]
+        - sets volume for specific event, 0 disables event completely, 100 is full volume
+	
+>    spset [event] panning [-100 to 100]
+        - sets panning 0 is both speakers , -100 full left speaker, 100 is full right speaker
+	
+>    spset [event] wav filename.wav
+        - sets a custom wav for this event, it can be located in either mushclient/sounds
+	  or your mushclient/sounds/saved folder
+	  
+>    spset [event] wav default
+        - this will reset your event to it's default wav
+
+>    sptog [event]
+        - toggles an event off and on (0 and 100 volume)
+
+>    sptog all
+	- toggles all events that are off to on, and vice versa
+	
+>    spmute
+        - toggles soundpack mute off and on
+	
+>    spvol [0-100]
+        - sets a global volume max percentage 
+	
+>    spallow
+        - allows remotes sounds from player who sent the last
+	
+>    spdeny [player]
+        - stop accepting remote sounds from player on your allow list
+	
+ Any message you send with !!SOUND(http://urlto/file.wav)
+ will be played to yourself and others with the plugin installed.
+ 
+ If you want to play a file in your sounds or sounds/saved folder
+ Simply !!SOUND(filename.wav) but both players must have the same filename!
+
+	
+>    sphelp
+        - display only this help
+
+
+]]>
+</description>
+
+</plugin>
+
+<aliases>
+  <alias
+   match="^spset (?<event>.+?) (?<setting>.+?) (?<value>.+?)$"
+   script="spset"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spset (?<event>.+?)$"
+   script="spset"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spset?$"
+   script="spset"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spmute$"
+   script="spmute"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^sphelp$"
+   script="sphelp"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spdebug$"
+   script="spdebug"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spvol(\s)(?<value>.+?)$"
+   script="spvol"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^sptog(\s)(?<event>.+?)$"
+   script="sptog"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^sptog$"
+   script="sptog"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spallow$"
+   script="spallow"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spdeny\s(.+)$"
+   script="spdeny"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spdeny$"
+   script="spdeny"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^spvol$"
+   script="spvol"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^savesound(\s)(?<wav>.+?)$"
+   script="save_sound"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
+   match="^savesound$"
+   script="save_sound"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  
+  <alias
+   match="^(.+)!!SOUND\((?<url>.+?)\)"
+   script="parse_input_rsound"
+   enabled="y"
+   sequence="99"
+   regexp="y"
+  >
+  </alias>
+
+</aliases>
+<triggers>		
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^INFO: Bonus experience has now expired.$"
+   regexp="y"
+   send_to="12"
+   keep_evaluating="n"
+   sequence="99"
+  >
+  <send>
+
+	TriggerEvent("double_end")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^INFO: New post (.+) in forum Personal from (.+)$"
+   regexp="y"
+   send_to="12"
+   keep_evaluating="n"
+   sequence="99"
+  >
+  <send>
+	TriggerEvent("personal_note")
+  </send>
+  </trigger>
+  
+    <trigger
+   enabled="y"
+   group="Alert"
+   match="^You were the first to complete this quest!$"
+   regexp="y"
+   send_to="12"
+   keep_evaluating="n"
+   sequence="99"
+  >
+  <send>
+	TriggerEvent("gq_win")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^INFO: .+$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("info")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^For the next 15 minutes experience is doubled in honor of the new superhero.$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("double_exp")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^\[(.+)10 minutes of double exp started courtesy of (.+)\]$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("double_exp")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Double experience for 10 minutes courtesy of (.+) daily blessing.$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("double_exp")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Double experience for 10 minutes courtesy of (.+).$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("double_exp")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Aardwolf rejoices in the death of another MILLION monsters.$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("double_exp")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^WARFARE: Type \'combat\' to join the war. No death penalties!$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("warfare")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Restore: .+$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("restore")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Remort Auction: .+$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("rauction")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="\[QUEST\]$"
+   name="QuestTargetFound"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("quest_target_found")
+  </send>
+  </trigger>
+   
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^QUEST: You have run out of time for your quest!$"
+   name="QuestTimeFail"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("quest_warning")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You feel as if you are being watched.$"
+   name="Scry"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("scry")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You sense that (.+) is scrying you.$"
+   name="ScryWish"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("scry")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^\*\* You can take revenge on (.+) for 15 minutes.$"
+   name="PKAlert"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("scry")
+  </send>
+  </trigger>
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You raise a level! You are now level (.+)\.$"
+   name="LevelUp"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("level_up")
+  </send>
+  </trigger>
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You die.$"
+   name="SelfDeath"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("death")
+  </send>
+  </trigger>
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Congratulations! You are now a superhero!(.+)$"
+   name="LevelUpSh"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("level_up_sh")
+  </send>
+  </trigger>
+  
+  level_up_sh
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="\[CP\]$"
+   name="quest_target_found2"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("quest_target_found")
+  </send>
+  </trigger>
+	
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Turning OFF the (.+) channel\.$"
+   name="ChannelOff"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("channel_off")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Channel (.+) will turn back on in (.*).$"
+   name="ChannelOff2"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("channel_off")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Turning ON the (.+) channel\.$"
+   name="ChannelOn"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("channel_on")
+  </send>
+  </trigger>
+	
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Removing timeout and turning ON the (.*) channel.$"
+   name="ChannelOn2"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("channel_on")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You find an \(Aarchaeology\) piece hidden in the corpse!$"
+   name="AarchFind"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("special_find")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You get AardWords \(TM\) - (.+) from the (.+) corpse of (.+).$"
+   name="AardWordsFind"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("special_find")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^\*\* You gain a bonus trivia point! \*\*$"
+   name="TriviaPoint1"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("special_find")
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You killed a Trivia Point bonus mob\!\! Trivia point added\.$"
+   name="TriviaPoint2"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("special_find")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^(.+) crumbles into (.*) gold pieces\.$"
+   name="Crumble"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+  local amount = string.gsub("%2", ",", "")
+   
+   -- make sure it's worth playing a sound for! 100k and higher!
+   if tonumber(amount) >= 100000 then
+      TriggerEvent("special_find")
+   end
+  </send>
+  </trigger>
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Channel timeout on (.*) has expired. Turning channel on.$"
+   name="ChannelOn3"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("channel_on")
+  </send>
+  </trigger>
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Congratulations\, that was one of your CAMPAIGN mobs\!$"
+   name="CpMobDead"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send> 	
+	TriggerEvent("cp_mob_dead")
+  </send>
+  </trigger>
+	
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Congratulations\, that was one of the GLOBAL QUEST mobs\!$"
+   name="GqMobDead"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+   >
+   <send>
+	TriggerEvent("gq_mob_dead")
+   </send>
+   </trigger>
+
+   <trigger
+    enabled="y"
+    group="Alert"
+    match="^Global Quest: Global quest # (.*) has been declared(.*)$"
+    name="GqDeclared"
+    regexp="y"
+    send_to="12"
+    sequence="100"
+   >
+   <send>
+	TriggerEvent("gquest_declare")
+   </send>
+   </trigger>
+   <trigger
+    enabled="y"
+    group="Alert"
+    match="^Global Quest: Global quest # (.*) for levels (.*) has now started.$"
+    name="GqStarted"
+    regexp="y"
+    send_to="12"
+    sequence="100"
+   >
+   <send>
+	TriggerEvent("gquest_start")
+   </send>
+   </trigger>
+</triggers>
+<script>
+<![CDATA[
+local sp_version = "1.1.1"
+local sp_last_download
+local sp_global_volume = 100
+local sp_mute_toggle = "0"
+local rsound_accept = {}
+local rsound = {}
+local self = {}
+local sp_debug = "0"
+
+local async = require "async"
+require "gmcphelper"
+require "serialize"  -- serialize tables to strings
+
+dofile (GetInfo(60) .. "aardwolf_colors.lua")
+
+local soundEvents = {
+  ["zone_repop"] = {
+    defaultwav = "zone_repop.wav",
+    volume = "100",
+    panning = "0",
+    description = "Zone repops (respawns)"
+  },
+  ["info"] = {
+    defaultwav = "info.wav",
+    volume = "100",
+    panning = "0",
+    description = "Info messages"
+  },
+  ["personal_note"] = {
+    defaultwav = "personal_note.wav",
+    volume = "100",
+    panning = "0",
+    description = "Personal note received"
+  },
+  ["gq_win"] = {
+    defaultwav = "gq_win.wav",
+    volume = "100",
+    panning = "0",
+    description = "Global quest won"
+  },
+  ["special_find"] = {
+    defaultwav = "special_find.wav",
+    volume = "100",
+    panning = "0",
+    description = "Aarchaelogy or AardWords item"
+  },
+  ["warfare"] = {
+    defaultwav = "warfare.wav",
+    volume = "100",
+    panning = "0",
+    description = "Warfare has been declared"
+  },
+  ["restore"] = {
+    defaultwav = "restore.wav",
+    volume = "100",
+    panning = "0",
+    description = "Restore messages"
+  },
+  ["gquest_start"] = {
+    defaultwav = "global_quest.wav",
+    volume = "100",
+    panning = "0",
+    description = "Gquest is started"
+  },
+  ["gquest_declare"] = {
+    defaultwav = "global_quest.wav",
+    volume = "100",
+    panning = "0",
+    description = "Gquest has been declared"
+  },
+  ["quest_target_found"] = {
+    defaultwav = "quest_target_found.wav",
+    volume = "100",
+    panning = "0",
+    description = "Quest target in room"
+  },
+  ["quest_target_killed"] = {
+    defaultwav = "quest_target_killed.wav",
+    volume = "100",
+    panning = "0",
+    description = "Quest target killed"
+  },
+  ["quest_ready"] = {
+    defaultwav = "quest_ready.wav",
+    volume = "100",
+    panning = "0",
+    description = "Quest is available"
+  },
+  ["quest_start"] = {
+    defaultwav = "quest_start.wav",
+    volume = "100",
+    panning = "0",
+    description = "Quest has started"
+  },
+  ["quest_complete"] = {
+    defaultwav = "quest_complete.wav",
+    volume = "100",
+    panning = "0",
+    description = "Quest completed"
+  },
+  ["quest_warning"] = {
+    defaultwav = "quest_warning.wav",
+    volume = "100",
+    panning = "0",
+    description = "Quest time warnings"
+  },
+  ["death"] = {
+    defaultwav = "death.wav",
+    volume = "100",
+    panning = "0",
+    description = "Your own death"
+  },
+  ["cp_mob_dead"] = {
+    defaultwav = "cp_mob_dead.wav",
+    volume = "100",
+    panning = "0",
+    description = "CP target killed"
+  },
+  ["double_end"] = {
+    defaultwav = "double_end.wav",
+    volume = "100",
+    panning = "0",
+    description = "Double experience ended"
+  },
+  ["double_exp"] = {
+    defaultwav = "double_exp.wav",
+    volume = "100",
+    panning = "0",
+    description = "Double experience started"
+  },
+  ["gq_mob_dead"] = {
+    defaultwav = "gq_mob_dead.wav",
+    volume = "100",
+    panning = "0",
+    description = "Gquest target killed"
+  },
+  ["channel_off"] = {
+    defaultwav = "channel_off.wav",
+    volume = "100",
+    panning = "0",
+    description = "Channel toggle off"
+  },
+  ["channel_on"] = {
+    defaultwav = "channel_on.wav",
+    volume = "100",
+    panning = "0",
+    description = "Channel toggle on"
+  },
+  ["answer"] = {
+    defaultwav = "answer.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Answer"
+  },
+  ["auction"] = {
+    defaultwav = "auction.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Auctions"
+  },
+  ["rauction"] = {
+    defaultwav = "rauction.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Remort Auctions"
+  },
+  ["barter"] = {
+    defaultwav = "barter.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Barter"
+  },
+  ["claninfo"] = {
+    defaultwav = "claninfo.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: ClanInfo"
+  },
+  ["clantalk"] = {
+    defaultwav = "clantalk.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: ClanTalk"
+  },
+  ["curse"] = {
+    defaultwav = "curse.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Curse"
+  },
+  ["debate"] = {
+    defaultwav = "debate.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Debate"
+  },
+  ["gametalk"] = {
+    defaultwav = "gametalk.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Gametalk"
+  },
+  ["ftalk"] = {
+    defaultwav = "ftalk.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Ftalk"
+  },
+  ["gclan"] = {
+    defaultwav = "gclan.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Gclan"
+  },
+  ["gossip"] = {
+    defaultwav = "gossip.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Gossip"
+  },
+  ["gratz"] = {
+    defaultwav = "gratz.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Gratz"
+  },
+  ["gsocial"] = {
+    defaultwav = "gsocial.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Gsocial"
+  },
+  ["gtell"] = {
+    defaultwav = "gtell.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Gtell"
+  },
+  ["helper"] = {
+    defaultwav = "helper.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Helper"
+  },
+  ["immtalk"] = {
+    defaultwav = "immtalk.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: ImmTalk"
+  },
+  ["inform"] = {
+    defaultwav = "inform.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Inform"
+  },
+  ["level_up"] = {
+    defaultwav = "level_up.wav",
+    volume = "100",
+    panning = "0",
+    description = "Level up"
+  },
+  ["level_up_sh"] = {
+    defaultwav = "level_up_sh.wav",
+    volume = "100",
+    panning = "0",
+    description = "Level up - Superhero"
+  },
+  ["ltalk"] = {
+    defaultwav = "ltalk.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Ltalk"
+  },
+  ["market"] = {
+    defaultwav = "market.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Market"
+  },
+  ["music"] = {
+    defaultwav = "music.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Music"
+  },
+  ["newbie"] = {
+    defaultwav = "newbie.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Newbie"
+  },
+  ["nobletalk"] = {
+    defaultwav = "nobletalk.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: NobleTalk"
+  },
+  ["pokerinfo"] = {
+    defaultwav = "pokerinfo.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: PokerInfo"
+  },
+  ["question"] = {
+    defaultwav = "question.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Question"
+  },
+  ["quote"] = {
+    defaultwav = "quote.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Quote"
+  },
+  ["racetalk"] = {
+    defaultwav = "racetalk.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Racetalk"
+  },
+  ["rp"] = {
+    defaultwav = "rp.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: RP"
+  },
+  ["say"] = {
+    defaultwav = "say.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Say"
+  },
+  ["scry"] = {
+    defaultwav = "scry.wav",
+    volume = "100",
+    panning = "0",
+    description = "Scried by player"
+  },
+  ["spouse"] = {
+    defaultwav = "spouse.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Spouse"
+  },
+  ["remote_sound"] = {
+    defaultwav = "none.wav", --doesn't have a default for remote_sound
+    volume = "100",
+    panning = "0",
+    description = "Remote Sounds"
+  },
+  ["tech"] = {
+    defaultwav = "tech.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Tech"
+  },
+  ["tell"] = {
+    defaultwav = "tell.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Tell"
+  },
+  ["tiertalk"] = {
+    defaultwav = "tiertalk.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: TierTalk"
+  },
+  ["wangrp"] = {
+    defaultwav = "wangrp.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: WanGrp"
+  },
+  ["yell"] = {
+    defaultwav = "yell.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Yell"
+  },
+  ["whisper"] = {
+    defaultwav = "whisper.wav",
+    volume = "100",
+    panning = "0",
+    description = "Comm Chan: Whisper"
+  }
+}
+
+function TriggerEvent(event)
+
+	if (sp_mute_toggle == "1") then
+      logmsg("Event " .. event .. " has fired but soundpack is muted, ignoring.")
+		return
+	end
+	logmsg("Event " .. event .. " has fired!")
+	local volume = tonumber(soundEvents[event].volume)
+	local filename = soundEvents[event].defaultwav	
+	volume = calc_volume(volume)
+	
+	if (soundEvents[event].customwav ~= nil) then
+		filename = soundEvents[event].customwav
+	end
+	-- 100 event triggered
+	BroadcastPlugin(100, event)
+	PlaySound(0, filename, false, volume, soundEvents[event].panning)
+end
+
+function PlaySettingChanged()
+	local volume = 100
+	
+	volume = calc_volume(volume)
+	PlaySound(0, "channel_on.wav", false, volume, 0)
+end
+
+function calc_volume(volume)
+	
+	if sp_global_volume < volume then
+		volume = sp_global_volume
+	end
+	
+	volume = .4 * volume
+	volume = -(40 - volume)
+	return volume
+end
+
+function spmute(name, line, wc)
+	if sp_mute_toggle == "0" then
+		sp_mute_toggle = "1"
+		ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] Playback audio has been: ", "Red", "", "Muted")
+		SaveState()
+      PlaySettingChanged()
+	else
+		sp_mute_toggle = "0"
+		ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] Playback audio has been: ", "Green", "", "Unmuted")
+      SaveState()
+      PlaySettingChanged()
+	end
+end
+
+function spvol(name, line, wc)
+	if (wc ~= nil) then
+		if (wc.value ~= nil) then
+			local value = tonumber(wc.value)
+			if (value == nil) then
+				showmsg("Global volume requires a valid number 0 - 100")
+				return
+			end
+			if (value >= 0 and value <= 100) then
+				showmsg("Global volume has been set to " .. wc.value)
+
+				sp_global_volume = value
+				PlaySettingChanged()
+            SaveState()
+				return
+			end
+		end
+	end
+	showmsg("Global volume is currently set to " .. sp_global_volume)
+end
+
+function parse_input_rsound(name, line, wc)
+	Send(line)
+	if wc.url ~= nil then
+		play_rsound(wc.url)
+	end
+end
+
+function spdebug(name, line, wc)
+	if sp_debug == "1" then
+		sp_debug = "0"
+		print("")
+		showmsg("Debug has been disabled.")
+		print("")
+	else
+		sp_debug = "1"
+		print("")
+		showmsg("Debug has been enabled.")
+		print("")
+	end
+   SaveState()
+end
+
+function sphelp(name, line, wc)
+	print("")
+	NoteStyle(2)
+	showmsg("SoundPack v" .. sp_version .. " for Aardwolf by Pwar")
+	NoteStyle(0)
+	print("")
+        ColourNote("SteelBlue", "", GetPluginInfo (GetPluginID (), 3))
+        print("")
+	return
+end
+
+function sptog(name, line, wc)
+	if (wc.event ~= nil) then
+		if wc.event == "all" then
+			for event in pairs(soundEvents) do
+				if tonumber(soundEvents[event].volume) == 0 then
+					soundEvents[event].volume = 100
+				else
+					soundEvents[event].volume = 0
+				end
+			end
+			showmsg("All events have been toggled.")
+			SaveState()
+         PlaySettingChanged()
+			return;
+		end
+		if soundEvents[wc.event] ~= nil then
+			if tonumber(soundEvents[wc.event].volume) == 0 then
+				soundEvents[wc.event].volume = 100
+				showmsg("Event \"" .. wc.event .. "\" has been enabled. Volume reset to 100.")
+				PlaySettingChanged()
+            SaveState()
+				return
+			else
+				soundEvents[wc.event].volume = 0
+				showmsg("Event \"" .. wc.event .. "\" has been disabled.")
+				SaveState()
+            PlaySettingChanged()
+				return	
+			end
+		end
+	end
+	logerr("Invalid event. Type \"sptog\" to see a list of events.")
+end
+
+function spallow(name, line, wc)
+	if rsound.player ~=nil then
+		if can_rsound(rsound.player) then
+			return
+		else
+			table.insert(rsound_accept, rsound.player)
+			showmsg("Added player " .. rsound.player .. " to remote sound allow list")
+         SaveState()
+			if rsound.url ~= nil then
+				play_rsound(rsound.url)
+			end
+		end
+		return
+	end
+	logerr("Noone has recently sent a sound file to allow!")
+	return
+end
+
+function spdeny(name, line, wc)
+	if (wc[1] ~= nil) then -- we have an arg
+		if can_rsound(wc[1]) then
+			for i = 1, #rsound_accept do
+				if rsound_accept[i] ~= nil then
+					if string.lower(rsound_accept[i]) == string.lower(wc[1]) then
+					showmsg("Removed " .. rsound_accept[i] .. " from remote sound allow list.")
+					table.remove(rsound_accept, i)
+					SetVariable("sp_allowlist", serialize.save_simple(rsound_accept))
+					end
+				end
+			end	
+		else
+			logerr(wc[1] .. " isn't on your remote sound allow list!")
+		end
+		return
+	else
+		showmsg("Usage is \"spdeny <player>\", see \"sphelp\" for more info.")
+		logprint("Valid deny targets:")
+		for i = 1, #rsound_accept do
+			logprint(rsound_accept[i])
+		end
+	end
+end
+
+function spset(name, line, wc)
+	if (wc ~= nil) then -- we have an arg
+		if (wc[1] == nil) then
+			listEvents()
+			return
+		elseif (wc.setting == nil) then
+			if soundEvents[wc.event] ~= nil then
+				showmsg("Event: " .. wc.event .. "\nVolume: " .. soundEvents[wc.event].volume .. ", Panning: " .. soundEvents[wc.event].panning .. " Desc: " .. soundEvents[wc.event].description)
+				if soundEvents[wc.event].customwav ~= nil then
+					logprint("Custom wav file set to: " .. soundEvents[wc.event].customwav)
+				end
+				return
+			end
+			logerr("Invalid event: " .. wc.event)
+			return
+		else
+		
+		if (wc.event ~= nil) and (wc.setting ~= nil) and (wc.value ~= nil) then
+			if (soundEvents[wc.event] ~= nil) then
+				if (wc.setting == "wav") then
+					if wc.value == "default" then
+						showmsg(wc.event .. " " .. wc.setting .. " setting has been reset to default.")
+						soundEvents[wc.event].customwav = nil
+						DeleteVariable(wc.event .. "_customwav")
+						PlaySettingChanged()
+                  SaveState()
+						return
+					elseif file_exists(GetInfo(74) .. wc.value) then
+						soundEvents[wc.event].customwav = GetInfo(74) .. wc.value
+						showmsg(wc.event .. " " .. wc.setting .. " setting has been set to: " .. wc.value)
+						SetVariable(wc.event .. "_customwav", GetInfo(74) .. wc.value)
+						PlaySettingChanged()
+                  SaveState()
+						return
+					elseif file_exists(GetInfo(74) .. "saved\\" .. wc.value) then
+						soundEvents[wc.event].customwav = GetInfo(74) .. "saved\\" .. wc.value
+						showmsg(wc.event .. " " .. wc.setting .. " setting has been set to: " .. wc.value)
+						SetVariable(wc.event .. "_customwav", GetInfo(74) .. "saved\\" .. wc.value)
+						PlaySettingChanged()
+                  SaveState()
+						return
+					end
+					logerr("File not found in sounds or sounds/saved: " .. wc.value)
+					return
+				end
+				if (wc.setting == "volume") then
+					
+					local value = tonumber(wc.value)
+					if (value == nil) then
+						return
+					end
+					if (value >= 0 and value <= 100) then
+						showmsg(wc.event .. " " .. wc.setting .. " setting has been set to: " .. value)
+						SetVariable(wc.event .. "_" .. wc.setting, value)
+						soundEvents[wc.event].volume = value
+						PlaySettingChanged()
+                  SaveState()
+						return
+					else
+						logerr("Invalid value \"" .. wc.value .. "\" for " .. wc.setting .. " -- see spset help")
+						return
+					end
+					
+				elseif (wc.setting == "panning") then
+					local value = tonumber(wc.value)
+					if (value >= -100 and value <= 100) then
+						showmsg(wc.event .. " " .. wc.setting .. " setting has been set to: " .. value)
+						SetVariable(wc.event .. "_" .. wc.setting, value)
+						soundEvents[wc.event].panning = value
+						PlaySettingChanged()
+                  SaveState()
+						return
+				
+					else
+						logerr("Invalid value \"" .. wc.value .. "\" for " .. wc.setting .. " -- see spset help")
+						return
+					end
+				end
+			
+			end
+		end
+		logerr("Invalid event: " .. wc.event)
+		end
+	end
+
+end
+
+function listEvents()
+	print("")
+	showmsg("Sound Pack Settings")
+	logprint(padRight("Event", 22, " ") .. "Volume Panning  " .. padRight("Description", 25, " ") .. "Custom Wav")
+	logprint("------------------------------------------------------------------")
+   
+   for event in orderedPairs(soundEvents) do
+   
+		local volume = soundEvents[event].volume .. "%"
+		if volume == "0%" then
+			volume = " OFF"
+		end
+		local showString = padRight(event, 22, " ") .. volume
+		showString = padRight(showString, 34, " ") .. soundEvents[event].panning
+		showString = padRight(showString, 38, " ") .. soundEvents[event].description
+		if soundEvents[event].customwav ~= nil then 
+		
+			local filename = string.sub(soundEvents[event].customwav, soundEvents[event].customwav:match'^.*()\\' + 1)
+			
+			showString = padRight(showString, 65, " ") .. filename
+		end
+		logprint(showString)
+	end
+
+end
+
+function can_rsound(player)
+	for i = 1, #rsound_accept do
+		if rsound_accept[i] ~= nil then
+			if string.lower(rsound_accept[i]) == string.lower(player) then
+				return true			
+			end
+		end
+	end
+	return false
+end
+
+function play_rsound(url)
+
+	if soundEvents["remote_sound"].volume == "0" then -- remote sounds are disabled
+			return
+	end
+	volume = tonumber(soundEvents["remote_sound"].volume)
+
+	if sp_global_volume < volume then
+		volume = sp_global_volume
+	end
+
+	volume = .4 * volume
+	volume = -(40 - volume)
+
+	if string.sub(url, 1, 4) == "http" then
+		
+		download_play(url, GetInfo(74) .. "cache\\")
+		
+	else
+	
+	-- These make sure it doesn't exist in sounds or sounds\saved with the current filename
+	
+		if file_exists(GetInfo(74) .. url) then
+			print("Found file locally, playing")
+			PlaySound(0, GetInfo(74) .. url, false, volume, 0)
+			return
+		elseif file_exists(GetInfo(74) .. "saved\\" .. url) then
+			print("Found file locally, playing")
+			PlaySound(0, GetInfo(74) .. "saved\\" .. url, false, volume, 0)
+			return
+		end
+	return
+	end
+end
+
+function OnPluginBroadcast (msg, id, name, text)
+	require "gmcphelper"
+
+        if (id == '3e7dedbe37e44942dd46d264') then              -- GMCP Handler plugin
+			
+		if text == "char.base" then
+			self.name = gmcp("char.base.name")
+         
+      elseif (text == "comm.repop") then
+         TriggerEvent("zone_repop")
+
+		elseif text == "comm.channel" then
+                        local channel = gmcp("comm.channel.chan")
+			local msg = gmcp("comm.channel.msg")
+			local player = gmcp("comm.channel.player")
+			msg = strip_colours(msg)
+			
+			
+			j, k = string.find(msg, "!!SOUND%(")
+
+			if k ~= nil then
+				if player ~= self.name then -- don't need to play sounds we are the sender
+					url = string.sub(msg, k+1)
+					l = string.find(url, ")")
+					if l ~= nil then
+						url = string.sub(url, 1, l-1)
+						if can_rsound(player) then
+							play_rsound(url)
+						else showmsg(player .. " would like to play remote sounds.")
+							rsound.url = url
+							rsound.player = player
+							logprint("Type \"spallow\" to allow remote sounds from them.")
+						end					
+					end
+				end
+			end
+			
+			if soundEvents[channel] == nil then
+				return
+			end
+
+			if soundEvents[channel].volume == "0" then
+				--Volume is set to 0 we're done here
+				return
+			end
+						
+			TriggerEvent(channel)
+			
+		elseif (text == "comm.quest") then
+			local action = gmcp("comm.quest.action")
+			
+			if (action == "ready") then
+				TriggerEvent("quest_ready")
+			elseif (action == "killed") then
+				TriggerEvent("quest_target_killed")
+			elseif (action == "comp") then
+				TriggerEvent("quest_complete")
+			elseif (action == "start") then
+				TriggerEvent("quest_start")
+			elseif (action == "warning") then
+				TriggerEvent("quest_warning")
+			end 
+		end
+	end
+end
+
+function loadSavedSettings()
+	table.sort(soundEvents, sort_func)
+	Send_GMCP_Packet("request char") -- store player name for later
+
+	for event in pairs(soundEvents) do
+		if (GetVariable(event .. "_volume") ~= nil) then
+			soundEvents[event].volume = GetVariable(event .. "_volume")
+		end
+		if (GetVariable(event .. "_panning") ~= nil) then
+			soundEvents[event].panning = GetVariable(event .. "_panning")
+		end
+		if (GetVariable(event .. "_customwav") ~= nil) then
+			soundEvents[event].customwav = GetVariable(event .. "_customwav")
+		end
+	end
+      
+      sp_debug = GetVariable("debug") or "0"
+	if (GetVariable("sp_global_volume") ~= nil) then
+		sp_global_volume = tonumber(GetVariable("sp_global_volume"))
+	end
+	if (GetVariable("sp_mute_toggle") ~= nil) then
+		sp_mute_toggle = GetVariable("sp_mute_toggle")
+	end
+	if (GetVariable("sp_allowlist") ~= nil) then
+	
+		local mystr = GetVariable("sp_allowlist")
+		rsound_accept = load( "return "..mystr)( )
+	end
+--   for k, v in pairs (GetVariableList()) do 
+--      Note (k, " = ", v) 
+--   end
+end
+
+function OnPluginSaveState()
+	for event in pairs(soundEvents) do
+		 SetVariable(event .. "_volume", soundEvents[event].volume)
+       SetVariable(event .. "_panning", soundEvents[event].panning)
+       if soundEvents[event].customwav ~= nil then
+         SetVariable(event .. "_customwav", soundEvents[event].customwav)
+       end
+   end
+   SetVariable("sp_global_volume", sp_global_volume)
+   SetVariable("debug", sp_debug)
+   SetVariable("sp_mute_toggle", sp_mute_toggle)
+   SetVariable("sp_allowlist", serialize.save_simple(rsound_accept))
+end
+
+function OnPluginInstall()
+	print("")
+	ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] " .. "Loaded Soundpack v" .. sp_version .. " by Pwar (", "MediumSeaGreen", "", "Type \"sphelp\"", "SteelBlue", "",")")
+	print("")
+	loadSavedSettings()
+
+end
+
+------ Utils ------
+function padRight(text, length, padChar)
+	local padding = length - string.len(text)
+	for i = 1, padding do
+		text = text .. padChar
+	end
+	return text
+end
+
+function showmsg(message)
+	ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] " .. message)
+end
+
+function logmsg(msg)
+	if GetVariable("debug") == "1" then
+		ColourNote("olive", "", "[dbg_sp] ", "MediumSeaGreen", "", msg)
+	end
+end
+
+function logprint(message)
+	ColourNote("SteelBlue", "", message)
+end
+
+function logerr(message)
+	ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] ", "Red", "", "Error: " .. message)
+end
+
+function async_head_download_complete(retval, page, status, headers, full_status, request_url)
+   print("Header received " .. headers["content-length"])
+end
+
+function async_download_complete(retval, page, status, headers, full_status, request_url)
+	local filesize = get_download_size(request_url)
+   local destination = GetInfo(74) .. "cache\\"
+
+        local filename = string.sub(request_url, request_url:match'^.*()/' + 1)
+	
+	if filesize == nil then
+		logerr("Link to wav invalid.")
+		return
+	end
+	if (tonumber(filesize) > 400000) then
+		logerr("File size exceeds 400k limit for wav files.")
+		return
+	end
+        f = assert(io.open (destination .. "temp.wav", "wb"))  -- open it
+	if data == nil then
+		return
+	end
+
+	f:write(page)  -- write file to disk
+        f:close()  -- close it
+	
+	local wave = parse_wav_header(destination .. "temp.wav")
+	if wave == nil then
+		logerr("Invalid wav header in file.")
+		return
+	end
+   
+	--Round the seconds off and make size readable
+	wave.duration = round(wave.duration, 2)
+	wave.size = wave.size/1024
+	wave.size = round(wave.size, 2)
+
+	showmsg("Downloaded " .. filename .. " [" .. wave.duration .. "secs] (" .. wave.size .. "KB) to temporary folder.")	
+	logprint("Type \"savesound filename.wav\" or \"savesound\" to save this sound for later.")
+	sp_last_download = filename
+   
+   if (wave.duration > 30) then
+			logerr("File size exceeds 30 second limit for wav files.")
+			return
+		end
+
+		PlaySound(0, "cache\\temp.wav", false, volume, 0)
+   --return wave;
+end
+
+function download_play(url, destination)
+   --download_header(url)
+   async.doAsyncRemoteRequest(url, async_download_complete, "HTTP", 120)
+end
+
+function download_header(url)
+   async.doAsyncRemoteRequest(url, async_head_download_complete, "HTTP", 120)
+end
+
+function get_download_size(url)
+	require "socket.http"
+
+	local resp, stat, hdr = socket.http.request{
+	  method  = "HEAD",
+	  url = url,
+	}
+	if hdr ~= nil then
+		return hdr["content-length"]
+	end
+	return
+end
+
+function save_sound(name, line, wc)
+	if wc[1] == nil then
+		if sp_last_download ~= nil then
+		
+			wc.wav = sp_last_download
+		else
+			logerr("Noone has recently sent you a sound file to save.")
+			return
+		end
+	end
+	local cacheFile = GetInfo(74) .. "cache\\temp.wav"
+	local saveFile = GetInfo(74) .. "saved\\" .. wc.wav
+	
+	-- These make sure it doesn't exist in sounds or sounds\saved with the current filename
+	
+	if file_exists(GetInfo(74) .. wc.wav) then
+		logerr("Filename exists already: " .. GetInfo(74) .. wc.wav)
+		logprint("Type savesound filename.wav to save with alternate name.")
+		return
+	elseif file_exists(saveFile) then
+		logerr("Filename exists already: " .. saveFile)
+		logprint("Type savesound filename.wav to save with alternate name.")
+		return
+	end
+	if file_exists(cacheFile) then
+		assert(os.rename(cacheFile, saveFile))
+		showmsg("File saved to " .. saveFile)
+		return
+	else
+		logerr("savesound: Downloaded wav file is no longer available.")
+	end
+end
+
+function parse_wav_header(filename)
+	local wave = {}
+	local f = assert(io.open(filename, "r"))
+	-- read in 16 bytes at a time
+	local block = 16
+	if f:read(4) ~= "RIFF" then
+		--logerr("not a RIFF file")
+		return
+	end
+	
+	file_size = f:read(4)
+	if not file_size then
+		--logerr("file header incomplete (file size)")
+		return
+	end
+	file_size = bton(file_size) + 8
+	if f:read(4) ~= "WAVE" then
+		--logerr("Not valid wave file!")
+		return
+	else
+		-- Read file chunks
+		local chunk_id, chunk_size
+		while true do
+			-- Read chunk header
+			chunk_id, chunk_size = f:read(4), f:read(4)
+			if not chunk_size then
+				break
+			end
+			chunk_size = bton(chunk_size)
+			-- Identify chunk type
+			if chunk_id == "fmt " then
+				-- Read format informations
+				local bytes = f:read(2)
+				if not bytes or bton(bytes) ~= 1 then
+					logerr("data must be in PCM format")
+				end
+				bytes = f:read(2)
+				if not bytes then
+					logerr("channels number not found")
+				end
+				channels_number = bton(bytes)
+				bytes = f:read(4)
+				if not bytes then
+					logerr("sample rate not found")
+				end
+				sample_rate = bton(bytes)
+				bytes = f:read(4)
+				if not bytes then
+					logerr("byte rate not found")
+				end
+				byte_rate = bton(bytes)
+				bytes = f:read(2)
+				if not bytes then
+					logerr("block align not found")
+				end
+				block_align = bton(bytes)
+				bytes = f:read(2)
+				if not bytes then
+					logerr("bits per sample not found")
+				end
+				bits_per_sample = bton(bytes)
+				if bits_per_sample ~= 8 and bits_per_sample ~= 16 and bits_per_sample ~= 24 and bits_per_sample ~= 32 then
+					logerr("bits per sample must be 8, 16, 24 or 32")
+				end
+			
+				wave.size = f:seek("end")
+				wave.channels = channels_number
+				wave.bps = bits_per_sample
+				wave.samplerate = sample_rate
+				wave.duration = wave.size / (sample_rate * channels_number * bits_per_sample /8)
+				wave.md5sum = utils.tohex (utils.md5 (f:read ("*a")))
+				--logprint("File name: " .. filename)
+				--logprint("File size: " .. wave.size)
+				--logprint("Channels: " .. wave.channels)
+				--logprint("bps: " .. wave.bps)
+				--logprint("Sample rate: " .. wave.samplerate)
+				--logprint ("md5sum: " .. wave.md5sum)
+			end
+		end
+		f:close()
+		return wave
+	end
+end
+
+-- Byte-string(unsigend integer,little endian)<->Lua-number converters
+function bton(s)
+	local bytes = {s:byte(1,#s)}
+	local n, bytes_n = 0, #bytes
+	for i = 0, bytes_n-1 do
+		n = n + bytes[1+i] * 2^(i*8)
+	end
+	return n
+end
+
+function round(num, numDecimalPlaces)
+  local mult = 10^(numDecimalPlaces or 0)
+  return math.floor(num * mult + 0.5) / mult
+end
+
+function file_exists(name)
+   local f=io.open(name,"r")
+   if f~=nil then io.close(f) return true else return false end
+end
+
+function __genOrderedIndex( t )
+    local orderedIndex = {}
+    for key in pairs(t) do
+        table.insert( orderedIndex, key )
+    end
+    table.sort( orderedIndex )
+    return orderedIndex
+end
+
+function orderedNext(t, state)
+    local key = nil
+    if state == nil then
+        -- the first time, generate the index
+        t.__orderedIndex = __genOrderedIndex(t)
+        key = t.__orderedIndex[1]
+    else
+        -- fetch the next value
+        for i = 1,table.getn(t.__orderedIndex) do
+            if t.__orderedIndex[i] == state then
+                key = t.__orderedIndex[i+1]
+            end
+        end
+    end
+
+    if key then
+        return key, t[key]
+    end
+
+    -- no more value to return, cleanup
+    t.__orderedIndex = nil
+    return
+end
+
+function orderedPairs(t)
+    return orderedNext, t, nil
+end
+
+]]>
+</script> 
+
+</muclient>
