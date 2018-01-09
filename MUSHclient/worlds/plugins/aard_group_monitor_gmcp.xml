@@ -202,7 +202,7 @@ function reset_aard()
    WindowPosition(win, default_x, default_y, 0, 18)
    WindowResize(win, default_width, default_height, background_colour)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
-   OnPluginSaveState()
+   SaveState()
    OnPluginInstall()
 end
 
@@ -599,7 +599,7 @@ function right_click_menu ()
 
       RemoveMembersFromGroupDisplay()
       -- save and reload
-      OnPluginSaveState()
+      SaveState()
       OnPluginInstall()
    end
 end -- right_click_menu
@@ -781,17 +781,17 @@ end
 function HideIt()
    WindowShow( win, false )
    hidden = 1
-   OnPluginSaveState()
+   SaveState()
 end
 
 function ShowIt()
    WindowShow (win, true)
    hidden = 0
-   OnPluginSaveState()
+   SaveState()
 end
 
 function OnPluginDisable ()
-   OnPluginSaveState()
+   SaveState()
    WindowShow(win, false)
 end --  OnPluginDisable
 
@@ -802,7 +802,7 @@ function OnPluginEnable ()
    if IsConnected() then
       OnPluginConnect()
    end
-   OnPluginSaveState()
+   SaveState()
 end -- OnPluginEnable
 
 win = GetPluginID()

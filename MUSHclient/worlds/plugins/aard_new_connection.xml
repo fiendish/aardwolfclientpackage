@@ -78,7 +78,7 @@ end -- hyperlink_close
 
 function vi_close()
    showGreeting2 = 0
-   OnPluginSaveState()
+   SaveState()
    ShowGreeting(false)
    hyperlink_close()
 end
