@@ -147,6 +147,13 @@ require "gmcphelper"
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
+-- legacy variables
+echo_info = GetVariable("echo_info_2") ~= "0"
+echo_global_quest = GetVariable("echo_global_quest_2") ~= "0"
+echo_remort_auction = GetVariable("echo_remort_auction_2") ~= "0"
+echo_donations = GetVariable("echo_donations_2") ~= "0"
+echo_warfare = GetVariable("echo_warfare_2") ~= "0"
+
 -- only hide echoes if at least one capture window is active
 never_hide = true
 list_of_filter_enablers = {}
@@ -156,7 +163,7 @@ function enable_hiding(true_false, enabler_id)
    for k,v in pairs(list_of_filter_enablers) do
       num_enablers = num_enablers + 1
    end
-   if num_enablers > 0 then
+   if (not aard_req_novisuals_mode) and (num_enablers > 0) then
       never_hide = false
       addDefaultNonChannels()
    else
@@ -164,9 +171,11 @@ function enable_hiding(true_false, enabler_id)
       for i,v in ipairs(GetTriggerList()) do
          EnableTrigger(v, false)
       end
---      EnableTriggerGroup("untagged_info", false)
    end
 end
+
+enable_hiding(false, GetPluginID())
+
 
 local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction"}
 local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations"}
@@ -323,7 +332,7 @@ function chat_echo (toggle)
       end
    end -- if
 
-   OnPluginSaveState()
+   SaveState()
 end
 
 function chat_echo_wrap (name, line, wildcards)
@@ -337,12 +346,10 @@ function OnPluginSaveState()
 end
 
 function OnPluginInstall()
-   done_init = false
    OnPluginEnable()
 end
 
 function OnPluginEnable ()
-   done_init = false
    -- if we are connected when the plugin loads, it must have been reloaded while playing
    if IsConnected() then
       OnPluginConnect()

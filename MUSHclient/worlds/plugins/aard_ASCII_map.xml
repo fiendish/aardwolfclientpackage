@@ -61,7 +61,7 @@ and made more awesomer.
    local temptype = tonumber("%1")
    if temptype and (temptype &gt;= 0) and (temptype &lt;= 6) then
       maptype = temptype
-      OnPluginSaveState()
+      SaveState()
       OnPluginInstall()
    end
    Send("maptype %1 session")
@@ -248,7 +248,7 @@ function reset_aard()
    WindowPosition(win, default_x, default_y, 0, 18)
    WindowResize(win, default_width, default_height, background_colour)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
-   OnPluginSaveState()
+   SaveState()
    OnPluginInstall()
 end
 
@@ -578,7 +578,7 @@ function right_click_menu ()
    if result ~= "" then
       -- save and reload
       OnPluginCommand()
-      OnPluginSaveState()
+      SaveState()
       OnPluginInstall(true)
    end
 end -- right_click_menu
@@ -841,7 +841,7 @@ function OnPluginDisable ()
          TelnetOptionOff(TELOPT_AUTOMAP) -- does this do anything?
       end
    end
-   OnPluginSaveState()
+   SaveState()
 end --  OnPluginDisable
 
 function OnPluginEnable ()
@@ -849,7 +849,7 @@ function OnPluginEnable ()
    if IsConnected() then
       OnPluginConnect()
    end
-   OnPluginSaveState()
+   SaveState()
 end -- OnPluginEnable
 
 win = GetPluginID()

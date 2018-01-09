@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- Thanks to Orogan for past help. I don't remember what with. ^o^; -->
+<!-- Thanks to Orogan for past help. I wish I remembered what with, but I didn't write it down. -->
 <muclient>
 <plugin
    name="Aardwolf_Chat_Capture_Miniwindow"
@@ -14,10 +14,8 @@
    save_state="y"
    sequence="-9000"
 >
-<!-- sequence must be before echo plugin to capture unechoed info -->
-
+<!-- Plugin sequence must be before echo plugin to capture unechoed info -->
 <description trim="y">
-
 USAGE:
 
    chats show       : show chats window
@@ -88,7 +86,7 @@ USAGE:
 
 <trigger
    enabled="y"
-   match="^\*.+$"
+   match="^\*.+[^*]$"
    regexp="y"
    script="rsocial"
    name="remote_socials"
@@ -192,6 +190,13 @@ function reduce_diverse_channels()
    end
 end
 
+-- legacy variables
+show_donations = tonumber(GetVariable("show_donations")) or 1
+info_on = tonumber(GetVariable("info_on")) or 0
+global_quest_on = tonumber(GetVariable("global_quest_on")) or 0
+remort_auction_on = tonumber(GetVariable("remort_auction_on")) or 0
+warfare_on = tonumber(GetVariable("warfare_on")) or 0
+
 function check_nonchannel_trigger(key)
    local on = false
    for tab,nonchannels in ipairs(tabs_nonchannel_captures) do
@@ -290,7 +295,7 @@ function reset_aard()
    WindowPosition(win, default_x, default_y, 0, 18)
    WindowResize(win, default_width, default_height, theme.INACTIVE_BODY)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
-   OnPluginSaveState()
+   SaveState()
    OnPluginInstall()
 end
 
@@ -496,12 +501,12 @@ function OnPluginEnable ()
    if IsConnected() then
       OnPluginConnect()
    end -- if already connected
-   OnPluginSaveState()
+   SaveState()
 end -- OnPluginEnable
 
 function OnPluginDisable()
    WindowShow( win, false )
-   OnPluginSaveState()
+   SaveState()
 end --  OnPluginDisable
 
 require "serialize"
@@ -831,7 +836,7 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
    elseif result == 17+echo_skip-noremove then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
    end
-   OnPluginSaveState()
+   SaveState()
 end
 
 function extend_rightclick_menu_string(tr)
