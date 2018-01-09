@@ -818,7 +818,7 @@ directions = {}
 
 function reset_aard()
    mapper.reset_pos()
-   OnPluginSaveState()
+   SaveState()
    OnPluginInstall()
 end
 
@@ -3251,12 +3251,12 @@ function OnPluginEnable()
       Send_GMCP_Packet("request char")
       Send_GMCP_Packet("request room")
    end
-   OnPluginSaveState()
+   SaveState()
 end -- OnPluginEnable
 
 -- hide window on removal
 function OnPluginDisable ()
-   OnPluginSaveState()
+   SaveState()
    mapper.hide()
    if IsConnected() then
       OnPluginDisconnect()
