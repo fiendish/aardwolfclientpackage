@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1956 snapshot
+- bug fix: A latent memory access bug in all prior versions of MUSHclient could randomly lead to crashes or other client errors. 
+
 r1955 snapshot
 - misc change: A lot of plugin variables will save more immediately now, which should prevent some configuration loss in the event of a crash.
 - bug fix: People have reported that the chat echo plugin was gagging certain non-channel messages when it should have been showing them. My best guess at solving this involves making sure that they are turned on for everyone. If you want them omitted from output, hide them again.
