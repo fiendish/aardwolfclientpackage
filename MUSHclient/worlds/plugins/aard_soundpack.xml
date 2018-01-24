@@ -95,6 +95,7 @@
   >
   </alias>
   <alias
+   name="spmute"
    match="^spmute$"
    script="spmute"
    enabled="y"
@@ -376,7 +377,21 @@
 	TriggerEvent("quest_target_found")
   </send>
   </trigger>
-   
+  
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="(.+)?Andolor's very own \(Aarchaeology\) Professor is here, studying\.$"
+   name="AarchProfFound"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("aarch_prof")
+  </send>
+  </trigger>
+  
   <trigger
    enabled="y"
    group="Alert"
@@ -557,6 +572,20 @@
 	TriggerEvent("special_find")
   </send>
   </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You find a \|P\[Poker Card\]P\| special item hidden in the corpse!$"
+   name="PokerCardFind"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("special_find")
+  </send>
+  </trigger>
   
   <trigger
    enabled="y"
@@ -598,6 +627,18 @@
   <send>
 	TriggerEvent("special_find")
   </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You get \((.+)\) (.+) from (.+) corpse of (.+)\.$"
+   script="found_enhanced"
+   name="EnhancedItem"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
   </trigger>
 
   <trigger
@@ -689,7 +730,7 @@
 </triggers>
 <script>
 <![CDATA[
-local sp_version = "1.1.1"
+local sp_version = "1.1.2"
 local sp_last_download
 local sp_global_volume = 100
 local sp_mute_toggle = "0"
@@ -758,6 +799,12 @@ local soundEvents = {
     volume = "100",
     panning = "0",
     description = "Gquest has been declared"
+  },
+  ["aarch_prof"] = {
+    defaultwav = "aarch_prof.wav",
+    volume = "100",
+    panning = "0",
+    description = "Aarch Professor in room"
   },
   ["quest_target_found"] = {
     defaultwav = "quest_target_found.wav",
@@ -1081,13 +1128,14 @@ local soundEvents = {
 
 function TriggerEvent(event)
 
-	if (sp_mute_toggle == "1") then
-      logmsg("Event " .. event .. " has fired but soundpack is muted, ignoring.")
-		return
-	end
-	logmsg("Event " .. event .. " has fired!")
 	local volume = tonumber(soundEvents[event].volume)
 	local filename = soundEvents[event].defaultwav	
+   
+   if volume == 0 then
+      logmsg("Event " .. event .. " has fired but event volume is set to 0, ignoring.")
+      return
+   end
+   logmsg("Event " .. event .. " has fired!")
 	volume = calc_volume(volume)
 	
 	if (soundEvents[event].customwav ~= nil) then
@@ -1119,14 +1167,16 @@ end
 function spmute(name, line, wc)
 	if sp_mute_toggle == "0" then
 		sp_mute_toggle = "1"
-		ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] Playback audio has been: ", "Red", "", "Muted")
+		ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] Soundpack has been: ", "Red", "", "Disabled")
 		SaveState()
       PlaySettingChanged()
+      toggle_triggers(0)
 	else
 		sp_mute_toggle = "0"
-		ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] Playback audio has been: ", "Green", "", "Unmuted")
+		ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] Soundpack has been: ", "Green", "", "Enabled")
       SaveState()
       PlaySettingChanged()
+      toggle_triggers(1)
 	end
 end
 
@@ -1374,6 +1424,24 @@ function listEvents()
 
 end
 
+function toggle_triggers_aliases(state)
+
+   local triggerList = GetTriggerList()
+   local aliasList = GetAliasList()
+
+   if state == 1 then
+      state = true
+   else
+      state = false
+   end
+   
+   if triggerList then
+      for k, v in ipairs(triggerList) do
+         EnableTrigger(v, state)
+      end 
+   end
+end
+
 function can_rsound(player)
 	for i = 1, #rsound_accept do
 		if rsound_accept[i] ~= nil then
@@ -1421,6 +1489,7 @@ function play_rsound(url)
 end
 
 function OnPluginBroadcast (msg, id, name, text)
+   if sp_mute_toggle == "1" then return end
 	require "gmcphelper"
 
         if (id == '3e7dedbe37e44942dd46d264') then              -- GMCP Handler plugin
@@ -1486,6 +1555,25 @@ function OnPluginBroadcast (msg, id, name, text)
 	end
 end
 
+function found_enhanced(name, line, wildcards, style)
+      local foundStartTag = false
+      local foundEndTag = false
+      
+		for index, value in ipairs(style) do
+         thisColor = RGBColourToName(value.textcolour)
+         
+         if (thisColor == "lime" or thisColor == "red") and value.text == "(" then
+            foundStartTag = true
+         elseif (thisColor == "lime" or thisColor == "red") and value.text == ")" and foundStartTag then
+            foundEndTag = true
+         end
+         if foundStartTag and foundEndTag then
+            TriggerEvent("special_find")
+         end
+		end
+      
+end
+
 function loadSavedSettings()
 	table.sort(soundEvents, sort_func)
 	Send_GMCP_Packet("request char") -- store player name for later
@@ -1508,15 +1596,17 @@ function loadSavedSettings()
 	end
 	if (GetVariable("sp_mute_toggle") ~= nil) then
 		sp_mute_toggle = GetVariable("sp_mute_toggle")
+   else --first time install no data saved for toggle
+      require "aard_requirements"
+      if aard_req_novisuals_mode ~= nil then
+         spmute()
+      end
 	end
 	if (GetVariable("sp_allowlist") ~= nil) then
 	
 		local mystr = GetVariable("sp_allowlist")
 		rsound_accept = load( "return "..mystr)( )
 	end
---   for k, v in pairs (GetVariableList()) do 
---      Note (k, " = ", v) 
---   end
 end
 
 function OnPluginSaveState()

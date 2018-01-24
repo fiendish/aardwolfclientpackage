@@ -51,19 +51,19 @@ Commands:
 rev or review [any command]
            - This will put the output from any command you send into your Review category
 
-via add    - allows you to add lines/categories yourself
-             via add All=Text line to add
+vi add    - allows you to add lines/categories yourself
+             vi add All=Text line to add
 
 Settings:
 
-via int    - this toggles between using TTS interrupts and regular messages
+vi int    - this toggles between using TTS interrupts and regular messages
              when reviewing, category changes will still be TTS messages
 
 Custom categories:
 You can easily add lines to existing categories, or make your own.
 
 Simply make a trigger "Send To" Execute
-	via add All=Text line to add
+	vi add All=Text line to add
 
 This example would add the line "Text line to add" to the existing All
 category. You could also create your own category.
@@ -136,7 +136,7 @@ category. You could also create your own category.
   </alias>
   <alias
    script="review_add"
-   match="^via add (\w+)=(.*)"
+   match="^vi add (\w+)=(.*)"
    enabled="y"
    omit_from_command_history="y"
    omit_from_log="y"
@@ -148,7 +148,7 @@ category. You could also create your own category.
   </alias>
   <alias
    script="review_add"
-   match="^via add.?"
+   match="^vi add.?"
    enabled="y"
    omit_from_command_history="y"
    omit_from_log="y"
@@ -159,8 +159,8 @@ category. You could also create your own category.
   >
   </alias>
   <alias
-   script="via"
-   match="^via(.+)"
+   script="vi"
+   match="^vi(.+)"
    enabled="y"
    keep_evaluating="y"
    regexp="y"
@@ -303,6 +303,243 @@ category. You could also create your own category.
 	review_addline("All", "%0")
   </send>
   </trigger>
+  
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^You gain (.+) hit points, (.+) mana, (.+) moves, (.+) practices and (.+) trains\.$"
+  name="GainLevelInfoTrigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^You receive (.+) experience points.$"
+  name="Exp1Trigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^Lucky! You gain an extra (.+) training session(s?)!$"
+  name="LuckyTrainsTrigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^You have (.+) daily blessing bonus (.+) kills remaining\.$"
+  name="DailyBlessingBonusKillsTrigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+    
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^You gain (.+) extra trains daily blessing bonus\.$"
+  name="DailyBlessingTrainsTrigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="(\*?)(\*?)(\s?)You gain a bonus (.+)(\s?)(\*?)(\*?)$"
+  name="GainBonusTrigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^You receive (.+) experience points in honor of (.+) reaching superhero.$"
+  name="Exp2Trigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^Congratulations, hero. You have increased your powers!$"
+  name="PupTrigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("All", "%0")
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^You raise a level! You are now level (.+)\.$"
+  name="LevelUpTrigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("All", "%0")
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="^You get ((?!gold coins).)* from (.+) corpse of (.+)\.$"
+  name="LootTrigger"
+  regexp="y"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="Type 'group accept *' or 'group decline *' to accept or decline."
+  name="GroupInviteTrigger"
+  regexp="n"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("All", "Group invite from %1. Group accept %1 or group decline %1.")
+   review_addline("Group", "Group invite from %1. Group accept %1 or group decline %1.")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="You have joined the group: *"
+  name="GroupJoinTrigger"
+  regexp="n"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="* has kicked you from the group."
+  name="GroupKickedTrigger"
+  regexp="n"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="You start to follow *."
+  name="StartFollowTrigger"
+  regexp="n"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="You stop following *."
+  name="StopFollowTrigger"
+  regexp="n"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+  
+  <trigger
+  enabled="y"
+  group="Alert"
+  match="You have removed yourself from group: *"
+  name="GroupRemoveSelfTrigger"
+  regexp="n"
+  send_to="12"
+  sequence="100"
+  >
+  <send>
+	review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+  
   <trigger
   enabled="y"
   group="Alert"
@@ -379,7 +616,7 @@ local lastState
 local current_category = 0 -- not set yet
 local current_msg_id = 0
 local on_global_quest = false
-local listIndexing = false
+local listIndexing = true
 
 local categories = {}
 
@@ -431,17 +668,9 @@ function check_silent(type)
 	EnableTrigger("event_" .. type .. "_list_start", true)
 	silentCheck = true
 	SendNoEcho("echo {START_" .. string.upper(type) .. "LIST}")
-	--print("{START_" .. string.upper(type) .. "LIST}")
-	--gq_simulate7()
 	SendNoEcho(type .. " check")
 	SendNoEcho("echo {END_" .. string.upper(type) .. "LIST}")
 	logmsg("silent check requested (" .. type .. ")")
-end
-
-function campaign_request(name, line, w)
-	Send(line) -- send the server side command also
-	EnableTrigger("event_cp_line", true)
-	if listIndexing then check_silent("cp") return end	
 end
 
 function OnPluginGetFocus()
@@ -618,7 +847,7 @@ function review_add(name, line, wc)
 	local cat, msg = wc[1], wc[2]
 
 	if wc[1] == nil or wc[2] == nil then
-		printmsg("Usage is\nvia add All=Text line to add")
+		printmsg("Usage is\nvi add All=Text line to add")
 		return
 	end
 	if messages[cat] == nil then
@@ -930,10 +1159,10 @@ function review_msgcopy(name, line, wc)
 	speak("copied")
 end
 
-function via_help(AliasName, AliasLine, wildcards)
+function vi_help(AliasName, AliasLine, wildcards)
         print("")
         NoteStyle(2)
-        print("Aardwolf VI Assist Plugin v" .. internal_ver)
+        print("Aardwolf VI Review Buffers Plugin v" .. internal_ver)
         NoteStyle(0)
         print("")
         ColourNote("SteelBlue", "", GetPluginInfo (GetPluginID (), 3))
@@ -943,7 +1172,7 @@ end
 
 function OnPluginInstall()
         print("")
-        Note("Loaded Aardwolf VI Review Buffers plugin, type \"via help\" for shortcuts and commands")
+        Note("Loaded Aardwolf VI Review Buffers plugin, type \"vi help\" for shortcuts and commands")
         print("")
 	if GetVariable("tts_interrupt") == nil then
 		SetVariable("tts_interupt", "1")
@@ -1540,21 +1769,21 @@ function logmsg(msg)
 	end
 end
 
-function via(alias, line, wc)
+function vi(alias, line, wc)
 	local togName
 	if string.lower(wc[1]) == " debug" then
 		togName = "debug"
 	elseif string.lower(wc[1]) == " int" then
 		togName = "tts_interrupt"
 	elseif string.lower(wc[1]) == " help" then
-		via_help()
+		vi_help()
 		return
 	else
 		ColourNote("steelblue", "", "Valid options are:")
-		ColourNote("steelblue", "", "via int                    > enables/disables tts interrupt for message review (not categories)")
-		ColourNote("steelblue", "", "via add Category=Message   > adds a line to and creates category")
-		ColourNote("steelblue", "", "via help                   > display help file")
-		ColourNote("steelblue", "", "via debug                  > enables/disables debug for testing only")
+		ColourNote("steelblue", "", "vi int                    > enables/disables tts interrupt for message review (not categories)")
+		ColourNote("steelblue", "", "vi add Category=Message   > adds a line to and creates category")
+		ColourNote("steelblue", "", "vi help                   > display help file")
+		ColourNote("steelblue", "", "vi debug                  > enables/disables debug for testing only")
 		return
 	end
 	if (GetVariable(togName) == "1") then
@@ -1580,6 +1809,7 @@ review_add(nil, nil, {"Clan", ""})
 review_add(nil, nil, {"Answers", ""})
 review_add(nil, nil, {"Commerce", ""})
 review_add(nil, nil, {"URLs", ""})
+review_add(nil, nil, {"Kill Summary", ""})
 review_add(nil, nil, {"Quests", ""})
 ]]>
 </script>
