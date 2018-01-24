@@ -733,7 +733,7 @@
 local sp_version = "1.1.2"
 local sp_last_download
 local sp_global_volume = 100
-local sp_mute_toggle = "0"
+local sp_mute_toggle = "1"
 local rsound_accept = {}
 local rsound = {}
 local self = {}
@@ -1424,7 +1424,7 @@ function listEvents()
 
 end
 
-function toggle_triggers_aliases(state)
+function toggle_triggers(state)
 
    local triggerList = GetTriggerList()
    local aliasList = GetAliasList()
