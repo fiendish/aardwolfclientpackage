@@ -405,13 +405,12 @@ function OnPluginInstall()
    local logopath = dir .. "worlds\\plugins\\images\\aardbg13.png"
    if WindowLoadImage (bgoffscreen, "wolf_logo", logopath) == 0 then
       WindowResize (bgoffscreen, WindowImageInfo(bgoffscreen, "wolf_logo", 2), WindowImageInfo(bgoffscreen, "wolf_logo", 3), bgcolor)
-      WindowDrawImage (bgoffscreen, "wolf_logo", 0, 0, 0, 0, miniwin.image_copy)
-      WindowFilter (bgoffscreen, 0, 0, 0, 0, miniwin.filter_red_brightness, bit.band(bgcolor, 0xFF))
-      WindowFilter (bgoffscreen, 0, 0, 0, 0, miniwin.filter_green_brightness, bit.band(bit.shr(bgcolor,8), 0xFF))
-      WindowFilter (bgoffscreen, 0, 0, 0, 0, miniwin.filter_blue_brightness, bit.band(bit.shr(bgcolor,16), 0xFF))
+      WindowDrawImageAlpha (bgoffscreen, "wolf_logo", 0, 0, 0, 0, theme.LOGO_OPACITY)
       WindowImageFromWindow(bgwin, "wolf_logo", bgoffscreen)
       image_ratio = WindowImageInfo(bgwin, "wolf_logo", 2)/WindowImageInfo(bgwin, "wolf_logo", 3)
    end
+
+   WindowDelete(bgoffscreen)
 
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
