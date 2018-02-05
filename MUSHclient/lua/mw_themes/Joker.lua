@@ -1,5 +1,7 @@
 -- BARNEY THEME
 return {
+   LOGO_OPACITY = 0.05,
+
    BODY = 0x0d000d,
    BODY_TEXT = 0x00bb55,
    BUTTON = 0x221122,
@@ -12,7 +14,7 @@ return {
       {["name"]="Courier New", ["size"]=10},
       {["name"]="Lucida Console", ["size"]=10}
    },
-   TITLE_PADDING = 4,
+   TITLE_PADDING = 1,
 
    -- for 3D surfaces other than the titlebar, like buttons and scrollbars
    THREE_D_HIGHLIGHT = 0x00bb55,

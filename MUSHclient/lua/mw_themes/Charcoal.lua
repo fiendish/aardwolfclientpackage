@@ -2,6 +2,8 @@
 
 -- CHARCOAL THEME
 return {
+   LOGO_OPACITY = 0.05,
+
    BODY = 0x000000,
    BODY_TEXT = 0xc8c8c8,
    BUTTON = 0x222222,
@@ -14,7 +16,7 @@ return {
       {["name"]="Courier New", ["size"]=10},
       {["name"]="Lucida Console", ["size"]=10}
    },
-   TITLE_PADDING = 4,
+   TITLE_PADDING = 1,
 
    -- for 3D surfaces other than the titlebar, like buttons and scrollbars
    THREE_D_HIGHLIGHT = 0x909090,
