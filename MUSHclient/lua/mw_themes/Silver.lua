@@ -2,6 +2,8 @@
 
 -- SILVER THEME
 return {
+   LOGO_OPACITY = 0.02,
+
    BODY = 0x0c0c0c,
    BODY_TEXT = 0xe8e8e8,
    BUTTON = 0x696969,
@@ -14,7 +16,7 @@ return {
       {["name"]="Courier New", ["size"]=10},
       {["name"]="Lucida Console", ["size"]=10}
    },
-   TITLE_PADDING = 4,
+   TITLE_PADDING = 1,
 
    -- for 3D surfaces other than the titlebar, like buttons and scrollbars
    THREE_D_HIGHLIGHT = 0xe8e8e8,
