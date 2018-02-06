@@ -3,148 +3,159 @@
 
 <muclient>
 <plugin
-   name="Universal_Text_To_Speech"
-   author="Fiendish"
-   id="463242566069ebfd1b379ec1"
-   language="Lua"
-   purpose="Automatically speak output text"
-   date_written="2017-01-01 19:53:01"
-   requires="4.60"
-   version="1.0"
-   >
-<description>
-Text to speech support using the Tolk speech and braille abstraction library.
-https://github.com/dkager/tolk
-</description>
+ name="Universal_Text_To_Speech"
+ author="Fiendish"
+ id="463242566069ebfd1b379ec1"
+ language="Lua"
+ purpose="Automatically speak output text"
+ date_written="2017-01-01 19:53:01"
+ requires="4.60"
+ version="1.0"
+>
+ <description>
+  Text to speech support using the Tolk speech and braille abstraction library.
+  https://github.com/dkager/tolk
+ </description>
 </plugin>
 
 <aliases>
-  <alias
-   match="tts_stop"
-   enabled="y"
-   send_to="12"
-   sequence="100"
-   ignore_case="y"
-  >
-  <send>silence()</send>
-  </alias>
+ <alias
+  match="tts_stop"
+  enabled="y"
+  send_to="12"
+  sequence="100"
+  ignore_case="y"
+ >
+  <send>
+   silence_if_can()
+  </send>
+ </alias>
 
-  <alias
-   match="tts_note *"
-   enabled="y"
-   send_to="12"
-   sequence="100"
-   ignore_case="y"
-  >
-  <send>say("%1", false)</send>
-  </alias>
+ <alias
+  match="tts_note *"
+  enabled="y"
+  send_to="12"
+  sequence="100"
+  ignore_case="y"
+ >
+  <send>
+   say("%1", false)
+  </send>
+ </alias>
 
-  <alias
-   match="tts_interrupt *"
-   enabled="y"
-   send_to="12"
-   sequence="100"
-   ignore_case="y"
-  >
-  <send>say("%1", true)</send>
-  </alias>
+ <alias
+  match="tts_interrupt *"
+  enabled="y"
+  send_to="12"
+  sequence="100"
+  ignore_case="y"
+ >
+  <send>
+   say("%1", true)
+  </send>
+ </alias>
 
   <alias
    match="^tts$"
    regexp="y"
+   script="tts_toggle"
    enabled="y"
    omit_from_command_history="y"
    omit_from_log="y"
    omit_from_output="y"
    sequence="100"
    ignore_case="y"
-   send_to="12"
   >
-  <send>
-  toggle_setting("tts_enabled")
-  </send>
-  </alias>
-  
-   <alias
-   match="^tts help$"
-   regexp="y"
-   enabled="y"
-   sequence="100"
-   send_to="12"
-   ignore_case="y"
-  ><send>
-	Note(tts_help())
-   </send>
-  </alias>
-  
-  <alias
-   match="^tts swskip$"
-   regexp="y"
-   enabled="y"
-   sequence="100"
-   ignore_case="y"
-   send_to="12"
-  >
-  <send>
-    toggle_setting("swskip")
-  </send>
   </alias>
 
-  <alias
-   match="^tts focus$"
-   enabled="y"
-	regexp="y"
-   sequence="100"
-	send_to="12"
-  >
-  <send>
-    toggle_setting("focus")
-  </send>
-  </alias>
+ <alias
+  match="^tts focus$"
+  script="tts_focus_toggle"
+  regexp="y"
+  enabled="y"
+  omit_from_command_history="y"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  ignore_case="y"
+ >
+ </alias>
 
-  <alias
-   match="sapi faster"
-   enabled="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="100"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
+ <alias
+  match="^tts running$"
+  script="tts_running_toggle"
+  regexp="y"
+  enabled="y"
+  omit_from_command_history="y"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  ignore_case="y"
+ >
+ </alias>
+
+ <alias
+  match="^tts help$"
+  regexp="y"
+  enabled="y"
+  omit_from_command_history="y"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  ignore_case="y"
+  send_to="12"
+ >
+  <send>
+   Note(tts_help())
+  </send>
+ </alias>
+
+ <alias
+  match="sapi faster"
+  enabled="n"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  group="sapi"
+  send_to="12"
+  ignore_case="y"
+ >
+  <send>
    if sapi then
       SetVariable("engine_Rate", tostring(sapi.faster()))
    end
-   </send>
-  </alias>
+ </send>
+ </alias>
 
-  <alias
-   match="sapi slower"
-   enabled="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="100"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
+ <alias
+  match="sapi slower"
+  enabled="n"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  group="sapi"
+  send_to="12"
+  ignore_case="y"
+ >
+  <send>
    if sapi then
       SetVariable("engine_Rate", tostring(sapi.slower()))
    end
-   </send>
-  </alias>
+  </send>
+ </alias>
 
-  <alias
-   match="sapi voice*"
-   regexp="n"
-   enabled="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="100"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
+ <alias
+  match="sapi voice*"
+  regexp="n"
+  enabled="n"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  group="sapi"
+  send_to="12"
+  ignore_case="y"
+ >
+  <send>
    if sapi then
       local arg = Trim("%1")
       if arg == "" then
@@ -154,52 +165,55 @@ https://github.com/dkager/tolk
          SetVariable("engine_Voice_ID", tostring(id))
       end
    end
-   </send>
-  </alias>
+  </send>
+ </alias>
 
-  <alias
-   match="sapi list voices"
-   enabled="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="100"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
+ <alias
+  match="sapi list voices"
+  enabled="n"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  group="sapi"
+  send_to="12"
+  ignore_case="y"
+ >
+  <send>
    if sapi then
       sapi.list_voices()
    end
-   </send>
-  </alias>
+  </send>
+ </alias>
 
-  <alias
-   match="sapi test"
-   enabled="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="100"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
+ <alias
+  match="sapi test"
+  enabled="n"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  group="sapi"
+  send_to="12"
+  ignore_case="y"
+ >
+  <send>
    if sapi then
       sapi.speech_demo()
    end
-   </send>
-  </alias>
+  </send>
+ </alias>
 
-  <alias
-   match="sapi rate*"
-   enabled="n"
-   regexp="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="100"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
+ <alias
+  match="sapi rate*"
+  enabled="n"
+  regexp="n"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  group="sapi"
+  send_to="12"
+  ignore_case="y"
+ >
+  <send>
    if sapi then
       local arg = Trim("%1")
       if arg == "" then
@@ -208,53 +222,37 @@ https://github.com/dkager/tolk
          SetVariable("engine_Rate", tostring(sapi.set_rate(arg)))
       end
    end
-   </send>
-  </alias>
+  </send>
+ </alias>
 
-  <alias
-   match="sapi help"
-   regexp="n"
-   enabled="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="100"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
-   if sapi then
-      sapi.say("This help is being spoken but not printed to the screen. To print it to the screen, use: sapi help printed.")
-      sapi.say(sapi_help(), true)
-   end
-   </send>
-  </alias>
+ <alias
+  match="sapi help"
+  regexp="n"
+  enabled="n"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  group="sapi"
+  send_to="12"
+  ignore_case="y"
+ >
+  <send>
+   Note(sapi_help())
+  </send>
+ </alias>
 
-  <alias
-   match="sapi help printed"
-   regexp="n"
-   enabled="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="99"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
-   print(sapi_help())
-   </send>
-  </alias>
-
-  <alias
-   match="sapi filtering*"
-   regexp="n"
-   enabled="n"
-   omit_from_log="y"
-   omit_from_output="y"
-   sequence="100"
-   group="sapi"
-   send_to="12"
-   ignore_case="y"
-  ><send>
+ <alias
+  match="sapi filtering*"
+  regexp="n"
+  enabled="n"
+  omit_from_log="y"
+  omit_from_output="y"
+  sequence="100"
+  group="sapi"
+  send_to="12"
+  ignore_case="y"
+ >
+  <send>
    if sapi then
       local arg = Trim("%1")
       if arg == "" then
@@ -263,13 +261,15 @@ https://github.com/dkager/tolk
          SetVariable("filtering_level", tostring(sapi.set_filtering_level(arg)))
       end
    end
-   </send>
-  </alias>
+  </send>
+ </alias>
 </aliases>
 
 <script>
 <![CDATA[
-AcceleratorTo("Ctrl+Space", "CallPlugin('"..GetPluginID().."', 'silence')", sendto.script)
+require "gmcphelper"
+
+AcceleratorTo("Ctrl+Space", "CallPlugin('"..GetPluginID().."', 'silence_if_can')", sendto.script)
 
 -- convert wchar_t[] to lua str
 function widestr_to_luastr(wstr)
@@ -287,8 +287,20 @@ function luastr_to_widestr(str)
    return wstr
 end
 
+function can_speak()
+   return ((tolk and tolk.Tolk_IsLoaded() and tolk.Tolk_HasSpeech()) or sapi)
+end
+
+function should_speak_now()
+   return (
+      want_speech
+      and not (lost_focus and settings["quiet_when_lost_focus"])
+      and not (running and settings["quiet_when_running"])
+   )
+end
+
 function say(text, interrupt)
-   if (not text) or text:find("^%s*$") then
+   if (not text) or text:find("^%s*$") or (not can_speak()) then
       return
    end
 
@@ -299,23 +311,32 @@ function say(text, interrupt)
    -- print(text) -- debug
    if sapi then
       sapi.say(text)
-   elseif tolk and tolk.Tolk_IsLoaded() then
-   	tolk.Tolk_Output(luastr_to_widestr(text), interrupt or false)
-	end
+   elseif tolk then
+      tolk.Tolk_Output(luastr_to_widestr(text), interrupt or false)
+   end
 end
 
 function silence()
    if sapi then
       sapi.skip_all()
-   elseif tolk and tolk.Tolk_IsLoaded() then
+   elseif tolk then
       tolk.Tolk_Silence()
    end
 end
 
+function silence_if_can()
+   if can_speak() then
+      silence()
+   end
+end
+
 function OnPluginInstall()
-   sapi = false
+   want_speech = true
+   tolk_dll_error = false
+   sapi = nil
+   tolk = nil
    EnableGroup("sapi", false)
-   require "gmcphelper"
+
    -- LuaJIT FFI
    ffi = require "ffi"
 
@@ -338,9 +359,11 @@ function OnPluginInstall()
    ]]
 
    -- Load saved settings from state file to local variable
-   setting_focus = GetVariable("focus") or "0"
-   setting_swskip = GetVariable("swskip") or "0"
-	
+   settings = {
+      ["quiet_when_lost_focus"] = GetVariable("quiet_when_lost_focus") == "1",
+      ["quiet_when_running"] = GetVariable("quiet_when_running") == "1"
+   }
+
    -- https://github.com/dkager/tolk
    if ffi.abi("32bit") then
       tolk_path = 'screen_reader_dlls/x86/Tolk.dll'
@@ -354,100 +377,82 @@ function OnPluginInstall()
    if tolk then
       tolk.Tolk_TrySAPI(false)
       tolk.Tolk_Load()
-	if tolk.Tolk_IsLoaded() and tolk.Tolk_HasSpeech() then setting_tts_enabled = "1" end
+   else
+      tolk_dll_error = true
    end
 
-   if setting_tts_enabled == "1" then
+   if can_speak() then
       local reader = widestr_to_luastr(tolk.Tolk_DetectScreenReader())
       say("The universal T T S plug-in is using "..reader.." speech.", true)
    else
       sapi_fallback()
    end
+
+   if tolk_dll_error then
+      Note("Error: Failed to load "..tolk_path)
+   end
 end
 
 function unload()
-   silence()
+   silence_if_can()
    tolk = nil
    sapi = nil
    collectgarbage("collect")
 end
 
-history = {}
-function playback(line)
-   if line then
-      say(history[line])
-   end
-end
-
 function OnPluginScreendraw(line_type, log, line)
-	if setting_tts_enabled == "1" and line_type < 2 then
-		say(line)
-      if Trim(line) ~= "" then
-         table.insert(history, 1, line)
-         history[11] = nil
-      end
-	end
+   if (line_type < 2) and should_speak_now() then
+      say(line)
+   end
 end
 
 function OnPluginSaveState()
-	--save all our local vars back to plugin state files
-	SetVariable("focus", setting_focus)
-	SetVariable("swskip", setting_swskip)
-	SetVariable("tts_enabled", setting_tts_enabled)
+   SetVariable("quiet_when_lost_focus", settings["quiet_when_lost_focus"] and "1" or "0")
+   SetVariable("quiet_when_running", settings["quiet_when_running"] and "1" or "0")
 end
 
-
-function toggle_setting(setting, value, silent)
-
-	if setting == "focus" then
-		if value ~= nil then setting_focus = value
-		elseif setting_focus == "1" then
-			value, setting_focus = "0", "0"
-		else
-			value, setting_focus = "1", "1"
-		end
-		
-	elseif setting == "tts_enabled" then
-		if value ~= nil then setting_tts_enabled = value
-		elseif setting_tts_enabled == "1" then
-			value, setting_tts_enabled = "0", "0"
-		else
-			value, setting_tts_enabled = "1", "1"
-		end
-		
-	elseif setting == "swskip" then
-		if value ~= nil then setting_swskip = value
-		elseif setting_swskip == "1" then
-			value, setting_swskip = "0", "0"
-		else
-			value, setting_swskip = "1", "1"
-		end
-	
-	end
-	if not silent then
-		Note("tts setting: " .. setting .. " has been set to: " .. value .. ".")
-	end
-	SaveState()
+function toggle_setting(key)
+   settings[key] = not settings[key]
+   SaveState()
+   return settings[key]
 end
 
+function tts_focus_toggle()
+   if toggle_setting("quiet_when_lost_focus") then
+      Note("Speech will only be active when MUSHclient has focus.")
+   else
+      Note("Speech will stay active when MUSHclient loses focus.")
+   end
+end
+
+function tts_running_toggle()
+   if toggle_setting("quiet_when_running") then
+      Note("MUSHclient will no longer speak while running.")
+   else
+      Note("MUSHclient will speak while running.")
+   end
+end
 
 function OnPluginLoseFocus()
-   if setting_focus == "1" then
-      setting_tts_enabled = "0"
-   end
+   lost_focus = true
 end
 
 function OnPluginGetFocus()
-   if setting_focus == "1" and (tolk or sapi) then
-      setting_tts_enabled = "1"
-   end
+   lost_focus = false
 end
 
+function tts_toggle(name, line, wildcards)
+   want_speech = not want_speech
+   if not want_speech then
+      silence_if_can()
+   end
+   say(string.format("Speech %s.", want_speech and "on" or "off"), true)
+end
 
 function OnPluginTabComplete(word)
-	if setting_tts_enabled then
-		say(word, true)
-	end
+   if want_speech then
+      say(word, true)
+   end
 end
 
 function OnPluginClose()
@@ -455,24 +460,11 @@ function OnPluginClose()
 end
 
 function OnPluginBroadcast (msg, id, name, text)
-	if (id == '3e7dedbe37e44942dd46d264') then              -- GMCP Handler plugin
-		
-		if text == "char.status" then
-			local state = gmcp("char.status.state")
-			if lastState == "12" and state ~= "12" then
-				if setting_swskip == "1" then
-					swInProgress = false
-					toggle_setting("tts_enabled", "1", true)
-				end
-			end
-			 
-			lastState = state
-			if state == "12" and not swInProgress and setting_swskip == "1" then
-				swInProgress = true
-				toggle_setting("tts_enabled", "0", true)
-			end
-		end
-	end
+   if (id == '3e7dedbe37e44942dd46d264') then    -- GMCP Handler plugin
+      if text == "char.status" then
+         running = (gmcp("char.status.state") == "12")
+      end
+   end
 end
 
 function sapi_fallback()
@@ -532,7 +524,6 @@ function sapi_fallback()
    --    table.insert(sapi.replacements, v)
    -- end
 
-   setting_tts_enabled = "1"
    EnableGroup("sapi", true)
    sapi.say("You are using Microsoft SAPI for text to speech. If you were hoping to send your text through a screen reader engine such as JAWS, N V D A, or Windows Eyes, and it didn't work, try restarting MUSHclient.")
    sapi.say("Type \"sapi help\" for a list of SAPI configuration commands.")
@@ -558,13 +549,13 @@ function tts_help()
    return [[
    TTS Settings Commands:
 
-   tts                     : Toggles tts on and off.
-   tts focus               : When enabled automatically toggles off TTS if MUSHclient is not the active window.
-   tts swskip              : When enabled automatically disables TTS while speedwalking, and enables after arrival.
+   tts                : Toggles speech on and off.
+   tts focus          : Toggles speech when MUSHclient is not the active window.
+   tts running        : Toggles speech while running.
 
    ]]
 end
 
 ]]>
- </script>
+</script>
 </muclient>
