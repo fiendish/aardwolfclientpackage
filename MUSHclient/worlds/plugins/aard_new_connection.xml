@@ -54,12 +54,13 @@ function OnPluginSaveState ()
    SetVariable("showGreeting2", showGreeting2)
 end -- OnPluginSaveState
 
-function OnPluginInstall()
-end
-
 loaded = false
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
+   if aard_req_novisuals_mode then
+      LoadPlugin(GetPluginInfo(GetPluginID(), 20).."aard_new_connection_no_UI.xml")
+      return
+   end
    if not loaded then
       showGreeting2 = tonumber(GetVariable("showGreeting2")) or showGreeting2
       if (showGreeting2 == 1) then
