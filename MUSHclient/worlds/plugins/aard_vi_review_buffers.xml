@@ -164,7 +164,7 @@ category. You could also create your own category.
 
   <alias
    script="vi"
-   match="^vi(.+)"
+   match="^vi (.+)"
    enabled="y"
    keep_evaluating="y"
    regexp="y"
