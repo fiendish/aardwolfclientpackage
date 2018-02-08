@@ -2636,7 +2636,7 @@ function checkDatabaseIntegrity(full_check, second_run)
 end
 
 function maybe_Note(msg, force)
-   if not quiet_backups or force then
+   if (not quiet_backups) or force then
       Note(msg)
    end
 end
@@ -4632,6 +4632,7 @@ end
 function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
    if aard_req_novisuals_mode then
+      quiet_backups = true
       Execute("mapper hide")
    end
 end
