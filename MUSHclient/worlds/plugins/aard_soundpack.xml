@@ -462,6 +462,19 @@
   <trigger
    enabled="y"
    group="Alert"
+   match="^Congratulations, hero\. You have increased your powers\!$"
+   name="PowerUp"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+	TriggerEvent("level_up")
+  </send>
+  </trigger>
+  <trigger
+   enabled="y"
+   group="Alert"
    match="^You die.$"
    name="SelfDeath"
    regexp="y"
@@ -741,7 +754,6 @@ local sp_debug = "0"
 local async = require "async"
 require "gmcphelper"
 require "serialize"  -- serialize tables to strings
-
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
 local soundEvents = {
@@ -1146,7 +1158,6 @@ end
 
 function PlaySettingChanged()
    local volume = 100
-
    volume = calc_volume(volume)
    PlaySound(0, "channel_on.wav", false, volume, 0)
 end
@@ -1452,7 +1463,7 @@ function play_rsound(url)
    volume = -(40 - volume)
 
    if string.sub(url, 1, 4) == "http" then
-      download_play(url, GetInfo(74) .. "cache\\")
+      async.HEAD(url, async_head_download_complete, "HTTP", 120)
    else
       -- These make sure it doesn't exist in sounds or sounds\saved with the current filename
       if file_exists(GetInfo(74) .. url) then
@@ -1573,6 +1584,11 @@ function loadSavedSettings()
    end
    if (GetVariable("sp_mute_toggle") ~= nil) then
       sp_mute_toggle = GetVariable("sp_mute_toggle")
+   else --first time install no data saved for toggle
+      require "aard_requirements"
+      if aard_req_novisuals_mode ~= nil then --enable soundpack if novisuals_mode
+         spmute()
+      end
    end
    if (GetVariable("sp_allowlist") ~= nil) then
       local mystr = GetVariable("sp_allowlist")
@@ -1629,22 +1645,22 @@ function logerr(message)
 end
 
 function async_head_download_complete(retval, page, status, headers, full_status, request_url)
-   print("Header received " .. headers["content-length"])
-end
-
-function async_download_complete(retval, page, status, headers, full_status, request_url)
-   local filesize = get_download_size(request_url)
-   local destination = GetInfo(74) .. "cache\\"
-   local filename = string.sub(request_url, request_url:match'^.*()/' + 1)
-
+   local filesize = headers["content-length"]
    if filesize == nil then
       logerr("Link to wav invalid.")
       return
-   end
-   if (tonumber(filesize) > 400000) then
+   elseif (tonumber(filesize) > 400000) then
       logerr("File size exceeds 400k limit for wav files.")
       return
    end
+   logmsg("Starting download..")
+   -- change this to use async.GETFILE later
+   async.doAsyncRemoteRequest(request_url, async_download_complete, "HTTP", 120)
+end
+
+function async_download_complete(retval, page, status, headers, full_status, request_url)
+   local destination = GetInfo(74) .. "cache\\"
+   local filename = string.sub(request_url, request_url:match'^.*()/' + 1)
 
    f = assert(io.open (destination .. "temp.wav", "wb"))  -- open it
 
@@ -1676,28 +1692,6 @@ function async_download_complete(retval, page, status, headers, full_status, req
    end
 
    PlaySound(0, "cache\\temp.wav", false, volume, 0)
-   --return wave
-end
-
-function download_play(url, destination)
-   --download_header(url)
-   async.doAsyncRemoteRequest(url, async_download_complete, "HTTP", 120)
-end
-
-function download_header(url)
-   async.doAsyncRemoteRequest(url, async_head_download_complete, "HTTP", 120)
-end
-
-function get_download_size(url)
-   require "socket.http"
-
-   local resp, stat, hdr = socket.http.request{
-      method  = "HEAD",
-      url = url,
-   }
-   if hdr ~= nil then
-      return hdr["content-length"]
-   end
 end
 
 function save_sound(name, line, wc)
