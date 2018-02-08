@@ -346,6 +346,21 @@ category. You could also create your own category.
   <trigger
    enabled="y"
    group="Alert"
+   match="^You gain (.+) trains\.$"
+   name="TrainsTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
    match="^Lucky! You gain an extra (.+) training session(s?)!$"
    name="LuckyTrainsTrigger"
    regexp="y"
@@ -1254,18 +1269,18 @@ end
 
 -- reverse ipairs function
 function ripairs(t)
-   local function ripairs_it(t,i)
-      i=i-1
-      local v=t[i]
-      if v==nil then
+   local function ripairs_it (t,i)
+      i = i-1
+      local v = t[i]
+      if v == nil then
          return v
       end
-      return i,v
+      return i, v
    end
    return ripairs_it, t, #t+1
 end
 
-function OnPluginBroadcast (msg, id, name, text)
+function OnPluginBroadcast(msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then              -- GMCP Handler plugin
 
       if (text == "comm.channel") then
