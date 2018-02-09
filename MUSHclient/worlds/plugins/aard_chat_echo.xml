@@ -154,6 +154,7 @@ echo_donations = GetVariable("echo_donations_2") ~= "0"
 echo_warfare = GetVariable("echo_warfare_2") ~= "0"
 
 -- only hide echoes if at least one capture window is active
+-- use CallPlugin ("55616ea13339bc68e963e1f8", "enable_hiding", true, GetPluginID())
 never_hide = true
 list_of_filter_enablers = {}
 function enable_hiding(true_false, enabler_id)
@@ -308,7 +309,6 @@ function OnPluginBroadcast (msg, id, name, text)
          -- some gmcp messages get sent with the MOTD and we want this to happen after
          if not done_init and can_check_compact() then
             done_init = true
-            Note("Checking compact setting.")
             Send_GMCP_Packet("config compact")
          end
          if char_state ~= "5" then -- show messages that were buffered while in note mode
@@ -328,6 +328,14 @@ function untagged_info (name, line, wildcards, styles)
    EnableTriggerGroup("end_gag", true) -- gags trailing blank line
 end
 
+function rejection_message()
+  Note()
+  ColourNote ("yellow", "", "You can't hide messages with \"chats echo on\" or \"chats echo custom\" unless you have at least one secondary capture plugin active.")
+  ColourNote ("yellow", "", "If you want to disable certain channels, do it with the available in-game commands.")
+  ColourNote ("yellow", "", [[Otherwise you must have at least one plugin which uses the following line of code before disabling chat display in the client is allowed:   CallPlugin("55616ea13339bc68e963e1f8", "enable_hiding", true, GetPluginID())]])
+  Note()
+end
+
 function chat_echo (toggle)
    if toggle == "" then
       ColourNote("yellow", "", "Current channel echo status: ")
@@ -340,17 +348,23 @@ function chat_echo (toggle)
       for k,v in pairs(channels_table) do
          channels_table[k]["echo"] = true
       end
-      ColourNote ("yellow", "", "All chats are now SHOWN in the main window.")
+      ColourNote ("yellow", "", "All chats are now", "lime", "", " shown ", "yellow", "", "in the main window.")
       ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
       Note("")
    elseif toggle == "off" then
+      if never_hide then
+         return rejection_message()
+      end
       for k,v in pairs(channels_table) do
          channels_table[k]["echo"] = nil
       end
-      ColourNote ("yellow", "", "All chats are now HIDDEN in the main window.")
+      ColourNote ("yellow", "", "All chats are now", "red", "", " hidden ", "yellow", "", "in the main window.")
       ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
       Note("")
    elseif toggle == "custom" then
+      if never_hide then
+         return rejection_message()
+      end
       local tbl = {}
       local defaults = {}
       local i = 1
@@ -404,18 +418,11 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 function OnPluginDisable()
    if IsConnected() then
-      TelnetOptionOff(TELOPT_CHANNELS)
-      TelnetOptionOff(TELOPT_TELLS)
-      TelnetOptionOff(TELOPT_SAYS)
       Send_GMCP_Packet("gmcpchannels off")
    end
 end
 
 function OnPluginConnect()
-   TelnetOptionOn(TELOPT_CHANNELS)
-   TelnetOptionOn(TELOPT_TELLS)
-   TelnetOptionOn(TELOPT_SAYS)
-   Send_GMCP_Packet("tags on")
    Send_GMCP_Packet("gmcpchannels on")
    Send_GMCP_Packet("request char")
 end
