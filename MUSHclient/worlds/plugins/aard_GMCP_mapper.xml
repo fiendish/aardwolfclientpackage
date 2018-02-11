@@ -790,7 +790,7 @@ window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
 quick_mode = ((GetVariable("quick_mode") or "1") == "1") -- default true
 shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
-quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
+quiet_backups = true -- just at the beginning
 local rooms = {}
 local areas = {}
 local environments = {}
@@ -2970,6 +2970,7 @@ function OnPluginInstall ()
    else
       after_update_check()
    end
+   quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
 end
 
 function update_db_schema(db_user_version)
