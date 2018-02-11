@@ -49,7 +49,6 @@ Bast and WinkleWinkle.
    send_to="14"
 >
 <send>
-   docheck = false
    EnableTriggerGroup("prompts", false)
    EnableTrigger("end", false)
 </send>
@@ -110,8 +109,6 @@ Bast and WinkleWinkle.
 <![CDATA[
 require "aard_lua_extras"
 
-docheck = true
-
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
@@ -152,37 +149,27 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-function do_prompt_check()
+function do_connect_init()
    EnableTrigger("begin", true)
    SendNoEcho("echo {prompt fixer begin}")
    SendNoEcho("prompt data")
    SendNoEcho("echo {prompt fixer end}")
 end
 
-function OnPluginTelnetOption (data)
-   hexcodes = {
-      ['640B'] = true,
-      ['6403'] = true,
-      ['6409'] = true
-   }
-   if docheck and hexcodes[utils.tohex(data)] then
-      do_prompt_check()
+doinit = true
+function OnPluginTelnetOption(data)
+   if doinit then
+      local hexcodes = {
+         ['6403'] = true,
+         ['6409'] = true,
+         ['640B'] = true
+      }
+      if hexcodes[utils.tohex(data)] then
+         doinit = false
+         do_connect_init()
+      end
    end
 end
-
-function OnPluginConnect()
-   docheck = true
-end
-
-function OnPluginInstall ()
-   OnPluginEnable()
-end -- OnPluginInstall
-
-function OnPluginEnable ()
-   if IsConnected() then
-      OnPluginConnect()
-   end
-end -- OnPluginEnable
 
 function getmemoryusage()
    collectgarbage('collect')
