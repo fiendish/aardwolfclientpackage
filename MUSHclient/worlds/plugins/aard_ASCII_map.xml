@@ -229,7 +229,7 @@ starty           = ""
 posx             = ""
 posy             = ""
 hotspot_id       = ""
-page_built       = false
+requested_since_empty       = false
 
 always_echo_rooms = {
 -- "A Garden" via FT2 Gardener's Brain Control Room
@@ -257,6 +257,7 @@ requesting = false
 function request_new_map()
    if GetTimerOption("activity_timer", "enabled") == 1 and can_request_map and not requesting and kinda_busy == 0 then
       requesting = true
+      requested_since_empty = true
       SendNoEcho("map")
       EnableTriggerGroup("end_gag", true)
    end
@@ -270,7 +271,6 @@ function map_redirect (name, line, wildcards, styles)
       map_lines = {} --reset ready for new map
    elseif name == "map_end" then
       EnableTrigger ("multi_line_map", false)  -- no more lines to go
-      page_built = true
       requesting = false
       DisplayMapPage () --end of map from MUD, display the window
 
@@ -407,7 +407,7 @@ function DisplayMapPage()
       txt = "Right-click here to pick another."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
-   elseif not page_built then
+   elseif not requested_since_empty then
       line = -font_height-5
       txt = "Map will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
@@ -583,6 +583,24 @@ function right_click_menu ()
    end
 end -- right_click_menu
 
+char_state_hexcodes = {
+   ['6403'] = 3,
+   ['6409'] = 9,
+   ['640B'] = 11
+}
+function OnPluginTelnetOption(data)
+   local hexdata = utils.tohex(data)
+   char_state = char_state_hexcodes[hexdata]
+   can_request_map = ((char_state == 3) or (char_state == 11))
+   if (char_state == 11) and (myhp == 1) and not died then
+      -- the mud doesn't send a map update when you die (part2)
+      died = true
+      requested_since_empty = false
+   end
+   if not requested_since_empty then
+      request_new_map()
+   end
+end
 
 --=================================================================================
 -- Called when plugin receives telnet data - main entry point for actually running
@@ -594,7 +612,7 @@ function OnPluginBroadcast (msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == 'reload') then
          -- invalidate current data
-         page_built = false
+         requested_since_empty = false
          can_request_map = true
          return
       end
@@ -606,7 +624,7 @@ function OnPluginBroadcast (msg, id, name, text)
          if (show_coords == 1) then
             process_coords()
          end
-         if page_built == false and (GetOption("enable_triggers") == 1) then
+         if (not requested_since_empty) and (GetOption("enable_triggers") == 1) then
             request_new_map()
          end
       elseif (text == "comm.repop") then
@@ -621,17 +639,6 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          else
             died = false
-         end
-      elseif (text == "char.status") then
-         char_state = tonumber(gmcp("char.status.state"))
-         can_request_map = (char_state == 3 or char_state == 11)
-         if char_state == 11 and myhp == 1 and not died then
-            -- the mud doesn't send a map update when you die (part2)
-            died = true
-            page_built = false
-         end
-         if not page_built then
-            request_new_map()
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
@@ -792,13 +799,13 @@ function LeftClickOnly(flags, hotspot_id, win)
 end
 
 function OnPluginConnect()
-   page_built = false
+   requested_since_empty = false
+   Send_GMCP_Packet("tags on")
    TelnetOptionOn(TELOPT_MAP)
    TelnetOptionOff(TELOPT_SHORTMAP)
    TelnetOptionOn(TELOPT_ROOM_NAMES)
    TelnetOptionOn(TELOPT_EXIT_NAMES)
    TelnetOptionOn(TELOPT_ROOMDESC_TAGS)
-   Send_GMCP_Packet("tags on")
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
    Send_GMCP_Packet("maptype "..maptype)
    Send_GMCP_Packet("request char")
