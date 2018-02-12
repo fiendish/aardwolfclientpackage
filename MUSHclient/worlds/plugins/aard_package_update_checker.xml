@@ -44,7 +44,7 @@ You can also run a manual check by typing:    package update check
 <send>
    local succ, version, msg = aard_extras.PackageVersionExtended()
    if succ then
-      ColourNote("white", "blue", msg)
+      ColourNote("white", "", msg)
    else
       ColourNote("white","red", msg)
    end
