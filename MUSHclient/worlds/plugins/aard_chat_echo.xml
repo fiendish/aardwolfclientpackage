@@ -184,11 +184,6 @@ end
 
 enable_hiding(false, GetPluginID())
 
-compact_uncheckable_states = {[""]=true, ["1"]=true, ["2"]=true, ["4"]=true, ["5"]=true, ["6"]=true, ["7"]=true, ["8"]=true}
-function can_check_compact()
-   return not compact_uncheckable_states[gmcp("char.status.state")]
-end
-
 function hideEchos(info, global_quest, remort_auction, donations, warfare)
    if info ~= nil then
       EnableTrigger("info", info)
@@ -276,6 +271,31 @@ function OnPluginListChanged ()
    end
 end
 
+char_state_hexcodes = {
+   ['6403'] = 3,
+   ['6405'] = 5,
+   ['6409'] = 9,
+   ['640B'] = 11
+}
+function OnPluginTelnetOption(data)
+   local hexdata = utils.tohex(data)
+   char_state = char_state_hexcodes[hexdata]
+
+   -- after MOTD
+   if (not done_init) and char_state and (char_state ~= 5) then
+      done_init = true
+      Send_GMCP_Packet("config compact")
+   end
+   if char_state ~= 5 then -- show messages that were buffered while in note mode
+      if #msg_buffer > 0 then
+         Note("Replaying all channel messages received while in note writing mode...")
+         for i,v in ipairs(msg_buffer) do
+            echo_msg(v)
+         end
+         msg_buffer = {}
+      end
+   end
+end
 
 msg_buffer = {}
 function OnPluginBroadcast (msg, id, name, text)
@@ -284,7 +304,6 @@ function OnPluginBroadcast (msg, id, name, text)
       if (text == "config") then
          compact_mode = gmcp("config.compact")
       elseif (text == "comm.channel") then
-         char_state = gmcp("char.status.state")
          gmcp_comm = gmcp("comm.channel")
          msg = gmcp_comm.msg or ""
          chan = gmcp_comm.chan or ""
@@ -297,28 +316,12 @@ function OnPluginBroadcast (msg, id, name, text)
                addNewChannel(chan)
             end
             if never_hide or channels_table[chan]["echo"] then
-               if char_state ~= "5" then
+               if char_state ~= 5 then
                   echo_msg(msg)
                else
                   table.insert(msg_buffer, msg)
                end
             end
-         end
-      elseif text == "char.status" then
-         char_state = gmcp("char.status.state")
-         -- some gmcp messages get sent with the MOTD and we want this to happen after
-         if not done_init and can_check_compact() then
-            done_init = true
-            Send_GMCP_Packet("config compact")
-         end
-         if char_state ~= "5" then -- show messages that were buffered while in note mode
-            if #msg_buffer > 0 then
-               Note("Replaying all channel messages received while in note writing mode...")
-            end
-            for i,v in ipairs(msg_buffer) do
-               echo_msg(v)
-            end
-            msg_buffer = {}
          end
       end
    end
