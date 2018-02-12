@@ -585,12 +585,10 @@ end -- right_click_menu
 
 char_state_hexcodes = {
    ['6403'] = 3,
-   ['6409'] = 9,
    ['640B'] = 11
 }
 function OnPluginTelnetOption(data)
-   local hexdata = utils.tohex(data)
-   char_state = char_state_hexcodes[hexdata]
+   char_state = char_state_hexcodes[utils.tohex(data)]
    can_request_map = ((char_state == 3) or (char_state == 11))
    if (char_state == 11) and (myhp == 1) and not died then
       -- the mud doesn't send a map update when you die (part2)
@@ -633,7 +631,7 @@ function OnPluginBroadcast (msg, id, name, text)
          -- the mud doesn't send a map update when you die (part1)
          myhp = tonumber(gmcp("char.vitals.hp"))
          if myhp == 1 then
-            if char_state == 11 and not died then
+            if (char_state == 11) and not died then
                died = true
                request_new_map()
             end
