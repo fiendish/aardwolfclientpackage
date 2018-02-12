@@ -68,7 +68,7 @@ window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
 function remember()
-   ColourTell("yellow", "", "Remember, the latest development snapshot is always available at: ")
+   ColourTell("yellow", "", "Remember, the latest installer/updater is always available at: ")
    Hyperlink(download_url, download_url, "Installer Download Page", "yellow", "", true)
    Note("")
    Note("")
@@ -223,7 +223,7 @@ function showUpdate()
          ErrorMessage = "The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Contact Fiendish about this message, because clearly this situation is impossible. :/"
          return false
       else
-         ColourNote("yellow", "", "Your package version r"..aard_extras.PackageVersionFull().." appears to be up-to-date.")
+         ColourNote("yellow", "", "Your Aardwolf MUSHclient package version r"..local_version.." appears to be up-to-date.")
          remember()
       end
    else
