@@ -478,6 +478,8 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <include name="aard_prompt_fixer.xml" plugin="y" />
 <include name="aard_chat_echo.xml" plugin="y" />
 <include name="aard_VI_command_output.xml" plugin="y" />
+<include name="aard_vi_review_buffers.xml" plugin="y" />
+<include name="aard_soundpack.xml" plugin="y" />
 <include name="aard_GMCP_handler.xml" plugin="y" />
 <include name="aard_miniwindow_z_order_monitor.xml" plugin="y" />
 <include name="aard_Copy_Colour_Codes.xml" plugin="y" />
