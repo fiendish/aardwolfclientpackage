@@ -30,7 +30,7 @@ Bast and WinkleWinkle.
    match="{prompt fixer begin}$"
    sequence="100"
    name="begin"
-   send_to="12"
+   send_to="14"
 >
 <send>
    EnableTriggerGroup("prompts", true)
@@ -43,13 +43,12 @@ Bast and WinkleWinkle.
    enabled="n"
    regexp="y"
    omit_from_output="y"
-   match="{prompt fixer end}$"
+   match="^{prompt fixer end}$"
    sequence="100"
    name="end"
-   send_to="12"
+   send_to="14"
 >
 <send>
-   docheck = false
    EnableTriggerGroup("prompts", false)
    EnableTrigger("end", false)
 </send>
@@ -108,11 +107,7 @@ Bast and WinkleWinkle.
 
 <script>
 <![CDATA[
-require "gmcphelper"
 require "aard_lua_extras"
-
-stats = nil
-docheck = true
 
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
@@ -154,39 +149,31 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-function do_prompt_check()
-   char_state = tonumber(gmcp("char.status.state"))
-
-   if (char_state == 3
-       or char_state == 9
-       or char_state == 11) then
-      EnableTrigger("begin", true)
-      SendNoEcho("echo {prompt fixer begin}")
-      SendNoEcho("prompt data")
-      SendNoEcho("echo {prompt fixer end}")
-   end
+function do_connect_init()
+   EnableTrigger("begin", true)
+   SendNoEcho("echo {prompt fixer begin}")
+   SendNoEcho("prompt data")
+   SendNoEcho("echo {prompt fixer end}")
 end
 
-function OnPluginBroadcast (msg, id, name, text)
-   if docheck and id == "3e7dedbe37e44942dd46d264" and text == "char.status" then
-      do_prompt_check()
+doinit = true
+function OnPluginTelnetOption(data)
+   if doinit then
+      local hexcodes = {
+         ['6403'] = true,
+         ['6409'] = true,
+         ['640B'] = true
+      }
+      if hexcodes[utils.tohex(data)] then
+         doinit = false
+         do_connect_init()
+      end
    end
 end
-
-function OnPluginInstall ()
-   OnPluginEnable()
-end -- OnPluginInstall
-
-
-function OnPluginEnable ()
-   if IsConnected() then
-      Send_GMCP_Packet("request char")
-   end
-end -- OnPluginEnable
 
 function getmemoryusage()
-  collectgarbage('collect')
-  return collectgarbage('count')
+   collectgarbage('collect')
+   return collectgarbage('count')
 end
 
 ]]>

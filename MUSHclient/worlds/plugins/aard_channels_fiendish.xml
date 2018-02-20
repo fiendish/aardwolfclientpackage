@@ -241,6 +241,7 @@ end
 win = GetPluginID()
 function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
+   -- let aard_chat_echo hide things
    CallPlugin ("55616ea13339bc68e963e1f8", "enable_hiding", true, GetPluginID())
 end
 

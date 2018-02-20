@@ -1,7 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r1960 snapshot
+- bug fix: work around possible gmcp char status inconsistency at login in prompt fixer, ascii map, and chat echo plugins by switching connection checks to telopts instead.
+- bug fix: The aard_Copy_Colour_Codes plugin should now work with extended ascii and the utf8 map characters.
+- misc change: A few unnecessary status messages have been removed in the non-visual edition.
+- new feature: Pwar's soundpack and review buffers plugins are now included in the package (and loaded by default on a brand new install of the non-visual edition).
+
 r1956 snapshot
-- bug fix: A latent memory access bug in all prior versions of MUSHclient could randomly lead to crashes or other client errors. 
+- bug fix: A latent memory access bug in all prior versions of MUSHclient could randomly lead to crashes or other client errors.
 
 r1955 snapshot
 - misc change: A lot of plugin variables will save more immediately now, which should prevent some configuration loss in the event of a crash.
