@@ -145,7 +145,7 @@ category. You could also create your own category.
    keep_evaluating="n"
    regexp="y"
    omit_from_output="y"
-   sequence="100"
+   sequence="99"
   >
   </alias>
 
@@ -158,7 +158,7 @@ category. You could also create your own category.
    keep_evaluating="n"
    regexp="y"
    omit_from_output="y"
-   sequence="100"
+   sequence="99"
   >
   </alias>
 
@@ -1810,11 +1810,11 @@ end
 
 function vi(alias, line, wc)
    local togName
-   if string.lower(wc[1]) == " debug" then
+   if string.lower(wc[1]) == "debug" then
       togName = "debug"
-   elseif string.lower(wc[1]) == " int" then
+   elseif string.lower(wc[1]) == "int" then
       togName = "tts_interrupt"
-   elseif string.lower(wc[1]) == " help" then
+   elseif string.lower(wc[1]) == "help" then
       vi_help()
       return
    else
