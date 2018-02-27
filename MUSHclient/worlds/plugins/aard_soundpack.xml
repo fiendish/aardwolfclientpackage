@@ -1585,14 +1585,19 @@ function loadSavedSettings()
    if (GetVariable("sp_mute_toggle") ~= nil) then
       sp_mute_toggle = GetVariable("sp_mute_toggle")
    else --first time install no data saved for toggle
-      require "aard_requirements"
-      if aard_req_novisuals_mode ~= nil then --enable soundpack if novisuals_mode
-         spmute()
-      end
+      first_time = true
    end
    if (GetVariable("sp_allowlist") ~= nil) then
       local mystr = GetVariable("sp_allowlist")
       rsound_accept = load( "return "..mystr)( )
+   end
+end
+
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+   if first_time and aard_req_novisuals_mode then
+      --enable soundpack if novisuals_mode
+      spmute()
    end
 end
 
