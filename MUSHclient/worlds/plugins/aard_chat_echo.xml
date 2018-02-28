@@ -271,29 +271,17 @@ function OnPluginListChanged ()
    end
 end
 
-char_state_hexcodes = {
+safe_char_state_hexcodes = {
    ['6403'] = 3,
-   ['6405'] = 5,
    ['6409'] = 9,
    ['640B'] = 11
 }
 function OnPluginTelnetOption(data)
    local hexdata = utils.tohex(data)
-   char_state = char_state_hexcodes[hexdata]
-
    -- after MOTD
-   if (not done_init) and char_state and (char_state ~= 5) then
+   if (not done_init) and safe_char_state_hexcodes[hexdata] then
       done_init = true
       Send_GMCP_Packet("config compact")
-   end
-   if char_state ~= 5 then -- show messages that were buffered while in note mode
-      if #msg_buffer > 0 then
-         Note("Replaying all channel messages received while in note writing mode...")
-         for i,v in ipairs(msg_buffer) do
-            echo_msg(v)
-         end
-         msg_buffer = {}
-      end
    end
 end
 
@@ -311,16 +299,26 @@ function OnPluginBroadcast (msg, id, name, text)
             Sound(GetInfo(50))
          end
 
-         if (never_hide or echo_donations or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+         if (never_hide or echo_donations or (string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil)) then
             if not channels_table[chan] then
                addNewChannel(chan)
             end
             if never_hide or channels_table[chan]["echo"] then
-               if char_state ~= 5 then
+               if gmcp("char.status.state") ~= "5" then
                   echo_msg(msg)
                else
                   table.insert(msg_buffer, msg)
                end
+            end
+         end
+      elseif (text == "char.status") then
+         if gmcp("char.status.state") ~= "5" then -- show messages that were buffered while in note mode
+            if #msg_buffer > 0 then
+               Note("Replaying all channel messages received while in note writing mode...")
+               for i,v in ipairs(msg_buffer) do
+                  echo_msg(v)
+               end
+               msg_buffer = {}
             end
          end
       end
