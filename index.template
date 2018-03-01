@@ -166,7 +166,7 @@
         This page has download links for two variants of the Aardwolf MUSHclient Package installer.<br> The only difference between them is that, if a world file is not already present, the one called the "non-visual base" installer initially loads a different default set of plugins in the default Aardwolf world file, eschewing graphical plugins that are incompatible with text to speech interaction. It still loads the mapper plugin, just with the visual map display hidden.
         </li>
         <li>
-        In order to preserve your personal settings, some of your existing files are never overwritten by the installers. Because these installers do not overwrite your Aardwolf.db mapper database file, Aardwolf.mcl world file, or plugin state files, you no longer need to do any of the old manual file edits, imports, or copies to complete an upgrade. <em style="color:darkgreen">You can just install over the same location as your previous Aardwolf MUSHclient install and that's it.</em> If you're concerned about accidents, just make a backup copy first.
+        These installers do not overwrite your existing Aardwolf.db mapper database file, Aardwolf.mcl world file, or plugin state files, so you no longer need to do any of the old manual file edits, imports, or copies to complete an upgrade. <em style="color:darkgreen">You can just install over the same location as your previous Aardwolf MUSHclient install and that's it.</em> If you're concerned about accidents, you can always make a backup copy of your whole MUSHclient folder first.
         </li>
         <li>
         For information about scary warnings from your computer relating to unsigned executables or potential viruses, please read <a href="trust_faq.html">Trust FAQ</a>.
