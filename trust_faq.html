@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Aardwolf MUSHclient Package Trust FAQ</title>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="//fiendish.github.io/gh-fork-banner/gh.css">
+  <style>
+  html, body {
+    padding-top: 0;
+    margin-top: 0;
+    font-family: Georgia, serif;
+    color: #222222;
+    background-color: #FEFAFF;
+    text-align: center;
+  }
+  dl {
+    width: 70%;
+    min-width: 400px;
+    display: inline-block;
+    text-align: left;
+  }
+  dt {
+    font-size: 20pt;
+    color: #4682B4;
+    margin-top: 30px;
+    text-decoration: underline;
+  }
+  dt:first-child {
+    margin-top: 0px;
+  }
+  dd {
+    font-size: 16pt;
+    margin-top: 15px;
+  }
+
+  a {
+    font-family: "Lucida Console", Monaco, monospace;
+    font-size: 85%;
+  }
+
+  .github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}
+  </style>
+</head>
+<body>
+<h1 style="text-align:center">Aardwolf MUSHclient Package Trust FAQ</h1>
+<dl>
+    <dt>How can I trust you?</dt>
+    <dd>How can you trust anyone? My character name in Aardwolf is Fiendish. I've been playing there since before Aardwolf started recording character birth dates in 2001, so a long time, and, if you're reading this, I'm either still there or dead. Many players know me, or they at least know of me. If you want, you can connect to Aardwolf without using this software and talk to people. Or you can talk to me personally. I always respond to personal notes, tells, and emails (finger fiendish in-game). Emails are fastest if I'm not online at the time. But reputation is really the only way that trust ever works, so, if you don't currently trust me or my software, think about what it would take to earn your trust and act on that.</dd>
+    <dt>Ok, I checked you out and I trust you now.</dt>
+    <dd>Excellent! I appreciate it.</dd>
+    <dt>What code is running inside the Aardwolf MUSHclient Package?</dt>
+    <dd>All parts of the Aardwolf MUSHclient Package are free/open-source software, which means that you or someone you know and trust can freely read and modify the underlying source code. The installer itself is generated automatically using NSIS scripts available at <a href="https://github.com/fiendish/aardwolfclientpackage-installer">https://github.com/fiendish/aardwolfclientpackage-installer</a> and also uploaded to GitHub using a continuous integration service called AppVeyor according to the instructions found in the project's appveyor.yml configuration file at <a href="https://github.com/fiendish/aardwolfclientpackage/blob/MUSHclient/appveyor.yml">https://github.com/fiendish/aardwolfclientpackage/blob/MUSHclient/appveyor.yml</a>. The download site at <a href="https://fiendish.github.io/aardwolfclientpackage">https://fiendish.github.io/aardwolfclientpackage</a> is also automatically updated with new download links at the same time using the HTML template files at <a href="https://github.com/fiendish/aardwolfclientpackage/tree/gh-pages">https://github.com/fiendish/aardwolfclientpackage/tree/gh-pages</a>. MUSHclient.exe is compiled directly from source code also using AppVeyor. You can find the MUSHclient source code repository at <a href="https://github.com/nickgammon/mushclient">https://github.com/nickgammon/mushclient</a> and its appveyor.yml configuration file specifically at <a href="https://github.com/nickgammon/mushclient/blob/master/appveyor.yml">https://github.com/nickgammon/mushclient/blob/master/appveyor.yml</a>. The Aardwolf MUSHclient Package also includes directly-from-source-code builds of LuaJIT, Lua-openssl, and Lua-llthreads2, each of which can also be found on GitHub at <a href="https://github.com/LuaJIT/LuaJIT">https://github.com/LuaJIT/LuaJIT</a>, <a href="https://github.com/zhaozg/lua-openssl">https://github.com/zhaozg/lua-openssl</a>, and <a href="https://github.com/moteus/lua-llthreads2">https://github.com/moteus/lua-llthreads2</a> respectively and which are all built at the same time as part of generating the installer with AppVeyor. In short, from the moment a set of changes enters the main MUSHclient code branch at <a href="https://github.com/fiendish/aardwolfclientpackage">https://github.com/fiendish/aardwolfclientpackage</a>, the installer is automatically bundled in a clean virtual environment and then immediately uploaded without any interaction from me or my computer.</dd>
+    <dt>How can I trust that AppVeyor isn't secretly injecting viruses into the compiled package?</dt>
+    <dd>The answer for this is the same as the answer for how you can trust me. Trust is earned only by reputation. I trust AppVeyor's reputation. If you don't, you can visit <a href="https://www.appveyor.com">https://www.appveyor.com</a> to learn more about them.</dd>
+    <dt>Microsoft/Symantec/AVG/McAfee/etc says that your installer is suspicious because you didn't sign it.</dt>
+    <dd>If you don't know what Code Signing is, you may want to read <a href="https://blogs.msdn.microsoft.com/ieinternals/2011/03/22/everything-you-need-to-know-about-authenticode-code-signing">https://blogs.msdn.microsoft.com/ieinternals/2011/03/22/everything-you-need-to-know-about-authenticode-code-signing</a>. Code signing certificates aren't free. In fact, they're very expensive for a project that I make no money doing. Code signing certificates are a great idea if you're a company who gets to charge hundreds of dollars per year for the right to say that I am who I say I am. Code signing doesn't seem so great from my perspective, because I don't want to have to pay hundreds of dollars per year to a cartel engaging in a protection racket. Unsigned code warnings are nothing more than them saying to me, "Gosh, it sure would be a shame if we scared away potential users (wink wink)." If the certificates were based on inspection of the actual source code and building the installer inside their special trusted environment, that would be one thing, but that isn't how they get assigned. Certificates are assigned based on whether or not I want to give the trust cartel a lot of money. If anyone feels like they want to donate the money for paying off the cartel for a few years, then I'll graciously start signing the software.</dd>
+    <dt>Microsoft/Symantec/AVG/McAfee/etc says that your installer is or contains a virus.</dt>
+    <dd>I'm 99.99% sure that they're lying to you. Every single time this has come up in the past it has been because the antivirus companies use overly aggressive detection heuristics that scoop up a lot of innocent false positives. Please let me know when it happens so that I can berate them directly. If they present a method for sending the package to them for further inspection, please use it. You can also send the downloaded files and URL to <a href="https://www.virustotal.com">https://www.virustotal.com</a> to see how other antivirus software treats it.</dd>
+</dl>
+<a href="https://github.com/fiendish/aardwolfclientpackage" class="github-corner" aria-label="View source on Github"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+</body>
+</html>
