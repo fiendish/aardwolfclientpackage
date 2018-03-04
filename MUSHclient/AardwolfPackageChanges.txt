@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1963 snapshot
+bug fix: Another day, another stupid bug in the prompt fixer plugin.
+
 r1962 snapshot
 bug fix: Channel messages sent to main output are supposed to buffer while writing a note, but Aardwolf doesn't appear to send telopt 100,5 when you enter note mode currently.
 
