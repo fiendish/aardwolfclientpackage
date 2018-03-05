@@ -1651,7 +1651,7 @@ end
 
 function OnPluginInstall()
    print("")
-   ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] " .. "Loaded Soundpack v" .. sp_version .. " by Pwar (", "MediumSeaGreen", "", "Type \"sphelp\"", "SteelBlue", "",")")
+   ColourNote("SteelBlue", "", "[", "MediumSeaGreen", "", "Soundpack", "SteelBlue", "", "] " .. "Loaded Soundpack v" .. sp_version .. " by Pwar (", "MediumSeaGreen", "", "\"spmute\"", "SteelBlue", "",") to enable sounds or (", "MediumSeaGreen", "", "\"sphelp\"", "SteelBlue", "",") for more commands.")
    print("")
    loadSavedSettings()
 end
