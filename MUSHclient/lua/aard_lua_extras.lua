@@ -54,7 +54,7 @@ function PackageVersionExtended()
       end
    else
       succ = true
-      msg = "You are currently using Aardwolf MUSHclient Package version: r"..PackageVersionFull()
+      msg = "You are using Aardwolf MUSHclient Package version: r"..version..(aard_req_novisuals_mode and "\nIf someone asked you to report your version to them, consider also telling them that it's the no-visuals edition if you think that it might be useful information." or "")
    end
 
    return succ, version, msg

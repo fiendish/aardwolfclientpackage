@@ -5,7 +5,7 @@
 <plugin
    name="Aardwolf_New_Connection_No_UI"
    author="Fiendish"
-   id="9f796334ab9ed476ef44f1dc"
+   id="9f796334ab9ed476ef44f1dd"
    language="Lua"
    purpose="Welcome players to the new client package"
    date_written="2010-11-22 18:32:06"
@@ -17,13 +17,9 @@
 <script>
 <![CDATA[
 
-function OnPluginInstall()
-   Note("Welcome to the Aardwolf MUSHclient Package.")
-   Note("Please send all client feedback to Fiendish in the game.")
-end
-
 loaded = false
 function OnPluginListChanged()
+   UnloadPlugin("9f796334ab9ed476ef44f1dc")
    dofile "lua/aard_requirements.lua"
    if not loaded then
       Connect()
