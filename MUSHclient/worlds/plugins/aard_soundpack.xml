@@ -87,6 +87,14 @@
   >
   </alias>
   <alias
+   match="^spsetvol (?<event>.+?)$"
+   script="spsetvol"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+  >
+  </alias>
+  <alias
    match="^spset?$"
    script="spset"
    enabled="y"
@@ -205,7 +213,7 @@
 <triggers>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^INFO: Bonus experience has now expired.$"
    regexp="y"
@@ -219,7 +227,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^INFO: New post (.+) in forum Personal from (.+)$"
    regexp="y"
@@ -233,7 +241,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You were the first to complete this quest!$"
    regexp="y"
@@ -247,7 +255,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^INFO: .+$"
    regexp="y"
@@ -260,7 +268,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^For the next 15 minutes experience is doubled in honor of the new superhero.$"
    regexp="y"
@@ -273,7 +281,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^\[(.+)10 minutes of double exp started courtesy of (.+)\]$"
    regexp="y"
@@ -286,7 +294,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Double experience for 10 minutes courtesy of (.+) daily blessing.$"
    regexp="y"
@@ -299,7 +307,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Double experience for 10 minutes courtesy of (.+).$"
    regexp="y"
@@ -312,7 +320,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Aardwolf rejoices in the death of another MILLION monsters.$"
    regexp="y"
@@ -325,7 +333,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^WARFARE: Type \'combat\' to join the war. No death penalties!$"
    regexp="y"
@@ -338,7 +346,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Restore: .+$"
    regexp="y"
@@ -351,7 +359,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Remort Auction: .+$"
    regexp="y"
@@ -364,7 +372,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="\[QUEST\]$"
    name="QuestTargetFound"
@@ -378,7 +386,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="(.+)?Andolor's very own \(Aarchaeology\) Professor is here, studying\.$"
    name="AarchProfFound"
@@ -392,7 +400,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^QUEST: You have run out of time for your quest!$"
    name="QuestTimeFail"
@@ -406,7 +414,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You feel as if you are being watched.$"
    name="Scry"
@@ -420,7 +428,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You sense that (.+) is scrying you.$"
    name="ScryWish"
@@ -434,7 +442,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^\*\* You can take revenge on (.+) for 15 minutes.$"
    name="PKAlert"
@@ -447,7 +455,7 @@
   </send>
   </trigger>
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You raise a level! You are now level (.+)\.$"
    name="LevelUp"
@@ -460,7 +468,7 @@
   </send>
   </trigger>
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Congratulations, hero\. You have increased your powers\!$"
    name="PowerUp"
@@ -473,7 +481,7 @@
   </send>
   </trigger>
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You die.$"
    name="SelfDeath"
@@ -486,7 +494,7 @@
   </send>
   </trigger>
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Congratulations! You are now a superhero!(.+)$"
    name="LevelUpSh"
@@ -502,7 +510,7 @@
   level_up_sh
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="\[CP\]$"
    name="quest_target_found2"
@@ -516,7 +524,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Turning OFF the (.+) channel\.$"
    name="ChannelOff"
@@ -530,7 +538,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Channel (.+) will turn back on in (.*).$"
    name="ChannelOff2"
@@ -544,7 +552,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Turning ON the (.+) channel\.$"
    name="ChannelOn"
@@ -558,7 +566,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Removing timeout and turning ON the (.*) channel.$"
    name="ChannelOn2"
@@ -572,7 +580,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You find an \(Aarchaeology\) piece hidden in the corpse!$"
    name="AarchFind"
@@ -586,7 +594,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You find a \|P\[Poker Card\]P\| special item hidden in the corpse!$"
    name="PokerCardFind"
@@ -600,7 +608,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You get AardWords \(TM\) - (.+) from the (.+) corpse of (.+).$"
    name="AardWordsFind"
@@ -614,7 +622,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^\*\* You gain a bonus trivia point! \*\*$"
    name="TriviaPoint1"
@@ -628,7 +636,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You killed a Trivia Point bonus mob\!\! Trivia point added\.$"
    name="TriviaPoint2"
@@ -642,7 +650,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^You get \((.+)\) (.+) from (.+) corpse of (.+)\.$"
    script="found_enhanced"
@@ -654,7 +662,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^(.+) crumbles into (.*) gold pieces\.$"
    name="Crumble"
@@ -673,7 +681,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Channel timeout on (.*) has expired. Turning channel on.$"
    name="ChannelOn3"
@@ -686,7 +694,7 @@
   </send>
   </trigger>
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Congratulations\, that was one of your CAMPAIGN mobs\!$"
    name="CpMobDead"
@@ -700,7 +708,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Congratulations\, that was one of the GLOBAL QUEST mobs\!$"
    name="GqMobDead"
@@ -714,7 +722,7 @@
   </trigger>
 
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Global Quest: Global quest # (.*) has been declared(.*)$"
    name="GqDeclared"
@@ -727,7 +735,7 @@
   </send>
   </trigger>
   <trigger
-   enabled="y"
+   enabled="n"
    group="Alert"
    match="^Global Quest: Global quest # (.*) for levels (.*) has now started.$"
    name="GqStarted"
@@ -1317,6 +1325,23 @@ function spdeny(name, line, wc)
    end
 end
 
+function spsetvol(name, line, wc)
+   if soundEvents[wc.event] ~= nil then
+      -- set volume by click here print (utils.inputbox ("What is your name?", "Query", "Nick", "Courier", 9)) 
+      local volume = tonumber(utils.inputbox ("Specify volume for " .. wc.event .. "\r\nUse a number 0-100", "Event Volume: " .. wc.event, soundEvents[wc.event].volume, "Courier", 9, { validate = isInteger } ))
+      if volume == nil then return end
+      if (volume >= 0 and volume <= 100) then
+         showmsg(wc.event .. " volume setting has been set to: " .. volume)
+         SetVariable(wc.event .. "_volume", volume)
+         soundEvents[wc.event].volume = volume
+         PlaySettingChanged()
+         SaveState()
+      else
+         logerr("Invalid value \"" .. wc.value .. "\" for " .. wc.setting .. " -- see spset help")
+      end
+   end   
+end
+
 function spset(name, line, wc)
    if (wc ~= nil) then -- we have an arg
       if (wc[1] == nil) then
@@ -1402,17 +1427,21 @@ end
 function listEvents()
    print("")
    showmsg("Sound Pack Settings")
-   logprint(padRight("Event", 22, " ") .. "Volume Panning  " .. padRight("Description", 25, " ") .. "Custom Wav")
+   ColourNote("LightSeaGreen", "", padRight("Event", 20, " ") .. "Volume " .. padRight("Description", 30, " ") .. "Custom Wav")
    logprint("------------------------------------------------------------------")
 
    for event in orderedPairs(soundEvents) do
-      local volume = soundEvents[event].volume .. "%"
-      if volume == "0%" then
-         volume = " OFF"
+      local volColor = "LimeGreen"
+      local volume = tonumber(soundEvents[event].volume)
+      local volStr = padRight(string.format("%3d", soundEvents[event].volume) .. "%", 5, " ")
+      Hyperlink("sptog " .. event, padRight(event, 22, " "), "Toggle Event:  " .. event, "LightSeaGreen", "black", 0, 1)
+      if volume < 71 and volume > 30 then
+         volColor = "Yellow"
+      elseif volume < 31 then
+         volColor = "Red"
       end
-      local showString = padRight(event, 22, " ") .. volume
-      showString = padRight(showString, 34, " ") .. soundEvents[event].panning
-      showString = padRight(showString, 38, " ") .. soundEvents[event].description
+      Hyperlink("spsetvol " .. event, padRight(volStr, 5, " "), "Adjust Volume:  " .. event, volColor, "black", 0, 1)
+      local showString = padRight(soundEvents[event].description, 30, " ")
       if soundEvents[event].customwav ~= nil then
          local filename = string.sub(soundEvents[event].customwav, soundEvents[event].customwav:match'^.*()\\' + 1)
          showString = padRight(showString, 65, " ") .. filename
@@ -1462,8 +1491,10 @@ function play_rsound(url)
    volume = .4 * volume
    volume = -(40 - volume)
 
-   if string.sub(url, 1, 4) == "http" then
+   if string.sub(url, 1, 5) == "http:" then
       async.HEAD(url, async_head_download_complete, "HTTP", 120)
+   elseif string.sub(url, 1, 5) == "https" then
+      async.HEAD(url, async_head_download_complete, "HTTPS", 120)
    else
       -- These make sure it doesn't exist in sounds or sounds\saved with the current filename
       if file_exists(GetInfo(74) .. url) then
@@ -1584,6 +1615,9 @@ function loadSavedSettings()
    end
    if (GetVariable("sp_mute_toggle") ~= nil) then
       sp_mute_toggle = GetVariable("sp_mute_toggle")
+      if sp_mute_toggle == "0" then
+         toggle_triggers(1)
+      end
    else --first time install no data saved for toggle
       first_time = true
    end
@@ -1650,6 +1684,10 @@ function logerr(message)
 end
 
 function async_head_download_complete(retval, page, status, headers, full_status, request_url)
+   if headers == nil then
+      logerr("No headers received from " .. request_url)
+      return
+   end
    local filesize = headers["content-length"]
    if filesize == nil then
       logerr("Link to wav invalid.")
@@ -1660,7 +1698,11 @@ function async_head_download_complete(retval, page, status, headers, full_status
    end
    logmsg("Starting download..")
    -- change this to use async.GETFILE later
-   async.doAsyncRemoteRequest(request_url, async_download_complete, "HTTP", 120)
+   if string.sub(request_url, 1, 5) == "http:" then
+      async.doAsyncRemoteRequest(request_url, async_download_complete, "HTTP", 120)
+   elseif string.sub(request_url, 1, 5) == "https" then
+      async.doAsyncRemoteRequest(request_url, async_download_complete, "HTTPS", 120)
+   end
 end
 
 function async_download_complete(retval, page, status, headers, full_status, request_url)
@@ -1668,8 +1710,10 @@ function async_download_complete(retval, page, status, headers, full_status, req
    local filename = string.sub(request_url, request_url:match'^.*()/' + 1)
 
    f = assert(io.open (destination .. "temp.wav", "wb"))  -- open it
-
-   if data == nil then
+   if status == 301 then
+      return
+   elseif status ~= 200 then
+      logerr("Web server reported error " .. status .. " while trying to download " .. request_url)
       return
    end
 
@@ -1838,6 +1882,13 @@ function file_exists(name)
    else
       return false
    end
+end
+
+function isInteger(s)
+	if tonumber(s) then
+		return true
+	end
+	return false
 end
 
 function __genOrderedIndex( t )
