@@ -43,7 +43,7 @@ Bast and WinkleWinkle.
    enabled="n"
    regexp="y"
    omit_from_output="y"
-   match="^{prompt fixer end}$"
+   match="{prompt fixer end}$"
    sequence="100"
    name="end"
    send_to="14"
@@ -98,7 +98,7 @@ Bast and WinkleWinkle.
 <send>
    p = Trim("%2")
    if p:sub(-2) ~= "%%c" then -- send box has funny % replacements
-      do_prompt_check()
+      do_connect_init()
    end
 </send>
 </trigger>
