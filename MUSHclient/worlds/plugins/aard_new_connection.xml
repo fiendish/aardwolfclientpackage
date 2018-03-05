@@ -54,12 +54,13 @@ function OnPluginSaveState ()
    SetVariable("showGreeting2", showGreeting2)
 end -- OnPluginSaveState
 
-function OnPluginInstall()
-end
-
 loaded = false
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
+   if aard_req_novisuals_mode then
+      LoadPlugin(GetPluginInfo(GetPluginID(), 20).."aard_new_connection_no_UI.xml")
+      return
+   end
    if not loaded then
       showGreeting2 = tonumber(GetVariable("showGreeting2")) or showGreeting2
       if (showGreeting2 == 1) then
@@ -73,12 +74,12 @@ end
 
 function hyperlink_close ()
    WindowShow (win, false)
+   SaveState()
    Connect()
 end -- hyperlink_close
 
 function vi_close()
    showGreeting2 = 0
-   SaveState()
    ShowGreeting(false)
    hyperlink_close()
 end
@@ -156,7 +157,7 @@ function ShowGreeting(firstTime, highlight_url)
    if (firstTime) then
 
       Note("")
-      Note("Screen reader users: To bypass the welcome screen and connect to the game, type \"connect to aardwolf\" without the quotation marks and then press enter.\nFor more information about the package be sure to check out http://tinyurl.com/aardclientmanual")
+      Note("Screen reader users: The non-visual package version at https://fiendish.github.io/aardwolfclientpackage/ comes pre-configured for screen reader text to speech. This version does not. Otherwise, to bypass this welcome screen and connect to the game, type \"connect to aardwolf\" without the quotation marks.")
       Note("")
 
       -- make the window to get font info

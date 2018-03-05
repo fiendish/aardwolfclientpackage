@@ -1,0 +1,1855 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<!--
+   Thanks to the original authors of the code for the history buffers Tyler Spivey, Oriol Gomez, and Wyoun!
+-->
+
+<muclient>
+<plugin
+ name="Aardwolf_VI_Review_Buffers"
+ author="Pwar"
+ id="6000a4c6f0e71d31fecf523d"
+ language="Lua"
+ purpose="Allow for easy review of various messages/events sorted into categories with hotkeys"
+ date_written="2017-12-17 13:00:25"
+ requires="4.51"
+ version="1.0"
+ save_state="y"
+>
+<description trim="y">
+<![CDATA[
+
+Shortcut keys:
+
+Alt + Right and Alt + Left - selects next and previous categorey
+
+Shift + Alt + Right and Left - moves category in direction
+
+Ctrl + 1 through Ctrl + 0 - reviews last 10 messages
+   double pressing the number will copy to clipboard
+
+Alt + 1 through Alt + 0 - reviews message 1 through 10
+   double pressing the number will copy to clipboard
+
+Alt + UpArrow and Downarrow to go up 1 message or down 1
+
+Alt + PageUp and PageDown to go up 10 messages or down 10
+
+Alt + U  - copies url in currently selected message, double tapping
+         will open the url in the current message
+
+Alt + Delete - will delete a category
+
+Ctrl + Tab - This will switch you to the global notepad window
+             which captures all output from the mud for you to review
+
+
+Commands:
+
+rev or review [any command]
+           - This will put the output from any command you send into your Review category
+
+vi add    - allows you to add lines/categories yourself
+             vi add All=Text line to add
+
+Settings:
+
+vi int    - this toggles between using TTS interrupts and regular messages
+             when reviewing, category changes will still be TTS messages
+
+Custom categories:
+You can easily add lines to existing categories, or make your own.
+
+Simply make a trigger "Send To" Execute
+   vi add All=Text line to add
+
+This example would add the line "Text line to add" to the existing All
+category. You could also create your own category.
+
+
+]]>
+</description>
+
+</plugin>
+
+<!--  Aliases  -->
+
+<aliases>
+  <alias
+   script="gmcp_quest_info"
+   match="^q(u(e(s(t?)?)?)?)? i(n(f(o?)?)?)?$"
+   enabled="y"
+   omit_from_command_history="n"
+   omit_from_log="n"
+   regexp="y"
+   omit_from_output="n"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review"
+   match="^re(v(i(e(w?)?)?)?) (?<command>.+?)$"
+   enabled="y"
+   omit_from_command_history="n"
+   omit_from_log="n"
+   regexp="y"
+   omit_from_output="n"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_delete"
+   match="^review_delete"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_category_move"
+   match="^review_category_move (\w+)"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_url"
+   match="^review_url$"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_add"
+   match="^vi add (\w+)=(.*)"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   keep_evaluating="n"
+   regexp="y"
+   omit_from_output="y"
+   sequence="99"
+  >
+  </alias>
+
+  <alias
+   script="review_add"
+   match="^vi add.?"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   keep_evaluating="n"
+   regexp="y"
+   omit_from_output="y"
+   sequence="99"
+  >
+  </alias>
+
+  <alias
+   script="vi"
+   match="^vi (.+)"
+   enabled="y"
+   keep_evaluating="y"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_get"
+   match="^review_get (\d+)$"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   match="buffer_get_line *"
+   enabled="y"
+   script="buffer_get_line"
+   omit_from_output="y"
+   omit_from_log="y"
+   omit_from_command_history="y"
+   send_to="12"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_catprev"
+   match="review_catprev"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_catnext"
+   match="review_catnext"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_msgprev"
+   match="^review_msgprev (\d+)$"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_msgnext"
+   match="^review_msgnext (\d+)$"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_msgcopy"
+   match="review_msgcopy"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+</aliases>
+
+<triggers>
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Global Quest:.+$"
+   name="GqTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Quests", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^\*(?!\*)(.*)$"
+   name="GlobalEmoteTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Say", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^INFO:.+$"
+   name="InfoTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Restore:.+$"
+   name="RestoreTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You gain (.+) hit points, (.+) mana, (.+) moves, (.+) practices and (.+) trains\.$"
+   name="GainLevelInfoTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You receive (.+) experience points.$"
+   name="Exp1Trigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You gain (.+) trains\.$"
+   name="TrainsTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+	review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Lucky! You gain an extra (.+) training session(s?)!$"
+   name="LuckyTrainsTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You have (.+) daily blessing bonus (.+) kills remaining\.$"
+   name="DailyBlessingBonusKillsTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You gain (.+) extra trains daily blessing bonus\.$"
+   name="DailyBlessingTrainsTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="(\*?)(\*?)(\s?)You gain a bonus (.+)(\s?)(\*?)(\*?)$"
+   name="GainBonusTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You receive (.+) experience points in honor of (.+) reaching superhero.$"
+   name="Exp2Trigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^Congratulations, hero. You have increased your powers!$"
+   name="PupTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You raise a level! You are now level (.+)\.$"
+   name="LevelUpTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^You get ((?!gold coins).)* from (.+) corpse of (.+)\.$"
+   name="LootTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("Kill Summary", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="Type 'group accept *' or 'group decline *' to accept or decline."
+   name="GroupInviteTrigger"
+   regexp="n"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "Group invite from %1. Group accept %1 or group decline %1.")
+   review_addline("Group", "Group invite from %1. Group accept %1 or group decline %1.")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="You have joined the group: *"
+   name="GroupJoinTrigger"
+   regexp="n"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="* has kicked you from the group."
+   name="GroupKickedTrigger"
+   regexp="n"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="You start to follow *."
+   name="StartFollowTrigger"
+   regexp="n"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="You stop following *."
+   name="StopFollowTrigger"
+   regexp="n"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="You have removed yourself from group: *"
+   name="GroupRemoveSelfTrigger"
+   regexp="n"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("All", "%0")
+   review_addline("Group", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   group="Alert"
+   match="^(WARFARE|GENOCIDE):.+$"
+   name="WarfareTrigger"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>
+   review_addline("Warfare", "%0")
+  </send>
+  </trigger>
+
+  <trigger
+   name="RequestCampaign"
+   match="^(.+) tells you \'Good luck in your campaign\!\'$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   send_to="12"
+  >
+  <send>
+   check_silent("cp")
+  </send>
+  </trigger>
+
+  <trigger
+   match="^You will no longer receive experience\. Happy questing\!$"
+   name="trg_noexp_on"
+   script="event_noexp_on"
+   enabled="y"
+   regexp="y"
+   omit_from_output="n"
+   sequence="500"
+   send_to="12"
+  >
+  </trigger>
+
+  <trigger
+   match="^You will now receive experience\. Happy leveling\!$"
+   name="trg_noexp_off"
+   script="event_noexp_off"
+   enabled="y"
+   regexp="y"
+   omit_from_output="n"
+   sequence="500"
+   send_to="12"
+   >
+  </trigger>
+</triggers>
+
+<script>
+<![CDATA[
+
+require "gmcphelper"
+dofile (GetInfo(60) .. "aardwolf_colors.lua")
+
+local internal_ver = "1.0.8"
+local gmcp_handler_id = "3e7dedbe37e44942dd46d264"
+local modes = {} -- for keyboard states
+local messages = {}
+local indices = {}
+local currentList = {}
+local max_buffer_size = 838860
+local initialized = false
+currentList["cp"] = {}
+currentList["gq"] = {}
+local currentIndex = 1
+local cpList = {}
+local globalbuffer = {}
+local notepadbuffer = {}
+local silentCheck = true
+local lastState
+local current_category = 0 -- not set yet
+local current_msg_id = 0
+local on_global_quest = false
+local listIndexing = true
+
+local categories = {}
+
+-- set up accelerators
+for i = 1, 9 do
+   Accelerator("alt + " .. i, "review_get " .. i) -- current category message buffers
+   Accelerator("ctrl + " .. i, "buffer_get_line " .. i) -- These are global message buffers
+end
+Accelerator("alt + 0", "review_get 10") -- 10 is a special case
+Accelerator("ctrl + 0", "buffer_get_line 10")
+Accelerator("alt + right", "review_catnext")
+Accelerator("alt + left", "review_catprev")
+Accelerator("alt + down", "review_msgnext 1")
+Accelerator("alt + up", "review_msgprev 1")
+Accelerator("alt + pagedown", "review_msgnext 10")
+Accelerator("alt + pageup", "review_msgprev 10")
+Accelerator("alt + end", "review_msgnext 200")
+Accelerator("alt + home", "review_msgprev 200")
+Accelerator("shift+alt + right", "review_category_move right")
+Accelerator("shift+alt + left", "review_category_move left")
+Accelerator("alt+delete","review_delete")
+Accelerator("alt + space", "review_msgprev 0")
+Accelerator("alt+shift+space","review_msgcopy")
+Accelerator("alt + u", "review_url")
+
+function review_addline(catname, line)
+   review_add(nil, nil, {catname, line})
+end
+
+function gmcp_quest_info(name, line, w)
+   Execute("sendgmcp request quest") -- request gmcp quest info
+   Send("quest info") -- send the server side command also
+end
+
+function scheck(name, line, wc)
+   check_silent("cp")
+end
+
+function review(name, line, w)
+   logmsg("review cmd used on: " .. w.command)
+   SendNoEcho("echo {START_REVIEW}")
+   Send(w.command) -- send the server side command also
+   SendNoEcho("echo {END_REVIEW}")
+end
+
+function check_silent(type)
+   if not listIndexing then
+      return
+   end
+   EnableTrigger("event_" .. type .. "_list_start", true)
+   silentCheck = true
+   SendNoEcho("echo {START_" .. string.upper(type) .. "LIST}")
+   SendNoEcho(type .. " check")
+   SendNoEcho("echo {END_" .. string.upper(type) .. "LIST}")
+   logmsg("silent check requested (" .. type .. ")")
+end
+
+function OnPluginGetFocus()
+   if(#notepadbuffer>0) then
+      if not initialized then
+         return
+      end
+      for i, buffered in ipairs(notepadbuffer) do
+         appendQueue(buffered)
+      end
+      notepadbuffer = {}
+   end
+end
+
+local appendBuffer = ""
+local lastAppend
+function appendQueue(line)
+   if GetNotepadLength("output") > max_buffer_size then
+      local oldbuffer = GetNotepadText("output")
+      ReplaceNotepad("output", string.sub(oldbuffer, max_buffer_size / 2))
+   end
+
+   appendBuffer = appendBuffer .. line .. "\r\n"
+
+   if not initialized then
+      return
+   end
+
+   if appendBuffer ~= nil and ((lastAppend == nil) or (lastAppend < os.time())) then
+      AppendToNotepad("output", appendBuffer)
+      appendBuffer = ""
+      lastAppend = os.time()
+   end
+   if appendBuffer ~= "" then
+      DoAfterSpecial(1, "emptyQueue()", 12)
+   end
+
+end
+
+function emptyQueue()
+   if GetNotepadLength("output") > max_buffer_size then
+      local oldbuffer = GetNotepadText("output")
+      ReplaceNotepad("output", string.sub(oldbuffer, max_buffer_size / 2))
+   end
+   if appendBuffer ~= "" then
+      AppendToNotepad("output", appendBuffer)
+      appendBuffer = ""
+      lastAppend = os.time()
+   end
+end
+
+function OnPluginScreendraw(t,l,line)
+   --real max_buffer_size = 1048575
+
+   if line == nil or line == "" or t > 1 then
+      return
+   end
+
+   table.insert(globalbuffer, 1, line)
+   globalbuffer[11] = nil
+
+   if(GetInfo(113) == false) then
+      table.insert(notepadbuffer, line)
+   else
+      appendQueue(line)
+   end
+end
+
+function buffer_get_line(name, line, wc)
+   wc = tonumber(wc[1])
+   line = globalbuffer[wc]
+
+   local timeout = 0.4 -- in seconds
+   if modes[wc] == nil then
+      modes[wc] = {os.clock(), 1}
+   elseif os.clock()-modes[wc][1] >= timeout then
+      modes[wc][1] = os.clock()
+      modes[wc][2] = 1
+   else
+      modes[wc][1] = os.clock()
+      modes[wc][2] = modes[wc][2] + 1
+   end
+   if modes[wc][2] > 2 then
+      modes[wc][2] = 2
+   end
+   if modes[wc][2] == 2 then
+      SetClipboard(line)
+      Execute(";tts_interrupt copied.")
+   end
+   if modes[wc][2] == 1 then
+      Execute(";tts_interrupt "..line)
+   end
+end
+
+function review_clear_cat(cat)
+   if cat ~= nil and #cat ~= 0 then
+      for i = 1, #categories do
+         if cat == categories[i] then
+            logmsg("Cleared category: " .. categories[i])
+            messages[categories[i]] = nil
+            indices[categories[i]] = nil
+         end
+      end
+   end
+end
+
+function message_select(msg_index)
+   current_msg_id = tonumber(msg_index)
+   local t = {
+      catname = categories[current_category],
+      msg = messages[categories[current_category]][msg_index],
+      index = msg_index
+   }
+   logmsg("Message index " .. msg_index .. " selected. Category is \"" .. categories[current_category] .. "\".")
+   BroadcastPlugin(101, serialize.save_simple(t)) -- broadcast we have selected a new message in a category
+end
+
+function review_delete(n,l,w)
+   if #categories == 0 then
+      speak("no categories")
+      return
+   end
+   if current_category == 0 then
+      speak("No category selected.")
+      return
+   end
+   messages[categories[current_category]] = nil
+   indices[categories[current_category]] = nil
+   table.remove(categories, current_category)
+   if current_category > #categories then
+      current_category = 1
+   end
+   if #categories > 0 then
+      speak(categories[current_category])
+   else
+      speak("no more categories.")
+   end
+end
+
+function review_category_move(name, line, w)
+   if #categories == 0 then
+      speak("no categories")
+      return
+   end
+   if current_category == 0 then
+      speak("No category selected.")
+      return
+   end
+   name = categories[current_category]
+   table.remove(categories,current_category)
+   if w[1]=="right" then
+      current_category = current_category + 1
+   if current_category > #categories + 1 then
+      current_category = 2
+   end
+   else
+      current_category = current_category - 1
+      if current_category < 1 then
+         current_category = #categories
+      end
+   end
+   table.insert(categories, current_category, name)
+   speak("moved.")
+end
+
+local function has_value(table, val)
+   for i = 1, #table do
+      if table[i] == val then
+         return true
+      end
+   end
+   return false
+end
+
+function review_add(name, line, wc)
+   local cat, msg = wc[1], wc[2]
+
+   if wc[1] == nil or wc[2] == nil then
+      printmsg("Usage is\nvi add All=Text line to add")
+      return
+   end
+   if messages[cat] == nil then
+      if has_value(categories, cat) then
+         -- Already have category, clearing messages and indices
+         messages[cat] = {}
+         indices[cat] = 0
+      else
+         messages[cat] = {}
+         indices[cat] = 0
+         table.insert(categories, cat)
+      end
+   end
+
+   if msg ~= "" then
+      table.insert(messages[cat], msg)
+      local t = {cat, msg}
+      BroadcastPlugin(100, serialize.save_simple(t)) -- broadcast we have a new message added to a buffer
+      logmsg("addBuffer[" .. cat .. "] - " .. msg)
+   end
+   -- if we go over 100 items, remove the oldest one
+   if #messages[cat] > 100 then
+      table.remove(messages[cat], 1)
+      if indices[cat] > 1 then
+         indices[cat] = indices[cat] - 1
+      end
+   end
+end
+
+
+-- helper function to say stuff
+function speak(msg, mode)
+   if GetVariable("tts_interrupt") ~= "1" and mode ~= "tts" then
+      mode = "note"
+   else
+      mode = "tts"
+   end
+
+   --if mode == nil then mode = "tts" end
+   if mode == "tts" then
+      Execute(";tts_interrupt " .. msg)
+   else
+      Note(msg)
+   end
+end
+
+function review_url(name, line, wc)
+   local timeout = 0.5 -- in seconds
+   local item = current_msg_id
+
+   if current_category == nil or current_msg_id == nil or messages[categories[current_category]] == nil then
+      speak("no message selected")
+      return
+   end
+   local msgstr = messages[categories[current_category]][current_msg_id]
+
+   if msgstr == nil then
+      speak("no message selected")
+      return
+   end
+
+   local url = url_from_string(messages[categories[current_category]][current_msg_id])
+   if url == nil then
+      speak("no url found")
+      return
+   end
+
+   if modes[item] == nil then
+      modes[item] = {os.clock(), 1}
+   elseif os.clock()-modes[item][1] >= timeout then
+      modes[item][1] = os.clock()
+      modes[item][2] = 1
+   else
+      modes[item][1] = os.clock()
+      modes[item][2] = modes[item][2] + 1
+   end
+
+   if modes[item][2] > 2 then
+      modes[item][2] = 2
+   end
+
+   if modes[item][2] == 1 then
+      SetClipboard(url)
+      speak("copied url")
+   elseif modes[item][2] == 2 then
+      OpenBrowser(url)
+      speak("opening url")
+   end
+end
+
+function url_from_string(str)
+   local pattern = "https?://[%w-_%.%?%.:/%+=&]+"
+   local start, stop = (string.find(str, pattern))
+
+   if start == nil then
+      return
+   end
+
+   local url = string.sub(str, start, stop)
+   url = string.gsub(url, "'", "") -- strip apostrophes out from some comm channels (these aren't used in urls in general)
+   stop = url:find(' ')
+   if stop ~= nil then
+      url = string.sub(url, 1, stop - 1)
+   end
+   return url
+end
+
+function review_get(name, line, wc)
+   local str = ""
+   if current_category == 0 and #categories == 0 then
+      speak("No categories")
+      return
+   elseif current_category == 0 and #categories > 0 then
+      for i, result in ipairs(categories) do
+         if categories[i] == "All" then
+            current_category = i
+         end
+      end
+      if current_category > 0 then
+         str = str .. "switching to all."
+      else
+         str = str .. "switching to " .. categories[1] .. ". Use alt left and right arrows to change."
+         current_category = 1
+      end
+   end
+
+   if messages[categories[current_category]] == nil then
+      speak("No messages.")
+      return
+   end
+
+   local item = tonumber(wc[1])
+      if #messages[categories[current_category]] < item then
+      speak("no message")
+      return
+   end
+
+   -- now that all that's out of the way, we can start our real code which should always succeed.
+   local timeout = 0.5 -- in seconds
+   if modes[item] == nil then
+      modes[item] = {os.clock(), 1}
+   elseif os.clock()-modes[item][1] >= timeout then
+      modes[item][1] = os.clock()
+      modes[item][2] = 1
+   else
+      modes[item][1] = os.clock()
+      modes[item][2] = modes[item][2] + 1
+   end
+
+   if modes[item][2] > 2 then
+      modes[item][2] = 2
+   end
+
+   local real_item = #messages[categories[current_category]] + 1 - item
+   if modes[item][2] == 1 then
+      speak(str .. " " .. messages[categories[current_category]][real_item])
+   elseif modes[item][2] == 2 then
+      SetClipboard(messages[categories[current_category]][real_item])
+      speak("copied")
+   end
+
+   message_select(real_item)
+end
+
+function review_catnext(name, line, wc)
+   current_msg_id = 0;
+   local mode = nil
+   if #categories == 0 then
+      speak("no categories", "tts")
+      return
+   end
+   current_category = current_category + 1
+
+   if current_category > #categories then
+      current_category = 1
+   end
+
+   if ((messages[categories[current_category]] == nil) or (#messages[categories[current_category]] == 0)) and categories[current_category] ~= "All" then
+      repeat
+         logmsg("Skipping empty category: " .. categories[current_category])
+         current_category = current_category + 1
+         if current_category > #categories then
+            current_category = 1
+         end
+         if messages[categories[current_category]] == nil then
+            return
+         end
+         -- skip empty categories until one with messages is reached, or All category is encountered
+      until (categories[current_category] == "All") or (#messages[categories[current_category]] ~= 0)
+   end
+   speak(categories[current_category], "tts")
+   if messages[categories[current_category]] ~= nil then
+      message_select(#messages[categories[current_category]])
+   end
+end
+
+function review_catprev(name, line, wc)
+   current_msg_id = 0;
+   local mode = nil
+   if #categories == 0 then
+      speak("no categories", "tts")
+      return
+   end
+   current_category = current_category - 1
+
+   if current_category < 1 then
+      current_category = #categories
+   end
+   if ((messages[categories[current_category]] == nil) or (#messages[categories[current_category]] == 0)) and categories[current_category] ~= "All" then
+      repeat
+         logmsg("Skipping empty category: " .. categories[current_category])
+         current_category = current_category - 1
+         if current_category < 1 then
+            current_category = #categories
+         end
+         if messages[categories[current_category]] == nil then
+            return
+         end
+         -- skip empty categories until one with messages is reached, or All category is encountered
+      until (#messages[categories[current_category]] ~= 0) or (categories[current_category] == "All")
+   end
+   speak(categories[current_category], "tts")
+   if messages[categories[current_category]] ~= nil then
+      message_select(#messages[categories[current_category]])
+   end
+end
+
+function review_msgnext(name, line, wc)
+   local skip = tonumber(wc[1])
+   local str = ""
+   if messages[categories[current_category]] == nil then
+      return
+   end
+   if #messages[categories[current_category]] == 0 or indices[categories[current_category]] == nil then
+      speak("No messages.")
+      return
+   end
+   if #categories == 0 then
+      speak("no categories")
+      return
+   end
+   if current_category == 0 then
+      speak("No category selected.")
+      return
+   end
+   if indices[categories[current_category]] == 0 then
+      indices[categories[current_category]] = #messages[categories[current_category]]
+   end
+   if indices[categories[current_category]] + skip > #messages[categories[current_category]] then
+      indices[categories[current_category]] = #messages[categories[current_category]]
+      str = str .. "Bottom: "
+   else
+      indices[categories[current_category]] = indices[categories[current_category]] + skip
+   end
+
+   local msg = messages[categories[current_category]][indices[categories[current_category]]]
+   if msg ~= nil then
+      speak(str .. msg)
+   else
+      speak("No messages.")
+   end
+   local real_item = indices[categories[current_category]]
+   message_select(real_item)
+end
+
+function review_msgprev(name, line, wc)
+   local skip = tonumber(wc[1])
+   local str = ""
+   if messages[categories[current_category]] == nil then
+      return
+   end
+   if #messages[categories[current_category]] == 0 or indices[categories[current_category]] == nil then
+      speak("No messages.")
+      return
+   end
+   if #categories == 0 then
+      speak("No categories")
+      return
+   end
+   if current_category == 0 then
+      speak("No category selected.")
+      return
+   end
+   if indices[categories[current_category]] == 0 then
+      indices[categories[current_category]] = #messages[categories[current_category]]
+   end
+   if indices[categories[current_category]] - skip < 1 then
+      indices[categories[current_category]] = 1
+      str = str .. "Top: "
+   else
+      indices[categories[current_category]] = indices[categories[current_category]] - skip
+   end
+
+   local msg = messages[categories[current_category]][indices[categories[current_category]]]
+   if msg ~= nil then
+      speak(str .. msg)
+   else
+      speak("No messages.")
+   end
+   local real_item = indices[categories[current_category]]
+   message_select(real_item)
+end
+
+function review_msgcopy(name, line, wc)
+   if #categories == 0 then
+      speak("No categories")
+      return
+   end
+   if current_category == 0 then
+      speak("No category selected.")
+      return
+   end
+   if indices[categories[current_category]] == 0 then
+      indices[categories[current_category]] = #messages[categories[current_category]]
+   end
+   SetClipboard(messages[categories[current_category]][indices[categories[current_category]]])
+   speak("copied")
+end
+
+function vi_help(AliasName, AliasLine, wildcards)
+   print("")
+   NoteStyle(2)
+   print("Aardwolf VI Review Buffers Plugin v" .. internal_ver)
+   NoteStyle(0)
+   print("")
+   ColourNote("SteelBlue", "", GetPluginInfo (GetPluginID (), 3))
+   print("")
+   return
+end
+
+function OnPluginInstall()
+   print("")
+   Note("Loaded Aardwolf VI Review Buffers plugin, type \"vi help\" for shortcuts and commands")
+   print("")
+   if GetVariable("tts_interrupt") == nil then
+      SetVariable("tts_interupt", "1")
+   end
+end
+
+
+function init()
+   logmsg("Initializing output notepad..")
+   if listIndexing then
+      check_silent("cp")
+   end
+   AppendToNotepad("output", "Capturing all output\r\n")
+   NotepadSaveMethod("output", 2) -- this suppresses the save dialog when closing mush
+   -- this seems to automove cursor to last line every time the notepad changes rendering it useless for vi review :(
+   NotepadReadOnly("output", true) -- Make it read only so we don't overwrite the text accidentally
+end
+
+function parse_list(list, mode)
+   -- mode can be CP or QP
+
+   local index = #list+1
+   local place
+   line_spacing = 0
+   local offset = 34
+   review_clear_cat(mode) -- clear the old buffer and fill with new data
+
+   for i,v in ripairs (list) do
+      index = index - 1
+      local qty = ""
+      if (v.qty > 1) then
+         qty = string.format("%s * ", v.qty)
+      end
+
+      local mobText = v.mob
+      local deadFlag = false
+      if (v.isDead ~= nil and v.isDead ~= "") then
+         mobText = mobText .. " [Dead]"
+         deadFlag = true
+      end
+      if (v.type == "area") then
+         place = string.format("%s", v.areaId)
+      elseif (v.type == "room") then
+         place = string.format("'%s' (%s) [%s-%s]", v.roomName, v.areaId, v.min, v.max)
+      else -- unknown
+         place = string.format("'%s' is Unknown", v.roomName, v.areaId)
+      end
+      local displayText = string.format("%s) %s%s - %s", index, qty, mobText, place)
+      review_addline(mode, displayText)
+      for i = 1, #categories do
+         if categories[i] == mode then
+            message_select(#messages[categories[i]])
+         end
+      end
+      --Note(displayText)
+   end
+end
+
+-- reverse ipairs function
+function ripairs(t)
+   local function ripairs_it (t,i)
+      i = i-1
+      local v = t[i]
+      if v == nil then
+         return v
+      end
+      return i, v
+   end
+   return ripairs_it, t, #t+1
+end
+
+function OnPluginBroadcast(msg, id, name, text)
+   if (id == '3e7dedbe37e44942dd46d264') then              -- GMCP Handler plugin
+
+      if (text == "comm.channel") then
+         local channel = gmcp("comm.channel.chan")
+         local msg = gmcp("comm.channel.msg")
+         local t
+         msg = strip_colours(msg)
+         local url = url_from_string(msg)
+         --print(url)
+         review_addline("All", msg)
+
+         if url ~= nil then --url in one of the comm messages, let's move this to URL window for history
+            review_addline("URLs", msg)
+         end
+
+         if channel == "say" then
+            t = {"Say", msg}
+         elseif channel == "gtell" then
+            t = {"Group", msg}
+         elseif channel == "tell" then
+            t = {"Tells", msg}
+         elseif channel == "clantalk" then
+            t = {"Clan", msg}
+         elseif channel == "claninfo" then
+            t = {"Clan", msg}
+         elseif channel == "auction" then
+            t = {"Commerce", msg}
+         elseif channel == "market" then
+            t = {"Commerce", msg}
+         elseif channel == "barter" then
+            t = {"Commerce", msg}
+         elseif channel == "spouse" then
+            t = {"Spouse", msg}
+         elseif channel == "answer" then
+            t = {"Answers", msg}
+         elseif channel == "question" then
+            t = {"Answers", msg}
+         elseif channel == "gossip" then
+            t = {"Gossip", msg}
+         elseif channel == "helper" then
+            t = {"Helper", msg}
+         elseif channel == "ftalk" then
+            t = {"Friend", msg}
+         elseif channel == "newbie" then
+            t = {"Newbie", msg}
+         else
+            return -- this *should* stop duplicates, if not we'll see
+         end
+
+         if t ~= nil then
+            review_add(nil, nil, t)
+         end
+         return
+      elseif (text == "comm.repop") then
+         local area = gmcp("comm.repop.zone")
+         review_addline("All", "Zone \"" .. area .. "\" has repopped.")
+      elseif (text == "room.info") then
+         if not initialized then
+            initialized = true
+            init()
+         end
+      elseif (text == "char.vitals") then
+         if not initialized then
+            initialized = true
+            init()
+         end
+      elseif (text == "comm.quest") then
+         local action = gmcp("comm.quest.action")
+         local quest = gmcp("comm.quest")
+         local msg
+
+         if (action == "ready") then
+            msg = "You may now quest again."
+
+         elseif (action == "reset") then
+            local timer = quest.timer
+            msg = "Quest timer has been reset to " .. timer .. " minutes."
+
+         elseif (action == "fail") then
+            local wait = quest.wait
+            msg = "Quest has failed! You can quest again in " .. wait .. " minutes."
+
+         elseif (action == "warning") then
+            local time = quest.time
+            msg = "Quest warning: " .. time .. " minutes remaining!"
+
+         elseif (action == "timeout") then
+            local wait = quest.wait
+            if wait == "0" then
+               msg = "You have run out of time for quest. You may try again now."
+            else
+               msg = "You have run out of time for quest. You may take one again in " .. wait .. "minutes."
+            end
+
+         elseif (action == "killed") then
+            msg = "Your quest is almost complete!"
+
+         elseif (action == "comp") then
+            local totqp = quest.totqp
+            msg = "Quest completed for " .. totqp .. " QPs."
+
+         elseif (action == "status") then
+            local target = quest.targ
+            local starget = quest.target
+            local room = quest.room
+            local area = quest.area
+            local wait = quest.wait
+            local timer = quest.timer
+            local status = quest.status
+
+            if wait ~= nil then
+               msg = "There are " .. wait .. " minutes remaining until you can go on another quest"
+            elseif status == "ready" then
+               msg = "You do not have to wait to go on another quest."
+            elseif target == "missing" then
+               msg = "Quest target is missing! Not in room or area!"
+            elseif starget == "killed" then
+               msg = "Your quest is almost complete!"
+            else
+               msg = "Quest target is \"" .. target .. "\" in room \"" .. room .. "\" of area: \"" .. area .. "\"" .. ", " .. timer .. " minutes remaining."
+            end
+
+         elseif (action == "start") then
+            local target = quest.targ
+            local room = quest.room
+            local area = quest.area
+            msg = "Quest target is \"" .. target .. "\" in room \"" .. room .. "\" of area: \"" .. area .. "\""
+         end
+         if msg ~= nil then
+            review_addline("All", msg)
+            review_addline("Quests", msg)
+         end
+      end
+   end
+end
+
+function parse_list_line(type, wc)
+   currentList[type][currentIndex] = {
+      mob = wc.mob,
+      where = wc.where,
+      isdead = wc.isdead,
+      qty = tonumber(wc.qty)
+      }
+   currentIndex = currentIndex + 1
+end
+
+function event_gq_line(name, line, wc, styles)
+   logmsg("parse_list_line: (gq) " .. line)
+   parse_list_line("gq", wc)
+end
+
+function event_gq_reward_note(name, line, wc, styles)
+
+end
+
+function event_gq_remaining(name, line, wc, styles)
+
+end
+
+function category_select(index)
+   current_category = index
+   if messages[categories[current_category]] ~= nil then
+      message_select(#messages[categories[current_category]])
+   end
+end
+
+function event_cp_line(name, line, wc, styles)
+   logmsg("parse_list_line: (cp) " .. line)
+   parse_list_line("cp", wc)
+end
+
+function event_gq_join(name, line, wc, styles)
+   logmsg("event_gq_joinstart(): " .. line)
+   EnableTrigger("event_gq_join", false)
+   EnableTrigger("event_gq_end", true)
+   EnableTrigger("event_gq_list_start", true)
+   EnableTrigger("event_gq_line", true)
+   EnableTrigger("event_gq_start", true) -- watch for start event
+   check_silent("gq")
+end
+
+function event_gq_start(name, line, wc, styles)
+   logmsg("event_gq_start() fired")
+   EnableTrigger("event_gq_start", false)
+   EnableTrigger("event_gq_end", true)
+   EnableTrigger("event_gq_list_start", true)
+   EnableTrigger("event_gq_line", true)
+   check_silent("gq")
+end
+
+function event_cp_end(name, line, wc, styles)
+   logmsg("event_cp_end() fired")
+   EnableTrigger("event_cp_line", false)
+   EnableTrigger("event_cp_end", false)
+   EnableTrigger("event_cp_mob_kill", false)
+   clear_list("cp")
+end
+
+function event_gq_end(name, line, wc, styles)
+   logmsg("event_gq_end() fired")
+   EnableTrigger("event_gq_end", false)
+   clear_list("gq")
+end
+
+function clear_list(type)
+   currentList[type] = {}
+   review_clear_cat(string.upper(type))
+end
+
+function event_gq_list_start(name, line, wc, styles)
+   local type = "gq"
+   EnableTrigger("event_" .. type .. "_line", true) -- watch for lines
+   EnableTrigger("event_" .. type .. "_end", true) --watch for end
+   EnableTrigger("event_" .. type .. "_note", true) --watch for notes
+
+   if (silentCheck) then
+      SetTriggerOption("event_" .. type .. "_line", "omit_from_output", "1")
+      SetTriggerOption("event_" .. type .. "_line", "omit_from_log", "1")
+      SetTriggerOption("event_" .. type .. "_note", "omit_from_output", "1")
+      SetTriggerOption("event_" .. type .. "_note", "omit_from_log", "1")
+      SetTriggerOption("event_" .. type .. "_end", "omit_from_output", "1")
+      SetTriggerOption("event_" .. type .. "_end", "omit_from_log", "1")
+   end
+   start_list("gq")
+end
+
+function event_cp_list_start(name, line, wc, styles)
+   local type = "cp"
+   EnableTrigger("event_" .. type .. "_line", true) -- watch for lines
+   EnableTrigger("event_" .. type .. "_end", true) --watch for end
+   EnableTrigger("event_" .. type .. "_note", true) --watch for notes
+
+   if (silentCheck) then
+      SetTriggerOption("event_" .. type .. "_line", "omit_from_output", "1")
+      SetTriggerOption("event_" .. type .. "_line", "omit_from_log", "1")
+      SetTriggerOption("event_" .. type .. "_note", "omit_from_output", "1")
+      SetTriggerOption("event_" .. type .. "_note", "omit_from_log", "1")
+      SetTriggerOption("event_" .. type .. "_end", "omit_from_output", "1")
+      SetTriggerOption("event_" .. type .. "_end", "omit_from_log", "1")
+   end
+   start_list("cp")
+end
+
+function event_cp_list_end(name, line, wc, styles)
+   end_list("cp")
+end
+
+function event_cp_time_left(name, line, wc, styles)
+
+end
+
+function event_cp_level_msg(name, line, wc, styles)
+
+end
+
+function event_review_start(name, line, wc, styles)
+   EnableTrigger("event_review_capture", true) -- capture everything between tags
+   EnableTrigger("event_review_end", true) -- watch for end tag
+   logmsg("review_start fired")
+end
+
+function event_review_capture(name, line, wc, styles)
+   review_addline("Review", strip_colours(line))
+end
+
+function event_review_end(name, line, wc, styles)
+   logmsg("review_end fired")
+   EnableTrigger("event_review_capture", false) -- stop capture
+   EnableTrigger("event_review_end", false) -- don't watch for end tag
+end
+
+function event_cp_note(name, line, wc, styles)
+   logmsg("event_cp_note fired!: " .. line)
+end
+
+function event_gq_note(name, line, wc, styles)
+   logmsg("event_gq_note fired!: " .. line)
+end
+
+function start_list(type)
+   EnableTrigger("event_" .. type .. "_line", true)
+   EnableTrigger("event_" .. type .. "_mob_kill", true)
+   EnableTrigger("event_" .. type .. "_list_end", true)
+   EnableTrigger("event_" .. type .. "_note", true)
+   EnableTrigger("event_" .. type .. "_end", true)
+   currentList[type] = {}
+   logmsg(type .. "_list_start() fired")
+   review_clear_cat(string.upper(type))
+end
+
+function end_list(type)
+   currentIndex = 1
+   EnableTrigger("event_" .. type .. "_line", false)
+   EnableTrigger("event_" .. type .. "_list_end", false)
+   EnableTrigger("event_" .. type .. "_join", true)
+   EnableTrigger("event_" .. type .. "_mob_kill", true)
+
+   silentCheck = false
+   SetTriggerOption("event_" .. type .. "_line", "omit_from_output", "0")
+   SetTriggerOption("event_" .. type .. "_line", "omit_from_log", "0")
+   SetTriggerOption("event_" .. type .. "_note", "omit_from_output", "0")
+   SetTriggerOption("event_" .. type .. "_note", "omit_from_log", "0")
+   SetTriggerOption("event_" .. type .. "_end", "omit_from_output", "0")
+   SetTriggerOption("event_" .. type .. "_end", "omit_from_log", "0")
+
+   logmsg(type .. "_list_end() fired .. list size: " .. #currentList[type])
+   if #currentList[type] == 0 then
+      logmsg("End of " .. type .. " list, list is empty.")
+      return
+   end
+   for index,value in ripairs(currentList[type]) do
+      local strListItem = ""
+      if value.qty ~= nil and value.qty > 1 then
+         strListItem = value.qty .. " "
+      end
+      strListItem = strListItem .. value.mob .. "; in area: " .. value.where
+      if (value.isdead ~= nil and value.isdead ~= "") then
+         strListItem = strListItem .. "- Mob is dead!"
+      end
+      logmsg(string.upper(type) .. " buffer: " .. strListItem)
+      review_addline(string.upper(type), strListItem)
+      --set focus here
+
+   end
+   if type == "gq" then -- if it's a gquest we switch to gquest tab and proper entry
+      logmsg("end_list type is gq, switching to category")
+      current_category = find_catid_by_name(string.upper(type))
+      if messages[categories[current_category]] ~= nil then
+         if current_msg_id > #messages[categories[current_category]] or current_msg_id == 0 then
+            message_select(#messages[categories[current_category]])
+         end
+      end
+   end
+end
+
+function event_gq_list_end(name, line, wc, styles)
+   end_list("gq")
+end
+
+function find_catid_by_name(cat)
+   for i = 1, #categories do
+      if categories[i] == cat then
+         return i
+      end
+   end
+end
+
+function event_gq_mob_kill(name, line, wc, styles)
+   logmsg("event_gq_mob_kill: " .. line)
+   if listIndexing then
+      check_silent("gq")
+   end
+end
+
+function event_cp_mob_kill(name, line, wc, styles)
+   logmsg("event_cp_mob_kill: " .. line)
+   if listIndexing then
+      check_silent("cp")
+   end
+end
+
+function get_current_selection()
+   local currCat = categories[current_category]
+   local listLen
+   if currentList[string.lower(currCat)] ~= nil then
+      listLen = #currentList[string.lower(currCat)]
+   end
+   return currCat, current_msg_id, listLen
+end
+
+function event_noexp_on(name, line, wc)
+   review_addline("All", line)
+end
+
+function event_noexp_off(name, line, wc)
+   review_addline("All", line)
+end
+
+function create_triggers()
+   local triggerFlags = trigger_flag.RegularExpression
+
+   check (AddTriggerEx("event_gq_line",
+      "^You still have to kill (?<qty>[0-9]) \\* (?<mob>[^\\(]+) \\((?<where>.+?)(?<isdead> - Dead)?\\)$",
+      "",
+      triggerFlags,
+      -1, 0, "",
+      "event_gq_line", sendto.script, 1))
+
+   check (AddTriggerEx("event_cp_line",
+      "^You still have to kill \\* (?<mob>[^\\(]+) \\((?<where>.+?)(?<isdead> - Dead)?\\)\\.?$",
+      "",
+      triggerFlags,
+      -1, 0, "",
+      "event_cp_line", sendto.script, 1))
+
+   check (AddTriggerEx("event_gq_join",
+      "^You have now joined Global Quest (.+) See 'help gquest' for available commands.$",
+      "",
+      triggerFlags + trigger_flag.Enabled,
+      -1, 0, "",
+      "event_gq_join", sendto.script, 1))
+
+   check (AddTriggerEx("event_gq_start",
+      "^Global Quest: Global quest (.+) has now started\\.$",
+      "",
+      triggerFlags,
+      -1, 0, "",
+      "event_gq_start", sendto.script, 1))
+
+   check (AddTriggerEx("event_gq_mob_kill",
+      "^Congratulations, that was one of the GLOBAL QUEST mobs!$",
+      "",
+      triggerFlags,
+      -1, 0, "",
+      "event_gq_mob_kill", sendto.script, 1))
+
+   check (AddTriggerEx("event_cp_mob_kill",
+      "^Congratulations, that was one of your CAMPAIGN mobs!$",
+      "",
+      triggerFlags + trigger_flag.Enabled,
+      -1, 0, "",
+      "event_cp_mob_kill", sendto.script, 1))
+
+   check (AddTriggerEx("event_gq_end",
+      "^You are not in a global quest.$",
+      "",
+      triggerFlags,
+      -1, 0, "",
+      "event_gq_end", sendto.script, 1))
+
+   check (AddTriggerEx("event_cp_end",
+      "^(" ..
+      "^CONGRATULATIONS! You have completed your campaign.*|" ..
+      "You are not currently on a campaign.*" ..
+      ")$",
+      "",
+      triggerFlags,
+      -1, 0, "",
+      "event_cp_end", sendto.script, 1))
+
+   check (AddTriggerEx("event_review_start",
+      "^\\{START_REVIEW\\}$",
+      "",
+      triggerFlags + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Enabled,
+      -1, 0, "",
+      "event_review_start", sendto.script, 0))
+
+   check (AddTriggerEx("event_review_capture",
+      "^.*$",
+      "",
+      triggerFlags + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.KeepEvaluating,
+      -1, 0, "",
+      "event_review_capture", sendto.script, 1))
+
+   check (AddTriggerEx("event_review_end",
+      "^\\{END_REVIEW\\}$",
+      "",
+      triggerFlags + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Enabled,
+      -1, 0, "",
+      "event_review_end", sendto.script, 0))
+
+   check (AddTriggerEx("event_gq_list_start",
+      "^\\{START_GQLIST\\}$",
+      "",
+      triggerFlags + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Enabled,
+      -1, 0, "",
+      "event_gq_list_start", sendto.script, 1))
+
+   check (AddTriggerEx("event_gq_list_end",
+      "^\\{END_GQLIST\\}$",
+      "",
+      triggerFlags + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput,
+      -1, 0, "",
+      "event_gq_list_end", sendto.script, 1))
+
+   check (AddTriggerEx("event_cp_list_start",
+      "^\\{START_CPLIST\\}$",
+      "",
+      triggerFlags + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Enabled,
+      -1, 0, "",
+      "event_cp_list_start", sendto.script, 1))
+
+   check (AddTriggerEx("event_cp_list_end",
+      "^\\{END_CPLIST\\}$",
+      "",
+      triggerFlags + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput,
+      -1, 0, "",
+      "event_cp_list_end", sendto.script, 1))
+
+   check (AddTriggerEx("event_gq_note",
+      "^(" ..
+      "You can be rewarded for (.+) more kills this level.*|"       ..
+      "Note\\: One or more target names in this gquest might be slightly scrambled.*|"    ..
+      "You may win (.+) more gquests at this level.*" ..
+      ")$",
+      "",
+      triggerFlags,
+      -1, 0, "",
+      "event_gq_note", sendto.script, 1))
+
+   check (AddTriggerEx("event_cp_note",
+      "^(" ..
+      "You have (.+) left to finish this campaign\\.*|"       ..
+      "You will have to level before you can go on another campaign\\.*|"       ..
+      "You have completed (.+) campaigns today\\.*|"   ..
+      "You may take a campaign at this level.*|"       ..
+      "Note\\: One or more target names in this campaign might be slightly scrambled.*|"    ..
+      "Note\\: Dead means that the target is dead, not that you have killed it\\.*" ..
+      ")$",
+         "",
+      triggerFlags,
+      -1, 0, "",
+      "event_cp_note", sendto.script, 1))
+end
+
+create_triggers()
+
+function printmsg(msg)
+   ColourNote("steelblue", "", msg)
+end
+
+function logmsg(msg)
+   if GetVariable("debug") == "1" then
+      ColourNote("olive", "", "[dbg] ", "SteelBlue", "", msg)
+   end
+end
+
+function vi(alias, line, wc)
+   local togName
+   if string.lower(wc[1]) == "debug" then
+      togName = "debug"
+   elseif string.lower(wc[1]) == "int" then
+      togName = "tts_interrupt"
+   elseif string.lower(wc[1]) == "help" then
+      vi_help()
+      return
+   else
+      ColourNote("steelblue", "", "Valid options are:")
+      ColourNote("steelblue", "", "vi int                    > enables/disables tts interrupt for message review (not categories)")
+      ColourNote("steelblue", "", "vi add Category=Message   > adds a line to and creates category")
+      ColourNote("steelblue", "", "vi help                   > display help file")
+      ColourNote("steelblue", "", "vi debug                  > enables/disables debug for testing only")
+      return
+   end
+   if (GetVariable(togName) == "1") then
+      SetVariable(togName, "0")
+      print("")
+      printmsg("vi review buffers: " .. togName .. " has been disabled.")
+      print("")
+   else
+      SetVariable(togName, "1")
+      print("")
+      printmsg("vi review buffers: " .. togName .. " has been enabled.")
+      print("")
+   end
+end
+
+--set up initial important categories
+review_add(nil, nil, {"All", ""})
+current_category = 1
+review_add(nil, nil, {"Say", ""})
+review_add(nil, nil, {"Tells", ""})
+review_add(nil, nil, {"Group", ""})
+review_add(nil, nil, {"Clan", ""})
+review_add(nil, nil, {"Answers", ""})
+review_add(nil, nil, {"Commerce", ""})
+review_add(nil, nil, {"URLs", ""})
+review_add(nil, nil, {"Kill Summary", ""})
+review_add(nil, nil, {"Quests", ""})
+]]>
+</script>
+</muclient>

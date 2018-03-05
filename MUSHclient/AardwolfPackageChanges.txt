@@ -1,7 +1,23 @@
 Aardwolf Client Package Major Changes List
 
+r1963 snapshot
+bug fix: Another day, another stupid bug in the prompt fixer plugin.
+
+r1962 snapshot
+bug fix: Channel messages sent to main output are supposed to buffer while writing a note, but Aardwolf doesn't appear to send telopt 100,5 when you enter note mode currently.
+
+r1961 snapshot
+bug fix: The new soundpack plugin was causing plugin load errors on the first run after a fresh install.
+bug fix: Fixed a couple aliases in the review buffers plugin introduced while merging Pwar's contributions into the package.
+
+r1960 snapshot
+- bug fix: Work around possible gmcp char status inconsistency at login in prompt fixer, ascii map, and chat echo plugins by switching connection checks to telopts instead.
+- bug fix: The aard_Copy_Colour_Codes plugin should now work with extended ascii and the utf8 map characters.
+- misc change: A few unnecessary status messages have been removed in the non-visual edition.
+- new feature: Pwar's soundpack and review buffers plugins are now included in the package (and loaded by default on a brand new install of the non-visual edition).
+
 r1956 snapshot
-- bug fix: A latent memory access bug in all prior versions of MUSHclient could randomly lead to crashes or other client errors. 
+- bug fix: A latent memory access bug in all prior versions of MUSHclient could randomly lead to crashes or other client errors.
 
 r1955 snapshot
 - misc change: A lot of plugin variables will save more immediately now, which should prevent some configuration loss in the event of a crash.
@@ -19,7 +35,7 @@ r1950 snapshot
 - bug fix: universal TTS plugin now also reads plugin messages in addition to server output.
 
 r1947 snapshot
-- bug fix: Move TTS DLLs to top level, to make them easier to find
+- bug fix: Move TTS DLLs to top level, to make them easier to find.
 
 r1946 snapshot
 - bug fix: Channel transitions and hidden map requests were causing extra blank lines to appear sometimes. Those should be gone now.
