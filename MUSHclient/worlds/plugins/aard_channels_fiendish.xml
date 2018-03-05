@@ -511,6 +511,8 @@ end --  OnPluginDisable
 
 require "serialize"
 function OnPluginSaveState()
+   -- save window current location for next time
+   SetVariable("enabled", tostring (GetPluginInfo (GetPluginID(), 17)))
    movewindow.save_state(win)
 
    SetVariable("font_name", font_name)
@@ -522,6 +524,10 @@ function OnPluginSaveState()
    end
    SetVariable("WINDOW_WIDTH", width)
    SetVariable("WINDOW_HEIGHT", height)
+   SetVariable("info_on", info_on)
+   SetVariable("global_quest_on", global_quest_on)
+   SetVariable("remort_auction_on", remort_auction_on)
+   SetVariable("warfare_on", warfare_on)
    SetVariable("log_to_file", log_to_file)
    SetVariable("log_colour_codes", log_colour_codes)
    SetVariable("log_timestamps", log_timestamps)
