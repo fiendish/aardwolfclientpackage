@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1964 snapshot
+bug fix: Some triggers were accidentally enabled by default in the soundpack plugin.
+
 r1963 snapshot
 bug fix: Another day, another stupid bug in the prompt fixer plugin.
 
