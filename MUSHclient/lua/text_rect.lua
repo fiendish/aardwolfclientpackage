@@ -2,7 +2,22 @@
 
 require "wait"
 require "copytable"
+require "colors"
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
+
+function getHighlight(bg)
+   local h, s, l = colors.rgb_string_to_hsl(string.format('#%06x', bg))
+   if l >= 0.5 then
+      bgr = {colors.hsl_to_rgb(h, s, l/2)}
+      local buffer = "0x"
+      for i,v in ipairs(bgr) do
+         buffer = buffer..string.format("%02x",math.floor(v*255+0.5))
+      end
+      return tonumber(buffer)
+   else
+      return bg+0x444444
+   end
+end
 
 TextRect = {
    hotspot_map = {}
@@ -20,7 +35,8 @@ TextRect_defaults = {
    num_wrapped_lines = 0,
    keepscrolling = "",
    padding = 5,
-   background_color = ColourNameToRGB("black")
+   background_color = 0x000000,
+   highlight = getHighlight(0x000000)
 }
 TextRect_mt = { __index = TextRect }
 
@@ -47,6 +63,7 @@ function TextRect.new(window, name, left, top, right, bottom, max_lines, scrolla
    new_tr.font_name = font_name or new_tr.font_name
    new_tr.font_size = font_size or new_tr.font_size
    new_tr.background_color = background_color or new_tr.background_color
+   new_tr.highlight_color = getHighlight(new_tr.background_color)
    new_tr:loadFont(new_tr.font_name, new_tr.font_size)
    return new_tr
 end
@@ -297,7 +314,7 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
    local left = self.padded_left
    local top = self.padded_top + (line * self.line_height)
    if (backfill_start ~= nil and backfill_end ~= nil) then
-      WindowRectOp(self.window, 2, backfill_start, top + 1, backfill_end, top + self.line_height + 1, 0x444444)
+      WindowRectOp(self.window, 2, backfill_start, top + 1, backfill_end, top + self.line_height + 1, self.highlight_color)
    end -- backfill
    if styles then
       for _, v in ipairs(styles) do

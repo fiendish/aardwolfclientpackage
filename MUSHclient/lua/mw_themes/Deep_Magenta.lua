@@ -1,14 +1,20 @@
 -- Copy this file to create your own custom themes, but please do not modify this file.
 
--- DARK MAGENTA THEME
+-- DEEP MAGENTA THEME
 return {
    LOGO_OPACITY = 0.03,
 
-   BODY = 0x0c000c,
+   PRIMARY_BODY = 0x0c000c,
+   SECONDARY_BODY = 0x552255,
    BODY_TEXT = 0xff00ff,
-   BUTTON = 0x221122,
-   BUTTON_HOVER = 0x7b007b,
-   BUTTON_HOT = 0x201150,
+
+   -- flat buttons
+   CLICKABLE = 0x221122,
+   CLICKABLE_HOVER = 0x7b007b,
+   CLICKABLE_HOT = 0x201150,
+   CLICKABLE_TEXT = 0xff00ff,
+   CLICKABLE_HOVER_TEXT = 0xff11ff,
+   CLICKABLE_HOT_TEXT = 0xff00dd,
 
    -- for miniwindow titlebar
    TITLE_FONTS = {
@@ -17,7 +23,7 @@ return {
       {["name"]="Lucida Console", ["size"]=10}
    },
    TITLE_PADDING = 1,
-   
+
    -- for 3D surfaces other than the titlebar, like buttons and scrollbars
    THREE_D_HIGHLIGHT = 0xaa00aa,
 

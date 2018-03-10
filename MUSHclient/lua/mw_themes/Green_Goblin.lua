@@ -1,12 +1,20 @@
--- BARNEY THEME
+-- Copy this file to create your own custom themes, but please do not modify this file.
+
+-- GREEN GOBLIN THEME
 return {
    LOGO_OPACITY = 0.05,
 
-   BODY = 0x0d000d,
-   BODY_TEXT = 0x00bb55,
-   BUTTON = 0x221122,
-   BUTTON_HOVER = 0x6b006b,
-   BUTTON_HOT = 0x201150,
+   PRIMARY_BODY = 0x1a000c,
+   SECONDARY_BODY = 0x662233,
+   BODY_TEXT = 0x0088ee,
+
+   -- flat buttons
+   CLICKABLE = 0x2a001c,
+   CLICKABLE_HOVER = 0x6b006b,
+   CLICKABLE_HOT = 0x401150,
+   CLICKABLE_TEXT = 0x00bb55,
+   CLICKABLE_HOVER_TEXT = 0x00bb55,
+   CLICKABLE_HOT_TEXT = 0x00bb55,
 
    -- for miniwindow titlebar
    TITLE_FONTS = {
@@ -20,7 +28,7 @@ return {
    THREE_D_HIGHLIGHT = 0x00bb55,
 
    THREE_D_GRADIENT = miniwin.gradient_vertical,
-   THREE_D_GRADIENT_FIRST = 0x600065,
+   THREE_D_GRADIENT_FIRST = 0x600075,
    THREE_D_GRADIENT_SECOND = 0x550037,
    THREE_D_GRADIENT_ONLY_IN_TITLE = false,
 

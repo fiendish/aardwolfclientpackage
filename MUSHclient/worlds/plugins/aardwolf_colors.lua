@@ -279,7 +279,7 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
       input = input:gsub("@x25[6-9]","") -- strip invalid xterm codes (256+)
       input = input:gsub("@[^xrgybmcwDRGYBMCW]", "")  -- strip hidden garbage
 
-      for code, text in input:gmatch("(@%a)([^@]+)") do
+      for code, text in input:gmatch("(@%a)([^@]*)") do
          local from_x = nil
          text = text:gsub("%z", "@") -- put any @ characters back
 
@@ -299,17 +299,15 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
             textcolor = code_to_client_color[code]
          end
 
-         if #text > 0 then
-            table.insert(astyles,
-            {
-               fromx = from_x,
-               text = text,
-               bold = bold_codes[code] or false,
-               length = #text,
-               textcolour = textcolor or default_foreground,
-               backcolour = default_background
-            })
-         end -- if some text
+         table.insert(astyles,
+         {
+            fromx = from_x,
+            text = text,
+            bold = bold_codes[code] or false,
+            length = #text,
+            textcolour = textcolor or default_foreground,
+            backcolour = default_background
+         })
       end -- for each colour run.
 
       return astyles
