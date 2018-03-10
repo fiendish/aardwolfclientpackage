@@ -446,7 +446,7 @@ function tabMouseUp (flags, hotspot_id)
 end
 
 function drawBackground ()
-   draw_left, draw_top, draw_right, draw_bottom = DressWindow(win, "Communication Log", nil, 2)
+   draw_left, draw_top, draw_right, draw_bottom = DressWindow(win, "Communication Log", nil)
    AddResizeTag(win, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
    movewindow.add_drag_handler(win, 0, 0, 0, draw_top)
 end
