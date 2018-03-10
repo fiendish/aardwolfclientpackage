@@ -82,20 +82,20 @@ function ScrollBar:draw(inside_callback)
       self.window, miniwin.circle_rectangle,
       self.left, self.top + self.width + 1, self.right + 1, self.bottom - self.width,
       theme.SCROLL_TRACK_COLOR1, miniwin.pen_solid, 1,
-      theme.SCROLL_TRACK_COLOR2, theme.VERTICAL_TRACK_BRUSH) -- brush
+      theme.SCROLL_TRACK_COLOR2, theme.VERTICAL_TRACK_BRUSH)
 
    local mid_x = (self.width - 2)/2
 
    -- draw the up button
    local points = ""
 
-   if (self.keepscrolling == "up") then
+   if (self.keepscrolling == "up") then -- button depressed
       Draw3DRect(self.window, self.left, self.top, self.right, self.top + self.width, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
-         self.left + math.floor(mid_x) + 2, self.top + math.ceil(self.width/4 + 0.5) + 2,
-         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 2, self.top + round_banker(self.width/2) + 2,
-         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 2, self.top + round_banker(self.width/2) + 2,
-         self.left + math.ceil(mid_x) + 2, self.top + math.ceil(self.width/4 + 0.5) + 2 )
+         self.left + math.floor(mid_x) + 3, self.top + math.ceil(self.width/4 + 0.5) + 3,
+         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 3, self.top + round_banker(self.width/2) + 3,
+         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 3, self.top + round_banker(self.width/2) + 3,
+         self.left + math.ceil(mid_x) + 3, self.top + math.ceil(self.width/4 + 0.5) + 3 )
    else
       Draw3DRect(self.window, self.left, self.top, self.right, self.top + self.width, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
@@ -107,13 +107,13 @@ function ScrollBar:draw(inside_callback)
    WindowPolygon(self.window, points, theme.THREE_D_SURFACE_DETAIL, miniwin.pen_solid + miniwin.pen_join_miter, 1, theme.THREE_D_SURFACE_DETAIL, 0, true, false)
 
    -- draw the down button
-   if (self.keepscrolling == "down") then
+   if (self.keepscrolling == "down") then -- button depressed
       Draw3DRect(self.window, self.left, self.bottom - self.width, self.right, self.bottom, true)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",
-         self.left + math.floor(mid_x) + 2, self.bottom - math.ceil(self.width/4 + 0.5),
-         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 2, self.bottom - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 2, self.bottom - round_banker(self.width/2),
-         self.left + math.ceil(mid_x) + 2, self.bottom - math.ceil(self.width/4 + 0.5))
+         self.left + math.floor(mid_x) + 3, self.bottom - math.ceil(self.width/4 + 0.5) + 1,
+         self.left + math.floor(mid_x) - math.floor(mid_x/2) + 3, self.bottom - round_banker(self.width/2) + 1,
+         self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 3, self.bottom - round_banker(self.width/2) + 1,
+         self.left + math.ceil(mid_x) + 3, self.bottom - math.ceil(self.width/4 + 0.5) + 1)
    else
       Draw3DRect(self.window, self.left, self.bottom - self.width, self.right, self.bottom, false)
       points = string.format("%i,%i,%i,%i,%i,%i,%i,%i",

@@ -200,12 +200,12 @@ EnableTriggerGroup("end_gag", false)
 <script>
 <![CDATA[
 
+require "mw_theme_base"
 require "gmcphelper"
 require "movewindow"
 require "mw"
 
-background_colour = GetNormalColour(1)
-title_colour          = 0x292929
+background_colour = theme.PRIMARY_BODY
 border_color          = 0xdddddd
 title_gradient_col1   = GetNormalColour(1)
 title_gradient_col2   = 0x444444
@@ -217,8 +217,6 @@ map_lines = {}
 coord_data= {}
 show_coords = 0
 
-
---title_colour          = 0xf92929
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
 TITLE_HEIGHT    = 0
@@ -270,9 +268,9 @@ function map_redirect (name, line, wildcards, styles)
    if name == "map_start" then   --- Setup the window.
       map_lines = {} --reset ready for new map
    elseif name == "map_end" then
-      EnableTrigger ("multi_line_map", false)  -- no more lines to go
+      EnableTrigger("multi_line_map", false)  -- no more lines to go
       requesting = false
-      DisplayMapPage () --end of map from MUD, display the window
+      DisplayMapPage() --end of map from MUD, display the window
 
       if (also_echo_map == 1) or always_echo_rooms[roomnum] then
          for i,line in ipairs(map_lines) do
@@ -342,31 +340,19 @@ function map_body_redirect(name, line, wildcards, styles)
    table.insert (map_lines, styles)
 end
 
-function SetUpHotspotsAndDraw(firstTime)
-   if (firstTime == true) then
-      check (WindowCreate (win,
-         windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-         width,   -- width
-         height,  -- height
-         windowinfo.window_mode,       -- auto-position: middle right
-         windowinfo.window_flags,  -- flags
-         background_colour) )
-      -- Add the drag handler so they can move the window around
-      movewindow.add_drag_handler (win, 0, 0, 0, 0)
-      -- Add legend-popup handler
-      WindowAddHotspot(win, "legend", 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
+function draw_legend(y)
+   -- show the widget for the legend popup
+   WindowRectOp(win, 2, bodyleft, y, bodyleft+(3*font_width), y+font_height+5, theme.CLICKABLE, 0x0000ff) -- fill
+   WindowRectOp(win, 1, bodyleft, y, bodyleft+(3*font_width), y+font_height+5, theme.CLICKABLE_TEXT, 0x0000ff) -- border
+   WindowText(win, font_id, "?", bodyleft+font_width, y, bodyright, bodybottom, theme.BODY_TEXT)
+end
 
-      -- Add handler for resizing
-      WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
-      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
-   else
-      -- everything has already been made
-      -- just move them back into place
-      WindowResize(win, width, height, background_colour)
-      WindowMoveHotspot(win, "legend", 5, height-font_height-2, 3*font_width, height)
-      WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
-   end
+current_room_name = "\n"
+function resize_window()
+   WindowResize(win, width, height, theme.SECONDARY_BODY)
+   movewindow.add_drag_handler(win, 0, 0, 0, 0)
+
+   bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, nil, nil, 1)
    DisplayMapPage()
 end
 
@@ -378,76 +364,68 @@ end
 
 function DisplayMapPage()
    styles = { }
-   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
+   WindowRectOp(win, 2, bodyleft, bodytop, bodyright+1, bodybottom+1, theme.PRIMARY_BODY) -- blank
 
-   if show_title == 1 then
-      -- title rectangle
-      WindowGradient (win, 2, 2, -2, TITLE_HEIGHT, title_gradient_col1, title_gradient_col2, 2)
-      WindowLine(win,0,TITLE_HEIGHT,width,TITLE_HEIGHT,0xeeeeee,0,1)
-   end
-
-   -- show the widget for the legend popup
-   WindowRectOp(win, 2, 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5,0x303030,0x0000ff) -- fill
-   WindowRectOp(win, 1, 1, TITLE_HEIGHT+1, 3*font_width+1,TITLE_HEIGHT+font_height+5,0x777777,0x0000ff) -- border
-   WindowText (win, font_id, "?", font_width+1, TITLE_HEIGHT+1, 0, 0, 0xffffff)
    if WindowTextWidth(win, font_id, "i") ~= WindowTextWidth(win, font_id, "w") then
       line = -font_height-5
       txt = "This plugin's configured font"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
       line = line+font_height+5
       txt = "[ "..font_name.." ]"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
       line = line+font_height+5
       txt = "is not a monospace font."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
       line = line+font_height+5
       txt = "Right-click here to pick another."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
    elseif not requested_since_empty then
       line = -font_height-5
       txt = "Map will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
       line = line+font_height+5
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, 0, 0, 0xeeeeee)
-   else
-      -- display each line
-      for i, line in ipairs (map_lines) do
-         if (show_exits == 1) or (i < #map_lines) then
-            Display_Line (i, line)
-         end
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
+   else -- display the map lines
+      local roomname_bottom = line_height(4)
+      if show_title == 1 then
+         -- Display_Line(1, map_lines[1])
+         -- Display_Line(2, map_lines[2])
+         --WindowLine(win, bodyleft, roomname_bottom, bodyright, roomname_bottom, theme.THREE_D_HIGHLIGHT, 0, 1)
+         roomname_bottom = DrawTitleBar(win, {map_lines[1], map_lines[2]}, "left")
+      end
+
+      -- Add legend-popup handler
+      WindowAddHotspot(win, "legend", bodyleft, roomname_bottom, bodyleft+(3*font_width), roomname_bottom+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
+      draw_legend(roomname_bottom+2)
+
+      local n = #map_lines
+      for i = 3, n-1 do
+         Display_Line(i, map_lines[i])
       end -- for
+
+      if show_exits == 1 then
+         Display_Line(n, map_lines[n])
+      end
 
       -- tack on coordinates after the map displays
       if (show_coords == 1 and coords ~= nil) then
-         Display_Line (#map_lines+show_exits, coords)
+         Display_Line(n+show_exits, coords)
       end
    end
 
-   -- draw edge frame.
-   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
-
-   -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+   AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
    -- show it now (or refresh)
-   WindowShow (win, true)
+   WindowShow(win, true)
    --Redraw()
-   BroadcastPlugin (999, "repaint")
+   BroadcastPlugin(999, "repaint")
 
 end -- Display_Map
 
@@ -490,29 +468,29 @@ function process_coords ()
    coords = tstyle
 end
 
+function line_height(i)
+   return ((i - 1) * (font_height)) + 5 + bodytop
+end
+
 function Display_Line (line, styles)
    local id = font_id
-   local left = 3
-   -- first 2 lines in bold
-   if show_title == 1 then
-      if line < 3 then
-         left = 4
-         id = font_id_bold
-      end
-   else
+   local left = 5
+   if show_title ~= 1 then
       line = line - 3
    end
 
-   local padding = 5
-
-   local top = ((line - 1) * (font_height)) + padding
+   local top = line_height(line)
 
    for _, v in ipairs (styles) do
-      local ret = WindowText (win, id, v.text, left, top, 0, 0, v.textcolour, true) -- try utf8 first
+      local color = v.textcolour
+      if (line <= 2) and (color == 65280) then -- replace plain green in room names
+         color = theme.BODY_TEXT
+      end
+      local ret = WindowText (win, id, v.text, left, top, bodyright, bodybottom, color, true) -- try utf8 first
       if (ret >= 0) then
          left = left + ret
       else
-         left = left + WindowText (win, id, v.text, left, top, 0, 0, v.textcolour, false)
+         left = left + WindowText (win, id, v.text, left, top, bodyright, bodybottom, color, false)
       end
    end -- for each style run
 end -- Display_Line
@@ -583,23 +561,6 @@ function right_click_menu ()
    end
 end -- right_click_menu
 
-char_state_hexcodes = {
-   ['6403'] = 3,
-   ['640B'] = 11
-}
-function OnPluginTelnetOption(data)
-   char_state = char_state_hexcodes[utils.tohex(data)]
-   can_request_map = ((char_state == 3) or (char_state == 11))
-   if (char_state == 11) and (myhp == 1) and not died then
-      -- the mud doesn't send a map update when you die (part2)
-      died = true
-      requested_since_empty = false
-   end
-   if not requested_since_empty then
-      request_new_map()
-   end
-end
-
 --=================================================================================
 -- Called when plugin receives telnet data - main entry point for actually running
 -- the plugin.
@@ -637,6 +598,17 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          else
             died = false
+         end
+      elseif (text == "char.status") then
+         char_state = tonumber(gmcp("char.status.state"))
+         can_request_map = ((char_state == 3) or (char_state == 11))
+         if (char_state == 11) and (myhp == 1) and not died then
+            -- the mud doesn't send a map update when you die (part2)
+            died = true
+            requested_since_empty = false
+         end
+         if not requested_since_empty then
+            request_new_map()
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
@@ -678,7 +650,7 @@ function ResizeMoveCallback()
       starty = GetInfo(280)
    end
    if (utils.timer() - lastRefresh > 0.0333) then
-      SetUpHotspotsAndDraw(false)
+      resize_window(false)
       lastRefresh = utils.timer()
    end
 end
@@ -689,7 +661,7 @@ lastRefresh = 0
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-   SetUpHotspotsAndDraw(true)
+   resize_window(true)
 end
 
 ---------------------------------------------------------------------------------
@@ -701,76 +673,65 @@ function MouseDown(flags, hotspot_id)
    end
 end
 
-function MouseOver (flags, hotspotid)
+function MouseOver(flags, hotspotid)
 
    if (hotspotid ~= "legend") then return end
 
    -- work out coordinates
-   local left =  WindowInfo (win, 10)
-   local top =  WindowInfo (win, 11)
+   local left =  WindowInfo(win, 10)
+   local top =  WindowInfo(win, 11)
 
    -- what to say - one line per table entry, with imbedded colour codes
-   info = {
-      "@WMap Legend:@w",
-      "",
-      "  @M#@w  - You                      --- - North/south wall",
-      "  @R*@w  - Other players             |  - East/west wall",
-      "  @Y!@w  - Mobiles                   +  - Door (closed)",
-      "  @C!@w  - Pet/other charmed mob     @B+@w  - Door (locked)",
-      "  @R!@w  - Angry mob (with Sense     >  - Up exit",
-      "       Anger cast)               @y>@w  - Up exit (closed)",
-      "  @G!@w  - Unkillable Mob            <  - Down exit",
-      "  @G$@w  - Shopkeeper                @y<@w  - Down exit (closed)",
-      "",
-      " @C[@W?@C]@w - Area exit                 @r#@w  - PK-flagged room",
-      " @G[@W?@G]@w - Clan public hall exit     @RD@w  - Donation room",
-      "",
-      "@WMajor Terrains:@w",
-      "",
-      " [ ]   Inside                   . .   City",
-      " @g, `@w   Field                    @G; ;@w   Hills",
-      " @y/ \\@w   Mountain                 @B~ ~@w   Water",
-      " @B~ ~@w   Waternoswim              @c. .@w   Air",
-      " @y~ ~@w   Desert                   @Y% %@w   Quicksand",
-      " @b~ ~@w   Underwater               @C~ ~@w   Ice",
-      " @B. .@w   Underground              - -   East/West road",
-      " . .   North/South road         @C~ ~@w   River",
-      " @R/ \\@w   Volcano                  @b% %@w   Cave",
-      " # #   Dungeon                  @g( *@w   Forest",
+   local info = {
+      ColoursToStyles("@wMap Legend:"),
+      ColoursToStyles("@w"),
+      ColoursToStyles("@w  @M#@w  - You                      @w---@w - North/south wall"),
+      ColoursToStyles("@w  @R*@w  - Other players             @w|@w  - East/west wall"),
+      ColoursToStyles("@w  @Y!@w  - Mobiles                   @w+@w  - Door (closed)"),
+      ColoursToStyles("@w  @C!@w  - Pet/other charmed mob     @B+@w  - Door (locked)"),
+      ColoursToStyles("@w  @R!@w  - Angry mob (with Sense     @w>@w  - Up exit"),
+      ColoursToStyles("@w       Anger cast)               @y>@w  - Up exit (closed)"),
+      ColoursToStyles("@w  @G!@w  - Unkillable Mob            @w<@w  - Down exit"),
+      ColoursToStyles("@w  @G$@w  - Shopkeeper                @y<@w  - Down exit (closed)"),
+      ColoursToStyles("@w @C[@w@W?@w@C]@w - Area exit                 @r#@w  - PK-flagged room"),
+      ColoursToStyles("@w @G[@w@W?@w@G]@w - Clan public hall exit     @RD@w  - Donation room"),
+      ColoursToStyles("@w"),
+      ColoursToStyles("@wMajor Terrains:"),
+      ColoursToStyles("@w"),
+      ColoursToStyles("@w @w[ ]@w   Inside                   @w. .@w   City"),
+      ColoursToStyles("@w @g, `@w   Field                    @G; ;@w   Hills"),
+      ColoursToStyles("@w @y/ \\@w   Mountain                 @B~ ~@w   Water"),
+      ColoursToStyles("@w @B~ ~@w   Waternoswim              @c. .@w   Air"),
+      ColoursToStyles("@w @y~ ~@w   Desert                   @Y% %@w   Quicksand"),
+      ColoursToStyles("@w @b~ ~@w   Underwater               @C~ ~@w   Ice"),
+      ColoursToStyles("@w @B. .@w   Underground              @w- -@w   East/West road"),
+      ColoursToStyles("@w @w. .@w   North/South road         @C~ ~@w   River"),
+      ColoursToStyles("@w @R/ \\@w   Volcano                  @b% %@w   Cave"),
+      ColoursToStyles("@w @w# #@w   Dungeon                  @g( *@w   Forest"),
+      ColoursToStyles("@w"),
+      ColoursToStyles("@wFind more in '@Yhelp sectors@w'.")
    }
 
-   heading = ""
-
-   if windowinfo.window_left < 300 then
-      align_left = true
-      align_right = false
-      left = windowinfo.window_left + width + 10
-      top = windowinfo.window_top + 15
-   else
-      align_right = true
-      align_left = false
+   for i,v in ipairs(info) do
+      for j,w in ipairs(v) do
+         if j % 2 == 1 then
+            w.textcolour = nil
+         end
+      end
    end
 
-   align_bottom = false
-   capitalize = true
-
-   -- show it
-   mw.popup (infowin,           -- window name to use
-         heading_font_id,   -- font to use for the heading
-         popup_font_id,           -- font to use for each line
-         heading,           -- heading text
-         info,              -- table of lines to show (with colour codes)
-         left, top,         -- where to put it
-         0x008800,     -- colour for round rectangle line
-         background_colour, -- colour for background
-         capitalize,        -- if true, force the first letter to upper case
-         align_right,       -- if true, align right side on "Left" parameter
-         align_bottom)      -- if true, align bottom side on "Top" parameter
+   heading = ""
+   Popup(infowin,           -- window name to use
+         font_id,           -- font to use for each line
+         info,              -- table of lines to show
+         windowinfo.window_left-1, windowinfo.window_top-1, -- preferred placement
+         windowinfo.window_left, -- keep left of this
+         windowinfo.window_left + width) -- keep right of this
 
 end -- mouseover
 
-function CancelMouseOver (flags, hotspotid)
-   WindowShow (infowin, false)
+function CancelMouseOver(flags, hotspotid)
+   WindowShow(infowin, false)
 end -- cancelmouseover
 
 ---------------------------------------------------------------------------------
@@ -812,10 +773,9 @@ end
 ---------------------------------------------------------------------------------
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
-function OnPluginSaveState ()
+function OnPluginSaveState()
    movewindow.save_state (win)   -- save window current location for next time
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   SetVariable ("title_colour", title_colour)
    if WindowInfo(win, 3) and WindowInfo(win, 4) then
       width = WindowInfo(win, 3)
       height = WindowInfo(win, 4)
@@ -887,7 +847,6 @@ setDefaultFont()
 
 function OnPluginInstall(skip_requests)
    --- Pull some state variables.
-   title_colour = tonumber (GetVariable ("title_colour")) or title_colour
    height = tonumber (GetVariable ("height")) or default_height
    width = tonumber (GetVariable ("width")) or default_width
    show_coords = tonumber (GetVariable ("showcoords")) or show_coords
@@ -895,18 +854,15 @@ function OnPluginInstall(skip_requests)
    show_title = tonumber (GetVariable ("showtitle")) or 1
    also_echo_map = tonumber (GetVariable("also_echo_map")) or 0
 
-   -- make window so I can grab the font info
-   WindowCreate (win, 1, 1, width, height, 0, 0, background_colour)
+   -- create window with position from movewindow
+   windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
 
-   font_id        = "mapper_font"
-   font_id_bold   = "mapper_bold"
-
+   --- Load the fonts.
+   font_id        = "map_font"
+   font_id_bold   = "map_bold"
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
-
-   maptype = tonumber (GetVariable("maptype")) or (((font_name ~= "Dina") and 1) or 0)
-
-   --- Load the fonts into the temp window.
    WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
    WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false) -- bold font
 
@@ -914,46 +870,21 @@ function OnPluginInstall(skip_requests)
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) -- height
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
 
-   if show_title == 1 then
-      TITLE_HEIGHT = font_height*2 + 11
-   else
-      TITLE_HEIGHT = 0
-   end
-
-   --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-
-   -- Draw the initial map window
-   SetUpHotspotsAndDraw(true)
+   maptype = tonumber (GetVariable("maptype")) or (((font_name ~= "Dina") and 1) or 0)
 
    -- Info (Legend) window
-
-   -- our window frame/background colours
-   border_colour = ColourNameToRGB "dimgray"
-
    -- a unique ID
    infowin = "~~~~~~"..GetPluginID () .. ":info" -- name hack to make the popup go on top of everything
-
-   -- font IDs
-   popup_font_id = "popup_font"
-   heading_font_id = "popup_heading_font"
-
-   -- load fonts - mouseover window
-   WindowCreate (infowin, 0, 0, 1, 1, 0, 0, 0)   -- make 1-pixel wide window
+   WindowCreate(infowin, 0, 0, 1, 1, 0, 0, 0)   -- make 1-pixel wide window
    WindowSetZOrder(infowin, 99999)
-
-   -- install the fonts  (49 is modern / fixed pitch)
-   WindowFont (infowin, popup_font_id, font_name, font_size, false, false, false, false, 0, 49)
-   WindowFont (infowin, heading_font_id, font_name, font_size + 2, false, false, false, false, 0, 49)
-
-   -- if disabled last time, stay disabled
-   if GetVariable ("enabled") == "false" then
-      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
-      check (EnablePlugin(GetPluginID (), false))
-      return
-   end -- they didn't enable us last time
+   WindowFont(infowin, font_id, font_name, font_size, false, false, false, false, 0, 49)
 
    SetOption("utf_8", 1)  -- needed for alternate maptypes in output
+
+   -- Draw the initial map window
+   resize_window()
+
+   WindowShow(win, true)
 
    -- update on reload
    if IsConnected() and not skip_requests then
