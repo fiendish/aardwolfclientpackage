@@ -47,12 +47,10 @@ require "gmcphelper"
 require "serialize"
 require "colors"
 
-border_color          = 0xcccccc
 default_width         = 1137
 default_x             = 0
 default_y             = 552
 
-local RESIZE_TAG_SIZE = 10
 local MIN_WIDTH        = 40
 local LEFT_MARGIN     = 10
 local TOP_MARGIN      = 6
@@ -71,7 +69,6 @@ thresh2percent = tonumber (GetVariable("thresh2percent")) or 20
 thresh1color = tonumber (GetVariable("thresh1color")) or 0x00ffff
 thresh2color = tonumber (GetVariable("thresh2color")) or 0x0000ff
 
--- Variables not saved.
 startx     = ""
 starty     = ""
 posx       = ""
