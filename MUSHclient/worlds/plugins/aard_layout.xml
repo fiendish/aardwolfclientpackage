@@ -398,7 +398,7 @@ function OnPluginInstall()
       ColourNote("yellow","red","Error loading background image.")
    end
 
-   local bgcolor = theme.BODY
+   local bgcolor = theme.PRIMARY_BODY
    WindowCreate (bgwin, 0, 0, 0, 0, 12, 3, bgcolor)
    WindowCreate (bgoffscreen, 0, 0, 0, 0, 12, 3, bgcolor)
 
@@ -507,7 +507,7 @@ function draw_main_window()
 
    WindowCreate (bgwin, textrect_left - 5, textrect_top - 5,
       math.max(0, trwidth + 10), math.max(0, trheight + 10),
-      12  , 3, theme.BODY)
+      12  , 3, theme.PRIMARY_BODY)
    WindowShow(bgwin, true)
 
    if image_ratio ~= nil then

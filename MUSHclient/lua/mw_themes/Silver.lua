@@ -4,11 +4,17 @@
 return {
    LOGO_OPACITY = 0.02,
 
-   BODY = 0x0c0c0c,
+   PRIMARY_BODY = 0x0c0c0c,
+   SECONDARY_BODY = 0x777777,
    BODY_TEXT = 0xe8e8e8,
-   BUTTON = 0x696969,
-   BUTTON_HOVER = 0x444444,
-   BUTTON_HOT = 0x40406b,
+
+   -- flat buttons
+   CLICKABLE = 0x666666,
+   CLICKABLE_HOVER = 0x444444,
+   CLICKABLE_HOT = 0x40406b,
+   CLICKABLE_TEXT = 0xc8c8c8,
+   CLICKABLE_HOVER_TEXT = 0xdddddd,
+   CLICKABLE_HOT_TEXT = 0xcfc5df,
 
    -- for miniwindow titlebar
    TITLE_FONTS = {
@@ -32,9 +38,9 @@ return {
 
    -- for scrollbar background
    SCROLL_TRACK_COLOR1 = 0x444444,
-   SCROLL_TRACK_COLOR2 = 0x696969,
+   SCROLL_TRACK_COLOR2 = 0x888888,
    VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
 
    DYNAMIC_BUTTON_PADDING = 20,
-   RESIZER_SIZE = 15
+   RESIZER_SIZE = 16
 }
