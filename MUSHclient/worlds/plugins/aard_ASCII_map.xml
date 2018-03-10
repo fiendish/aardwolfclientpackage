@@ -352,7 +352,7 @@ function resize_window()
    WindowResize(win, width, height, theme.SECONDARY_BODY)
    movewindow.add_drag_handler(win, 0, 0, 0, 0)
 
-   bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, nil, nil, 1)
+   bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, nil, nil)
    DisplayMapPage()
 end
 
@@ -650,7 +650,7 @@ function ResizeMoveCallback()
       starty = GetInfo(280)
    end
    if (utils.timer() - lastRefresh > 0.0333) then
-      resize_window(false)
+      resize_window()
       lastRefresh = utils.timer()
    end
 end
@@ -661,7 +661,7 @@ lastRefresh = 0
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-   resize_window(true)
+   resize_window()
 end
 
 ---------------------------------------------------------------------------------

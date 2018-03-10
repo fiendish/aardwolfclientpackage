@@ -165,13 +165,7 @@ function LoadTitleFont(win)
 end
 
 -- title_alignment can be "left", "right", or "center" (the default)
--- resizer_type 1 is partial (triangle)
--- resizer_type 2 is full (square)
--- If using resizer_type 1, you must also pass in the function that you're
--- using to draw the contents of your miniwindow. That function must take input
--- arguments (left, top, right, bottom) which define the boundaries of the
--- window body.
-function DressWindow(win, title, title_alignment, resizer_type, draw_function)
+function DressWindow(win, title, title_alignment)
    local l, t, r, b = DrawBorder(win)
 
    theme.TITLE_LINE_HEIGHT = 0
