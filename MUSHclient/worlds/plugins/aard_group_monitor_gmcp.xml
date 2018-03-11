@@ -134,10 +134,10 @@ details captured through GMCP.
 
 <script>
 <![CDATA[
+require "mw_theme_base"
 
 require "gauge"
 require "movewindow"
-require "mw"
 require "gmcphelper"
 require "copytable"
 require "serialize"
@@ -187,7 +187,6 @@ startx      = ""
 starty      = ""
 posx        = ""
 posy        = ""
-font_height = 0
 hidden_members = {}
 
 -- pull in telnet option handling
@@ -271,52 +270,53 @@ end
 
 -- build and draw the group display
 function DisplayGroupPage()
-   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
-
-   -- title rectangle
-   WindowGradient(win, 2, 2, -2, title_height, title_gradient_col1, title_gradient_col2, 2)
-   WindowLine(win, 0, title_height, width, title_height, 0xeeeeee, 0, 1)
+   WindowRectOp(win, 2, 2, 2,-2,-2, theme.PRIMARY_BODY) -- blank
 
    if not group_built then
       if next(invitations) == nil then
-         txt = "No Group To Display"
-         txtlen = WindowTextWidth(win,font_id, txt)
-         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, 0xeeeeee, utf8)
          txt = "Group info will appear here"
          txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
+         WindowText (win, font_id, txt, (width-txtlen)/2, height/2-line_height, 0, 0, theme.BODY_TEXT, utf8)
          txt = "once you create or join one."
          txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (width-txtlen)/2, height/2+font_height, 0, 0, 0xeeeeee, utf8)
+         WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, theme.BODY_TEXT, utf8)
       else
          local lines = {}
          txt = "Pending Group Invitations"
          txtlen = WindowTextWidth(win, font_id, txt)
-         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, 0xeeeeee, utf8)
+         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, theme.BODY_TEXT, utf8)
          table.insert(lines, "[ Leader     : Group Name ]")
          table.insert(lines, "---------------------------")
          for k,v in pairs(invitations) do
             table.insert(lines, string.rpad(k,12).." : "..v)
          end
          for i,v in ipairs(lines) do
-            WindowText(win, font_id, v, GAP*4, (title_height) + (i*line_height), 0, 0, 0xeeeeee, utf8)
+            WindowText(win, font_id, v, GAP*4, (title_height) + (i*line_height), 0, 0, theme.BODY_TEXT, utf8)
          end
       end
    else
       styles = ColoursToStyles(full_group_data.groupname)
-      local x = GAP
+      bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, "\n")
+
+      local x = bodyleft + GAP
       local y = 2
-      local statusBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, full_group_data.status)-3*GAP)
-      WindowText(win, font_id, full_group_data.status, statusBoundary+2*GAP, y, 0, 0, ((full_group_data.status=="Private" and 0x0000ff) or 0x00ff00), utf8)
-      x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, 0, 0xeeeeee, utf8)
-      for _, v in ipairs (styles) do
-         x = x + WindowText (win, font_id, v.text, x, y, statusBoundary, 0, v.textcolour)
-      end -- for each style run
+
+      local statusBoundary = bodyright
+      if full_group_data.status == "Private" then
+         statusBoundary = math.max(GAP, bodyright-WindowTextWidth(win, font_id, full_group_data.status)-3*GAP)
+         WindowText(win, font_id, full_group_data.status, statusBoundary+2*GAP, y, bodyright, bodyright, theme.THREE_D_SURFACE_DETAIL, utf8)
+      end
+
+      x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, bodytop, theme.THREE_D_SURFACE_DETAIL, utf8)
+      x = x + WindowText (win, font_id, StylesToColours(styles), x, y, statusBoundary, bodytop, theme.THREE_D_SURFACE_DETAIL, utf8)
+
+
       y = y + line_height
-      local xpKillsBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills)-3*GAP)
-      WindowText(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills, xpKillsBoundary+2*GAP, y, 0,0, 0xeeeeee, utf8)
-      WindowText(win, font_id, "Leader: "..full_group_data.leader, GAP, y, xpKillsBoundary, 0, 0xeeeeee, utf8)
-      y = title_height
+      local xpKillsBoundary = math.max(GAP, bodyright-WindowTextWidth(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills)-3*GAP)
+      WindowText(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills, xpKillsBoundary+2*GAP, y, 0,0, theme.THREE_D_SURFACE_DETAIL, utf8)
+      WindowText(win, font_id, "Leader: "..full_group_data.leader, bodyleft + GAP, y, xpKillsBoundary, 0, theme.THREE_D_SURFACE_DETAIL, utf8)
+
+      y = bodytop
 
       if #group_members > 0 then
          -- MAIN DISPLAY BODY
@@ -434,19 +434,7 @@ function DisplayGroupPage()
       end
    end
 
-   -- draw edge frame.
-   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
-
-   -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
+   AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
    BroadcastPlugin (999, "repaint")
 
@@ -742,38 +730,38 @@ function OnPluginConnect()
    Send_GMCP_Packet("group on")
 end
 
-function OnPluginSaveState ()
+function OnPluginSaveState()
    -- save window current location for next time
-   movewindow.save_state (win)
+   movewindow.save_state(win)
 
-   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   SetVariable ("background_colour", background_colour)
-   SetVariable ("title_colour", title_colour)
+   SetVariable("enabled", tostring(GetPluginInfo(GetPluginID (), 17)))
+   SetVariable("background_colour", background_colour)
+   SetVariable("title_colour", title_colour)
    if WindowInfo(win, 3) and WindowInfo(win, 4) then
       width = WindowInfo(win, 3)
       height = WindowInfo(win, 4)
    end
-   SetVariable ("width", width)
-   SetVariable ("height", height)
-   SetVariable ("font_name", font_name)
-   SetVariable ("font_size", font_size)
-   SetVariable ("show_self", show_self)
-   SetVariable ("show_hp", show_hp)
-   SetVariable ("show_mn", show_mn)
-   SetVariable ("show_mv", show_mv)
-   SetVariable ("hidden", hidden)
-   SetVariable ("colorVals", serialize.save ("colorVals"))
-   SetVariable ("flat_gauges", flat_gauges)
-   SetVariable ("overlay_numbers", overlay_numbers)
-   SetVariable ("thresh1active", thresh1active)
-   SetVariable ("thresh2active", thresh2active)
-   SetVariable ("thresh1percent", thresh1percent)
-   SetVariable ("thresh2percent", thresh2percent)
-   SetVariable ("thresh1color", thresh1color)
-   SetVariable ("thresh2color", thresh2color)
+   SetVariable("width", width)
+   SetVariable("height", height)
+   SetVariable("font_name", font_name)
+   SetVariable("font_size", font_size)
+   SetVariable("show_self", show_self)
+   SetVariable("show_hp", show_hp)
+   SetVariable("show_mn", show_mn)
+   SetVariable("show_mv", show_mv)
+   SetVariable("hidden", hidden)
+   SetVariable("colorVals", serialize.save ("colorVals"))
+   SetVariable("flat_gauges", flat_gauges)
+   SetVariable("overlay_numbers", overlay_numbers)
+   SetVariable("thresh1active", thresh1active)
+   SetVariable("thresh2active", thresh2active)
+   SetVariable("thresh1percent", thresh1percent)
+   SetVariable("thresh2percent", thresh2percent)
+   SetVariable("thresh1color", thresh1color)
+   SetVariable("thresh2color", thresh2color)
 end -- OnPluginSaveState
 
-function OnPluginClose ()
+function OnPluginClose()
    OnPluginDisable()
    WindowDelete(win)
 end
@@ -811,45 +799,37 @@ function OnPluginListChanged ()
 end
 
 function OnPluginInstall()
-   -- make window so I can grab the font info
-   WindowCreate (win, width, height, 1, 1, 0, 0, background_colour)
-
-   font_id        = "font"
-   font_id_bold   = "font_bold"
 
    local fonts = utils.getfontfamilies ()
 
-   -- if not there already, add it
+   -- if Dina not there already, add it
    if not fonts.Dina then
       AddFont (GetInfo (66) .. "\\Dina.fon")
       fonts = utils.getfontfamilies ()
-   end -- if Dina not installed
+   end
 
    if fonts ["Dina"] then
       default_font_size = 8
-      default_font_name = "Dina"    -- the actual font
+      default_font_name = "Dina"
    elseif fonts["Courier New"] then
       default_font_size = 9
       default_font_name = "Courier New"
    else
       default_font_size = 9
       default_font_name = "Lucida Console"
-   end -- if
+   end
 
+   font_id = "font"
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
-   --- Load the fonts into the temp window.
-   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
-   WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false) -- bold font
+   windowinfo = movewindow.install(win, miniwin.pos_center, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
+   WindowFont(win, font_id, font_name, font_size, false, false, false, false) -- normal font
 
    --- Grab font size settings.
-   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-   line_height = font_height + 1
+   line_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 2
    title_height = line_height*2+2
-
-   --- install the window movement handler, get back the window position.
-   windowinfo = movewindow.install (win, miniwin.pos_center, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
 
    if IsConnected() then
       OnPluginConnect()
