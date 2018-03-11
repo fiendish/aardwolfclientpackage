@@ -182,26 +182,27 @@ end
 
 function DisplayStatsPage()
 
-   WindowRectOp(win, 2, 0, 0, 0, 0, theme.PRIMARY_BODY) -- blank
+   bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, nil, nil)
+   WindowRectOp(win, 2, bodyleft, bodytop, bodyright, bodybottom, theme.PRIMARY_BODY) -- blank
 
    if not page_built then
       if stacked == 1 then
          local txt = "Status bars will appear here"
          local txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height/2)-line_height, 0, 0, theme.BODY_TEXT, false)
+         WindowText (win, font_id, txt, (bodyright-txtlen)/2, (height/2)-line_height, bodyright, bodybottom, theme.BODY_TEXT, false)
          txt = "once you start playing."
          txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, height/2, 0, 0, theme.BODY_TEXT, false)
+         WindowText (win, font_id, txt, (bodyright-txtlen)/2, height/2, bodyright, bodybottom, theme.BODY_TEXT, false)
       else
          local txt = "Status bars will appear here once you start playing."
          local txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height-line_height)/2, 0, 0, theme.BODY_TEXT, false)
+         WindowText (win, font_id, txt, (bodyright-txtlen)/2, (height-line_height)/2, bodyright, bodybottom, theme.BODY_TEXT, false)
       end
    else -- Only draw bars if we have data.
 
       local barTexts = ""
-      ypos = TOP_MARGIN
-      xpos = LEFT_MARGIN
+      ypos = bodytop + TOP_MARGIN
+      xpos = bodyleft + LEFT_MARGIN
       label_width = 0
       bar_width = 0
       num_ticks = 3
@@ -215,7 +216,7 @@ function DisplayStatsPage()
          if showLabels == 1 then
             label_width = WindowTextWidth(win, font_id, "WWWWWW:")
          end
-         bar_width = math.max(1, effectiveWidth-label_width-LEFT_MARGIN*2)
+         bar_width = math.max(1, bodyright-label_width-LEFT_MARGIN*2)
       else
          for i,v in pairs(showBar) do
             if (v[2] == true) then
@@ -223,9 +224,9 @@ function DisplayStatsPage()
             end
          end
          if showLabels == 1 then
-            bar_width = math.max(1, (effectiveWidth-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+            bar_width = math.max(1, (bodyright-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
          else
-            bar_width = math.max(1, (effectiveWidth-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+            bar_width = math.max(1, (bodyright-LEFT_MARGIN)/numBars-LEFT_MARGIN)
          end
       end
 
@@ -250,9 +251,9 @@ function DisplayStatsPage()
             if enemypct ~= "" then
                if showLabels == 1 then
                   if stacked == 1 then
-                     WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+                     WindowText(win, font_id, showBar[bar][1], xpos,  ypos, bodyright, bodybottom, showBar[bar][4], false)
                   else
-                     xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+                     xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, bodyright, bodybottom, showBar[bar][4], false)
                   end
                end
             end
@@ -261,23 +262,23 @@ function DisplayStatsPage()
                if overlay_numbers ~= 0 then
                   txt = string.lpad(enemypct.."%", 4, ' ')
                   txtlen = WindowTextWidth(win,font_id,txt)
-                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, bodyright, bodybottom, 0xeeeeee, utf8)
                end
             else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, bodyright, bodybottom, showBar[bar][4], false)
             end
          else
             if showLabels == 1 then
                if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, false)
+                  WindowText(win, font_id, showBar[bar][1], xpos, ypos, bodyright, bodybottom, 0x444444, false)
                else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, false)
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, bodyright, bodybottom, 0x444444, false)
                end
             end
             if graphicalMode == 1 then
                gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1)
             else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, bodyright, bodybottom, 0x444444, false)
             end
          end
          if stacked == 1 then
@@ -302,9 +303,9 @@ function DisplayStatsPage()
             prev_bar_colour = bar_colour
             if showLabels == 1 then
                if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, bodyright, bodybottom, bar_colour, false)
                else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, false)
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, bodyright, bodybottom, bar_colour, false)
                end
             end
             if graphicalMode == 1 then
@@ -317,7 +318,7 @@ function DisplayStatsPage()
                WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
                WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
             else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, 0, 0, bar_colour, false)
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, bodyright, bodybottom, bar_colour, false)
             end
             if stacked == 1 then
                ypos = ypos + line_height + 1
@@ -328,10 +329,9 @@ function DisplayStatsPage()
       end
    end
 
-   DressWindow(win, nil, nil)
    AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
-   BroadcastPlugin (999, "repaint")
+   BroadcastPlugin(999, "repaint")
 end -- DisplayStatsPage
 
 -- right click menu
@@ -537,7 +537,7 @@ end
 ---------------------------------------------------------------------------------
 function MouseDown(flags, hotspot_id)
    if (hotspot_id == "resize") then
-      startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
+      startx, starty = WindowInfo(win, 17), WindowInfo(win, 18)
    end
 end
 
@@ -551,14 +551,14 @@ end
 -- Called when mouse button released on hotspot.
 ---------------------------------------------------------------------------------
 function MouseUp(flags, hotspot_id, win)
-   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       right_click_menu()
    end
    return true
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       return true
    end
    return false
@@ -569,49 +569,49 @@ end
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
    -- save window current location for next time
-   movewindow.save_state (win)
+   movewindow.save_state(win)
    barTexts = ""
-   SetVariable ("stacked", stacked)
-   SetVariable ("showLabels", showLabels)
-   SetVariable ("reverseTNL", reverseTNL)
-   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
+   SetVariable("stacked", stacked)
+   SetVariable("showLabels", showLabels)
+   SetVariable("reverseTNL", reverseTNL)
+   SetVariable("enabled", tostring(GetPluginInfo(GetPluginID(), 17)))
    if WindowInfo(win, 3) and WindowInfo(win, 4) then
       width = WindowInfo(win, 3)
       height = WindowInfo(win, 4)
    end
-   SetVariable ("width", width)
-   SetVariable ("font_name", font_name)
-   SetVariable ("font_size", font_size)
-   SetVariable ("showBar", serialize.save ("showBar"))
-   SetVariable ("graphicalMode", graphicalMode)
-   SetVariable ("flat_gauges", flat_gauges)
-   SetVariable ("overlay_numbers", overlay_numbers)
-   SetVariable ("thresh1active", thresh1active)
-   SetVariable ("thresh2active", thresh2active)
-   SetVariable ("thresh1percent", thresh1percent)
-   SetVariable ("thresh2percent", thresh2percent)
-   SetVariable ("thresh1color", thresh1color)
-   SetVariable ("thresh2color", thresh2color)
+   SetVariable("width", width)
+   SetVariable("font_name", font_name)
+   SetVariable("font_size", font_size)
+   SetVariable("showBar", serialize.save ("showBar"))
+   SetVariable("graphicalMode", graphicalMode)
+   SetVariable("flat_gauges", flat_gauges)
+   SetVariable("overlay_numbers", overlay_numbers)
+   SetVariable("thresh1active", thresh1active)
+   SetVariable("thresh2active", thresh2active)
+   SetVariable("thresh1percent", thresh1percent)
+   SetVariable("thresh2percent", thresh2percent)
+   SetVariable("thresh1color", thresh1color)
+   SetVariable("thresh2color", thresh2color)
 end -- OnPluginSaveState
 
 function OnPluginClose()
    WindowDelete(win)
 end
 
-function OnPluginDisable ()
+function OnPluginDisable()
    SaveState()
-   WindowShow( win, false )
+   WindowShow(win, false)
 end --  OnPluginDisable
 
-function OnPluginEnable ()
-   WindowShow (win, true)
+function OnPluginEnable()
+   WindowShow(win, true)
    SaveState()
 end -- OnPluginEnable
 
 
 win = GetPluginID()
 
-function OnPluginListChanged ()
+function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
@@ -646,18 +646,18 @@ function OnPluginInstall()
    if not fonts.Dina then
       AddFont(GetInfo(66) .. "\\Dina.fon")
       fonts = utils.getfontfamilies()
-   end -- if Dina not installed
+   end
 
    if fonts["Dina"] then
       default_font_size = 8
-      default_font_name = "Dina"    -- the actual font
+      default_font_name = "Dina"
    elseif fonts["Courier New"] then
       default_font_size = 9
       default_font_name = "Courier New"
    else
       default_font_size = 9
       default_font_name = "Lucida Console"
-   end -- if
+   end
 
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
@@ -682,29 +682,16 @@ function OnPluginInstall()
 
    width = math.max(width, MIN_WIDTH)
 
-   -- Setup the window.
    resize_window()
 
    if IsConnected() then
       Send_GMCP_Packet("request char")
    end
 
-   -- if disabled last time, stay disabled
-   if GetVariable ("enabled") == "false" then
-      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
-      check (EnablePlugin(GetPluginID (), false))
-      return
-   end -- they didn't enable us last time
-
    installed = true
    WindowShow(win, true)
 end
 
---=================================================================================
--- Called by OnPluginInstall, but also by redraw routine to refresh the screen
--- and (if the first time) add the resizer tag, otherwise move the resizer relative
--- to the main window.
---=================================================================================
 function resize_window()
    effectiveWidth = math.max(MIN_WIDTH, math.min(width, GetInfo(281)-windowinfo.window_left))
 
@@ -713,17 +700,6 @@ function resize_window()
 
    DisplayStatsPage()
 end
-
--------------------------------------------------------------------------------
---- Calculate width of a line of styled text without drawing it.
--------------------------------------------------------------------------------
-function styleWidth(styles)
-   local s = ""
-   for _,w in ipairs (styles) do
-      s = s .. w.text
-   end
-   return WindowTextWidth(win,font_id,s)
-end -- styleWidth
 
 function getmemoryusage()
   collectgarbage('collect')
