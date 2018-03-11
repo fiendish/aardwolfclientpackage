@@ -28,7 +28,7 @@ function get_theme()
    return theme_file
 end
 
-function load_theme (file)
+function load_theme(file, reloading)
    status, theme = pcall(dofile, file)
 
    if status then
@@ -38,18 +38,26 @@ function load_theme (file)
       theme.TITLE_FONTS = theme.TITLE_FONTS or {}
       table.insert(theme.TITLE_FONTS, {["name"]="Dina", ["size"]=10}) -- in case other fonts aren't found
    end
+
+   if reloading then
+      SetVariable("just_reloading", 1)
+   end
+end
+
+function ExecuteInGlobalSpace(inner_action)
+   local prefix = GetAlphaOption("script_prefix")
+   local action = [[
+      SetAlphaOption("script_prefix", "/")
+      Execute("/]] .. inner_action:gsub("\\", "\\\\") .. [[")
+      SetAlphaOption("script_prefix", "]] .. prefix:gsub("\\", "\\\\") .. [[")
+   ]]
+   DoAfterSpecial(0.1, action, sendto.script)
 end
 
 local theme_controller = "b9315e040989d3f81f4328d6"
 if GetPluginID() ~= theme_controller and not IsPluginInstalled(theme_controller) then
-   local action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller..[[\', \'aard_Theme_Controller\')', sendto.script)]]
-   local prefix = GetAlphaOption("script_prefix")
-   action = [[
-      SetAlphaOption("script_prefix", "/")
-      Execute("/]]..action:gsub("\\", "\\\\")..[[")
-      SetAlphaOption("script_prefix", "]]..prefix:gsub("\\", "\\\\")..[[")
-   ]]
-   DoAfterSpecial(0.1, action, sendto.script)
+   local inner_action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller..[[\', \'aard_Theme_Controller\')', sendto.script)]]
+   ExecuteInGlobalSpace(inner_action)
 end
 theme_file = GetPluginVariable(theme_controller, "theme_file") or theme_file
 load_theme(theme_dir..theme_file)
@@ -109,7 +117,7 @@ function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, 
    return x1, y1
 end
 
-function DrawResizeTag (win, type, x1, y1)
+function DrawResizeTag(win, type, x1, y1)
    local x2, y2
    if not (x1 and y1) then
       x2 = WindowInfo(win, 3) - 3
@@ -155,7 +163,7 @@ end
 function LoadTitleFont(win)
    if WindowFontInfo(win, theme.TITLE_FONT, 1) == nil then
       for i,F in ipairs(theme.TITLE_FONTS) do
-         if 0 == WindowFont(win, theme.TITLE_FONT, F["name"], F["size"], true) then
+         if 0 == WindowFont(win, theme.TITLE_FONT, F["name"], F["size"]) then
             break
          end
       end

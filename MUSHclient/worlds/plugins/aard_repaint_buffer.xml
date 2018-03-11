@@ -16,27 +16,31 @@
 >
 
 </plugin>
-<!--  Script  -->
 
 <script>
 <![CDATA[
 
-local repaint_on_tick = false
-local last_repaint_time = utils.timer()
+repaint_on_tick = false
+last_repaint_time = utils.timer()
+paused = false
 function OnPluginBroadcast (msg, id, name, text)
-   if (msg == 999 and text == "repaint") then
+   if ((msg == 999) and (text == "repaint")) then
       repaint_on_tick = true
-      if (utils.timer() - last_repaint_time > .1) then
+      if (paused == false) and (utils.timer() - last_repaint_time > .1) then
          repaint_on_tick = false
          Repaint()
          last_repaint_time = utils.timer()
       end
+   elseif ((msg == 999) and (text == "pause_repaint")) then
+      paused = true
+   elseif ((msg == 999) and (text == "resume_repaint")) then
+      paused = false
    end
 end
 
 -- if ticks are coming through, then we have enough time to repaint again
 function OnPluginTick()
-   if repaint_on_tick == true then
+   if (repaint_on_tick == true) and (paused == false) then
       repaint_on_tick = false
       Repaint()
       last_repaint_time = utils.timer()

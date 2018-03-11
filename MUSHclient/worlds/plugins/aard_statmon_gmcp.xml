@@ -34,15 +34,13 @@ Aardwolf GMCP based stats monitor.
 
 <script>
 <![CDATA[
-
+require "mw_theme_base"
 require "serialize"
 require "movewindow"
 require "commas"
 require "gmcphelper"
 require "copytable"
 
-background_colour     = 0x000000
-border_colour         = 0xcccccc
 default_width         = 209
 default_height        = 287
 default_x             = 658
@@ -58,7 +56,7 @@ starty     = ""
 posx       = ""
 posy       = ""
 hotspot_id = ""
-cstyles    = { }
+cstyles    = {}
 page_built = false
 max_width  = 0
 
@@ -91,15 +89,15 @@ function reset_aard()
    font_name = default_font_name
    font_size = default_font_size
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, default_height, background_colour)
+   WindowResize(win, default_width, default_height, theme.PRIMARY_BODY)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    SaveState()
    OnPluginInstall()
 end
 
-bracket = {text="[",textcolour=0xFFFF00}
-slash = {text="/",textcolour=0xFFFF00}
-endbracket = {text="]",textcolour=0xFFFF00}
+bracket = {text=" : [",textcolour=theme.BODY_TEXT}
+slash = {text="/",textcolour=theme.BODY_TEXT}
+endbracket = {text="]",textcolour=theme.BODY_TEXT}
 
 function BuildStatsPage()
 
@@ -116,14 +114,14 @@ function BuildStatsPage()
 
    if (stacked == 1) then
       table.insert(cstyles, {
-            {text="Str : ",textcolour=label_colors["Strength"]},
+            {text="Str",textcolour=label_colors["Strength"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.str),textcolour=data_colors["Strength"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxstr),textcolour=data_colors["Strength"]},
             endbracket,
 
-            {text="     Hp  : ",textcolour=label_colors["Health"]},
+            {text="     Hp ",textcolour=label_colors["Health"]},
             bracket,
             {text=string.format("%6d",gmcpchar.vitals.hp), textcolour=data_colors["Health"]},
             slash,
@@ -132,14 +130,14 @@ function BuildStatsPage()
             })
 
       table.insert(cstyles, {
-            {text="Int : ",textcolour=label_colors["Intelligence"]},
+            {text="Int",textcolour=label_colors["Intelligence"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.int),textcolour=data_colors["Intelligence"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxint),textcolour=data_colors["Intelligence"]},
             endbracket,
 
-            {text="     Mn  : ",textcolour=label_colors["Mana"]},
+            {text="     Mn ",textcolour=label_colors["Mana"]},
             bracket,
             {text=string.format("%6d",gmcpchar.vitals.mana), textcolour=data_colors["Mana"]},
             slash,
@@ -148,14 +146,14 @@ function BuildStatsPage()
             })
 
       table.insert(cstyles, {
-            {text="Wis : ",textcolour=label_colors["Wisdom"]},
+            {text="Wis",textcolour=label_colors["Wisdom"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.wis),textcolour=data_colors["Wisdom"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxwis),textcolour=data_colors["Wisdom"]},
             endbracket,
 
-            {text="     Mvs : ",textcolour=label_colors["Moves"]},
+            {text="     Mvs",textcolour=label_colors["Moves"]},
             bracket,
             {text=string.format("%6d",gmcpchar.vitals.moves), textcolour=data_colors["Moves"]},
             slash,
@@ -164,7 +162,7 @@ function BuildStatsPage()
             })
 
       table.insert(cstyles, {
-            {text="Dex : ",textcolour=label_colors["Dexterity"]},
+            {text="Dex",textcolour=label_colors["Dexterity"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.dex),textcolour=data_colors["Dexterity"]},
             slash,
@@ -173,28 +171,28 @@ function BuildStatsPage()
             })
 
       table.insert(cstyles, {
-            {text="Con : ",textcolour=label_colors["Constitution"]},
+            {text="Con",textcolour=label_colors["Constitution"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.con),textcolour=data_colors["Constitution"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxcon),textcolour=data_colors["Constitution"]},
             endbracket,
 
-            {text="     HR  : ",textcolour=label_colors["Hitroll"]},
+            {text="     HR ",textcolour=label_colors["Hitroll"]},
             bracket,
             {text=string.format("%5d",gmcpchar.stats.hr), textcolour=data_colors["Hitroll"]},
             endbracket
             })
 
       table.insert(cstyles, {
-            {text="Luk : ",textcolour=label_colors["Luck"]},
+            {text="Luk",textcolour=label_colors["Luck"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.luck),textcolour=data_colors["Luck"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxluck),textcolour=data_colors["Luck"]},
             endbracket,
 
-            {text="     DR  : ",textcolour=label_colors["Damroll"]},
+            {text="     DR ",textcolour=label_colors["Damroll"]},
             bracket,
             {text=string.format("%5d",gmcpchar.stats.dr), textcolour=data_colors["Damroll"]},
             endbracket
@@ -203,48 +201,48 @@ function BuildStatsPage()
       table.insert(cstyles, {})
 
       table.insert(cstyles, {
-            {text="TNL : ",textcolour=label_colors["TNL"]},
+            {text="TNL",textcolour=label_colors["TNL"]},
             bracket,
             {text=string.format("%5d",gmcpchar.status.tnl), textcolour=data_colors["TNL"]},
             endbracket,
 
-            {text="       Lvl : ",textcolour=label_colors["Level"]},
+            {text="       Lvl",textcolour=label_colors["Level"]},
             bracket,
             {text=string.format("%5d",gmcpchar.status.level), textcolour=data_colors["Level"]},
             endbracket,
             })
 
       table.insert(cstyles, {
-            {text="QP  : ",textcolour=label_colors["Quest Points"]},
+            {text="QP ",textcolour=label_colors["Quest Points"]},
             bracket,
             {text=string.format("%7d",gmcpchar.worth.qp), textcolour=data_colors["Quest Points"]},
             endbracket,
 
-            {text="     TP  : ",textcolour=label_colors["Trivia"]},
+            {text="     TP ",textcolour=label_colors["Trivia"]},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.tp), textcolour=data_colors["Trivia"]},
             endbracket,
             })
 
       table.insert(cstyles, {
-            {text="Align : ",textcolour=label_colors["Alignment"]},
+            {text="Align",textcolour=label_colors["Alignment"]},
             bracket,
             {text=string.format("%5d",gmcpchar.status.align), textcolour=data_colors["Alignment"]},
             endbracket,
 
-            {text="     Gold : ",textcolour=label_colors["Gold"]},
+            {text="     Gold",textcolour=label_colors["Gold"]},
             bracket,
             {text=string.format("%s", commas_in_gold and commas(gmcpchar.worth.gold) or gmcpchar.worth.gold), textcolour=data_colors["Gold"]},
             endbracket,
             })
 
       table.insert(cstyles, {
-            {text="Train : ",textcolour=label_colors["Trains"]},
+            {text="Train",textcolour=label_colors["Trains"]},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.trains), textcolour=data_colors["Trains"]},
             endbracket,
 
-            {text="     Prac : ",textcolour=label_colors["Pracs"]},
+            {text="     Prac",textcolour=label_colors["Pracs"]},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.pracs), textcolour=data_colors["Pracs"]},
             endbracket,
@@ -260,7 +258,7 @@ function BuildStatsPage()
       end
    else
       table.insert(cstyles, {
-            {text="Str : ",textcolour=label_colors["Strength"]},
+            {text="Str",textcolour=label_colors["Strength"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.str),textcolour=data_colors["Strength"]},
             slash,
@@ -269,7 +267,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Int : ",textcolour=label_colors["Intelligence"]},
+            {text="Int",textcolour=label_colors["Intelligence"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.int),textcolour=data_colors["Intelligence"]},
             slash,
@@ -278,7 +276,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Wis : ",textcolour=label_colors["Wisdom"]},
+            {text="Wis",textcolour=label_colors["Wisdom"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.wis),textcolour=data_colors["Wisdom"]},
             slash,
@@ -287,7 +285,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Dex : ",textcolour=label_colors["Dexterity"]},
+            {text="Dex",textcolour=label_colors["Dexterity"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.dex),textcolour=data_colors["Dexterity"]},
             slash,
@@ -296,7 +294,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Con : ",textcolour=label_colors["Constitution"]},
+            {text="Con",textcolour=label_colors["Constitution"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.con),textcolour=data_colors["Constitution"]},
             slash,
@@ -305,7 +303,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Luk : ",textcolour=label_colors["Luck"]},
+            {text="Luk",textcolour=label_colors["Luck"]},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.luck),textcolour=data_colors["Luck"]},
             slash,
@@ -314,7 +312,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="HR  : ",textcolour=label_colors["Hitroll"]},
+            {text="HR ",textcolour=label_colors["Hitroll"]},
             bracket,
             {text=string.format("%5d",gmcpchar.stats.hr), textcolour=data_colors["Hitroll"]},
             endbracket
@@ -322,7 +320,7 @@ function BuildStatsPage()
 
 
       table.insert(cstyles, {
-            {text="DR  : ",textcolour=label_colors["Damroll"]},
+            {text="DR ",textcolour=label_colors["Damroll"]},
             bracket,
             {text=string.format("%5d",gmcpchar.stats.dr), textcolour=data_colors["Damroll"]},
             endbracket
@@ -331,35 +329,35 @@ function BuildStatsPage()
       table.insert(cstyles,{})
 
       table.insert(cstyles, {
-            {text="Train : ",textcolour=label_colors["Trains"]},
+            {text="Train",textcolour=label_colors["Trains"]},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.trains), textcolour=data_colors["Trains"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="Prac  : ",textcolour=label_colors["Pracs"]},
+            {text="Prac ",textcolour=label_colors["Pracs"]},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.pracs), textcolour=data_colors["Pracs"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="Gold  : ",textcolour=label_colors["Gold"]},
+            {text="Gold ",textcolour=label_colors["Gold"]},
             bracket,
             {text=string.format("%s",commas_in_gold and commas(gmcpchar.worth.gold) or gmcpchar.worth.gold), textcolour=data_colors["Gold"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="TP    : ",textcolour=label_colors["Trivia"]},
+            {text="TP   ",textcolour=label_colors["Trivia"]},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.tp), textcolour=data_colors["Trivia"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="QP    : ",textcolour=label_colors["Quest Points"]},
+            {text="QP   ",textcolour=label_colors["Quest Points"]},
             bracket,
             {text=string.format("%7d",gmcpchar.worth.qp), textcolour=data_colors["Quest Points"]},
             endbracket
@@ -368,21 +366,21 @@ function BuildStatsPage()
       table.insert(cstyles, {})
 
       table.insert(cstyles, {
-            {text="Lvl   : ",textcolour=label_colors["Level"]},
+            {text="Lvl  ",textcolour=label_colors["Level"]},
             bracket,
             {text=string.format("%5d",gmcpchar.status.level), textcolour=data_colors["Level"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="TNL   : ",textcolour=label_colors["TNL"]},
+            {text="TNL  ",textcolour=label_colors["TNL"]},
             bracket,
             {text=string.format("%5d",gmcpchar.status.tnl), textcolour=data_colors["TNL"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="Align : ",textcolour=label_colors["Alignment"]},
+            {text="Align",textcolour=label_colors["Alignment"]},
             bracket,
             {text=string.format("%5d",gmcpchar.status.align), textcolour=data_colors["Alignment"]},
             endbracket
@@ -391,7 +389,7 @@ function BuildStatsPage()
       table.insert(cstyles,{})
 
       table.insert(cstyles, {
-            {text="Hp  : ",textcolour=label_colors["Health"]},
+            {text="Hp ",textcolour=label_colors["Health"]},
             bracket,
             {text=string.format("%3d",gmcpchar.vitals.hp),textcolour=data_colors["Health"]},
             slash,
@@ -400,7 +398,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Mn  : ",textcolour=label_colors["Mana"]},
+            {text="Mn ",textcolour=label_colors["Mana"]},
             bracket,
             {text=string.format("%3d",gmcpchar.vitals.mana),textcolour=data_colors["Mana"]},
             slash,
@@ -409,7 +407,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Mvs : ",textcolour=label_colors["Moves"]},
+            {text="Mvs",textcolour=label_colors["Moves"]},
             bracket,
             {text=string.format("%3d",gmcpchar.vitals.moves),textcolour=data_colors["Moves"]},
             slash,
@@ -434,57 +432,38 @@ function BuildStatsPage()
 end -- BuildStatsPage
 
 function Print()
-   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
+   bodyleft, bodytop, bodyright, bodybottom = DrawBorder(win)
+   WindowRectOp(win, 2, bodyleft, bodytop, bodyright, bodybottom, theme.PRIMARY_BODY) -- blank
 
    if not page_built then
       txt = "Stats will appear here"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, 0, 0, 0xeeeeee, utf8)
+      WindowText(win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, bodyright, bodybottom, theme.BODY_TEXT, utf8)
       txt = "once you start playing."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, 0xeeeeee, utf8)
+      WindowText(win, font_id, txt, (width-txtlen)/2, height/2, bodyright, bodybottom, theme.BODY_TEXT, utf8)
    else
       -- display each line
       local left = LEFT_MARGIN
       local top = 0
-      for i, v in ipairs (cstyles) do
+      for i, v in ipairs(cstyles) do
          top = TOP_MARGIN + (i - 1) * line_height
-         Display_Styled_Line (win, font_id, v, left, top)
+         WindowTextFromStyles(win, font_id, v, left, top, bodyright, bodybottom)
       end -- for
       if cstyles[#cstyles].text == "" then
-         Display_Styled_Line (win, font_id, {{text="Foe :",textcolour=0x444444}}, left, top)
+         WindowTextFromStyles(win, font_id, {{text="Foe :",textcolour=0x444444}}, left, top, bodyright, bodybottom)
       end
    end
 
-   -- draw edge frame.
-   WindowRectOp (win, 1, 0, 0, 0, 0, border_colour, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
-   -- draw the resize widget bottom right corner.
-   WindowLine(win, width-3, height-2, width-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, width-4, height-2, width-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, width-6, height-2, width-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, width-9, height-2, width-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, width-12, height-2, width-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0x696969, 0, 1)
-
-   BroadcastPlugin (999, "repaint")
+   BroadcastPlugin(999, "repaint")
 end
 
 function RefreshPage()
    BuildStatsPage()
    Print()
 end
-
--- returns the end of the line
-function Display_Styled_Line (win, font_id, styles, left, top)
-   for _, v in ipairs (styles) do
-      left = left + WindowText (win, font_id, v.text, left, top, 0, 0, v.textcolour)
-   end -- for each style run
-   return left
-end -- Display_Styled_Line
 
 -- right click menu
 function right_click_menu ()
@@ -520,7 +499,7 @@ function right_click_menu ()
             SetVariable ("width", width)
             SetVariable("height",height)
          end
-         SetUpHotspotsAndDraw()
+         resize_window()
       end
    elseif result == "Change Font" then
       wanted_font = utils.fontpicker (font_name, font_size) --font dialog
@@ -539,7 +518,7 @@ function right_click_menu ()
                SetVariable("width", width)
                SetVariable("height",height)
             end
-            SetUpHotspotsAndDraw()
+            resize_window()
          end
       end
    elseif string.find(result,"Label") then
@@ -592,7 +571,7 @@ function right_click_menu ()
             SetVariable("width", width)
             SetVariable("height",height)
          end
-         SetUpHotspotsAndDraw()
+         resize_window()
       end
    elseif result == "Bring To Front" then
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
@@ -612,7 +591,7 @@ function right_click_menu ()
       OnPluginInstall()
       BuildStatsPage()
       if (page_built) then
-         SetUpHotspotsAndDraw()
+         resize_window()
       end
    end -- if
 end -- right_click_menu
@@ -668,7 +647,7 @@ function ResizeMoveCallback()
       starty = GetInfo(280)
    end
    if (utils.timer() - lastRefresh > 0.0333) then
-      SetUpHotspotsAndDraw(false)
+      resize_window()
       lastRefresh = utils.timer()
    end
 end
@@ -679,7 +658,7 @@ lastRefresh = 0
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-   SetUpHotspotsAndDraw()
+   resize_window()
 end
 
 ---------------------------------------------------------------------------------
@@ -721,7 +700,6 @@ function OnPluginSaveState ()
    -- save window current location for next time
    movewindow.save_state (win)
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   SetVariable ("background_colour", background_colour)
    if WindowInfo(win, 3) and WindowInfo(win, 4) then
       width = WindowInfo(win, 3)
       height = WindowInfo(win, 4)
@@ -761,89 +739,56 @@ end
 
 
 function OnPluginInstall()
-   -- make window so I can grab the font info
-   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour)
-
-   font_id        = "statmon_font"
+   font_id = "statmon_font"
 
    local fonts = utils.getfontfamilies ()
 
-   -- if not there already, add it
+   -- if Dina not there already, add it
    if not fonts.Dina then
-      AddFont (GetInfo (66) .. "\\Dina.fon")
+      AddFont(GetInfo (66) .. "\\Dina.fon")
       fonts = utils.getfontfamilies ()
-   end -- if Dina not installed
+   end
 
    if fonts ["Dina"] then
       default_font_size = 8
-      default_font_name = "Dina"    -- the actual font
+      default_font_name = "Dina"
    elseif fonts["Courier New"] then
       default_font_size = 9
       default_font_name = "Courier New"
    else
       default_font_size = 9
       default_font_name = "Lucida Console"
-   end -- if
+   end
 
    commas_in_gold = tonumber(GetVariable("commas_in_gold")) == 1
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
-   --- Load the fonts into the temp window.
-   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
-
-   --- Grab font size settings.
-   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-   font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
-   line_height = font_height + 1
+   height = tonumber(GetVariable("height")) or default_height
+   orig_height = height
+   width = tonumber(GetVariable("width")) or default_width
    stacked = tonumber(GetVariable("stacked")) or 0
+
+   windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
+   WindowFont(win, font_id, font_name, font_size, false, false, false, false)
+
+   --- Grab font size metrics
+   font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
+   line_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 2
    max_height = (line_height*(((stacked == 1) and 12) or 23))+(TOP_MARGIN+1)
 
-   --- Pull some state variables.
-   background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-   height = tonumber (GetVariable ("height")) or default_height
-   orig_height = height
-   width = tonumber (GetVariable ("width")) or default_width
-
-   --- install the window movement handler, get back the window position.
-   windowinfo = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-
-   --- Setup the window.
-   SetUpHotspotsAndDraw(true)
+   resize_window()
 
    if IsConnected() then
       Send_GMCP_Packet("request char")
    end
+   WindowShow(win, true)
 end
 
---=================================================================================
--- Called by OnPluginInstall, but also by redraw routine to refresh the screen
--- and (if the first time) add the resizer tag, otherwise move the resizer relative
--- to the main window.
---=================================================================================
-function SetUpHotspotsAndDraw(firstTime)
-   if (firstTime == true) then
-      check (WindowCreate (win,
-         windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-         width,     -- width
-         height,  -- height
-         windowinfo.window_mode,       -- auto-position: middle right
-         windowinfo.window_flags,  -- flags
-         background_colour) )
-
-      -- Add handler for resizing
-      WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
-      WindowShow (win, true)
-   else
-      -- everything has already been made
-      -- just move them back into place
-      WindowResize(win, width, height, background_colour)
-      WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
-   end
-   -- Add the drag handler so they can move the window around
-   movewindow.add_drag_handler (win, 0, 0, 0, 0)
+function resize_window()
+   WindowResize(win, width, height, theme.SECONDARY_BODY)
+   movewindow.add_drag_handler(win, 0, 0, 0, 0)
 
    Print()
 end
