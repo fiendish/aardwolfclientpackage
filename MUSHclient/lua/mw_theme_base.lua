@@ -1,16 +1,15 @@
 --[[
 This file contains code that that allows many different miniwindow plugins
-to follow the same UI theme, as long as they follow certain guidelines.
-We can use this to maintain a base set of colors, standard display elements,
+to maintain the same UI theme, as long as they follow certain guidelines.
+We can use this to get a base set of colors, standard display elements,
 and title fonts that get used everywhere in order to unify the visual style
 and provide a way to customize that style easily.
 
 Steps for use:
 1) Inside your plugins, require "mw_theme_base" at the very beginning of your script section.
-2) Use variable names as spelled out in mw_themes\default.lua for colorization
+2) Use variable names as spelled out in lua/mw_themes/Charcoal.lua for colorization
 3) Use the shared graphics functions defined below for drawing any 3D rectangles with the chosen color theme
-4) Call FinalizeThemes() at the very end of your script section.
-6) Optional: Make your own themes (copy lua/mw_themes/default.lua to a new *.lua file and customize the colors).
+4) Optional: Make your own themes (clone one of the files in lua/mw_themes and customize your colors).
 --]]
 require "checkplugin"
 require "movewindow"
@@ -28,7 +27,11 @@ function get_theme()
    return theme_file
 end
 
-function load_theme(file, reloading)
+function just_reloading()
+   SetVariable("just_reloading", 1)
+end
+
+function load_theme(file)
    status, theme = pcall(dofile, file)
 
    if status then
@@ -37,10 +40,6 @@ function load_theme(file, reloading)
       theme.TITLE_FONT = "theme_title_font"
       theme.TITLE_FONTS = theme.TITLE_FONTS or {}
       table.insert(theme.TITLE_FONTS, {["name"]="Dina", ["size"]=10}) -- in case other fonts aren't found
-   end
-
-   if reloading then
-      SetVariable("just_reloading", 1)
    end
 end
 
