@@ -1,20 +1,17 @@
 Aardwolf Client Package Major Changes List
 
-r1965 snapshot
-- bug fix: Deleted an errant exit in the Underdark default map.
-
 r1964 snapshot
-- bug fix: Some triggers were accidentally enabled by default in the soundpack plugin.
+bug fix: Some triggers were accidentally enabled by default in the soundpack plugin.
 
 r1963 snapshot
-- bug fix: Another day, another stupid bug in the prompt fixer plugin.
+bug fix: Another day, another stupid bug in the prompt fixer plugin.
 
 r1962 snapshot
-- bug fix: Channel messages sent to main output are supposed to buffer while writing a note, but Aardwolf doesn't appear to send telopt 100,5 when you enter note mode currently.
+bug fix: Channel messages sent to main output are supposed to buffer while writing a note, but Aardwolf doesn't appear to send telopt 100,5 when you enter note mode currently.
 
 r1961 snapshot
-- bug fix: The new soundpack plugin was causing plugin load errors on the first run after a fresh install.
-- bug fix: Fixed a couple aliases in the review buffers plugin introduced while merging Pwar's contributions into the package.
+bug fix: The new soundpack plugin was causing plugin load errors on the first run after a fresh install.
+bug fix: Fixed a couple aliases in the review buffers plugin introduced while merging Pwar's contributions into the package.
 
 r1960 snapshot
 - bug fix: Work around possible gmcp char status inconsistency at login in prompt fixer, ascii map, and chat echo plugins by switching connection checks to telopts instead.

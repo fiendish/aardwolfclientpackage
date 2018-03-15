@@ -374,7 +374,7 @@
   <trigger
    enabled="n"
    group="Alert"
-   match="^.+\[QUEST\]$"
+   match="\[QUEST\]$"
    name="QuestTargetFound"
    regexp="y"
    send_to="12"
@@ -506,124 +506,9 @@
    TriggerEvent("level_up_sh")
   </send>
   </trigger>
-  
-  <trigger
-   enabled="n"
-   group="Alert"
-   match="^You ring the bell and hope that someone inside hears you\.$"
-   name="Doorbell1"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("manor_doorbell")
-  </send>
-  </trigger>
-  <trigger
-   enabled="n"
-   group="Alert"
-   match="^(.+) is outside ringing the bell!$"
-   name="Doorbell2"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("manor_doorbell")
-  </send>
-  </trigger>
-  <trigger
-   enabled="n"
-   group="Alert"
-   match="^You start to follow (.+)\.$"
-   name="Follow"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("follow")
-  </send>
-  </trigger>
-  <trigger
-   enabled="n"
-   group="Alert"
-   match="^You stop following (.+)\.$"
-   name="StopFollow"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("stop_follow")
-  </send>
-  </trigger>
-    <trigger
-   enabled="n"
-   group="Alert"
-   match="^(.+) starts to follow you\.$"
-   name="Follow2"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("follow")
-  </send>
-  </trigger>
-  <trigger
-   enabled="n"
-   group="Alert"
-   match="^(.+) stops following you\.$"
-   name="StopFollow2"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("stop_follow")
-  </send>
-  </trigger>
-  <trigger
-   enabled="n"
-   group="Alert"
-   match="^(.+) has invited you to join group: (.+)\.$"
-   name="GroupInvited"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("gtell")
-  </send>
-  </trigger>
-  <trigger
-   enabled="n"
-   group="Alert"
-   match="^You have removed yourself from group: (.+)$"
-   name="GroupRemoved"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("gtell")
-  </send>
-  </trigger>
-    <trigger
-   enabled="n"
-   group="Alert"
-   match="^(.+) has kicked you from the group\.$"
-   name="GroupRemoved2"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-   TriggerEvent("gtell")
-  </send>
-  </trigger>
+
+  level_up_sh
+
   <trigger
    enabled="n"
    group="Alert"
@@ -768,8 +653,8 @@
    enabled="n"
    group="Alert"
    match="^You get \((.+)\) (.+) from (.+) corpse of (.+)\.$"
-   script="found_bonusitem"
-   name="BonusItem"
+   script="found_enhanced"
+   name="EnhancedItem"
    regexp="y"
    send_to="12"
    sequence="100"
@@ -909,30 +794,6 @@ local soundEvents = {
       volume = "100",
       panning = "0",
       description = "Aarchaelogy or AardWords item"
-   },
-   ["bonus_item"] = {
-      defaultwav = "bonus_item.wav",
-      volume = "100",
-      panning = "0",
-      description = "Looted a bonus item with enhanced stats"
-   },
-   ["manor_doorbell"] = {
-      defaultwav = "manor_doorbell.wav",
-      volume = "100",
-      panning = "0",
-      description = "Doorbells for ring bell at manor"
-   },
-   ["follow"] = {
-      defaultwav = "follow.wav",
-      volume = "100",
-      panning = "0",
-      description = "Sound when you follow a player"
-   },
-   ["stop_follow"] = {
-      defaultwav = "stop_follow.wav",
-      volume = "100",
-      panning = "0",
-      description = "Sound when you stop following a player"
    },
    ["warfare"] = {
       defaultwav = "warfare.wav",
@@ -1713,24 +1574,23 @@ function OnPluginBroadcast (msg, id, name, text)
    end
 end
 
-function found_bonusitem(name, line, wildcards, style)
+function found_enhanced(name, line, wildcards, style)
    local foundStartTag = false
    local foundEndTag = false
 
    for index, value in ipairs(style) do
       thisColor = RGBColourToName(value.textcolour)
 
-      if (thisColor == "lime" or thisColor == "red" or thisColor == "yellow") and value.text == "(" then
+      if (thisColor == "lime" or thisColor == "red") and value.text == "(" then
          foundStartTag = true
-      elseif (thisColor == "lime" or thisColor == "red" or thisColor == "yellow") and value.text == ")" and foundStartTag then
+      elseif (thisColor == "lime" or thisColor == "red") and value.text == ")" and foundStartTag then
          foundEndTag = true
       end
 
       if foundStartTag and foundEndTag then
-         -- maybe add sounds for diff color tags later..
+         TriggerEvent("special_find")
       end
    end
-   TriggerEvent("bonus_item")
 end
 
 function loadSavedSettings()
