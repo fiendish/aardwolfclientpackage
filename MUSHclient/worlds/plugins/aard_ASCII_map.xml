@@ -863,8 +863,8 @@ function OnPluginInstall(skip_requests)
    font_id_bold   = "map_bold"
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
-   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
-   WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false) -- bold font
+   WindowFont (win, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
+   WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false, 0) -- bold font
 
    --- Grab font size settings.
    font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) -- height

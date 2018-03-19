@@ -162,7 +162,7 @@ end
 function LoadTitleFont(win)
    if WindowFontInfo(win, theme.TITLE_FONT, 1) == nil then
       for i,F in ipairs(theme.TITLE_FONTS) do
-         if 0 == WindowFont(win, theme.TITLE_FONT, F["name"], F["size"]) then
+         if 0 == WindowFont(win, theme.TITLE_FONT, F["name"], F["size"], false, false, false, false, 0) then
             break
          end
       end
