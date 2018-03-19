@@ -3273,7 +3273,9 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginSaveState ()
-   SetVariable ("window_hidden", window_hidden and "1" or "0")
+   if not aard_req_novisuals_mode then
+      SetVariable ("window_hidden", window_hidden and "1" or "0")
+   end
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    if mapper.config.SCAN.depth < temp_scan_depth then
       -- then we probably caught ourselves in a botched run or something
