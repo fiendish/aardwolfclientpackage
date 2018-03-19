@@ -666,7 +666,7 @@ function OnPluginInstall()
    WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, 60, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
 
    font_id = "statmon_font"
-   WindowFont(win, font_id, font_name, font_size, false, false, false, false) -- normal font
+   WindowFont(win, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
    line_height = WindowFontInfo(win, font_id, 1) -  WindowFontInfo(win, font_id, 4) + 2
 
    MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWWW:")+(LEFT_MARGIN*2))

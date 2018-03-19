@@ -433,13 +433,13 @@ end -- BuildStatsPage
 
 function Print()
    bodyleft, bodytop, bodyright, bodybottom = DrawBorder(win)
-   WindowRectOp(win, 2, bodyleft, bodytop, bodyright, bodybottom, theme.PRIMARY_BODY) -- blank
+   WindowRectOp(win, 2, bodyleft, bodytop, bodyright+1, bodybottom+1, theme.PRIMARY_BODY) -- blank
 
    if not page_built then
-      txt = "Stats will appear here"
+      txt = "Stats will appear "
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText(win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, bodyright, bodybottom, theme.BODY_TEXT, utf8)
-      txt = "once you start playing."
+      txt = "once play begins."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText(win, font_id, txt, (width-txtlen)/2, height/2, bodyright, bodybottom, theme.BODY_TEXT, utf8)
    else
@@ -485,7 +485,6 @@ function right_click_menu ()
       SetVariable("stacked", stacked)
       height           = orig_height
       width            = default_width
-      movewindow.save_state(win)
       SetVariable("width",width)
       SetVariable("height",height)
       SetVariable("font_name",font_name)
@@ -496,19 +495,20 @@ function right_click_menu ()
          if (max_width ~= 0) then
             width = max_width+LEFT_MARGIN
             height = max_height+TOP_MARGIN
-            SetVariable ("width", width)
+            SetVariable("width", width)
             SetVariable("height",height)
          end
          resize_window()
       end
+      SaveState()
    elseif result == "Change Font" then
-      wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+      wanted_font = utils.fontpicker(font_name, font_size) --font dialog
       if wanted_font then
          font_name = wanted_font.name
          font_size = wanted_font.size
          SetVariable("font_name", font_name)
          SetVariable("font_size", font_size)
-         movewindow.save_state(win)
+         SaveState()
          OnPluginInstall()
          BuildStatsPage()
          if (page_built) then
@@ -561,7 +561,7 @@ function right_click_menu ()
       end
    elseif result == "Commas in Gold" then
       SetVariable("commas_in_gold", not commas_in_gold and 1 or 0)
-      movewindow.save_state(win)
+      SaveState()
       OnPluginInstall()
       BuildStatsPage()
       if (page_built) then
@@ -586,7 +586,6 @@ function right_click_menu ()
       stacked = 0
       label_colors = copytable.deep(label_color_defaults)
       data_colors = copytable.deep(data_color_defaults)
-      movewindow.save_state(win)
       SaveState()
       OnPluginInstall()
       BuildStatsPage()
@@ -737,15 +736,14 @@ function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
 end
 
-
 function OnPluginInstall()
-   font_id = "statmon_font"
+   font_id = GetPluginID()
 
    local fonts = utils.getfontfamilies ()
 
    -- if Dina not there already, add it
    if not fonts.Dina then
-      AddFont(GetInfo (66) .. "\\Dina.fon")
+      print("ADDFONT", AddFont(GetInfo(66) .. "/Dina.fon"))
       fonts = utils.getfontfamilies ()
    end
 
@@ -760,7 +758,6 @@ function OnPluginInstall()
       default_font_name = "Lucida Console"
    end
 
-   commas_in_gold = tonumber(GetVariable("commas_in_gold")) == 1
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
@@ -768,13 +765,13 @@ function OnPluginInstall()
    orig_height = height
    width = tonumber(GetVariable("width")) or default_width
    stacked = tonumber(GetVariable("stacked")) or 0
+   commas_in_gold = tonumber(GetVariable("commas_in_gold")) == 1
 
    windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
    WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
-   WindowFont(win, font_id, font_name, font_size, false, false, false, false)
+   WindowFont(win, font_id, font_name, font_size, false, false, false, false, 0)
 
    --- Grab font size metrics
-   font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
    line_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 2
    max_height = (line_height*(((stacked == 1) and 12) or 23))+(TOP_MARGIN+1)
 
