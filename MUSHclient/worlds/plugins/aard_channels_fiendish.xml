@@ -269,6 +269,7 @@ function setTab(i)
 end
 
 function addTab()
+   clearTabHotspots()
    num_tabs = num_tabs + 1
    tabs_channel_captures[num_tabs] = {}
    tabs_nonchannel_captures[num_tabs] = {}
@@ -277,7 +278,14 @@ function addTab()
    setTab(num_tabs)
 end
 
+function clearTabHotspots()
+   for i=1,#tabs_names do
+      WindowDeleteHotspot(win, "tab"..tostring(i))
+   end
+end
+
 function removeTab()
+   clearTabHotspots()
    tabs_rects[current_tab]:unInit()
    tabs_scrollbars[current_tab]:unInit()
 
@@ -287,7 +295,6 @@ function removeTab()
    table.remove(tabs_channel_captures, current_tab)
    table.remove(tabs_nonchannel_captures, current_tab)
 
-   WindowDeleteHotspot(win, "tab"..tostring(num_tabs))
    num_tabs = num_tabs - 1
    setTab(current_tab)
 end
@@ -376,6 +383,8 @@ function drawTabs (mouseover)
 
          if not WindowHotspotInfo(win, "tab"..tostring(i), 1) then
             WindowAddHotspot(win, "tab"..tostring(i), tab_left, tab_top, tab_left + tab_width, tab_top + (3*gap) + tab_font_height, "tabMouseOver", "tabCancelMouseOver", "tabMouseDown", nil, "tabMouseUp", "", 1, 0)
+         else
+            WindowMoveHotspot(win, "tab"..tostring(i), tab_left, tab_top, tab_left + tab_width, tab_top + (3*gap) + tab_font_height)
          end
 
          local text_color = theme.BODY_TEXT
@@ -706,7 +715,7 @@ function storeChannel(styles, chan)
    end
 end
 
-function OnPluginBroadcast (msg, id, name, text)
+function OnPluginBroadcast(msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == "comm.channel") then
@@ -731,12 +740,12 @@ function MouseDown(flags, hotspot_id)
 end
 
 
-function chat_show (name, line, wildcards)
+function chat_show(name, line, wildcards)
    WindowShow( win, true )
    ColourNote ("yellow", "", "Chats window now shown. Type 'chats hide' to hide it.")
 end -- function chat_show
 
-function chat_hide (name, line, wildcards)
+function chat_hide(name, line, wildcards)
    WindowShow( win, false )
    ColourNote ("yellow", "", "Chats window now hidden. Type 'chats show' to see it again.")
 end -- function chat_hide
@@ -822,9 +831,12 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       name = Trim(name or "")
       if name ~= "" then
          tabs_names[current_tab] = name
-         drawTabs()
+      else
+         tabs_names[current_tab] = current_tab
       end
-   elseif result == 13+echo_skip-noremove then
+      clearTabHotspots()
+      drawTabs()
+elseif result == 13+echo_skip-noremove then
       local defaults = {}
       local tbl = {}
       for k,v in pairs(tabs_channel_captures[current_tab]) do
