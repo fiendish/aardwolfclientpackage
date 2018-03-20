@@ -242,7 +242,7 @@ end
 addDefaultChannels()
 reduce_diverse_channels()
 
-function makeRect(i, tr_left, tr_top, tr_right, tr_bottom)
+function makeRect(i)
    tabs_rects[i] = TextRect.new(win, "tr"..tostring(i), tr_left, tr_top, tr_right, tr_bottom, 1000, true, theme.PRIMARY_BODY, 3, "Dina", 10)
    tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), tr_right, tr_top, draw_right, draw_bottom-theme.RESIZER_SIZE)
 
@@ -327,22 +327,20 @@ function OnPluginInstall ()
 end
 
 function bump_top_for_tabs()
-   if (num_tabs > 1) and tabs_rects[1] then
+   if num_tabs > 1 then
       tab_top = draw_top + 2
-      tab_font = tabs_rects[1].font
-      tab_font_height = TextHeight(win, tab_font)
       tr_top = tab_top + (2*gap) + tab_font_height + 2
    end
 end
 
-function trShape()
-   local tr_left = draw_left
-   local tr_top = draw_top
+function set_tr_shape()
+   tr_left = draw_left
+   tr_top = draw_top
 
    bump_top_for_tabs()
 
-   local tr_right = draw_right - theme.RESIZER_SIZE + 1
-   local tr_bottom = draw_bottom
+   tr_right = draw_right - theme.RESIZER_SIZE + 1
+   tr_bottom = draw_bottom
    return tr_left, tr_top, tr_right, tr_bottom
 end
 
@@ -355,6 +353,9 @@ function init ()
 
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
+
+   WindowFont(win, "tab_font", font_name, font_size)
+   tab_font_height = TextHeight(win, "tab_font")
 
    tabs_rects = {}
    tabs_scrollbars = {}
@@ -371,7 +372,7 @@ function drawTabs (mouseover)
 
       for i,_ in ipairs(tabs_channel_captures) do
          local name = tabs_names[i] or tostring(i)
-         local tab_width = WindowTextWidth(win, tab_font, name) + (tab_padding * 2)
+         local tab_width = WindowTextWidth(win, "tab_font", name) + (tab_padding * 2)
 
          if not WindowHotspotInfo(win, "tab"..tostring(i), 1) then
             WindowAddHotspot(win, "tab"..tostring(i), tab_left, tab_top, tab_left + tab_width, tab_top + (3*gap) + tab_font_height, "tabMouseOver", "tabCancelMouseOver", "tabMouseDown", nil, "tabMouseUp", "", 1, 0)
@@ -408,7 +409,7 @@ function drawTabs (mouseover)
          end
 
          tab_left = tab_left + tab_padding
-         tab_left = tab_left + WindowText(win, tab_font, name, tab_left, tab_top + gap, draw_right, draw_top + (3*gap) + tab_font_height, text_color, false)
+         tab_left = tab_left + WindowText(win, "tab_font", name, tab_left, tab_top + gap, draw_right, draw_top + (3*gap) + tab_font_height, text_color, false)
          tab_left = tab_left + tab_padding
       end
 
@@ -421,7 +422,7 @@ function drawTabs (mouseover)
          16,   -- width of the ellipse used to draw the rounded corner
          (4*gap) + (2*tab_font_height)   -- height of the ellipse used to draw the rounded corner
       )
-      WindowText(win, tab_font, tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap, draw_right, draw_top + (3*gap) + tab_font_height, theme.BODY_TEXT, false)
+      WindowText(win, "tab_font", tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap, draw_right, draw_top + (3*gap) + tab_font_height, theme.BODY_TEXT, false)
    end
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
@@ -493,13 +494,13 @@ end
 function setupDisplay ()
    WindowResize(win, width, height, 0x00ff00)
    drawBackground()
-   tr_left, tr_top, tr_right, tr_bottom = trShape()
+   set_tr_shape()
    for i = 1,num_tabs do
       if tabs_rects[i] then
          tabs_rects[i]:setRect(tr_left, tr_top, tr_right, tr_bottom)
          tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-theme.RESIZER_SIZE)
       else
-         makeRect(i, tr_left, tr_top, tr_right, tr_bottom)
+         makeRect(i)
       end
    end
    drawTabs()
