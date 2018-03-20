@@ -4365,7 +4365,6 @@ function OnPluginDisconnect ()
       sent_busy = false
    end
    if db:isopen() then
-      maybe_Note("GMCP Mapper: Disconnected; closing map database.")
       db:close()
    end
    if GetVariable("backup_timer_enabled") == "1" then
