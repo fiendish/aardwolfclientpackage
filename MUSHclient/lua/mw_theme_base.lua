@@ -119,13 +119,13 @@ function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textco
    if nil == textcolor then
       textcolor = theme.CLICKABLE_TEXT
    end
-   right = left + WindowTextWidth(win, font, text)
+   right = left + WindowTextWidth(win, font, text) + 4
    bottom = top + TextHeight(win, font)
+   WindowRectOp(win, 2, left, top+1, right, bottom+2, theme.CLICKABLE)
    if outlined then
-      WindowRectOp(win, 1, left-1, top, right+4, bottom+3, theme.CLICKABLE_TEXT)
+      WindowRectOp(win, 1, left-1, top, right+1, bottom+3, theme.CLICKABLE_TEXT)
    end
-   WindowRectOp(win, 2, left, top+1, right+3, bottom+2, theme.CLICKABLE)
-   WindowText(win, font, text, left+1, top+2, right+1, bottom+1, theme.CLICKABLE_TEXT, utf8)
+   WindowText(win, font, text, left+2, top+2, right, bottom+1, theme.CLICKABLE_TEXT, utf8)
    return right-left
 end
 
