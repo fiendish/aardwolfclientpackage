@@ -172,7 +172,7 @@ xref = {}
 show_map = tonumber(GetVariable("show_map")) or 1
 background_colour = 0x000028
 title_colour = 0x696969
-zone_name_colour = ColourNameToRGB "yellow"
+zone_name_colour = theme.BODY_TEXT
 square_brush_pixels = 8
 continent_dimensions = {
 [0]={["w"]=60, ["h"]=40},
@@ -382,7 +382,7 @@ function NoMap()
    if show_map ~= 1 then
       return
    end
-   WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
+   WindowRectOp (mapwin, 2, 0, 0, 0, 0, theme.PRIMARY_BODY)  -- blank
    local messages = {"If the continent map doesn't show,","type: 'bigmap update'"}
    for i,v in ipairs(messages) do
       local messagewidth = WindowTextWidth (mapwin, font_id, v)
@@ -428,7 +428,7 @@ function DrawMap(clearHotspotsFirst)
       correction = y_correction
    end
 
-   WindowRectOp (mapwin, 2, 0, 0, 0, 0, 0x00)  -- blank
+   WindowRectOp (mapwin, 2, 0, 0, 0, 0, theme.PRIMARY_BODY)  -- blank
    WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction*WindowImageInfo(mapwin,image_name,2)), starty + (correction*WindowImageInfo(mapwin,image_name,3)), 2)
 
    local tile_pixels_x = 1 + WindowImageInfo(mapwin,image_name,2)/continent_dimensions[zone].w
