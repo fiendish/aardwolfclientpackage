@@ -104,6 +104,31 @@ function Draw3DRect (win, left, top, right, bottom, depressed)
    end
 end
 
+function Draw3DTextBox(win, font, left, top, text, utf8)
+   right = left + WindowTextWidth(win, font, text)
+   bottom = top + TextHeight(win, font)
+   Draw3DRect(win, left, top, right+3, bottom+3)
+   WindowText(win, font, text, left+2, top+2, right+1, bottom+1, theme.THREE_D_SURFACE_DETAIL, utf8)
+   return right-left
+end
+
+function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textcolor)
+   if nil == bgcolor then
+      bgcolor = theme.CLICKABLE
+   end
+   if nil == textcolor then
+      textcolor = theme.CLICKABLE_TEXT
+   end
+   right = left + WindowTextWidth(win, font, text)
+   bottom = top + TextHeight(win, font)
+   if outlined then
+      WindowRectOp(win, 1, left-1, top, right+4, bottom+3, theme.CLICKABLE_TEXT)
+   end
+   WindowRectOp(win, 2, left, top+1, right+3, bottom+2, theme.CLICKABLE)
+   WindowText(win, font, text, left+1, top+2, right+1, bottom+1, theme.CLICKABLE_TEXT, utf8)
+   return right-left
+end
+
 function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, dragrelease_callback)
    local x1, y1 = DrawResizeTag(win, type, x1, y1)
 

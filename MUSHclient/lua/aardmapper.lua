@@ -61,6 +61,7 @@ module (..., package.seeall)
 
 VERSION = 2.5   -- for querying by plugins
 
+require "mw_theme_base"
 require "movewindow"
 require "copytable"
 require "gauge"
@@ -877,24 +878,18 @@ function draw (uid)
       room_name = room_name .. "..."
    end -- if
 
+   DrawBorder(win)
+
    -- room name
 
-   draw_text_box (win, FONT_ID,
-      (config.WINDOW.width - WindowTextWidth (win, FONT_ID, room_name)) / 2,   -- left
-      2,    -- top
-      room_name, false,             -- what to draw, utf8
-      ROOM_NAME_TEXT.colour,   -- text colour
-      ROOM_NAME_FILL.colour,   -- fill colour
-      ROOM_NAME_BORDER.colour)     -- border colour
+   DrawTitleBar(win, room_name)
+
 
    if config.SHOW_ROOM_ID then
-      draw_text_box (win, FONT_ID,
+      DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..uid)) / 2,   -- left
          2+font_height+1,    -- top
-         "ID: "..uid, false,             -- what to draw, utf8
-         ROOM_NAME_TEXT.colour,   -- text colour
-         ROOM_NAME_FILL.colour,   -- fill colour
-         ROOM_NAME_BORDER.colour)     -- border colour
+         "ID: "..uid, false, false)
    end
 
    -- area name
@@ -902,13 +897,10 @@ function draw (uid)
    local areaname = room.area
 
    if areaname then
-      draw_text_box (win, FONT_ID,
+      DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname)) / 2,   -- left
          config.WINDOW.height - 3 - font_height,    -- top
-         areaname:gsub("^%l", string.upper), false,
-         AREA_NAME_TEXT.colour,   -- text colour
-         AREA_NAME_FILL.colour,   -- fill colour
-         AREA_NAME_BORDER.colour) -- border colour
+         areaname:gsub("^%l", string.upper), false, false)
    end -- if area known
 
    -- configure?
@@ -919,15 +911,12 @@ function draw (uid)
       WindowShow(config_win, false)
       local x = 2
       local y = 2
-      local text_width = draw_text_box (win, FONT_ID,
-         x+3,   -- left
-         y,   -- top
-         "*", false,              -- what to draw, utf8
-         AREA_NAME_TEXT.colour,   -- text colour
-         AREA_NAME_FILL.colour,   -- fill colour
-         AREA_NAME_BORDER.colour) -- border colour
+      local text_width = DrawTextBox(win, FONT_ID,
+         x,   -- left
+         y-1,   -- top
+         "*", false, false)
 
-         WindowAddHotspot(win, "<configure>",
+      WindowAddHotspot(win, "<configure>",
          x, y, x+text_width+6, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
@@ -941,13 +930,18 @@ function draw (uid)
    if type (show_help) == "function" then
       local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 5
       local y = 2
-      local text_width = draw_text_box (win, FONT_ID,
-         x,   -- left
-         y,   -- top
-         "?", false,              -- what to draw, utf8
-         AREA_NAME_TEXT.colour,   -- text colour
-         AREA_NAME_FILL.colour,   -- fill colour
-         AREA_NAME_BORDER.colour) -- border colour
+      local text_width = DrawTextBox(win, FONT_ID,
+         x-1,   -- left
+         y-1,   -- top
+         "?", false, false)
+
+      -- local text_width = draw_text_box (win, FONT_ID,
+      --    x,   -- left
+      --    y,   -- top
+      --    "?", false,              -- what to draw, utf8
+      --    AREA_NAME_TEXT.colour,   -- text colour
+      --    AREA_NAME_FILL.colour,   -- fill colour
+      --    AREA_NAME_BORDER.colour) -- border colour
 
       WindowAddHotspot(win, "<help>",
          x-3, y, x+text_width+3, y + font_height,   -- rectangle
@@ -960,9 +954,7 @@ function draw (uid)
          miniwin.cursor_hand, 0)  -- hand cursor
    end -- if
 
-   draw_edge()
-
-   add_resize_tag()
+   AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    -- make sure window visible
    WindowShow (win, not window_hidden)
@@ -1062,12 +1054,12 @@ function init (t)
    for _, v in ipairs (credits) do
       local width = WindowTextWidth (win, FONT_ID, v)
       local left = (config.WINDOW.width - width) / 2
-      WindowText (win, FONT_ID, v, left, top, 0, 0, ROOM_COLOUR.colour)
+      WindowText (win, FONT_ID, v, left, top, 0, 0, theme.BODY_TEXT)
       top = top + font_height
    end -- for
 
-   draw_edge()
-   add_resize_tag()
+   DrawBorder(win)
+   AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    WindowShow (win, not window_hidden)
    WindowShow (config_win, false)
@@ -1672,9 +1664,7 @@ function zoom_map (flags, hotspot_id)
 end -- zoom_map
 
 function resize_mouse_down(flags, hotspot_id)
-   if (hotspot_id == "resize") then
-      startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
-   end
+   startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
 end
 
 function resize_release_callback()
@@ -1710,44 +1700,8 @@ function resize_move_callback()
    end
 
    WindowResize(win, width, height, BACKGROUND_COLOUR.colour)
-   draw_edge()
-   add_resize_tag()
+   DrawBorder(win)
+   AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
-   WindowShow(win,true)
-end
-
-
-function add_resize_tag()
-   -- draw the resize widget bottom right corner.
-   local width  = WindowInfo(win, 3)
-   local height = WindowInfo(win, 4)
-
-   WindowLine(win, width-4, height-2, width-2, height-4, 0xffffff, 0, 2)
-   WindowLine(win, width-5, height-2, width-2, height-5, 0x696969, 0, 1)
-   WindowLine(win, width-7, height-2, width-2, height-7, 0xffffff, 0, 2)
-   WindowLine(win, width-8, height-2, width-2, height-8, 0x696969, 0, 1)
-   WindowLine(win, width-10, height-2, width-2, height-10, 0xffffff, 0, 2)
-   WindowLine(win, width-11, height-2, width-2, height-11, 0x696969, 0, 1)
-   WindowLine(win, width-13, height-2, width-2, height-13, 0xffffff, 0, 2)
-   WindowLine(win, width-14, height-2, width-2, height-14, 0x696969, 0, 1)
-
-   -- Hotspot for resizer.
-   local x = width - 14
-   local y = height - 14
-   if (WindowHotspotInfo(win, "resize", 1) == nil) then
-      WindowAddHotspot(win, "resize",
-         x, y, 0, 0,   -- rectangle
-         "", "", "mapper.resize_mouse_down", "", "",
-         "Drag to resize",
-         6, 0)  -- hand cursor
-      WindowDragHandler(win, "resize", "mapper.resize_move_callback", "mapper.resize_release_callback", 0)
-   else
-      WindowMoveHotspot(win, "resize", x, y,  0,  0)
-   end
-end -- draw resize tag.
-
-function draw_edge()
-   -- draw edge frame.
-   check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
-   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
+   WindowShow(win, true)
 end
