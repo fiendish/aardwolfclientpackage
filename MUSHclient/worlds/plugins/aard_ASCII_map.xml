@@ -340,13 +340,6 @@ function map_body_redirect(name, line, wildcards, styles)
    table.insert (map_lines, styles)
 end
 
-function draw_legend(y)
-   -- show the widget for the legend popup
-   WindowRectOp(win, 2, bodyleft, y, bodyleft+(3*font_width), y+font_height+5, theme.CLICKABLE, 0x0000ff) -- fill
-   WindowRectOp(win, 1, bodyleft, y, bodyleft+(3*font_width), y+font_height+5, theme.CLICKABLE_TEXT, 0x0000ff) -- border
-   WindowText(win, font_id, "?", bodyleft+font_width, y, bodyright, bodybottom, theme.BODY_TEXT)
-end
-
 current_room_name = "\n"
 function resize_window()
    WindowResize(win, width, height, theme.SECONDARY_BODY)
@@ -403,7 +396,7 @@ function DisplayMapPage()
 
       -- Add legend-popup handler
       WindowAddHotspot(win, "legend", bodyleft, roomname_bottom, bodyleft+(3*font_width), roomname_bottom+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
-      draw_legend(roomname_bottom+2)
+      DrawTextBox(win, font_id, bodyleft+2, roomname_bottom+1, "?", false, true)
 
       local n = #map_lines
       for i = 3, n-1 do
