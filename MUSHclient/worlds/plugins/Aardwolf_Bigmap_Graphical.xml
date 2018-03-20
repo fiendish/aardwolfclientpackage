@@ -390,7 +390,7 @@ function NoMap()
    end
    DrawBorder(mapwin)
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
-      AddResizeTag(mapwin, 1, nil, nil, "resize", "resize_move_callback", "resize_release_callback")
+      AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
 end
 
