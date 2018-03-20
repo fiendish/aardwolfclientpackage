@@ -182,27 +182,26 @@ end
 
 function DisplayStatsPage()
 
-   bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, nil, nil)
-   WindowRectOp(win, 2, bodyleft, bodytop, bodyright, bodybottom, theme.PRIMARY_BODY) -- blank
+   WindowRectOp(win, 2, 0, 0, 0, 0, theme.PRIMARY_BODY) -- blank
 
    if not page_built then
       if stacked == 1 then
          local txt = "Status bars will appear here"
          local txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (bodyright-txtlen)/2, (height/2)-line_height, bodyright, bodybottom, theme.BODY_TEXT, false)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height/2)-line_height, 0, 0, theme.BODY_TEXT, false)
          txt = "once you start playing."
          txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (bodyright-txtlen)/2, height/2, bodyright, bodybottom, theme.BODY_TEXT, false)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, height/2, 0, 0, theme.BODY_TEXT, false)
       else
          local txt = "Status bars will appear here once you start playing."
          local txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (bodyright-txtlen)/2, (height-line_height)/2, bodyright, bodybottom, theme.BODY_TEXT, false)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height-line_height)/2, 0, 0, theme.BODY_TEXT, false)
       end
    else -- Only draw bars if we have data.
 
       local barTexts = ""
-      ypos = bodytop + TOP_MARGIN
-      xpos = bodyleft + LEFT_MARGIN
+      ypos = TOP_MARGIN
+      xpos = LEFT_MARGIN
       label_width = 0
       bar_width = 0
       num_ticks = 3
@@ -216,7 +215,7 @@ function DisplayStatsPage()
          if showLabels == 1 then
             label_width = WindowTextWidth(win, font_id, "WWWWWW:")
          end
-         bar_width = math.max(1, bodyright-label_width-LEFT_MARGIN*2)
+         bar_width = math.max(1, effectiveWidth-label_width-LEFT_MARGIN*2)
       else
          for i,v in pairs(showBar) do
             if (v[2] == true) then
@@ -224,9 +223,9 @@ function DisplayStatsPage()
             end
          end
          if showLabels == 1 then
-            bar_width = math.max(1, (bodyright-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+            bar_width = math.max(1, (effectiveWidth-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
          else
-            bar_width = math.max(1, (bodyright-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+            bar_width = math.max(1, (effectiveWidth-LEFT_MARGIN)/numBars-LEFT_MARGIN)
          end
       end
 
@@ -251,9 +250,9 @@ function DisplayStatsPage()
             if enemypct ~= "" then
                if showLabels == 1 then
                   if stacked == 1 then
-                     WindowText(win, font_id, showBar[bar][1], xpos,  ypos, bodyright, bodybottom, showBar[bar][4], false)
+                     WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
                   else
-                     xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, bodyright, bodybottom, showBar[bar][4], false)
+                     xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
                   end
                end
             end
@@ -262,23 +261,23 @@ function DisplayStatsPage()
                if overlay_numbers ~= 0 then
                   txt = string.lpad(enemypct.."%", 4, ' ')
                   txtlen = WindowTextWidth(win,font_id,txt)
-                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, bodyright, bodybottom, 0xeeeeee, utf8)
+                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
                end
             else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, bodyright, bodybottom, showBar[bar][4], false)
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
             end
          else
             if showLabels == 1 then
                if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos, ypos, bodyright, bodybottom, 0x444444, false)
+                  WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, false)
                else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, bodyright, bodybottom, 0x444444, false)
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, false)
                end
             end
             if graphicalMode == 1 then
                gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1)
             else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, bodyright, bodybottom, 0x444444, false)
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
             end
          end
          if stacked == 1 then
@@ -303,9 +302,9 @@ function DisplayStatsPage()
             prev_bar_colour = bar_colour
             if showLabels == 1 then
                if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, bodyright, bodybottom, bar_colour, false)
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
                else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, bodyright, bodybottom, bar_colour, false)
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, false)
                end
             end
             if graphicalMode == 1 then
@@ -318,7 +317,7 @@ function DisplayStatsPage()
                WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
                WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
             else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, bodyright, bodybottom, bar_colour, false)
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, 0, 0, bar_colour, false)
             end
             if stacked == 1 then
                ypos = ypos + line_height + 1
@@ -329,6 +328,7 @@ function DisplayStatsPage()
       end
    end
 
+   DressWindow(win, nil, nil)
    AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
    BroadcastPlugin(999, "repaint")
