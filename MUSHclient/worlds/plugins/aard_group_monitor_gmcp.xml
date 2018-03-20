@@ -427,8 +427,8 @@ function DisplayGroupPage()
       local x = GAP
       local y = 2
       local statusBoundary = math.max(GAP, width-WindowTextWidth(win, font_id, full_group_data.status)-3*GAP)
-      WindowRectOp(win, 2, statusBoundary+2*GAP - 3, y-1 , -3, y+line_height, ((full_group_data.status=="Private" and 0x0000ff) or 0x00ff00))
-      OutlinedText(win, font_id, full_group_data.status, statusBoundary+2*GAP - 1, y, 0, 0, 0xffffff)
+      WindowRectOp(win, 2, statusBoundary+2*GAP - 2, y , -3, y+line_height, ((full_group_data.status=="Private" and 0x000088) or 0x008800))
+      WindowText(win, font_id, full_group_data.status, statusBoundary+2*GAP, y+1, 0, 0, 0xffffff)
       x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, 0, theme.THREE_D_SURFACE_DETAIL, utf8)
       local group_width = WindowTextWidth(win, font_id, strip_colours_from_styles(styles))
       WindowRectOp(win, 2, x-3, y-1, x+group_width + GAP, y+line_height, theme.PRIMARY_BODY)
