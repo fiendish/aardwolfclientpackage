@@ -6,7 +6,7 @@ return {
 
    PRIMARY_BODY = 0x1a000c,
    SECONDARY_BODY = 0x662233,
-   BODY_TEXT = 0x0088ee,
+   BODY_TEXT = 0x00bb55,
 
    -- flat buttons
    CLICKABLE = 0x2a001c,
@@ -34,7 +34,7 @@ return {
 
    THREE_D_SOFTSHADOW = 0x200020,
    THREE_D_HARDSHADOW = 0x000000,
-   THREE_D_SURFACE_DETAIL = 0x00bb55, -- for contrasting details drawn on 3D surfaces
+   THREE_D_SURFACE_DETAIL = 0x0088ee, -- for contrasting details drawn on 3D surfaces
 
    -- for scrollbar background
    SCROLL_TRACK_COLOR1 = 0x444444,

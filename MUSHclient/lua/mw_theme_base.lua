@@ -244,18 +244,53 @@ function DrawTitleBar(win, title, text_alignment)
    return title_height+1
 end
 
-function WindowTextFromStyles(win, font, styles, left, top, right, bottom)
-   for i,v in ipairs(styles) do
-      left = left + WindowText(win, font, v.text, left, top, right, bottom, v.textcolour or theme.BODY_TEXT)
-   end
-end
-
 function DrawBorder(win)
    local r = WindowInfo(win, 3)-3
    local b = WindowInfo(win, 4)-3
    WindowRectOp(win, 1, 0, 0, 0, 0, theme.THREE_D_HIGHLIGHT)
    WindowRectOp(win, 1, 1, 1, -1, -1, theme.THREE_D_SOFTSHADOW)
    return 2, 2, r, b
+end
+
+function OutlinedText(win, font, text, startx, starty, endx, endy, color, outline_color, utf8)
+   if outline_color == nil then
+      outline_color = theme.THREE_D_HARDSHADOW
+   end
+   WindowText(win, font, text, startx-1, starty-1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx-1, starty, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx-1, starty+1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx, starty-1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx, starty+1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx+1, starty-1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx+1, starty, endx, endy, outline_color, utf8)
+   local right = WindowText(win, font, text, startx+1, starty+1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx, starty, endx, endy, color, utf8)
+   return right
+end
+
+function WindowTextFromStyles(win, font, styles, left, top, right, bottom, utf8)
+   for i,v in ipairs(styles) do
+      left = left + WindowText(win, font, v.text, left, top, right, bottom, v.textcolour or theme.BODY_TEXT, utf8)
+   end
+   return left
+end
+
+-- text with a black outline
+function OutlinedTextFromStyles(win, font, styles, startx, starty, endx, endy, outline_color, utf8)
+   if outline_color == nil then
+      outline_color = theme.THREE_D_HARDSHADOW
+   end
+   local text = strip_colours_from_styles(styles)
+   WindowText(win, font, text, startx-1, starty-1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx-1, starty, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx-1, starty+1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx, starty-1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx, starty+1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx+1, starty-1, endx, endy, outline_color, utf8)
+   WindowText(win, font, text, startx+1, starty, endx, endy, outline_color, utf8)
+   local right = WindowText(win, font, text, startx+1, starty+1, endx, endy, outline_color, utf8)
+   WindowTextFromStyles(win, font, styles, startx, starty, endx, endy, utf8)
+   return right
 end
 
 -- Based on mw.lua's popup function, but with theme colors
