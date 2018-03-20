@@ -928,7 +928,7 @@ function draw (uid)
    end -- if
 
    if type (show_help) == "function" then
-      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 5
+      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
       local y = 2
       local text_width = DrawTextBox(win, FONT_ID,
          x-1,   -- left
