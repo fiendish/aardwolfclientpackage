@@ -186,14 +186,14 @@ function DisplayStatsPage()
 
    if not page_built then
       if stacked == 1 then
-         local txt = "Status bars will appear here"
+         local txt = "Status bars will appear"
          local txtlen = WindowTextWidth(win,font_id,txt)
          WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height/2)-line_height, 0, 0, theme.BODY_TEXT, false)
-         txt = "once you start playing."
+         txt = "when play begins."
          txtlen = WindowTextWidth(win,font_id,txt)
          WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, height/2, 0, 0, theme.BODY_TEXT, false)
       else
-         local txt = "Status bars will appear here once you start playing."
+         local txt = "Status bars will appear when play begins."
          local txtlen = WindowTextWidth(win,font_id,txt)
          WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height-line_height)/2, 0, 0, theme.BODY_TEXT, false)
       end
