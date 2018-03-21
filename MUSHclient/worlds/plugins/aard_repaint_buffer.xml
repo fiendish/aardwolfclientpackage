@@ -23,6 +23,15 @@
 repaint_on_tick = false
 last_repaint_time = utils.timer()
 paused = false
+
+function pause()
+   paused = true
+end
+
+function resume()
+   paused = false
+end
+
 function OnPluginBroadcast (msg, id, name, text)
    if ((msg == 999) and (text == "repaint")) then
       repaint_on_tick = true
