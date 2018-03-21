@@ -439,7 +439,7 @@ function Print()
       txt = "Stats will appear "
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText(win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, bodyright, bodybottom, theme.BODY_TEXT, utf8)
-      txt = "once play begins."
+      txt = "when play begins."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText(win, font_id, txt, (width-txtlen)/2, height/2, bodyright, bodybottom, theme.BODY_TEXT, utf8)
    else

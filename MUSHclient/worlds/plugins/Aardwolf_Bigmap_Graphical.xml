@@ -170,8 +170,7 @@ map = {}
 continents = {}
 xref = {}
 show_map = tonumber(GetVariable("show_map")) or 1
-background_colour = 0x000028
-title_colour = 0x696969
+background_colour = theme.PRIMARY_BODY
 zone_name_colour = theme.BODY_TEXT
 square_brush_pixels = 8
 continent_dimensions = {
@@ -378,31 +377,38 @@ function loadCustomImage()
 end
 
 
-function NoMap()
+function NoMap(messages)
+   if not messages then
+      messages = {"The continent bigmap will appear", "when play begins."}
+   end
    if show_map ~= 1 then
       return
    end
-   WindowRectOp (mapwin, 2, 0, 0, 0, 0, theme.SECONDARY_BODY)  -- blank
-   local messages = {"If the continent map doesn't show,","type: 'bigmap update'"}
+   WindowRectOp (mapwin, 2, 0, 0, 0, 0, theme.PRIMARY_BODY)  -- blank
    for i,v in ipairs(messages) do
       local messagewidth = WindowTextWidth (mapwin, font_id, v)
       WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
    end
-   DrawBorder(mapwin)
+   DressWindow(mapwin, font_id, "\n", "left")
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
       AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
+   BroadcastPlugin(999, "repaint")
 end
 
 function DrawMap(clearHotspotsFirst)
    if show_map ~= 1 then
       return
    end
+   if not zone then
+      NoMap()
+      return
+   end
    if clearHotspotsFirst then
       WindowDeleteAllHotspots(mapwin)
    end
    local startx = 4
-   local starty = (font_height*2)+15
+   local starty = (2*theme.TITLE_PADDING) + (TextHeight(mapwin, font_id) * 2) + 2
    local image_name = "bigmap_continent_"..zone
    if (mapwin == GetPluginID().."_mapper") then
       local window_width, window_height
@@ -416,7 +422,6 @@ function DrawMap(clearHotspotsFirst)
       WindowResize(mapwin, window_width, window_height, background_colour)
       WindowShow (mapwin, true)
    end
-   movewindow.add_drag_handler (mapwin, 0, 0, 0, 0)
 
    local x_correction = (WindowInfo(mapwin,3) - startx - startx) / WindowImageInfo(mapwin,image_name,2) -- stretch to x
    local y_correction = (WindowInfo(mapwin,4) - starty - startx) / WindowImageInfo(mapwin,image_name,3) -- stretch to y
@@ -428,7 +433,7 @@ function DrawMap(clearHotspotsFirst)
       correction = y_correction
    end
 
-   WindowRectOp (mapwin, 2, 0, 0, 0, 0, theme.PRIMARY_BODY)  -- blank
+   WindowRectOp (mapwin, 2, 0, starty-2, 0, 0, background_colour)  -- blank
    WindowDrawImage (mapwin, image_name, startx, starty, startx+(correction*WindowImageInfo(mapwin,image_name,2)), starty + (correction*WindowImageInfo(mapwin,image_name,3)), 2)
 
    local tile_pixels_x = 1 + WindowImageInfo(mapwin,image_name,2)/continent_dimensions[zone].w
@@ -436,14 +441,6 @@ function DrawMap(clearHotspotsFirst)
 
    local our_location_x = ((x - 1) * (tile_pixels_x-1) + (tile_pixels_x / 2) )
    local our_location_y = ((y - 1) * (tile_pixels_y-1) + (tile_pixels_y / 2) )
-
-   local name = continent or ""
-   local namewidth = WindowTextWidth (mapwin, font_id, name)
-   WindowText (mapwin, font_id, name, (WindowInfo(mapwin,3) - namewidth) / 2, 5, 0, 0, zone_name_colour)  -- title
-
-   local coords = string.format ("Location: %2i, %2i", origx, origy)
-   local coordswidth = WindowTextWidth (mapwin, font_id, coords)
-   WindowText (mapwin, font_id, coords, (WindowInfo(mapwin,3) - coordswidth) / 2, 10 + font_height, 0, 0, zone_name_colour)  -- coords
 
    -- rounded rects around the player's position
    WindowCircleOp (mapwin, miniwin.circle_round_rectangle,
@@ -471,7 +468,12 @@ function DrawMap(clearHotspotsFirst)
       0, -- brush colour
       miniwin.brush_null ) -- null brush
 
-   DrawBorder(mapwin)
+
+   local name = continent or ""
+   local coords = string.format ("Location: %2i, %2i", origx, origy)
+   DressWindow(mapwin, font_id, name.."\n"..coords)
+   WindowAddHotspot(mapwin, "right-click", 0, starty, 0, 0, nil, nil, nil, nil, "MouseUp", "", miniwin.cursor_hand, 0)
+
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
       AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
@@ -479,6 +481,7 @@ function DrawMap(clearHotspotsFirst)
 end -- DrawMap
 
 function resize_mouse_down(flags, hotspot_id)
+   width, height = WindowInfo(mapwin, 3), WindowInfo(mapwin, 4)
    startx, starty = WindowInfo(mapwin, 17), WindowInfo(mapwin, 18)
 end
 
@@ -495,9 +498,8 @@ function resize_move_callback()
    if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
       return
    end
-   local posx, posy = WindowInfo (mapwin, 17), WindowInfo (mapwin, 18)
-
-   local width = WindowInfo(mapwin, 3) + posx - startx
+   posx, posy = WindowInfo(mapwin, 17), WindowInfo(mapwin, 18)
+   width = width+posx-startx
    startx = posx
    if (50 > width) then
       width = 50
@@ -506,9 +508,8 @@ function resize_move_callback()
       width = GetInfo(281) - WindowInfo(mapwin, 10)
       startx = GetInfo(281)
    end
-
-   local height = WindowInfo(mapwin, 4) + posy - starty
-   starty = posy
+   height = height + posy - starty
+   starty=posy
    if (50 > height) then
       height = 50
       starty = WindowInfo(mapwin, 11) + height
@@ -517,14 +518,18 @@ function resize_move_callback()
       starty = GetInfo(280)
    end
 
-   WindowResize(mapwin, width, height, 0x000000)
-
-   if mapwin == GetPluginID().."_mapper" then
-      unmerged_width = width
-      unmerged_height = height
+   if (utils.timer() - lastRefresh > 0.0333) then
+      WindowResize(mapwin, width, height, background_colour)
+      if mapwin == GetPluginID().."_mapper" then
+         unmerged_width = width
+         unmerged_height = height
+      end
+      DrawMap()
+      lastRefresh = utils.timer()
    end
-   DrawMap()
 end
+
+lastRefresh = 0
 
 
 function table.contains(table, element)
@@ -560,7 +565,7 @@ function updatelocation()
       end
       DrawMap(true)
    else
-      NoMap()
+      NoMap({"If the continent map doesn't show,","type: 'bigmap update'"})
    end -- if
 end -- updatelocation
 
@@ -664,8 +669,12 @@ end
 require "checkplugin"
 function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
-   if (not mapper_is_loaded) and IsPluginInstalled("b6eae87ccedd84f510b74714") then
-      OnPluginInstall()
+   if IsPluginInstalled("b6eae87ccedd84f510b74714") then
+      if not mapper_is_loaded then
+         OnPluginInstall()
+      end
+   else
+      mapper_is_loaded = false
    end
 end
 
@@ -683,11 +692,10 @@ end -- OnPluginInstall
 
 
 function do_init()
-   if show_map == 0 then return end
-   bigmap_enabled = false
-   if mapwin == GetPluginID().."_mapper" then
-      WindowDelete(mapwin)
+   if show_map == 0 then
+      return
    end
+   bigmap_enabled = false
 
    assert (loadstring (GetVariable ("continents") or "")) ()
    assert (loadstring (GetVariable ("xref") or "")) ()
@@ -709,8 +717,7 @@ function do_init()
          not use_exact_sizes and unmerged_height or 0,  -- height
          windowinfo.window_mode,
          windowinfo.window_flags,
-         theme.SECONDARY_BODY)
-      DrawBorder(mapwin)
+         theme.PRIMARY_BODY)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
    end
 
@@ -730,7 +737,9 @@ function do_init()
 
    font_height = WindowFontInfo (mapwin, font_id, 1) -  WindowFontInfo (mapwin, font_id, 4) + 1 -- height
    font_width = WindowFontInfo (mapwin, font_id, 6)  -- avg width
-   descent = WindowFontInfo (mapwin, font_id, 3)
+   if mapwin == GetPluginID().."_mapper" then
+      NoMap()
+   end
 end
 
 function OnPluginSaveState ()
