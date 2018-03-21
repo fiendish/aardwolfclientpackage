@@ -926,7 +926,7 @@ function draw (uid)
          "*", false, false)
 
       WindowAddHotspot(win, "<configure>",
-         x, y, x+text_width+6, y + font_height,   -- rectangle
+         0, 0, x+text_width+6, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
          "",  -- mousedown
