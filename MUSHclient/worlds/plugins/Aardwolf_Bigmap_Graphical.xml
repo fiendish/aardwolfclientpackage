@@ -382,7 +382,7 @@ function NoMap()
    if show_map ~= 1 then
       return
    end
-   WindowRectOp (mapwin, 2, 0, 0, 0, 0, theme.PRIMARY_BODY)  -- blank
+   WindowRectOp (mapwin, 2, 0, 0, 0, 0, theme.SECONDARY_BODY)  -- blank
    local messages = {"If the continent map doesn't show,","type: 'bigmap update'"}
    for i,v in ipairs(messages) do
       local messagewidth = WindowTextWidth (mapwin, font_id, v)
@@ -664,10 +664,16 @@ end
 require "checkplugin"
 function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
-   OnPluginInstall()
+   if (not mapper_is_loaded) and IsPluginInstalled("b6eae87ccedd84f510b74714") then
+      OnPluginInstall()
+   end
 end
 
 function OnPluginInstall ()
+   if IsPluginInstalled("b6eae87ccedd84f510b74714") then
+      mapper_is_loaded = true
+   end
+
    do_init()
 
    if GetPluginInfo (GetPluginID (), 17) then
@@ -703,7 +709,8 @@ function do_init()
          not use_exact_sizes and unmerged_height or 0,  -- height
          windowinfo.window_mode,
          windowinfo.window_flags,
-         background_colour)
+         theme.SECONDARY_BODY)
+      DrawBorder(mapwin)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
    end
 
@@ -732,7 +739,7 @@ function OnPluginSaveState ()
    SetVariable ("xref", "xref = " .. serialize.save_simple (xref))
    SetVariable("use_gmcp_mapper", tostring(use_gmcp_mapper))
    SetVariable("show_map", show_map)
-   if (mapwin == GetPluginID().."_mapper" and WindowInfo(mapwin, 3)) then
+   if (mapwin == GetPluginID().."_mapper") and WindowInfo(mapwin, 3) then
       movewindow.save_state(mapwin)
       unmerged_width = WindowInfo(mapwin, 3)
       unmerged_height = WindowInfo(mapwin, 4)
@@ -753,9 +760,9 @@ function OnPluginBroadcast (msg, id, name, text)
       if text == "room.info" then
          room_info = gmcp("room.info")
          -- where we are
-         origx = tonumber (room_info.coord.x)
-         origy = tonumber (room_info.coord.y)
-         zone = tonumber (room_info.coord.id)
+         origx = tonumber(room_info.coord.x)
+         origy = tonumber(room_info.coord.y)
+         zone = tonumber(room_info.coord.id)
          oncont = tonumber(room_info.coord.cont)
          x = origx + 1  -- make 1-relative
          y = origy + 1  -- ditto
