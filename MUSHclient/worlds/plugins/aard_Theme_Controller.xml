@@ -45,7 +45,7 @@ function list_themes()
 end
 
 function apply_theme(theme)
-   BroadcastPlugin(999, "pause_repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "pause")
    for _, v in ipairs(GetPluginList()) do
       if (v ~= GetPluginID()) and GetPluginInfo(v, 17) and (PluginSupports(v, "b9315e040989d3f81f4328d6") == error_code.eOK) then
          rc, t = CallPlugin(v, "get_theme")
@@ -56,7 +56,7 @@ function apply_theme(theme)
          end
       end
    end
-   BroadcastPlugin(999, "resume_repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "resume")
 end
 
 function choose_theme()
