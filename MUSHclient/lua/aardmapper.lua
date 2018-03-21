@@ -544,7 +544,7 @@ local function draw_room (uid, path, x, y)
    local left, top, right, bottom = x - HALF_ROOM, y - HALF_ROOM, x + HALF_ROOM, y + HALF_ROOM
 
    -- forget it if off screen
-   if x < HALF_ROOM or y < HALF_ROOM or
+   if x < HALF_ROOM or y < font_height+3 or
       x > config.WINDOW.width - HALF_ROOM or y > config.WINDOW.height - HALF_ROOM then
       return
    end -- if
@@ -807,7 +807,7 @@ function draw (uid)
       config.WINDOW.height,
       windowinfo.window_mode,   -- top right
       windowinfo.window_flags,
-      BACKGROUND_COLOUR.colour)
+      theme.PRIMARY_BODY)
 
    -- Handle background texture.
    if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
@@ -825,9 +825,6 @@ function draw (uid)
          y = y + iheight
       end
    end
-
-   -- let them move it around
-   movewindow.add_drag_handler (win, 0, 0, 0, font_height)
 
    -- for zooming
    WindowAddHotspot(win,
@@ -881,14 +878,26 @@ function draw (uid)
    DrawBorder(win)
 
    -- room name
-
-   DrawTitleBar(win, room_name)
-
+   Draw3DRect(
+      win,
+      -1,
+      -1,
+      WindowInfo(win, 3)-1,
+      font_height+4,
+      false
+   )
+   WindowText(win, FONT_ID,
+      room_name,
+      (config.WINDOW.width - WindowTextWidth (win, FONT_ID, room_name)) / 2,   -- left
+      2,    -- top
+      0, 0, theme.THREE_D_SURFACE_DETAIL,
+      false
+      )
 
    if config.SHOW_ROOM_ID then
       DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..uid)) / 2,   -- left
-         2+font_height+1,    -- top
+         3+font_height,    -- top
          "ID: "..uid, false, false)
    end
 
@@ -912,8 +921,8 @@ function draw (uid)
       local x = 2
       local y = 2
       local text_width = DrawTextBox(win, FONT_ID,
-         x,   -- left
-         y-1,   -- top
+         x-1,   -- left
+         y-2,   -- top
          "*", false, false)
 
       WindowAddHotspot(win, "<configure>",
@@ -924,7 +933,7 @@ function draw (uid)
          "",  -- cancelmousedown
          "mapper.mouseup_configure",  -- mouseup
          "Click to configure map",
-         miniwin.cursor_hand, 0)  -- hand cursor
+         miniwin.cursor_plus, 0)
    end -- if
 
    if type (show_help) == "function" then
@@ -932,16 +941,8 @@ function draw (uid)
       local y = 2
       local text_width = DrawTextBox(win, FONT_ID,
          x-1,   -- left
-         y-1,   -- top
+         y-2,   -- top
          "?", false, false)
-
-      -- local text_width = draw_text_box (win, FONT_ID,
-      --    x,   -- left
-      --    y,   -- top
-      --    "?", false,              -- what to draw, utf8
-      --    AREA_NAME_TEXT.colour,   -- text colour
-      --    AREA_NAME_FILL.colour,   -- fill colour
-      --    AREA_NAME_BORDER.colour) -- border colour
 
       WindowAddHotspot(win, "<help>",
          x-3, y, x+text_width+3, y + font_height,   -- rectangle
@@ -951,7 +952,7 @@ function draw (uid)
          "",  -- cancelmousedown
          "mapper.show_help",  -- mouseup
          "Click for help",
-         miniwin.cursor_hand, 0)  -- hand cursor
+         miniwin.cursor_help, 0)
    end -- if
 
    AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
@@ -978,6 +979,10 @@ function draw (uid)
          total_times_drawn,
          total_time_taken / total_times_drawn))
    end -- if
+
+   -- let them move it around
+   movewindow.add_drag_handler (win, 0, 0, 0, font_height+3)
+
    BroadcastPlugin (999, "repaint")
 end -- draw
 
@@ -1042,7 +1047,7 @@ function init (t)
       config.WINDOW.height,
       windowinfo.window_mode,   -- top right
       windowinfo.window_flags,
-      BACKGROUND_COLOUR.colour)
+      theme.PRIMARY_BODY)
 
    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
 
