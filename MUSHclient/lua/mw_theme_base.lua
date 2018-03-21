@@ -36,10 +36,6 @@ function load_theme(file)
 
    if status then
       theme_file = file
-
-      theme.TITLE_FONT = "theme_title_font"
-      theme.TITLE_FONTS = theme.TITLE_FONTS or {}
-      table.insert(theme.TITLE_FONTS, {["name"]="Dina", ["size"]=10}) -- in case other fonts aren't found
    end
 end
 
@@ -125,7 +121,7 @@ function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textco
    if outlined then
       WindowRectOp(win, 1, left-1, top, right+1, bottom+3, theme.CLICKABLE_TEXT)
    end
-   WindowText(win, font, text, left+2, top+2, right, bottom+1, theme.CLICKABLE_TEXT, utf8)
+   WindowText(win, font, text, left+2, top+1, right, bottom+1, theme.CLICKABLE_TEXT, utf8)
    return right-left
 end
 
@@ -184,25 +180,12 @@ function TextHeight(win, font)
    return WindowFontInfo(win, font, 1)
 end
 
-function LoadTitleFont(win)
-   if WindowFontInfo(win, theme.TITLE_FONT, 1) == nil then
-      for i,F in ipairs(theme.TITLE_FONTS) do
-         if 0 == WindowFont(win, theme.TITLE_FONT, F["name"], F["size"], false, false, false, false, 0) then
-            break
-         end
-      end
-   end
-   theme.TITLE_LINE_HEIGHT = TextHeight(win, theme.TITLE_FONT) + theme.TITLE_PADDING
-   return theme.TITLE_FONT
-end
-
 -- title_alignment can be "left", "right", or "center" (the default)
-function DressWindow(win, title, title_alignment)
+function DressWindow(win, font, title, title_alignment)
    local l, t, r, b = DrawBorder(win)
 
-   theme.TITLE_LINE_HEIGHT = 0
    if title and (title ~= "") then
-      t = DrawTitleBar(win, title, title_alignment)
+      t = DrawTitleBar(win, font, title, title_alignment)
       if t > 1 then
          movewindow.add_drag_handler(win, 0, 0, 0, t)
       end
@@ -211,7 +194,7 @@ function DressWindow(win, title, title_alignment)
    return l, t, r, b
 end
 
-function DrawTitleBar(win, title, text_alignment)
+function DrawTitleBar(win, font, title, text_alignment)
    local title_lines
    if type(title) == "string" then
       title_lines = utils.split(title, "\n")
@@ -219,8 +202,12 @@ function DrawTitleBar(win, title, text_alignment)
       title_lines = title
    end
 
-   LoadTitleFont(win)
-   local title_height = theme.TITLE_PADDING + (theme.TITLE_LINE_HEIGHT * #title_lines)
+   local line_height = 0
+   local title_height = 0
+   if font and title_lines then
+      line_height = TextHeight(win, font)
+      title_height = (2*theme.TITLE_PADDING) + (line_height * #title_lines)
+   end
 
    __theme_istitle = true
    Draw3DRect(
@@ -232,29 +219,27 @@ function DrawTitleBar(win, title, text_alignment)
       false
    )
 
-   local title_width = 0
+   local first_color = nil
+   local txt = nil
    for i,v in ipairs(title_lines) do
       if type(v) == "table" then
          txt = strip_colours_from_styles(v)
       else
          txt = v
       end
-      title_width = math.max(title_width, WindowTextWidth(win, theme.TITLE_FONT, txt))
-   end
+      local width = WindowTextWidth(win, font, txt)
 
-   local text_left = (WindowInfo(win, 3) - title_width) / 2  -- default text align center
-   if text_alignment == "left" then
-      text_left = theme.TITLE_PADDING + 5
-   elseif text_alignment == "right" then
-      text_left = WindowInfo(win, 3) - title_width - theme.TITLE_PADDING
-   end
-   local text_right = math.min(text_left + title_width, WindowInfo(win, 3) - theme.TITLE_PADDING)
+      local text_left = (WindowInfo(win, 3) - width) / 2  -- default text align center
+      if text_alignment == "left" then
+         text_left = theme.TITLE_PADDING + 2
+      elseif text_alignment == "right" then
+         text_left = WindowInfo(win, 3) - width - theme.TITLE_PADDING
+      end
+      local text_right = math.min(text_left + width, WindowInfo(win, 3) - theme.TITLE_PADDING - 2)
 
-   local first_color = nil
-   for i,v in ipairs(title_lines) do
-      text_top = (theme.TITLE_LINE_HEIGHT * (i-1)) + theme.TITLE_PADDING
+      local text_top = (line_height * (i-1)) + theme.TITLE_PADDING
       if type(v) == "string" then
-         WindowText(win, theme.TITLE_FONT, v, text_left, text_top, text_right, title_height, theme.THREE_D_SURFACE_DETAIL)
+         WindowText(win, font, v, text_left, text_top, text_right, title_height, theme.THREE_D_SURFACE_DETAIL)
       else
          -- The colors of all styles matching the first style color get stripped out and replaced with the default title color
          for i,w in ipairs(v) do
@@ -263,10 +248,10 @@ function DrawTitleBar(win, title, text_alignment)
                w.textcolour = theme.THREE_D_SURFACE_DETAIL
             end
          end
-         WindowTextFromStyles(win, theme.TITLE_FONT, v, text_left, text_top, text_right, title_height, true)
+         WindowTextFromStyles(win, font, v, text_left, text_top, text_right, title_height, true)
       end
    end
-   return title_height+1
+   return title_height
 end
 
 function DrawBorder(win)

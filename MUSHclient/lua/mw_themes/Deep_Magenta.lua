@@ -16,12 +16,6 @@ return {
    CLICKABLE_HOVER_TEXT = 0xff11ff,
    CLICKABLE_HOT_TEXT = 0xff00dd,
 
-   -- for miniwindow titlebar
-   TITLE_FONTS = {
-      {["name"]="Dina", ["size"]=10},
-      {["name"]="Courier New", ["size"]=10},
-      {["name"]="Lucida Console", ["size"]=10}
-   },
    TITLE_PADDING = 1,
 
    -- for 3D surfaces other than the titlebar, like buttons and scrollbars
