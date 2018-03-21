@@ -149,9 +149,6 @@ default_y = 0
 default_font_name = "Dina"
 default_font_size = "8"
 
-head_font_name = default_font_name
-head_font_size = default_font_size
-
 date_format = GetVariable("date_format") or "[%d %b %H:%M:%S] "
 width = tonumber(GetVariable("WINDOW_WIDTH")) or default_width
 height = tonumber(GetVariable("WINDOW_HEIGHT")) or default_height
@@ -352,17 +349,14 @@ function set_tr_shape()
 end
 
 function init ()
-   head_font = LoadTitleFont(win)
-   head_font_height = TextHeight(win, head_font)
-
    -- register with the z-order monitor
    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
 
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
-   WindowFont(win, "tab_font", font_name, font_size)
-   tab_font_height = TextHeight(win, "tab_font")
+   WindowFont(win, "channels_font", font_name, font_size)
+   tab_font_height = TextHeight(win, "channels_font")
 
    tabs_rects = {}
    tabs_scrollbars = {}
@@ -379,7 +373,7 @@ function drawTabs (mouseover)
 
       for i,_ in ipairs(tabs_channel_captures) do
          local name = tabs_names[i] or tostring(i)
-         local tab_width = WindowTextWidth(win, "tab_font", name) + (tab_padding * 2)
+         local tab_width = WindowTextWidth(win, "channels_font", name) + (tab_padding * 2)
 
          if not WindowHotspotInfo(win, "tab"..tostring(i), 1) then
             WindowAddHotspot(win, "tab"..tostring(i), tab_left, tab_top, tab_left + tab_width, tab_top + (3*gap) + tab_font_height, "tabMouseOver", "tabCancelMouseOver", "tabMouseDown", nil, "tabMouseUp", "", 1, 0)
@@ -418,7 +412,7 @@ function drawTabs (mouseover)
          end
 
          tab_left = tab_left + tab_padding
-         tab_left = tab_left + WindowText(win, "tab_font", name, tab_left, tab_top + gap, draw_right, draw_top + (3*gap) + tab_font_height, text_color, false)
+         tab_left = tab_left + WindowText(win, "channels_font", name, tab_left, tab_top + gap + 1, draw_right, draw_top + (3*gap) + tab_font_height, text_color, false)
          tab_left = tab_left + tab_padding
       end
 
@@ -431,7 +425,7 @@ function drawTabs (mouseover)
          16,   -- width of the ellipse used to draw the rounded corner
          (4*gap) + (2*tab_font_height)   -- height of the ellipse used to draw the rounded corner
       )
-      WindowText(win, "tab_font", tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap, draw_right, draw_top + (3*gap) + tab_font_height, theme.BODY_TEXT, false)
+      WindowText(win, "channels_font", tabs_names[current_tab] or tostring(current_tab), active_left + tab_padding, tab_top + gap + 1, draw_right, draw_top + (3*gap) + tab_font_height, theme.BODY_TEXT, false)
    end
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
@@ -450,15 +444,18 @@ function tabMouseDown (flags, hotspot_id)
 end
 
 function tabMouseUp (flags, hotspot_id)
+   if hotspot_id == "titlebar" then
+      hotspot_id = "tab"..tostring(current_tab or 1)
+   end
    if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       tabs_rects[tonumber(hotspot_id:sub(4))]:rightClickMenu()
    end
 end
 
 function drawBackground ()
-   draw_left, draw_top, draw_right, draw_bottom = DressWindow(win, "Communication Log", nil)
+   -- WindowAddHotspot(win, "titlebar", 0, 0, 0, 0, nil, nil, nil, nil, "tabMouseUp", "", miniwin.cursor_hand, 0)
+   draw_left, draw_top, draw_right, draw_bottom = DressWindow(win, "channels_font", "Communication Log", nil)
    AddResizeTag(win, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
-   movewindow.add_drag_handler(win, 0, 0, 0, draw_top)
 end
 
 function ResizeMoveCallback ()
@@ -468,8 +465,8 @@ function ResizeMoveCallback ()
    posx, posy = WindowInfo(win, 17), WindowInfo(win, 18)
    width = width+posx-startx
    startx = posx
-   if (WindowTextWidth(win, head_font, "Communication Log")+2*theme.RESIZER_SIZE > width) then
-      width = WindowTextWidth(win, head_font, "Communication Log")+2*theme.RESIZER_SIZE
+   if (WindowTextWidth(win, "channels_font", "Communication Log")+2*theme.RESIZER_SIZE > width) then
+      width = WindowTextWidth(win, "channels_font", "Communication Log")+2*theme.RESIZER_SIZE
       startx = windowinfo.window_left+width
    elseif (windowinfo.window_left+width > GetInfo(281)) then
       width = GetInfo(281)-windowinfo.window_left
@@ -760,10 +757,13 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
          font_size = wanted_font.size
          SetVariable("font_name", font_name)
          SetVariable("font_size", font_size)
+         WindowFont(win, "channels_font", font_name, font_size)
+         tab_font_height = TextHeight(win, "channels_font")
          for i = 1,num_tabs do
             tabs_rects[i]:loadFont(font_name, font_size)
             tabs_rects[i]:reWrapLines()
          end
+         setupDisplay()
       end
    elseif result == 2 then
       date_format = ""

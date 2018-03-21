@@ -343,9 +343,7 @@ end
 current_room_name = "\n"
 function resize_window()
    WindowResize(win, width, height, theme.SECONDARY_BODY)
-   movewindow.add_drag_handler(win, 0, 0, 0, 0)
 
-   bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, nil, nil)
    DisplayMapPage()
 end
 
@@ -357,6 +355,8 @@ end
 
 function DisplayMapPage()
    styles = { }
+   bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, font_id, (show_title == 1) and {map_lines[1] or "", map_lines[2] or ""}, "left")
+   movewindow.add_drag_handler(win, 0, 0, 0, 0)
    WindowRectOp(win, 2, bodyleft, bodytop, bodyright+1, bodybottom+1, theme.PRIMARY_BODY) -- blank
 
    if WindowTextWidth(win, font_id, "i") ~= WindowTextWidth(win, font_id, "w") then
@@ -378,25 +378,17 @@ function DisplayMapPage()
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
    elseif not requested_since_empty then
       line = -font_height-5
-      txt = "Map will appear here"
+      txt = "The map will appear"
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
       line = line+font_height+5
-      txt = "once you start playing."
+      txt = "when play begins."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
    else -- display the map lines
-      local roomname_bottom = line_height(4)
-      if show_title == 1 then
-         -- Display_Line(1, map_lines[1])
-         -- Display_Line(2, map_lines[2])
-         --WindowLine(win, bodyleft, roomname_bottom, bodyright, roomname_bottom, theme.THREE_D_HIGHLIGHT, 0, 1)
-         roomname_bottom = DrawTitleBar(win, {map_lines[1], map_lines[2]}, "left")
-      end
-
       -- Add legend-popup handler
-      WindowAddHotspot(win, "legend", bodyleft, roomname_bottom, bodyleft+(3*font_width), roomname_bottom+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 12, 0)
-      DrawTextBox(win, font_id, bodyleft+2, roomname_bottom+1, "?", false, true)
+      WindowAddHotspot(win, "legend", bodyleft, bodytop, bodyleft+(3*font_width), bodytop+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", miniwin.cursor_help, 0)
+      DrawTextBox(win, font_id, bodyleft+2, bodytop+1, "?", false, true)
 
       local n = #map_lines
       for i = 3, n-1 do
@@ -462,15 +454,12 @@ function process_coords ()
 end
 
 function line_height(i)
-   return ((i - 1) * (font_height)) + 5 + bodytop
+   return ((i - 4 - 0.1) * (font_height)) + bodytop
 end
 
 function Display_Line (line, styles)
    local id = font_id
-   local left = 5
-   if show_title ~= 1 then
-      line = line - 3
-   end
+   local left = theme.TITLE_PADDING + 2
 
    local top = line_height(line)
 
@@ -853,14 +842,12 @@ function OnPluginInstall(skip_requests)
 
    --- Load the fonts.
    font_id        = "map_font"
-   font_id_bold   = "map_bold"
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
-   WindowFont (win, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
-   WindowFont (win, font_id_bold, font_name, font_size+1, false, false, false, false, 0) -- bold font
+   WindowFont (win, font_id, font_name, font_size, false, false, false, false, 0, miniwin.font_family_modern + miniwin.font_pitch_monospaced)
 
    --- Grab font size settings.
-   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) -- height
+   font_height = WindowFontInfo (win, font_id, 1)
    font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
 
    maptype = tonumber (GetVariable("maptype")) or (((font_name ~= "Dina") and 1) or 0)

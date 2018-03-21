@@ -142,8 +142,6 @@ require "gmcphelper"
 require "copytable"
 require "serialize"
 
-background_colour = tonumber (GetVariable ("background_colour")) or 0x000000
-title_colour = tonumber (GetVariable ("title_colour")) or 0x292929
 default_x = 868
 default_y = 336
 default_height = 215
@@ -160,9 +158,6 @@ overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 0
 GAP = 4
 font_size = 0
 font_name = ""
-border_color = 0xdddddd
-title_gradient_col1 = 0x000000
-title_gradient_col2 = 0x444444
 group_members = {}
 group_info = {}
 
@@ -199,7 +194,7 @@ function reset_aard()
    font_name = default_font_name
    font_size = default_font_size
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, default_height, background_colour)
+   WindowResize(win, default_width, default_height, theme.PRIMARY_BODY)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    SaveState()
    OnPluginInstall()
@@ -214,13 +209,10 @@ function SetUpHotspotsAndDraw(firstTime)
          height,  -- height
          windowinfo.window_mode,       -- auto-position: middle right
          windowinfo.window_flags,  -- flags
-         background_colour) )
+         theme.PRIMARY_BODY) )
       -- Add the drag handler so they can move the window around
       movewindow.add_drag_handler (win, 0, 0, 0, 0)
 
-      -- Add handler for resizing
-      WindowAddHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
-      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
       if hidden == 0 then
          WindowShow (win, true)
@@ -228,8 +220,7 @@ function SetUpHotspotsAndDraw(firstTime)
    else
       -- everything has already been made
       -- just move them back into place
-      WindowResize(win, width, height, background_colour)
-      WindowMoveHotspot(win, "resize", width-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, width, height)
+      WindowResize(win, width, height, theme.PRIMARY_BODY)
    end
    DisplayGroupPage()
 end
@@ -272,15 +263,12 @@ end
 function DisplayGroupPage()
    WindowRectOp(win, 2, 2, 2,-2,-2, theme.PRIMARY_BODY) -- blank
 
-   -- title rectangle
-   --WindowLine(win, 0, title_height, width, title_height, theme.THREE_D_HIGHLIGHT, 0, 1)
-
    if not group_built then
       if next(invitations) == nil then
          txt = "No Group To Display"
          txtlen = WindowTextWidth(win,font_id, txt)
          WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, theme.BODY_TEXT, utf8)
-         txt = "Group info will appear here"
+         txt = "Group info will appear"
          txtlen = WindowTextWidth(win,font_id,txt)
          WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, theme.BODY_TEXT, utf8)
          txt = "once you create or join one."
@@ -428,10 +416,10 @@ function DisplayGroupPage()
       local y = 2
       local statusBoundary = math.max(GAP, width-WindowTextWidth(win, font_id, full_group_data.status)-3*GAP)
       WindowRectOp(win, 2, statusBoundary+2*GAP - 2, y , -3, y+line_height, ((full_group_data.status=="Private" and 0x000088) or 0x008800))
-      WindowText(win, font_id, full_group_data.status, statusBoundary+2*GAP, y+1, 0, 0, 0xffffff)
+      WindowText(win, font_id, full_group_data.status, statusBoundary+2*GAP, y, 0, 0, 0xffffff)
       x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, 0, theme.THREE_D_SURFACE_DETAIL, utf8)
       local group_width = WindowTextWidth(win, font_id, strip_colours_from_styles(styles))
-      WindowRectOp(win, 2, x-3, y-1, x+group_width + GAP, y+line_height, theme.PRIMARY_BODY)
+      WindowRectOp(win, 2, x-3, y, x+group_width + GAP, y+line_height, theme.PRIMARY_BODY)
       WindowTextFromStyles(win, font_id, styles, x, y, statusBoundary, 0)
       y = y + line_height
       local xpKillsBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills)-3*GAP)
@@ -739,8 +727,6 @@ function OnPluginSaveState()
    movewindow.save_state(win)
 
    SetVariable("enabled", tostring(GetPluginInfo(GetPluginID (), 17)))
-   SetVariable("background_colour", background_colour)
-   SetVariable("title_colour", title_colour)
    if WindowInfo(win, 3) and WindowInfo(win, 4) then
       width = WindowInfo(win, 3)
       height = WindowInfo(win, 4)

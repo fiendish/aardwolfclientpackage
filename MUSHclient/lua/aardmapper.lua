@@ -544,8 +544,8 @@ local function draw_room (uid, path, x, y)
    local left, top, right, bottom = x - HALF_ROOM, y - HALF_ROOM, x + HALF_ROOM, y + HALF_ROOM
 
    -- forget it if off screen
-   if x < HALF_ROOM or y < font_height+3 or
-      x > config.WINDOW.width - HALF_ROOM or y > config.WINDOW.height - HALF_ROOM then
+   if (x < HALF_ROOM) or (y < (title_bottom or font_height)+HALF_ROOM) or
+      (x > config.WINDOW.width - HALF_ROOM) or (y > config.WINDOW.height - HALF_ROOM) then
       return
    end -- if
 
@@ -878,26 +878,12 @@ function draw (uid)
    DrawBorder(win)
 
    -- room name
-   Draw3DRect(
-      win,
-      -1,
-      -1,
-      WindowInfo(win, 3)-1,
-      font_height+4,
-      false
-   )
-   WindowText(win, FONT_ID,
-      room_name,
-      (config.WINDOW.width - WindowTextWidth (win, FONT_ID, room_name)) / 2,   -- left
-      2,    -- top
-      0, 0, theme.THREE_D_SURFACE_DETAIL,
-      false
-      )
+   title_bottom = DrawTitleBar(win, FONT_ID, room_name)
 
    if config.SHOW_ROOM_ID then
       DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..uid)) / 2,   -- left
-         3+font_height,    -- top
+         title_bottom-1,    -- top
          "ID: "..uid, false, false)
    end
 
@@ -919,14 +905,14 @@ function draw (uid)
    else
       WindowShow(config_win, false)
       local x = 2
-      local y = 2
+      local y = math.max(2, (title_bottom-font_height)/2)
       local text_width = DrawTextBox(win, FONT_ID,
-         x-1,   -- left
+         x,   -- left
          y-2,   -- top
          "*", false, false)
 
       WindowAddHotspot(win, "<configure>",
-         0, 0, x+text_width+6, y + font_height,   -- rectangle
+         x-2, y-4, x+text_width, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
          "",  -- mousedown
@@ -938,14 +924,14 @@ function draw (uid)
 
    if type (show_help) == "function" then
       local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
-      local y = 2
+      local y = math.max(2, (title_bottom-font_height)/2)
       local text_width = DrawTextBox(win, FONT_ID,
          x-1,   -- left
          y-2,   -- top
          "?", false, false)
 
       WindowAddHotspot(win, "<help>",
-         x-3, y, x+text_width+3, y + font_height,   -- rectangle
+         x-3, y-4, x+text_width+3, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
          "",  -- mousedown
@@ -981,7 +967,7 @@ function draw (uid)
    end -- if
 
    -- let them move it around
-   movewindow.add_drag_handler (win, 0, 0, 0, font_height+3)
+   movewindow.add_drag_handler (win, 0, 0, 0, title_bottom)
 
    BroadcastPlugin (999, "repaint")
 end -- draw
