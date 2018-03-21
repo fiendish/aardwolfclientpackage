@@ -462,7 +462,7 @@ function add_main_resizer()
       DrawResizeTag(textResizer, 0)
 
       -- Add a drag handler to this window, effectively allows textrectangle to be resized.
-      WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
+      WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, nil, nil, "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
       WindowDragHandler(textResizer, "resizemain", "ResizeMainCallback", "ResizeReleaseMainCallback", 0)
    end
    WindowShow(textResizer, true)
@@ -478,7 +478,7 @@ function add_title_dragger()
    if WindowHotspotInfo(textDragger, "dragmain", 13) then
       WindowMoveHotspot(textDragger, "dragmain", 0, 0, 0, 0)
    else
-      WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
+      WindowAddHotspot(textDragger, "dragmain", 0, 0, 0, 0, nil, nil, "MouseDown", "CancelMouseDown", "MouseUp", "", 1, 0)
       WindowDragHandler(textDragger, "dragmain", "DragMainCallback", "DragReleaseMainCallback", 0)
    end
 
