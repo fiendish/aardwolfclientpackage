@@ -39,22 +39,21 @@ Aardwolf GCMP based health bars
 <script>
 <![CDATA[
 
+require "mw_theme_base"
+
 require "movewindow"
 require "gauge"
 require "gmcphelper"
 require "serialize"
 require "colors"
 
-background_colour     = 0x000000
-border_color          = 0xcccccc
 default_width         = 1137
 default_x             = 0
 default_y             = 552
 
-local RESIZE_TAG_SIZE = 10
 local MIN_WIDTH        = 40
 local LEFT_MARGIN     = 10
-local TOP_MARGIN      = 5
+local TOP_MARGIN      = 6
 local stacked = 0
 local showLabels = 1
 local reverseTNL = 1
@@ -70,7 +69,6 @@ thresh2percent = tonumber (GetVariable("thresh2percent")) or 20
 thresh1color = tonumber (GetVariable("thresh1color")) or 0x00ffff
 thresh2color = tonumber (GetVariable("thresh2color")) or 0x0000ff
 
--- Variables not saved.
 startx     = ""
 starty     = ""
 posx       = ""
@@ -98,7 +96,7 @@ function reset_aard()
    font_name = default_font_name
    font_size = default_font_size
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, WindowInfo(win, 4), background_colour)
+   WindowResize(win, default_width, WindowInfo(win, 4), theme.PRIMARY_BODY)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    stacked = 0
    SaveState()
@@ -184,15 +182,21 @@ end
 
 function DisplayStatsPage()
 
-   WindowRectOp(win, 2, 2,2,-2,-2,background_colour) -- blank
+   WindowRectOp(win, 2, 0, 0, 0, 0, theme.PRIMARY_BODY) -- blank
 
    if not page_built then
-      local txt = "Status bars will appear here"
-      local txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height/2)-line_height, 0, 0, 0xeeeeee, false)
-      txt = "once you start playing."
-      txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, height/2, 0, 0, 0xeeeeee, false)
+      if stacked == 1 then
+         local txt = "Status bars will appear"
+         local txtlen = WindowTextWidth(win,font_id,txt)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height/2)-line_height, 0, 0, theme.BODY_TEXT, false)
+         txt = "when play begins."
+         txtlen = WindowTextWidth(win,font_id,txt)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, height/2, 0, 0, theme.BODY_TEXT, false)
+      else
+         local txt = "Status bars will appear when play begins."
+         local txtlen = WindowTextWidth(win,font_id,txt)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height-line_height)/2, 0, 0, theme.BODY_TEXT, false)
+      end
    else -- Only draw bars if we have data.
 
       local barTexts = ""
@@ -209,7 +213,7 @@ function DisplayStatsPage()
 
       if stacked == 1 then
          if showLabels == 1 then
-            label_width = WindowTextWidth(win,font_id,"WWWWWW:")
+            label_width = WindowTextWidth(win, font_id, "WWWWWW:")
          end
          bar_width = math.max(1, effectiveWidth-label_width-LEFT_MARGIN*2)
       else
@@ -324,21 +328,10 @@ function DisplayStatsPage()
       end
    end
 
-   -- draw edge frame.
-   WindowRectOp (win, 1, 0, 0, 0, 0, border_color, 15)
-   WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15)
+   DressWindow(win, nil, nil)
+   AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
-   -- draw the resize widget bottom right corner.
-   WindowLine(win, effectiveWidth-3, height-2, effectiveWidth-2, height-3, 0xffffff, 0, 2)
-   WindowLine(win, effectiveWidth-4, height-2, effectiveWidth-2, height-4, 0x696969, 0, 1)
-   WindowLine(win, effectiveWidth-6, height-2, effectiveWidth-2, height-6, 0xffffff, 0, 2)
-   WindowLine(win, effectiveWidth-7, height-2, effectiveWidth-2, height-7, 0x696969, 0, 1)
-   WindowLine(win, effectiveWidth-9, height-2, effectiveWidth-2, height-9, 0xffffff, 0, 2)
-   WindowLine(win, effectiveWidth-10, height-2, effectiveWidth-2, height-10, 0x696969, 0, 1)
-   WindowLine(win, effectiveWidth-12, height-2, effectiveWidth-2, height-12, 0xffffff, 0, 2)
-   WindowLine(win, effectiveWidth-13, height-2, effectiveWidth-2, height-13, 0x696969, 0, 1)
-
-   BroadcastPlugin (999, "repaint")
+   BroadcastPlugin(999, "repaint")
 end -- DisplayStatsPage
 
 -- right click menu
@@ -525,7 +518,7 @@ function ResizeMoveCallback()
    end
 
    if (utils.timer() - lastRefresh > 0.0333) then
-      SetUpHotspotsAndDraw(false)
+      resize_window()
       lastRefresh = utils.timer()
    end
 end
@@ -536,7 +529,7 @@ lastRefresh = 0
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseCallback()
-   SetUpHotspotsAndDraw(false)
+   resize_window()
 end
 
 ---------------------------------------------------------------------------------
@@ -544,7 +537,7 @@ end
 ---------------------------------------------------------------------------------
 function MouseDown(flags, hotspot_id)
    if (hotspot_id == "resize") then
-      startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
+      startx, starty = WindowInfo(win, 17), WindowInfo(win, 18)
    end
 end
 
@@ -558,14 +551,14 @@ end
 -- Called when mouse button released on hotspot.
 ---------------------------------------------------------------------------------
 function MouseUp(flags, hotspot_id, win)
-   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       right_click_menu()
    end
    return true
 end
 
 function LeftClickOnly(flags, hotspot_id, win)
-   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       return true
    end
    return false
@@ -576,102 +569,59 @@ end
 ---------------------------------------------------------------------------------
 function OnPluginSaveState ()
    -- save window current location for next time
-   movewindow.save_state (win)
+   movewindow.save_state(win)
    barTexts = ""
-   SetVariable ("stacked", stacked)
-   SetVariable ("showLabels", showLabels)
-   SetVariable ("reverseTNL", reverseTNL)
-   SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
-   SetVariable ("background_colour", background_colour)
+   SetVariable("stacked", stacked)
+   SetVariable("showLabels", showLabels)
+   SetVariable("reverseTNL", reverseTNL)
+   SetVariable("enabled", tostring(GetPluginInfo(GetPluginID(), 17)))
    if WindowInfo(win, 3) and WindowInfo(win, 4) then
       width = WindowInfo(win, 3)
       height = WindowInfo(win, 4)
    end
-   SetVariable ("width", width)
-   SetVariable ("height", height)
-   SetVariable ("font_name", font_name)
-   SetVariable ("font_size", font_size)
-   SetVariable ("showBar", serialize.save ("showBar"))
-   SetVariable ("graphicalMode", graphicalMode)
-   SetVariable ("flat_gauges", flat_gauges)
-   SetVariable ("overlay_numbers", overlay_numbers)
-   SetVariable ("thresh1active", thresh1active)
-   SetVariable ("thresh2active", thresh2active)
-   SetVariable ("thresh1percent", thresh1percent)
-   SetVariable ("thresh2percent", thresh2percent)
-   SetVariable ("thresh1color", thresh1color)
-   SetVariable ("thresh2color", thresh2color)
+   SetVariable("width", width)
+   SetVariable("font_name", font_name)
+   SetVariable("font_size", font_size)
+   SetVariable("showBar", serialize.save ("showBar"))
+   SetVariable("graphicalMode", graphicalMode)
+   SetVariable("flat_gauges", flat_gauges)
+   SetVariable("overlay_numbers", overlay_numbers)
+   SetVariable("thresh1active", thresh1active)
+   SetVariable("thresh2active", thresh2active)
+   SetVariable("thresh1percent", thresh1percent)
+   SetVariable("thresh2percent", thresh2percent)
+   SetVariable("thresh1color", thresh1color)
+   SetVariable("thresh2color", thresh2color)
 end -- OnPluginSaveState
 
 function OnPluginClose()
    WindowDelete(win)
 end
 
-function OnPluginDisable ()
+function OnPluginDisable()
    SaveState()
-   WindowShow( win, false )
+   WindowShow(win, false)
 end --  OnPluginDisable
 
-function OnPluginEnable ()
-   WindowShow (win, true)
+function OnPluginEnable()
+   WindowShow(win, true)
    SaveState()
 end -- OnPluginEnable
 
 
 win = GetPluginID()
 
-function OnPluginListChanged ()
+function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
 function OnPluginWorldOutputResized()
    if (installed == true) and (((GetInfo(281)-windowinfo.window_left) > effectiveWidth) or ((GetInfo(281)-windowinfo.window_left) < width)) then
-      SetUpHotspotsAndDraw(false)
+      resize_window()
    end
 end
 
 function OnPluginInstall()
-   background_colour = tonumber (GetVariable ("background_colour")) or background_colour
-   -- make window so I can grab the font info
-   WindowCreate (win, 600, 600, 1, 1, 0, 0, background_colour)
-
-   font_id = "statmon_font"
-
-   local fonts = utils.getfontfamilies ()
-
-   -- if not there already, add it
-   if not fonts.Dina then
-      AddFont (GetInfo (66) .. "\\Dina.fon")
-      fonts = utils.getfontfamilies ()
-   end -- if Dina not installed
-
-   if fonts ["Dina"] then
-      default_font_size = 8
-      default_font_name = "Dina"    -- the actual font
-   elseif fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-   else
-      default_font_size = 9
-      default_font_name = "Lucida Console"
-   end -- if
-
-   font_name = GetVariable("font_name") or default_font_name
-   font_size = tonumber(GetVariable("font_size")) or default_font_size
-
-   --- Load the fonts into the temp window.
-   WindowFont (win, font_id, font_name, font_size, false, false, false, false) -- normal font
-
-   --- Grab font size settings.
-   font_height = WindowFontInfo (win, font_id, 1) -  WindowFontInfo (win, font_id, 4) + 1 -- height
-   font_width  = WindowFontInfo (win, font_id, 6)  -- avg width
-   line_height = font_height + 1
-
-   --- install the window movement handler, get back the window position.
-   windowinfo  = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-
-   MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWWW:")+(LEFT_MARGIN*2))
-
    width      = tonumber(GetVariable("width")) or default_width
    stacked    = tonumber(GetVariable("stacked")) or stacked
    showLabels = tonumber(GetVariable("showLabels")) or showLabels
@@ -689,75 +639,67 @@ function OnPluginInstall()
          numBars = numBars + 1
       end
    end
+
+   local fonts = utils.getfontfamilies()
+
+   -- if Dina not there already, add it
+   if not fonts.Dina then
+      AddFont(GetInfo(66) .. "\\Dina.fon")
+      fonts = utils.getfontfamilies()
+   end
+
+   if fonts["Dina"] then
+      default_font_size = 8
+      default_font_name = "Dina"
+   elseif fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
+   else
+      default_font_size = 9
+      default_font_name = "Lucida Console"
+   end
+
+   font_name = GetVariable("font_name") or default_font_name
+   font_size = tonumber(GetVariable("font_size")) or default_font_size
+
+   windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, 60, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
+
+   font_id = "statmon_font"
+   WindowFont(win, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
+   line_height = WindowFontInfo(win, font_id, 1) -  WindowFontInfo(win, font_id, 4) + 2
+
+   MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWWW:")+(LEFT_MARGIN*2))
+
    if stacked == 1 then
-      height = (TOP_MARGIN*2)+(numBars*(line_height+1))
+      height = (TOP_MARGIN*2) + (numBars*(line_height+1))
    else
       if showLabels == 1 then
          MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+(LEFT_MARGIN*(numBars+2)))
       end
-      height = TOP_MARGIN*2 + line_height
+      height = (TOP_MARGIN*2) + line_height
    end
+
    width = math.max(width, MIN_WIDTH)
 
-   --- Setup the window.
-   SetUpHotspotsAndDraw(true)
+   resize_window()
+
    if IsConnected() then
       Send_GMCP_Packet("request char")
    end
 
-   -- if disabled last time, stay disabled
-   if GetVariable ("enabled") == "false" then
-      ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
-      check (EnablePlugin(GetPluginID (), false))
-      return
-   end -- they didn't enable us last time
-
    installed = true
+   WindowShow(win, true)
 end
 
---=================================================================================
--- Called by OnPluginInstall, but also by redraw routine to refresh the screen
--- and (if the first time) add the resizer tag, otherwise move the resizer relative
--- to the main window.
---=================================================================================
-function SetUpHotspotsAndDraw(firstTime)
+function resize_window()
    effectiveWidth = math.max(MIN_WIDTH, math.min(width, GetInfo(281)-windowinfo.window_left))
-   if (firstTime == true) then
-      check (WindowCreate (win,
-            windowinfo.window_left, windowinfo.window_top,   -- left, top (auto-positions)
-            effectiveWidth,     -- width
-            height,  -- height
-            windowinfo.window_mode,       -- auto-position: middle right
-            windowinfo.window_flags,  -- flags
-            background_colour) )
-      -- Add handler for resizing
-      WindowAddHotspot(win, "resize", effectiveWidth-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, effectiveWidth, height, "MouseOver", "CancelMouseOver", "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-      WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
-      WindowShow (win, true)
-   else
-      -- everything has already been made
-      -- just move them back into place
-      WindowResize(win, effectiveWidth, height, background_colour)
-      WindowMoveHotspot(win, "resize", effectiveWidth-RESIZE_TAG_SIZE, height-RESIZE_TAG_SIZE, effectiveWidth, height)
-   end
 
-   -- Add the drag handler so they can move the window around
-   movewindow.add_drag_handler (win, 0, 0, 0, 0)
+   WindowResize(win, effectiveWidth, height, theme.SECONDARY_BODY)
+   movewindow.add_drag_handler(win, 0, 0, 0, 0)
 
    DisplayStatsPage()
 end
-
--------------------------------------------------------------------------------
---- Calculate width of a line of styled text without drawing it.
--------------------------------------------------------------------------------
-function styleWidth(styles)
-   local s = ""
-   for _,w in ipairs (styles) do
-      s = s .. w.text
-   end
-   return WindowTextWidth(win,font_id,s)
-end -- styleWidth
 
 function getmemoryusage()
   collectgarbage('collect')
