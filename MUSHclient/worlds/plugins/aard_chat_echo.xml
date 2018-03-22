@@ -19,9 +19,9 @@
 <description trim="y">
 USAGE:
 
-   chats echo on      : show all chats in main window
-   chats echo off     : do not show any chats in main window
-   chats echo custom  : select a custom list of chats to show in the main window
+   chats echo on      : show all channels in main window
+   chats echo off     : do not show any channels in main window
+   chats echo custom  : select a custom list of channels to show in the main window
 </description>
 
 </plugin>
@@ -128,7 +128,7 @@ USAGE:
 <aliases>
 <alias
    script="chat_echo_wrap"
-   match="^chats? echo( on| off| custom)?$"
+   match="^chats? echo( on| off| channels| nonchannels)?$"
    enabled="y"
    regexp="y"
    sequence="100"
@@ -147,6 +147,7 @@ require "gmcphelper"
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
+-- legacy variables
 echo_info = GetVariable("echo_info_2") ~= "0"
 echo_global_quest = GetVariable("echo_global_quest_2") ~= "0"
 echo_remort_auction = GetVariable("echo_remort_auction_2") ~= "0"
@@ -163,17 +164,9 @@ function enable_hiding(true_false, enabler_id)
    for k,v in pairs(list_of_filter_enablers) do
       num_enablers = num_enablers + 1
    end
-   if num_enablers > 0 then
+   if (not aard_req_novisuals_mode) and (num_enablers > 0) then
       never_hide = false
-      if not aard_req_novisuals_mode then
-         EnableTrigger("info", not echo_info)
-         EnableTrigger("raidinfo", not echo_info)
-         EnableTrigger("claninfo", not echo_info)
-         EnableTrigger("global_quest", not echo_global_quest)
-         EnableTrigger("remort_auction", not echo_remort_auction)
-         EnableTrigger("donations", not echo_donations)
-         EnableTrigger("warfare", not echo_warfare)
-      end
+      addDefaultNonChannels()
    else
       never_hide = true
       for i,v in ipairs(GetTriggerList()) do
@@ -184,81 +177,47 @@ end
 
 enable_hiding(false, GetPluginID())
 
-function hideEchos(info, global_quest, remort_auction, donations, warfare)
-   if info ~= nil then
-      EnableTrigger("info", info)
-      EnableTrigger("raidinfo", info)
-      EnableTrigger("claninfo", info)
-      echo_info = not info
-      if echo_info then
-         ColourNote ("yellow", "", "Info echoing is now ENABLED.")
-      else
-         ColourNote ("yellow", "", "Info echoing is now DISABLED.")
-      end
-   end
-   if global_quest ~= nil then
-      EnableTrigger("global_quest", global_quest)
-      echo_global_quest = not global_quest
-      if echo_global_quest then
-         ColourNote ("yellow", "", "Global Quest echoing is now ENABLED.")
-      else
-         ColourNote ("yellow", "", "Global Quest echoing is now DISABLED.")
-      end
-   end
-   if remort_auction ~= nil then
-      EnableTrigger("remort_auction", remort_auction)
-      echo_remort_auction = not remort_auction
-      if echo_remort_auction then
-         ColourNote ("yellow", "", "Remort Auction echoing is now ENABLED.")
-      else
-         ColourNote ("yellow", "", "Remort Auction echoing is now DISABLED.")
-      end
-   end
-   if donations ~= nil then
-      EnableTrigger("donations", donations)
-      echo_donations = not donations
-      if echo_donations then
-         ColourNote ("yellow", "", "Donations echoing is now ENABLED.")
-      else
-         ColourNote ("yellow", "", "Donations echoing is now DISABLED.")
-      end
-   end
-   if warfare ~= nil then
-      EnableTrigger("warfare", warfare)
-      echo_warfare = not warfare
-      if echo_warfare then
-         ColourNote ("yellow", "", "Warfare echoing is now ENABLED.")
-      else
-         ColourNote ("yellow", "", "Warfare echoing is now DISABLED.")
-      end
-   end
-end
 
-function getEchos()
-   return echo_info, echo_global_quest, echo_remort_auction, echo_donations, echo_warfare
-end
-
-local init_channel_names = {"advice","answer","auction","barter","clantalk","curse","debate","dtell","ftalk","gametalk","gclan","gossip","gratz","gsocial","gtell","helper","immtalk","lasertag","ltalk","market","mobsay","music","mxit","newbie","nobletalk","pchat","pokerinfo","ptell","question","quote","racetalk","rauction","rp","say","sports","spouse","tech","tell","tiertalk","trivia","wangrp","wardrums"}
+local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction"}
+local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations"}
+local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 channels_table = {}
+nonchannels_table = {}
 loadstring(GetVariable("channels_table") or "")()
+loadstring(GetVariable("nonchannels_table") or "")()
 
 function addNewChannel(name)
    if not channels_table[name] then
-      channels_table[name] = {echo=true}
+      channels_table[name] = {["echo"]=true}
    end
 end
 
-function constructDefaultChannels()
-   for i,v in ipairs(init_channel_names) do
+function other_should_echo(name)
+   if never_hide or nonchannels_table[name]["echo"] then
+      return true
+   end
+   return false
+end
+
+function addDefaultNonChannels()
+   for i,v in ipairs(init_nonchannel_keys) do
+      nonchannels_table[v] = nonchannels_table[v] or {["echo"]=true}
+      EnableTrigger(v, not other_should_echo(v))
+   end
+end
+
+function addDefaultChannels()
+   for i,v in ipairs(init_channel_keys) do
       addNewChannel(v)
    end
+   addDefaultNonChannels()
 end
 
-constructDefaultChannels()
+addDefaultChannels()
 
 function echo_msg(msg)
    Simulate(ColoursToANSI(msg).."\r\n")
-   if compact_mode ~= "set" then
+   if compact_mode ~= "ON" then
       Simulate("\r\n")
    end
    EnableTriggerGroup("end_gag", true) -- gags trailing blank line
@@ -292,14 +251,14 @@ function OnPluginBroadcast (msg, id, name, text)
       if (text == "config") then
          compact_mode = gmcp("config.compact")
       elseif (text == "comm.channel") then
-         gmcp_comm = gmcp("comm.channel")
-         msg = gmcp_comm.msg or ""
-         chan = gmcp_comm.chan or ""
+         local gmcp_comm = gmcp("comm.channel")
+         local msg = gmcp_comm.msg or ""
+         local chan = gmcp_comm.chan or ""
          if msg:find("\a") and (GetOption("enable_beeps") == 1) then
             Sound(GetInfo(50))
          end
 
-         if (never_hide or echo_donations or (string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil)) then
+         if (never_hide or other_should_echo("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if not channels_table[chan] then
                addNewChannel(chan)
             end
@@ -362,10 +321,7 @@ function chat_echo (toggle)
       ColourNote ("yellow", "", "All chats are now", "red", "", " hidden ", "yellow", "", "in the main window.")
       ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
       Note("")
-   elseif toggle == "custom" then
-      if never_hide then
-         return rejection_message()
-      end
+   elseif toggle == "channels" then
       local tbl = {}
       local defaults = {}
       local i = 1
@@ -374,10 +330,22 @@ function chat_echo (toggle)
          defaults[i] = v["echo"]
          i = i+1
       end
-      local echo_result = utils.multilistbox("Choose which channels to show in the main window.", "Main Output Echo Channel Selection", tbl, defaults)
+      local echo_result = utils.multilistbox("Choose which channels to show in the main window.", "Channel Echo Selection", tbl, defaults)
       if echo_result then
          for i,v in ipairs(tbl) do
             channels_table[v]["echo"] = echo_result[i]
+         end
+      end
+   elseif toggle == "nonchannels" then
+      local defaults = {}
+      for k,v in pairs(nonchannels_table) do
+         defaults[k] = v["echo"]
+      end
+      local echo_result = utils.multilistbox("Choose which non-channel info to show in the main window.", "Non-Channel Info Echo Selection", init_nonchannel_pairs, defaults)
+      if echo_result then
+         for k,v in pairs(nonchannels_table) do
+            v["echo"] = echo_result[k]
+            EnableTrigger(k, not other_should_echo(k))
          end
       end
    end -- if
@@ -391,12 +359,8 @@ end -- chat_echo
 
 require "serialize"
 function OnPluginSaveState()
-   SetVariable("echo_info_2", echo_info and "1" or "0")
-   SetVariable("echo_global_quest_2", echo_global_quest and "1" or "0")
-   SetVariable("echo_remort_auction_2", echo_remort_auction and "1" or "0")
-   SetVariable("echo_donations_2", echo_donations and "1" or "0")
-   SetVariable("echo_warfare_2", echo_warfare and "1" or "0")
    SetVariable("channels_table", serialize.save("channels_table"))
+   SetVariable("nonchannels_table", serialize.save("nonchannels_table"))
 end
 
 function OnPluginInstall()
@@ -418,12 +382,14 @@ end
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 function OnPluginDisable()
+   done_init = false
    if IsConnected() then
       Send_GMCP_Packet("gmcpchannels off")
    end
 end
 
 function OnPluginConnect()
+   done_init = false
    Send_GMCP_Packet("gmcpchannels on")
    Send_GMCP_Packet("request char")
 end
