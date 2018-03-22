@@ -73,7 +73,7 @@ function TextRect:loadFont(name, size)
    self.font_name = name
    self.font_size = size
 
-   WindowFont(self.window, self.font, self.font_name, self.font_size)
+   WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
    self.line_height = WindowFontInfo(self.window, self.font, 1) - WindowFontInfo(self.window, self.font, 4) + 2
    self.rect_lines = math.floor(self.padded_height / self.line_height)
 end
