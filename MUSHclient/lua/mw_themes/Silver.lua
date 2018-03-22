@@ -16,9 +16,9 @@ return {
    CLICKABLE_HOVER_TEXT = 0xdddddd,
    CLICKABLE_HOT_TEXT = 0xcfc5df,
 
-   TITLE_PADDING = 1,
+   TITLE_PADDING = 2,
 
-   -- for 3D surfaces other than the titlebar, like buttons and scrollbars
+   -- for 3D surfaces
    THREE_D_HIGHLIGHT = 0xe8e8e8,
 
    THREE_D_GRADIENT = miniwin.gradient_vertical,
@@ -28,7 +28,7 @@ return {
 
    THREE_D_SOFTSHADOW = 0x606060,
    THREE_D_HARDSHADOW = 0x303030,
-   THREE_D_SURFACE_DETAIL = 0x050505, -- for contrasting details drawn on 3D surfaces
+   THREE_D_SURFACE_DETAIL = 0x050505, -- for contrasting details/text drawn on 3D surfaces
 
    -- for scrollbar background
    SCROLL_TRACK_COLOR1 = 0x444444,

@@ -312,21 +312,8 @@ function OnPluginListChanged ()
 end
 
 function OnPluginInstall ()
-   win = GetPluginID()
-
-   -- create window with position from movewindow
-   windowinfo  = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
-
-   -- Add handler for resizing
-   WindowAddHotspot(win, "resize", width-theme.RESIZER_SIZE, height-theme.RESIZER_SIZE, width, height, nil, nil, "MouseDown", nil, nil, "", 6, 0)
-   WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-
-   WindowShow(win, true)
-
    init()
    setupDisplay()
-
    OnPluginEnable()
 end
 
@@ -349,13 +336,32 @@ function set_tr_shape()
 end
 
 function init ()
+   win = GetPluginID()
+
+   local fonts = utils.getfontfamilies ()
+
+   -- install Dina
+   if not fonts.Dina then
+      AddFont(GetInfo (66) .. "\\Dina.fon")
+   end
+
+   -- create window with position from movewindow
+   windowinfo  = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
+
+   -- Add handler for resizing
+   WindowAddHotspot(win, "resize", width-theme.RESIZER_SIZE, height-theme.RESIZER_SIZE, width, height, nil, nil, "MouseDown", nil, nil, "", 6, 0)
+   WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+
+   WindowShow(win, true)
+
    -- register with the z-order monitor
    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
 
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
-   WindowFont(win, "channels_font", font_name, font_size)
+   WindowFont(win, "channels_font", font_name, font_size, false, false, false, false, 0)
    tab_font_height = TextHeight(win, "channels_font")
 
    tabs_rects = {}
@@ -757,7 +763,7 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
          font_size = wanted_font.size
          SetVariable("font_name", font_name)
          SetVariable("font_size", font_size)
-         WindowFont(win, "channels_font", font_name, font_size)
+         WindowFont(win, "channels_font", font_name, font_size, false, false, false, false, 0)
          tab_font_height = TextHeight(win, "channels_font")
          for i = 1,num_tabs do
             tabs_rects[i]:loadFont(font_name, font_size)
@@ -836,7 +842,7 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       end
       clearTabHotspots()
       drawTabs()
-elseif result == 13+echo_skip-noremove then
+   elseif result == 13+echo_skip-noremove then
       local defaults = {}
       local tbl = {}
       for k,v in pairs(tabs_channel_captures[current_tab]) do
