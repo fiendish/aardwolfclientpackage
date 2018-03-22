@@ -2607,12 +2607,12 @@ function checkDatabaseIntegrity(full_check, second_run)
    -- this is a harmless no-op if not using journal_mode=WAL
    dbCheckExecute("PRAGMA wal_checkpoint(FULL);")
    local integrityCheck = true
-   local integrity_check_query = "PRAGMA quick_check;"
+   local integrity_check_pragma = "quick_check"
    if full_check then
-      integrity_check_query = "PRAGMA integrity_check;"
+      integrity_check_pragma = "integrity_check"
    end
-   for row in dbnrowsWRAPPER(integrity_check_query) do
-      if row.integrity_check ~= "ok" then
+   for row in dbnrowsWRAPPER("PRAGMA "..integrity_check_pragma..";") do
+      if row[integrity_check_pragma] ~= "ok" then
          tprint(row)
          integrityCheck = false
       end
@@ -3273,7 +3273,9 @@ function OnPluginClose ()
 end -- OnPluginClose
 
 function OnPluginSaveState ()
-   SetVariable ("window_hidden", window_hidden and "1" or "0")
+   if not aard_req_novisuals_mode then
+      SetVariable ("window_hidden", window_hidden and "1" or "0")
+   end
    SetVariable ("enabled", tostring (GetPluginInfo (GetPluginID (), 17)))
    if mapper.config.SCAN.depth < temp_scan_depth then
       -- then we probably caught ourselves in a botched run or something
@@ -4363,7 +4365,6 @@ function OnPluginDisconnect ()
       sent_busy = false
    end
    if db:isopen() then
-      maybe_Note("GMCP Mapper: Disconnected; closing map database.")
       db:close()
    end
    if GetVariable("backup_timer_enabled") == "1" then

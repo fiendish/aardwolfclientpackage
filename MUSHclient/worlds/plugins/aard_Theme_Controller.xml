@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Aardwolf_Theme_Controller"
+   author="Fiendish"
+   id="b9315e040989d3f81f4328d6"
+   language="Lua"
+   purpose="Manages activating color themes"
+   requires="5.05"
+   save_state="y"
+>
+</plugin>
+
+<aliases>
+
+<alias
+   script="choose_theme"
+   match="aard theme change"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
+
+</aliases>
+
+<script>
+<![CDATA[
+theme_dir = GetInfo(66).."lua\\mw_themes\\"
+theme_file = "Charcoal.lua"
+
+t = GetVariable("theme_file")
+if t then
+   theme_file = t
+else
+   SetVariable("theme_file", theme_file)
+end
+
+function list_themes()
+   t, e = utils.readdir(theme_dir.."*.lua")
+   for k,v in pairs(t) do
+      t[k] = k:gsub("%.lua", ""):gsub("_", " ")
+   end
+   return t
+end
+
+function apply_theme(theme)
+   CallPlugin("abc1a0944ae4af7586ce88dc", "pause")
+   for _, v in ipairs(GetPluginList()) do
+      if (v ~= GetPluginID()) and GetPluginInfo(v, 17) and (PluginSupports(v, "b9315e040989d3f81f4328d6") == error_code.eOK) then
+         rc, t = CallPlugin(v, "get_theme")
+         if t ~= theme then
+            CallPlugin(v, "load_theme", theme)
+            CallPlugin(v, "just_reloading")
+            ReloadPlugin(v)
+         end
+      end
+   end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "resume")
+end
+
+function choose_theme()
+   res = utils.listbox("Which theme would you like to use?", "Choose Theme", list_themes(), theme_file)
+   if res then
+      theme_file = res
+      SetVariable("theme_file", theme_file)
+      apply_theme(theme_file)
+   end
+end
+
+function OnPluginListChanged()
+   if not done_init then
+      apply_theme(theme_file)
+      done_init = true
+   end
+end
+
+]]>
+</script>
+</muclient>
