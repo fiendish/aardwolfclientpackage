@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r1975 snapshot
+- new feature: Async socket requests can now send a request body.
+- new feature: The communication log miniwindow now supports multiple tabs.
+- new feature: Prepackaged miniwindow plugins now support switchable color themes. Type 'aard theme change' to switch when the Theme Controller plugin is installed. Look for themes inside lua/mw_themes.
+- misc change: The soundpack has a few more sounds.
+- bug fix: The soundpack directory structure has been fixed.
+
 r1965 snapshot
 - bug fix: Deleted an errant exit in the Underdark default map.
 
