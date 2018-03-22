@@ -124,7 +124,7 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       return
    end -- if not GMCP
 
-   if GMCPDebug > 0 then ColourNote ("#FFAF00", "", data) end
+   if GMCPDebug > 0 then ColourNote ("#FFAF00", "", utils.utf8convert(data)) end
 
    message, params = string.match (data, "([%a.]+)%s+(.*)")
 
