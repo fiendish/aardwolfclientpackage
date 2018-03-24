@@ -133,7 +133,7 @@ function prompt_rec (name, line, wildcards, styles)
          ColourNote("white", "red", "This is necessary for Aardwolf scripts to work consistently.")
          ColourNote()
          ColourNote("white", "red", "Afterwards, you might want to restart MUSHclient to let scripts reinitialize.")
-      else
+      elseif #Trim(prompt) > 0 then
          print()
          print("The Aardwolf MUSHclient Package is adjusting your "..name.." to end in '%c'.")
          print("This is necessary for Aardwolf scripts to work consistently.")

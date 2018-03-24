@@ -1,5 +1,15 @@
 Aardwolf Client Package Major Changes List
 
+r1975 snapshot
+- new feature: The communication log miniwindow now supports multiple tabs.
+- new feature: Prepackaged miniwindow plugins now support switchable color themes. Type 'aard theme change' to switch when the Theme Controller plugin is installed. Look for themes inside lua/mw_themes.
+- new feature for developers: There are new reusable modules for scrolling text boxes (text_rect.lua) and vertical scrollbars (scrollbar.lua) in miniwindows.
+- new feature for developers: Async socket requests can now send a request body.
+- misc change: The soundpack has a few more sounds.
+- bug fix: The soundpack directory structure has been adjusted.
+- bug fix: Using the no-visuals installer and then using the with-visuals installer should no longer leave the mapper miniwindow hidden.
+- bug fix: I guess the commas toggle in the stats miniwindow gold display wasn't working?
+
 r1965 snapshot
 - bug fix: Deleted an errant exit in the Underdark default map.
 
