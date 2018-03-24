@@ -560,7 +560,7 @@ function right_click_menu ()
          end
       end
    elseif result == "Commas in Gold" then
-      SetVariable("commas_in_gold", not commas_in_gold and 1 or 0)
+      commas_in_gold = not commas_in_gold
       SaveState()
       OnPluginInstall()
       BuildStatsPage()
@@ -743,7 +743,7 @@ function OnPluginInstall()
 
    -- if Dina not there already, add it
    if not fonts.Dina then
-      print("ADDFONT", AddFont(GetInfo(66) .. "/Dina.fon"))
+      AddFont(GetInfo(66) .. "/Dina.fon")
       fonts = utils.getfontfamilies ()
    end
 
@@ -766,7 +766,6 @@ function OnPluginInstall()
    width = tonumber(GetVariable("width")) or default_width
    stacked = tonumber(GetVariable("stacked")) or 0
    commas_in_gold = tonumber(GetVariable("commas_in_gold")) == 1
-
    windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
    WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
    WindowFont(win, font_id, font_name, font_size, false, false, false, false, 0)
