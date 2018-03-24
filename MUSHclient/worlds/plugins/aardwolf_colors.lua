@@ -128,11 +128,11 @@ local xterm_number_to_client_color = extended_colours
 local client_color_to_xterm_number = {}
 local client_color_to_xterm_code = {}
 local x_to_client_color = {}
-
+local x_not_too_dark = {}
 local function init_xterm_colors ()
    for i = 0,255 do
       local color = xterm_number_to_client_color[i]
-
+      x_not_too_dark[i] = i
       x_to_client_color[string.format("@x%03d",i)] = color
       x_to_client_color[string.format("@x%02d",i)] = color
       x_to_client_color[string.format("@x%d",i)] = color
@@ -146,10 +146,12 @@ local function init_xterm_colors ()
    local color19 = xterm_number_to_client_color[19]
    local color238 = xterm_number_to_client_color[238]
    for i = 17,18 do
+      x_not_too_dark[i] = 19
       x_to_client_color[string.format("@x%03d",i)] = color19
       x_to_client_color[string.format("@x%d",i)] = color19
    end
    for i = 232,237 do
+      x_not_too_dark[i] = 238
       x_to_client_color[string.format("@x%d",i)] = color238
    end
 end
@@ -277,7 +279,7 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
       input = input:gsub("@x25[6-9]","") -- strip invalid xterm codes (256+)
       input = input:gsub("@[^xrgybmcwDRGYBMCW]", "")  -- strip hidden garbage
 
-      for code, text in input:gmatch("(@%a)([^@]+)") do
+      for code, text in input:gmatch("(@%a)([^@]*)") do
          local from_x = nil
          text = text:gsub("%z", "@") -- put any @ characters back
 
@@ -297,17 +299,15 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
             textcolor = code_to_client_color[code]
          end
 
-         if #text > 0 then
-            table.insert(astyles,
-            {
-               fromx = from_x,
-               text = text,
-               bold = bold_codes[code] or false,
-               length = #text,
-               textcolour = textcolor or default_foreground,
-               backcolour = default_background
-            })
-         end -- if some text
+         table.insert(astyles,
+         {
+            fromx = from_x,
+            text = text,
+            bold = bold_codes[code] or false,
+            length = #text,
+            textcolour = textcolor or default_foreground,
+            backcolour = default_background
+         })
       end -- for each colour run.
 
       return astyles
@@ -470,7 +470,7 @@ function ColoursToANSI (text)
                return ANSI(0, num_a+30)
             end
          else
-            return ANSI(0,38,5,num_a)
+            return ANSI(0, 38, 5, x_not_too_dark[num_a])
          end
       end)
       text = text:gsub("(@[DRGYBMCW])", function(a)
