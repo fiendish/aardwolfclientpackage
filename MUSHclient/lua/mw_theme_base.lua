@@ -31,8 +31,8 @@ function just_reloading()
    SetVariable("just_reloading", 1)
 end
 
-function load_theme(file)
-   status, theme = pcall(dofile, file)
+function load_theme(dir, file)
+   status, theme = pcall(dofile, dir..file)
 
    if status then
       theme_file = file
@@ -50,12 +50,14 @@ function ExecuteInGlobalSpace(inner_action)
 end
 
 local theme_controller = "b9315e040989d3f81f4328d6"
-if GetPluginID() ~= theme_controller and not IsPluginInstalled(theme_controller) then
-   local inner_action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller..[[\', \'aard_Theme_Controller\')', sendto.script)]]
-   ExecuteInGlobalSpace(inner_action)
+if (GetPluginID() ~= theme_controller) then
+   if not IsPluginInstalled(theme_controller) then
+      local inner_action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller..[[\', \'aard_Theme_Controller\')', sendto.script)]]
+      ExecuteInGlobalSpace(inner_action)
+   end
+   theme_file = GetPluginVariable(theme_controller, "theme_file") or theme_file
+   load_theme(theme_dir, theme_file)
 end
-theme_file = GetPluginVariable(theme_controller, "theme_file") or theme_file
-load_theme(theme_dir..theme_file)
 
 -- Replacement for WindowRectOp action 5, which allows for a 3D look while maintaining color theme.
 function Draw3DRect (win, left, top, right, bottom, depressed)
