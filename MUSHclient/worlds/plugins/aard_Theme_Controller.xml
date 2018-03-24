@@ -26,8 +26,8 @@
 
 <script>
 <![CDATA[
-theme_dir = GetInfo(66).."lua\\mw_themes\\"
-theme_file = "Charcoal.lua"
+
+require "mw_theme_base"
 
 t = GetVariable("theme_file")
 if t then
@@ -50,8 +50,8 @@ function apply_theme(theme)
       if (v ~= GetPluginID()) and GetPluginInfo(v, 17) and (PluginSupports(v, "b9315e040989d3f81f4328d6") == error_code.eOK) then
          rc, t = CallPlugin(v, "get_theme")
          if t ~= theme then
-            CallPlugin(v, "load_theme", theme)
             CallPlugin(v, "just_reloading")
+            CallPlugin(v, "load_theme", theme_dir, theme)
             ReloadPlugin(v)
          end
       end
@@ -69,10 +69,7 @@ function choose_theme()
 end
 
 function OnPluginListChanged()
-   if not done_init then
-      apply_theme(theme_file)
-      done_init = true
-   end
+   apply_theme(theme_file)
 end
 
 ]]>
