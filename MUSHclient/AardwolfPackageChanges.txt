@@ -8,6 +8,7 @@ r1975 snapshot
 - misc change: The soundpack has a few more sounds.
 - bug fix: The soundpack directory structure has been adjusted.
 - bug fix: Using the no-visuals installer and then using the with-visuals installer should no longer leave the mapper miniwindow hidden.
+- bug fix: I guess the commas toggle in the stats miniwindow gold display wasn't working?
 
 r1965 snapshot
 - bug fix: Deleted an errant exit in the Underdark default map.
