@@ -45,6 +45,7 @@ function list_themes()
 end
 
 function apply_theme(theme)
+   applying = true
    CallPlugin("abc1a0944ae4af7586ce88dc", "pause")
    for _, v in ipairs(GetPluginList()) do
       if (v ~= GetPluginID()) and GetPluginInfo(v, 17) and (PluginSupports(v, "b9315e040989d3f81f4328d6") == error_code.eOK) then
@@ -57,6 +58,7 @@ function apply_theme(theme)
       end
    end
    CallPlugin("abc1a0944ae4af7586ce88dc", "resume")
+   applying = false
 end
 
 function choose_theme()
@@ -69,7 +71,9 @@ function choose_theme()
 end
 
 function OnPluginListChanged()
-   apply_theme(theme_file)
+   if not applying then
+      apply_theme(theme_file)
+   end
 end
 
 ]]>
