@@ -31,11 +31,65 @@ function just_reloading()
    SetVariable("just_reloading", 1)
 end
 
-function load_theme(dir, file)
-   status, theme = pcall(dofile, dir..file)
+local default_theme = {
+   LOGO_OPACITY = 0.02,
 
-   if status then
-      theme_file = file
+   PRIMARY_BODY = 0x0c0c0c,
+   SECONDARY_BODY = 0x777777,
+   BODY_TEXT = 0xe8e8e8,
+
+   CLICKABLE = 0x666666,
+   CLICKABLE_HOVER = 0x444444,
+   CLICKABLE_HOT = 0x40406b,
+   CLICKABLE_TEXT = 0xc8c8c8,
+   CLICKABLE_HOVER_TEXT = 0xdddddd,
+   CLICKABLE_HOT_TEXT = 0xcfc5df,
+
+   TITLE_PADDING = 2,
+
+   THREE_D_HIGHLIGHT = 0xe8e8e8,
+
+   THREE_D_GRADIENT = miniwin.gradient_vertical,
+   THREE_D_GRADIENT_FIRST = 0xcdced1,
+   THREE_D_GRADIENT_SECOND = 0x8c8c8c,
+   THREE_D_GRADIENT_ONLY_IN_TITLE = false,
+
+   THREE_D_SOFTSHADOW = 0x606060,
+   THREE_D_HARDSHADOW = 0x303030,
+   THREE_D_SURFACE_DETAIL = 0x050505,
+
+   SCROLL_TRACK_COLOR1 = 0x444444,
+   SCROLL_TRACK_COLOR2 = 0x888888,
+   VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
+
+   DYNAMIC_BUTTON_PADDING = 20,
+   RESIZER_SIZE = 16
+}
+
+function load_theme(dir, file)
+   file_loaded, data_from_file = pcall(dofile, dir..file)
+   valid = true
+
+   -- init defaults
+   theme = {}
+   for k,v in pairs(default_theme) do
+      theme[k] = v
+   end
+
+   if file_loaded then
+      if type(data_from_file) == "table" then
+         for k,v in pairs(data_from_file) do
+            theme[k] = v
+         end
+         theme_file = file
+      else
+         print("Error loading theme file: ", dir..file)
+         print("This theme file is invalid. Please remove it from your harddrive and select a different theme.")
+         print()
+      end
+   else
+      print("Error loading theme file: ", dir..file)
+      print(data_from_file) -- error message
    end
 end
 
