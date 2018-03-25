@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1976 snapshot
+- bug fix: Break less if the theme changer finds an invalid theme file.
+
 r1975 snapshot
 - new feature: The communication log miniwindow now supports multiple tabs.
 - new feature: Prepackaged miniwindow plugins now support switchable color themes. Type 'aard theme change' to switch when the Theme Controller plugin is installed. Look for themes inside lua/mw_themes.
