@@ -263,6 +263,22 @@ function setTab(i)
    tabs_activity[current_tab] = false
 
    setupDisplay()
+   Repaint()
+   return current_tab
+end
+
+function nextTab()
+   local prev_tab = current_tab
+   if prev_tab == setTab(current_tab+1) then
+      setTab(1)
+   end
+end
+
+function prevTab()
+   local prev_tab = current_tab
+   if prev_tab == setTab(current_tab-1) then
+      setTab(num_tabs)
+   end
 end
 
 function addTab()
@@ -435,6 +451,7 @@ function drawTabs (mouseover)
    end
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
+   BroadcastPlugin(999, "repaint")
 end
 
 function tabMouseOver (flags, hotspot_id)
