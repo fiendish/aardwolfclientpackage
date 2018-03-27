@@ -514,9 +514,14 @@ lastRefresh = 0
 
 function ResizeReleaseCallback ()
    setupDisplay()
+
    for i = 1,num_tabs do
       tabs_rects[i]:reWrapLines()
    end
+
+   tabs_rects[current_tab]:draw()
+   tabs_scrollbars[current_tab]:draw()
+
    WindowMoveHotspot(win, "resize", draw_right-theme.RESIZER_SIZE, draw_bottom-theme.RESIZER_SIZE, 0, 0)
 end
 
