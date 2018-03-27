@@ -102,7 +102,7 @@ function TextRect:addStyles(styles)
    local urls = self:findURLs(strip_colours_from_styles(styles))
 
    -- pop the oldest line from our buffer if we're at capacity
-   if self.num_raw_lines > self.max_lines then
+   if self.num_raw_lines >= self.max_lines then
       table.remove(self.raw_lines, 1)
       self.num_raw_lines = self.num_raw_lines - 1
    end
@@ -282,6 +282,7 @@ function TextRect:clear()
    self.raw_lines = {}
    self.num_raw_lines = 0
    self:reWrapLines()
+   self:draw()
 end
 
 function TextRect:reWrapLines()
@@ -307,7 +308,6 @@ function TextRect:reWrapLines()
    self.display_start_line = start_line
    self.end_line = math.max(1, math.min(start_line + self.rect_lines - 1, self.num_wrapped_lines))
    self.display_end_line = self.end_line
-   self:draw()
 end
 
 function TextRect:drawLine(line, styles, backfill_start, backfill_end)
