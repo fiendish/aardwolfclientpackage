@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1979 snapshot
+- new feature: function setTabByName(name) added to the communication log plugin to switch to a named tab.
+
 r1978 snapshot
 - bug fix: Make sure to draw the communication log's current tab contents after resize is released.
 
