@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1978 snapshot
+- bug fix: Make sure to draw the communication log's current tab contents after resize is released.
+
 r1977 snapshot
 - bug fix: The recent text printing slowdown in MUSHclient.exe should be fixed.
 - new feature: The communication log plugin now has nextTab() and prevTab() functions for cycling to the next or previous tab. You can access them through the CallPlugin interface.
