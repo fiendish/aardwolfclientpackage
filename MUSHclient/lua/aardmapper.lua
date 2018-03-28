@@ -969,7 +969,7 @@ function draw (uid)
    -- let them move it around
    movewindow.add_drag_handler (win, 0, 0, 0, title_bottom)
 
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- draw
 
 local credits = {
@@ -1169,7 +1169,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
    local notfound = {}
    for i,v in ipairs(dests) do
       SetStatus (string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       local foundpath = findpath(current_room, v.uid, no_portals, no_portals)
       if not rooms [v.uid] then
          rooms [v.uid] = get_room (v.uid)
@@ -1272,7 +1272,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
 end
 
 function quick_find(name, dests, show_uid, expected_count, walk, fcb)
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    Note("+------------------------------ START OF SEARCH -------------------------------+")
 
    for i,v in ipairs(dests) do
@@ -1311,7 +1311,7 @@ function quick_find(name, dests, show_uid, expected_count, walk, fcb)
          fcb (uid)
       end -- if callback
 
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    end -- for each room
 
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
