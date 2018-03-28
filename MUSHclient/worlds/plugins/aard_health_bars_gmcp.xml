@@ -331,7 +331,7 @@ function DisplayStatsPage()
    DressWindow(win, nil, nil)
    AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
-   BroadcastPlugin(999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- DisplayStatsPage
 
 -- right click menu
