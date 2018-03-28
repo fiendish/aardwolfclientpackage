@@ -147,7 +147,7 @@ function ScrollBar:draw(inside_callback)
       WindowMoveHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.right, position + self.size)
    end
    Draw3DRect(self.window, self.left, position, self.right, position + self.size, false)
-   BroadcastPlugin(999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    self.has_hotspots = true
 
    if not inside_callback then
