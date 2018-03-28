@@ -254,6 +254,29 @@ function makeRect(i)
    tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-theme.RESIZER_SIZE)
 end
 
+function setTabByName(name)
+   if type(name) ~= "string" then
+      return
+   end
+
+   -- prefer named tabs first
+   for i=1,num_tabs do
+      if tabs_names[i] and (tabs_names[i]:upper() == name:upper()) then
+         setTab(i)
+         return
+      end
+   end
+
+   -- but if the "name" is a number and there isn't a matching named tab,
+   -- pick that number tab.
+   for i=1,num_tabs do
+      if (tabs_names[i] == nil) and (tostring(i) == name) then
+         setTab(i)
+         return
+      end
+   end
+end
+
 function setTab(i)
    if tabs_rects[current_tab] then
       tabs_rects[current_tab]:unInit()
