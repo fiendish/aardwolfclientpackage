@@ -149,14 +149,11 @@ dofile(GetInfo(60) .. "aardwolf_colors.lua")
 
 require "addxml"
 function apply_pattern_as_trigger(original_pattern, nocase, alone)
-   local flags = trigger_flag.Enabled + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.RegularExpression + trigger_flag.Temporary
-   if nocase then
-      flags = flags + trigger_flag.IgnoreCase
-   end
    addxml.trigger(
       {
          match = original_pattern:gsub("([^%%]?)%%([^%%])", "%1\\%2"), -- replace % escapes with \ escapes
          enabled = true,
+         ignore_case = nocase,
          regexp = true,
          sequence = 100,
          omit_from_output = true,
