@@ -3327,6 +3327,7 @@ function activate_running(run)
       mapper.config.SCAN.depth = 4  -- or whatever
    else
       mapper.config.SCAN.depth = temp_scan_depth
+      temp_scan_depth = 4  -- or whatever
    end
    mapper.draw(current_room)
 end
