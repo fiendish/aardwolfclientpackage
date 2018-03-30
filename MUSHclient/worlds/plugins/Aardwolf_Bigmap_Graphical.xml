@@ -674,6 +674,7 @@ function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
    if IsPluginInstalled("b6eae87ccedd84f510b74714") then
       if not mapper_is_loaded then
+         WindowDelete(GetPluginID().."_mapper")
          OnPluginInstall()
       end
    else
