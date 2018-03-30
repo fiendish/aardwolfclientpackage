@@ -380,7 +380,7 @@ function TextRect:draw(cleanup_first, inside_callback)
       self:doUpdateCallbacks()
    end
 
-   BroadcastPlugin(999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function TextRect:addUpdateCallback(object, callback)
@@ -670,7 +670,7 @@ function TextRect.linkHover(flags, hotspot_id)
          WindowLine(tr.window, left, bottom, right, bottom, 0xffffff, 256, 1);
       end
    end
-   BroadcastPlugin(999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function TextRect.cancelLinkHover(flags, hotspot_id)

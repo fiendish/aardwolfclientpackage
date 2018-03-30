@@ -393,10 +393,13 @@ function NoMap(messages)
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
       AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
-   BroadcastPlugin(999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function DrawMap(clearHotspotsFirst)
+   if TextHeight(mapwin, font_id) == nil then
+      OnPluginInstall()
+   end
    if show_map ~= 1 then
       return
    end
@@ -477,7 +480,7 @@ function DrawMap(clearHotspotsFirst)
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
       AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- DrawMap
 
 function resize_mouse_down(flags, hotspot_id)
@@ -671,6 +674,7 @@ function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
    if IsPluginInstalled("b6eae87ccedd84f510b74714") then
       if not mapper_is_loaded then
+         WindowDelete(GetPluginID().."_mapper")
          OnPluginInstall()
       end
    else

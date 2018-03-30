@@ -429,7 +429,7 @@ function DisplayGroupPage()
 
    AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- Display_Group_Page
 
 function validate_percent(input)

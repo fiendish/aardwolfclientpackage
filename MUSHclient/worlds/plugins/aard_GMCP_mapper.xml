@@ -1077,7 +1077,7 @@ function map_areas (name, line, wildcards)
       end
       Note (line)
       count = count + 1
-      BroadcastPlugin(999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    end
 
    Note (hl)
@@ -1190,7 +1190,7 @@ function custom_exit_list (name, line, wildcards)
       Hyperlink(string.format("mapper goto %s",row.uid), line, string.format("%s",row.dir), "", "", false, NoUnderline_hyperlinks)
       print("")
       count = count + 1
-      BroadcastPlugin(999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    end -- custom exits query
    world.Note (hl)
    line = string.format ("Found %s custom exits.", count)
@@ -1569,7 +1569,7 @@ function ExecuteWithWaits(cexit_command)
             SendNoEcho("echo {mapper_wait}wait("..wait_time..")")
             line, wildcards = wait.regexp("^\\{mapper_wait\\}wait\\(([0-9]*\\.?[0-9]+)\\)",nil,trigger_flag.OmitFromOutput)
             Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
-            BroadcastPlugin(999, "repaint")
+            CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
             wait.time(wait_time)
             partial_cexit_command = string.sub(partial_cexit_command, strend+1)
          end
@@ -1625,7 +1625,7 @@ function custom_exit (name, line, wildcards)
          added_waits = added_waits + tonumber(wait_secs)
       end
       world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING.\nThis should take about "..cexit_delay+added_waits.." seconds"..(((added_waits ~= 0) and " (includes "..added_waits.." seconds in added waits)") or "")..".")
-      BroadcastPlugin(999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       ExecuteWithWaits(cexit_command)
 
       wait.time(cexit_delay+added_waits)
@@ -2859,22 +2859,22 @@ end
 function remove_date_added_columns()
    print("---------------------------------------------------------")
    print("Removing date_added from exits table...")
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    drop_db_columns("exits", {"date_added"}, "PRIMARY KEY(fromuid, dir)")
    print("Removing date_added from rooms table...")
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    drop_db_columns("rooms", {"date_added", "roomid"}, "PRIMARY KEY(uid)")
    print("Removing date_added from areas table...")
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    drop_db_columns("areas", {"date_added", "areaid"}, "PRIMARY KEY(uid)")
    print("Removing date_added from bookmarks table...")
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    drop_db_columns("bookmarks", {"date_added", "id"}, "PRIMARY KEY(uid)")
    print("Removing date_added from environments table...")
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    drop_db_columns("environments", {"date_added", "environmentid"}, "PRIMARY KEY(uid)")
    print("---------------------------------------------------------")
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function drop_db_columns(db_table, drop_columns, extra_directives)
@@ -2982,7 +2982,7 @@ function update_db_schema(db_user_version)
    -- to save time at startup.
    if db_user_version < 2 then
       print("Updating mapper database schema to v2...")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       create_tables()
       dbCheckExecute("PRAGMA user_version = 2;")
    end
@@ -2993,7 +2993,7 @@ function update_db_schema(db_user_version)
 
    if db_user_version < 4 then
       print("Updating mapper database schema to v4 (v3 skipped)...")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       -- add bookmarks and terrain tables to the main db since we're
       -- ditching the second db file
       dbCheckExecute([[
@@ -3017,14 +3017,14 @@ function update_db_schema(db_user_version)
 
    if db_user_version < 5 then
       print("Updating mapper database schema to v5...")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       check_rooms_flags()
       dbCheckExecute("PRAGMA user_version = 5;")
    end
 
    if db_user_version < 6 then
       print("Updating mapper database schema to v6...")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       -- original database name for wayhouse was missing the apostrophe
       dbCheckExecute([[
       update areas set name="The Adventurers' Wayhouse" where uid="wayhouse";
@@ -3034,7 +3034,7 @@ function update_db_schema(db_user_version)
 
    if db_user_version < 7 then
       print("Updating mapper database schema to v7...")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       fix_exits_table_v7()
       dbCheckExecute([[
       CREATE TABLE IF NOT EXISTS storage (
@@ -3058,7 +3058,7 @@ function update_db_schema(db_user_version)
 
    if db_user_version < 9 then
       print("Updating mapper database schema to v9 (v8 skipped)...")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       local flags_column_exists = false
       for a in dbnrowsWRAPPER("PRAGMA table_info('areas')") do
          if a["name"] == "flags" then
@@ -3073,7 +3073,7 @@ function update_db_schema(db_user_version)
 
    if db_user_version < 10 then
       print("Updating mapper database schema to v10...")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       remove_date_added_columns()
       local ignore_exits_mismatch_column_exists = false
       for row in dbnrowsWRAPPER("PRAGMA table_info('rooms')") do
@@ -3089,20 +3089,20 @@ function update_db_schema(db_user_version)
 
    if db_user_version < 11 then
       print("Updating mapper database schema to v11...")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       dbCheckExecute("CREATE INDEX IF NOT EXISTS exits_touid_index ON exits (touid);")
       dbCheckExecute("CREATE INDEX IF NOT EXISTS rooms_area_index ON rooms (area);")
    end
 
    print("")
    print("Converted database to new format. Verifying integrity.")
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    if not checkDatabaseIntegrity(true) then
       return
    end
    dbCheckExecute("VACUUM;")
    print("")
-   BroadcastPlugin (999, "repaint")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    dbCheckExecute("PRAGMA user_version = 11;")
 
    utils.msgbox ("Your map database schema update has completed.", "", "ok", "i")
@@ -3327,6 +3327,7 @@ function activate_running(run)
       mapper.config.SCAN.depth = 4  -- or whatever
    else
       mapper.config.SCAN.depth = temp_scan_depth
+      temp_scan_depth = 4  -- or whatever
    end
    mapper.draw(current_room)
 end
@@ -4122,7 +4123,7 @@ function findpath(src, dst, noportals, norecalls)
    local main_status = GetInfo(53)
    while not found and depth < max_depth do
       SetStatus(main_status.." (searching depth "..depth..")")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       depth = depth + 1
       if depth > 1 then
          ftd = room_sets[depth-1] or {}
@@ -4239,7 +4240,7 @@ function findNearestJumpRoom(src, dst, target_type)
    local main_status = GetInfo(53)
    while not found and depth < max_depth do
       SetStatus(main_status.." (searching jump depth "..depth..")")
-      BroadcastPlugin (999, "repaint")
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       depth = depth + 1
 
       -- prune the search space

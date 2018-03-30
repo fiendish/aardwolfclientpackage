@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r1980 snapshot
+- bug fix: Fix a couple plugin load order issues between the Bigmap plugin and the GMCP mapper plugin.
+- bug fix: Fix a situation where the GMCP mapper wouldn't let you change the scan depth.
+- bug fix: It looks like I broke nocase #subs at some point.
+
 r1979 snapshot
 - new feature: function setTabByName(name) added to the communication log plugin to switch to a named tab.
 
