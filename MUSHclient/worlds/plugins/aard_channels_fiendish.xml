@@ -254,16 +254,11 @@ function makeRect(i)
    tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-theme.RESIZER_SIZE)
 end
 
-function setTabByName(name)
-   if type(name) ~= "string" then
-      return
-   end
-
+function findTab(name)
    -- prefer named tabs first
    for i=1,num_tabs do
       if tabs_names[i] and (tabs_names[i]:upper() == name:upper()) then
-         setTab(i)
-         return
+         return i
       end
    end
 
@@ -271,13 +266,27 @@ function setTabByName(name)
    -- pick that number tab.
    for i=1,num_tabs do
       if (tabs_names[i] == nil) and (tostring(i) == name) then
-         setTab(i)
-         return
+         return i
       end
    end
 end
 
+function setTabByName(name)
+   if type(name) ~= "string" then
+      return
+   end
+
+   local tab = findTab(name)
+   if tab then
+      setTab(tab)
+   end
+end
+
 function setTab(i)
+   if type(i) ~= "number" then
+      return
+   end
+
    if tabs_rects[current_tab] then
       tabs_rects[current_tab]:unInit()
       tabs_scrollbars[current_tab]:unInit()
@@ -309,9 +318,34 @@ function addTab()
    num_tabs = num_tabs + 1
    tabs_channel_captures[num_tabs] = {}
    tabs_nonchannel_captures[num_tabs] = {}
+   tabs_activity[num_tabs] = false
    addDefaultChannels()
+   setupDisplay()
 
-   setTab(num_tabs)
+   return num_tabs
+end
+
+function nameTab(tab, name)
+   if (tab >= 1) and (tab <= num_tabs) then
+      name = Trim(name or "")
+      if name ~= "" then
+         tabs_names[tab] = name
+      else
+         tabs_names[tab] = nil
+      end
+      clearTabHotspots()
+      drawTabs()
+      return tab
+   end
+end
+
+function addNamedTab(name)
+   local existing = findTab(name)
+   if existing then
+      return existing
+   else
+      return nameTab(addTab(), name)
+   end
 end
 
 function clearTabHotspots()
@@ -874,19 +908,12 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
    noremove = (num_tabs < 2) and 1 or 0
 
    if result == 10+echo_skip then
-      addTab()
+      setTab(addTab())
    elseif result == 11+echo_skip-noremove then
       removeTab()
    elseif result == 12+echo_skip-noremove then
       local name = utils.inputbox("Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab))
-      name = Trim(name or "")
-      if name ~= "" then
-         tabs_names[current_tab] = name
-      else
-         tabs_names[current_tab] = current_tab
-      end
-      clearTabHotspots()
-      drawTabs()
+      nameTab(current_tab, name)
    elseif result == 13+echo_skip-noremove then
       local defaults = {}
       local tbl = {}
