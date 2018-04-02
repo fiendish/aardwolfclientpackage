@@ -339,7 +339,7 @@ function nameTab(tab, name)
    end
 end
 
-function addNamedTab(name)
+function getNamedTab(name)
    local existing = findTab(name)
    if existing then
       return existing
