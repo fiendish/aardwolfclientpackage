@@ -720,16 +720,23 @@ end
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", 1)
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", "Q/A")
 function storeFromOutside(msg, tab)
-   if type(tab) == "string" then
-      tab = findTab(tab)
-   end
    if tab == nil then
       tab = 1
+   elseif type(tab) == "string" then
+      tab = findTab(tab)
    end
 
-   if storeTab(ColoursToStyles(msg), tab) then
-      drawTabs()
+   if tab then
+      local should_redraw = storeTab(ColoursToStyles(msg), tab)
+      if should_redraw == true then
+         drawTabs()
+      end
    end
+
+   if should_redraw ~= nil then
+      return true  -- stored
+   end
+   return false  -- not stored
 end
 
 -- stolen from Mendaloth
@@ -760,17 +767,19 @@ function filter_as_needed(msg)
 end
 
 function storeTab(styles, tab)
-   tabs_rects[tab]:addStyles(styles)
-   if tab == current_tab then
-      tabs_rects[tab]:draw()
-      tabs_scrollbars[tab]:draw()
-   else
-      if not tabs_activity[tab] then
-         tabs_activity[tab] = true
-         return true
+   if (tab >= 1) and (tab <= num_tabs) then
+      tabs_rects[tab]:addStyles(styles)
+      if tab == current_tab then
+         tabs_rects[tab]:draw()
+         tabs_scrollbars[tab]:draw()
+      else
+         if not tabs_activity[tab] then
+            tabs_activity[tab] = true
+            return true
+         end
       end
+      return false
    end
-   return false
 end
 
 function storeNonChannel(styles, nonchan)
