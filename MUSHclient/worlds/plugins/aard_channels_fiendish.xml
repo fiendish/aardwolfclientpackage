@@ -714,13 +714,20 @@ function stampAndStore(msg, chan, is_gmcp)
    end
 end
 
--- Takes input as a string with embedded Aardwolf color codes. Use via CallPlugin().
--- See:   http://mushclient.com/scripts/doc.php?function=CallPlugin
--- You can use the function StylesToColours(styles_table) from aardwolf_colors.lua
--- or manually embed your own colors to push any colorized line you want to the log window.
--- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO")
-function storeFromOutside(msg)
-   if storeTab(ColoursToStyles(msg), 1) then
+-- Takes a string with embedded Aardwolf color codes and a tab name or number.
+-- Use via CallPlugin(), http://mushclient.com/scripts/doc.php?function=CallPlugin
+--
+-- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", 1)
+-- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", "Q/A")
+function storeFromOutside(msg, tab)
+   if type(tab) == "string" then
+      tab = findTab(tab)
+   end
+   if tab == nil then
+      tab = 1
+   end
+
+   if storeTab(ColoursToStyles(msg), tab) then
       drawTabs()
    end
 end
