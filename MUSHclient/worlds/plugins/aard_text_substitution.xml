@@ -149,7 +149,8 @@ dofile(GetInfo(60) .. "aardwolf_colors.lua")
 
 require "addxml"
 function apply_pattern_as_trigger(original_pattern, nocase, alone)
-   addxml.trigger(
+   if pcall(
+      addxml.trigger,
       {
          match = original_pattern:gsub("([^%%]?)%%([^%%])", "%1\\%2"), -- replace % escapes with \ escapes
          enabled = true,
@@ -164,7 +165,13 @@ function apply_pattern_as_trigger(original_pattern, nocase, alone)
          send = "StopEvaluatingTriggers(true)",
          group = "all"
       }
-   )
+   ) then
+      return true
+   else
+      AnsiNote(ColoursToANSI("@RERROR CREATING PATTERN: @Y"..original_pattern))
+      Simulate(ColoursToANSI("@RThis may be caused by needing to escape dangling magic characters in your pattern with @Y%@R (Read https://www.lua.org/pil/20.2.html for information about Lua patterns)\r\n"))
+      return false
+   end
 end
 
 function set_triggers()
@@ -399,19 +406,20 @@ function addsub(name, line, wildcards)
    local found = find_in(subs, wildcards[1], nocase, alone, use_function)
    if found then remsub(nil, nil, {found}) end
 
-   table.insert(subs,
-   {
-      fromstr=fromstr,
-      tostr=tostr,
-      original=wildcards[1],
-      nocase=nocase,
-      alone=alone,
-      use_function=use_function
-   })
+   if apply_pattern_as_trigger(wildcards[1], nocase, alone) then
+      table.insert(subs,
+      {
+         fromstr=fromstr,
+         tostr=tostr,
+         original=wildcards[1],
+         nocase=nocase,
+         alone=alone,
+         use_function=use_function
+      })
 
-   apply_pattern_as_trigger(wildcards[1], nocase, alone)
+      AnsiNote(ColoursToANSI("@YCreated sub "..#subs..": "..format_sub(subs[#subs])))
+   end
 
-   AnsiNote(ColoursToANSI("@YCreated sub "..#subs..": "..format_sub(subs[#subs])))
    SaveState()
 end
 
@@ -451,17 +459,18 @@ function addgag(name, line, wildcards)
    local found = find_in(gags, wildcards[1], nocase, alone, use_function)
    if found then remgag(nil, nil, {found}) end
 
-   table.insert(gags, {
-      gagstr=gagstr,
-      original=wildcards[1],
-      nocase=nocase,
-      alone=alone,
-      use_function=use_function
-      })
+   if apply_pattern_as_trigger(wildcards[1], nocase, alone) then
+      table.insert(gags, {
+         gagstr=gagstr,
+         original=wildcards[1],
+         nocase=nocase,
+         alone=alone,
+         use_function=use_function
+         })
 
-   apply_pattern_as_trigger(wildcards[1], nocase, alone)
+      AnsiNote(ColoursToANSI("@YCreated gag "..#gags..": "..format_gag(gags[#gags])))
+   end
 
-   AnsiNote(ColoursToANSI("@YCreated gag "..#gags..": "..format_gag(gags[#gags])))
    SaveState()
 end
 
