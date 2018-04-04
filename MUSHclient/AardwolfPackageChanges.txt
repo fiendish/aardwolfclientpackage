@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1983 snapshot
+- bug fix: This should prevent an error message from the mapper during resetaard calls.
+
 r1982 snapshot
 - bug fix: The #sub/#gag plugin will politely decline invalid patterns instead of entering an endless cycle of errors.
 
