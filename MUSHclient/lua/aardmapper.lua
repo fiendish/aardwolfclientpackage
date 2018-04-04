@@ -110,7 +110,7 @@ function reset_pos()
    config.WINDOW.width = default_width
    config.WINDOW.height = default_height
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, default_height, config.BACKGROUND_COLOUR.colour)
+   WindowResize(win, default_width, default_height, BACKGROUND_COLOUR.colour)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
 end
 
