@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1984 snapshot
+- bug fix: Remove some old broken theme files accidentally distributed during early theme development.
+
 r1983 snapshot
 - bug fix: This should prevent an error message from the mapper during resetaard calls.
 
