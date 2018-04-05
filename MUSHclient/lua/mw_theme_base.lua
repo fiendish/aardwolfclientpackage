@@ -84,7 +84,7 @@ function load_theme(dir, file)
          theme_file = file
       else
          print("Error loading theme file: ", dir..file)
-         print("This theme file is invalid. Please remove it from your harddrive and select a different theme.")
+         print("This theme file is invalid. Please delete it and select a different theme.")
          print()
       end
    else
@@ -103,13 +103,44 @@ function ExecuteInGlobalSpace(inner_action)
    DoAfterSpecial(0.1, action, sendto.script)
 end
 
+-- junk files that should not have existed in the first place
+local bad_shas = {
+   ["default.lua"] = {
+      ["d189be39efb49730537c8ada65fbd5382d3e44ad"] = true,
+      ["39d9b7fc4d571ac62d1005b52f8da43c4b7827e1"] = true,
+      ["774bdd2f098f1c4fe81d9a6b8eb5bfad6bd79c51"] = true,
+      ["b7fd919be678f0c7b1c52bea644f183a7b9397f1"] = true,
+      ["acc1d615901050b2faa50e1b0497ee30b72f5118"] = true,
+      ["ac993b349691eb51e472ca5b1b0ae18a03943bf2"] = true,
+      ["0cd5bcca0723a57eabedd08a9cfa6f4ec93ea469"] = true
+  },
+  ["dark_pony.lua"] = {
+      ["d189be39efb49730537c8ada65fbd5382d3e44ad"] = true
+  },
+   ["Joker.lua"] = {
+      ["17fa722746df781326b100744dd790c66721b749"] = true,
+      ["b2b83804ce87eb889127658cb80c9d23d76082b4"] = true
+  }
+}
+
+require "gitsha"
+function theme_has_bad_sha(filename)
+   return bad_shas[filename] and bad_shas[filename][gitsha(theme_dir..filename)]
+end
+
 local theme_controller = "b9315e040989d3f81f4328d6"
 if (GetPluginID() ~= theme_controller) then
    if not IsPluginInstalled(theme_controller) then
       local inner_action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller..[[\', \'aard_Theme_Controller\')', sendto.script)]]
       ExecuteInGlobalSpace(inner_action)
    end
-   theme_file = GetPluginVariable(theme_controller, "theme_file") or theme_file
+
+   local maybe_theme_file = GetPluginVariable(theme_controller, "theme_file") or theme_file
+
+   if not theme_has_bad_sha(maybe_theme_file) then
+      theme_file = maybe_theme_file
+   end
+
    load_theme(theme_dir, theme_file)
 end
 
