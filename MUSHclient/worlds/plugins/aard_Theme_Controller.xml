@@ -38,10 +38,15 @@ end
 
 function list_themes()
    t, e = utils.readdir(theme_dir.."*.lua")
-   for k,v in pairs(t) do
-      t[k] = k:gsub("%.lua", ""):gsub("_", " ")
+   local res = {}
+   for filename,v in pairs(t) do
+      if theme_has_bad_sha(filename) then
+         os.remove(theme_dir..filename)
+      else
+         res[filename] = filename:gsub("%.lua", ""):gsub("_", " ")
+      end
    end
-   return t
+   return res
 end
 
 function apply_theme(theme)
