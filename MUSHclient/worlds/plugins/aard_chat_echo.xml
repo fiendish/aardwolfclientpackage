@@ -330,7 +330,7 @@ function chat_echo (toggle)
          channels_table[k]["echo"] = true
       end
       ColourNote ("yellow", "", "All chats are now", "lime", "", " shown ", "yellow", "", "in the main window.")
-      ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
+      ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled separately.")
       Note("")
    elseif toggle == "off" then
       if never_hide then
@@ -340,7 +340,7 @@ function chat_echo (toggle)
          channels_table[k]["echo"] = nil
       end
       ColourNote ("yellow", "", "All chats are now", "red", "", " hidden ", "yellow", "", "in the main window.")
-      ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled manually.")
+      ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled separately.")
       Note("")
    elseif toggle == "channels" then
       local tbl = {}
