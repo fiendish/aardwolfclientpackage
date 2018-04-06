@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1985 snapshot
+- bug fix: Fix compact mode detection in the chat echo plugin. Did the config gmcp values change or did I just forget to do this right the first time?
+
 r1984 snapshot
 - bug fix: Remove some old broken theme files accidentally distributed during early theme development.
 
