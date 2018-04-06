@@ -123,6 +123,22 @@ USAGE:
 </send>
 </trigger>
 
+<trigger
+   enabled="y"
+   match="^Compact mode (removed|set)\."
+   regexp="y"
+   sequence="100"
+   send_to="14"
+>
+<send>
+   if "%1" == "set" then
+      compact_mode = "YES"
+   else
+      compact_mode = "NO"
+   end
+</send>
+</trigger>
+
 </triggers>
 
 <aliases>
@@ -143,6 +159,10 @@ USAGE:
 
 require "pairsbykeys"
 require "gmcphelper"
+
+local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction"}
+local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations"}
+local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mchat","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
@@ -169,7 +189,7 @@ function enable_hiding(true_false, enabler_id)
       addDefaultNonChannels()
    else
       never_hide = true
-      for i,v in ipairs(GetTriggerList()) do
+      for i,v in ipairs(init_nonchannel_keys) do
          EnableTrigger(v, false)
       end
    end
@@ -178,9 +198,6 @@ end
 enable_hiding(false, GetPluginID())
 
 
-local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction"}
-local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations"}
-local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 channels_table = {}
 nonchannels_table = {}
 loadstring(GetVariable("channels_table") or "")()
@@ -217,7 +234,7 @@ addDefaultChannels()
 
 function echo_msg(msg)
    Simulate(ColoursToANSI(msg).."\r\n")
-   if compact_mode ~= "ON" then
+   if compact_mode ~= "YES" then
       Simulate("\r\n")
    end
    EnableTriggerGroup("end_gag", true) -- gags trailing blank line
@@ -271,6 +288,10 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          end
       elseif (text == "char.status") then
+         if not done_init then
+            done_init = true
+            Send_GMCP_Packet("config compact")
+         end
          if gmcp("char.status.state") ~= "5" then -- show messages that were buffered while in note mode
             if #msg_buffer > 0 then
                Note("Replaying all channel messages received while in note writing mode...")
