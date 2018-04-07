@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1986 snapshot
+- new feature: The communication log window will now preserve its message contents when switching color themes.
+- new feature: Themes can now optionally override the background pattern behavior. The "Pink Neon" theme gives a decent demonstration.
+
 r1985 snapshot
 - bug fix: Fix compact mode detection in the chat echo plugin. Did the config gmcp values change or did I just forget to do this right the first time?
 
