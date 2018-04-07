@@ -36,5 +36,30 @@ return {
    VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
 
    DYNAMIC_BUTTON_PADDING = 20,
-   RESIZER_SIZE = 16
+   RESIZER_SIZE = 16,
+
+   -- bg_texture_function is optional to override the default behavior.
+   -- See Charcoal.lua for a "do nothing" variant.
+   -- Just make sure to return the path to a valid png file.
+   bg_texture_function = function()
+      imgpath = GetInfo(66).."worlds/plugins/images/bg1.png"
+
+      WindowCreate("WiLl_It_BlEnD", 0, 0, 0, 0, 0, 0, theme.THREE_D_HIGHLIGHT)
+      WindowLoadImage("WiLl_It_BlEnD", "tExTuRe", imgpath)
+      local tw = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 2)
+      local th = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 3)
+      WindowResize("WiLl_It_BlEnD", tw, th, theme.THREE_D_HIGHLIGHT)
+      WindowImageFromWindow("WiLl_It_BlEnD", "cOlOr", "WiLl_It_BlEnD")
+
+      WindowDrawImage("WiLl_It_BlEnD", "tExTuRe", 0, 0, 0, 0, 1)
+      WindowFilter("WiLl_It_BlEnD", 0, 0, 0, 0, 7, 50)
+      WindowFilter("WiLl_It_BlEnD", 0, 0, 0, 0, 8, 30)
+      WindowFilter("WiLl_It_BlEnD", 0, 0, 0, 0, 7, -120)
+      WindowBlendImage("WiLl_It_BlEnD", "cOlOr", 0, 0, 0, 0, 5, 0.9)
+
+      imgpath = GetInfo(66).."worlds/plugins/images/temp_theme_blend.png"
+      WindowWrite("WiLl_It_BlEnD", imgpath)
+
+      return imgpath
+   end
 }
