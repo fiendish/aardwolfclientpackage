@@ -36,5 +36,12 @@ return {
    VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
 
    DYNAMIC_BUTTON_PADDING = 20,
-   RESIZER_SIZE = 16
+   RESIZER_SIZE = 16,
+
+   -- bg_texture_function is optional to override the default behavior.
+   -- See Pink_Neon.lua for a "glitter on black" variant.
+   -- Just make sure to return the path to a valid png file.
+   bg_texture_function = function()
+      return GetInfo(66).."worlds/plugins/images/bg1.png"
+   end
 }
