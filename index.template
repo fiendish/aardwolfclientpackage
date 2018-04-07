@@ -158,6 +158,7 @@
   <h1>Aardwolf MUSHclient Package Installer</h1>
   <div id="release-info"></div>
   <div id="all-releases-info"></div>
+  <br> Extensive documentation for the Aardwolf MUSHclient Package is available at <a href="https://github.com/fiendish/aardwolfclientpackage/wiki">https://github.com/fiendish/aardwolfclientpackage/wiki</a> and assistance is provided in-game on the tech channel.
   <div>
     <div class="description">
     <h2>Important installer details:</h2>
@@ -186,9 +187,6 @@
     </div>
     </div>
 </div>
-  <br>
-  <br> Extensive documentation for the Aardwolf MUSHclient Package is available at <a href="https://github.com/fiendish/aardwolfclientpackage/wiki">https://github.com/fiendish/aardwolfclientpackage/wiki</a> and assistance is provided in-game on the tech channel.
-  <br>
   <br>
   <div id="changes-wrapper">
     <hr>
