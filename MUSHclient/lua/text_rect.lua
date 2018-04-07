@@ -286,14 +286,12 @@ function TextRect:clear()
 end
 
 function TextRect:reWrapLines()
-   if self.num_wrapped_lines == 0 then
-      return
-   end
-
    local raw_index = 0
    local start_line = self.display_start_line or 1
 
-   raw_index = self.wrapped_lines[start_line][4]
+   if self.num_wrapped_lines ~= 0 then
+      raw_index = self.wrapped_lines[start_line][4]
+   end
 
    self.wrapped_lines = {}
    self.num_wrapped_lines = 0
@@ -416,6 +414,10 @@ function TextRect:setRect(left, top, right, bottom)
       WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.bottom)
    end
    self.rect_lines = math.floor(self.padded_height / self.line_height)
+end
+
+function TextRect:getScroll()
+   return self.start_line
 end
 
 function TextRect:setScroll(new_pos)
@@ -749,8 +751,31 @@ function TextRect:clickUrl(hotspot_id)
    end
 end
 
-function TextRect:getAllText()
-   return copytable.deep(self.raw_lines)
+function TextRect:serializeContents()
+   require "serialize"
+   local keys = {
+      raw_lines = {},
+      start_line = 1,
+   }
+
+   local contents = {}
+   for k,v in pairs(keys) do
+      contents[k] = self[k]
+   end
+
+   return serialize.save_simple(contents)
+end
+
+function TextRect:deserializeContents(contents)
+   if (type(contents) == "string") and (contents ~= "") then
+      local contents = loadstring("return "..contents)()
+      if (type(contents) == "table") and contents.raw_lines and contents.start_line then
+         self.raw_lines = contents.raw_lines
+         self.num_raw_lines = #self.raw_lines
+         self:reWrapLines()
+         self:setScroll(contents.start_line)
+      end
+   end
 end
 
 function TextRect:copyAndNotify(text)
