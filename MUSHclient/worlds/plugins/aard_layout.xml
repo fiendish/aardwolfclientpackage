@@ -393,8 +393,29 @@ function OnPluginInstall()
    bgoffscreen = win.."text_background_offscreen"
 
    local dir = GetInfo(66)
-   local imgpath = dir .. "worlds\\plugins\\images\\bg1.png"
-   if 0 ~= SetBackgroundImage(imgpath,13) then
+   local imgpath = "-"
+
+   if type(theme.bg_texture_function) == "function" then
+      imgpath = theme.bg_texture_function()
+   end
+
+   if 0 ~= SetBackgroundImage(imgpath, 13) then
+      imgpath = dir.."worlds\\plugins\\images\\bg1.png"
+      -- add some theme coloring to the background
+      WindowCreate("WiLl_It_BlEnD", 0, 0, 0, 0, 0, 0, theme.SECONDARY_BODY)
+      WindowLoadImage("WiLl_It_BlEnD", "tExTuRe", imgpath)
+      local tw = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 2)
+      local th = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 3)
+      WindowResize("WiLl_It_BlEnD", tw, th, theme.SECONDARY_BODY)
+      WindowImageFromWindow("WiLl_It_BlEnD", "cOlOr", "WiLl_It_BlEnD")
+      WindowDrawImage("WiLl_It_BlEnD", "tExTuRe", 0, 0, 0, 0, 1)
+      WindowBlendImage("WiLl_It_BlEnD", "cOlOr", 0, 0, 0, 0, 12, 0.3)
+
+      imgpath = dir.."worlds\\plugins\\images\\temp_theme_blend.png"
+      WindowWrite("WiLl_It_BlEnD", imgpath)
+   end
+
+   if 0 ~= SetBackgroundImage(imgpath, 13) then
       ColourNote("yellow","red","Error loading background image.")
    end
 
