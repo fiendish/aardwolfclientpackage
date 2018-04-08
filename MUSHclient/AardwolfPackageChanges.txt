@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1987 snapshot
+- misc change: Pwar's soundpack plugin will be automatically installed now. It starts with everything off unless you're using the non-visual package, so I don't see a good reason to not load it.
+- bug fix: The communication log window was sometimes preserving message contents across restarts too, but I don't want that.
+
 r1986 snapshot
 - new feature: The communication log window will now preserve its message contents when switching color themes.
 - new feature: Themes can now optionally override the background pattern behavior. The "Pink Neon" theme gives a decent demonstration.
