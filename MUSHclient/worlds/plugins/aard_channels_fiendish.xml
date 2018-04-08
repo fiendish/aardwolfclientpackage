@@ -607,24 +607,22 @@ function setupDisplay ()
    drawTabs()
 end
 
-function OnPluginConnect ()
-   -- first time after connect, get tags right
-end --  OnPluginConnect
-
 function OnPluginClose ()
-   -- if enabled
-   if GetPluginInfo(GetPluginID(), 17) then
-      OnPluginDisable()
-   end -- if enabled
    WindowDelete(win)
+   if GetVariable("just_reloading") then
+      local temp_tabs_data = {}
+      for i,v in ipairs(tabs_rects) do
+         temp_tabs_data[i] = {
+            ["contents"] = v:serializeContents(),
+            ["activity"] = tabs_activity[i]
+         }
+      end
+      SetVariable("temp_tabs_data", serialize.save_simple(temp_tabs_data))
+   end
 end -- OnPluginClose
 
 function OnPluginEnable ()
    WindowShow(win, true)
-   -- if we are connected when the plugin loads, it must have been reloaded while playing
-   if IsConnected() then
-      OnPluginConnect()
-   end -- if already connected
 end -- OnPluginEnable
 
 function OnPluginDisable()
@@ -657,17 +655,6 @@ function OnPluginSaveState()
    SetVariable("tabs_names", serialize.save("tabs_names"))
    SetVariable("tabs_channel_captures", serialize.save("tabs_channel_captures"))
    SetVariable("tabs_nonchannel_captures", serialize.save("tabs_nonchannel_captures"))
-
-   if GetVariable("just_reloading") then
-      local temp_tabs_data = {}
-      for i,v in ipairs(tabs_rects) do
-         temp_tabs_data[i] = {
-            ["contents"] = v:serializeContents(),
-            ["activity"] = tabs_activity[i]
-         }
-      end
-      SetVariable("temp_tabs_data", serialize.save_simple(temp_tabs_data))
-   end
 end
 
 function sanitize_filename(str)
