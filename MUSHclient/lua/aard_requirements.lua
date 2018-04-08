@@ -29,6 +29,7 @@ if not GetVariable("just_reloading") then
    do_plugin_check_now("55616ea13339bc68e963e1f8", "aard_chat_echo") -- gmcp channels in main display
    do_plugin_check_now("520bc4f29806f7af0017985f", "Hyperlink_URL2") -- make hyperlinks from urls
    do_plugin_check_now("04d9e64f835452b045b427a7", "aard_Copy_Colour_Codes") -- Ctrl+D to copy selected text with color codes
+   do_plugin_check_now("23832d1089f727f5f34abad8", "aard_soundpack") -- pre-made collection of common sound triggers
 end
 
 DeleteVariable("just_reloading")
