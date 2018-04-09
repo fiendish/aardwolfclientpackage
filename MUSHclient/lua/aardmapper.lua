@@ -807,7 +807,7 @@ function draw (uid)
       config.WINDOW.height,
       windowinfo.window_mode,   -- top right
       windowinfo.window_flags,
-      theme.PRIMARY_BODY)
+      Theme.PRIMARY_BODY)
 
    -- Handle background texture.
    if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
@@ -875,13 +875,13 @@ function draw (uid)
       room_name = room_name .. "..."
    end -- if
 
-   DrawBorder(win)
+   Theme.DrawBorder(win)
 
    -- room name
-   title_bottom = DrawTitleBar(win, FONT_ID, room_name)
+   title_bottom = Theme.DrawTitleBar(win, FONT_ID, room_name)
 
    if config.SHOW_ROOM_ID then
-      DrawTextBox(win, FONT_ID,
+      Theme.DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..uid)) / 2,   -- left
          title_bottom-1,    -- top
          "ID: "..uid, false, false)
@@ -892,7 +892,7 @@ function draw (uid)
    local areaname = room.area
 
    if areaname then
-      DrawTextBox(win, FONT_ID,
+      Theme.DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname)) / 2,   -- left
          config.WINDOW.height - 3 - font_height,    -- top
          areaname:gsub("^%l", string.upper), false, false)
@@ -906,7 +906,7 @@ function draw (uid)
       WindowShow(config_win, false)
       local x = 2
       local y = math.max(2, (title_bottom-font_height)/2)
-      local text_width = DrawTextBox(win, FONT_ID,
+      local text_width = Theme.DrawTextBox(win, FONT_ID,
          x,   -- left
          y-2,   -- top
          "*", false, false)
@@ -925,7 +925,7 @@ function draw (uid)
    if type (show_help) == "function" then
       local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
       local y = math.max(2, (title_bottom-font_height)/2)
-      local text_width = DrawTextBox(win, FONT_ID,
+      local text_width = Theme.DrawTextBox(win, FONT_ID,
          x-1,   -- left
          y-2,   -- top
          "?", false, false)
@@ -941,7 +941,7 @@ function draw (uid)
          miniwin.cursor_help, 0)
    end -- if
 
-   AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
+   Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    -- make sure window visible
    WindowShow (win, not window_hidden)
@@ -1033,7 +1033,7 @@ function init (t)
       config.WINDOW.height,
       windowinfo.window_mode,   -- top right
       windowinfo.window_flags,
-      theme.PRIMARY_BODY)
+      Theme.PRIMARY_BODY)
 
    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
 
@@ -1045,12 +1045,12 @@ function init (t)
    for _, v in ipairs (credits) do
       local width = WindowTextWidth (win, FONT_ID, v)
       local left = (config.WINDOW.width - width) / 2
-      WindowText (win, FONT_ID, v, left, top, 0, 0, theme.BODY_TEXT)
+      WindowText (win, FONT_ID, v, left, top, 0, 0, Theme.BODY_TEXT)
       top = top + font_height
    end -- for
 
-   DrawBorder(win)
-   AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
+   Theme.DrawBorder(win)
+   Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    WindowShow (win, not window_hidden)
    WindowShow (config_win, false)
@@ -1691,8 +1691,8 @@ function resize_move_callback()
    end
 
    WindowResize(win, width, height, BACKGROUND_COLOUR.colour)
-   DrawBorder(win)
-   AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
+   Theme.DrawBorder(win)
+   Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    WindowShow(win, true)
 end
