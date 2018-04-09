@@ -170,8 +170,8 @@ map = {}
 continents = {}
 xref = {}
 show_map = tonumber(GetVariable("show_map")) or 1
-background_colour = theme.PRIMARY_BODY
-zone_name_colour = theme.BODY_TEXT
+background_colour = Theme.PRIMARY_BODY
+zone_name_colour = Theme.BODY_TEXT
 square_brush_pixels = 8
 continent_dimensions = {
 [0]={["w"]=60, ["h"]=40},
@@ -384,20 +384,20 @@ function NoMap(messages)
    if show_map ~= 1 then
       return
    end
-   WindowRectOp (mapwin, 2, 0, 0, 0, 0, theme.PRIMARY_BODY)  -- blank
+   WindowRectOp (mapwin, 2, 0, 0, 0, 0, Theme.PRIMARY_BODY)  -- blank
    for i,v in ipairs(messages) do
       local messagewidth = WindowTextWidth (mapwin, font_id, v)
       WindowText (mapwin, font_id, v, (WindowInfo(mapwin,3) - messagewidth) / 2, (WindowInfo(mapwin,4) - (3*font_height*(#messages-i))) / 2, 0, 0, zone_name_colour)
    end
-   DressWindow(mapwin, font_id, "\n", "left")
+   Theme.DressWindow(mapwin, font_id, "\n", "left")
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
-      AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
+      Theme.AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function DrawMap(clearHotspotsFirst)
-   if TextHeight(mapwin, font_id) == nil then
+   if Theme.TextHeight(mapwin, font_id) == nil then
       OnPluginInstall()
    end
    if show_map ~= 1 then
@@ -411,7 +411,7 @@ function DrawMap(clearHotspotsFirst)
       WindowDeleteAllHotspots(mapwin)
    end
    local startx = 4
-   local starty = (2*theme.TITLE_PADDING) + (TextHeight(mapwin, font_id) * 2) + 2
+   local starty = (2*Theme.TITLE_PADDING) + (Theme.TextHeight(mapwin, font_id) * 2) + 2
    local image_name = "bigmap_continent_"..zone
    if (mapwin == GetPluginID().."_mapper") then
       local window_width, window_height
@@ -474,11 +474,11 @@ function DrawMap(clearHotspotsFirst)
 
    local name = continent or ""
    local coords = string.format ("Location: %2i, %2i", origx, origy)
-   DressWindow(mapwin, font_id, name.."\n"..coords)
+   Theme.DressWindow(mapwin, font_id, name.."\n"..coords)
    WindowAddHotspot(mapwin, "right-click", 0, starty, 0, 0, nil, nil, nil, nil, "MouseUp", "", miniwin.cursor_hand, 0)
 
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
-      AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
+      Theme.AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- DrawMap
@@ -721,7 +721,7 @@ function do_init()
          not use_exact_sizes and unmerged_height or 0,  -- height
          windowinfo.window_mode,
          windowinfo.window_flags,
-         theme.PRIMARY_BODY)
+         Theme.PRIMARY_BODY)
       CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", mapwin)
    end
 

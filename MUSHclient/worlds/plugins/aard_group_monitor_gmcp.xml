@@ -194,7 +194,7 @@ function reset_aard()
    font_name = default_font_name
    font_size = default_font_size
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, default_height, theme.PRIMARY_BODY)
+   WindowResize(win, default_width, default_height, Theme.PRIMARY_BODY)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    SaveState()
    OnPluginInstall()
@@ -209,7 +209,7 @@ function SetUpHotspotsAndDraw(firstTime)
          height,  -- height
          windowinfo.window_mode,       -- auto-position: middle right
          windowinfo.window_flags,  -- flags
-         theme.PRIMARY_BODY) )
+         Theme.PRIMARY_BODY) )
       -- Add the drag handler so they can move the window around
       movewindow.add_drag_handler (win, 0, 0, 0, 0)
 
@@ -220,7 +220,7 @@ function SetUpHotspotsAndDraw(firstTime)
    else
       -- everything has already been made
       -- just move them back into place
-      WindowResize(win, width, height, theme.PRIMARY_BODY)
+      WindowResize(win, width, height, Theme.PRIMARY_BODY)
    end
    DisplayGroupPage()
 end
@@ -261,31 +261,31 @@ end
 
 -- build and draw the group display
 function DisplayGroupPage()
-   WindowRectOp(win, 2, 2, 2,-2,-2, theme.PRIMARY_BODY) -- blank
+   WindowRectOp(win, 2, 2, 2,-2,-2, Theme.PRIMARY_BODY) -- blank
 
    if not group_built then
       if next(invitations) == nil then
          txt = "No Group To Display"
          txtlen = WindowTextWidth(win,font_id, txt)
-         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, theme.BODY_TEXT, utf8)
+         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, Theme.BODY_TEXT, utf8)
          txt = "Group info will appear"
          txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, theme.BODY_TEXT, utf8)
+         WindowText (win, font_id, txt, (width-txtlen)/2, height/2, 0, 0, Theme.BODY_TEXT, utf8)
          txt = "once you create or join one."
          txtlen = WindowTextWidth(win,font_id,txt)
-         WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line_height, 0, 0, theme.BODY_TEXT, utf8)
+         WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line_height, 0, 0, Theme.BODY_TEXT, utf8)
       else
          local lines = {}
          txt = "Pending Group Invitations"
          txtlen = WindowTextWidth(win, font_id, txt)
-         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, theme.BODY_TEXT, utf8)
+         WindowText(win, font_id, txt, (width-txtlen)/2, title_height/4, 0, 0, Theme.BODY_TEXT, utf8)
          table.insert(lines, "[ Leader     : Group Name ]")
          table.insert(lines, "---------------------------")
          for k,v in pairs(invitations) do
             table.insert(lines, string.rpad(k,12).." : "..v)
          end
          for i,v in ipairs(lines) do
-            WindowText(win, font_id, v, GAP*4, (title_height) + (i*line_height), 0, 0, theme.BODY_TEXT, utf8)
+            WindowText(win, font_id, v, GAP*4, (title_height) + (i*line_height), 0, 0, Theme.BODY_TEXT, utf8)
          end
       end
    else
@@ -322,21 +322,21 @@ function DisplayGroupPage()
            --     (("W" and v.info.status.webbed == true) or "_")..
            --     (("C" and v.info.status.cursed == true) or "_")..
            --     (("*" and v.info.status.attacked == true) or "_").."]"
-           -- WindowText(win, font_id, txt, x, y, 0, 0, theme.BODY_TEXT, utf8)
+           -- WindowText(win, font_id, txt, x, y, 0, 0, Theme.BODY_TEXT, utf8)
            -- x = x + math.max(WindowTextWidth(win, font_id, "[PBWC*]"), WindowTextWidth(win, font_id, "[_____]")) + GAP
             txt = "["..string.lpad(v.info.lvl, 3, ' ').."]"
-            x = x + WindowText(win, font_id, txt, x, y, 0, 0, theme.BODY_TEXT, utf8) + GAP
+            x = x + WindowText(win, font_id, txt, x, y, 0, 0, Theme.BODY_TEXT, utf8) + GAP
             txt = string.rpad(v.name, 12, ' ')
             zeroed_alignment = v.info.align+2500
-            name_colour = ((zeroed_alignment<=1625 and colorVals.Align[1]) or ((zeroed_alignment>=3375 and colorVals.Align[2]) or theme.BODY_TEXT))
+            name_colour = ((zeroed_alignment<=1625 and colorVals.Align[1]) or ((zeroed_alignment>=3375 and colorVals.Align[2]) or Theme.BODY_TEXT))
             x = x + WindowText(win, font_id, txt, x, y, 0, 0, name_colour, utf8) + GAP
             txt = "Q:"..string.lpad(v.info.qt, 2, ' ')..", ".."TNL:"..string.lpad(v.info.tnl, 5, ' ')
-            WindowText(win, font_id, txt, x, y, 0, 0, theme.BODY_TEXT, utf8)
+            WindowText(win, font_id, txt, x, y, 0, 0, Theme.BODY_TEXT, utf8)
             y = y + line_height + 1
 
             if show_hp == 1 then -- HP BAR
                x = baseX
-               WindowText(win, font_id, "HP", x, y, 0, 0, theme.BODY_TEXT, utf8)
+               WindowText(win, font_id, "HP", x, y, 0, 0, Theme.BODY_TEXT, utf8)
                x = x + labels_width + GAP
                local hpColor1 = colorVals.Health[1]
                local hpColor2 = colorVals.Health[2]
@@ -360,55 +360,55 @@ function DisplayGroupPage()
                txt = string.lpad(v.info.hp, 5, ' ').."/"..string.rpad(v.info.mhp,5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
-                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, theme.BODY_TEXT, utf8)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
                else
-                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, theme.BODY_TEXT, utf8)
+                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
                end
                y = y + line_height + 1
             end
 
             if show_mn == 1 then-- MANA BAR
                x = baseX
-               WindowText(win, font_id, "MN", x, y, 0, 0, theme.BODY_TEXT, utf8)
+               WindowText(win, font_id, "MN", x, y, 0, 0, Theme.BODY_TEXT, utf8)
                x = x + labels_width + GAP
                gauge(win, v.name.."'s MN", tonumber(v.info.mn), tonumber(v.info.mmn), x, y, bar_width, line_height, colorVals.Mana[1], 0x000000, 0, 0x000000, colorVals.Mana[2], nil, flat_gauges==1)
                txt = string.lpad(v.info.mn,5,' ').."/"..string.rpad(v.info.mmn,5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
-                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, theme.BODY_TEXT, utf8)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
                else
-                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, theme.BODY_TEXT, utf8)
+                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
                end
                y = y + line_height + 1
             end
 
             if show_mv == 1 then -- MOVES BAR
                x = baseX
-               WindowText(win, font_id, "MV", x, y, 0, 0, theme.BODY_TEXT, utf8)
+               WindowText(win, font_id, "MV", x, y, 0, 0, Theme.BODY_TEXT, utf8)
                x = x + labels_width + GAP
                gauge(win, v.name.."'s MV", tonumber(v.info.mv), tonumber(v.info.mmv), x, y, bar_width, line_height, colorVals.Moves[1], 0x000000, 0, 0x000000, colorVals.Moves[2], nil, flat_gauges==1)
                txt = string.lpad(v.info.mv,5,' ').."/"..string.rpad(v.info.mmv,5,' ')
                if overlay_numbers == 1 then
                   txtlen = WindowTextWidth(win,font_id,txt)
-                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, theme.BODY_TEXT, utf8)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
                else
-                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, theme.BODY_TEXT, utf8)
+                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
                end
                y = y + line_height+1
             end
             y = y + GAP - 2
-            WindowLine(win, baseX-GAP, y, baseX+column_width-GAP+1, y, theme.THREE_D_HIGHLIGHT, 0, 1) -- horizontal line
-            WindowLine(win, baseX+column_width-GAP, baseY-GAP+2, baseX+column_width-GAP, y, theme.THREE_D_HIGHLIGHT, 0, 1) -- vertical line
+            WindowLine(win, baseX-GAP, y, baseX+column_width-GAP+1, y, Theme.THREE_D_HIGHLIGHT, 0, 1) -- horizontal line
+            WindowLine(win, baseX+column_width-GAP, baseY-GAP+2, baseX+column_width-GAP, y, Theme.THREE_D_HIGHLIGHT, 0, 1) -- vertical line
          end
       else
          txt = "Your group is empty."
          txtlen = WindowTextWidth(win,font_id, txt)
-         WindowText(win, font_id, txt, (width-txtlen)/2, (height+line_height)/2, 0, 0, theme.BODY_TEXT, utf8)
+         WindowText(win, font_id, txt, (width-txtlen)/2, (height+line_height)/2, 0, 0, Theme.BODY_TEXT, utf8)
       end
    end
 
-   DrawBorder(win)
-   Draw3DRect(win, -1, -1, WindowInfo(win, 3)-1, title_height, false)
+   Theme.DrawBorder(win)
+   Theme.Draw3DRect(win, -1, -1, WindowInfo(win, 3)-1, title_height, false)
 
    if group_built then
       styles = ColoursToStyles(full_group_data.groupname)
@@ -417,17 +417,17 @@ function DisplayGroupPage()
       local statusBoundary = math.max(GAP, width-WindowTextWidth(win, font_id, full_group_data.status)-3*GAP)
       WindowRectOp(win, 2, statusBoundary+2*GAP - 2, y , -3, y+line_height, ((full_group_data.status=="Private" and 0x000088) or 0x008800))
       WindowText(win, font_id, full_group_data.status, statusBoundary+2*GAP, y, 0, 0, 0xffffff)
-      x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, 0, theme.THREE_D_SURFACE_DETAIL, utf8)
+      x = x + WindowText(win, font_id, "Group: ", x, y, statusBoundary, 0, Theme.THREE_D_SURFACE_DETAIL, utf8)
       local group_width = WindowTextWidth(win, font_id, strip_colours_from_styles(styles))
-      WindowRectOp(win, 2, x-3, y, x+group_width + GAP, y+line_height, theme.PRIMARY_BODY)
-      WindowTextFromStyles(win, font_id, styles, x, y, statusBoundary, 0)
+      WindowRectOp(win, 2, x-3, y, x+group_width + GAP, y+line_height, Theme.PRIMARY_BODY)
+      Theme.WindowTextFromStyles(win, font_id, styles, x, y, statusBoundary, 0)
       y = y + line_height
       local xpKillsBoundary = math.max(GAP,width-WindowTextWidth(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills)-3*GAP)
-      WindowText(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills, xpKillsBoundary+2*GAP, y, 0,0, theme.THREE_D_SURFACE_DETAIL, utf8)
-      WindowText(win, font_id, "Leader: "..full_group_data.leader, GAP, y, xpKillsBoundary, 0, theme.THREE_D_SURFACE_DETAIL, utf8)
+      WindowText(win, font_id, "XP:"..full_group_data.exp.." K:"..full_group_data.kills, xpKillsBoundary+2*GAP, y, 0,0, Theme.THREE_D_SURFACE_DETAIL, utf8)
+      WindowText(win, font_id, "Leader: "..full_group_data.leader, GAP, y, xpKillsBoundary, 0, Theme.THREE_D_SURFACE_DETAIL, utf8)
    end
 
-   AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
+   Theme.AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- Display_Group_Page
@@ -814,7 +814,7 @@ function OnPluginInstall()
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
    windowinfo = movewindow.install(win, miniwin.pos_center, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
    WindowFont(win, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
 
    --- Grab font size settings.

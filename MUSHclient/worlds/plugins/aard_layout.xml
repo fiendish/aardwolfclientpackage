@@ -58,9 +58,6 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
---title_colour          = 0xf92929
-RESIZE_TAG_SIZE = 10
-
 default_top = 140
 default_bottom = 544
 default_left = 7
@@ -395,18 +392,18 @@ function OnPluginInstall()
    local dir = GetInfo(66)
    local imgpath = "-"
 
-   if type(theme.bg_texture_function) == "function" then
-      imgpath = theme.bg_texture_function()
+   if type(Theme.bg_texture_function) == "function" then
+      imgpath = Theme.bg_texture_function()
    end
 
    if 0 ~= SetBackgroundImage(imgpath, 13) then
       imgpath = dir.."worlds\\plugins\\images\\bg1.png"
       -- add some theme coloring to the background
-      WindowCreate("WiLl_It_BlEnD", 0, 0, 0, 0, 0, 0, theme.SECONDARY_BODY)
+      WindowCreate("WiLl_It_BlEnD", 0, 0, 0, 0, 0, 0, Theme.SECONDARY_BODY)
       WindowLoadImage("WiLl_It_BlEnD", "tExTuRe", imgpath)
       local tw = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 2)
       local th = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 3)
-      WindowResize("WiLl_It_BlEnD", tw, th, theme.SECONDARY_BODY)
+      WindowResize("WiLl_It_BlEnD", tw, th, Theme.SECONDARY_BODY)
       WindowImageFromWindow("WiLl_It_BlEnD", "cOlOr", "WiLl_It_BlEnD")
       WindowDrawImage("WiLl_It_BlEnD", "tExTuRe", 0, 0, 0, 0, 1)
       WindowBlendImage("WiLl_It_BlEnD", "cOlOr", 0, 0, 0, 0, 12, 0.3)
@@ -419,14 +416,14 @@ function OnPluginInstall()
       ColourNote("yellow","red","Error loading background image.")
    end
 
-   local bgcolor = theme.PRIMARY_BODY
+   local bgcolor = Theme.PRIMARY_BODY
    WindowCreate (bgwin, 0, 0, 0, 0, 12, 3, bgcolor)
    WindowCreate (bgoffscreen, 0, 0, 0, 0, 12, 3, bgcolor)
 
    local logopath = dir .. "worlds\\plugins\\images\\aardbg13.png"
    if WindowLoadImage (bgoffscreen, "wolf_logo", logopath) == 0 then
       WindowResize (bgoffscreen, WindowImageInfo(bgoffscreen, "wolf_logo", 2), WindowImageInfo(bgoffscreen, "wolf_logo", 3), bgcolor)
-      WindowDrawImageAlpha (bgoffscreen, "wolf_logo", 0, 0, 0, 0, theme.LOGO_OPACITY)
+      WindowDrawImageAlpha (bgoffscreen, "wolf_logo", 0, 0, 0, 0, Theme.LOGO_OPACITY)
       WindowImageFromWindow(bgwin, "wolf_logo", bgoffscreen)
       image_ratio = WindowImageInfo(bgwin, "wolf_logo", 2)/WindowImageInfo(bgwin, "wolf_logo", 3)
    end
@@ -467,20 +464,20 @@ function check_geometry()
 end
 
 function add_main_resizer()
-   local l = GetInfo(274) - theme.RESIZER_SIZE + GetInfo(276)
-   local r = GetInfo(275) - theme.RESIZER_SIZE + GetInfo(276)
+   local l = GetInfo(274) - Theme.RESIZER_SIZE + GetInfo(276)
+   local r = GetInfo(275) - Theme.RESIZER_SIZE + GetInfo(276)
    if WindowInfo(textResizer, 1) then -- if it already exists
       --- Reposition the resize tag.
       WindowPosition(textResizer, l, r, 0, 18)
    else
       -- Add another mini-window in bottom right corner for resizer tag.
       check (WindowCreate (textResizer,
-         l, r, theme.RESIZER_SIZE, theme.RESIZER_SIZE,
+         l, r, Theme.RESIZER_SIZE, Theme.RESIZER_SIZE,
          12, miniwin.create_transparent + miniwin.create_absolute_location,
          GetNormalColour(1)
       ))
 
-      DrawResizeTag(textResizer, 0)
+      Theme.DrawResizeTag(textResizer, 0)
 
       -- Add a drag handler to this window, effectively allows textrectangle to be resized.
       WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, nil, nil, "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
@@ -517,9 +514,9 @@ function draw_main_window()
 
    TextRectangle(textrect_left, textrect_top, t_right, t_bottom,
       5,  -- BorderOffset,
-      theme.THREE_D_HIGHLIGHT,   -- BorderColour,
+      Theme.THREE_D_HIGHLIGHT,   -- BorderColour,
       1,  -- BorderWidth,
-      theme.THREE_D_SOFTSHADOW,  -- OutsideFillColour,
+      Theme.THREE_D_SOFTSHADOW,  -- OutsideFillColour,
       miniwin.brush_solid) -- OutsideFillStyle
 
    -- Add a mini-window under main text area so background won't mess it up.
@@ -528,7 +525,7 @@ function draw_main_window()
 
    WindowCreate (bgwin, textrect_left - 5, textrect_top - 5,
       math.max(0, trwidth + 10), math.max(0, trheight + 10),
-      12  , 3, theme.PRIMARY_BODY)
+      12  , 3, Theme.PRIMARY_BODY)
    WindowShow(bgwin, true)
 
    if image_ratio ~= nil then

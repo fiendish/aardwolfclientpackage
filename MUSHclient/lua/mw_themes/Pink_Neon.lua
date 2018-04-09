@@ -44,11 +44,11 @@ return {
    bg_texture_function = function()
       imgpath = GetInfo(66).."worlds/plugins/images/bg1.png"
 
-      WindowCreate("WiLl_It_BlEnD", 0, 0, 0, 0, 0, 0, theme.THREE_D_HIGHLIGHT)
+      WindowCreate("WiLl_It_BlEnD", 0, 0, 0, 0, 0, 0, Theme.THREE_D_HIGHLIGHT)
       WindowLoadImage("WiLl_It_BlEnD", "tExTuRe", imgpath)
       local tw = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 2)
       local th = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 3)
-      WindowResize("WiLl_It_BlEnD", tw, th, theme.THREE_D_HIGHLIGHT)
+      WindowResize("WiLl_It_BlEnD", tw, th, Theme.THREE_D_HIGHLIGHT)
       WindowImageFromWindow("WiLl_It_BlEnD", "cOlOr", "WiLl_It_BlEnD")
 
       WindowDrawImage("WiLl_It_BlEnD", "tExTuRe", 0, 0, 0, 0, 1)
