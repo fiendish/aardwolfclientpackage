@@ -89,15 +89,15 @@ function reset_aard()
    font_name = default_font_name
    font_size = default_font_size
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, default_height, theme.PRIMARY_BODY)
+   WindowResize(win, default_width, default_height, Theme.PRIMARY_BODY)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    SaveState()
    OnPluginInstall()
 end
 
-bracket = {text=" : [",textcolour=theme.BODY_TEXT}
-slash = {text="/",textcolour=theme.BODY_TEXT}
-endbracket = {text="]",textcolour=theme.BODY_TEXT}
+bracket = {text=" : [",textcolour=Theme.BODY_TEXT}
+slash = {text="/",textcolour=Theme.BODY_TEXT}
+endbracket = {text="]",textcolour=Theme.BODY_TEXT}
 
 function BuildStatsPage()
 
@@ -432,30 +432,30 @@ function BuildStatsPage()
 end -- BuildStatsPage
 
 function Print()
-   bodyleft, bodytop, bodyright, bodybottom = DrawBorder(win)
-   WindowRectOp(win, 2, bodyleft, bodytop, bodyright+1, bodybottom+1, theme.PRIMARY_BODY) -- blank
+   bodyleft, bodytop, bodyright, bodybottom = Theme.DrawBorder(win)
+   WindowRectOp(win, 2, bodyleft, bodytop, bodyright+1, bodybottom+1, Theme.PRIMARY_BODY) -- blank
 
    if not page_built then
       txt = "Stats will appear "
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText(win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, bodyright, bodybottom, theme.BODY_TEXT, utf8)
+      WindowText(win, font_id, txt, (width-txtlen)/2, (height/2)-line_height, bodyright, bodybottom, Theme.BODY_TEXT, utf8)
       txt = "when play begins."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText(win, font_id, txt, (width-txtlen)/2, height/2, bodyright, bodybottom, theme.BODY_TEXT, utf8)
+      WindowText(win, font_id, txt, (width-txtlen)/2, height/2, bodyright, bodybottom, Theme.BODY_TEXT, utf8)
    else
       -- display each line
       local left = LEFT_MARGIN
       local top = 0
       for i, v in ipairs(cstyles) do
          top = TOP_MARGIN + (i - 1) * line_height
-         WindowTextFromStyles(win, font_id, v, left, top, bodyright, bodybottom)
+         Theme.WindowTextFromStyles(win, font_id, v, left, top, bodyright, bodybottom)
       end -- for
       if cstyles[#cstyles].text == "" then
-         WindowTextFromStyles(win, font_id, {{text="Foe :",textcolour=0x444444}}, left, top, bodyright, bodybottom)
+         Theme.WindowTextFromStyles(win, font_id, {{text="Foe :",textcolour=0x444444}}, left, top, bodyright, bodybottom)
       end
    end
 
-   AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
+   Theme.AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
@@ -767,7 +767,7 @@ function OnPluginInstall()
    stacked = tonumber(GetVariable("stacked")) or 0
    commas_in_gold = tonumber(GetVariable("commas_in_gold")) == 1
    windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
    WindowFont(win, font_id, font_name, font_size, false, false, false, false, 0)
 
    --- Grab font size metrics
@@ -783,7 +783,7 @@ function OnPluginInstall()
 end
 
 function resize_window()
-   WindowResize(win, width, height, theme.SECONDARY_BODY)
+   WindowResize(win, width, height, Theme.SECONDARY_BODY)
    movewindow.add_drag_handler(win, 0, 0, 0, 0)
 
    Print()

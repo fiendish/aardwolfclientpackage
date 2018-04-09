@@ -5,7 +5,7 @@ require "copytable"
 require "colors"
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
-function getHighlight(bg)
+local function getHighlightColor(bg)
    local h, s, l = colors.rgb_string_to_hsl(string.format('#%06x', bg))
    if l >= 0.5 then
       bgr = {colors.hsl_to_rgb(h, s, l/2)}
@@ -36,7 +36,7 @@ TextRect_defaults = {
    keepscrolling = "",
    padding = 5,
    background_color = 0x000000,
-   highlight = getHighlight(0x000000)
+   highlight = getHighlightColor(0x000000)
 }
 TextRect_mt = { __index = TextRect }
 
@@ -63,7 +63,7 @@ function TextRect.new(window, name, left, top, right, bottom, max_lines, scrolla
    new_tr.font_name = font_name or new_tr.font_name
    new_tr.font_size = font_size or new_tr.font_size
    new_tr.background_color = background_color or new_tr.background_color
-   new_tr.highlight_color = getHighlight(new_tr.background_color)
+   new_tr.highlight_color = getHighlightColor(new_tr.background_color)
    new_tr:loadFont(new_tr.font_name, new_tr.font_size)
    return new_tr
 end

@@ -205,10 +205,7 @@ require "gmcphelper"
 require "movewindow"
 require "mw"
 
-background_colour = theme.PRIMARY_BODY
-border_color          = 0xdddddd
-title_gradient_col1   = GetNormalColour(1)
-title_gradient_col2   = 0x444444
+background_colour = Theme.PRIMARY_BODY
 default_width         = 209
 default_height        = 263
 default_x             = 658
@@ -217,9 +214,7 @@ map_lines = {}
 coord_data= {}
 show_coords = 0
 
-RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
-TITLE_HEIGHT    = 0
 
 -- Variables not saved.
 startx           = ""
@@ -342,7 +337,7 @@ end
 
 current_room_name = "\n"
 function resize_window()
-   WindowResize(win, width, height, theme.SECONDARY_BODY)
+   WindowResize(win, width, height, Theme.SECONDARY_BODY)
 
    DisplayMapPage()
 end
@@ -355,40 +350,40 @@ end
 
 function DisplayMapPage()
    styles = { }
-   bodyleft, bodytop, bodyright, bodybottom = DressWindow(win, font_id, (show_title == 1) and {map_lines[1] or "", map_lines[2] or ""}, "left")
+   bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, (show_title == 1) and {map_lines[1] or "", map_lines[2] or ""}, "left")
    movewindow.add_drag_handler(win, 0, 0, 0, 0)
-   WindowRectOp(win, 2, bodyleft, bodytop, bodyright+1, bodybottom+1, theme.PRIMARY_BODY) -- blank
+   WindowRectOp(win, 2, bodyleft, bodytop, bodyright+1, bodybottom+1, Theme.PRIMARY_BODY) -- blank
 
    if WindowTextWidth(win, font_id, "i") ~= WindowTextWidth(win, font_id, "w") then
       line = -font_height-5
       txt = "This plugin's configured font"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, Theme.BODY_TEXT)
       line = line+font_height+5
       txt = "[ "..font_name.." ]"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, Theme.BODY_TEXT)
       line = line+font_height+5
       txt = "is not a monospace font."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, Theme.BODY_TEXT)
       line = line+font_height+5
       txt = "Right-click here to pick another."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, Theme.BODY_TEXT)
    elseif not requested_since_empty then
       line = -font_height-5
       txt = "The map will appear"
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, Theme.BODY_TEXT)
       line = line+font_height+5
       txt = "when play begins."
       txtlen = WindowTextWidth(win,font_id,txt)
-      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, theme.BODY_TEXT)
+      WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, Theme.BODY_TEXT)
    else -- display the map lines
       -- Add legend-popup handler
       WindowAddHotspot(win, "legend", bodyleft, bodytop, bodyleft+(3*font_width), bodytop+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", miniwin.cursor_help, 0)
-      DrawTextBox(win, font_id, bodyleft+2, bodytop+1, "?", false, true)
+      Theme.DrawTextBox(win, font_id, bodyleft+2, bodytop+1, "?", false, true)
 
       local n = #map_lines
       for i = 3, n-1 do
@@ -405,7 +400,7 @@ function DisplayMapPage()
       end
    end
 
-   AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
+   Theme.AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
    -- show it now (or refresh)
    WindowShow(win, true)
@@ -458,14 +453,14 @@ end
 
 function Display_Line (line, styles)
    local id = font_id
-   local left = theme.TITLE_PADDING + 2
+   local left = Theme.TITLE_PADDING + 2
 
    local top = line_height(line)
 
    for _, v in ipairs (styles) do
       local color = v.textcolour
       if (line <= 2) and (color == 65280) then -- replace plain green in room names
-         color = theme.BODY_TEXT
+         color = Theme.BODY_TEXT
       end
       local ret = WindowText (win, id, v.text, left, top, bodyright, bodybottom, color, true) -- try utf8 first
       if (ret >= 0) then
@@ -702,7 +697,7 @@ function MouseOver(flags, hotspotid)
    end
 
    heading = ""
-   Popup(infowin,           -- window name to use
+   Theme.Popup(infowin,           -- window name to use
          font_id,           -- font to use for each line
          info,              -- table of lines to show
          windowinfo.window_left-1, windowinfo.window_top-1, -- preferred placement
@@ -837,7 +832,7 @@ function OnPluginInstall(skip_requests)
 
    -- create window with position from movewindow
    windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
-   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, theme.SECONDARY_BODY)
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
 
    --- Load the fonts.
    font_id        = "map_font"
