@@ -5,7 +5,7 @@ require "checkplugin"
 SetOption("omit_date_from_save_files", 1)  -- slightly less clutter in settings files
 SetAlphaOption("terminal_identification", "MUSHclient-Aard") -- helps Lasher count for the 'clients' in-game command
 
-if not GetVariable("just_reloading") then
+if not GetVariable("aard_theme_just_reloading") then
    -- Edit the preferences db to stop opening the activity window at startup
    local aard_req_prefs_db = sqlite3.open(GetInfo(82))
    local aard_req_pref_activity_window = 1
@@ -32,4 +32,4 @@ if not GetVariable("just_reloading") then
    do_plugin_check_now("23832d1089f727f5f34abad8", "aard_soundpack") -- pre-made collection of common sound triggers
 end
 
-DeleteVariable("just_reloading")
+DeleteVariable("aard_theme_just_reloading")
