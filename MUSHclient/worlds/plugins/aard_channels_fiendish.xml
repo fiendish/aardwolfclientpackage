@@ -609,7 +609,7 @@ end
 
 function OnPluginClose ()
    WindowDelete(win)
-   if GetVariable("just_reloading") then
+   if GetVariable(Theme.reloading_variable) then
       local temp_tabs_data = {}
       for i,v in ipairs(tabs_rects) do
          temp_tabs_data[i] = {
