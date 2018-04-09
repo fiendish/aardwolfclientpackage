@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1988 snapshot
+- misc change: The theme code is now namespaced for better predictability. Now you only have to not clobber one variable instead of dozens when writing a miniwindow plugin.
+
 r1987 snapshot
 - misc change: Pwar's soundpack plugin will be automatically installed now. It starts with everything off unless you're using the non-visual package, so I don't see a good reason to not load it.
 - bug fix: The communication log window was sometimes preserving message contents across restarts too, but I don't want that.
