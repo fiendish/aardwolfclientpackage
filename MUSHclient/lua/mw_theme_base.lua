@@ -5,30 +5,39 @@ We can use this to get a base set of colors, standard display elements,
 and title fonts that get used everywhere in order to unify the visual style
 and provide a way to customize that style easily.
 
-Steps for use:
-1) Inside your plugins, require "mw_theme_base" at the very beginning of your script section.
-2) Use variable names as spelled out in lua/mw_themes/Charcoal.lua for colorization
-3) Use the shared graphics functions defined below for drawing any 3D rectangles with the chosen color theme
+Steps for use: (also see https://github.com/fiendish/aardwolfclientpackage/wiki/Miniwindow-Color-Themes )
+1) Inside your plugins, require this file at the very beginning of your script section.
+2) Use variable names as spelled out in lua/mw_themes/Charcoal.lua for colorization within the "Theme." namespace, e.g. Theme.BODY_TEXT etc.
+3) Use the shared graphics functions defined below for drawing various elements with the current color theme.
+   Some of the functions are not for drawing things. You can ignore them.
+4) Four things make a miniwindow fit the theme: The border, the titlebar, the resize widget, and the general colors being used.
+   The border, titlebar, resize widget, and 3D boxes all have special draw functions included below. The colors are defined in the theme files.
 4) Optional: Make your own themes (clone one of the files in lua/mw_themes and customize your colors).
+5) Optional: If your plugin wants to preserve state between theme changes (changing theme reloads the plugin),
+   you can detect whether the plugin is closing because of a theme change with GetVariable(Theme.reloading_variable).
 --]]
 require "checkplugin"
 require "movewindow"
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
-theme_dir = GetInfo(66).."lua\\mw_themes\\"
-theme_file = "Charcoal.lua"
+module ("Theme", package.seeall)
 
 function b9315e040989d3f81f4328d6()
    -- used for theme system detection
    return true
 end
 
+theme_dir = GetInfo(66).."lua\\mw_themes\\"
+theme_file = "Charcoal.lua"
+
 function get_theme()
    return theme_file
 end
 
+reloading_variable = "aard_theme_just_reloading"
+
 function just_reloading()
-   SetVariable("just_reloading", 1)
+   SetVariable(reloading_variable, 1)
 end
 
 local default_theme = {
@@ -66,41 +75,29 @@ local default_theme = {
    RESIZER_SIZE = 16
 }
 
-function load_theme(dir, file)
-   file_loaded, data_from_file = pcall(dofile, dir..file)
-   valid = true
+function load_theme(file)
+   local file_loaded, data_from_file = pcall(dofile, theme_dir..file)
 
    -- init defaults
-   theme = {}
    for k,v in pairs(default_theme) do
-      theme[k] = v
+      Theme[k] = v
    end
 
    if file_loaded then
       if type(data_from_file) == "table" then
          for k,v in pairs(data_from_file) do
-            theme[k] = v
+            Theme[k] = v
          end
          theme_file = file
       else
-         print("Error loading theme file: ", dir..file)
+         print("Error loading theme file: ", theme_dir..file)
          print("This theme file is invalid. Please delete it and select a different theme.")
          print()
       end
    else
-      print("Error loading theme file: ", dir..file)
+      print("Error loading theme file: ", theme_dir..file)
       print(data_from_file) -- error message
    end
-end
-
-function ExecuteInGlobalSpace(inner_action)
-   local prefix = GetAlphaOption("script_prefix")
-   local action = [[
-      SetAlphaOption("script_prefix", "/")
-      Execute("/]] .. inner_action:gsub("\\", "\\\\") .. [[")
-      SetAlphaOption("script_prefix", "]] .. prefix:gsub("\\", "\\\\") .. [[")
-   ]]
-   DoAfterSpecial(0.1, action, sendto.script)
 end
 
 -- junk files that should not have existed in the first place
@@ -128,25 +125,34 @@ function theme_has_bad_sha(filename)
    return bad_shas[filename] and bad_shas[filename][gitsha(theme_dir..filename)]
 end
 
-local theme_controller = "b9315e040989d3f81f4328d6"
-if (GetPluginID() ~= theme_controller) then
-   if not IsPluginInstalled(theme_controller) then
-      local inner_action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller..[[\', \'aard_Theme_Controller\')', sendto.script)]]
-      ExecuteInGlobalSpace(inner_action)
+local theme_controller_ID = "b9315e040989d3f81f4328d6"
+local theme_controller_name = "aard_Theme_Controller"
+if (GetPluginID() ~= theme_controller_ID) then
+   if not IsPluginInstalled(theme_controller_ID) then
+      local inner_action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller_ID..[[\', \']]..theme_controller_name..[[\')', sendto.script)]]
+
+      -- execute_in_global_space(inner_action)
+      local prefix = GetAlphaOption("script_prefix")
+      local action = [[
+         SetAlphaOption("script_prefix", "/")
+         Execute("/]] .. inner_action:gsub("\\", "\\\\") .. [[")
+         SetAlphaOption("script_prefix", "]] .. prefix:gsub("\\", "\\\\") .. [[")
+      ]]
+      DoAfterSpecial(0.1, action, sendto.script)
    end
 
-   local maybe_theme_file = GetPluginVariable(theme_controller, "theme_file") or theme_file
+   local maybe_theme_file = GetPluginVariable(theme_controller_ID, "theme_file") or theme_file
 
    if not theme_has_bad_sha(maybe_theme_file) then
       theme_file = maybe_theme_file
    end
 
-   load_theme(theme_dir, theme_file)
+   load_theme(theme_file)
 end
 
 -- Replacement for WindowRectOp action 5, which allows for a 3D look while maintaining color theme.
 function Draw3DRect (win, left, top, right, bottom, depressed)
-   local gradient = (not theme.THREE_D_GRADIENT_ONLY_IN_TITLE or __theme_istitle) and theme.THREE_D_GRADIENT or false
+   local gradient = (not THREE_D_GRADIENT_ONLY_IN_TITLE or __theme_istitle) and THREE_D_GRADIENT or false
    __theme_istitle = false
 
    if right > 0 then
@@ -156,59 +162,59 @@ function Draw3DRect (win, left, top, right, bottom, depressed)
       bottom = bottom + 1
    end
 
-   if gradient and (theme.THREE_D_GRADIENT_FIRST == theme.THREE_D_GRADIENT_SECOND) then
+   if gradient and (THREE_D_GRADIENT_FIRST == THREE_D_GRADIENT_SECOND) then
       gradient = false
    end
 
    if (gradient == 1) or (gradient == 2) or (gradient == 3) then
       WindowGradient(win, left, top, right, bottom,
-                theme.THREE_D_GRADIENT_FIRST,
-                theme.THREE_D_GRADIENT_SECOND,
+                THREE_D_GRADIENT_FIRST,
+                THREE_D_GRADIENT_SECOND,
                 gradient)
    else
-      WindowRectOp(win, 2, left, top, right, bottom, theme.THREE_D_GRADIENT_FIRST)
+      WindowRectOp(win, 2, left, top, right, bottom, THREE_D_GRADIENT_FIRST)
    end
 
    if not depressed then
-      WindowLine(win, left+1, top+1, right, top+1, theme.THREE_D_HIGHLIGHT, 0x0200, 1)
-      WindowLine(win, left+1, top+1, left+1, bottom, theme.THREE_D_HIGHLIGHT, 0x0200, 1)
+      WindowLine(win, left+1, top+1, right, top+1, THREE_D_HIGHLIGHT, 0x0200, 1)
+      WindowLine(win, left+1, top+1, left+1, bottom, THREE_D_HIGHLIGHT, 0x0200, 1)
 
-      WindowLine(win, left, bottom-2, right, bottom-2, theme.THREE_D_SOFTSHADOW, 0x0200, 1)
-      WindowLine(win, right-2, top, right-2, bottom-2, theme.THREE_D_SOFTSHADOW, 0x0200, 1)
+      WindowLine(win, left, bottom-2, right, bottom-2, THREE_D_SOFTSHADOW, 0x0200, 1)
+      WindowLine(win, right-2, top, right-2, bottom-2, THREE_D_SOFTSHADOW, 0x0200, 1)
 
-      WindowLine(win, left, bottom-1, right, bottom-1, theme.THREE_D_HARDSHADOW, 0x0200, 1)
-      WindowLine(win, right-1, top, right-1, bottom-1, theme.THREE_D_HARDSHADOW, 0x0200, 1)
+      WindowLine(win, left, bottom-1, right, bottom-1, THREE_D_HARDSHADOW, 0x0200, 1)
+      WindowLine(win, right-1, top, right-1, bottom-1, THREE_D_HARDSHADOW, 0x0200, 1)
    else
-      WindowLine(win, left, top+1, right, top+1, theme.THREE_D_HARDSHADOW, 0x0200, 1)
-      WindowLine(win, left+1, top, left+1, bottom, theme.THREE_D_HARDSHADOW, 0x0200, 1)
+      WindowLine(win, left, top+1, right, top+1, THREE_D_HARDSHADOW, 0x0200, 1)
+      WindowLine(win, left+1, top, left+1, bottom, THREE_D_HARDSHADOW, 0x0200, 1)
 
-      WindowLine(win, left, top, right, top, theme.THREE_D_HARDSHADOW, 0x0200, 1)
-      WindowLine(win, left, top, left, bottom, theme.THREE_D_HARDSHADOW, 0x0200, 1)
+      WindowLine(win, left, top, right, top, THREE_D_HARDSHADOW, 0x0200, 1)
+      WindowLine(win, left, top, left, bottom, THREE_D_HARDSHADOW, 0x0200, 1)
    end
 end
 
 function Draw3DTextBox(win, font, left, top, text, utf8)
-   right = left + WindowTextWidth(win, font, text)
-   bottom = top + TextHeight(win, font)
+   local right = left + WindowTextWidth(win, font, text)
+   local bottom = top + TextHeight(win, font)
    Draw3DRect(win, left, top, right+3, bottom+3)
-   WindowText(win, font, text, left+2, top+2, right+1, bottom+1, theme.THREE_D_SURFACE_DETAIL, utf8)
+   WindowText(win, font, text, left+2, top+2, right+1, bottom+1, THREE_D_SURFACE_DETAIL, utf8)
    return right-left
 end
 
 function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textcolor)
    if nil == bgcolor then
-      bgcolor = theme.CLICKABLE
+      bgcolor = CLICKABLE
    end
    if nil == textcolor then
-      textcolor = theme.CLICKABLE_TEXT
+      textcolor = CLICKABLE_TEXT
    end
-   right = left + WindowTextWidth(win, font, text) + 4
-   bottom = top + TextHeight(win, font)
-   WindowRectOp(win, 2, left, top+1, right, bottom+2, theme.CLICKABLE)
+   local right = left + WindowTextWidth(win, font, text) + 4
+   local bottom = top + TextHeight(win, font)
+   WindowRectOp(win, 2, left, top+1, right, bottom+2, CLICKABLE)
    if outlined then
-      WindowRectOp(win, 1, left-1, top, right+1, bottom+3, theme.CLICKABLE_TEXT)
+      WindowRectOp(win, 1, left-1, top, right+1, bottom+3, CLICKABLE_TEXT)
    end
-   WindowText(win, font, text, left+2, top+1, right, bottom+1, theme.CLICKABLE_TEXT, utf8)
+   WindowText(win, font, text, left+2, top+1, right, bottom+1, CLICKABLE_TEXT, utf8)
    return right-left
 end
 
@@ -229,11 +235,11 @@ function DrawResizeTag(win, type, x1, y1)
    if not (x1 and y1) then
       x2 = WindowInfo(win, 3) - 3
       y2 = WindowInfo(win, 4) - 3
-      x1 = x2 - theme.RESIZER_SIZE + 1
-      y1 = y2 - theme.RESIZER_SIZE + 1
+      x1 = x2 - RESIZER_SIZE + 1
+      y1 = y2 - RESIZER_SIZE + 1
    else
-      x2 = x1 + theme.RESIZER_SIZE
-      y2 = y1 + theme.RESIZER_SIZE
+      x2 = x1 + RESIZER_SIZE
+      y2 = y1 + RESIZER_SIZE
    end
 
    local m = 2
@@ -241,24 +247,24 @@ function DrawResizeTag(win, type, x1, y1)
    if type == 2 then -- full
       Draw3DRect(win, x1, y1, x2, y2, false)
       while (x1+m < x2 and y1+n+1 < y2) do
-         WindowLine(win, x1+m-1, y2-2, x2-1, y1+n-2, theme.THREE_D_HIGHLIGHT, 0, 1)
-         WindowLine(win, x1+m, y2-2, x2-1, y1+n-1, theme.THREE_D_HARDSHADOW, 0, 1)
-         WindowLine(win, x1+m+1, y2-2, x2-1, y1+n, theme.THREE_D_GRADIENT_FIRST, 0, 1)
+         WindowLine(win, x1+m-1, y2-2, x2-1, y1+n-2, THREE_D_HIGHLIGHT, 0, 1)
+         WindowLine(win, x1+m, y2-2, x2-1, y1+n-1, THREE_D_HARDSHADOW, 0, 1)
+         WindowLine(win, x1+m+1, y2-2, x2-1, y1+n, THREE_D_GRADIENT_FIRST, 0, 1)
          m = m+3
          n = n+3
       end
-      WindowSetPixel(win, x2-2, y2-2, theme.THREE_D_HIGHLIGHT)
+      WindowSetPixel(win, x2-2, y2-2, THREE_D_HIGHLIGHT)
    else
       while (x1+m < x2 and y1+n+1 < y2) do
-         WindowLine(win, x1+m, y2-1, x2, y1+n-1, theme.THREE_D_HIGHLIGHT, 0, 1)
-         WindowLine(win, x1+m+1, y2-1, x2, y1+n, theme.THREE_D_HARDSHADOW, 0, 1)
-         WindowLine(win, x1+m+2, y2-1, x2, y1+n+1, theme.THREE_D_GRADIENT_FIRST, 0, 1)
+         WindowLine(win, x1+m, y2-1, x2, y1+n-1, THREE_D_HIGHLIGHT, 0, 1)
+         WindowLine(win, x1+m+1, y2-1, x2, y1+n, THREE_D_HARDSHADOW, 0, 1)
+         WindowLine(win, x1+m+2, y2-1, x2, y1+n+1, THREE_D_GRADIENT_FIRST, 0, 1)
          m = m+3
          n = n+3
       end
-      WindowLine(win, x1, y2, x2, y2, theme.THREE_D_HARDSHADOW, 0, 1)
-      WindowLine(win, x2, y1, x2, y2+1, theme.THREE_D_HARDSHADOW, 0, 1)
-      WindowSetPixel(win, x2-1, y2-1, theme.THREE_D_HIGHLIGHT)
+      WindowLine(win, x1, y2, x2, y2, THREE_D_HARDSHADOW, 0, 1)
+      WindowLine(win, x2, y1, x2, y2+1, THREE_D_HARDSHADOW, 0, 1)
+      WindowSetPixel(win, x2-1, y2-1, THREE_D_HIGHLIGHT)
    end
    return x1, y1
 end
@@ -293,7 +299,7 @@ function DrawTitleBar(win, font, title, text_alignment)
    local title_height = 0
    if font and title_lines then
       line_height = TextHeight(win, font)
-      title_height = (2*theme.TITLE_PADDING) + (line_height * #title_lines)
+      title_height = (2*TITLE_PADDING) + (line_height * #title_lines)
    end
 
    __theme_istitle = true
@@ -318,21 +324,21 @@ function DrawTitleBar(win, font, title, text_alignment)
 
       local text_left = (WindowInfo(win, 3) - width) / 2  -- default text align center
       if text_alignment == "left" then
-         text_left = theme.TITLE_PADDING + 2
+         text_left = TITLE_PADDING + 2
       elseif text_alignment == "right" then
-         text_left = WindowInfo(win, 3) - width - theme.TITLE_PADDING
+         text_left = WindowInfo(win, 3) - width - TITLE_PADDING
       end
-      local text_right = math.min(text_left + width, WindowInfo(win, 3) - theme.TITLE_PADDING - 2)
+      local text_right = math.min(text_left + width, WindowInfo(win, 3) - TITLE_PADDING - 2)
 
-      local text_top = (line_height * (i-1)) + theme.TITLE_PADDING
+      local text_top = (line_height * (i-1)) + TITLE_PADDING
       if type(v) == "string" then
-         WindowText(win, font, v, text_left, text_top, text_right, title_height, theme.THREE_D_SURFACE_DETAIL)
+         WindowText(win, font, v, text_left, text_top, text_right, title_height, THREE_D_SURFACE_DETAIL)
       else
          -- The colors of all styles matching the first style color get stripped out and replaced with the default title color
          for i,w in ipairs(v) do
             first_color = first_color or w.textcolour
             if w.textcolour == first_color then
-               w.textcolour = theme.THREE_D_SURFACE_DETAIL
+               w.textcolour = THREE_D_SURFACE_DETAIL
             end
          end
          WindowTextFromStyles(win, font, v, text_left, text_top, text_right, title_height, true)
@@ -344,14 +350,14 @@ end
 function DrawBorder(win)
    local r = WindowInfo(win, 3)-3
    local b = WindowInfo(win, 4)-3
-   WindowRectOp(win, 1, 0, 0, 0, 0, theme.THREE_D_HIGHLIGHT)
-   WindowRectOp(win, 1, 1, 1, -1, -1, theme.THREE_D_SOFTSHADOW)
+   WindowRectOp(win, 1, 0, 0, 0, 0, THREE_D_HIGHLIGHT)
+   WindowRectOp(win, 1, 1, 1, -1, -1, THREE_D_SOFTSHADOW)
    return 2, 2, r, b
 end
 
 function OutlinedText(win, font, text, startx, starty, endx, endy, color, outline_color, utf8)
    if outline_color == nil then
-      outline_color = theme.THREE_D_HARDSHADOW
+      outline_color = THREE_D_HARDSHADOW
    end
    WindowText(win, font, text, startx-1, starty-1, endx, endy, outline_color, utf8)
    WindowText(win, font, text, startx-1, starty, endx, endy, outline_color, utf8)
@@ -367,7 +373,7 @@ end
 
 function WindowTextFromStyles(win, font, styles, left, top, right, bottom, utf8)
    for i,v in ipairs(styles) do
-      left = left + WindowText(win, font, v.text, left, top, right, bottom, v.textcolour or theme.BODY_TEXT, utf8)
+      left = left + WindowText(win, font, v.text, left, top, right, bottom, v.textcolour or BODY_TEXT, utf8)
    end
    return left
 end
@@ -375,7 +381,7 @@ end
 -- text with a black outline
 function OutlinedTextFromStyles(win, font, styles, startx, starty, endx, endy, outline_color, utf8)
    if outline_color == nil then
-      outline_color = theme.THREE_D_HARDSHADOW
+      outline_color = THREE_D_HARDSHADOW
    end
    local text = strip_colours_from_styles(styles)
    WindowText(win, font, text, startx-1, starty-1, endx, endy, outline_color, utf8)
@@ -394,7 +400,7 @@ end
 function Popup(win,   -- window name to use
    font_id,           -- font to use for each body line
    info,              -- table of lines to show (plain text or styles)
-   Left, Top,         -- preferred location
+   left, top,         -- preferred location
    stay_left_of,      -- guidance for keeping the popup visible
    stay_right_of)     -- guidance for keeping the popup visible
 
@@ -429,42 +435,42 @@ function Popup(win,   -- window name to use
       10                                -- and 5 pixels top and bottom
 
    -- if align_right then
-   --    Left = Left - infowidth
+   --    left = left - infowidth
    -- end -- if align_right
 
    -- if align_bottom then
-   --    Top = Top - infoheight
+   --    top = top - infoheight
    -- end -- if align_bottom
 
-   Top = math.min(Top, GetInfo(280) - infoheight)
-   Top = math.max(0, Top)
-   if Left < stay_left_of then
-      if Left+infowidth > stay_left_of then
-         Left = stay_left_of - infowidth
+   top = math.min(top, GetInfo(280) - infoheight)
+   top = math.max(0, top)
+   if left < stay_left_of then
+      if left+infowidth > stay_left_of then
+         left = stay_left_of - infowidth
       end
-      if Left < 0 then
-         Left = stay_right_of
+      if left < 0 then
+         left = stay_right_of
       end
    else
-      if Left < stay_right_of then
-         Left = stay_right_of
+      if left < stay_right_of then
+         left = stay_right_of
       end
-      if (Left + infowidth) > GetInfo(281) then
-         Left = stay_left_of - infowidth
+      if (left + infowidth) > GetInfo(281) then
+         left = stay_left_of - infowidth
       end
    end
    WindowCreate(win,
-      Left, Top,    -- where
+      left, top,    -- where
       infowidth,    -- width  (gap of 5 pixels per side)
       infoheight,   -- height
       miniwin.pos_top_left,  -- position mode: can't be 0 to 3
       miniwin.create_absolute_location + miniwin.create_transparent,
-      theme.SECONDARY_BODY)
+      SECONDARY_BODY)
 
    WindowCircleOp(win, miniwin.circle_round_rectangle,
       BORDER_WIDTH, BORDER_WIDTH, -BORDER_WIDTH, -BORDER_WIDTH,  -- border inset
-      theme.THREE_D_HIGHLIGHT, miniwin.pen_solid, BORDER_WIDTH,  -- line
-      theme.PRIMARY_BODY, miniwin.brush_solid,          -- fill
+      THREE_D_HIGHLIGHT, miniwin.pen_solid, BORDER_WIDTH,  -- line
+      PRIMARY_BODY, miniwin.brush_solid,          -- fill
       5, 5)  -- diameter of ellipse
 
    local x = BORDER_WIDTH + WindowFontInfo (win, font_id, 6) / 2    -- start 1/2 character in
@@ -473,7 +479,7 @@ function Popup(win,   -- window name to use
    -- show each line
    for _, line in ipairs(info) do
       if type(line) == "string" then
-         WindowText(win, font_id, line, x, y, 0, 0, theme.BODY_TEXT)
+         WindowText(win, font_id, line, x, y, 0, 0, BODY_TEXT)
       else
          WindowTextFromStyles(win, font_id, line, x, y, 0, 0)
       end

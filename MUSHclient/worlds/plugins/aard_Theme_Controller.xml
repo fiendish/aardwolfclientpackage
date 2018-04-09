@@ -29,19 +29,15 @@
 
 require "mw_theme_base"
 
-t = GetVariable("theme_file")
-if t then
-   theme_file = t
-else
-   SetVariable("theme_file", theme_file)
-end
+theme_file = GetVariable("theme_file") or Theme.theme_file
+SetVariable("theme_file", theme_file)
 
 function list_themes()
-   t, e = utils.readdir(theme_dir.."*.lua")
+   t, e = utils.readdir(Theme.theme_dir.."*.lua")
    local res = {}
    for filename,v in pairs(t) do
-      if theme_has_bad_sha(filename) then
-         os.remove(theme_dir..filename)
+      if Theme.theme_has_bad_sha(filename) then
+         os.remove(Theme.theme_dir..filename)
       else
          res[filename] = filename:gsub("%.lua", ""):gsub("_", " ")
       end
@@ -50,18 +46,18 @@ function list_themes()
 end
 
 function apply_theme(theme)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "pause")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "pause") -- repaint buffer plugin
    for _, v in ipairs(GetPluginList()) do
-      if (v ~= GetPluginID()) and GetPluginInfo(v, 17) and (PluginSupports(v, "b9315e040989d3f81f4328d6") == error_code.eOK) then
-         rc, t = CallPlugin(v, "get_theme")
+      if (v ~= GetPluginID()) and GetPluginInfo(v, 17) and (PluginSupports(v, "Theme.b9315e040989d3f81f4328d6") == error_code.eOK) then
+         rc, t = CallPlugin(v, "Theme.get_theme")
          if t ~= theme then
-            CallPlugin(v, "just_reloading")
-            CallPlugin(v, "load_theme", theme_dir, theme)
+            CallPlugin(v, "Theme.just_reloading")
+            CallPlugin(v, "Theme.load_theme", theme)
             ReloadPlugin(v)
          end
       end
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "resume")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "resume") -- repaint buffer plugin
 end
 
 function choose_theme()
