@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1990 snapshot
+- bug fix: Fix a string/int comparison bug in the communication log's findTab function. Thanks Crowley.
+
 r1989 snapshot
 - bug fix: In haste, it seems I accidentally undid message content preserving in the comm log across theme changes. Should be fixed.
 
