@@ -263,7 +263,7 @@ end
 function findTab(name)
    -- prefer named tabs first
    for i=1,num_tabs do
-      if tabs_names[i] and (tabs_names[i]:upper() == name:upper()) then
+      if tabs_names[i] and (tabs_names[i]:upper() == tostring(name):upper()) then
          return i
       end
    end
@@ -271,7 +271,7 @@ function findTab(name)
    -- but if the "name" is a number and there isn't a matching named tab,
    -- pick that number tab.
    for i=1,num_tabs do
-      if (tabs_names[i] == nil) and (tostring(i) == name) then
+      if (tabs_names[i] == nil) and (tostring(i) == tostring(name)) then
          return i
       end
    end
