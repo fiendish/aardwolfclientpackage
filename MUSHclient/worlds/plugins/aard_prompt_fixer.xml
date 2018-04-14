@@ -161,7 +161,7 @@ function OnPluginTelnetOption(data)
    if doinit then
       local hexcodes = {
          ['6403'] = true,
-         ['6409'] = true,
+         --['6409'] = true,
          ['640B'] = true
       }
       if hexcodes[utils.tohex(data)] then
