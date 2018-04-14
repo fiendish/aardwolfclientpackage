@@ -61,7 +61,7 @@ function apply_theme(theme)
 end
 
 function choose_theme()
-   res = utils.listbox("Which theme would you like to use?", "Choose Theme", list_themes(), theme_file)
+   res = utils.listbox("Which theme would you like to use?\r\n\r\nDo you have a custom theme that you want to share? Send it to Fiendish!", "Choose Theme", list_themes(), theme_file)
    if res then
       theme_file = res
       SetVariable("theme_file", theme_file)
