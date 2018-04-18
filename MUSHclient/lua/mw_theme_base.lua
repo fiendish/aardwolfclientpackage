@@ -244,7 +244,7 @@ function DrawResizeTag(win, type, x1, y1)
 
    local m = 2
    local n = 2
-   if type == 2 then -- full
+   if (type == 2) or (type == "full") then
       Draw3DRect(win, x1, y1, x2, y2, false)
       while (x1+m < x2 and y1+n+1 < y2) do
          WindowLine(win, x1+m-1, y2-2, x2-1, y1+n-2, THREE_D_HIGHLIGHT, 0, 1)
