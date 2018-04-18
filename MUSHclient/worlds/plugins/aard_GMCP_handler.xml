@@ -143,36 +143,53 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
 
       -- find where to insert the new data
       local node = gmcpdata
+      local prev_node = nil
       local prev_item = ""
       for next_item in string.gmatch(message,"%a+") do
-
-         -- some messages don't have invariant structure, so always clear them
-         if (next_item == "room" and message ~= "room.wrongdir") -- don't let room.wrongdir erase current room info
-         or next_item == "comm" or next_item == "group" then
-            node[next_item] = nil
-         end
-
          node[next_item] = node[next_item] or {}
+         prev_node = node
+         prev_item = next_item
          node = node[next_item]
       end
 
-      function clone(from, to)
-         for k,v in pairs(from) do
+      -- A loveletter.
+      -- Some GMCP messages are just messages, not state. The "current" comm.channel message isn't a meaningful
+      -- concept except in the exact moment it arrives, for example (though most recent might be).
+      -- Since room.area is not sent automatically, and is only ever sent in response to a request,
+      -- having seen a room.area message tells you only what the area details were for the area your
+      -- character was in at the time the request was processed, but has no relation to where you are
+      -- after or even to the area your character was in when the request was sent and especially not
+      -- to the actual transition from one area to the next. If you run 5e through an area entrance,
+      -- you would be 5 rooms deep into a new area before that area info arrives back to you, with
+      -- mismatching area info the whole way in.
+      -- (You send run 5e, you go e, new area in room.info triggers sending request for room.area, you go 4e,
+      -- room.area request seen by game, room.area response sent back, room.area response seen by client)
+      -- If you had also run back out of the area, then you'd also be receiving room.area information
+      -- after five moves for an area you are no longer in.
+      -- I do this next part for your own good.
+      if (message == "room.info") then
+         gmcpdata["room"] = {}
+         prev_node = gmcpdata["room"]
+      end
+
+      -- For some reason we've historically treated numbers as strings.
+      -- It's bad form, but we should preserve that behavior.
+      function stringify(things)
+         for k,v in pairs(things) do
             if type(v) == "table" then
-               to[k] = to[k] or {}
-               clone(from[k], to[k])
+               stringify(v)
             else
-               to[k] = tostring(v)
+               things[k] = tostring(v)
             end
          end
       end
-      clone(t, node)
+      stringify(t)
+      prev_node[prev_item] = t
 
       if GMCPDebug > 1 then
          print ("gmcpdata serialized: " .. gmcpdata_as_string(""))
       end
-
-      BroadcastPlugin(1,message)
+      BroadcastPlugin(1, message)
   else
       ColourNote("white","red","GMCP DATA ERROR: "..t)
   end  -- if
@@ -201,12 +218,13 @@ function OnPluginSaveState()
 end
 
 function OnPluginConnect()
+   GMCP_send("config xterm yes")
+   GMCP_send("rawcolor on")
    GMCP_send("request char")
    GMCP_send("request room")
    GMCP_send("request area")
    GMCP_send("request quest")
    GMCP_send("request group")
-   GMCP_send("rawcolor on")
 end
 
 function OnPluginTelnetRequest (msg_type, data)
