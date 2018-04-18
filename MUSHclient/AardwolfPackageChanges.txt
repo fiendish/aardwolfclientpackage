@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1991 snapshot
+- bug fix: Ignore sleeping status telopt during login. It arrives at the wrong time.
+
 r1990 snapshot
 - bug fix: Fix a string/int comparison bug in the communication log's findTab function. Thanks Crowley.
 

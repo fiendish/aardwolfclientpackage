@@ -260,10 +260,11 @@ function makeRect(i)
    end
 end
 
-function findTab(name)
+
+function findTab(name_or_number)
    -- prefer named tabs first
    for i=1,num_tabs do
-      if tabs_names[i] and (tabs_names[i]:upper() == tostring(name):upper()) then
+      if tabs_names[i] and (tabs_names[i]:upper() == tostring(name_or_number):upper()) then
          return i
       end
    end
@@ -271,7 +272,7 @@ function findTab(name)
    -- but if the "name" is a number and there isn't a matching named tab,
    -- pick that number tab.
    for i=1,num_tabs do
-      if (tabs_names[i] == nil) and (tostring(i) == tostring(name)) then
+      if tostring(i) == tostring(name_or_number) then
          return i
       end
    end
