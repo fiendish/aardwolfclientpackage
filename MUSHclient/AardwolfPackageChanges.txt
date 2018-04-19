@@ -1,6 +1,8 @@
 Aardwolf Client Package Major Changes List
 
 r1992 snapshot
+- new feature: Statmon miniwindow label colors will match the current theme by default unless customized. You'll need to right-click and choose 'Reset Defaults' to see this on an existing install.
+- new theme: Green Neon to complement Pink Neon.
 - misc change: Using 'resetaard' will now tell the user about 'aard layout help'.
 
 r1991 snapshot
