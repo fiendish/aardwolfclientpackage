@@ -24,7 +24,7 @@
 
 <alias
    script="LayoutCommand"
-   match="^aard layout( lock| unlock| save| forget| restore| list| help)?( .*)?"
+   match="^aard layout( lock| unlock| save| forget| restore| list| help| reset)?( .*)?"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -32,7 +32,7 @@
 ></alias>
 
 <alias
-   script="reset_aard"
+   script="reset_main"
    match="resetmain"
    enabled="y"
    sequence="100"
@@ -40,6 +40,7 @@
 ></alias>
 
 <alias
+   name="resetaard"
    script="reset_aard"
    match="resetaard"
    enabled="y"
@@ -75,6 +76,7 @@ MIN_SIZE         = 50
 require "serialize"
 
 function LayoutHelp()
+   print("")
    print("Aardwolf MUSHclient Layout Command Help")
    print("--------------------------------------------------------------------------------")
    print("aard layout lock               :  prevent dragging miniwindows")
@@ -84,6 +86,7 @@ function LayoutHelp()
    print("aard layout forget <keyword>   :  forget the layout for the given keyword")
    print("aard layout list               :  list all stored layout keywords")
    print("aard layout help               :  show this command help")
+   print("aard layout reset              :  like resetaard, but better")
    print("")
    LockStatus()
    print("")
@@ -123,6 +126,11 @@ function LayoutCommand(name, line, wildcards)
       else
          LayoutHelp()
       end
+   elseif wildcards[1] == " reset" then
+      reset_main()
+      EnableAlias("resetaard", false)
+      Execute("resetaard")
+      EnableAlias("resetaard", true)
    elseif wildcards[1] == "" or wildcards[1] == " help" then
       LayoutHelp()
    end
@@ -345,6 +353,11 @@ function SaveEnabled()
 end
 
 function reset_aard()
+   reset_main()
+   LayoutHelp()
+end
+
+function reset_main()
    textrect_left = default_left
    textrect_right = default_right
    textrect_top = default_top
