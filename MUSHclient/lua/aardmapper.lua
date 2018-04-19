@@ -883,7 +883,7 @@ function draw (uid)
    if config.SHOW_ROOM_ID then
       Theme.DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..uid)) / 2,   -- left
-         title_bottom-1,    -- top
+         title_bottom,    -- top
          "ID: "..uid, false, false)
    end
 
@@ -894,7 +894,7 @@ function draw (uid)
    if areaname then
       Theme.DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname)) / 2,   -- left
-         config.WINDOW.height - 3 - font_height,    -- top
+         config.WINDOW.height - 4 - font_height,    -- top
          areaname:gsub("^%l", string.upper), false, false)
    end -- if area known
 
