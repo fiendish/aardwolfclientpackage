@@ -819,7 +819,10 @@ directions = {}
 function reset_aard()
    mapper.reset_pos()
    SaveState()
+   prev_quiet_backups = quiet_backups
+   quiet_backups = true
    OnPluginInstall()
+   quiet_backups = prev_quiet_backups
 end
 
 convert_direction = {
