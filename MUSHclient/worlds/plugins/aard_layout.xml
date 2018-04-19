@@ -76,6 +76,7 @@ MIN_SIZE         = 50
 require "serialize"
 
 function LayoutHelp()
+   print("")
    print("Aardwolf MUSHclient Layout Command Help")
    print("--------------------------------------------------------------------------------")
    print("aard layout lock               :  prevent dragging miniwindows")
@@ -352,8 +353,8 @@ function SaveEnabled()
 end
 
 function reset_aard()
-   ColourNote("red","","Still using resetaard? Read 'aard layout help'.")
    reset_main()
+   LayoutHelp()
 end
 
 function reset_main()
