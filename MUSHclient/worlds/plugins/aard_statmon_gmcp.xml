@@ -69,16 +69,10 @@ dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
 color_indices = {"Strength","Intelligence","Wisdom","Dexterity","Constitution","Luck","Health","Mana","Moves","Hitroll","Damroll","Alignment","Gold","Quest Points","Trivia","TNL","Level","Trains","Pracs"}
 
-label_color_defaults = {["Strength"]=0x00FF00,["Intelligence"]=0x00FF00,["Wisdom"]=0x00FF00,["Dexterity"]=0x00FF00,["Constitution"]=0x00FF00,["Luck"]=0x00FF00, ["Health"]=0x00FF00,["Mana"]=0x00FF00,["Moves"]=0x00FF00,["Hitroll"]=0x00FF00,["Damroll"]=0x00FF00,["Alignment"]=0x00FF00,["Gold"]=0x00FF00,["Quest Points"]=0x00FF00,["Trivia"]=0x00FF00,["TNL"]=0x00FF00,["Level"]=0x00FF00,["Trains"]=0x00FF00,["Pracs"]=0x00FF00}
-
 data_color_defaults = {["Strength"]=0xFFFFFF,["Intelligence"]=0xFFFFFF,["Wisdom"]=0xFFFFFF,["Dexterity"]=0xFFFFFF,["Constitution"]=0xFFFFFF,["Luck"]=0xFFFFFF, ["Health"]=0xFFFFFF,["Mana"]=0xFFFFFF,["Moves"]=0xFFFFFF,["Hitroll"]=0xFFFFFF,["Damroll"]=0xFFFFFF,["Alignment"]=0xFFFFFF,["Gold"]=0x00FFFF,["Quest Points"]=0xFFFFFF,["Trivia"]=0xFFFFFF,["TNL"]=0xFFFFFF,["Level"]=0xFFFFFF,["Trains"]=0xFFFFFF,["Pracs"]=0xFFFFFF}
 
 assert (loadstring (GetVariable ("label_colors") or "label_colors = {}")) ()
 assert (loadstring (GetVariable ("data_colors") or "data_colors = {}")) ()
-
-for k,v in pairs(label_color_defaults) do
-   label_colors[k] = label_colors[k] or v
-end
 
 for k,v in pairs(data_color_defaults) do
    data_colors[k] = data_colors[k] or v
@@ -114,14 +108,14 @@ function BuildStatsPage()
 
    if (stacked == 1) then
       table.insert(cstyles, {
-            {text="Str",textcolour=label_colors["Strength"]},
+            {text="Str",textcolour=label_colors["Strength"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.str),textcolour=data_colors["Strength"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxstr),textcolour=data_colors["Strength"]},
             endbracket,
 
-            {text="     Hp ",textcolour=label_colors["Health"]},
+            {text="     Hp ",textcolour=label_colors["Health"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%6d",gmcpchar.vitals.hp), textcolour=data_colors["Health"]},
             slash,
@@ -130,14 +124,14 @@ function BuildStatsPage()
             })
 
       table.insert(cstyles, {
-            {text="Int",textcolour=label_colors["Intelligence"]},
+            {text="Int",textcolour=label_colors["Intelligence"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.int),textcolour=data_colors["Intelligence"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxint),textcolour=data_colors["Intelligence"]},
             endbracket,
 
-            {text="     Mn ",textcolour=label_colors["Mana"]},
+            {text="     Mn ",textcolour=label_colors["Mana"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%6d",gmcpchar.vitals.mana), textcolour=data_colors["Mana"]},
             slash,
@@ -146,14 +140,14 @@ function BuildStatsPage()
             })
 
       table.insert(cstyles, {
-            {text="Wis",textcolour=label_colors["Wisdom"]},
+            {text="Wis",textcolour=label_colors["Wisdom"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.wis),textcolour=data_colors["Wisdom"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxwis),textcolour=data_colors["Wisdom"]},
             endbracket,
 
-            {text="     Mvs",textcolour=label_colors["Moves"]},
+            {text="     Mvs",textcolour=label_colors["Moves"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%6d",gmcpchar.vitals.moves), textcolour=data_colors["Moves"]},
             slash,
@@ -162,7 +156,7 @@ function BuildStatsPage()
             })
 
       table.insert(cstyles, {
-            {text="Dex",textcolour=label_colors["Dexterity"]},
+            {text="Dex",textcolour=label_colors["Dexterity"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.dex),textcolour=data_colors["Dexterity"]},
             slash,
@@ -171,28 +165,28 @@ function BuildStatsPage()
             })
 
       table.insert(cstyles, {
-            {text="Con",textcolour=label_colors["Constitution"]},
+            {text="Con",textcolour=label_colors["Constitution"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.con),textcolour=data_colors["Constitution"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxcon),textcolour=data_colors["Constitution"]},
             endbracket,
 
-            {text="     HR ",textcolour=label_colors["Hitroll"]},
+            {text="     HR ",textcolour=label_colors["Hitroll"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.stats.hr), textcolour=data_colors["Hitroll"]},
             endbracket
             })
 
       table.insert(cstyles, {
-            {text="Luk",textcolour=label_colors["Luck"]},
+            {text="Luk",textcolour=label_colors["Luck"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.luck),textcolour=data_colors["Luck"]},
             slash,
             {text=string.format("%-3d",gmcpchar.maxstats.maxluck),textcolour=data_colors["Luck"]},
             endbracket,
 
-            {text="     DR ",textcolour=label_colors["Damroll"]},
+            {text="     DR ",textcolour=label_colors["Damroll"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.stats.dr), textcolour=data_colors["Damroll"]},
             endbracket
@@ -201,48 +195,48 @@ function BuildStatsPage()
       table.insert(cstyles, {})
 
       table.insert(cstyles, {
-            {text="TNL",textcolour=label_colors["TNL"]},
+            {text="TNL",textcolour=label_colors["TNL"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.status.tnl), textcolour=data_colors["TNL"]},
             endbracket,
 
-            {text="       Lvl",textcolour=label_colors["Level"]},
+            {text="       Lvl",textcolour=label_colors["Level"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.status.level), textcolour=data_colors["Level"]},
             endbracket,
             })
 
       table.insert(cstyles, {
-            {text="QP ",textcolour=label_colors["Quest Points"]},
+            {text="QP ",textcolour=label_colors["Quest Points"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%7d",gmcpchar.worth.qp), textcolour=data_colors["Quest Points"]},
             endbracket,
 
-            {text="     TP ",textcolour=label_colors["Trivia"]},
+            {text="     TP ",textcolour=label_colors["Trivia"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.tp), textcolour=data_colors["Trivia"]},
             endbracket,
             })
 
       table.insert(cstyles, {
-            {text="Align",textcolour=label_colors["Alignment"]},
+            {text="Align",textcolour=label_colors["Alignment"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.status.align), textcolour=data_colors["Alignment"]},
             endbracket,
 
-            {text="     Gold",textcolour=label_colors["Gold"]},
+            {text="     Gold",textcolour=label_colors["Gold"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%s", commas_in_gold and commas(gmcpchar.worth.gold) or gmcpchar.worth.gold), textcolour=data_colors["Gold"]},
             endbracket,
             })
 
       table.insert(cstyles, {
-            {text="Train",textcolour=label_colors["Trains"]},
+            {text="Train",textcolour=label_colors["Trains"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.trains), textcolour=data_colors["Trains"]},
             endbracket,
 
-            {text="     Prac",textcolour=label_colors["Pracs"]},
+            {text="     Prac",textcolour=label_colors["Pracs"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.pracs), textcolour=data_colors["Pracs"]},
             endbracket,
@@ -258,7 +252,7 @@ function BuildStatsPage()
       end
    else
       table.insert(cstyles, {
-            {text="Str",textcolour=label_colors["Strength"]},
+            {text="Str",textcolour=label_colors["Strength"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.str),textcolour=data_colors["Strength"]},
             slash,
@@ -267,7 +261,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Int",textcolour=label_colors["Intelligence"]},
+            {text="Int",textcolour=label_colors["Intelligence"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.int),textcolour=data_colors["Intelligence"]},
             slash,
@@ -276,7 +270,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Wis",textcolour=label_colors["Wisdom"]},
+            {text="Wis",textcolour=label_colors["Wisdom"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.wis),textcolour=data_colors["Wisdom"]},
             slash,
@@ -285,7 +279,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Dex",textcolour=label_colors["Dexterity"]},
+            {text="Dex",textcolour=label_colors["Dexterity"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.dex),textcolour=data_colors["Dexterity"]},
             slash,
@@ -294,7 +288,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Con",textcolour=label_colors["Constitution"]},
+            {text="Con",textcolour=label_colors["Constitution"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.con),textcolour=data_colors["Constitution"]},
             slash,
@@ -303,7 +297,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Luk",textcolour=label_colors["Luck"]},
+            {text="Luk",textcolour=label_colors["Luck"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.stats.luck),textcolour=data_colors["Luck"]},
             slash,
@@ -312,7 +306,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="HR ",textcolour=label_colors["Hitroll"]},
+            {text="HR ",textcolour=label_colors["Hitroll"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.stats.hr), textcolour=data_colors["Hitroll"]},
             endbracket
@@ -320,7 +314,7 @@ function BuildStatsPage()
 
 
       table.insert(cstyles, {
-            {text="DR ",textcolour=label_colors["Damroll"]},
+            {text="DR ",textcolour=label_colors["Damroll"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.stats.dr), textcolour=data_colors["Damroll"]},
             endbracket
@@ -329,35 +323,35 @@ function BuildStatsPage()
       table.insert(cstyles,{})
 
       table.insert(cstyles, {
-            {text="Train",textcolour=label_colors["Trains"]},
+            {text="Train",textcolour=label_colors["Trains"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.trains), textcolour=data_colors["Trains"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="Prac ",textcolour=label_colors["Pracs"]},
+            {text="Prac ",textcolour=label_colors["Pracs"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.pracs), textcolour=data_colors["Pracs"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="Gold ",textcolour=label_colors["Gold"]},
+            {text="Gold ",textcolour=label_colors["Gold"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%s",commas_in_gold and commas(gmcpchar.worth.gold) or gmcpchar.worth.gold), textcolour=data_colors["Gold"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="TP   ",textcolour=label_colors["Trivia"]},
+            {text="TP   ",textcolour=label_colors["Trivia"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.worth.tp), textcolour=data_colors["Trivia"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="QP   ",textcolour=label_colors["Quest Points"]},
+            {text="QP   ",textcolour=label_colors["Quest Points"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%7d",gmcpchar.worth.qp), textcolour=data_colors["Quest Points"]},
             endbracket
@@ -366,21 +360,21 @@ function BuildStatsPage()
       table.insert(cstyles, {})
 
       table.insert(cstyles, {
-            {text="Lvl  ",textcolour=label_colors["Level"]},
+            {text="Lvl  ",textcolour=label_colors["Level"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.status.level), textcolour=data_colors["Level"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="TNL  ",textcolour=label_colors["TNL"]},
+            {text="TNL  ",textcolour=label_colors["TNL"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.status.tnl), textcolour=data_colors["TNL"]},
             endbracket
       })
 
       table.insert(cstyles, {
-            {text="Align",textcolour=label_colors["Alignment"]},
+            {text="Align",textcolour=label_colors["Alignment"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%5d",gmcpchar.status.align), textcolour=data_colors["Alignment"]},
             endbracket
@@ -389,7 +383,7 @@ function BuildStatsPage()
       table.insert(cstyles,{})
 
       table.insert(cstyles, {
-            {text="Hp ",textcolour=label_colors["Health"]},
+            {text="Hp ",textcolour=label_colors["Health"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.vitals.hp),textcolour=data_colors["Health"]},
             slash,
@@ -398,7 +392,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Mn ",textcolour=label_colors["Mana"]},
+            {text="Mn ",textcolour=label_colors["Mana"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.vitals.mana),textcolour=data_colors["Mana"]},
             slash,
@@ -407,7 +401,7 @@ function BuildStatsPage()
       })
 
       table.insert(cstyles, {
-            {text="Mvs",textcolour=label_colors["Moves"]},
+            {text="Mvs",textcolour=label_colors["Moves"] or Theme.BODY_TEXT},
             bracket,
             {text=string.format("%3d",gmcpchar.vitals.moves),textcolour=data_colors["Moves"]},
             slash,
@@ -470,7 +464,7 @@ function right_click_menu ()
 
    colorstring = ">All Fields|All Labels|All Data|<|-|"
    for k,v in pairs(color_indices) do
-      colorstring = colorstring..">"..v.."|"..v.." Label ("..RGBColourToName(label_colors[v])..")|"..v.." Data ("..RGBColourToName(data_colors[v])..")|<|"
+      colorstring = colorstring..">"..v.."|"..v.." Label ("..RGBColourToName(label_colors[v] or Theme.BODY_TEXT)..")|"..v.." Data ("..RGBColourToName(data_colors[v])..")|<|"
    end
 
    menustring = "Flip Orientation|Change Font|>Colors|"..colorstring.."<|"..(commas_in_gold and "+" or "").."Commas in Gold|-|Bring To Front|Send To Back|-|Reset Defaults"
@@ -524,7 +518,7 @@ function right_click_menu ()
    elseif string.find(result,"Label") then
       local item = string.sub(result,1,string.find(result,"Label")-2)
       if item == "All" then
-         local newcolour = PickColour(0x00FF00)
+         local newcolour = PickColour(Theme.BODY_TEXT)
          if newcolour ~= -1 then
             for i,v in pairs(label_colors) do
                label_colors[i] = newcolour
@@ -533,7 +527,7 @@ function right_click_menu ()
             RefreshPage()
          end
       else
-         local newcolour = PickColour(label_colors[item])
+         local newcolour = PickColour(label_colors[item] or Theme.BODY_TEXT)
          if newcolour ~= -1 then
             label_colors[item] = newcolour
             SaveState()
@@ -545,7 +539,7 @@ function right_click_menu ()
       if item == "All" then
          local newcolour = PickColour(0xFFFFFF)
          if newcolour ~= -1 then
-            for i,v in pairs(label_colors) do
+            for i,v in pairs(data_colors) do
                data_colors[i] = newcolour
             end
             SaveState()
@@ -584,7 +578,8 @@ function right_click_menu ()
       height           = default_height
       width            = default_width
       stacked = 0
-      label_colors = copytable.deep(label_color_defaults)
+
+      label_colors = {}
       data_colors = copytable.deep(data_color_defaults)
       SaveState()
       OnPluginInstall()
