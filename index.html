@@ -110,40 +110,46 @@
       SetAllReleasesInfo(allReleasesInfo);
       SetLatestReleaseInfo(rname, url, info);
     } else {
-      $.getJSON("https://api.github.com/repos/fiendish/aardwolfclientpackage/releases?nocache=" + (new Date()).getTime())
-        .done(function (releases) {
-          var downloadCount = 0;
-          for (var i = 0; i < releases.length; i++) {
-            for (var j = 0; j < releases[i].assets.length; j++) {
-              var asset = releases[i].assets[j];
-              downloadCount += asset.download_count;
+        $.ajax(
+        {
+            url: "https://api.github.com/repos/fiendish/aardwolfclientpackage/releases?nocache=" + (new Date()).getTime(),
+            headers: {
+                "Accepts": "application/vnd.github.v3+json"
+            },
+            success: function (releases) {
+                var downloadCount = 0;
+                for (var i = 0; i < releases.length; i++) {
+                    for (var j = 0; j < releases[i].assets.length; j++) {
+                    var asset = releases[i].assets[j];
+                    downloadCount += asset.download_count;
+                    }
+                }
+                var allReleasesInfo = "<span style='opacity: 0.5'>All installer versions combined since r1871 (the first installer build), <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
+                Storage.set('allReleasesInfo', allReleasesInfo, fiveMinutes);
+
+                SetAllReleasesInfo(allReleasesInfo);
+
+                var release = releases[0];
+                var asset = release.assets[0];
+                var downloadCount = asset.download_count;
+                var oneHour = 60 * 60 * 1000;
+                var oneDay = 24 * oneHour;
+                var dateDiff = new Date() - new Date(asset.updated_at);
+                var timeAgo;
+                if (dateDiff < oneDay) {
+                    timeAgo = (dateDiff / oneHour).toFixed(1) + " hours ago";
+                } else {
+                    timeAgo = (dateDiff / oneDay).toFixed(1) + " days ago";
+                }
+                var rname = release.name;
+                var url = asset.browser_download_url;
+                var info = "The latest Aardwolf MUSHclient Package version is: <span class='number'>" + release.name + "</span><br>Its installer was created <span class='number'>" + timeAgo + "</span> and has been downloaded <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
+                Storage.set('rname', rname, fiveMinutes);
+                Storage.set('url', url, fiveMinutes);
+                Storage.set('info', info, fiveMinutes);
+
+                SetLatestReleaseInfo(rname, url, info);
             }
-          }
-          var allReleasesInfo = "<span style='opacity: 0.5'>All installer versions combined since r1871 (the first installer build), <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
-          Storage.set('allReleasesInfo', allReleasesInfo, fiveMinutes);
-
-          SetAllReleasesInfo(allReleasesInfo);
-
-          var release = releases[0];
-          var asset = release.assets[0];
-          var downloadCount = asset.download_count;
-          var oneHour = 60 * 60 * 1000;
-          var oneDay = 24 * oneHour;
-          var dateDiff = new Date() - new Date(asset.updated_at);
-          var timeAgo;
-          if (dateDiff < oneDay) {
-            timeAgo = (dateDiff / oneHour).toFixed(1) + " hours ago";
-          } else {
-            timeAgo = (dateDiff / oneDay).toFixed(1) + " days ago";
-          }
-          var rname = release.name;
-          var url = asset.browser_download_url;
-          var info = "The latest Aardwolf MUSHclient Package version is: <span class='number'>" + release.name + "</span><br>Its installer was created <span class='number'>" + timeAgo + "</span> and has been downloaded <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
-          Storage.set('rname', rname, fiveMinutes);
-          Storage.set('url', url, fiveMinutes);
-          Storage.set('info', info, fiveMinutes);
-
-          SetLatestReleaseInfo(rname, url, info);
         });
     }
   }
