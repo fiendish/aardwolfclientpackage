@@ -104,7 +104,7 @@
     var rname = Storage.get("rname");
     var url = Storage.get("url");
     var info = Storage.get("info");
-    var latest_rev = "r1993";
+    var latest_rev = "r1992";
 
     if ((latest_rev == rname) && allReleasesInfo && rname && url && info) {
       SetAllReleasesInfo(allReleasesInfo);
@@ -112,10 +112,11 @@
     } else {
         $.ajax(
         {
-            url: "https://api.github.com/repos/fiendish/aardwolfclientpackage/releases?nocache=" + (new Date()).getTime(),
+            url: "https://api.github.com/repos/fiendish/aardwolfclientpackage/releases?per_page=1000&nocache=" + (new Date()).getTime(),
             headers: {
-                "Accepts": "application/vnd.github.v3+json"
+                "Accept": "application/vnd.github.v3+json",
             },
+            dataType: "json",
             success: function (releases) {
                 var downloadCount = 0;
                 for (var i = 0; i < releases.length; i++) {
