@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1994 snapshot
+- bug fix: Fixes a crash in MUSHclient when calling PluginSupports on a plugin without any script section. https://github.com/nickgammon/mushclient/commit/079ba7f
+
 r1993 snapshot
 - new feature: Statmon miniwindow label colors will match the current theme by default unless customized. You'll need to right-click and choose 'Reset Defaults' to see this on an existing install.
 - new theme: Green Neon to complement Pink Neon.
