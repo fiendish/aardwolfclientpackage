@@ -6,7 +6,7 @@
    author="Fiendish"
    id="e50b1d08a0cfc0ee9c44947b"
    language="Lua"
-   purpose="The time to the next tick is shown on the status bar."
+   purpose="The time to the next tick is shown on the status bar or in a miniwindow."
    date_written="2008-07-05 16:46:02"
    requires="4.31"
    version="1.0"
@@ -68,12 +68,17 @@
 <script>
 <![CDATA[
 require "mw_theme_base"
+require "aard_requirements"
 
 tick_prefix = "Next tick: "
 tick_length = 30
 win = GetPluginID()
 
 function switch_to_status()
+   if aard_req_novisuals_mode then
+      Note("This command does nothing in no visuals mode.")
+      return
+   end
    if use_miniwin then
       use_miniwin = false
       Note("The tick timer readout is now in the bottom status bar.")
@@ -85,6 +90,10 @@ function switch_to_status()
 end
 
 function switch_to_miniwin()
+   if aard_req_novisuals_mode then
+      Note("This command does nothing in no visuals mode.")
+      return
+   end
    if not use_miniwin then
       use_miniwin = true
       Note("The tick timer readout is now in a floating miniwindow.")
@@ -134,7 +143,11 @@ function init()
       last_tick = lt
    end
 
-   use_miniwin = GetVariable("use_miniwin") ~= "0" -- default true
+   if aard_req_novisuals_mode then
+      use_miniwin = false
+   else
+      use_miniwin = GetVariable("use_miniwin") ~= "0" -- default true
+   end
    font_name = GetVariable("font_name") or default_font_name
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
@@ -198,7 +211,9 @@ end
 function OnPluginSaveState()
    SetVariable("font_name", font_name)
    SetVariable("font_size", font_size)
-   SetVariable("use_miniwin", use_miniwin and "1" or "0")
+   if not aard_req_novisuals_mode then
+      SetVariable("use_miniwin", use_miniwin and "1" or "0")
+   end
    if last_tick then
       SetVariable("last_tick", last_tick)
    end
