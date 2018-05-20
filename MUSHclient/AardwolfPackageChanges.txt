@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r1995 snapshot
+- new feature: New tick timer plugin. It's like the old tick timer plugin, but optionally floats in a miniwindow. Try 'aard tick help'.
+
 r1994 snapshot
 - bug fix: Fixes a crash in MUSHclient when calling PluginSupports on a plugin without any script section. https://github.com/nickgammon/mushclient/commit/079ba7f
 
