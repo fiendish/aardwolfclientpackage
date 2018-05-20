@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Aardwolf_Tick_Timer"
+   author="Fiendish"
+   id="e50b1d08a0cfc0ee9c44947b"
+   language="Lua"
+   purpose="The time to the next tick is shown on the status bar."
+   date_written="2008-07-05 16:46:02"
+   requires="4.31"
+   version="1.0"
+   save_state="y"
+   >
+</plugin>
+
+<aliases>
+
+<alias
+   match="^aard tick( help| miniwin| status)?$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+>
+<send>
+   key = Trim("%1")
+
+   if key == "" then
+      if last_tick then
+         print("Next tick: "..time_left().." seconds.")
+      else
+         print("A tick must be witnessed before the next tick can be predicted.")
+      end
+   elseif key == "help" then
+      Note("")
+      Note("Aardwolf MUSHclient Tick Timer Help")
+      Note("")
+      Note("aard tick          :  Print the estimated time until the next game tick.")
+      Note("aard tick status   :  Put the tick timer underneath the input area.")
+      Note("aard tick miniwin  :  Put the tick timer in a draggable miniwindow.")
+      Note("aard tick help     :  Print this help message.")
+      Note("")
+   elseif key == "miniwin" then
+      if switch_to_miniwin() then
+         SaveState()
+         init()
+      end
+   elseif key == "status" then
+      if switch_to_status() then
+         SaveState()
+         init()
+      end
+   end
+</send>
+</alias>
+</aliases>
+
+<timers>
+  <timer enabled="y" second="1.00" offset_second="0.00" send_to="12">
+   <send>
+   display()
+   </send>
+  </timer>
+</timers>
+
+<script>
+<![CDATA[
+require "mw_theme_base"
+
+tick_prefix = "Next tick: "
+tick_length = 30
+win = GetPluginID()
+
+function switch_to_status()
+   if use_miniwin then
+      use_miniwin = false
+      Note("The tick timer readout is now in the bottom status bar.")
+      Note("For other available commands, type: aard tick help")
+      return true
+   else
+      Note("The tick timer is already shown in the MUSHclient status area.")
+   end
+end
+
+function switch_to_miniwin()
+   if not use_miniwin then
+      use_miniwin = true
+      Note("The tick timer readout is now in a floating miniwindow.")
+      Note("For other available commands, type: aard tick help")
+      return true
+   else
+      Note("The tick timer is already shown as a miniwindow.")
+   end
+end
+
+function time_left()
+   if last_tick and (last_tick >= 0) then
+      return string.format("%2i", last_tick + tick_length - os.time())
+   else
+      return "??"
+   end
+end
+
+function display()
+   if use_miniwin then
+      update_miniwin()
+   else
+      SetStatus(tick_prefix..time_left())
+   end
+end
+
+function get_metrics()
+   font_height = WindowFontInfo(win, "font", 1)
+   height = font_height + (2 * Theme.TITLE_PADDING) + 4
+   width = WindowTextWidth(win, "font", tick_prefix.."??") + (2 * Theme.TITLE_PADDING) + 8
+   for i=0,tick_length do
+      width = math.max(
+         width,
+         WindowTextWidth(win, "font", tick_prefix..string.format("%2i", i))
+      )
+   end
+   return width, height
+end
+
+default_font_name = "Dina"
+default_font_size = "10"
+
+function init()
+   last_tick = nil
+   lt = tonumber(GetVariable("last_tick"))
+   if lt and (os.time() - lt < tick_length) then
+      last_tick = lt
+   end
+
+   use_miniwin = GetVariable("use_miniwin") ~= "0" -- default true
+   font_name = GetVariable("font_name") or default_font_name
+   font_size = tonumber(GetVariable("font_size")) or default_font_size
+
+   if use_miniwin then
+      windowinfo = movewindow.install(win, miniwin.pos_bottom_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp})
+      WindowCreate(win, windowinfo.window_left, windowinfo.window_top, 0, 0, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
+      WindowFont(win, "font", font_name, font_size, false, false, false, false, 0)
+      width, height = get_metrics()
+      WindowResize(win, width, height, Theme.SECONDARY_BODY)
+      movewindow.add_drag_handler(win, 0, 0, 0, 0)
+      WindowShow(win)
+   else
+      WindowShow(win, false)
+      WindowDelete(win)
+   end
+
+   SetStatus("")
+   display()
+end
+
+function MouseUp(flags, hotspot_id, win)
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+end
+
+function right_click_menu()
+   menustring = "Change Font|-|Move Tick Timer to Status Bar|-|Bring to Front|Send to Back"
+   result = WindowMenu(
+      win,
+      WindowInfo(win, 14),  -- x position
+      WindowInfo(win, 15),   -- y position
+      menustring
+   )
+
+   if result then
+      if result == "Change Font" then
+         wanted_font = utils.fontpicker(font_name, font_size) --font dialog
+         if wanted_font then
+            font_name = wanted_font.name
+            font_size = wanted_font.size
+         end
+      elseif result == "Move Tick Timer to Status Bar" then
+         switch_to_status()
+      elseif result == "Bring to Front" then
+         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      elseif result == "Send to Back" then
+         CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+      end
+      SaveState()
+      init()
+   end
+end
+
+require "checkplugin"
+function OnPluginListChanged()
+   do_plugin_check_now("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")
+end
+
+function OnPluginSaveState()
+   SetVariable("font_name", font_name)
+   SetVariable("font_size", font_size)
+   SetVariable("use_miniwin", use_miniwin and "1" or "0")
+   if last_tick then
+      SetVariable("last_tick", last_tick)
+   end
+   if WindowInfo(win, 1) then
+      movewindow.save_state(win)
+   end
+end
+
+function update_miniwin()
+   WindowRectOp(win, 2, 0, 0, 0, 0, Theme.PRIMARY_BODY) -- blank
+   WindowText(
+      win, "font", tick_prefix..time_left(),
+      4+Theme.TITLE_PADDING, 2+Theme.TITLE_PADDING, 0, 0,
+      Theme.BODY_TEXT
+   )
+   Theme.DrawBorder(win)
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end
+
+tick_option = string.char(101,1)
+function OnPluginTelnetOption (option)
+   if option == tick_option then
+      last_tick = os.time()
+      display()
+   end
+end
+
+function OnPluginInstall()
+   OnPluginEnable()
+end
+
+function OnPluginEnable()
+   init()
+end
+
+function OnPluginClose()
+   SaveState()
+   WindowDelete(win)
+end
+
+function OnPluginDisable()
+   OnPluginClose()
+end
+
+function OnPluginBroadcast(msg, id, name, text)
+   if (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
+      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
+   end
+end
+
+]]>
+</script>
+</muclient>
