@@ -299,6 +299,9 @@ function DrawTitleBar(win, font, title, text_alignment)
    local title_height = 0
    if font and title_lines then
       line_height = TextHeight(win, font)
+      if line_height == nil then
+        return (2*TITLE_PADDING)
+      end
       title_height = (2*TITLE_PADDING) + (line_height * #title_lines)
    end
 
@@ -355,17 +358,19 @@ function DrawBorder(win)
    return 2, 2, r, b
 end
 
-function OutlinedText(win, font, text, startx, starty, endx, endy, color, outline_color, utf8)
+function OutlinedText(win, font, text, startx, starty, endx, endy, color, outline_color, utf8, thickness)
+   if thickness == nil then
+      thickness = 1
+   end
    if outline_color == nil then
       outline_color = THREE_D_HARDSHADOW
    end
-   WindowText(win, font, text, startx-1, starty-1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx-1, starty, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx-1, starty+1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx, starty-1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx, starty+1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx+1, starty-1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx+1, starty, endx, endy, outline_color, utf8)
+   local right = nil
+   for xi = -thickness,thickness do
+      for yi = -thickness,thickness do
+         right = WindowText(win, font, text, startx+xi, starty+yi, endx+1, endy+1, outline_color, utf8)
+      end
+   end
    local right = WindowText(win, font, text, startx+1, starty+1, endx, endy, outline_color, utf8)
    WindowText(win, font, text, startx, starty, endx, endy, color, utf8)
    return right
@@ -379,19 +384,20 @@ function WindowTextFromStyles(win, font, styles, left, top, right, bottom, utf8)
 end
 
 -- text with a black outline
-function OutlinedTextFromStyles(win, font, styles, startx, starty, endx, endy, outline_color, utf8)
+function OutlinedTextFromStyles(win, font, styles, startx, starty, endx, endy, outline_color, utf8, thickness)
+   if thickness == nil then
+      thickness = 1
+   end
    if outline_color == nil then
       outline_color = THREE_D_HARDSHADOW
    end
    local text = strip_colours_from_styles(styles)
-   WindowText(win, font, text, startx-1, starty-1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx-1, starty, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx-1, starty+1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx, starty-1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx, starty+1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx+1, starty-1, endx, endy, outline_color, utf8)
-   WindowText(win, font, text, startx+1, starty, endx, endy, outline_color, utf8)
-   local right = WindowText(win, font, text, startx+1, starty+1, endx, endy, outline_color, utf8)
+   local right = nil
+   for xi = -thickness,thickness do
+      for yi = -thickness,thickness do
+         right = WindowText(win, font, text, startx+xi, starty+yi, endx+1, endy+1, outline_color, utf8)
+      end
+   end
    WindowTextFromStyles(win, font, styles, startx, starty, endx, endy, utf8)
    return right
 end
