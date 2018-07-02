@@ -205,7 +205,6 @@ require "gmcphelper"
 require "movewindow"
 require "mw"
 
-background_colour = Theme.PRIMARY_BODY
 default_width         = 209
 default_height        = 263
 default_x             = 658
@@ -239,7 +238,7 @@ function reset_aard()
    font_name = default_font_name
    font_size = default_font_size
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, default_height, background_colour)
+   WindowResize(win, default_width, default_height, Theme.PRIMARY_BODY)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    SaveState()
    OnPluginInstall()
@@ -332,7 +331,7 @@ function utf8_map_text_to_ascii(text)
 end
 
 function map_body_redirect(name, line, wildcards, styles)
-   table.insert (map_lines, styles)
+   table.insert(map_lines, styles)
 end
 
 current_room_name = "\n"
@@ -342,15 +341,42 @@ function resize_window()
    DisplayMapPage()
 end
 
---=================================================================================
--- Called by OnPluginInstall, but also by redraw routine to refresh the screen
--- and (if the first time) add the resizer tag, otherwise move the resizer relative
--- to the main window.
---=================================================================================
+title_color = Theme.THREE_D_SURFACE_DETAIL
+blink_cycle = {
+   0x0000FF,
+   0x00FFFF,
+   Theme.THREE_D_SURFACE_DETAIL
+}
+function blink_title(lines)
+   if show_title == 1 then
+      next_blink_color = (next_blink_color % (#blink_cycle)) + 1
+      title_color = blink_cycle[next_blink_color]
+      draw_title()
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   end
+end
+
+function draw_title()
+   local text_left = Theme.TITLE_PADDING + 2
+   local text_right = WindowInfo(win, 3) - Theme.TITLE_PADDING - 2
+   for i = 1,2 do
+      local text_top = (font_height * (i-1)) + Theme.TITLE_PADDING
+      Theme.WindowText(win, font_id, title_lines[i], text_left, text_top, text_right, bodytop, title_color)
+   end
+end
 
 function DisplayMapPage()
    styles = { }
-   bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, (show_title == 1) and {map_lines[1] or "", map_lines[2] or ""}, "left")
+   bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, "\n", "left")
+   if (show_title == 1) and (map_lines[1] ~= nil) then
+      title_lines = {strip_colours_from_styles(map_lines[1]), strip_colours_from_styles(map_lines[2])}
+      draw_title()
+      if is_pk then
+         next_blink_color = 0
+         blink_title()
+         AddTimer("blink_title", 0, 0, 0.5, "", timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace, "blink_title")
+      end
+   end
    movewindow.add_drag_handler(win, 0, 0, 0, 0)
    WindowRectOp(win, 2, bodyleft, bodytop, bodyright+1, bodybottom+1, Theme.PRIMARY_BODY) -- blank
 
@@ -405,7 +431,6 @@ function DisplayMapPage()
    -- show it now (or refresh)
    WindowShow(win, true)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
-
 end -- Display_Map
 
 function process_coords ()
@@ -554,6 +579,17 @@ function OnPluginBroadcast (msg, id, name, text)
 
       if (text == "room.info") then
          room_info = gmcp("room.info")
+         title_color = Theme.THREE_D_SURFACE_DETAIL
+         is_pk = false
+         for _,v in ipairs(utils.split(room_info.details, ",")) do
+            if v == "pk" then
+               is_pk = true
+               break
+            end
+         end
+         if not is_pk then
+            DeleteTimer("blink_title")
+         end
          coord_data = room_info.coord
          roomnum = room_info.num
          if (show_coords == 1) then
@@ -744,6 +780,7 @@ function OnPluginConnect()
    TelnetOptionOn(TELOPT_AUTOMAP) -- does this do anything?
    Send_GMCP_Packet("maptype "..maptype)
    Send_GMCP_Packet("request char")
+   Send_GMCP_Packet("request room")
 end
 
 ---------------------------------------------------------------------------------
