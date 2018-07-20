@@ -175,6 +175,8 @@ loadstring(GetVariable("tabs_nonchannel_captures") or "")()
 tabs_names = {}
 loadstring(GetVariable("tabs_names") or "")()
 
+window_title = GetVariable("window_title") or "Communication Log"
+
 function reduce_diverse_channels()
    channels_table = {}
    for tab,channels in ipairs(tabs_channel_captures) do
@@ -544,7 +546,7 @@ end
 
 function drawBackground ()
    -- WindowAddHotspot(win, "titlebar", 0, 0, 0, 0, nil, nil, nil, nil, "tabMouseUp", "", miniwin.cursor_hand, 0)
-   draw_left, draw_top, draw_right, draw_bottom = Theme.DressWindow(win, "channels_font", "Communication Log", nil)
+   draw_left, draw_top, draw_right, draw_bottom = Theme.DressWindow(win, "channels_font", window_title, nil)
    Theme.AddResizeTag(win, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 end
 
@@ -656,6 +658,7 @@ function OnPluginSaveState()
    SetVariable("tabs_names", serialize.save("tabs_names"))
    SetVariable("tabs_channel_captures", serialize.save("tabs_channel_captures"))
    SetVariable("tabs_nonchannel_captures", serialize.save("tabs_nonchannel_captures"))
+   SetVariable("window_title", window_title)
 end
 
 function sanitize_filename(str)
@@ -976,6 +979,13 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == 17+echo_skip-noremove then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+   elseif result == 18+echo_skip-noremove then
+    if window_title == "" then
+        window_title = "Communication Log"
+    else
+        window_title = ""
+    end
+    setupDisplay()
    end
    SaveState()
 end
@@ -1015,7 +1025,8 @@ function extend_rightclick_menu_string(tr)
       "Clear Tab",
       "-",
       "Bring to Front",
-      "Send to Back"
+      "Send to Back",
+      "Show/Hide Titlebar"
    }
    local ms = menu_strings
 
