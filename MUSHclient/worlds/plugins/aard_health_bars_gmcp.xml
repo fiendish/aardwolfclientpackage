@@ -138,8 +138,8 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
             txt = string.lpad(val, maxlen, ' ').."/"..string.rpad(maxval,maxlen,' ')
          end
          if overlay_numbers == 2 or overlay_numbers == 3 then
-            txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%u',100*num_val/num_maxval).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
-         end
+            txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%d',100*num_val/num_maxval).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
+          end
       end
 
       if graphicalMode == 1 then
