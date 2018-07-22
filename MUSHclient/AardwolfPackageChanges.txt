@@ -1,6 +1,6 @@
 Aardwolf Client Package Major Changes List
 
-r1998 snapshot:
+r1998 snapshot
 - bug fix: Reverse TNL + Percentage mode in the health bars plugin would show a silly number if your TNL was higher than max because of dying.
 
 r1997 snapshot
