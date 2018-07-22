@@ -5,4 +5,6 @@ Documentation and help can by found on the project wiki at https://github.com/fi
 
 Further help can be found in-game on the tech channel.
 
+**Contributors**: Submitting a Pull Request? Please target the development branch. Thanks!
+
 ![screenshot of the client](https://github.com/fiendish/aardwolfclientpackage/wiki/images/screenshot1.png) 
