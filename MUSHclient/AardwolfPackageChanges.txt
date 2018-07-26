@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r1999 snapshot
+- bug fix: Because of a limitation in the current implementation of checkplugin, the tick timer plugin needs to load aard_requirements in OnPluginListChanged and not immediately during load. Oops.
+- lol: Party!
+
 r1998 snapshot
 - bug fix: Reverse TNL + Percentage mode in the health bars plugin would show a silly number if your TNL was higher than max because of dying.
 - new theme: Midnight

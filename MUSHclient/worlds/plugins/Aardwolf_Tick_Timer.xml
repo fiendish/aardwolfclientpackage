@@ -68,7 +68,6 @@
 <script>
 <![CDATA[
 require "mw_theme_base"
-require "aard_requirements"
 
 tick_prefix = "Next tick: "
 tick_length = 30
@@ -203,9 +202,8 @@ function right_click_menu()
    end
 end
 
-require "checkplugin"
 function OnPluginListChanged()
-   do_plugin_check_now("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor")
+  dofile "lua/aard_requirements.lua"
 end
 
 function OnPluginSaveState()
