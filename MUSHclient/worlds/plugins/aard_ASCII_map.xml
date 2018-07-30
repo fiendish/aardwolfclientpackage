@@ -345,7 +345,7 @@ title_color = Theme.THREE_D_SURFACE_DETAIL
 blink_cycle = {
    0x0000FF,
    0x00FFFF,
-   Theme.THREE_D_SURFACE_DETAIL
+   0xFFFFFF
 }
 function blink_title(lines)
    if show_title == 1 then
