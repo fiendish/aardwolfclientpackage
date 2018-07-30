@@ -290,6 +290,10 @@ function TextRect:reWrapLines()
    local start_line = self.display_start_line or 1
 
    if self.num_wrapped_lines ~= 0 then
+      if (start_line == nil) or (self.wrapped_lines == nil) or (self.wrapped_lines[start_line] == nil) then
+         print("TEXT RECT ERROR. SEND THIS TO FIENDISH:")
+         for k,v in pairs(self) do print(k, v) end
+      end
       raw_index = self.wrapped_lines[start_line][4]
    end
 
