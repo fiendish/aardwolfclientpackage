@@ -520,8 +520,8 @@ function right_click_menu ()
       if item == "All" then
          local newcolour = PickColour(Theme.BODY_TEXT)
          if newcolour ~= -1 then
-            for i,v in pairs(label_colors) do
-               label_colors[i] = newcolour
+            for i,v in pairs(color_indices) do
+               label_colors[v] = newcolour
             end
             SaveState()
             RefreshPage()
@@ -539,8 +539,8 @@ function right_click_menu ()
       if item == "All" then
          local newcolour = PickColour(0xFFFFFF)
          if newcolour ~= -1 then
-            for i,v in pairs(data_colors) do
-               data_colors[i] = newcolour
+            for i,v in pairs(color_indices) do
+               data_colors[v] = newcolour
             end
             SaveState()
             RefreshPage()
