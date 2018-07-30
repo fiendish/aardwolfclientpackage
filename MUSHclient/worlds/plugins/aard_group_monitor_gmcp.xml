@@ -239,7 +239,7 @@ function RemoveMembersFromGroupDisplay()
    group_members = {}
    if (full_group_data ~= nil) then
       for i,v in ipairs(full_group_data.members) do
-         if not hidden_members[v.name] or ((show_self == 0) and (char_data ~= nil) and (v.name ~= char_data.name)) then
+         if not (hidden_members[v.name] or ((show_self == 0) and (char_data ~= nil) and (v.name == char_data.name))) then
             table.insert(group_members, v)
          end
       end
