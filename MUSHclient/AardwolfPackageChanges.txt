@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2001 snapshot
+- bug fix: Fix the include self toggle in the group monitor.
+
 r2000 snapshot
 - new theme: Deep Red
 - misc change: Deep Magenta theme is now more magenta
