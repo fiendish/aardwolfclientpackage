@@ -8,13 +8,13 @@
 <muclient>
 <plugin
    name="Aardwolf_Help"
-   author="Kobus"
+   author="Kobus and Fiendish"
    id="60ad15b3cb2a5757d2611c28"
    language="Lua"
-   purpose="Displays help for various aardmush plugin commands"
+   purpose="Help for Aardwolf MUSHclient Package's more elusive plugin commands"
    save_state="y"
    date_written="2018-08-05 16:13:09"
-   requires="5.06"
+   requires="5.05"
    version="1.0"
    >
 <description trim="y">
@@ -24,21 +24,7 @@ Empty.
 </description>
 </plugin>
 
-<!--  Aliases  -->
-
 <aliases>
-<!--
-  <alias
-   match="^aard help$"
-   enabled="y"
-   group="aard_help"
-   regexp="y"
-   send_to="10"
-   sequence="100"
-  >
-  <send></send>
-  </alias>
--->
   <alias
    match="^aard help$"
    enabled="y"
@@ -48,168 +34,109 @@ Empty.
    sequence="100"
   >
   </alias>
-  <alias
-   match="^aard help maptype$"
-   enabled="y"
-   group="aard_help"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>Note("Valid map types:")
-Note(" 0    Standard ASCII map")
-Note(" 1    Solid single line map")
-Note(" 2    Solid double line map")
-Note(" 3    Solid single line map without end caps")
-Note(" 4    Solid double line map without end caps")
-Note(" 5    Solid single line map with extended walls")
-Note(" 6    Solid double line map with extended walls")</send>
-  </alias>
-  <alias
-   match="^aard help mapper(.*)$"
-   enabled="y"
-   group="aard_help"
-   regexp="y"
-   send_to="10"
-   sequence="100"
-  >
-  <send>mapper help%1</send>
-  </alias>
-  <alias
-   match="^aard help layout(.*)$"
-   enabled="y"
-   group="aard_help"
-   regexp="y"
-   send_to="10"
-   sequence="100"
-  >
-  <send>aard layout help%1</send>
-  </alias>
-  <alias
-   match="^aard help soundpack(.*)$"
-   enabled="y"
-   group="aard_help"
-   regexp="y"
-   send_to="10"
-   sequence="100"
-  >
-  <send>sphelp</send>
-  </alias>
 </aliases>
 
 <script>
 <![CDATA[
 plugin_list = {}
-check_list = {
-  {"3f498d929793c12cb70fb59e", "asciimap"},
-  {"b9315e040989d3f81f4328d6", "theme"},
-  {"b6eae87ccedd84f510b74714", "layout"},
-  {"c293f9e7f04dde889f65cb90", "mapper"},
-  {"b555825a4a5700c35fa80780", "channels"},
-  {"f178e68512c685b3be1e9b07", "group"},
-  {"3e7dedbe37e44942dd46d264", "gmcp"},
-  {"60840c9013c7cc57777ae0ac", "bigmap"},
-  {"e50b1d08a0cfc0ee9c44947b", "tick"},
-  {"23832d1089f727f5f34abad8", "soundpack"}
+
+name_to_id = {
+   ["tick"] = "e50b1d08a0cfc0ee9c44947b",
+   ["soundpack"] = "23832d1089f727f5f34abad8",
+   ["bigmap"] = "60840c9013c7cc57777ae0ac",
+   ["gmcp"] = "3e7dedbe37e44942dd46d264",
+   ["layout"] = "c293f9e7f04dde889f65cb90",
+   ["channels"] = "b555825a4a5700c35fa80780",
+   ["asciimap"] = "3f498d929793c12cb70fb59e",
+   ["group"] = "f178e68512c685b3be1e9b07",
+   ["theme"] = "b9315e040989d3f81f4328d6",
+   ["inventory"] = "0cbb10309587f0ee15ba78ce",
+   ["mapper"] = "b6eae87ccedd84f510b74714",
+   ["echo"] = "55616ea13339bc68e963e1f8"
 }
 
-function OnPluginInstall()
-  check_plugins()
+split_col = 30
+
+function help(cmd, text)
+   ColourNote(
+      "khaki", "", "  " .. cmd, 
+      "lightskyblue", "", string.rep(" ", (split_col - string.len(cmd))) .. text
+   )
 end
 
-function OnPluginListChanged()
-  check_plugins()
-end -- function
-
-function help(cmd,text)
-  Note("  " .. cmd .. string.rep(" ",(24 - string.len(cmd))) .. text)
+function subheading(cmd, text)
+   ColourNote(
+      "paleturquoise", "", "  " .. cmd, 
+      "paleturquoise", "", string.rep(" ", (split_col - string.len(cmd))) .. text
+   )
 end
+
+line = string.rep("-", 79)
 
 function aard_help()
-  Note("Global AardMUSH Commands\n")
-  help("resetaard","Reset miniwindows to their default positions")
-  if isplugin("theme") then
-    Note("\nTheme Commands\n")
-    help("aard theme change","Change the current theme")
-  end
-  if isplugin("layout") then
-    Note("\nLayout Commands - For more info type 'aard help layout'\n")
-    help("aard layout (un)lock","(Un)Lock miniwindow positions")
-    help("aard layout reset","Reset the layout (like resetaard but better)")
-  end
-  if isplugin("asciimap") then
-    Note("\nASCII Mapper Commands\n")
-    help("maptype <0-6>","Change the ASCII map type (for more info type 'aard help maptype')")
-  end
-  if isplugin("mapper") then
-    Note("\nGMCP Mapper Commands - For more info type 'aard help mapper'\n")
-    help("mapper [show/hide]","Show/hide the GMCP mapper window")
-    help("mapper [area/find] <t>","Search for a room matching <t> (use area for current zone)")
-    help("mapper where <id>","Show directions to the room matching <room id>")
-    help("mapper next","Go to the next room in the list")
-    help("mapper resume","Resume going to the previous target room")
-  end
-  if isplugin("bigmap") then
-    Note("\nBigmap Commands\n")
-    help("bigmap [on/off]","Show/hide the big (continent) map")
-    help("bigmap (un)merge","(Un)Merge big (continent) map from/into GMCP mapper window")
-    help("bigmap reset","Remove all cached maps (maps will require update)")
-    help("bigmap update","Update the map for the current continent")
-  end
-  if isplugin("channels") then
-    Note("\nCommunication Log Commands\n")
-    help("chats [show/hide]","Show/hide the communication log")
-  end
-  if isplugin("group") then
-    Note("\nGroup Commands\n")
-    help("group[on/off]","Show/hide the group window")
-  end
-  if isplugin("tick") then
-    Note("\nTick Commands\n")
-    help("aard tick","Show seconds until next tick")
-    help("aard tick status","Put tick timer in the status bar")
-    help("aard tick miniwin","Put tick timer in a miniwindow")
-  end
-  if isplugin("soundpack") then
-    Note("\nSoundpack Commands - For more info type 'aard help soundpack'\n")
-    help("spset <event>","Show info for the event matching <event>")
-    help("sptog <ev|all>","Toggle all or the specified event on/off")
-    help("spmute","Mute all event sounds")
-    help("spvol <0-100>","Set global maximum volume for events")
-  end
-  
-  if isplugin("gmcp") then
-    Note("\nGMCP Commands\n")
-    help("gmcpdebug <0-2>","Set GMCP debugging verbosity")
-    help("sendgmcp <str>","Send <str> to the MUD via GMCP")
-  end
+   Note()
+   ColourNote("paleturquoise", "", "  Aardwolf MUSHclient Package Hidden Commands")
+   ColourNote("royalblue", "", line)
+   subheading("Plugin Help Command", "Does What")
+   Note()
+   
+   if is_active("layout") then
+      help("aard layout help", "Miniwindow layouts help")
+   end
+   if is_active("mapper") then
+      help("mapper help", "GMCP mapper plugin help")
+   end
+   if is_active("bigmap") then
+      help("bigmap help", "Bigmap plugin help")
+   end
+   if is_active("tick") then
+      help("aard tick help", "Tick timer plugin help")
+   end
+   if is_active("inventory") then
+      help("inventory serials help", "Inventory serial numbers help")
+   end
+   if is_active("soundpack") then
+      help("sphelp", "Pwar's soundpack plugin help")
+   end
+
+   ColourNote("royalblue", "", line)
+   subheading("Other Command", "Does What")
+   Note()
+
+   if is_active("theme") then
+      help("aard theme change", "Miniwindow color themes")
+   end
+   if is_active("channels") then
+      help("chats show / chats hide", "Show/hide the communication log")
+   end
+   if is_active("echo") then
+      help("chats echo", "List which channels are sent to the main output area")
+   end
+   if is_active("group") then
+      help("groupon / groupoff", "Show/hide the group window")
+   end
+   if is_active("gmcp") then
+      help("gmcpdebug <0-2>", "Set GMCP debugging verbosity")
+   end
+
+   ColourNote("royalblue", "", line)
+   ColourTell("paleturquoise", "", "Find even more help at:  ")
+   Hyperlink (
+      "https://github.com/fiendish/aardwolfclientpackage/wiki",
+      "https://github.com/fiendish/aardwolfclientpackage/wiki",
+      "", "paleturquoise", "", true
+   )
+   Note()
 end
 
-function add_plugin(name)
-  plugin_list[(#plugin_list+1)] = name
-end
-
-function check_plugins()
-  plugin_list = {}
-  for i=1,#check_list do
-    if IsPluginInstalled(check_list[i][1]) then add_plugin(check_list[i][2]) end
-  end
-end
-
-function isplugin(name)
-  ret = false
-  for i=1,#plugin_list do
-    if plugin_list[i] == name then
-      ret = true
-      break
-    end
-  end
-  return ret
+function is_active(name)
+   id = name_to_id[name]
+   return GetPluginInfo(id, 17) or false
 end
 
 function getmemoryusage()
-  collectgarbage('collect')
-  return collectgarbage('count')
+   collectgarbage('collect')
+   return collectgarbage('count')
 end
 
 ]]>

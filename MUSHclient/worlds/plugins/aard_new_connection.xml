@@ -27,6 +27,10 @@
 </aliases>
 <script>
 <![CDATA[
+showGreeting2 = tonumber(GetVariable("showGreeting2"))
+if showGreeting2 == nil then
+   showGreeting2 = 1
+end
 
 function OnPluginSaveState ()
    SetVariable("showGreeting2", showGreeting2)
@@ -40,7 +44,6 @@ function OnPluginListChanged()
       return
    end
    if not loaded then
-      showGreeting2 = tonumber(GetVariable("showGreeting2")) or showGreeting2
       if (showGreeting2 == 1) then
          ShowGreeting(true)
       else
@@ -50,25 +53,22 @@ function OnPluginListChanged()
    loaded = true
 end
 
-function ShowGreeting(firstTime, highlight_url)
-   if (firstTime) then
+function ShowGreeting()
+   Note("")
+   Note("Screen reader users: The non-visual package version at https://fiendish.github.io/aardwolfclientpackage/ comes pre-configured for screen reader text to speech. This version does not. Otherwise, to bypass this welcome screen and connect to the game, type \"connect to aardwolf\" without the quotation marks.")
+   Note("For help with the client type \"aard help\" without the quotation marks.")
+   Note("")
 
-      Note("")
-      Note("Screen reader users: The non-visual package version at https://fiendish.github.io/aardwolfclientpackage/ comes pre-configured for screen reader text to speech. This version does not. Otherwise, to bypass this welcome screen and connect to the game, type \"connect to aardwolf\" without the quotation marks.")
-      Note("For help with the client type \"aard help\" without the quotation marks.")
-      Note("")
-
-    if not aard_req_novisuals_mode then
-     utils.msgbox("Welcome to the AardMUSH client!\n\nFor help type 'aard help'.\n\n\nThis dialog will not be displayed again.", "Welcome", "ok", "i")
-    end
-    showGreeting2 = 0
+   if not aard_req_novisuals_mode then
+      utils.msgbox("Welcome to the AardMUSH client!\n\nFor help type 'aard help'.\n\n\nThis dialog will not be displayed again.", "Welcome", "ok", "i")
    end
+   showGreeting2 = 0
    Connect()
 end -- ShowGreeting
 
 function getmemoryusage()
-  collectgarbage('collect')
-  return collectgarbage('count')
+   collectgarbage('collect')
+   return collectgarbage('count')
 end
 
 ]]>
