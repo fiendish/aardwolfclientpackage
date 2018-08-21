@@ -18,7 +18,7 @@ Steps for use: (also see https://github.com/fiendish/aardwolfclientpackage/wiki/
 --]]
 require "checkplugin"
 require "movewindow"
-dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
+dofile(GetInfo(60) .. "aardwolf_colors.lua")
 
 module ("Theme", package.seeall)
 
@@ -210,11 +210,11 @@ function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textco
    end
    local right = left + WindowTextWidth(win, font, text) + 4
    local bottom = top + TextHeight(win, font)
-   WindowRectOp(win, 2, left, top+1, right, bottom+2, CLICKABLE)
+   WindowRectOp(win, 2, left, top+1, right, bottom+2, bgcolor)
    if outlined then
-      WindowRectOp(win, 1, left-1, top, right+1, bottom+3, CLICKABLE_TEXT)
+      WindowRectOp(win, 1, left-1, top, right+1, bottom+3, textcolor)
    end
-   WindowText(win, font, text, left+2, top+1, right, bottom+1, CLICKABLE_TEXT, utf8)
+   WindowText(win, font, text, left+2, top+1, right, bottom+1, textcolor, utf8)
    return right-left
 end
 
