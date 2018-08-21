@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2004 snapshot
+- bug fix: The bgcolor and textcolor arguments to Theme.DrawTextBox should work now.
+- bug fix: mw_theme_base will use a more developer-friendly path for aardwolf_colors.lua
+- bug fix: The miniwindow themes overhaul had broken the ASCII map "Show Room Name" toggle. It should work again.
+
 r2001 snapshot
 - bug fix: Fix the include self toggle in the group monitor.
 
