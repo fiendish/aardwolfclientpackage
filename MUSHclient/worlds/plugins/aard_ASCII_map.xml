@@ -334,7 +334,6 @@ function map_body_redirect(name, line, wildcards, styles)
    table.insert(map_lines, styles)
 end
 
-current_room_name = "\n"
 function resize_window()
    WindowResize(win, width, height, Theme.SECONDARY_BODY)
 
@@ -367,7 +366,7 @@ end
 
 function DisplayMapPage()
    styles = { }
-   bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, "\n", "left")
+   bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, (show_title == 1) and "\n" or "", "left")
    if (show_title == 1) and (map_lines[1] ~= nil) then
       title_lines = {strip_colours_from_styles(map_lines[1]), strip_colours_from_styles(map_lines[2])}
       draw_title()
