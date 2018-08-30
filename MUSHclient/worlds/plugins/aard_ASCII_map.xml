@@ -67,6 +67,17 @@ and made more awesomer.
    Send("maptype %1 session")
 </send>
 </alias>
+
+<alias
+   match="mapshow (?<setting>room(?:name)?|exits|coord(?:inate)?s|echo)"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="map_show_toggle"
+>
+</alias>
+</aliases>
 </aliases>
 
 <triggers>
@@ -560,6 +571,29 @@ function right_click_menu ()
       OnPluginInstall(true)
    end
 end -- right_click_menu
+
+function map_show_toggle(name, line, wildcards)
+	local setting = wildcards.setting
+	
+	if (setting == "room" or setting == "roomname") then
+		show_title = (((show_title == 0) and 1) or 0)
+	elseif (setting == "exits") then
+		show_exits = (((show_exits == 0) and 1) or 0)
+	elseif (setting == "coords" or setting == "coordinates") then
+		show_coords = (((show_coords == 0) and 1) or 0)
+	elseif (setting == "echo") then
+		also_echo_map = (((also_echo_map == 0) and 1) or 0)
+        if also_echo_map == 1 then
+           request_new_map()
+        end
+	end
+	
+	ColourNote("orange", "", "Map setting for " .. setting .. " changed.");
+	
+    OnPluginCommand()
+    SaveState()
+    OnPluginInstall(true)
+end -- map_show_toggle
 
 --=================================================================================
 -- Called when plugin receives telnet data - main entry point for actually running
