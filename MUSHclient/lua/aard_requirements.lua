@@ -30,6 +30,7 @@ if not GetVariable("aard_theme_just_reloading") then
    do_plugin_check_now("520bc4f29806f7af0017985f", "Hyperlink_URL2") -- make hyperlinks from urls
    do_plugin_check_now("04d9e64f835452b045b427a7", "aard_Copy_Colour_Codes") -- Ctrl+D to copy selected text with color codes
    do_plugin_check_now("23832d1089f727f5f34abad8", "aard_soundpack") -- pre-made collection of common sound triggers
+   do_plugin_check_now("60ad15b3cb2a5757d2611c28", "aard_help") -- help command for aardmush-specific plugins
 end
 
 DeleteVariable("aard_theme_just_reloading")
