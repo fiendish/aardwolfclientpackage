@@ -1,20 +1,20 @@
 -- Copy this file to create your own custom themes, but please do not modify this file.
 
--- DEEP RED THEME
+-- ZOOT'S AARDWOLF THEME
 return {
    LOGO_OPACITY = 0.03,
 
    PRIMARY_BODY = 0x00018,
-   SECONDARY_BODY = 0x222255,
-   BODY_TEXT = 0x0000ff,
+   SECONDARY_BODY = 0x00008B,
+   BODY_TEXT = 0x8CE6F0,
 
    -- flat buttons
    CLICKABLE = 0x111122,
-   CLICKABLE_HOVER = 0x00007b,
-   CLICKABLE_HOT = 0x111150,
-   CLICKABLE_TEXT = 0x0000ff,
-   CLICKABLE_HOVER_TEXT = 0x1111ff,
-   CLICKABLE_HOT_TEXT = 0x1111ff,
+   CLICKABLE_HOVER = 0x8CE6F0,
+   CLICKABLE_HOT = 0x8CE6F0,
+   CLICKABLE_TEXT = 0x8CE6F0,
+   CLICKABLE_HOVER_TEXT = 0x8CE6F0,
+   CLICKABLE_HOT_TEXT = 0x8CE6F0,
 
    TITLE_PADDING = 2,
 
@@ -28,10 +28,10 @@ return {
 
    THREE_D_SOFTSHADOW = 0x080825,
    THREE_D_HARDSHADOW = 0x040412,
-   THREE_D_SURFACE_DETAIL = 0x0000ff, -- for contrasting details/text drawn on 3D surfaces
+   THREE_D_SURFACE_DETAIL = 0x8CE6F0, -- for contrasting details/text drawn on 3D surfaces
 
    -- for scrollbar background
-   SCROLL_TRACK_COLOR1 = 0x111133,
+   SCROLL_TRACK_COLOR1 = 0x000000,
    SCROLL_TRACK_COLOR2 = 0x222266,
    VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
 
@@ -42,7 +42,7 @@ return {
    -- See Charcoal.lua for a "do nothing" variant.
    -- Just make sure to return the path to a valid png file.
    bg_texture_function = function()
-      imgpath = GetInfo(66).."worlds/plugins/images/bg1.png"
+      imgpath = GetInfo(66).."worlds/plugins/images/forest2.png"
 
       WindowCreate("WiLl_It_BlEnD", 0, 0, 0, 0, 0, 0, 0)
       WindowLoadImage("WiLl_It_BlEnD", "tExTuRe", imgpath)
@@ -50,15 +50,13 @@ return {
       local th = WindowImageInfo("WiLl_It_BlEnD", "tExTuRe", 3)
       WindowResize("WiLl_It_BlEnD", tw, th, Theme.THREE_D_HIGHLIGHT)
       WindowImageFromWindow("WiLl_It_BlEnD", "cOlOr", "WiLl_It_BlEnD")
-
       WindowDrawImage("WiLl_It_BlEnD", "tExTuRe", 0, 0, 0, 0, 1)
       WindowFilter("WiLl_It_BlEnD", 0, 0, 0, 0, 7, 100)
       WindowFilter("WiLl_It_BlEnD", 0, 0, 0, 0, 9, 4)
       WindowBlendImage("WiLl_It_BlEnD", "cOlOr", 0, 0, 0, 0, 5, 0.8)
-
+      
       imgpath = GetInfo(66).."worlds/plugins/images/temp_theme_blend.png"
       WindowWrite("WiLl_It_BlEnD", imgpath)
-
       return imgpath
    end
 }
