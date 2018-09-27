@@ -110,7 +110,7 @@ function aard_help()
       help("chats show / chats hide", "Show/hide the communication log")
    end
    if is_active("echo") then
-      help("chats echo", "List which channels are sent to the main output area")
+      help("chats echo", "List which channels are sent to the main output")
    end
    if is_active("group") then
       help("groupon / groupoff", "Show/hide the group window")
