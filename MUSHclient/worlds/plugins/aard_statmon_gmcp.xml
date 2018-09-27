@@ -34,6 +34,8 @@ Aardwolf GMCP based stats monitor.
 
 <script>
 <![CDATA[
+require "aard_register_z_on_create"
+
 require "mw_theme_base"
 require "serialize"
 require "movewindow"

@@ -60,6 +60,7 @@ Room info should include:
 module (..., package.seeall)
 
 VERSION = 2.5   -- for querying by plugins
+require "aard_register_z_on_create"
 
 require "mw_theme_base"
 require "movewindow"
@@ -1034,8 +1035,6 @@ function init (t)
       windowinfo.window_mode,   -- top right
       windowinfo.window_flags,
       Theme.PRIMARY_BODY)
-
-   CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
 
    -- let them move it around
    movewindow.add_drag_handler (win, 0, 0, 0, 0)

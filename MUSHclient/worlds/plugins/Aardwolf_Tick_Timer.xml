@@ -67,6 +67,8 @@
 
 <script>
 <![CDATA[
+require "aard_register_z_on_create"
+
 require "mw_theme_base"
 
 tick_prefix = "Next tick: "
@@ -153,7 +155,6 @@ function init()
    if use_miniwin then
       windowinfo = movewindow.install(win, miniwin.pos_bottom_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp})
       WindowCreate(win, windowinfo.window_left, windowinfo.window_top, 0, 0, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
-      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
       WindowFont(win, "font", font_name, font_size, false, false, false, false, 0)
       width, height = get_metrics()
       WindowResize(win, width, height, Theme.SECONDARY_BODY)
