@@ -34,3 +34,10 @@ if not GetVariable("aard_theme_just_reloading") then
 end
 
 DeleteVariable("aard_theme_just_reloading")
+
+-- consolidate the new connection plugins
+if IsPluginInstalled("9f796334ab9ed476ef44f1dd") then
+    UnloadPlugin("9f796334ab9ed476ef44f1dd")
+    do_plugin_check_now("9f796334ab9ed476ef44f1dc", "aard_new_connection")
+    Save()
+end
