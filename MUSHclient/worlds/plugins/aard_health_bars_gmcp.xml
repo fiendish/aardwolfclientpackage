@@ -38,6 +38,7 @@ Aardwolf GCMP based health bars
 
 <script>
 <![CDATA[
+require "aard_register_z_on_create"
 
 require "mw_theme_base"
 

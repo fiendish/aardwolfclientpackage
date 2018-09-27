@@ -134,6 +134,8 @@ details captured through GMCP.
 
 <script>
 <![CDATA[
+require "aard_register_z_on_create"
+
 require "mw_theme_base"
 
 require "gauge"
@@ -213,7 +215,6 @@ function SetUpHotspotsAndDraw(firstTime)
       -- Add the drag handler so they can move the window around
       movewindow.add_drag_handler (win, 0, 0, 0, 0)
 
-      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win) -- fail silently
       if hidden == 0 then
          WindowShow (win, true)
       end
