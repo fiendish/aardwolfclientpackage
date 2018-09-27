@@ -14,63 +14,26 @@
    save_state="y"
 >
 </plugin>
-<aliases>
-<alias
-   match="connect to aardwolf"
-   enabled="y"
-   sequence="100"
-   omit_from_output="y"
-   ignore_case="y"
-   send_to="12"
-><send>Connect()</send>
-</alias>
-</aliases>
 <script>
 <![CDATA[
-showGreeting2 = tonumber(GetVariable("showGreeting2"))
-if showGreeting2 == nil then
-   showGreeting2 = 1
-end
-
-function OnPluginSaveState ()
-   SetVariable("showGreeting2", showGreeting2)
-end -- OnPluginSaveState
-
-loaded = false
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
-   if aard_req_novisuals_mode then
-      LoadPlugin(GetPluginInfo(GetPluginID(), 20).."aard_new_connection_no_UI.xml")
-      return
+   if GetVariable("showGreeting3") == nil then
+      ShowGreeting()
+   else
+      Connect()
    end
-   if not loaded then
-      if (showGreeting2 == 1) then
-         ShowGreeting(true)
-      else
-         Connect()
-      end
-   end
-   loaded = true
 end
 
 function ShowGreeting()
-   Note("")
-   Note("Screen reader users: The non-visual package version at https://fiendish.github.io/aardwolfclientpackage/ comes pre-configured for screen reader text to speech. This version does not. Otherwise, to bypass this welcome screen and connect to the game, type \"connect to aardwolf\" without the quotation marks.")
-   Note("For help with the client type \"aard help\" without the quotation marks.")
-   Note("")
-
+   vi_msg = ""
    if not aard_req_novisuals_mode then
-      utils.msgbox("Welcome to the AardMUSH client!\n\nFor help type 'aard help'.\n\n\nThis dialog will not be displayed again.", "Welcome", "ok", "i")
+      vi_msg = "Screen reader users: The non-visual version of this package available at https://fiendish.github.io/aardwolfclientpackage/ comes pre-configured for screen reader output, less display clutter, and sound effects.\n\n"
    end
-   showGreeting2 = 0
+   utils.msgbox("Welcome to the Aardwolf MUSHclient Package!\n\nFor client help, type 'aard help' at any time after dismissing this message.\n\n"..vi_msg.."This dialog will not be displayed again.", "Welcome", "ok", "i")
+   SetVariable("showGreeting3", 0)
    Connect()
-end -- ShowGreeting
-
-function getmemoryusage()
-   collectgarbage('collect')
-   return collectgarbage('count')
 end
-
 ]]>
 </script>
 </muclient>
