@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2006 snapshot
+- bug fix: Late-loading plugins weren't saving their Z position.
+- new feature: With Kobus's help, there's a new plugin for helping to find hidden client commands. Type 'aard help'.
+- misc change: The new_connection plugins have been consolidated and drastically simplified.
+- new theme: Zoot made us an Aard EQ color theme!
+
 r2004 snapshot
 - bug fix: The bgcolor and textcolor arguments to Theme.DrawTextBox should work now.
 - bug fix: mw_theme_base will use a more developer-friendly path for aardwolf_colors.lua
