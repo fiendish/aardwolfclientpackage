@@ -287,13 +287,11 @@ end
 
 function TextRect:reWrapLines()
    local raw_index = 0
+   -- wrapLine messes with the start position, so track a temporary variable
+   -- for start_line instead of self.start_line
    local start_line = self.display_start_line or 1
 
    if self.num_wrapped_lines ~= 0 then
-      if (start_line == nil) or (self.wrapped_lines == nil) or (self.wrapped_lines[start_line] == nil) then
-         print("TEXT RECT ERROR. SEND THIS TO FIENDISH:")
-         for k,v in pairs(self) do print(k, v) end
-      end
       raw_index = self.wrapped_lines[start_line][4]
    end
 
@@ -305,10 +303,10 @@ function TextRect:reWrapLines()
       end
       self:wrapLine(line[1], line[2], i)
    end
-
+   
    self.start_line = start_line
-   self.display_start_line = start_line
-   self.end_line = math.max(1, math.min(start_line + self.rect_lines - 1, self.num_wrapped_lines))
+   self.start_line, self.end_line = self:snapToBottom()
+   self.display_start_line = self.start_line
    self.display_end_line = self.end_line
 end
 
@@ -391,12 +389,8 @@ function TextRect:addUpdateCallback(object, callback)
 end
 
 function TextRect:snapToBottom()
-   if self.end_line == self.num_wrapped_lines then
-      start_line = math.max(1, self.num_wrapped_lines - self.rect_lines + 1)
-   else
-      start_line = math.max(1, math.min(self.start_line, self.num_wrapped_lines - self.rect_lines + 1))
-   end
-   end_line = math.max(1, math.min(start_line + self.rect_lines - 1, self.num_wrapped_lines))
+   local start_line = math.max(1, math.min(self.start_line, self.num_wrapped_lines - self.rect_lines + 1))
+   local end_line = math.max(1, math.min(start_line + self.rect_lines - 1, self.num_wrapped_lines))
    return start_line, end_line
 end
 
