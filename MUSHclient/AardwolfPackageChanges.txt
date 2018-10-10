@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2007 snapshot
+- bug fix: Hopefully fix a communication log plugin error when resizing the miniwindow after the raw line buffer filled up in an inactive tab.
+- misc change: A few color tweaks in the Aardgear theme. "Hot" areas are more readable now.
+
 r2006 snapshot
 - bug fix: Late-loading plugins weren't saving their Z position.
 - new feature: With Kobus's help, there's a new plugin for helping to find hidden client commands. Type 'aard help'.
