@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2009 snapshot
+- new feature: Rauru wanted a keyboard command for toggling various ASCII map settings. 'mapshow (?<setting>room(?:name)?|exits|coord(?:inate)?s|echo) (?<option>on|off)'. This is currently undocumented.
+- new feature: Androg wanted a toggle for disabling the ASCII map PK room name blinking. This is accessible via the right-click menu.
+
 r2007 snapshot
 - bug fix: Hopefully fix a communication log plugin error when resizing the miniwindow after the raw line buffer filled up in an inactive tab.
 - misc change: A few color tweaks in the Aardgear theme. "Hot" areas are more readable now.
