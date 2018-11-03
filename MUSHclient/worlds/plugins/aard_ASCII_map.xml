@@ -351,14 +351,13 @@ function resize_window()
    DisplayMapPage()
 end
 
-title_color = Theme.THREE_D_SURFACE_DETAIL
 blink_cycle = {
    0x0000FF,
    0x00FFFF,
    0xFFFFFF
 }
 function blink_title(lines)
-   if show_title == 1 then
+   if (show_title == 1) and (want_blinks == 1) then
       next_blink_color = (next_blink_color % (#blink_cycle)) + 1
       title_color = blink_cycle[next_blink_color]
       draw_title()
@@ -380,6 +379,7 @@ function DisplayMapPage()
    bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, (show_title == 1) and "\n" or "", "left")
    if (show_title == 1) and (map_lines[1] ~= nil) then
       title_lines = {strip_colours_from_styles(map_lines[1]), strip_colours_from_styles(map_lines[2])}
+      title_color = Theme.THREE_D_SURFACE_DETAIL
       draw_title()
       if is_pk then
          next_blink_color = 0
@@ -519,6 +519,7 @@ function right_click_menu ()
    menustring = menustring .. ((maptype == 6 and "+") or "") .. "6 - Solid double line map (extended walls)|"
    menustring = menustring .. "<|-|"
    menustring = (menustring .. (((show_title == 1) and "+") or "") .. "Show Room Name|")
+   menustring = (menustring .. (((want_blinks == 1) and "+") or "") .. "Blink Name in PK Rooms|")
    menustring = (menustring .. (((show_exits == 1) and "+") or "") .. "Show Exits|")
    menustring = (menustring .. (((show_coords == 1) and "+") or "") .. "Show Coordinates|")
    menustring = (menustring .. (((also_echo_map == 1) and "+") or "") .. "Also Show Map In Main Output")
@@ -531,6 +532,8 @@ function right_click_menu ()
 
    if result == "Show Room Name" then
       show_title = (((show_title == 0) and 1) or 0)
+   elseif result == "Blink Name in PK Rooms" then
+      want_blinks = (((want_blinks == 0) and 1) or 0)
    elseif result == "Show Exits" then
       show_exits = (((show_exits == 0) and 1) or 0)
    elseif result == "Show Coordinates" then
@@ -559,6 +562,7 @@ function right_click_menu ()
       show_exits = 0
       also_echo_map = 0
       show_title = 1
+      want_blinks = 1
    elseif result ~= "" then
       maptype = tonumber(result:sub(1,1))
       Send_GMCP_Packet("maptype "..maptype)
@@ -836,6 +840,7 @@ function OnPluginSaveState()
    SetVariable ("font_size", font_size)
    SetVariable ("also_echo_map", also_echo_map)
    SetVariable ("maptype", maptype)
+   SetVariable ("want_blinks", want_blinks)
 end -- OnPluginSaveState
 
 function OnPluginClose ()
@@ -899,6 +904,7 @@ function OnPluginInstall(skip_requests)
    show_coords = tonumber (GetVariable ("showcoords")) or show_coords
    show_exits = tonumber (GetVariable ("showexits")) or 0
    show_title = tonumber (GetVariable ("showtitle")) or 1
+   want_blinks = tonumber (GetVariable ("want_blinks")) or 1
    also_echo_map = tonumber (GetVariable("also_echo_map")) or 0
 
    -- create window with position from movewindow
