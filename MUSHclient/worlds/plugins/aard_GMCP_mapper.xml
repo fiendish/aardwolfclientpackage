@@ -445,6 +445,23 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
+   match="^mapper delete note$"
+   enabled="y"
+   sequence="100"
+   send_to="12"
+   regexp="y"
+>
+<send>
+   local notes, found = room_find_notes(current_room)
+   if found then
+      room_delete_note(current_room, notes)
+   else
+      mapper.mapprint("No note found here to delete.")
+   end
+</send>
+</alias>
+
+<alias
    match="^mapper purge portals$"
    enabled="y"
    sequence="100"
@@ -773,6 +790,7 @@ local speedwalk_prefix = "&speedwalk_prefix;"
 -- functions for handling Aardwolf color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
+require "aard_lua_extras"
 require "serialize"
 mapper = require "aardmapper"
 require "gmcphelper"
@@ -1460,19 +1478,6 @@ function create_portal(keyword, destination, level)
    dbCheckExecute(query)
 end
 
-function string:split(pat)
-   local fields = {}
-   local start = 1
-   self:gsub("()("..pat..")",
-      function(c,d)
-         table.insert(fields,self:sub(start,c-1))
-         start = c + #d
-      end
-   )
-   table.insert(fields, self:sub(start))
-   return fields
-end
-
 function map_portal_level (name, line, wildcards)
 
    local keys = Trim(wildcards[1]):split("[%s]+")
@@ -2149,6 +2154,22 @@ function get_room (uid)
 
 end -- get_room
 
+function room_delete_note (uid, prev_notes)
+   dbCheckExecute(string.format(
+      "DELETE FROM bookmarks WHERE uid = %s;",
+      fixsql(uid)
+   ))
+   mapper.mapprint("Note for room", uid, "deleted. Was previously:", prev_notes)
+   rooms[uid].notes = nil
+   mapper.draw(current_room)
+end
+
+function room_find_notes (uid)
+   for row in dbnrowsWRAPPER(string.format("SELECT * FROM bookmarks WHERE uid = %s", fixsql(uid))) do
+      return row.notes, true
+   end
+end
+
 function room_edit_note (room, uid, newnotes)
 
    if uid == nil and current_room ~= nil then
@@ -2161,12 +2182,7 @@ function room_edit_note (room, uid, newnotes)
       return
    end
 
-   local notes, found
-
-   for row in dbnrowsWRAPPER(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (uid))) do
-      notes = row.notes
-      found = true
-   end   -- finding room
+   local notes, found = room_find_notes(uid)
 
    if newnotes == nil or newnotes == "" then
       if found then
@@ -2185,13 +2201,7 @@ function room_edit_note (room, uid, newnotes)
          mapper.mapprint ("No comment entered, note not saved.")
          return
       else
-         dbCheckExecute(string.format (
-         "DELETE FROM bookmarks WHERE uid = %s;",
-         fixsql (uid)
-         ))
-         mapper.mapprint ("Note for room", uid, "deleted. Was previously:", notes)
-         rooms [uid].notes = nil
-         mapper.draw (current_room)
+         room_delete_note(uid, notes)
          return
       end -- if
    end -- if
@@ -4429,6 +4439,8 @@ function OnHelp (name, line, wildcards)
                                  > preserving a few prior backups]],
 [[mapper addnote                 --> Add a new note to the current room]],
 [[mapper addnote <note>          --> Ditto, but skips the dialog]],
+[[mapper delete note             --> Deletes the note in the current room
+                                 > without using the addnote dialog]],
 [[mapper purgezone <area>        --> Remove an area from the map database]],
 [[mapper purgeroom               --> Purge the current room from the database]],
 [[mapper ignore mismatch <true/false> --> Don't change the room in the database
@@ -4596,22 +4608,26 @@ you set all portal aspects in one command without being in the target room.]],
          ColourTell("cornflower","black","Searching help for: ")
          ColourNote("red","black",pattern)
          if pattern ~= "" then
+            nocase_pattern = case_insensitive_pattern(pattern)
             for k,v in pairs(help_table) do
                local done_header = false
                for j,w in ipairs(v) do
-                  if (w ~= "") and (w:find("--------",nil,true) == nil) and (w:find(pattern) ~= nil) then
+                  if (w ~= "") and (w:find("--------",nil,true) == nil) and (w:find(nocase_pattern) ~= nil) then
                      if not done_header then
                         print("")
                         print(v['header'])
                         done_header = true
                      end
                      print("")
-                     local wtable = w:split(pattern)
+                     local wtable = w:split(nocase_pattern, true)
+                     odd = true
                      for i,v in ipairs(wtable) do
-                        ColourTell("cornflower","black",v)
-                        if (i < #wtable) then
-                           ColourTell("red", "black", pattern)
+                        if odd then
+                           ColourTell("cornflower","black",v)
+                        else
+                           ColourTell("red", "black", v)
                         end
+                        odd = not odd
                      end
                      Note("")
                   end
@@ -4634,6 +4650,26 @@ you set all portal aspects in one command without being in the target room.]],
    print("+---------------------------------------------------------------------------+")
    print("")
 end
+
+
+function case_insensitive_pattern(pattern)
+
+  -- find an optional '%' (group 1) followed by any character (group 2)
+  local p = pattern:gsub("(%%?)(.)", function(percent, letter)
+
+    if percent ~= "" or not letter:match("%a") then
+      -- if the '%' matched, or `letter` is not a letter, return "as is"
+      return percent .. letter
+    else
+      -- else, return a case-insensitive character class of the matched letter
+      return string.format("[%s%s]", letter:lower(), letter:upper())
+    end
+
+  end)
+
+  return p
+end
+
 
 function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
