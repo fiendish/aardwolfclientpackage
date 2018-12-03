@@ -263,6 +263,12 @@ Scripts can also speak stuff by doing:
 <![CDATA[
 AcceleratorTo("Ctrl+Space", "Execute('sapi clear')", sendto.script)
 
+function say (line)
+   if sapi_interface then
+      sapi_interface.say(line)
+   end
+end
+
 function OnPluginInstall ()
    sapi_interface = require "sapi_interface"
    
