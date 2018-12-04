@@ -66,6 +66,15 @@ require "json"
 require "serialize"
 require "gmcphelper"
 
+rr = require "luacom".CreateObject "WScript.Shell".RegRead
+rw = require "luacom".CreateObject "WScript.Shell".RegWrite
+ident_ok, ident = pcall(rr, rr, "HKCU\\Software\\AardwolfMUSHclient\\Ident")
+if not ident_ok then
+   pcall(rw, rw, "HKCU\\Software\\AardwolfMUSHclient\\Ident", CreateGUID())
+   ident_ok, ident = pcall(rr, rr, "HKCU\\Software\\AardwolfMUSHclient\\Ident")
+end
+ident = ident_ok and ident or "{ident failed}"
+
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
@@ -235,8 +244,8 @@ function OnPluginTelnetRequest (msg_type, data)
    if msg_type == GMCP and data == "SENT_DO" then
       -- This hard-coded block may need to be made into a config table as we add more message types.
       GMCP_send (
-         string.format ('Core.Hello { "client": "MUSHclient", "version": "%s" }',
-                        Version().." r"..aard_extras.PackageVersionFull())
+         string.format ('Core.Hello { "client": "MUSHclient", "version": "%s", "ident": "%s" }',
+                        Version().." r"..aard_extras.PackageVersionFull(), ident)
       )
       GMCP_send ('Core.Supports.Set [ "Char 1", "Comm 1", "Room 1" ]')
       return true
