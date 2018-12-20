@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2011 snapshot
+- bug fix: The SAPI.xml plugin's say function has been restored (as mentioned in that plugin's description for use with CallPlugin)
+- new feature: Someone wanted a `mapper delete note` command to streamline removing notes from GMCP mapper rooms. You want it, you got it.
+- new feature: The GMCP mapper's help search function is now case-insensitive.
+
 r2009 snapshot
 - new feature: Rauru wanted a keyboard command for toggling various ASCII map settings. 'mapshow (?<setting>room(?:name)?|exits|coord(?:inate)?s|echo) (?<option>on|off)'. This is currently undocumented.
 - new feature: Androg wanted a toggle for disabling the ASCII map PK room name blinking. This is accessible via the right-click menu.
