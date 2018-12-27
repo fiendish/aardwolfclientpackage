@@ -286,13 +286,22 @@ function TextRect:clear()
    self:draw()
 end
 
+function TextRect:debug()
+   require "pairsbykeys"
+   for k,v in pairsByKeys(self) do print(k, "--", v) end
+end
+
 function TextRect:reWrapLines()
    local raw_index = 0
    -- wrapLine messes with the start position, so track a temporary variable
    -- for start_line instead of self.start_line
-   local start_line = self.display_start_line or 1
+   local start_line = math.max(1, self.display_start_line or 1) -- easier than finding where it goes negative
 
    if self.num_wrapped_lines ~= 0 then
+      if self.wrapped_lines[start_line] == nil then
+         print("ERROR: SEND THIS TO FIENDISH")
+         self:debug()
+      end
       raw_index = start_line - self.wrapped_lines[start_line][4]
    end
 
@@ -315,7 +324,7 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
    local left = self.padded_left
    local top = self.padded_top + (line * self.line_height)
    if (backfill_start ~= nil and backfill_end ~= nil) then
-      WindowRectOp(self.window, 2, backfill_start, top + 1, backfill_end, top + self.line_height + 1, self.highlight_color)
+      WindowRectOp(self.window, 2, backfill_start, top + 1, backfill_end-1, top + self.line_height + 1, self.highlight_color)
    end -- backfill
    if styles then
       for _, v in ipairs(styles) do
@@ -369,9 +378,20 @@ function TextRect:draw(cleanup_first, inside_callback)
 
          -- create highlighting parameters when text is selected
          if self.copy_start_line ~= nil and self.copy_end_line ~= nil and count >= self.copy_start_line and count <= self.copy_end_line then
-            ax = (((count == self.copy_start_line) and math.min(self.start_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)) or self.padded_left)
+            ax = (
+               (count == self.copy_start_line)
+               and math.min(self.start_copying_x, WindowTextWidth(self.window, self.font, line_no_colors))
+               or 0
+            ) + self.padded_left
             -- end of highlight for this line
-            zx = math.min(self.padded_right, (((count == self.copy_end_line) and math.min(self.end_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)) or WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left))
+            zx = math.min(
+               self.padded_right,
+               (
+                  (count == self.copy_end_line)
+                  and math.min(self.end_copying_x, WindowTextWidth(self.window, self.font, line_no_colors))
+                  or WindowTextWidth(self.window, self.font, line_no_colors)
+               ) + self.padded_left
+            )
          end
          self:drawLine(count - self.display_start_line, self.wrapped_lines[count][1], ax, zx )
       end
@@ -575,7 +595,7 @@ function TextRect.dragMove(flags, hotspot_id)
             if copy_line == tr.copy_start_line then
                for pos=1,#line_no_colors do
                   if WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos)) + tr.left > tr.start_copying_x then
-                     tr.start_copying_x = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos-1)) + tr.left
+                     tr.start_copying_x = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos-1))
                      break
                   end
                   startpos = pos

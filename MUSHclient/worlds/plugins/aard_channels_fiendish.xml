@@ -789,10 +789,10 @@ function storeTab(styles, tab)
    end
 end
 
-function storeNonChannel(styles, nonchan)
+function storeNonChannel(styles, label)
    will_draw = false
-   for tab,nonchannels in ipairs(tabs_nonchannel_captures) do
-      if nonchannels[nonchan]["capture"] then
+   for tab, whats_inside_the_tab in ipairs(tabs_nonchannel_captures) do
+      if whats_inside_the_tab[label]["capture"] then
          if storeTab(styles, tab) then
             will_draw = true
          end
@@ -803,13 +803,13 @@ function storeNonChannel(styles, nonchan)
    end
 end
 
-function storeChannel(styles, chan)
+function storeChannel(styles, label)
    will_draw = false
-   for tab,channels in ipairs(tabs_channel_captures) do
-      if not channels[chan] then
-         addNewChannel(chan)
+   for tab, whats_inside_the_tab in ipairs(tabs_channel_captures) do
+      if not whats_inside_the_tab[label] then
+         addNewChannel(label)
       end
-      if channels[chan]["capture"] then
+      if whats_inside_the_tab[label]["capture"] then
          if storeTab(styles, tab) then
             will_draw = true
          end
@@ -1064,6 +1064,42 @@ function getmemoryusage()
    return collectgarbage('count')
 end
 
+
+local charset = {
+   'r', 'g', 'b', 'y', 'm', 'c', 'w', 'R', 'G', 'B', 'Y', 'M', 'C', 'W', '@', ' '
+}
+math.randomseed(os.time())
+
+function string.random(Length)
+   -- Length (number)
+   local Result = {}
+   local Range = #charset
+
+   for Loop = 1,Length do
+      Result[Loop] = charset[math.random(1, Range)]
+   end
+
+   return table.concat(Result)
+end
+
+
+function test(arg)
+   if arg == nil then
+      arg = 1000
+   end
+   for i = 1, math.random(arg) do
+      storeFromOutside(
+         string.random(math.random(200)),
+         math.random(#tabs_rects)
+      )
+   end
+end
+
+function show(i)
+   tabs_rects[i]:debug()
+end
+-- \\\CallPlugin("b555825a4a5700c35fa80780","test")
+-- \\\CallPlugin("b555825a4a5700c35fa80780","show", 1)
 ]]>
 </script>
 </muclient>
