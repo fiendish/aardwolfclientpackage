@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2012 snapshot
+- bug fix: Hopefully fix a communication log plugin error when resizing the miniwindow after the raw line buffer filled up in an inactive tab.
+
 r2011 snapshot
 - bug fix: The SAPI.xml plugin's say function has been restored (as mentioned in that plugin's description for use with CallPlugin)
 - new feature: Someone wanted a `mapper delete note` command to streamline removing notes from GMCP mapper rooms. You want it, you got it.
