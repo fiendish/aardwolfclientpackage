@@ -266,8 +266,9 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          end
 
          -- add new wrapped line component
-         table.insert(self.wrapped_lines, {[1]=line_styles, [2]=beginning, [3]=line_urls, [4]=raw_index} )
          self.num_wrapped_lines = self.num_wrapped_lines + 1
+         local raw_index_delta = self.num_wrapped_lines - raw_index
+         table.insert(self.wrapped_lines, {[1]=line_styles, [2]=beginning, [3]=line_urls, [4]=raw_index_delta} )
 
          -- prep for next line
          available = self.padded_width
@@ -292,7 +293,7 @@ function TextRect:reWrapLines()
    local start_line = self.display_start_line or 1
 
    if self.num_wrapped_lines ~= 0 then
-      raw_index = self.wrapped_lines[start_line][4]
+      raw_index = start_line - self.wrapped_lines[start_line][4]
    end
 
    self.wrapped_lines = {}
