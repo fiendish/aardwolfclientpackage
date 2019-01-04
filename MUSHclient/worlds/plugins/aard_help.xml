@@ -52,7 +52,8 @@ name_to_id = {
    ["theme"] = "b9315e040989d3f81f4328d6",
    ["inventory"] = "0cbb10309587f0ee15ba78ce",
    ["mapper"] = "b6eae87ccedd84f510b74714",
-   ["echo"] = "55616ea13339bc68e963e1f8"
+   ["echo"] = "55616ea13339bc68e963e1f8",
+   ["updater"] = "162bba4a5ecef2bb32b5652f"
 }
 
 split_col = 30
@@ -100,7 +101,7 @@ function aard_help()
    end
 
    ColourNote("royalblue", "", line)
-   subheading("Other Command", "Does What")
+   subheading("Misc Command", "Does What")
    Note()
 
    if is_active("theme") then
@@ -120,6 +121,13 @@ function aard_help()
    end
 
    ColourNote("royalblue", "", line)
+   if is_active("updater") then
+      subheading("Version/Update Command", "Does What")
+      Note()
+         help("checkversion", "Check your Aardwolf MUSHclient Package version")
+      help("package update check", "Look online for a package update")
+      ColourNote("royalblue", "", line)
+   end
    ColourTell("paleturquoise", "", "Find even more help at:  ")
    Hyperlink (
       "https://github.com/fiendish/aardwolfclientpackage/wiki",
