@@ -733,8 +733,10 @@ function storeFromOutside(msg, tab)
       tab = findTab(tab)
    end
 
+   timestamp = os.date(date_format)
+
    if tab then
-      local should_redraw = storeTab(ColoursToStyles(msg), tab)
+      local should_redraw = storeTab(ColoursToStyles(timestamp..msg), tab)
       if should_redraw == true then
          drawTabs()
       end
