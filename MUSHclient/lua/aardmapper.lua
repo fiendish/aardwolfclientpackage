@@ -93,6 +93,7 @@ local current_room
 local rooms = {}
 local last_visited = {}
 local textures = {}
+local last_result_list = {}
 
 -- other locals
 local HALF_ROOM, connectors, half_connectors, arrows
