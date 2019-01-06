@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Aardwolf_Keyboard_Lockout"
+   author="Fiendish"
+   id="b14162092957e88ec16d99e7"
+   language="Lua"
+   purpose="Lock keyboard input against cat paws or other invaders"
+   date_written="2019-01-06"
+   requires="5.0"
+   version="1.0"
+   save_state="y"
+   sequence="-10000"
+>
+
+<description trim="y">
+aard input lock       : disable keyboard input
+aard input unlock     : enable keyboard input
+</description>
+
+</plugin>
+
+<aliases>
+<alias
+   script="lock_input"
+   match="aard input *"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
+</aliases>
+
+<script>
+<![CDATA[
+
+lock_commands = false
+
+function lock_input(name, line, wildcards)
+   arg = Trim(wildcards[1]):lower()
+   if arg == "lock" then
+      lock_commands = true
+      locked_message()
+   elseif arg == "unlock" then
+      lock_commands = false
+      unlocked_message()
+   else
+      print("Valid input lock commands are:")
+      print(string.rep("-", 80))
+      print(GetPluginInfo(GetPluginID(), 3))
+   end
+end
+
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+end
+
+function locked_message()
+   print("Keyboard input is locked. Unlock it by typing 'aard input unlock'.")
+end
+
+function unlocked_message()
+   print("Keyboard input is unlocked. Lock it again by typing 'aard input lock'.")
+end
+
+function OnPluginCommandEntered(sText)
+   if lock_commands and (Trim(sText):lower() ~= "aard input unlock") then
+      locked_message()
+      SetCommandSelection(1, -1)
+      return "\t"
+   else
+      return sText
+   end
+end -- function
+
+function OnPluginSend(sText)  -- for also blocking macros
+   action_source = GetInfo(239)  -- actions 1 through 5 are human inputs
+   if lock_commands and (action_source >= 1) and (action_source <= 5) then
+      locked_message()
+      return false
+   else
+      return true
+   end
+end
+]]>
+</script>
+</muclient>
