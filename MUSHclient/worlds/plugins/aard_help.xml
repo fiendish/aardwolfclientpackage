@@ -53,7 +53,8 @@ name_to_id = {
    ["inventory"] = "0cbb10309587f0ee15ba78ce",
    ["mapper"] = "b6eae87ccedd84f510b74714",
    ["echo"] = "55616ea13339bc68e963e1f8",
-   ["updater"] = "162bba4a5ecef2bb32b5652f"
+   ["updater"] = "162bba4a5ecef2bb32b5652f",
+   ["lockout"] = "b14162092957e88ec16d99e7"
 }
 
 split_col = 30
@@ -115,6 +116,9 @@ function aard_help()
    end
    if is_active("group") then
       help("groupon / groupoff", "Show/hide the group window")
+   end
+   if is_active("lockout") then
+      help("aard input lock", "Lock the keyboard against feline invaders")
    end
    if is_active("gmcp") then
       help("gmcpdebug <0-2>", "Set GMCP debugging verbosity")
