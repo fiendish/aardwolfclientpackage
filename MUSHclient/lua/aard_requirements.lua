@@ -31,6 +31,7 @@ if not GetVariable("aard_theme_just_reloading") then
    do_plugin_check_now("04d9e64f835452b045b427a7", "aard_Copy_Colour_Codes") -- Ctrl+D to copy selected text with color codes
    do_plugin_check_now("23832d1089f727f5f34abad8", "aard_soundpack") -- pre-made collection of common sound triggers
    do_plugin_check_now("60ad15b3cb2a5757d2611c28", "aard_help") -- help command for aardmush-specific plugins
+   do_plugin_check_now("b14162092957e88ec16d99e7", "aard_keyboard_lockout") -- feline assistance prevention
 end
 
 DeleteVariable("aard_theme_just_reloading")
