@@ -67,6 +67,8 @@ download_url = "https://fiendish.github.io/aardwolfclientpackage/"
 window_title = "Aardwolf MUSHclient Package Update Checker"
 ErrorMessage = ""
 
+TIME_BETWEEN_CHECKS = (60*60*24*7*4) -- four weeks
+
 function remember()
    ColourTell("yellow", "", "Remember, the latest installer/updater is always available at: ")
    Hyperlink(download_url, download_url, "Installer Download Page", "yellow", "", true)
@@ -111,7 +113,7 @@ function updateDialog(message,list)
    if utils.editbox(message,window_title,list,nil,nil,{ok_button="Ok, Get It", cancel_button="Ignore", read_only=true, no_default=true}) then
       browse(download_url)
    else
-      Note("")
+      Note("") 
       ColourNote("cyan", "", "  +--------------------------------------------------------------------------+")
       ColourNote("cyan", "", "  |               Aardwolf MUSHclient Package Update Checker                 |")
       ColourNote("cyan", "", "  +--------------------------------------------------------------------------+")
@@ -127,7 +129,6 @@ function updateDialog(message,list)
       ColourNote("cyan", "", "  |                                                                          |")
       ColourNote("cyan", "", "  +--------------------------------------------------------------------------+")
       Note("")
-      SetVariable("last_cancel", os.time())
       SetVariable("ignore_before_version", latest_version)
    end
 end
@@ -147,7 +148,6 @@ function errorMessage(msg)
 end
 
 loaded = false
-thread = nil
 function OnPluginListChanged()
    if not loaded then
       dofile "lua/aard_requirements.lua"
@@ -157,17 +157,18 @@ function OnPluginListChanged()
 end
 
 function manualCheck()
-   SetVariable("last_cancel", 0)
+   SetVariable("last_check", 0)
    SetVariable("ignore_before_version", 0)
    DeleteTemporaryTimers()
    async.doAsyncRemoteRequest(version_url, main, "HTTPS", 120)
 end
 
 function main(retval, page, status, headers, full_status, request_url)
-   last_cancel = tonumber(GetVariable("last_cancel")) or os.time()
-   if (os.time() - last_cancel) < (60*60*24*7) then -- wait at least a week between update prompts
+   last_check = tonumber(GetVariable("last_check")) or os.time()
+   if (os.time() - last_check) < TIME_BETWEEN_CHECKS then -- wait between update prompts
       return
    end
+   SetVariable("last_check", os.time())
    ignore_before_version = tonumber(GetVariable("ignore_before_version")) or 0
    SetStatus("Checking online for Aardwolf MUSHclient Package updates")
    ErrorMessage = ""
@@ -190,26 +191,25 @@ end
 
 function checkRemoteFile(page, status)
    -- grab the download page
-   thread = nil
    if status == 200 then -- 200 is the HTTP status code for "OK"
       update_list, latest_version = string.match(page, "Aardwolf Client Package Major Changes List\r\n\r\n(r(%d+) snapshot.*)")
       -- extract the snapshot revision number
       latest_version = tonumber(latest_version)
+
+      if not latest_version then -- string.match failed to find the right pattern above
+         ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package site. Please alert Fiendish about this."
+         return false
+      end
+   
+      if latest_version <= ignore_before_version then
+         return false
+      end
+
+      return true
    else -- http access error
       ErrorMessage = "Could not access the Aardwolf MUSHclient Package download page to check for the latest version number. Please make sure that you are able to access the version file at "..version_url.." and then type \'PACKAGE UPDATE CHECK\' to try again."
       return false
    end
-
-   if not latest_version then -- string.match failed to find the right pattern above
-      ErrorMessage = "There appears to be a problem with the version information on the Aardwolf MUSHclient Package site. Please alert Fiendish about this."
-      return false
-   end
-
-   if latest_version <= ignore_before_version then
-      return false
-   end
-
-   return true
 end
 
 function showUpdate()
@@ -221,23 +221,17 @@ function showUpdate()
          updateDialog(message,final_update_list)
       elseif local_version > latest_version then
          ErrorMessage = "The Aardwolf MUSHclient Package update checker has detected that you have a version NEWER than what is available online! Contact Fiendish about this message, because clearly this situation is impossible. :/"
-         return false
       else
          ColourNote("yellow", "", "Your Aardwolf MUSHclient package version r"..local_version.." appears to be up-to-date.")
          remember()
       end
-   else
-      return false
    end
-   return true
 end
 
 function checkErrors()
    if ErrorMessage ~= "" then
       errorMessage(ErrorMessage)
-      return true
    end
-   return false
 end
 
 function getmemoryusage()
