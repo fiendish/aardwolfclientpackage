@@ -51,10 +51,6 @@ function lock_input(name, line, wildcards)
    end
 end
 
-function OnPluginListChanged()
-   dofile "lua/aard_requirements.lua"
-end
-
 function locked_message()
    print("Keyboard input is locked. Unlock it by typing 'aard input unlock'.")
 end
