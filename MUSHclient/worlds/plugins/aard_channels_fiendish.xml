@@ -738,11 +738,12 @@ function stampAndStore(msg, chan, is_gmcp)
    end
 end
 
--- Takes a string with embedded Aardwolf color codes and a tab name or number.
+-- Takes a string with embedded Aardwolf color codes, a tab name or number, and a true/false argument for controlling whether to timestamp the line.
+-- (false means don't add a timestamp, and true means obey the internal timestamping configuration)
 -- Use via CallPlugin(), http://mushclient.com/scripts/doc.php?function=CallPlugin
 --
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", 1, true)
--- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", "Q/A", true)
+-- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", "Q/A", false)
 function storeFromOutside(msg, tab, add_timestamp)
    if tab == nil then
       tab = 1
