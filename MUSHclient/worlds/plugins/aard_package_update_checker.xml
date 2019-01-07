@@ -215,7 +215,12 @@ end
 function showUpdate()
    if local_version and latest_version then -- sanity check
       if local_version < latest_version then
-         final_update_list = (string.match(update_list,"(.*)r"..local_version.." snapshot") or "<ERROR! Please don't modify your "..aard_extras.version_file.." file>\r\n")
+         local current_stuff_start, _ = string.find(update_list, "r"..local_version.." snapshot")
+         local newer_stuff = nil
+         if current_stuff_start then
+            newer_stuff = update_list:sub(1, current_stuff_start-1)
+         end
+         final_update_list = (newer_stuff or "<ERROR! Please don't modify your "..aard_extras.version_file.." file>\r\n")
          final_update_list = "( Get it from: "..download_url.." )\r\n\r\n"..convertHTMLcodesToStandardText(final_update_list)
          message = "There is a new Aardwolf MUSHclient Package snapshot available. You currently have version r"..local_version.." and the newest version is r"..latest_version..".\n\nThe major differences between your version and the latest version are:"
          updateDialog(message,final_update_list)
