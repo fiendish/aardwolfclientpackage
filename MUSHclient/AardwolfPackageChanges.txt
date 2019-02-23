@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2016 snapshot
+- bug fix: Fixed a crash at launch recently reported by a few Debian Wine users.
+- bug fix: Fixed an error in the mapper when using next without a prior search.
+- new feature: Added a third argument to storeFromOutside in the communication log plugin to control whether a timestamp should be added to the message.
+- new feature: There's a new plugin called Aardwolf Keyboard Lockout (aard_keyboard_lockout.xml) that lets you prevent keyboard input from accidentally being sent to the game (like if you need to step away for a second but have a tech-savvy cat). Activation is covered in 'aard help'.
+- misc change: Some tweaks to how update checks work.
+- misc change: Updated some help text in 'aard help' and the mapper plugin.
+
 r2012 snapshot
 - bug fix: Hopefully fix a communication log plugin error when resizing the miniwindow after the raw line buffer filled up in an inactive tab.
 
