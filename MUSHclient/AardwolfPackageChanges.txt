@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2017 snapshot
+- bug fix: Try not to show a bunch of prompts at startup.
+
 r2016 snapshot
 - bug fix: Fixed a crash at launch recently reported by a few Debian Wine users.
 - bug fix: Fixed an error in the mapper when using next without a prior search.
