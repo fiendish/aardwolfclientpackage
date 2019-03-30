@@ -123,22 +123,6 @@ USAGE:
 </send>
 </trigger>
 
-<trigger
-   enabled="y"
-   match="^Compact mode (removed|set)\."
-   regexp="y"
-   sequence="100"
-   send_to="14"
->
-<send>
-   if "%1" == "set" then
-      compact_mode = "YES"
-   else
-      compact_mode = "NO"
-   end
-</send>
-</trigger>
-
 </triggers>
 
 <aliases>
@@ -234,7 +218,7 @@ addDefaultChannels()
 
 function echo_msg(msg)
    Simulate(ColoursToANSI(msg).."\r\n")
-   if compact_mode ~= "YES" then
+   if gmcp("config.compact") ~= "YES" then
       Simulate("\r\n")
    end
    EnableTriggerGroup("end_gag", true) -- gags trailing blank line
@@ -247,27 +231,11 @@ function OnPluginListChanged ()
    end
 end
 
-safe_char_state_hexcodes = {
-   ['6403'] = 3,
-   ['6409'] = 9,
-   ['640B'] = 11
-}
-function OnPluginTelnetOption(data)
-   local hexdata = utils.tohex(data)
-   -- after MOTD
-   if (not done_init) and safe_char_state_hexcodes[hexdata] then
-      done_init = true
-      Send_GMCP_Packet("config compact")
-   end
-end
-
 msg_buffer = {}
 function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
-      if (text == "config") then
-         compact_mode = gmcp("config.compact")
-      elseif (text == "comm.channel") then
+      if (text == "comm.channel") then
          local gmcp_comm = gmcp("comm.channel")
          local msg = gmcp_comm.msg or ""
          local chan = gmcp_comm.chan or ""
@@ -288,10 +256,6 @@ function OnPluginBroadcast (msg, id, name, text)
             end
          end
       elseif (text == "char.status") then
-         if not done_init then
-            done_init = true
-            Send_GMCP_Packet("config compact")
-         end
          if gmcp("char.status.state") ~= "5" then -- show messages that were buffered while in note mode
             if #msg_buffer > 0 then
                Note("Replaying all channel messages received while in note writing mode...")
@@ -403,14 +367,12 @@ end
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 function OnPluginDisable()
-   done_init = false
    if IsConnected() then
       Send_GMCP_Packet("gmcpchannels off")
    end
 end
 
 function OnPluginConnect()
-   done_init = false
    Send_GMCP_Packet("gmcpchannels on")
    Send_GMCP_Packet("request char")
 end
