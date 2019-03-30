@@ -56,6 +56,24 @@ For Mushclient specific information on how to access GMCP data, see:
 
 </aliases>
 
+<triggers>
+<trigger
+   enabled="y"
+   regexp="y"
+   match="^You will (now|no longer) see prompts.$"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   if "%1" == "now" then
+      OnPluginTelnetSubnegotiation(201, 'config { "prompt" : "YES" }')
+   else
+      OnPluginTelnetSubnegotiation(201, 'config { "prompt" : "NO" }')
+   end
+</send>
+</trigger>
+</triggers>
+
 <!--  Get our standard constants -->
 
 <script>
@@ -201,12 +219,22 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
          end
       end
       stringify(t)
-      prev_node[prev_item] = t
+
+      if prev_item == "config" then
+         for k,v in pairs(t) do
+            prev_node[prev_item][k] = v
+         end
+      else
+         prev_node[prev_item] = t
+      end
 
       if GMCPDebug > 1 then
          print ("gmcpdata serialized: " .. gmcpdata_as_string(""))
       end
       BroadcastPlugin(1, message)
+      if message == "config" then
+         BroadcastPlugin(1, "config."..next(t))
+      end
   else
       ColourNote("white","red","GMCP DATA ERROR: "..t)
   end  -- if
@@ -242,6 +270,7 @@ function OnPluginConnect()
    GMCP_send("request area")
    GMCP_send("request quest")
    GMCP_send("request group")
+   GMCP_send("config prompt")
 end
 
 function OnPluginTelnetRequest (msg_type, data)

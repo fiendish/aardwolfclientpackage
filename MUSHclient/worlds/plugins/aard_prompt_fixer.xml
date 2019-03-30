@@ -51,6 +51,7 @@ Bast and WinkleWinkle.
 <send>
    EnableTriggerGroup("prompts", false)
    EnableTrigger("end", false)
+   Send_GMCP_Packet("config prompt "..prompt_mode)
 </send>
 </trigger>
 
@@ -98,7 +99,7 @@ Bast and WinkleWinkle.
 <send>
    p = Trim("%2")
    if p:sub(-2) ~= "%%c" then -- send box has funny % replacements
-      do_connect_init()
+      start_fixup()
    end
 </send>
 </trigger>
@@ -108,6 +109,7 @@ Bast and WinkleWinkle.
 <script>
 <![CDATA[
 require "aard_lua_extras"
+require "gmcphelper"
 
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
@@ -149,27 +151,28 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-function do_connect_init()
-   EnableTrigger("begin", true)
-   SendNoEcho("echo {prompt fixer begin}")
-   SendNoEcho("prompt data")
-   SendNoEcho("echo {prompt fixer end}")
+function fixup()
+   prompt_mode = gmcp("config.prompt")
+   if prompt_mode ~= "" then
+      doinit = false
+      Send_GMCP_Packet("config prompt NO")
+      EnableTrigger("begin", true)
+      SendNoEcho("echo {prompt fixer begin}")
+      SendNoEcho("prompt data")
+      SendNoEcho("echo {prompt fixer end}")
+   end
 end
 
 doinit = true
 function OnPluginTelnetOption(data)
    if doinit then
-      local hexcodes = {
-         ['6403'] = true,
-         --['6409'] = true,
-         ['640B'] = true
-      }
-      if hexcodes[utils.tohex(data)] then
-         doinit = false
-         do_connect_init()
+      hexcode = utils.tohex(data)
+      if (hexcode == "6403") or (hexcode == "640B") then -- standing or resting
+         fixup()
       end
    end
 end
+
 
 function getmemoryusage()
    collectgarbage('collect')
