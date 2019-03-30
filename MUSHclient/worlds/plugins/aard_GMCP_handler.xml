@@ -60,7 +60,7 @@ For Mushclient specific information on how to access GMCP data, see:
 <trigger
    enabled="y"
    regexp="y"
-   match="^You will (now|no longer) see prompts.$"
+   match="^You will (now|no longer) see prompts\.$"
    sequence="100"
    send_to="12"
 >
@@ -69,6 +69,21 @@ For Mushclient specific information on how to access GMCP data, see:
       OnPluginTelnetSubnegotiation(201, 'config { "prompt" : "YES" }')
    else
       OnPluginTelnetSubnegotiation(201, 'config { "prompt" : "NO" }')
+   end
+</send>
+</trigger>
+<trigger
+   enabled="y"
+   regexp="y"
+   match="^Compact mode (set|removed)\.$"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   if "%1" == "set" then
+      OnPluginTelnetSubnegotiation(201, 'config { "compact" : "YES" }')
+   else
+      OnPluginTelnetSubnegotiation(201, 'config { "compact" : "NO" }')
    end
 </send>
 </trigger>
@@ -271,6 +286,7 @@ function OnPluginConnect()
    GMCP_send("request quest")
    GMCP_send("request group")
    GMCP_send("config prompt")
+   GMCP_send("config compact")
 end
 
 function OnPluginTelnetRequest (msg_type, data)
