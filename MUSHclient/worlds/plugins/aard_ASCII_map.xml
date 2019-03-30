@@ -89,7 +89,10 @@ and made more awesomer.
    name="map_start"
    sequence="100"
    send_to="12"
-><send>StopEvaluatingTriggers()</send>
+><send>
+requested_since_empty = true
+StopEvaluatingTriggers()
+</send>
 </trigger>
 
 <trigger
@@ -261,7 +264,12 @@ function request_new_map()
    if GetTimerOption("activity_timer", "enabled") == 1 and can_request_map and not requesting and kinda_busy == 0 then
       requesting = true
       requested_since_empty = true
-      SendNoEcho("map")
+      prompt_mode = gmcp("config.prompt")
+      if prompt_mode ~= "" then
+         Send_GMCP_Packet("config prompt OFF")
+         SendNoEcho("map")
+         Send_GMCP_Packet("config prompt "..prompt_mode)
+      end
       EnableTriggerGroup("end_gag", true)
    end
 end
