@@ -287,7 +287,7 @@ function DressWindow(win, font, title, title_alignment)
    return l, t, r, b
 end
 
-function DrawTitleBar(win, font, title, text_alignment)
+function DrawTitleBar(win, font, title, text_alignment, utf8)
    local title_lines
    if type(title) == "string" then
       title_lines = utils.split(title, "\n")
@@ -335,7 +335,7 @@ function DrawTitleBar(win, font, title, text_alignment)
 
       local text_top = (line_height * (i-1)) + TITLE_PADDING
       if type(v) == "string" then
-         WindowText(win, font, v, text_left, text_top, text_right, title_height, THREE_D_SURFACE_DETAIL)
+         WindowText(win, font, v, text_left, text_top, text_right, title_height, THREE_D_SURFACE_DETAIL, utf8)
       else
          -- The colors of all styles matching the first style color get stripped out and replaced with the default title color
          for i,w in ipairs(v) do
@@ -344,7 +344,7 @@ function DrawTitleBar(win, font, title, text_alignment)
                w.textcolour = THREE_D_SURFACE_DETAIL
             end
          end
-         WindowTextFromStyles(win, font, v, text_left, text_top, text_right, title_height, true)
+         WindowTextFromStyles(win, font, v, text_left, text_top, text_right, title_height, utf8)
       end
    end
    return title_height
