@@ -531,6 +531,10 @@ function draw_main_window()
       1,  -- BorderWidth,
       Theme.THREE_D_SOFTSHADOW,  -- OutsideFillColour,
       miniwin.brush_solid) -- OutsideFillStyle
+   
+   if GetPluginInfo("74524d1272786aaf04e9487d", 17) then  -- splitscreen scrollback plugin force update
+      CallPlugin("74524d1272786aaf04e9487d", "OnPluginTick")
+   end
 
    -- Add a mini-window under main text area so background won't mess it up.
    local trwidth = t_right - textrect_left
