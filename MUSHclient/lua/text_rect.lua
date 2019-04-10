@@ -74,7 +74,7 @@ function TextRect:loadFont(name, size)
    self.font_size = size
 
    WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
-   self.line_height = WindowFontInfo(self.window, self.font, 1) - WindowFontInfo(self.window, self.font, 4) + 2
+   self.line_height = WindowFontInfo(self.window, self.font, 1)
    self.rect_lines = math.floor(self.padded_height / self.line_height)
 end
 
@@ -732,16 +732,15 @@ function TextRect:rightClickMenu(hotspot_id)
 
    local inner_count = #menu_functions
 
-   local ems = self.external_menu_string_generator()
-   local emf = self.external_menu_result_function
-   if ems and emf then
+   if self.external_menu_string_generator and self.external_menu_result_function then
+      local ems = self.external_menu_string_generator()
       if ems:sub(1,1) == "!" then
          ems = ems:sub(2)
       end
 
       table.insert(menu_text, "-")
       table.insert(menu_text, ems)
-      table.insert(menu_functions, emf)
+      table.insert(menu_functions, self.external_menu_result_function)
    end
 
    result = tonumber(
