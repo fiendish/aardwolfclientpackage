@@ -40,7 +40,7 @@ TextRect_defaults = {
 }
 TextRect_mt = { __index = TextRect }
 
-function TextRect.new(window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size)
+function TextRect.new(window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..tostring(GetUniqueNumber())
    new_tr.name = name
@@ -52,6 +52,7 @@ function TextRect.new(window, name, left, top, right, bottom, max_lines, scrolla
    new_tr.width = right-left
    new_tr.height = bottom-top
    new_tr.scrollable = scrollable
+   new_tr.external_scroll = external_scroll
    new_tr.padding = padding or new_tr.padding
    new_tr.padded_left = new_tr.left + new_tr.padding
    new_tr.padded_top = new_tr.top + new_tr.padding
@@ -371,7 +372,11 @@ function TextRect:draw(cleanup_first, inside_callback)
                   self.hyperlinks[link_id] = v.text
                   WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
                   WindowDragHandler(self.window, link_id, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
-                  WindowScrollwheelHandler(self.window, link_id, "TextRect.wheelMove")
+                  if self.scrollable then
+                     WindowScrollwheelHandler(self.window, link_id, "TextRect.wheelMove")
+                  elseif self.external_scroll then
+                     WindowScrollwheelHandler(self.window, link_id, self.external_scroll)
+                  end
                end
             end
          end
@@ -479,6 +484,8 @@ function TextRect:initArea()
    WindowDragHandler(self.window, self.area_hotspot, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
    if self.scrollable then
       WindowScrollwheelHandler(self.window, self.area_hotspot, "TextRect.wheelMove")
+   elseif self.external_scroll then
+      WindowScrollwheelHandler(self.window, self.area_hotspot, self.external_scroll)
    end
    self.hyperlinks = {}
 end
