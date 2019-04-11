@@ -49,7 +49,6 @@ function OnPluginScreendraw(type, log, line)
 end
 
 function OnPluginTick()
-   font_size = GetOption("output_font_height")
    font_height = GetInfo(212)
    if at_bottom() then
       if go_back then
@@ -75,6 +74,7 @@ function OnPluginTick()
          or (WindowInfo(win, 3) ~= width)
          or (WindowInfo(win, 4) ~= height)
       ) then -- build the window if it isn't where we want it to be
+         local font_size = GetOption("output_font_height")
          if not WindowInfo(win, 1) then
             WindowCreate(win, left, top, width, height, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots, Theme.SECONDARY_BODY)
             WindowFont(win, "body", GetAlphaOption("output_font_name"), font_size, false, false, false)
@@ -85,8 +85,9 @@ function OnPluginTick()
          local l , t, r, b = Theme.DrawBorder(win)
          t = Theme.DrawTitleBar(win, "body", "-- RECENT --")
          rect = TextRect.new(win, "rect", l, t, r, b, 15, false, Theme.PRIMARY_BODY, border_offset, GetAlphaOption("output_font_name"), font_size)
-         for i=rect.rect_lines,1,-1 do
-            rect:addStyles(GetStyleInfo(GetLinesInBufferCount() - i))
+         local num_lines = GetLinesInBufferCount()
+         for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
+            rect:addStyles(GetStyleInfo(num_lines - i))
          end
          rect:draw()
          WindowShow(win, true)
