@@ -28,7 +28,7 @@ function at_bottom()
    text_rectangle_lines = text_rectangle_height / font_height
    max_scroll_line = total_output_lines - text_rectangle_lines - 1
    max_scroll_position = (max_scroll_line * font_height) + GetWorldWindowPosition().top
-   return cur_scroll_position == max_scroll_position
+   return cur_scroll_position >= max_scroll_position  -- the current position can briefly be higher than max when the output is scrolling quickly
 end
 
 win = GetPluginID()
@@ -84,7 +84,7 @@ function OnPluginTick()
          end
          local l , t, r, b = Theme.DrawBorder(win)
          t = Theme.DrawTitleBar(win, "body", "-- RECENT --")
-         rect = TextRect.new(win, "rect", l, t, r, b, 15, false, Theme.PRIMARY_BODY, border_offset, GetAlphaOption("output_font_name"), font_size)
+         rect = TextRect.new(win, "rect", l, t, r+1, b, 15, false, Theme.PRIMARY_BODY, border_offset, GetAlphaOption("output_font_name"), font_size)
          local num_lines = GetLinesInBufferCount()
          for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
             rect:addStyles(GetStyleInfo(num_lines - i))
