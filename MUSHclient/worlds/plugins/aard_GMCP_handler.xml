@@ -250,6 +250,19 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       if message == "config" then
          BroadcastPlugin(1, "config."..next(t))
       end
+
+      if not inited then
+         GMCP_send("config xterm yes")
+         GMCP_send("rawcolor on")
+         GMCP_send("request char")
+         GMCP_send("request room")
+         GMCP_send("request area")
+         GMCP_send("request quest")
+         GMCP_send("request group")
+         GMCP_send("config prompt")
+         GMCP_send("config compact")
+         inited = true
+      end
   else
       ColourNote("white","red","GMCP DATA ERROR: "..t)
   end  -- if
@@ -278,15 +291,7 @@ function OnPluginSaveState()
 end
 
 function OnPluginConnect()
-   GMCP_send("config xterm yes")
-   GMCP_send("rawcolor on")
-   GMCP_send("request char")
-   GMCP_send("request room")
-   GMCP_send("request area")
-   GMCP_send("request quest")
-   GMCP_send("request group")
-   GMCP_send("config prompt")
-   GMCP_send("config compact")
+   inited = false
 end
 
 function OnPluginTelnetRequest (msg_type, data)
