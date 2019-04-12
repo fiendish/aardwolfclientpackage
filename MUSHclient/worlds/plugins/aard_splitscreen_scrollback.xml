@@ -43,12 +43,20 @@ end
 
 function OnPluginScreendraw(type, log, line)
    if rect then
-      rect:addStyles(GetStyleInfo(GetLinesInBufferCount()))
+      new_num_lines = GetLinesInBufferCount()
+      for i=num_lines,new_num_lines do
+         rect:addStyles(GetStyleInfo(i))
+      end
       rect:draw()
+      num_lines = new_num_lines+1
    end
 end
 
 function OnPluginTick()
+   if cur_scroll_position == GetInfo(296) then
+      return
+   end
+
    font_height = GetInfo(212)
    if at_bottom() then
       if go_back then
@@ -84,8 +92,10 @@ function OnPluginTick()
          end
          local l , t, r, b = Theme.DrawBorder(win)
          t = Theme.DrawTitleBar(win, "body", "-- RECENT --")
+         WindowAddHotspot(win, 'bar', 0, 0, 0, t, "", "", "", "", "", "", miniwin.cursor_ibeam, 0)
+         WindowScrollwheelHandler(win, 'bar', 'ScrollMain')
          rect = TextRect.new(win, "rect", l, t, r+1, b, 15, false, Theme.PRIMARY_BODY, border_offset, GetAlphaOption("output_font_name"), font_size, 'ScrollMain')
-         local num_lines = GetLinesInBufferCount()
+         num_lines = GetLinesInBufferCount()
          for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
             rect:addStyles(GetStyleInfo(num_lines - i))
          end
