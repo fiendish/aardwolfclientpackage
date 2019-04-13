@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r2020 snapshot
+- bug fix: Standardize the line height in text_rects
+- bug fix: Don't apply a nil external menu function to text_rects
+- bug fix: Initial GMCP data requests should happen more reliably now
+- bug fix: Ascii map updates on door open and close should happen more reliably now
+- new feature: There's a new experimental plugin (not loaded by default) called aard_splitscreen_scrollback.xml which simulates a split-screen scrollback view using a miniwindow overlay.
+
 r2017 snapshot
 - bug fix: Try not to show a bunch of prompts at startup.
 
