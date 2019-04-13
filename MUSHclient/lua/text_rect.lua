@@ -45,26 +45,15 @@ function TextRect.new(window, name, left, top, right, bottom, max_lines, scrolla
    new_tr.id = "TextRect_"..window.."_"..tostring(GetUniqueNumber())
    new_tr.name = name
    new_tr.window = window
-   new_tr.left = left
-   new_tr.top = top
-   new_tr.right = right
-   new_tr.bottom = bottom
-   new_tr.width = right-left
-   new_tr.height = bottom-top
    new_tr.scrollable = scrollable
    new_tr.external_scroll = external_scroll
    new_tr.padding = padding or new_tr.padding
-   new_tr.padded_left = new_tr.left + new_tr.padding
-   new_tr.padded_top = new_tr.top + new_tr.padding
-   new_tr.padded_right = new_tr.right - new_tr.padding
-   new_tr.padded_bottom = new_tr.bottom - new_tr.padding
-   new_tr.padded_width = new_tr.width - (2*new_tr.padding)
-   new_tr.padded_height = new_tr.height - (2*new_tr.padding)
    new_tr.max_lines = max_lines or new_tr.max_lines
    new_tr.font_name = font_name or new_tr.font_name
    new_tr.font_size = font_size or new_tr.font_size
    new_tr.background_color = background_color or new_tr.background_color
    new_tr.highlight_color = getHighlightColor(new_tr.background_color)
+   new_tr:setRect(left, top, right, bottom)
    new_tr:loadFont(new_tr.font_name, new_tr.font_size)
    return new_tr
 end
@@ -421,13 +410,12 @@ function TextRect:snapToBottom()
 end
 
 function TextRect:setRect(left, top, right, bottom)
-   local changed = (self.right ~= right) or (self.bottom ~= bottom) or (self.left ~= left) or (self.top ~= top)
    self.left = left
    self.top = top
    self.right = right
-   self.bottom = bottom
+   self.bottom = bottom + 1
    self.width = right-left
-   self.height = bottom-top
+   self.height = bottom-top + 1
    self.padded_left = self.left + self.padding
    self.padded_top = self.top + self.padding
    self.padded_right = self.right - self.padding
@@ -437,7 +425,9 @@ function TextRect:setRect(left, top, right, bottom)
    if self.area_hotspot then
       WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.bottom)
    end
-   self.rect_lines = math.floor(self.padded_height / self.line_height)
+   if self.line_height then
+      self.rect_lines = math.floor(self.padded_height / self.line_height)
+   end
 end
 
 function TextRect:getScroll()
