@@ -56,7 +56,10 @@ function OnPluginTick()
    if cur_scroll_position == GetInfo(296) then
       return
    end
+   check_display()
+end
 
+function check_display()
    font_height = GetInfo(212)
    if at_bottom() then
       if go_back then

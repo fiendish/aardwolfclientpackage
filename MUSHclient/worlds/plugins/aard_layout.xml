@@ -533,7 +533,7 @@ function draw_main_window()
       miniwin.brush_solid) -- OutsideFillStyle
    
    if GetPluginInfo("74524d1272786aaf04e9487d", 17) then  -- splitscreen scrollback plugin force update
-      CallPlugin("74524d1272786aaf04e9487d", "OnPluginTick")
+      CallPlugin("74524d1272786aaf04e9487d", "check_display")
    end
 
    -- Add a mini-window under main text area so background won't mess it up.
