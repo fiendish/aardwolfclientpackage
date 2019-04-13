@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2021 snapshot
+- bug fix: Splitscreen scrollback vertical pixel alignment and performance fix
+
 r2020 snapshot
 - bug fix: Standardize the line height in text_rects
 - bug fix: Don't apply a nil external menu function to text_rects
