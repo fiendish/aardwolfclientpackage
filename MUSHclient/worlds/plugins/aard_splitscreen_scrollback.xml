@@ -33,6 +33,16 @@ end
 
 win = GetPluginID()
 
+function OnPluginEnable()
+   WindowCreate(win, 0, 0, 0, 0, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots, 0)
+   WindowFont(win, "body", GetAlphaOption("output_font_name"), GetOption("output_font_height"), false, false, false)
+   WindowShow(win, false)
+   check_display()
+end
+
+function OnPluginInstall()
+   OnPluginEnable()
+end
 
 function OnPluginCommandEntered(sText)
    if rect then
@@ -52,7 +62,7 @@ function OnPluginScreendraw(type, log, line)
    end
 end
 
-function OnPluginTick()
+function OnPluginDrawOutputWindow(a, b, c)
    if cur_scroll_position == GetInfo(296) then
       return
    end
@@ -66,7 +76,7 @@ function check_display()
          SetScroll(go_back)
          go_back = nil
       else
-         WindowDelete(win)
+         WindowShow(win, false)
          rect = nil
       end
    elseif text_rectangle_lines > 17 then
@@ -78,32 +88,26 @@ function check_display()
       local width = right - left
       local height = font_height*15 + 4*border_offset - Theme.TITLE_PADDING - 1
       local top = bottom - height
-
       if (
-         (WindowInfo(win, 1) ~= left)
+         (not WindowInfo(win, 5))
+         or (WindowInfo(win, 1) ~= left)
          or (WindowInfo(win, 2) ~= top)
          or (WindowInfo(win, 3) ~= width)
          or (WindowInfo(win, 4) ~= height)
       ) then -- build the window if it isn't where we want it to be
-         local font_size = GetOption("output_font_height")
-         if not WindowInfo(win, 1) then
-            WindowCreate(win, left, top, width, height, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots, Theme.SECONDARY_BODY)
-            WindowFont(win, "body", GetAlphaOption("output_font_name"), font_size, false, false, false)
-         else
-            WindowPosition(win, left, top, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots)
-            WindowResize(win, width, height, Theme.SECONDARY_BODY)
-         end
+         WindowPosition(win, left, top, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots)
+         WindowResize(win, width, height, Theme.SECONDARY_BODY)
          local l , t, r, b = Theme.DrawBorder(win)
          t = Theme.DrawTitleBar(win, "body", "-- RECENT --")
-         WindowAddHotspot(win, 'bar', 0, 0, 0, t, "", "", "", "", "", "", miniwin.cursor_ibeam, 0)
-         WindowScrollwheelHandler(win, 'bar', 'ScrollMain')
-         rect = TextRect.new(win, "rect", l, t, r+1, b, 15, false, Theme.PRIMARY_BODY, border_offset, GetAlphaOption("output_font_name"), font_size, 'ScrollMain')
+         rect = TextRect.new(win, "rect", l, t+1, r+1, b, 15, false, Theme.PRIMARY_BODY, border_offset, GetAlphaOption("output_font_name"), GetOption("output_font_height"), 'ScrollMain')
          num_lines = GetLinesInBufferCount()
          for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
             rect:addStyles(GetStyleInfo(num_lines - i))
          end
          rect:draw()
          WindowShow(win, true)
+         WindowAddHotspot(win, 'bar', 0, 0, 0, t, "", "", "", "", "", "", miniwin.cursor_ibeam, 0)
+         WindowScrollwheelHandler(win, 'bar', 'ScrollMain')
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end
    end
