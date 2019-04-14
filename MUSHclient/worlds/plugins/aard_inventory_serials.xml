@@ -184,6 +184,36 @@ Makes inventory command slightly more useful by displaying item serial numbers
    script="parseVault"
 >
 </trigger>
+
+<trigger
+   enabled="n"
+   match="^$"
+   name="squelch_empty"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+   send_to="12"
+   group="squelch"
+   keep_evaluating="y"
+><send>
+</send>
+
+</trigger>
+<trigger
+   enabled="n"
+   match="^.+$"
+   name="squelch_not_empty"
+   omit_from_output="n"
+   regexp="y"
+   sequence="100"
+   send_to="12"
+   group="squelch"
+   keep_evaluating="y"
+><send>
+EnableTriggerGroup("squelch", false)
+</send>
+</trigger>
+
 </triggers>
 
 <aliases>
@@ -198,6 +228,7 @@ Makes inventory command slightly more useful by displaying item serial numbers
    group="commands"
 >
 <send>
+   EchoTypedCommand("%0")
    if not manually_requested and not visible_always then
       if show_hint then
          hint_message()
@@ -208,7 +239,7 @@ Makes inventory command slightly more useful by displaying item serial numbers
       key_sent_count = key_sent_count + 1
       EnableTrigger("start_key", true)
       EnableTrigger("start_inv", true)
-      SendNoEcho("keyring data")
+      SendNoEcho("keyring data", true)
       SendNoEcho("invdata")
    end
 </send>
@@ -224,6 +255,7 @@ Makes inventory command slightly more useful by displaying item serial numbers
    group="commands"
 >
 <send>
+   EchoTypedCommand("%0")
    if not manually_requested and not visible_always then
       if show_hint then
          hint_message()
@@ -247,6 +279,7 @@ Makes inventory command slightly more useful by displaying item serial numbers
    group="commands"
 >
 <send>
+   EchoTypedCommand("%0")
    if not manually_requested and not visible_always then
       if show_hint then
          hint_message()
@@ -272,6 +305,37 @@ Makes inventory command slightly more useful by displaying item serial numbers
 </aliases>
 <script>
 <![CDATA[
+require "gmcphelper"
+
+original_SendNoEcho = SendNoEcho
+function SendNoEcho(foo, unprompt)
+   compact_mode = gmcp("config.compact")
+   prompt_mode = gmcp("config.prompt")
+
+   if unprompt and prompt_mode ~= "" then
+      Send_GMCP_Packet("config prompt NO")
+   end
+   if unprompt and compact_mode ~= "" then
+      Send_GMCP_Packet("config compact YES")
+   end
+
+   EnableTriggerGroup("squelch", true)
+   original_SendNoEcho(foo)
+
+   if unprompt and prompt_mode ~= "" then
+      Send_GMCP_Packet("config prompt "..prompt_mode)
+   end
+   if unprompt and compact_mode ~= "" then
+      Send_GMCP_Packet("config compact "..compact_mode)
+   end
+end
+
+function EchoTypedCommand(foo)
+   if GetEchoInput() then
+      ColourNote(RGBColourToName(GetCustomColourText(GetOption("echo_colour"))), "", foo)
+   end
+end
+
 dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
 
 function update_colorname(code)
