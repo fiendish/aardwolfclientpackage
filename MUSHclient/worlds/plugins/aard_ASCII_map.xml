@@ -267,7 +267,9 @@ function request_new_map()
       prompt_mode = gmcp("config.prompt")
       if prompt_mode ~= "" then
          Send_GMCP_Packet("config prompt OFF")
-         SendNoEcho("map")
+      end
+      SendNoEcho("map")
+      if prompt_mode ~= "" then
          Send_GMCP_Packet("config prompt "..prompt_mode)
       end
       EnableTriggerGroup("end_gag", true)
