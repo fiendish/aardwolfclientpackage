@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2022 snapshot
+- bug fix: Suppress errant blank lines around keyring and vault info (inventory serials plugin)
+- bug fix: Echo inventory commands instead of hiding them (inventory serials plugin)
+
 r2021 snapshot
 - bug fix: Splitscreen scrollback vertical pixel alignment and performance fix
 
