@@ -77,7 +77,10 @@ function check_display()
          go_back = nil
       else
          WindowShow(win, false)
-         rect = nil
+         if rect then
+            rect:unInit()
+            rect = nil
+         end
       end
    elseif text_rectangle_lines > 17 then
       local border_offset = GetInfo(276)
@@ -118,8 +121,11 @@ function OnPluginClose()
 end
 
 function OnPluginDisable()
+   if rect then
+      rect:unInit()
+      rect = nil
+   end
    WindowDelete(win)
-   rect = nil
 end
 
 function ScrollMain(flags, hotspot_id)
