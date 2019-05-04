@@ -99,7 +99,7 @@ Bast and WinkleWinkle.
 <send>
    p = Trim("%2")
    if p:sub(-2) ~= "%%c" then -- send box has funny % replacements
-      start_fixup()
+      fixup()
    end
 </send>
 </trigger>
