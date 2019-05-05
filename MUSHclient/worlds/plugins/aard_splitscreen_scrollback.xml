@@ -206,14 +206,13 @@ function OnPluginDisable()
 end
 
 function ScrollMain(flags, hotspot_id)
-   if bit.band (flags, 0x100) ~= 0 then
-      how_much = font_height
-      -- wheel scrolled down
+   local delta = bit.shr(flags, 16)
+   if bit.band (flags, miniwin.wheel_scroll_back) ~= 0 then
+      direction = 1   -- wheel scrolled down
    else
-      how_much = -font_height
-      -- wheel scrolled up
+      direction = -1  -- wheel scrolled up
    end
-   SetScroll(GetInfo(296) + 3*how_much, GetInfo(120))
+   SetScroll(GetInfo(296) + delta*direction, GetInfo(120))
 end
 
 ]]>
