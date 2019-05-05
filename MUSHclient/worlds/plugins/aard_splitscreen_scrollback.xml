@@ -136,8 +136,12 @@ function check_display()
             or (WindowInfo(win, 2) ~= top)
             or (WindowInfo(win, 3) ~= width)
             or (WindowInfo(win, 4) ~= height)
-            or output_font ~= rect.font_name
-            or output_font_size ~= rect.font_size
+            or (
+               rect and (
+                  (output_font ~= rect.font_name)
+                  or (output_font_size ~= rect.font_size)
+               )
+            )
          ) then -- build the window if it isn't where we want it to be
             WindowPosition(win, left, top, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots)
             WindowResize(win, width, height, bgcolor)
