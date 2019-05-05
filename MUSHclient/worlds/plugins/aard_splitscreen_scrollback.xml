@@ -25,20 +25,27 @@ function at_bottom()
    cur_scroll_position = GetInfo(296)
    total_output_lines = GetInfo(224)
    text_rectangle_height = GetInfo(293) - GetInfo(291)
-   text_rectangle_lines = text_rectangle_height / font_height
+   text_rectangle_lines = text_rectangle_height / font_height  -- it's ok that this is not rounded. we round when we need to.
    max_scroll_line = total_output_lines - text_rectangle_lines - 1
    max_scroll_position = (max_scroll_line * font_height)
-   return cur_scroll_position >= max_scroll_position  -- the current position can briefly be higher than max when the output is scrolling quickly
+   return cur_scroll_position >= max_scroll_position  -- the current position can briefly be higher than max when the output is scrolling quickly. Why, I don't know.
 end
 
 win = GetPluginID()
+
+function LoadTitleFont()
+   title_font = GetAlphaOption("output_font_name")
+   title_font_size = GetOption("output_font_height")
+   WindowFont(win, "title", GetAlphaOption("output_font_name"), GetOption("output_font_height"), false, false, false)
+   title_height = WindowFontInfo(win, "title", 1) + (2 * Theme.TITLE_PADDING)
+end
 
 function OnPluginEnable()
    WindowCreate(win, 0, 0, 0, 0, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots, 0)
    WindowAddHotspot(win, 'bar', 0, 0, 0, 0, "", "", "BarDown", "", "", "", miniwin.cursor_ns_arrow, 0)
    WindowDragHandler(win, 'bar', "BarDrag", "BarDragRelease")
    WindowScrollwheelHandler(win, 'bar', 'ScrollMain')
-   WindowFont(win, "body", GetAlphaOption("output_font_name"), GetOption("output_font_height"), false, false, false)
+   LoadTitleFont()
    WindowShow(win, false)
    check_display()
 end
@@ -93,24 +100,35 @@ function check_display()
          end
       end
    else
-      desired_lines = base_desired_lines + new_desired_lines
-      desired_lines = math.min(desired_lines, text_rectangle_lines-10)
-      desired_lines = math.max(desired_lines, 10)
-   
+      desired_lines = math.max(
+         10,
+         math.min(
+            base_desired_lines + new_desired_lines,
+            text_rectangle_lines - 10
+         )
+      )
       if text_rectangle_lines > (desired_lines+2) then
+         local text_offset = GetOption("pixel_offset")
+         local border_width = 1
          local border_offset = 0
-         local border_width = 0
          if is_rect() then
             border_offset = GetInfo(276)
             border_width = GetInfo(277)
+            bgcolor = Theme.PRIMARY_BODY
          else
-           border_offset = GetOption("pixel_offset")
+            bgcolor = GetNormalColour(1)
          end
          local left = GetInfo(290) - border_offset - border_width
          local right = GetInfo(292) + border_offset + border_width
          local bottom = GetInfo(293) + border_offset + border_width
          local width = right - left
-         local height = (font_height*desired_lines) + (4*border_offset) - Theme.TITLE_PADDING - 1
+         desired_lines = math.floor(desired_lines)  -- round here because text_rectangle_lines isn't an int
+         local output_font = GetAlphaOption("output_font_name")
+         local output_font_size = GetOption("output_font_height")
+         if (output_font ~= title_font) or (output_font_size ~= title_font_size) then
+            LoadTitleFont()
+         end
+         local height = (font_height * desired_lines) + border_offset + (2*border_width) + text_offset + title_height
          local top = bottom - height
          if (
             (not WindowInfo(win, 5))
@@ -118,15 +136,27 @@ function check_display()
             or (WindowInfo(win, 2) ~= top)
             or (WindowInfo(win, 3) ~= width)
             or (WindowInfo(win, 4) ~= height)
+            or output_font ~= rect.font_name
+            or output_font_size ~= rect.font_size
          ) then -- build the window if it isn't where we want it to be
             WindowPosition(win, left, top, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots)
-            WindowResize(win, width, height, Theme.SECONDARY_BODY)
-            local l , t, r, b = Theme.DrawBorder(win)
-            t = Theme.DrawTitleBar(win, "body", "-- RECENT --")
+            WindowResize(win, width, height, bgcolor)
+            WindowRectOp(win, miniwin.rect_fill, 0, 0, 0, 0, bgcolor, nil)  -- clear
+            local l, t, r, b = Theme.DrawBorder(win)
+            t = Theme.DrawTitleBar(win, "title", "-- RECENT --")
             if rect then
                rect:unInit()
             end
-            rect = TextRect.new(win, "rect", l, t+1, r+1, b, desired_lines, false, Theme.PRIMARY_BODY, border_offset, GetAlphaOption("output_font_name"), GetOption("output_font_height"), 'ScrollMain')
+            rect = TextRect.new(
+               win, "rect",
+               l + text_offset + border_offset - border_width,
+               t + border_width,
+               r - text_offset - border_offset + border_width,
+               b - text_offset - border_offset + border_width,
+               desired_lines, false, bgcolor, 0,
+               output_font, output_font_size,  -- output_font_height is actually the pt size
+               'ScrollMain'
+            )
             num_lines = GetLinesInBufferCount()
             for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
                rect:addStyles(GetStyleInfo(num_lines - i))
@@ -179,7 +209,7 @@ function ScrollMain(flags, hotspot_id)
       how_much = -font_height
       -- wheel scrolled up
    end
-   SetScroll(GetInfo(296) + 5*how_much, GetInfo(120))
+   SetScroll(GetInfo(296) + 3*how_much, GetInfo(120))
 end
 
 ]]>
