@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2025 snapshot
+- bug fix: Fix an error in splitscreen when scrolling back across long lines that get wrapped (actually a bug in text_rect when adding new lines).
+
 r2024 snapshot
 - new feature: The splitscreen bar is now draggable and also hopefully more numerically correct.
 - bug fix: r2017 broke the prompt fixer plugin, causing errors. lol. It's fixed now, I guess.
