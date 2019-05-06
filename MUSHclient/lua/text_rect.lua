@@ -361,8 +361,7 @@ function TextRect:draw(cleanup_first, inside_callback)
 
                if not WindowHotspotInfo(self.window, link_id, 1) then
                   self.hyperlinks[link_id] = v.text
-                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
-                  WindowDragHandler(self.window, link_id, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
+                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.clickUrl", "", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
                   if self.scrollable then
                      WindowScrollwheelHandler(self.window, link_id, "TextRect.wheelMove")
                   elseif self.external_scroll then
@@ -679,6 +678,9 @@ function TextRect.wheelMove(flags, hotspot_id)
 end
 
 function TextRect.linkHover(flags, hotspot_id)
+   if GetOption("underline_hyperlinks") == 0 then
+      return
+   end
    local tr = TextRect.hotspot_map[hotspot_id]
    local url = tr.hyperlinks[hotspot_id]
    local hotspots = WindowHotspotList(tr.window)
@@ -715,7 +717,7 @@ function TextRect:rightClickMenu(hotspot_id)
       table.insert(menu_text, "Browse URL: " .. self.hyperlinks[hotspot_id])
       table.insert(menu_text, "Copy URL to Clipboard")
       table.insert(menu_text, "-")
-      table.insert(menu_functions, TextRect.clickUrl)
+      table.insert(menu_functions, TextRect.browseUrl)
       table.insert(menu_functions, TextRect.copyUrl)
    end
 
@@ -761,11 +763,19 @@ function TextRect:rightClickMenu(hotspot_id)
    end
 end
 
-function TextRect:clickUrl(hotspot_id)
+function TextRect:browseUrl(hotspot_id)
    local url = self.hyperlinks[hotspot_id]
    if url then
       OpenBrowser(url)
    end
+end
+
+function TextRect.clickUrl(flags, hotspot_id)
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then  -- only left-button
+      return
+   end
+   local tr = TextRect.hotspot_map[hotspot_id]
+   tr:browseUrl(hotspot_id)
 end
 
 function TextRect:serializeContents()
