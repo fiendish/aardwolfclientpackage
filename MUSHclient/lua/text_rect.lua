@@ -356,7 +356,7 @@ function TextRect:draw(cleanup_first, inside_callback)
                local left = self.padded_left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, v.start-1))
                local right = left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, v.start-1, v.stop-1))
                local top = self.padded_top + ((count - self.display_start_line) * self.line_height)-1
-               local bottom = top + self.line_height + 1
+               local bottom = top + self.line_height
                local link_id = self:generateHotspotID(table.concat({v.text, " ", count, " ", v.start, " ", v.stop}))
 
                if not WindowHotspotInfo(self.window, link_id, 1) then
@@ -658,23 +658,27 @@ end
 
 function TextRect.wheelMove(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
-   if bit.band(flags, 0x100) ~= 0 then
+   local delta = bit.shr(flags, 16)
+   local line_delta = math.floor(delta / tr.line_height)
+   if bit.band(flags, miniwin.wheel_scroll_back) ~= 0 then
       -- down
       if tr.start_line < #tr.wrapped_lines - tr.rect_lines + 1 then
-         tr.start_line = math.max(1, math.min(#tr.wrapped_lines - tr.rect_lines + 1, tr.start_line + 3))
+         tr.start_line = math.max(1, math.min(#tr.wrapped_lines - tr.rect_lines + 1, tr.start_line + line_delta))
          tr.end_line = math.min(#tr.wrapped_lines, tr.start_line + tr.rect_lines - 1)
          tr.display_start_line = tr.start_line
          tr.display_end_line = tr.end_line
          tr:draw()
       end
-   elseif tr.start_line > 1 then
-      -- up
-      tr.start_line = math.max(1, tr.start_line - 3)
-      tr.end_line = math.min(#tr.wrapped_lines, tr.start_line + tr.rect_lines - 1)
-      tr.display_start_line = tr.start_line
-      tr.display_end_line = tr.end_line
-      tr:draw()
-   end -- if
+   else
+      if tr.start_line > 1 then
+         -- up
+         tr.start_line = math.max(1, tr.start_line - line_delta)
+         tr.end_line = math.min(#tr.wrapped_lines, tr.start_line + tr.rect_lines - 1)
+         tr.display_start_line = tr.start_line
+         tr.display_end_line = tr.end_line
+         tr:draw()
+      end -- if
+   end
 end
 
 function TextRect.linkHover(flags, hotspot_id)
@@ -688,7 +692,7 @@ function TextRect.linkHover(flags, hotspot_id)
       if string.find(v, url, 1, true) then
          local left = WindowHotspotInfo(tr.window, v, 1)
          local right = WindowHotspotInfo(tr.window, v, 3)
-         local bottom = WindowHotspotInfo(tr.window, v, 4)
+         local bottom = WindowHotspotInfo(tr.window, v, 4) + 1
          WindowLine(tr.window, left, bottom, right, bottom, 0xffffff, 256, 1);
       end
    end
