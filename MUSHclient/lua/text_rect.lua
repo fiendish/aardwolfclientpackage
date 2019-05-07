@@ -658,8 +658,8 @@ end
 
 function TextRect.wheelMove(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
-   local delta = bit.shr(flags, 16)
-   local line_delta = math.floor(delta / tr.line_height)
+   local delta = math.ceil(bit.shr(flags, 16) / 3)
+   local line_delta = math.ceil(delta / tr.line_height)
    if bit.band(flags, miniwin.wheel_scroll_back) ~= 0 then
       -- down
       if tr.start_line < #tr.wrapped_lines - tr.rect_lines + 1 then
