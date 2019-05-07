@@ -206,12 +206,14 @@ function OnPluginDisable()
 end
 
 function ScrollMain(flags, hotspot_id)
-   local delta = bit.shr(flags, 16)
+   local delta = math.ceil(bit.shr(flags, 16) / 3)
+
    if bit.band (flags, miniwin.wheel_scroll_back) ~= 0 then
       direction = 1   -- wheel scrolled down
    else
       direction = -1  -- wheel scrolled up
    end
+
    SetScroll(GetInfo(296) + delta*direction, GetInfo(120))
 end
 
