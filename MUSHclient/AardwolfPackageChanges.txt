@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2027 snapshot
+- bug fix: More fluid scrolling with less main body flicker in the splitscreen scrollback plugin.
+- new feature: I'm tired of having to right-click urls in the communication log. Links are now launched directly on plain click.
+- misc change: MUSHclient.exe is updated to a new pre-release version to get delta values from mousewheel callbacks and to fix a few trigger bugs.
+
 r2025 snapshot
 - bug fix: Fix an error in splitscreen when scrolling back across long lines that get wrapped (actually a bug in text_rect when adding new lines).
 
