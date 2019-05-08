@@ -27,16 +27,14 @@ Turns off all aliases, triggers and timers while in note writing mode.
 <![CDATA[
 
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
-
-function OnPluginListChanged()
-   dofile "lua/aard_requirements.lua"
-end
+require "gmcphelper"
 
 function OnPluginClose()
-   toggleStuff(true)
+   OnPluginDisable()
 end
 
 function OnPluginDisable()
+   done_init = false
    toggleStuff(true)
 end
 
@@ -45,14 +43,15 @@ function OnPluginInstall()
 end
 
 function OnPluginEnable()
-   if IsConnected() then
+   if IsConnected() and not done_init then
       Send_GMCP_Packet("request char")
+      done_init = true
    end
 end
 
 function toggleStuff(on)
    if on then
-      SetStatus(prev_status_msg)
+      SetStatus(prev_status_msg or "")
       world.SetOption('enable_timers', 1)
       world.SetOption('enable_aliases', 1)
       world.SetOption('enable_triggers', 1)
@@ -73,6 +72,7 @@ function toggleStuff(on)
    end
 end
 
+done_init = false
 function OnPluginBroadcast(msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
@@ -83,6 +83,10 @@ function OnPluginBroadcast(msg, id, name, text)
          elseif previous_state ~= "5" and state == "5" then
             toggleStuff(false)
          end
+         done_init = true
+      elseif not done_init then
+         done_init = true
+         Send_GMCP_Packet("request char")
       end
    end
 end -- onpluginbroadcast
