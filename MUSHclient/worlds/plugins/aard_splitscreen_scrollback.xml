@@ -25,9 +25,9 @@ function at_bottom()
    cur_scroll_position = GetInfo(296)
    total_output_lines = GetInfo(224)
    text_rectangle_height = GetInfo(293) - GetInfo(291)
-   text_rectangle_lines = text_rectangle_height / font_height  -- it's ok that this is not rounded. we round when we need to.
-   max_scroll_line = total_output_lines - text_rectangle_lines - 1
-   max_scroll_position = (max_scroll_line * font_height)
+   font_height = GetInfo(212)
+   max_scroll_position = ((total_output_lines-1) * font_height) - text_rectangle_height
+
    return cur_scroll_position >= max_scroll_position  -- the current position can briefly be higher than max when the output is scrolling quickly. Why, I don't know.
 end
 
@@ -54,13 +54,7 @@ function OnPluginInstall()
    OnPluginEnable()
 end
 
-function OnPluginCommandEntered(sText)
-   if rect then
-      go_back = GetInfo(296)
-   end
-   return sText
-end
-
+-- when something is added to output
 function OnPluginScreendraw(type, log, line)
    if rect then
       new_num_lines = GetLinesInBufferCount()
@@ -72,8 +66,9 @@ function OnPluginScreendraw(type, log, line)
    end
 end
 
+-- when output area moves
 function OnPluginDrawOutputWindow(a, b, c)
-   if cur_scroll_position == GetInfo(296) then
+   if cur_scroll_position == GetInfo(296) then  -- current position same as previous
       return
    end
    check_display()
@@ -87,19 +82,15 @@ function is_rect()
 end
 
 function check_display()
-   font_height = GetInfo(212)
    if at_bottom() then
-      if go_back then
-         SetScroll(go_back)
-         go_back = nil
-      else
-         WindowShow(win, false)
-         if rect then
-            rect:unInit()
-            rect = nil
-         end
+      WindowShow(win, false)
+      if rect then
+         rect:unInit()
+         rect = nil
       end
+      SetOption("unpause_on_send", original_unpause_on_send)
    else
+      local text_rectangle_lines = text_rectangle_height / font_height
       desired_lines = math.max(
          10,
          math.min(
@@ -108,21 +99,20 @@ function check_display()
          )
       )
       if text_rectangle_lines > (desired_lines+2) then
+         desired_lines = math.floor(desired_lines)  -- round here because text_rectangle_lines isn't an int
          local text_offset = GetOption("pixel_offset")
-         local border_width = 1
-         local border_offset = 0
-         if is_rect() then
-            border_offset = GetInfo(276)
-            border_width = GetInfo(277)
-            bgcolor = Theme.PRIMARY_BODY
-         else
+         local border_width = GetInfo(277)
+         local border_offset = GetInfo(276)
+         local bgcolor = Theme.PRIMARY_BODY
+         if not is_rect() then
+            border_width = 1
+            border_offset = 0
             bgcolor = GetNormalColour(1)
          end
          local left = GetInfo(290) - border_offset - border_width
          local right = GetInfo(292) + border_offset + border_width
          local bottom = GetInfo(293) + border_offset + border_width
          local width = right - left
-         desired_lines = math.floor(desired_lines)  -- round here because text_rectangle_lines isn't an int
          local output_font = GetAlphaOption("output_font_name")
          local output_font_size = GetOption("output_font_height")
          if (output_font ~= title_font) or (output_font_size ~= title_font_size) then
@@ -166,9 +156,13 @@ function check_display()
                rect:addStyles(GetStyleInfo(num_lines - i))
             end
             rect:draw()
-            WindowShow(win, true)
             WindowMoveHotspot(win, 'bar', 0, 0, 0, t)
+            WindowShow(win, true)
             CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+            original_unpause_on_send = GetOption("unpause_on_send")
+            original_auto_pause = GetOption("auto_pause")
+            SetOption("auto_pause", 1)
+            SetOption("unpause_on_send", 0)
          end
       end
    end
@@ -203,17 +197,16 @@ function OnPluginDisable()
       rect = nil
    end
    WindowDelete(win)
+   SetOption("auto_pause", original_auto_pause)
 end
 
 function ScrollMain(flags, hotspot_id)
    local delta = math.ceil(bit.shr(flags, 16) / 3)
-
    if bit.band (flags, miniwin.wheel_scroll_back) ~= 0 then
       direction = 1   -- wheel scrolled down
    else
       direction = -1  -- wheel scrolled up
    end
-
    SetScroll(GetInfo(296) + delta*direction, GetInfo(120))
 end
 
