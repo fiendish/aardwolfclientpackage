@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2029 snapshot
+- bug fix: The splitscreen scrollback plugin should now catch when new messages arrive while output is paused but not scrolled.
+- bug fix: Don't error when loading the note mode plugin.
+
 r2027 snapshot
 - bug fix: More fluid scrolling with less main body flicker in the splitscreen scrollback plugin.
 - new feature: I'm tired of having to right-click urls in the communication log. Links are now launched directly on plain click.
