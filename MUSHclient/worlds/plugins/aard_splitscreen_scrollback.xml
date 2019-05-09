@@ -63,15 +63,16 @@ function OnPluginScreendraw(type, log, line)
       end
       rect:draw()
       num_lines = new_num_lines+1
+   else
+      check_display()
    end
 end
 
 -- when output area moves
 function OnPluginDrawOutputWindow(a, b, c)
-   if cur_scroll_position == GetInfo(296) then  -- current position same as previous
-      return
+   if cur_scroll_position ~= GetInfo(296) then  -- current position different from previous
+      check_display()
    end
-   check_display()
 end
 
 base_desired_lines = 17
@@ -83,8 +84,8 @@ end
 
 function check_display()
    if at_bottom() then
-      WindowShow(win, false)
       if rect then
+         WindowShow(win, false)
          rect:unInit()
          rect = nil
       end
