@@ -28,7 +28,7 @@ function at_bottom()
    font_height = GetInfo(212)
    max_scroll_position = ((total_output_lines-1) * font_height) - text_rectangle_height
 
-   return cur_scroll_position >= max_scroll_position  -- the current position can briefly be higher than max when the output is scrolling quickly. Why, I don't know.
+   return (not GetInfo(114)) or (cur_scroll_position >= max_scroll_position)
 end
 
 win = GetPluginID()
