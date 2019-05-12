@@ -45,29 +45,37 @@ TextRect_mt = { __index = TextRect }
 function TextRect.new(window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..tostring(GetUniqueNumber())
-   new_tr.name = name
    new_tr.window = window
-   new_tr.scrollable = scrollable
-   new_tr.external_scroll = external_scroll
-   new_tr.padding = padding or new_tr.padding
-   new_tr.max_lines = max_lines or new_tr.max_lines
-   new_tr.font_name = font_name or new_tr.font_name
-   new_tr.font_size = font_size or new_tr.font_size
-   new_tr.background_color = background_color or new_tr.background_color
-   new_tr.highlight_color = getHighlightColor(new_tr.background_color)
-   new_tr:setRect(left, top, right, bottom)
-   new_tr:loadFont(new_tr.font_name, new_tr.font_size)
+   new_tr.name = name
+   new_tr:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
    return new_tr
 end
 
-function TextRect:loadFont(name, size)
-   self.font = self.id.."_font"
-   self.font_name = name
-   self.font_size = size
+function TextRect:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
+   self.scrollable = scrollable
+   self.external_scroll = external_scroll
+   self.padding = padding or self.padding
+   self.max_lines = max_lines or self.max_lines
+   self.font_name = font_name or self.font_name
+   self.font_size = font_size or self.font_size
+   if background_color ~= self.background_color then
+      self.background_color = background_color or self.background_color
+      self.highlight_color = getHighlightColor(self.background_color)
+   end
+   self:setRect(left, top, right, bottom)
+   self:loadFont(self.font_name, self.font_size)
+end
 
-   WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
-   self.line_height = WindowFontInfo(self.window, self.font, 1)
-   self.rect_lines = math.floor(self.padded_height / self.line_height)
+function TextRect:loadFont(name, size)
+   if not self.font or ((name ~= self.font_name) and (size ~= self.font_size)) then
+      self.font = self.id.."_font"
+      self.font_name = name
+      self.font_size = size
+
+      WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
+      self.line_height = WindowFontInfo(self.window, self.font, 1)
+      self.rect_lines = math.floor(self.padded_height / self.line_height)
+   end
 end
 
 -- Returns an array {start, end, text}
