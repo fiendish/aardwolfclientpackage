@@ -41,6 +41,10 @@ function LoadTitleFont()
 end
 
 function OnPluginEnable()
+   original_unpause_on_send = GetOption("unpause_on_send")
+   original_auto_pause = GetOption("auto_pause")
+   SetOption("auto_pause", 1)
+
    WindowCreate(win, 0, 0, 0, 0, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots, 0)
    WindowAddHotspot(win, 'bar', 0, 0, 0, 0, "", "", "BarDown", "", "", "", miniwin.cursor_ns_arrow, 0)
    WindowDragHandler(win, 'bar', "BarDrag", "BarDragRelease")
@@ -161,9 +165,8 @@ function check_display()
             WindowShow(win, true)
             CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
             original_unpause_on_send = GetOption("unpause_on_send")
-            original_auto_pause = GetOption("auto_pause")
-            SetOption("auto_pause", 1)
             SetOption("unpause_on_send", 0)
+            SetOption("auto_pause", 1)
          end
       end
    end
@@ -199,6 +202,7 @@ function OnPluginDisable()
    end
    WindowDelete(win)
    SetOption("auto_pause", original_auto_pause)
+   SetOption("unpause_on_send", original_unpause_on_send)
 end
 
 function ScrollMain(flags, hotspot_id)
