@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2031 snapshot
+- bug fix: Fix the text_rect highlight color variable name so that WindowRectOp on line 327 stops getting passed nil. Wow, lol.
+
 r2030 snapshot
 - bug fix: Splitscreen scrollback should no longer flicker active during high throughput scrolling.
 
