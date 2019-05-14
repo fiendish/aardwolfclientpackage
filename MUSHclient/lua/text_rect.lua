@@ -38,7 +38,7 @@ TextRect_defaults = {
    keepscrolling = "",
    padding = 5,
    background_color = 0x000000,
-   highlight = getHighlightColor(0x000000)
+   highlight_color = getHighlightColor(0x000000)
 }
 TextRect_mt = { __index = TextRect }
 
