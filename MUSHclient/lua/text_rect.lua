@@ -327,13 +327,14 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
       WindowRectOp(self.window, 2, backfill_start, top + 1, backfill_end-1, top + self.line_height + 1, self.highlight_color)
    end -- backfill
    if styles then
+      utf8 = GetOption("utf_8")
       for _, v in ipairs(styles) do
          local t = v.text
          -- now clean up dangling newlines that cause block characters to show
          if string.sub(v.text, -1) == "\n" then
             t = string.sub(v.text, 1, -2)
          end
-         left = left + WindowText(self.window, self.font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour)
+         left = left + WindowText(self.window, self.font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour, utf8)
       end
    end
 end
