@@ -227,10 +227,14 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
             -- if the history buffer is full then remove the oldest line
             remove(self.wrapped_lines, 1)
             self.num_wrapped_lines = self.num_wrapped_lines - 1
-            self.start_line = self.start_line - 1
-            self.end_line = self.end_line - 1
-            self.display_start_line = self.display_start_line - 1
-            self.display_end_line = self.display_end_line - 1
+            self.start_line = math.max(1, self.start_line - 1)
+            self.end_line = math.max(1, self.end_line - 1)
+            self.display_start_line = math.max(1, self.display_start_line - 1)
+            self.display_end_line = math.max(1, self.display_end_line - 1)
+            if self.copy_start_line then
+               self.copy_start_line = math.max(0, self.copy_start_line - 1)
+               self.copy_end_line = math.max(self.copy_start_line, self.copy_end_line - 1)
+            end
          end -- buffer full
 
          local line_urls = {}
