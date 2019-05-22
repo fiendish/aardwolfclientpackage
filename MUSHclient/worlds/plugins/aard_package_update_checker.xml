@@ -40,16 +40,8 @@ You can also run a manual check by typing:    package update check
    enabled="y"
    send_to="12"
    sequence="100"
+   script="versionCheck"
 >
-<send>
-   local succ, version, msg = aard_extras.PackageVersionExtended()
-   if succ then
-      ColourNote("white", "", msg)
-   else
-      ColourNote("white","red", msg)
-   end
-   remember()
-</send>
 </alias>
 
 </aliases>
@@ -74,6 +66,17 @@ function remember()
    Hyperlink(download_url, download_url, "Installer Download Page", "yellow", "", true)
    Note("")
    Note("")
+end
+
+
+function versionCheck()
+   local succ, version, msg = aard_extras.PackageVersionExtended()
+   if succ then
+      ColourNote("white", "", msg)
+   else
+      ColourNote("white","red", msg)
+   end
+   remember()
 end
 
 -- converts special character codes in html source to their ascii
@@ -139,7 +142,7 @@ function errorMessage(msg)
    ColourNote("white","red","Aardwolf MUSHclient Package Updater Error:")
    ColourNote("white","red",msg)
    if msg:find("plugin network") then
-      Execute("checkversion")
+      versionCheck()
    end
    ColourNote("white","red", "\nThe latest development snapshot is always available at:")
    Hyperlink(download_url, download_url, "Installer Download Page", "white", "red", true)
