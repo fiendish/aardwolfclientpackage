@@ -4675,7 +4675,8 @@ function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
    if aard_req_novisuals_mode then
       quiet_backups = true
-      Execute("mapper hide")
+      window_hidden = true
+      mapper.hide()
    end
 end
 
