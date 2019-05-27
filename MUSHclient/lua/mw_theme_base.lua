@@ -127,19 +127,24 @@ end
 
 local theme_controller_ID = "b9315e040989d3f81f4328d6"
 local theme_controller_name = "aard_Theme_Controller"
-if (GetPluginID() ~= theme_controller_ID) then
-   if not IsPluginInstalled(theme_controller_ID) then
-      local inner_action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller_ID..[[\', \']]..theme_controller_name..[[\')', sendto.script)]]
 
-      -- execute_in_global_space(inner_action)
-      local prefix = GetAlphaOption("script_prefix")
-      local action = [[
-         SetAlphaOption("script_prefix", "/")
-         Execute("/]] .. inner_action:gsub("\\", "\\\\") .. [[")
-         SetAlphaOption("script_prefix", "]] .. prefix:gsub("\\", "\\\\") .. [[")
-      ]]
-      DoAfterSpecial(0.1, action, sendto.script)
+function _load_controller()
+   if not GetInfo(119) then
+      DoAfterSpecial(0.1, 'Theme._load_controller()', sendto.script)
+      return
    end
+   if not IsPluginInstalled(theme_controller_ID) then
+      local inner_action = [[if not theme_plugin_loading then theme_plugin_loading = true; DoAfterSpecial(0.1, 'require \'checkplugin\'; theme_plugin_loading = nil; do_plugin_check_now(\']]..theme_controller_ID..[[\', \']]..theme_controller_name..[[\')', sendto.scriptafteromit) end]]
+      -- run_in_global_space(inner_action)
+      local prefix = GetAlphaOption("script_prefix")
+      SetAlphaOption("script_prefix", "/")
+      Execute("/"..inner_action)
+      SetAlphaOption("script_prefix", prefix)
+   end
+end
+
+if (GetPluginID() ~= theme_controller_ID) then
+   _load_controller()
 
    local maybe_theme_file = GetPluginVariable(theme_controller_ID, "theme_file") or theme_file
 
