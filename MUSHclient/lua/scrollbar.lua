@@ -13,7 +13,7 @@ ScrollBar_mt = { __index = ScrollBar }
 
 function ScrollBar.new(window, name, left, top, right, bottom)
    new_sb = setmetatable(copytable.deep(ScrollBar_defaults), ScrollBar_mt)
-   new_sb.id = "ScrollBar_"..window.."_"..tostring(GetUniqueNumber())
+   new_sb.id = "ScrollBar_"..window.."_"..name
    new_sb.name = name
    new_sb.window = window
    new_sb.left = left
