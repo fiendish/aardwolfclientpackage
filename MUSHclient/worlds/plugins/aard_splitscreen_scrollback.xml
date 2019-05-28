@@ -20,6 +20,7 @@
 
 require "mw_theme_base"
 require "text_rect"
+require "color_copy"
 
 function at_bottom()
    cur_scroll_position = GetInfo(296)
@@ -138,27 +139,56 @@ function check_display()
                )
             )
          ) then -- build the window if it isn't where we want it to be
+            num_lines = GetLinesInBufferCount()
             WindowPosition(win, left, top, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots)
             WindowResize(win, width, height, bgcolor)
             WindowRectOp(win, miniwin.rect_fill, 0, 0, 0, 0, bgcolor, nil)  -- clear
             local l, t, r, b = Theme.DrawBorder(win)
             t = Theme.DrawTitleBar(win, "title", "-- RECENT --")
-            if rect then
+            local carry = false
+            local csl, cel, csx, cex, cptxt = nil, nil, nil, nil, nil
+            if rect and rect.copy_start_line then
+               carry = true
+               csl = num_lines - rect.rect_lines - 1 + rect.copy_start_line
+               cel = num_lines - rect.rect_lines - 1 + rect.copy_end_line
+               csx = rect.start_copying_x
+               cex = rect.end_copying_x
+               cptxt = rect.copied_text
                rect:unInit()
+               rect = nil
             end
             rect = TextRect.new(
                win, "rect",
                l + text_offset + border_offset - border_width,
                t + border_width,
-               r - text_offset - border_offset + border_width,
+               r - border_offset + border_width,
                b - text_offset - border_offset + border_width,
                desired_lines, false, bgcolor, 0,
                output_font, output_font_size,  -- output_font_height is actually the pt size
                'ScrollMain'
             )
-            num_lines = GetLinesInBufferCount()
+            local wsl = GetSelectionStartLine()
+            if wsl ~= 0 then
+               carry = true
+               csl = wsl
+               cel = GetSelectionEndLine()
+               csc = GetSelectionStartColumn() - 1
+               cec = GetSelectionEndColumn() - 1
+               sstxt = GetLineInfo(csl, 1):sub(1, csc)
+               setxt = GetLineInfo(cel, 1):sub(1, cec)
+               csx = WindowTextWidth(rect.window, rect.font, sstxt) + rect.padded_left
+               cex = WindowTextWidth(rect.window, rect.font, setxt) + rect.padded_left + 1
+               cptxt = get_selection_with_color() .. "@w"
+            end
             for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
                rect:addStyles(GetStyleInfo(num_lines - i))
+            end
+            if carry then
+               rect.start_copying_x = csx
+               rect.end_copying_x = cex
+               rect.copy_start_line = rect.rect_lines - (num_lines - 1 - csl)
+               rect.copy_end_line = rect.rect_lines - (num_lines - 1 - cel)
+               rect.copied_text = cptxt
             end
             rect:draw()
             WindowMoveHotspot(win, 'bar', 0, 0, 0, t)
