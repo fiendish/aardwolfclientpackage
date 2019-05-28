@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r2036 snapshot
+- new feature: Splitscreen scrollback will persist highlights from the main output to the overlay. We can't go the other direction just yet, but it's a start.
+- bug fix: Fix communication log broken highlight scrolling after the buffer fills up
+- bug fix: Hopefully the communication log will no longer sometimes flash the wrong tab contents when you click on the text
+- bug fix: Splitscreen scrollback should capture ascii map echo with the fancy maptypes now
+- bug fix: Fewer startup crashes in Wine
+
 r2031 snapshot
 - bug fix: Fix the text_rect highlight color variable name so that WindowRectOp on line 327 stops getting passed nil. Wow, lol.
 
