@@ -44,7 +44,7 @@ TextRect_mt = { __index = TextRect }
 
 function TextRect.new(window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
-   new_tr.id = "TextRect_"..window.."_"..tostring(GetUniqueNumber())
+   new_tr.id = "TextRect_"..window.."_"..name
    new_tr.window = window
    new_tr.name = name
    new_tr:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
@@ -67,7 +67,7 @@ function TextRect:configure(left, top, right, bottom, max_lines, scrollable, bac
 end
 
 function TextRect:loadFont(name, size)
-   if not self.font or ((name ~= self.font_name) and (size ~= self.font_size)) then
+   if (not self.font) or (name ~= self.font_name) or (size ~= self.font_size) then
       self.font = self.id.."_font"
       self.font_name = name
       self.font_size = size
@@ -328,7 +328,7 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
    local left = self.padded_left
    local top = self.padded_top + (line * self.line_height)
    if (backfill_start ~= nil and backfill_end ~= nil) then
-      WindowRectOp(self.window, 2, backfill_start, top + 1, backfill_end-1, top + self.line_height + 1, self.highlight_color)
+      WindowRectOp(self.window, 2, backfill_start, top, backfill_end-1, top + self.line_height, self.highlight_color)
    end -- backfill
    if styles then
       utf8 = GetOption("utf_8")
@@ -388,17 +388,19 @@ function TextRect:draw(cleanup_first, inside_callback)
          if self.copy_start_line ~= nil and self.copy_end_line ~= nil and count >= self.copy_start_line and count <= self.copy_end_line then
             ax = (
                (count == self.copy_start_line)
-               and math.min(self.start_copying_x, WindowTextWidth(self.window, self.font, line_no_colors))
-               or 0
-            ) + self.padded_left
+               and self.start_copying_x
+               and math.min(self.start_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)
+               or self.padded_left
+            )
             -- end of highlight for this line
             zx = math.min(
                self.padded_right,
                (
                   (count == self.copy_end_line)
-                  and math.min(self.end_copying_x, WindowTextWidth(self.window, self.font, line_no_colors))
-                  or WindowTextWidth(self.window, self.font, line_no_colors)
-               ) + self.padded_left
+                  and self.end_copying_x
+                  and math.min(self.end_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)
+                  or (WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)
+               )
             )
          end
          self:drawLine(count - self.display_start_line, self.wrapped_lines[count][1], ax, zx )
@@ -498,6 +500,7 @@ function TextRect:_deleteHyperlinks()
    if self.hyperlinks then
       for k, v in pairs(self.hyperlinks) do
          WindowDeleteHotspot(self.window, k)
+         TextRect.hotspot_map[k] = nil
       end
    end
    self.hyperlinks = {}
@@ -506,10 +509,11 @@ end
 function TextRect:unInit()
    -- unload all hotspots
    if self.area_hotspot then
+      TextRect.hotspot_map[self.area_hotspot] = nil
       WindowDeleteHotspot(self.window, self.area_hotspot)
+      self.area_hotspot = nil
    end
    self:_deleteHyperlinks()
-   self.area_hotspot = nil
 end
 
 function TextRect.mouseDown(flags, hotspot_id)
@@ -522,6 +526,8 @@ function TextRect.mouseDown(flags, hotspot_id)
       tr.copied_text = ""
       tr.copy_start_line = nil
       tr.copy_end_line = nil
+      tr.start_copying_pos = nil
+      tr.end_copying_pos = nil
       tr:draw(false)
    end
 end
@@ -605,8 +611,8 @@ function TextRect.dragMove(flags, hotspot_id)
             -- Clamp the selection start position
             if copy_line == tr.copy_start_line then
                for pos=1,#line_no_colors do
-                  if WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos)) + tr.left > tr.start_copying_x then
-                     tr.start_copying_x = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos-1))
+                  if (WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos)) + tr.padded_left) > tr.start_copying_x then
+                     tr.start_copying_x = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos-1)) + tr.padded_left
                      break
                   end
                   startpos = pos
@@ -616,32 +622,36 @@ function TextRect.dragMove(flags, hotspot_id)
             if copy_line == tr.copy_end_line then
                endpos = 0
                for pos=1,#line_no_colors do
-                  if WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos)) + tr.left > tr.end_copying_x then
-                     tr.end_copying_x = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos-1)) + tr.left
+                  if WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos)) + tr.padded_left > tr.end_copying_x then
+                     tr.end_copying_x = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos-1)) + tr.padded_left
                      break
                   end
                   endpos = pos
                end
             end
-
          end
 
          -- Store selected area for later
          if endpos > startpos then
-            copied_part = StylesToColours( TruncateStyles(tr.wrapped_lines[copy_line][1], startpos+1, endpos))
-            if copy_line ~= tr.copy_end_line and copy_line ~= #tr.wrapped_lines and tr.wrapped_lines[copy_line + 1][2] == true then
-               -- only put a line break if the next line is from a different message
-               copied_part = copied_part.."@w\n"
-            elseif copy_line == tr.copy_end_line or copy_line == #tr.wrapped_lines then
-               -- tack a white code on to the very end
+            local styles = tr.wrapped_lines[copy_line][1]
+            copied_part = StylesToColours(TruncateStyles(styles, startpos+1, endpos))
+            -- end in @w if line starts with a color code
+            if (#styles > 1) or ((copied_part:sub(1,1) == "@") and (copied_part:sub(2,2) ~= "@")) then
                copied_part = copied_part.."@w"
             end
+            if (copy_line ~= tr.num_wrapped_lines) and (tr.wrapped_lines[copy_line + 1][2] == true) then
+               -- put a line break if the next line is from a different message
+               copied_part = copied_part.."\n"
+            end
             tr.copied_text = tr.copied_text..(((copied_part ~= nil) and copied_part) or "")
+         elseif (endpos == 0) and (startpos == 0) and (copy_line ~= tr.copy_end_line) and (copy_line ~= tr.copy_start_line) then
+            tr.copied_text = tr.copied_text.."@w\n"
          end
-
       end -- if valid line
-   end -- for
-
+   end -- copying lines
+   if tr.copied_text:sub(-1) == "\n" then
+      tr.copied_text = tr.copied_text:sub(1, -2)
+   end
    if tr.scrollable then
       -- Scroll if the mouse is dragged off the top or bottom
       if ypos < tr.top then
@@ -845,12 +855,12 @@ function TextRect:copy()
 end
 
 function TextRect:copyFull()
-   ColourNote("yellow","","All text copied to clipboard.")
    local t = {}
    for _,styles in ipairs(self.raw_lines) do
       table.insert(t, StylesToColoursOneLine(styles[1]))
    end
    SetClipboard(table.concat(t,"@w\n").."@w")
+   ColourNote("yellow","","All text copied to clipboard.")
 end
 
 function TextRect:generateHotspotID(id)
