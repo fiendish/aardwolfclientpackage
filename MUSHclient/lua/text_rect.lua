@@ -42,18 +42,19 @@ TextRect_defaults = {
 }
 TextRect_mt = { __index = TextRect }
 
-function TextRect.new(window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
+function TextRect.new(window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select)
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..name
    new_tr.window = window
    new_tr.name = name
-   new_tr:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
+   new_tr:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select)
    return new_tr
 end
 
-function TextRect:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll)
+function TextRect:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select)
    self.scrollable = scrollable
-   self.external_scroll = external_scroll
+   self.external_scroll_handler = external_scroll_handler
+   self.call_on_select = call_on_select
    self.padding = padding or self.padding
    self.max_lines = max_lines or self.max_lines
    self.font_name = font_name or self.font_name
@@ -377,8 +378,8 @@ function TextRect:draw(cleanup_first, inside_callback)
                   WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.clickUrl", "", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
                   if self.scrollable then
                      WindowScrollwheelHandler(self.window, link_id, "TextRect.wheelMove")
-                  elseif self.external_scroll then
-                     WindowScrollwheelHandler(self.window, link_id, self.external_scroll)
+                  elseif self.external_scroll_handler then
+                     WindowScrollwheelHandler(self.window, link_id, self.external_scroll_handler)
                   end
                end
             end
@@ -490,8 +491,8 @@ function TextRect:initArea()
    WindowDragHandler(self.window, self.area_hotspot, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
    if self.scrollable then
       WindowScrollwheelHandler(self.window, self.area_hotspot, "TextRect.wheelMove")
-   elseif self.external_scroll then
-      WindowScrollwheelHandler(self.window, self.area_hotspot, self.external_scroll)
+   elseif self.external_scroll_handler then
+      WindowScrollwheelHandler(self.window, self.area_hotspot, self.external_scroll_handler)
    end
    self.hyperlinks = {}
 end
@@ -526,9 +527,14 @@ function TextRect.mouseDown(flags, hotspot_id)
       tr.copied_text = ""
       tr.copy_start_line = nil
       tr.copy_end_line = nil
+      tr.start_copying_x = nil
+      tr.end_copying_x = nil
       tr.start_copying_pos = nil
       tr.end_copying_pos = nil
       tr:draw(false)
+      if tr.call_on_select then
+         tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x, tr.copied_text)
+      end
    end
 end
 
@@ -610,9 +616,11 @@ function TextRect.dragMove(flags, hotspot_id)
 
             -- Clamp the selection start position
             if copy_line == tr.copy_start_line then
+               tr.start_copying_pos = 1
                for pos=1,#line_no_colors do
                   if (WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos)) + tr.padded_left) > tr.start_copying_x then
                      tr.start_copying_x = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos-1)) + tr.padded_left
+                     tr.start_copying_pos = pos
                      break
                   end
                   startpos = pos
@@ -621,9 +629,11 @@ function TextRect.dragMove(flags, hotspot_id)
             -- Clamp the selection end position
             if copy_line == tr.copy_end_line then
                endpos = 0
+               tr.end_copying_pos = #line_no_colors + 1
                for pos=1,#line_no_colors do
                   if WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos)) + tr.padded_left > tr.end_copying_x then
                      tr.end_copying_x = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, pos-1)) + tr.padded_left
+                     tr.end_copying_pos = pos
                      break
                   end
                   endpos = pos
@@ -671,12 +681,18 @@ function TextRect.dragMove(flags, hotspot_id)
       end
    end
    tr:draw(false)
+   if tr.call_on_select then
+      tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x, tr.copied_text)
+   end
 end
 
 function TextRect.dragRelease(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
    tr.copy_start_line = math.min(#tr.wrapped_lines, tr.copy_start_line or 0)
    tr.copy_end_line = math.min(#tr.wrapped_lines, tr.copy_end_line or 0)
+   if tr.call_on_select then
+      tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x, tr.copied_text)
+   end
 end
 
 function TextRect.wheelMove(flags, hotspot_id)
