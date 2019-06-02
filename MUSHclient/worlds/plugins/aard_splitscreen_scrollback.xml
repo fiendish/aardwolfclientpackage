@@ -38,7 +38,7 @@ function LoadTitleFont()
    title_font = GetAlphaOption("output_font_name")
    title_font_size = GetOption("output_font_height")
    WindowFont(win, "title", GetAlphaOption("output_font_name"), GetOption("output_font_height"), false, false, false)
-   title_height = WindowFontInfo(win, "title", 1) + (2 * Theme.TITLE_PADDING)
+   title_height = 6
 end
 
 function OnPluginEnable()
@@ -189,7 +189,8 @@ function check_display()
             WindowResize(win, width, height, bgcolor)
             WindowRectOp(win, miniwin.rect_fill, 0, 0, 0, 0, bgcolor, nil)  -- clear
             local l, t, r, b = Theme.DrawBorder(win)
-            t = Theme.DrawTitleBar(win, "title", "-- RECENT --")
+            Theme.Draw3DRect(win, -1, 1, 0, title_height)
+            t = title_height
             local carry = false
             local csl, cel, csx, cex, cptxt = nil, nil, nil, nil, nil
             if rect and rect.copy_start_line then
