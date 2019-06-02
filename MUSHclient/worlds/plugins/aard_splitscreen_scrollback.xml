@@ -11,6 +11,7 @@
    requires="5.05"
    version="1.0"
    sequence="10000"
+   save_state="y"
    >
 
 </plugin>
@@ -54,6 +55,9 @@ function OnPluginEnable()
    WindowShow(win, false)
    check_display()
 end
+
+base_desired_lines = tonumber(GetVariable("base_desired_lines")) or 17
+new_desired_lines = 0
 
 function OnPluginInstall()
    OnPluginEnable()
@@ -112,9 +116,6 @@ function OnPluginSelectionChanged()
       end
    end
 end
-
-base_desired_lines = 17
-new_desired_lines = 0
 
 function is_rect()
    return (GetInfo(272) ~= 0) or (GetInfo(273) ~= 0) or (GetInfo(274) ~= 0) or (GetInfo(275) ~= 0)
@@ -268,6 +269,7 @@ end
 
 function BarDragRelease(flags, hotspot_id)
    base_desired_lines = desired_lines
+   SetVariable("base_desired_lines", base_desired_lines)
    new_desired_lines = 0
    check_display()
 end
