@@ -16,12 +16,16 @@
 </plugin>
 <script>
 <![CDATA[
+done = false
 function OnPluginListChanged()
-   dofile "lua/aard_requirements.lua"
-   if GetVariable("showGreeting3") == nil then
-      ShowGreeting()
-   else
-      Connect()
+   if not done then
+      done = true
+      dofile "lua/aard_requirements.lua"
+      if GetVariable("showGreeting3") == nil then
+         ShowGreeting()
+      else
+         Connect()
+      end
    end
 end
 
