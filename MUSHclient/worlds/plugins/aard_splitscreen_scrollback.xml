@@ -80,11 +80,56 @@ function OnPluginDrawOutputWindow(a, b, c)
    end
 end
 
+function OnPluginSelectionChanged()
+   if rect then
+      local csl = GetSelectionStartLine()
+      local cel = GetSelectionEndLine()
+      local csp = GetSelectionStartColumn()
+      local cep = GetSelectionEndColumn()
+      if (csl ~= cel) or (csp ~= cep) then
+         local sstxt = GetLineInfo(csl, 1):sub(1, csp - 1)
+         local setxt = GetLineInfo(cel, 1):sub(1, cep - 1)
+         local csx = WindowTextWidth(rect.window, rect.font, sstxt) + rect.padded_left
+         local cex = WindowTextWidth(rect.window, rect.font, setxt) + rect.padded_left + 1
+         local cptxt = get_selection_with_color() .. "@w"
+         rect.start_copying_x = csx
+         rect.end_copying_x = cex
+         rect.start_copying_pos = csp
+         rect.end_copying_pos = cep
+         rect.copy_start_line = rect.rect_lines - (num_lines - 1 - csl)
+         rect.copy_end_line = rect.rect_lines - (num_lines - 1 - cel)
+         rect.copied_text = cptxt
+         rect:draw()
+      elseif ((csl == 0) and (cel == 0) and (csp == 0) and (cep == 0)) then
+         rect.start_copying_x = nil
+         rect.end_copying_x = nil
+         rect.start_copying_pos = nil
+         rect.end_copying_pos = nil
+         rect.copy_start_line = nil
+         rect.copy_end_line = nil
+         rect.copied_text = ""
+         rect:draw()
+      end
+   end
+end
+
 base_desired_lines = 17
 new_desired_lines = 0
 
 function is_rect()
    return (GetInfo(272) ~= 0) or (GetInfo(273) ~= 0) or (GetInfo(274) ~= 0) or (GetInfo(275) ~= 0)
+end
+
+function select_in_main(start_line, end_line, start_pos, end_pos, start_x, end_x, text)
+   last_start_line, last_end_line, last_start_pos, last_end_pos, last_start_x, last_end_x = start_line, end_line, start_pos, end_pos, start_x, end_x
+
+   if start_line and end_line and start_pos and end_pos then
+      start_line = start_line - rect.rect_lines + num_lines - 1
+      end_line = end_line - rect.rect_lines + num_lines - 1
+   else
+      start_line, end_line, start_pos, end_pos = 1, 1, 1, 1
+   end
+   SetSelection(start_line, end_line, start_pos, end_pos)
 end
 
 function check_display()
@@ -153,6 +198,8 @@ function check_display()
                cel = num_lines - rect.rect_lines - 1 + rect.copy_end_line
                csx = rect.start_copying_x
                cex = rect.end_copying_x
+               csp = rect.start_copying_pos
+               cep = rect.end_copying_pos
                cptxt = rect.copied_text
                rect:unInit()
                rect = nil
@@ -165,17 +212,18 @@ function check_display()
                b - text_offset - border_offset + border_width,
                desired_lines, false, bgcolor, 0,
                output_font, output_font_size,  -- output_font_height is actually the pt size
-               'ScrollMain'
+               'ScrollMain',
+               select_in_main
             )
             local wsl = GetSelectionStartLine()
             if wsl ~= 0 then
                carry = true
                csl = wsl
                cel = GetSelectionEndLine()
-               csc = GetSelectionStartColumn() - 1
-               cec = GetSelectionEndColumn() - 1
-               sstxt = GetLineInfo(csl, 1):sub(1, csc)
-               setxt = GetLineInfo(cel, 1):sub(1, cec)
+               csp = GetSelectionStartColumn()
+               cep = GetSelectionEndColumn()
+               sstxt = GetLineInfo(csl, 1):sub(1, csp - 1)
+               setxt = GetLineInfo(cel, 1):sub(1, cep - 1)
                csx = WindowTextWidth(rect.window, rect.font, sstxt) + rect.padded_left
                cex = WindowTextWidth(rect.window, rect.font, setxt) + rect.padded_left + 1
                cptxt = get_selection_with_color() .. "@w"
@@ -186,6 +234,8 @@ function check_display()
             if carry then
                rect.start_copying_x = csx
                rect.end_copying_x = cex
+               rect.start_copying_pos = csp
+               rect.end_copying_pos = cep
                rect.copy_start_line = rect.rect_lines - (num_lines - 1 - csl)
                rect.copy_end_line = rect.rect_lines - (num_lines - 1 - cel)
                rect.copied_text = cptxt
