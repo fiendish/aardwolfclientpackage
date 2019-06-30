@@ -149,6 +149,7 @@ default_x = 0
 default_y = 0
 default_font_name = "Dina"
 default_font_size = "8"
+default_log_file_size = 0 -- MB or 0 for no split
 
 date_format = GetVariable("date_format") or "[%d %b %H:%M:%S] "
 width = tonumber(GetVariable("WINDOW_WIDTH")) or default_width
@@ -156,6 +157,7 @@ height = tonumber(GetVariable("WINDOW_HEIGHT")) or default_height
 log_to_file = tonumber(GetVariable("log_to_file")) or 0
 log_colour_codes = tonumber(GetVariable("log_colour_codes")) or 1
 log_timestamps = tonumber(GetVariable("log_timestamps")) or 1
+log_file_size = tonumber(GetVariable("log_file_size")) or default_log_file_size
 
 local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction", "remote_socials"}
 local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations", ["remote_socials"]="Remote Socials"}
@@ -649,6 +651,7 @@ function OnPluginSaveState()
    SetVariable("remort_auction_on", remort_auction_on)
    SetVariable("warfare_on", warfare_on)
    SetVariable("log_to_file", log_to_file)
+   SetVariable("log_file_size", log_file_size)
    SetVariable("log_colour_codes", log_colour_codes)
    SetVariable("log_timestamps", log_timestamps)
    SetVariable("current_tab", current_tab)
@@ -680,7 +683,12 @@ function log(styles_or_text, timestamp)
    local f, err = io.open(filename, "a+") -- handle to chat log file
    if f then
       f:write(log_text.."\n") -- write to it
+      local size = f:seek("end") -- get current file size
       f:close()  -- close that file now
+      if log_file_size > 0 and (size / 1048576) >= log_file_size then
+         local splitfilename = GetInfo(58):gsub("^.\\",GetInfo(56))..os.time().."-"..sanitize_filename(GetInfo(2)).."ChatLog.txt"
+         os.rename(filename, splitfilename) -- rename file to start a new one
+      end
    else
       ColourNote("white", "red", "COMMUNICATION LOG ERROR: Failed to access your logging file because of the following reason:" )
       ColourNote("white", "red", err)
@@ -688,7 +696,7 @@ function log(styles_or_text, timestamp)
    end
 end
 
-function stampAndLog(styles_or_text, timestamp)
+function stampAndLog(styles_or_text, timestamp, omit_log)
    if not timestamp then
       timestamp = ""
    end
@@ -709,7 +717,7 @@ function stampAndLog(styles_or_text, timestamp)
       styles_or_text = styles_or_text:gsub("[^%C\n]", "")
    end
 
-   if log_to_file == 1 then
+   if (log_to_file == 1) and not omit_log then
       log(styles_or_text, timestamp)
    end
 
@@ -738,13 +746,24 @@ function stampAndStore(msg, chan, is_gmcp)
    end
 end
 
--- Takes a string with embedded Aardwolf color codes, a tab name or number, and a true/false argument for controlling whether to timestamp the line.
--- (false means don't add a timestamp, and true means obey the internal timestamping configuration)
+-- storeFromOutside takes four arguments:
+-- 1. the message you want to store in Aardwolf color code format
+-- 2. (optional) the tab name or number to store it in
+-- 3. (optional) true/false for controlling whether to timestamp the line (defaults to true if nil)
+-- 4. (optional) true/false for whether to omit the line from the log file (defaults to false if nil)
+-- (for add_timestamp, false means don't add a timestamp, and nil or true means obey the internal timestamping configuration)
+-- (for omit_log, true means don't add the line to the log file, and nil or false means go ahead and log it)
 -- Use via CallPlugin(), http://mushclient.com/scripts/doc.php?function=CallPlugin
 --
--- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", 1, true)
+-- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", 1, true, true)
+--   This example will use Tab #1, Add a timestamp, and Omit from the log
+--
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", "Q/A", false)
-function storeFromOutside(msg, tab, add_timestamp)
+--   This example will use Tab Q/A, Not add a timestamp, and Log it
+function storeFromOutside(msg, tab, add_timestamp, omit_log)
+   if add_timestamp == nil then
+      add_timestamp = true
+   end
    if tab == nil then
       tab = 1
    elseif type(tab) == "string" then
@@ -752,7 +771,7 @@ function storeFromOutside(msg, tab, add_timestamp)
    end
 
    if tab then
-      msg = stampAndLog(msg, add_timestamp and os.date(date_format) or "")
+      msg = stampAndLog(msg, add_timestamp and os.date(date_format) or "", omit_log)
       local should_redraw = (storeTab(ColoursToStyles(msg), tab) == 1)
       if should_redraw == true then
          drawTabs()
@@ -932,32 +951,52 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       else
          ColourNote ("yellow", "", "Timestamps will be included in the log file.")
       end
+   elseif result == 10 then
+      local ls = utils.inputbox("Input a size in MB. (0 for None)", "Log File Split Size", log_file_size, "", 10, {prompt_height = 16, box_width = 180, box_height = 130, reply_width = 40, reply_height = 20})
+      if not ls then -- canceled
+         return
+      end
+      ls = tonumber(ls)
+      if not ls then -- not a number
+         extend_rightclick_menu_result(sender, hotspot_id, result)
+         return
+      else
+         log_file_size = ls
+      end
+      if log_file_size == 0 then
+         ColourNote ("yellow", "", "Log file will not be split.")
+      else
+         ColourNote ("yellow", "", "Log files will be split at "..log_file_size.." MB.")
+      end
    end
 
    local echo_skip = 0
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
       echo_skip = 4
-      if result == 10 then
+      if result == 11 then
          CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "on")
-      elseif result == 11 then
-         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "off")
       elseif result == 12 then
-         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "channels")
+         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "off")
       elseif result == 13 then
+         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "channels")
+      elseif result == 14 then
          CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "nonchannels")
       end
    end
 
    noremove = (num_tabs < 2) and 1 or 0
 
-   if result == 10+echo_skip then
+   if result == 11+echo_skip then
       setTab(addTab())
-   elseif result == 11+echo_skip-noremove then
-      removeTab()
    elseif result == 12+echo_skip-noremove then
-      local name = utils.inputbox("Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab))
-      nameTab(current_tab, name)
+      removeTab()
    elseif result == 13+echo_skip-noremove then
+      local name = utils.inputbox("Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab))
+      if not name then
+         return -- cancel was pressed, so keep existing name
+      end
+      nameTab(current_tab, name)
+   elseif result == 14+echo_skip-noremove then
       local defaults = {}
       local tbl = {}
       for k,v in pairs(tabs_channel_captures[current_tab]) do
@@ -972,7 +1011,7 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
          end
       end
       reduce_diverse_channels()
-   elseif result == 14+echo_skip-noremove then
+   elseif result == 15+echo_skip-noremove then
       local defaults = {}
       for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
          defaults[k] = v["capture"]
@@ -991,13 +1030,13 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       EnableTrigger("remort_auction", check_nonchannel_trigger("remort_auction"))
       EnableTrigger("warfare", check_nonchannel_trigger("warfare"))
       EnableTrigger("remote_socials", check_nonchannel_trigger("remote_socials"))
-   elseif result == 15+echo_skip-noremove then
-      tabs_rects[current_tab]:clear()
    elseif result == 16+echo_skip-noremove then
-      CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      tabs_rects[current_tab]:clear()
    elseif result == 17+echo_skip-noremove then
-      CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+      CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == 18+echo_skip-noremove then
+      CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+   elseif result == 19+echo_skip-noremove then
     if window_title == "" then
         window_title = "Communication Log"
     else
@@ -1030,6 +1069,8 @@ function extend_rightclick_menu_string(tr)
       log_to_file==1 and "Disable" or "Enable",
       "Log with Color Codes",
       "Log with Timestamps",
+      "-",
+      "Set Log File Split Size ("..((log_file_size == 0) and "None" or (tostring(log_file_size).."MB"))..")",
       "<",
       "Add New Tab",
       "-",
@@ -1072,7 +1113,7 @@ function extend_rightclick_menu_string(tr)
       local ems = echo_menu_strings
 
       for i,v in ipairs(echo_menu_strings) do
-         table.insert(menu_strings, 13+i, v)
+         table.insert(menu_strings, 15+i, v)
       end
 
       return table.concat(menu_strings, "|")
