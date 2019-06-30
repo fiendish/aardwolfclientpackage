@@ -686,8 +686,9 @@ function log(styles_or_text, timestamp)
       f:write(log_text.."\n") -- write to it
       local size = f:seek("end") -- get current file size
       f:close()  -- close that file now
-      if (size / 1048576) >= log_file_size then
-         os.rename(filename, GetInfo(58):gsub("^.\\",GetInfo(56))..os.time().."-"..sanitize_filename(GetInfo(2)).."ChatLog.txt") -- rename file to start a new one
+      if log_file_size > 0 and (size / 1048576) >= log_file_size then
+         local splitfilename = GetInfo(58):gsub("^.\\",GetInfo(56))..os.time().."-"..sanitize_filename(GetInfo(2)).."ChatLog.txt"
+         os.rename(filename, splitfilename) -- rename file to start a new one
       end
    else
       ColourNote("white", "red", "COMMUNICATION LOG ERROR: Failed to access your logging file because of the following reason:" )
@@ -985,8 +986,8 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       removeTab()
    elseif result == 13+echo_skip-noremove then
       local name = utils.inputbox("Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab))
-	  if not name then
-	     return false -- cancel was pressed, so keep existing name
+      if not name then
+         return false -- cancel was pressed, so keep existing name
       end
       nameTab(current_tab, name)
    elseif result == 14+echo_skip-noremove then
