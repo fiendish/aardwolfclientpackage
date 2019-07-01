@@ -178,7 +178,7 @@ EXIT_COLOUR           = { name = "Exit",             colour =  ColourNameToRGB "
 EXIT_COLOUR_UP_DOWN   = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
 ROOM_NOTE_COLOUR      = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen"}
 OUR_ROOM_COLOUR       = { name = "Our room",         colour =  ColourNameToRGB "#ff1493"}
-UNKNOWN_ROOM_COLOUR   = { name = "Unknown room",     colour =  ColourNameToRGB "#8b0000"}
+UNKNOWN_ROOM_COLOUR   = { name = "Unknown room",     colour =  ColourNameToRGB "#9b0000"}
 DIFFERENT_AREA_COLOUR = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
 PK_BORDER_COLOUR      = { name = "PK border",        colour =  ColourNameToRGB "red"}
 SHOP_FILL_COLOUR      = { name = "Shop",             colour =  ColourNameToRGB "#ffad2f"}
@@ -664,7 +664,7 @@ local function draw_room (uid, path, x, y)
    if room.unknown then
       WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
          UNKNOWN_ROOM_COLOUR.colour, miniwin.pen_dot, 1,  --  dotted single pixel pen
-         -1, miniwin.brush_null)  -- opaque, no brush
+         0, miniwin.brush_hatch_forwards_diagonal)  -- opaque, no brush
    else
       -- room fill
       WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
