@@ -339,7 +339,7 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
          if string.sub(v.text, -1) == "\n" then
             t = string.sub(v.text, 1, -2)
          end
-         left = left + WindowText(self.window, self.font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour, utf8)
+         left = left + WindowText(self.window, self.font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour, utf8 and utils.utf8valid(t))
       end
    end
 end
