@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r2045 snapshot
+- new feature: The communication log's...uhh...log now has an option to start a fresh file after reaching a certain size.
+- new feature: Added an optional flag to omit messages stored from the communication log's log (I need a better name for this) when using StoreFromOutside.
+- bug fix: A text_rect module change for splitscreen overlay maptype echo capture in 2036 accidentally broke extended ascii captures. Now they both work at the same time.
+- misc change: Unmapped rooms are a bit more visible in the mapper GUI.
+- misc change: The default value for add_timestamp in storeFromOutside is now true. Blame and/or thank Endymion and Durel.
+
 r2040 snapshot
 - new feature: (part 2, I guess) Splitscreen scrollback highlight transfer between main and the overlay should now be completely operational
 - misc change: The splitscreen divider position is now thinner
