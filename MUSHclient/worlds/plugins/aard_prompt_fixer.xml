@@ -164,12 +164,24 @@ function fixup()
 end
 
 doinit = true
-function OnPluginTelnetOption(data)
-   if doinit then
-      hexcode = utils.tohex(data)
-      if (hexcode == "6403") or (hexcode == "640B") then -- standing or resting
-         fixup()
+function state_check(state)
+   if doinit and ((state == "3") or (state == "8")) then -- standing or resting
+      fixup()
+   end
+end
+
+function OnPluginBroadcast(msg, id, name, text)
+   if (id == '3e7dedbe37e44942dd46d264') then -- GMCP handler
+      if text == "char.status" then
+         state_check(gmcp("char.status.state"))
       end
+   end
+end
+
+
+function OnPluginInstall()
+   if IsConnected() then
+      state_check(gmcp("char.status.state"))   
    end
 end
 

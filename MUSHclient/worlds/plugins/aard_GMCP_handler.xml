@@ -292,6 +292,7 @@ end
 
 function OnPluginConnect()
    inited = false
+   GMCP_send("config compact") -- give the server a little kick
 end
 
 function OnPluginTelnetRequest (msg_type, data)
