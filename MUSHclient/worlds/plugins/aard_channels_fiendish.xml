@@ -161,7 +161,7 @@ log_file_size = tonumber(GetVariable("log_file_size")) or default_log_file_size
 
 local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction", "remote_socials"}
 local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations", ["remote_socials"]="Remote Socials"}
-local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mchat","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
+local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","group","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mchat","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
