@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2048 snapshot
+- bug fix: Wrong telopts being sent when entering note mode was throwing off the prompt fixer. Heavy sigh.
+- bug fix: Group channel (not grouptalk) added to the default list of channels that the communication log knows about.
+- bug fix: The communication log has a tighter check for remote socials, so the Tilule directory won't be caught anymore.
+- new feature: The input bar will now be set to use the theme background and body text colors.
+
 r2045 snapshot
 - new feature: The communication log's...uhh...log now has an option to start a fresh file after reaching a certain size.
 - new feature: Added an optional flag to omit messages stored from the communication log's log (I need a better name for this) when using StoreFromOutside.
