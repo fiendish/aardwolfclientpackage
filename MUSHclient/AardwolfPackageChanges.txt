@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2049 snapshot
+- revert: I'm undoing the input bar change for now until I can fix what's causing black on black input bars for people.
+
 r2048 snapshot
 - bug fix: Wrong telopts being sent when entering note mode was throwing off the prompt fixer. Heavy sigh.
 - bug fix: Group channel (not grouptalk) added to the default list of channels that the communication log knows about.
