@@ -1093,7 +1093,7 @@ function extend_rightclick_menu_string(tr)
    if log_colour_codes == 1 then check(ms, 11) end
    if log_timestamps == 1 then check(ms, 12) end
 
-   if num_tabs < 2 then disable(ms, 16) end
+   if num_tabs < 2 then disable(ms, 18) end
 
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
       local echo_menu_strings = {
