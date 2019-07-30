@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2050 snapshot
+- bug fix: Adding the communication log log (lol) split option to the right-click menu caused the wrong entry to be disabled when there was only one tab, which prevented making new communication log tabs.
+
 r2049 snapshot
 - revert: I'm undoing the input bar change for now until I can fix what's causing black on black input bars for people.
 
