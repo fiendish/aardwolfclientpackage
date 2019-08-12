@@ -24,7 +24,7 @@ Bast and WinkleWinkle.
 
 <triggers>
 <trigger
-   enabled="n"
+   enabled="y"
    regexp="y"
    omit_from_output="y"
    match="{prompt fixer begin}$"
@@ -34,13 +34,11 @@ Bast and WinkleWinkle.
 >
 <send>
    EnableTriggerGroup("prompts", true)
-   EnableTrigger("end", true)
-   EnableTrigger("begin", false)
 </send>
 </trigger>
 
 <trigger
-   enabled="n"
+   enabled="y"
    regexp="y"
    omit_from_output="y"
    match="{prompt fixer end}$"
@@ -50,8 +48,8 @@ Bast and WinkleWinkle.
 >
 <send>
    EnableTriggerGroup("prompts", false)
-   EnableTrigger("end", false)
    Send_GMCP_Packet("config prompt "..prompt_mode)
+   doing = false
 </send>
 </trigger>
 
@@ -97,9 +95,11 @@ Bast and WinkleWinkle.
    send_to="12"
 >
 <send>
-   p = Trim("%2")
-   if p:sub(-2) ~= "%%c" then -- send box has funny % replacements
-      fixup()
+   if not doing then
+      p = Trim("%2")
+      if p:sub(-2) ~= "%%c" then -- send box has funny % replacements
+         fixup()
+      end
    end
 </send>
 </trigger>
@@ -152,11 +152,16 @@ function OnPluginListChanged()
 end
 
 function fixup()
+   doing = true
+   requesting = true
+   Send_GMCP_Packet("config prompt")
+end
+
+function fixup_inner()
    prompt_mode = gmcp("config.prompt")
    if prompt_mode ~= "" then
       doinit = false
       Send_GMCP_Packet("config prompt NO")
-      EnableTrigger("begin", true)
       SendNoEcho("echo {prompt fixer begin}")
       SendNoEcho("prompt data")
       SendNoEcho("echo {prompt fixer end}")
@@ -175,13 +180,17 @@ function OnPluginBroadcast(msg, id, name, text)
       if text == "char.status" then
          state_check(gmcp("char.status.state"))
       end
+      if text == "config.prompt" and doing == true and requesting == true then
+         requesting = false
+         fixup_inner()
+      end
    end
 end
 
 
 function OnPluginInstall()
    if IsConnected() then
-      state_check(gmcp("char.status.state"))   
+      state_check(gmcp("char.status.state"))
    end
 end
 
