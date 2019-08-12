@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2051 snapshot
+- bug fix: Try to patch around a reported prompt fixer problem disabling prompts sometimes. I scream, you scream, we all scream at the the prompt fixer.
+
 r2050 snapshot
 - bug fix: Adding the communication log log (lol) split option to the right-click menu caused the wrong entry to be disabled when there was only one tab, which prevented making new communication log tabs.
 
