@@ -260,10 +260,12 @@ end
 
 kinda_busy = 0
 requesting = false
+prompt_mode = ""
 function request_new_map()
    if GetTimerOption("activity_timer", "enabled") == 1 and can_request_map and not requesting and kinda_busy == 0 then
       requesting = true
       requested_since_empty = true
+
       prompt_mode = gmcp("config.prompt")
       if prompt_mode ~= "" then
          Send_GMCP_Packet("config prompt OFF")
@@ -272,6 +274,7 @@ function request_new_map()
       if prompt_mode ~= "" then
          Send_GMCP_Packet("config prompt "..prompt_mode)
       end
+
       EnableTriggerGroup("end_gag", true)
    end
 end
@@ -284,7 +287,9 @@ function map_redirect (name, line, wildcards, styles)
       map_lines = {} --reset ready for new map
    elseif name == "map_end" then
       EnableTrigger("multi_line_map", false)  -- no more lines to go
-      requesting = false
+      if prompt_mode == "" then
+         requesting = false
+      end
       DisplayMapPage() --end of map from MUD, display the window
 
       if (also_echo_map == 1) or always_echo_rooms[roomnum] then
@@ -589,7 +594,7 @@ end -- right_click_menu
 function map_show_toggle(name, line, wildcards)
    local setting = wildcards.setting
    local option = wildcards.option
-   
+
    if (setting == "room" or setting == "roomname") then
       show_title = (((option == "on") and 1) or 0)
    elseif (setting == "exits") then
@@ -602,9 +607,9 @@ function map_show_toggle(name, line, wildcards)
          request_new_map()
       end
    end
-   
+
    ColourNote("orange", "", "Map setting for " .. setting .. " switched " .. option .. ".");
-   
+
    OnPluginCommand()
    SaveState()
    OnPluginInstall(true)
@@ -669,6 +674,11 @@ function OnPluginBroadcast (msg, id, name, text)
          end
          if not requested_since_empty then
             request_new_map()
+         end
+      elseif (text == "config.prompt") then
+         if (prompt_mode ~= "") and (gmcp("config.prompt") == prompt_mode) then
+            requesting = false
+            prompt_mode = ""
          end
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
