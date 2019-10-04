@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2052 snapshot
+- bug fix: Try to patch around reported ascii map problem disabling prompts sometimes. Everyone loves ice cream.
+
 r2051 snapshot
 - bug fix: Try to patch around a reported prompt fixer problem disabling prompts sometimes. I scream, you scream, we all scream at the the prompt fixer.
 
