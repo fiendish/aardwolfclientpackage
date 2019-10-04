@@ -23,69 +23,6 @@ Bast and WinkleWinkle.
 </plugin>
 
 <triggers>
-<trigger
-   enabled="y"
-   regexp="y"
-   omit_from_output="y"
-   match="{prompt fixer begin}$"
-   sequence="100"
-   name="begin"
-   send_to="14"
->
-<send>
-   EnableTriggerGroup("prompts", true)
-</send>
-</trigger>
-
-<trigger
-   enabled="y"
-   regexp="y"
-   omit_from_output="y"
-   match="{prompt fixer end}$"
-   sequence="100"
-   name="end"
-   send_to="14"
->
-<send>
-   EnableTriggerGroup("prompts", false)
-   Send_GMCP_Packet("config prompt "..prompt_mode)
-   doing = false
-</send>
-</trigger>
-
-<trigger
-   enabled="n"
-   regexp="y"
-   omit_from_output="y"
-   match="^Regular Game Prompt    : (.*)$"
-   sequence="100"
-   name="prompt"
-   script="prompt_rec"
-   group="prompts"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   regexp="y"
-   omit_from_output="y"
-   match="^Regular Battle Prompt  : (.*)$"
-   sequence="100"
-   name="battleprompt"
-   script="prompt_rec"
-   group="prompts"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   regexp="y"
-   omit_from_output="y"
-   match="^.*$"
-   sequence="110"
-   group="prompts"
->
-</trigger>
 
 <trigger
    enabled="y"
@@ -95,12 +32,7 @@ Bast and WinkleWinkle.
    send_to="12"
 >
 <send>
-   if not doing then
-      p = Trim("%2")
-      if p:sub(-2) ~= "%%c" then -- send box has funny % replacements
-         fixup()
-      end
-   end
+   request_prompt()
 </send>
 </trigger>
 
@@ -108,96 +40,100 @@ Bast and WinkleWinkle.
 
 <script>
 <![CDATA[
-require "aard_lua_extras"
 require "gmcphelper"
 
 -- functions for handling Aardwolf color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
 
-adjusted = {}
--- received a prompt line in the config output
-function prompt_rec (name, line, wildcards, styles)
-   prompt = wildcards[1]
-   if prompt:sub(-2) ~= "%c" then
+function strip_right(s)
+   return s:gsub("%s+$", "")
+end
+
+function check_prompt(prompt, name)
+   if prompt:sub(-4) ~= "%c@w" then
+      started_white = (prompt:sub(1,2) == "@w")
+
+      -- strip trailing color codes
+      styles = ColoursToStyles(prompt)
       while styles[#styles].length == 0 do
          styles[#styles] = nil
+         prompt = strip_right(StylesToColours(styles))
+         styles = ColoursToStyles(prompt)
       end
-      prompt = StylesToColours(styles)
-      prompt = Trim(string.split(prompt, ":%s+", false, 1)[2])
+      prompt = strip_right(prompt)
 
+      -- remove leading @w added by StylesToColours
+      if prompt:sub(1,2) == "@w" and not started_white then
+         prompt = prompt:sub(3)
+      end
+
+      -- strip trailing space before newline
+      while prompt:sub(-2) == "%c" do
+         prompt = strip_right(prompt:sub(1, -3))
+      end
+
+      -- newline at end
       if prompt:sub(-2) ~= "%c" then
          prompt = prompt.."%c"
       end
+
       if #strip_colours(prompt) > 80 then
          print()
-         ColourNote("white", "red", "The Aardwolf MUSHclient Package wants to adjust your "..name.." to end in '%c', but it is too long.")
-         ColourNote("white", "red", "Please adjust your "..name.." manually to end in '%c'. (help prompt)")
-         ColourNote("white", "red", "This is necessary for Aardwolf scripts to work consistently.")
-         ColourNote()
-         ColourNote("white", "red", "Afterwards, you might want to restart MUSHclient to let scripts reinitialize.")
+         ColourNote("white", "red", "The Aardwolf MUSHclient Package wants to adjust your game "..name.." to end in '%c', but it is too long.")
+         ColourNote("white", "red", "Please adjust your game "..name.." manually to end in '%c'. (help prompt)")
+         ColourNote("white", "red", "This is necessary for triggers to work properly.")
+         ColourNote("white", "red", "If you've encountered script errors, try restarting MUSHclient afterwards to let scripts reinitialize.")
       elseif #Trim(prompt) > 0 then
          print()
-         print("The Aardwolf MUSHclient Package is adjusting your "..name.." to end in '%c'.")
-         print("This is necessary for Aardwolf scripts to work consistently.")
-         print()
-         print("You might want to restart MUSHclient now to let scripts reinitialize.")
-         table.insert(adjusted, name)
+         print("The Aardwolf MUSHclient Package is adjusting your game "..name.." to end in '%c'.")
+         print("This is necessary for triggers to work properly.")
+         print("If you've encountered script errors, try restarting MUSHclient now to let scripts reinitialize.")
          Send((name == "battleprompt" and "bprompt" or "prompt").." "..prompt)
       end
    end
+end
+
+function prompt_rec(main, battle)
+   check_prompt(main, "prompt")
+   check_prompt(battle, "battleprompt")
 end
 
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-function fixup()
-   doing = true
-   requesting = true
-   Send_GMCP_Packet("config prompt")
-end
-
-function fixup_inner()
-   prompt_mode = gmcp("config.prompt")
-   if prompt_mode ~= "" then
-      doinit = false
-      Send_GMCP_Packet("config prompt NO")
-      SendNoEcho("echo {prompt fixer begin}")
-      SendNoEcho("prompt data")
-      SendNoEcho("echo {prompt fixer end}")
+requesting = false
+function request_prompt()
+   if not requesting then
+      requesting = true
+      Send_GMCP_Packet("request prompt")
    end
 end
 
 doinit = true
 function state_check(state)
    if doinit and ((state == "3") or (state == "8")) then -- standing or resting
-      fixup()
+      doinit = false
+      request_prompt()
    end
 end
 
 function OnPluginBroadcast(msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then -- GMCP handler
-      if text == "char.status" then
+      if (text == "char.status") and doinit then
          state_check(gmcp("char.status.state"))
       end
-      if text == "config.prompt" and doing == true and requesting == true then
+      if text == "char.prompts" then
+         prompt_rec(gmcp("char.prompts.main"), gmcp("char.prompts.battle"))
          requesting = false
-         fixup_inner()
       end
    end
 end
 
-
 function OnPluginInstall()
-   if IsConnected() then
+   if IsConnected() and doinit then
       state_check(gmcp("char.status.state"))
    end
-end
-
-
-function getmemoryusage()
-   collectgarbage('collect')
-   return collectgarbage('count')
 end
 
 ]]>
