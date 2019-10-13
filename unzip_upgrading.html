@@ -4,8 +4,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Aardwolf MUSHclient Package Unzip Upgrading</title>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link rel="stylesheet" href="//fiendish.github.io/gh-fork-banner/gh.css">
   <style>
 
@@ -34,6 +32,34 @@
     background-color : #D7C4A4;
   }
 
+  .button {
+    padding: .4em 1em;
+    display: inline-block;
+    position: relative;
+    line-height: normal;
+    margin-right: .1em;
+    cursor: pointer;
+    vertical-align: middle;
+    text-align: center;
+    overflow: visible;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 1em;
+    border: 1px solid #a5a5a5;
+    background: #f6f6f6;
+    font-weight: normal;
+    border-radius: 3px;
+    text-decoration: none;
+    color: #454545;
+  }
+
+  .button:hover {
+    background-color: #e7e7e7;
+  }
+
+  .button:active {
+    background-color: #c7c7c7;
+  }
+
   .github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}
   </style>
 </head>
@@ -43,9 +69,9 @@
     <p><b>Important: These steps should all be carried out with MUSHclient closed down - it should not be running while files are copied.</b></p>
 
     <div style="text-align: center">
-    You can download a zip archive version of the Aardwolf MUSHclient Package here    <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r2052/Aardwolf_MUSHclient_r2052_no_visuals_no_install.zip">Download a zip of r2052 non-visual base for screen readers</a>
+    You can download a zip archive version of the Aardwolf MUSHclient Package here    <a class="button" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r2052/Aardwolf_MUSHclient_r2052_no_visuals_no_install.zip">Download a zip of r2052 non-visual base for screen readers</a>
     &nbsp;&nbsp;or&nbsp;&nbsp;
-    <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r2052/Aardwolf_MUSHclient_r2052_no_install.zip">Download a zip of r2052 with full visuals</a>
+    <a class="button" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/r2052/Aardwolf_MUSHclient_r2052_no_install.zip">Download a zip of r2052 with full visuals</a>
     </div>
 
     <p>When you download a newly updated version of the client you may want to keep your mapper files and other settings from previous versions. We recommend copying over only the mapper files and reconfiguring everything else, but the following steps will help you.</p>

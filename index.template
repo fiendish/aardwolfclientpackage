@@ -5,11 +5,9 @@
   <meta charset="UTF-8">
   <title>Aardwolf MUSHclient Package Installer Download</title>
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
   <script src="js/store2.js"></script>
   <script src="js/store.cache.js"></script>
 
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link rel="stylesheet" href="//fiendish.github.io/gh-fork-banner/gh.css">
   <style>
   html, body {
@@ -58,6 +56,34 @@
     font-weight: bold;
   }
 
+  .button {
+    padding: .4em 1em;
+    display: inline-block;
+    position: relative;
+    line-height: normal;
+    margin-right: .1em;
+    cursor: pointer;
+    vertical-align: middle;
+    text-align: center;
+    overflow: visible;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 1em;
+    border: 1px solid #a5a5a5;
+    background: #f6f6f6;
+    font-weight: normal;
+    border-radius: 3px;
+    text-decoration: none;
+    color: #454545;
+  }
+
+  .button:hover {
+    background-color: #e7e7e7;
+  }
+
+  .button:active {
+    background-color: #c7c7c7;
+  }
+
   .github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}
   </style>
 </head>
@@ -71,8 +97,9 @@
   var Storage = store.namespace('aardwolfclientpackage').session;
 
   function SetChanges(changes) {
+    changes = changes.replace(/(Aardwolf Client Package Major Changes List)\r\n/, '<h3>$1</h3>\r\n')
     changes = changes.replace(/\n(\-.*?\:)/g, '\n<strong>$1</strong>')
-    changes = changes.replace(/\n(r.*? snapshot)/g, '\n<em>$1</em>')
+    changes = changes.replace(/\n(r.*? snapshot|Beta)/g, '\n<em>$1</em>')
     changes = '<p>' + changes.replace(/(?:\r\n\r\n|\r\r|\n\n)/g, '</p><br><p>').replace(/(?:\r\n|\r|\n)/g, '</p><p>') + '</p>';
     changes = changes.replace(/(https?\:\/\/[^)\n\s<]+)/g, '<a href="$1">$1</a>');
     $("#changes").html(changes);
@@ -183,9 +210,9 @@
     </div>
     <div>
     Quit MUSHclient before running any update installer.<br><br>
-    <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%_no_visuals.exe">Download the %%REV%% non-visual base for screen readers</a>
+    <a class="button" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%_no_visuals.exe">Download the %%REV%% non-visual base for screen readers</a>
     &nbsp;&nbsp;or&nbsp;&nbsp;
-    <a class="ui-button ui-widget ui-corner-all" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%.exe">Download %%REV%% with full visuals</a>
+    <a class="button" href="https://github.com/fiendish/aardwolfclientpackage/releases/download/%%REV%%/Aardwolf_MUSHclient_%%REV%%.exe">Download %%REV%% with full visuals</a>
     </div>
     <div class="description">
     <h3>Need zip archives instead?</h3>
