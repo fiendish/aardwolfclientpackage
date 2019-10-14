@@ -495,4 +495,6 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <include name="aard_GMCP_mapper.xml" plugin="y" />
 <include name="aard_package_update_checker.xml" plugin="y" />
 <include name="aard_help.xml" plugin="y" />
+<include name="aard_keyboard_lockout.xml" plugin="y" />
+<include name="aard_splitscreen_scrollback.xml" plugin="y" />
 </muclient>
