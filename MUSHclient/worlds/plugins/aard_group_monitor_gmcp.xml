@@ -263,19 +263,19 @@ function hideAllMembers()
 end
 
 function byTotalDamage(a, b)
-	return (tonumber(a.info.mhp) - tonumber(a.info.hp)) > (tonumber(b.info.mhp) - tonumber(b.info.hp))
+   return (tonumber(a.info.mhp) - tonumber(a.info.hp)) > (tonumber(b.info.mhp) - tonumber(b.info.hp))
 end
 
 function byPerCentDamage(a, b)
-	return (tonumber(a.info.hp) / tonumber(a.info.mhp)) < (tonumber(b.info.hp) / tonumber(b.info.mhp))
+   return (tonumber(a.info.hp) / tonumber(a.info.mhp)) < (tonumber(b.info.hp) / tonumber(b.info.mhp))
 end
 
 function sortMembers()
-	if sort_hp_which == "total" then
-		table.sort(group_members, byTotalDamage)
-	else
-		table.sort(group_members, byPerCentDamage)
-	end
+   if sort_hp_which == "total" then
+      table.sort(group_members, byTotalDamage)
+   else
+      table.sort(group_members, byPerCentDamage)
+   end
 end
 
 -- build and draw the group display
@@ -325,12 +325,12 @@ function DisplayGroupPage()
          if overlay_numbers == 0 then
             bar_width = bar_width - WindowTextWidth(win, font_id, "88888/88888")
          end
-		 
-		 -- sort or not
-		 if sort_hp then
-			sortMembers()
-		 end
-		 
+
+         -- sort or not
+         if sort_hp then
+            sortMembers()
+         end
+
          for i,v in ipairs(group_members) do
             if (i ~= 1) and ((i-1) % members_per_col == 0) then
                baseY = title_height+GAP-1
@@ -587,24 +587,24 @@ function right_click_menu ()
          if newcolor ~= -1 then
             thresh2color = newColor
          end
-	  elseif numResult == member_count+24 then
-		 -- sort by % damage
+      elseif numResult == member_count+24 then
+         -- sort by % damage
          if sort_hp_which == "percent" then -- current sort so disable
-			sort_hp = false
-			sort_hp_which = ""
-		 else
-			sort_hp = true
-			sort_hp_which = "percent"
-		 end
-	  elseif numResult == member_count+25 then
-		 -- sort by total damage
+            sort_hp = false
+            sort_hp_which = ""
+         else
+            sort_hp = true
+            sort_hp_which = "percent"
+         end
+      elseif numResult == member_count+25 then
+         -- sort by total damage
          if sort_hp_which == "total" then -- current sort so disable
-			sort_hp = false
-			sort_hp_which = ""
-		 else
-			sort_hp = true
-			sort_hp_which = "total"
-		 end
+            sort_hp = false
+            sort_hp_which = ""
+         else
+            sort_hp = true
+            sort_hp_which = "total"
+         end
       elseif numResult == member_count+26 then
          -- bring to front
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
