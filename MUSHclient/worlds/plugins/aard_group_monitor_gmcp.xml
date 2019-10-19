@@ -155,6 +155,8 @@ show_hp = tonumber (GetVariable ("show_hp")) or 1
 show_mn = tonumber (GetVariable ("show_mn")) or 1
 show_mv = tonumber (GetVariable ("show_mv")) or 1
 hidden = tonumber (GetVariable ("hidden")) or 0
+sort_hp = loadstring("return "..(GetVariable("sort_hp") or "false"))()
+sort_hp_which = GetVariable("sort_hp_which") or "" -- percent damage or total damage
 flat_gauges = tonumber (GetVariable("flat_gauges")) or 0
 overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 0
 GAP = 4
@@ -260,6 +262,22 @@ function hideAllMembers()
    RemoveMembersFromGroupDisplay()
 end
 
+function byTotalDamage(a, b)
+   return (tonumber(a.info.mhp) - tonumber(a.info.hp)) > (tonumber(b.info.mhp) - tonumber(b.info.hp))
+end
+
+function byPerCentDamage(a, b)
+   return (tonumber(a.info.hp) / tonumber(a.info.mhp)) < (tonumber(b.info.hp) / tonumber(b.info.mhp))
+end
+
+function sortMembers()
+   if sort_hp_which == "total" then
+      table.sort(group_members, byTotalDamage)
+   else
+      table.sort(group_members, byPerCentDamage)
+   end
+end
+
 -- build and draw the group display
 function DisplayGroupPage()
    WindowRectOp(win, 2, 2, 2,-2,-2, Theme.PRIMARY_BODY) -- blank
@@ -307,6 +325,12 @@ function DisplayGroupPage()
          if overlay_numbers == 0 then
             bar_width = bar_width - WindowTextWidth(win, font_id, "88888/88888")
          end
+
+         -- sort or not
+         if sort_hp then
+            sortMembers()
+         end
+
          for i,v in ipairs(group_members) do
             if (i ~= 1) and ((i-1) % members_per_col == 0) then
                baseY = title_height+GAP-1
@@ -459,7 +483,7 @@ function right_click_menu ()
          end
       end
    end
-   menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|-|Bring To Front|Send To Back|-|Reset Defaults"
+   menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|>Sort By...|"..(((sort_hp and (sort_hp_which == "percent")) and "+") or "").."% Damage|"..(((sort_hp and (sort_hp_which == "total")) and "+") or "").."Total Damage|<|-|Bring To Front|Send To Back|-|Reset Defaults"
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
@@ -564,12 +588,30 @@ function right_click_menu ()
             thresh2color = newColor
          end
       elseif numResult == member_count+24 then
+         -- sort by % damage
+         if sort_hp_which == "percent" then -- current sort so disable
+            sort_hp = false
+            sort_hp_which = ""
+         else
+            sort_hp = true
+            sort_hp_which = "percent"
+         end
+      elseif numResult == member_count+25 then
+         -- sort by total damage
+         if sort_hp_which == "total" then -- current sort so disable
+            sort_hp = false
+            sort_hp_which = ""
+         else
+            sort_hp = true
+            sort_hp_which = "total"
+         end
+      elseif numResult == member_count+26 then
          -- bring to front
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == member_count+25 then
+      elseif numResult == member_count+27 then
          -- send to back
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-      elseif numResult == member_count+26 then
+      elseif numResult == member_count+28 then
          -- reset
          font_name        = default_font_name
          font_size        = default_font_size
@@ -740,6 +782,8 @@ function OnPluginSaveState()
    SetVariable("show_hp", show_hp)
    SetVariable("show_mn", show_mn)
    SetVariable("show_mv", show_mv)
+   SetVariable("sort_hp", tostring(sort_hp))
+   SetVariable("sort_hp_which", sort_hp_which)
    SetVariable("hidden", hidden)
    SetVariable("colorVals", serialize.save ("colorVals"))
    SetVariable("flat_gauges", flat_gauges)
