@@ -1292,6 +1292,10 @@ function TriggerEvent(event)
       logmsg("Event " .. event .. " has fired, but event volume is set to 0. Ignoring.")
       return
    end
+   -- Added this so if another plugin calls TriggerEvent() and soundpack is muted, it will not play the sound
+   if sp_mute_toggle == "1" then
+      return
+   end
    logmsg("Event " .. event .. " has fired!")
    volume = calc_volume(volume)
 
