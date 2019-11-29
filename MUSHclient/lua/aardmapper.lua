@@ -1164,7 +1164,7 @@ function hyperlinkGoto(uid)
 end
 
 require "serialize"
-function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals)
+function full_find (dests, show_uid, expected_count, walk, fcb, no_portals)
    local paths = {}
    local notfound = {}
    for i,v in ipairs(dests) do
@@ -1271,7 +1271,7 @@ function full_find (name, dests, show_uid, expected_count, walk, fcb, no_portals
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end
 
-function quick_find(name, dests, show_uid, expected_count, walk, fcb)
+function quick_find(dests, show_uid, expected_count, walk, fcb)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    Note("+------------------------------ START OF SEARCH -------------------------------+")
 
@@ -1352,7 +1352,9 @@ function goto(uid)
 end
 
 -- generic room finder
+-- name is for informational purposes only; it's displayed to the user in the search results
 -- dests is a list of room/reason pairs where reason is either true (meaning generic) or a string to find
+-- if max_paths <= 0 it's disregarded, otherwise number of dests must be <= max_paths
 -- show_uid is true if you want the room uid to be displayed
 -- expected_count is the number we expect to find (eg. the number found on a database)
 -- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
@@ -1384,9 +1386,9 @@ function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quic
    end
 
    if quick_list == true then
-      quick_find(name, dests, show_uid, expected_count, walk, fcb)
+      quick_find(dests, show_uid, expected_count, walk, fcb)
    else
-      full_find(name, dests, show_uid, expected_count, walk, fcb, no_portals)
+      full_find(dests, show_uid, expected_count, walk, fcb, no_portals)
    end
 end -- map_find_things
 
