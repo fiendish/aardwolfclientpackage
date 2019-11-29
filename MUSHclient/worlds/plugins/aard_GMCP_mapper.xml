@@ -3785,6 +3785,45 @@ function compact_mode_toggle(name, line, wildcards)
    if not compact_mode then Note("") end
 end
 
+-- Queries db for a list of rooms and passes them to mapper.find(). Can be used with CallPlugin().
+-- query: SQL query to run. Should return a list of rooms with uids. Example:
+--        "SELECT uid FROM rooms WHERE name = 'The Grand City of Aylor'"
+-- The remaining args are the same as the args to find() in aardmapper.lua. Their default values
+-- are given below. "fcb" is missing here since function args can't be used with CallPlugin().
+-- name: Defaults to nil.
+-- max_paths: Defaults to 0 (unlimited).
+-- show_uid: Defaults to true.
+-- walk: Defaults to false.
+-- quick_list: Defaults to false.
+-- no_portals: Defaults to false.
+function map_find_query(query, name, max_paths, show_uid, walk, quick_list, no_portals)
+   -- Default arguments.
+   max_paths = max_paths or 0
+   if show_uid == nil then show_uid = true end
+   walk = walk or false
+   quick_list = quick_list or false
+   no_portals = no_portals or false
+
+   local rooms = {}
+   local count = 0
+
+   for row in dbnrowsWRAPPER(query) do
+      table.insert(rooms, {uid=row.uid, reason=true})
+      count = count + 1
+   end
+
+   mapper.find(
+      name,
+      rooms,
+      max_paths,
+      show_uid,
+      count,      -- expected_count
+      walk,
+      nil,        -- fcb
+      quick_list 
+   )
+end -- map_find_query
+
 function map_area (name, line, wildcards)
 
    uid = mapper.current_room
@@ -3811,59 +3850,38 @@ function map_area (name, line, wildcards)
 
    local area = rooms[uid].area
 
-   local rooms = {}
-   local count = 0
-
    local key = Trim(wildcards[1])
    local name = "%"..key.."%"
    if string.sub(key,1,1) == "\"" and string.sub(key,-1) == "\"" then
       name = Trim(string.sub(key,2,-2))
    end
-   for row in dbnrowsWRAPPER(string.format ("SELECT uid, name, area FROM rooms WHERE trim(name) LIKE %s and area = %s", fixsql(name), fixsql(area))) do
-      table.insert(rooms,{uid=row.uid, reason=true})
-      count = count + 1
-   end   -- finding room
 
-   -- see if nearby
-
-   mapper.find (name,
-      rooms,
-      50,
-      show_vnums,  -- show vnum?
-      count,      -- how many to expect
-      false,       -- don't auto-walk
-      nil,
-      quick_mode
+   map_find_query(
+      string.format("SELECT uid, name, area FROM rooms WHERE trim(name) LIKE %s and area = %s",fixsql(name), fixsql(area)),
+      name,
+      50,          -- max_paths
+      show_vnums,  -- show_uid
+      false,       -- walk
+      quick_mode   -- quick_list
    )
-
 end -- map_area
 
 
 function map_find (name, line, wildcards)
-
-   local rooms = {}
-   local count = 0
-
    -- find matching rooms using FTS3
    local name = "%"..wildcards[1].."%"
 
    if string.sub(wildcards[1],1,1) == "\"" and string.sub(wildcards[1],-1) == "\"" then
       name = string.sub(wildcards[1],2,-2)
    end
-   for row in dbnrowsWRAPPER(string.format ("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql (name))) do
-      table.insert(rooms, {uid=row.uid, reason=true})
-      count = count + 1
-   end   -- finding room
 
-   -- see if nearby
-   mapper.find (name,
-      rooms,  -- function
-      50,
-      show_vnums,  -- show vnum?
-      count,      -- how many to expect
-      false,       -- don't auto-walk
-      nil,
-      quick_mode
+   map_find_query(
+      string.format("SELECT uid, name FROM rooms_lookup WHERE rooms_lookup.name LIKE %s", fixsql (name)),
+      name,
+      50,          -- max_paths
+      show_vnums,  -- show_uid
+      false,       -- walk
+      quick_mode   -- quick_list
    )
 end -- map_find
 
