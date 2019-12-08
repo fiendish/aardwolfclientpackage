@@ -143,16 +143,20 @@ local function init_xterm_colors ()
 
    -- Aardwolf bumps a few very dark xterm colors to brighter values to improve
    -- visibility. This seems like a good idea.
-   local color19 = xterm_number_to_client_color[19]
-   local color238 = xterm_number_to_client_color[238]
-   for i = 17,18 do
-      x_not_too_dark[i] = 19
-      x_to_client_color[string.format("@x%03d",i)] = color19
-      x_to_client_color[string.format("@x%d",i)] = color19
+   local function override_dark_color (replace_what, with_what)
+      local new_color = xterm_number_to_client_color[with_what]
+      x_not_too_dark[replace_what] = with_what
+      x_to_client_color[string.format("@x%03d",replace_what)] = new_color
+      x_to_client_color[string.format("@x%02d",replace_what)] = new_color
+      x_to_client_color[string.format("@x%d",replace_what)] = new_color
    end
+
+   override_dark_color(0, 7)
+   override_dark_color(16, 7)
+   override_dark_color(17, 19)
+   override_dark_color(18, 19)
    for i = 232,237 do
-      x_not_too_dark[i] = 238
-      x_to_client_color[string.format("@x%d",i)] = color238
+      override_dark_color(i, 238)
    end
 end
 
@@ -463,7 +467,7 @@ function ColoursToANSI (text)
       text = text:gsub("@x(%d%d?%d?)", function(a)
          local num_a = tonumber(a)
          -- Aardwolf treats x1...x15 as normal ANSI codes
-         if num_a <= 15 then
+         if num_a >=1 and num_a <= 15 then
             if num_a >= 9 then
                return ANSI(1, num_a+22)
             else
