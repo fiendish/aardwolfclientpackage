@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2058 snapshot
+- misc change: GMCPify the prompt fixer plugin. I'm looking forward to a whole new set of bugs in 2020!
+- misc change: Add the keyboard lockout and splitscreen plugins to the base world file.
+- new feature: A couple sorting options were added to the group monitor.
+- bug fix: (from pwar) Prevent audio playing when other plugins call TriggerEvent() to play a sound when the soundpack is muted.
+- new feature: New function `map_find_query` added to mapper plugin code to allow other scripts to call mapper.find() with arbitrary SQL queries.
+- misc change: Xterm colors 0 and 16 (black) are brightened for visibility.
+
 r2052 snapshot
 - bug fix: Try to patch around reported ascii map problem disabling prompts sometimes. Everyone loves ice cream.
 
