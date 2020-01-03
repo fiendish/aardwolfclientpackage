@@ -61,7 +61,11 @@ function ScrollBar:doUpdateCallbacks()
       for _, cb in ipairs(self.update_callbacks) do
          local obj = cb[1]
          local func = cb[2]
-         func(obj, self.step)
+         if obj then
+            func(obj, self.step)
+         else
+            func(self.step)
+         end
       end
    end
 end
