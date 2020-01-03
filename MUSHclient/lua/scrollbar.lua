@@ -1,5 +1,6 @@
 require "commas"
 require "mw_theme_base"
+require "wait"
 
 ScrollBar = {
    hotspot_map = {}
