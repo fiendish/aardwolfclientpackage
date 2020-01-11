@@ -2987,7 +2987,6 @@ function OnPluginInstall ()
 end
 
 function update_db_schema(db_user_version)
-   SetScroll(-1)
    print("\nThe GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.\n")
    utils.msgbox ("The GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.", "", "ok", "i")
 
@@ -3820,7 +3819,7 @@ function map_find_query(query, name, max_paths, show_uid, walk, quick_list, no_p
       count,      -- expected_count
       walk,
       nil,        -- fcb
-      quick_list 
+      quick_list
    )
 end -- map_find_query
 
@@ -4710,4 +4709,3 @@ end
 ]]>
 </script>
 </muclient>
-
