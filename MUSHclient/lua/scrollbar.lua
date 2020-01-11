@@ -12,7 +12,7 @@ ScrollBar_defaults = {
 }
 ScrollBar_mt = { __index = ScrollBar }
 
-function ScrollBar.new(window, name, left, top, right, bottom)
+function ScrollBar.new(window, name, left, top, right, bottom, min_thumb_size)
    new_sb = setmetatable(copytable.deep(ScrollBar_defaults), ScrollBar_mt)
    new_sb.id = "ScrollBar_"..window.."_"..name
    new_sb.name = name
@@ -23,6 +23,7 @@ function ScrollBar.new(window, name, left, top, right, bottom)
    new_sb.bottom = bottom
    new_sb.width = right-left
    new_sb.height = bottom-top
+   new_sb.min_thumb_size = min_thumb_size or 10
    return new_sb
 end
 
@@ -134,7 +135,7 @@ function ScrollBar:draw(inside_callback)
    local position
    local scroll_height = self.height - (2 * self.width) - 2
    if slots ~= 0 then
-      self.size = math.max(10, scroll_height - slots)
+      self.size = math.max(self.min_thumb_size, scroll_height - slots)
       local available_space = scroll_height - self.size
       local space_per_step = available_space / slots
       position = self.top + self.width + math.ceil(space_per_step * self.step)
