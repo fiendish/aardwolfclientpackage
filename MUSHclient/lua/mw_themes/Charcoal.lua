@@ -2,41 +2,40 @@
 
 -- CHARCOAL THEME
 return {
-   LOGO_OPACITY = 0.05,
+   LOGO_OPACITY = 0.05,                    -- Main output background logo
 
-   PRIMARY_BODY = 0x000000,
-   SECONDARY_BODY = 0x333333,
-   BODY_TEXT = 0xc8c8c8,
+   PRIMARY_BODY = 0x000000,                -- Background for main output and miniwindow main areas
+   SECONDARY_BODY = 0x333333,              -- Secondary background color (color under the chat window tabs)
+   BODY_TEXT = 0xc8c8c8,                   -- Body text of plugins
 
-   -- flat buttons
-   CLICKABLE = 0x444444,
-   CLICKABLE_HOVER = 0x151515,
-   CLICKABLE_HOT = 0x303050,
-   CLICKABLE_TEXT = 0xc8c8c8,
-   CLICKABLE_HOVER_TEXT = 0xdddddd,
-   CLICKABLE_HOT_TEXT = 0xcfc5df,
+   TITLE_PADDING = 2,                      -- Padding around text in miniwindow titlebars
 
-   TITLE_PADDING = 2,
+   -- buttons
+   CLICKABLE = 0x444444,                   -- Button face
+   CLICKABLE_HOVER = 0x151515,             -- Button face when hovering over it with mouse
+   CLICKABLE_HOT = 0x303050,               -- Button face when it wants your attention
+   CLICKABLE_TEXT = 0xc8c8c8,              -- Button text
+   CLICKABLE_HOVER_TEXT = 0xdddddd,        -- Button text when hovering over it
+   CLICKABLE_HOT_TEXT = 0xcfc5df,          -- Button text when it wants your attention
 
-   -- for 3D surfaces
+   -- 3D surfaces
+   THREE_D_GRADIENT = false,               -- Surface color gradient direction (or false)
+   THREE_D_GRADIENT_FIRST = 0x555555,      -- Start color
+   THREE_D_GRADIENT_SECOND = 0x555555,     -- End color
+   THREE_D_GRADIENT_ONLY_IN_TITLE = true,  -- Only apply gradient in miniwindow titlebars
+
    THREE_D_HIGHLIGHT = 0x909090,
-
-   THREE_D_GRADIENT = false,
-   THREE_D_GRADIENT_ONLY_IN_TITLE = true,
-   THREE_D_GRADIENT_FIRST = 0x555555,
-   THREE_D_GRADIENT_SECOND = 0x555555,
-
    THREE_D_SOFTSHADOW = 0x222222,
    THREE_D_HARDSHADOW = 0x000000,
-   THREE_D_SURFACE_DETAIL = 0xc8c8c8, -- for contrasting details/text drawn on 3D surfaces
+   THREE_D_SURFACE_DETAIL = 0xc8c8c8,      -- Contrasting details/text drawn on 3D surfaces
 
-   -- for scrollbar background
-   SCROLL_TRACK_COLOR1 = 0x444444,
-   SCROLL_TRACK_COLOR2 = 0x696969,
-   VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
+   -- scrollbar background
+   SCROLL_TRACK_COLOR1 = 0x444444,         -- Color of accent brush on scrollbar
+   SCROLL_TRACK_COLOR2 = 0x696969,         -- Main color of scrollbar
+   VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,  -- Scrollbar background texture
 
-   DYNAMIC_BUTTON_PADDING = 20,
-   RESIZER_SIZE = 16,
+   DYNAMIC_BUTTON_PADDING = 20,            -- Padding around button text if button is dynamically sized to the text
+   RESIZER_SIZE = 16,                      -- Miniwindow resizer
 
    -- bg_texture_function is optional to override the default behavior.
    -- See Pink_Neon.lua for a "glitter on black" variant.
