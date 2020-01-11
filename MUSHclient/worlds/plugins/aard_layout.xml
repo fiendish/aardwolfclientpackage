@@ -54,6 +54,7 @@
 <script>
 <![CDATA[
 require "mw_theme_base"
+require "scrollbar"
 
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
@@ -319,7 +320,7 @@ end
 -- Called when mouse button is pressed on hotspot.
 ---------------------------------------------------------------------------------
 function MouseDown(flags, hotspot_id)
-   if (hotspot_id == "resizemain") then
+   if (hotspot_id == "resize") then
       startx, starty = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
    elseif (hotspot_id == "dragmain") then
       startx, starty = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
@@ -476,25 +477,68 @@ function check_geometry()
    draw_main_window()
 end
 
+function scrollMain(step)
+   local new_pos = (step-1) * GetInfo(212)
+   if new_pos ~= GetInfo(296) then
+      SetScroll(new_pos, GetInfo(120))
+   end
+end
+
+-- when something is added to output
+function OnPluginScreendraw(type, log, line)
+   add_main_resizer()
+end
+
+-- when output area moves
+function OnPluginDrawOutputWindow(a, b, c)
+   if cur_scroll_position ~= GetInfo(296) then  -- current position different from previous
+      add_main_resizer()
+   end
+end
+
 function add_main_resizer()
-   local l = GetInfo(274) - Theme.RESIZER_SIZE + GetInfo(276)
-   local r = GetInfo(275) - Theme.RESIZER_SIZE + GetInfo(276)
+   local l = GetInfo(274) + GetInfo(276)
+   local t = GetInfo(273) - GetInfo(276) - 1
+   local b = GetInfo(275) + GetInfo(276) + 1
+
+   cur_scroll_position = GetInfo(296)
+   local total_output_lines = GetInfo(224)
+   local text_rectangle_height = GetInfo(293) - GetInfo(291)
+   local font_height = GetInfo(212)
+   local text_rectangle_lines = math.ceil(text_rectangle_height / font_height)
+   local cur_scroll_line = math.ceil(cur_scroll_position / font_height) + 1
+   local max_scroll_position = ((total_output_lines-1) * font_height) - text_rectangle_height
+   if cur_scroll_position >= max_scroll_position then
+      cur_scroll_line = total_output_lines - text_rectangle_lines + 1
+   end
+
    if WindowInfo(textResizer, 1) then -- if it already exists
       --- Reposition the resize tag.
-      WindowPosition(textResizer, l, r, 0, 18)
+      WindowPosition(textResizer, l, t, 0, 18)
+      WindowResize(textResizer, Theme.RESIZER_SIZE + 4, b-t, GetNormalColour(2))
    else
       -- Add another mini-window in bottom right corner for resizer tag.
       check (WindowCreate (textResizer,
-         l, r, Theme.RESIZER_SIZE, Theme.RESIZER_SIZE,
+         l, t, Theme.RESIZER_SIZE + 4, b-t,
          12, miniwin.create_transparent + miniwin.create_absolute_location,
-         GetNormalColour(1)
+         GetNormalColour(2)
       ))
+   end
+   local il, it, ir, ib = Theme.DrawBorder(textResizer)
 
-      Theme.DrawResizeTag(textResizer, 0)
+   if sb then
+      sb:setRect(il, it, ir, ib-Theme.RESIZER_SIZE)
+   else
+      sb = ScrollBar.new(textResizer, "sb", il, it, ir, ib-Theme.RESIZER_SIZE, 30)
+      sb:addUpdateCallback(self, scrollMain)
+   end
+   sb:setScroll(cur_scroll_line, text_rectangle_lines, total_output_lines)
 
-      -- Add a drag handler to this window, effectively allows textrectangle to be resized.
-      WindowAddHotspot(textResizer, "resizemain", 0, 0, 0, 0, nil, nil, "MouseDown", "CancelMouseDown", "MouseUp", "", 6, 0)
-      WindowDragHandler(textResizer, "resizemain", "ResizeMainCallback", "ResizeReleaseMainCallback", 0)
+   -- allows textrectangle to be resized
+   local new_x, new_y = il, ib-Theme.RESIZER_SIZE+1
+   if resizer_x ~= new_x or resizer_y ~= new_y then
+      Theme.AddResizeTag(textResizer, "full", new_x, new_y, "MouseDown", "ResizeMainCallback", "ResizeReleaseMainCallback")
+      resizer_x, resizer_y = new_x, new_y
    end
    WindowShow(textResizer, true)
 end
@@ -531,7 +575,7 @@ function draw_main_window()
       1,  -- BorderWidth,
       Theme.THREE_D_SOFTSHADOW,  -- OutsideFillColour,
       miniwin.brush_solid) -- OutsideFillStyle
-   
+
    if GetPluginInfo("74524d1272786aaf04e9487d", 17) then  -- splitscreen scrollback plugin force update
       CallPlugin("74524d1272786aaf04e9487d", "check_display")
    end
