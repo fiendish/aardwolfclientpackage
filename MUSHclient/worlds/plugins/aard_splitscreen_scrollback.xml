@@ -86,10 +86,14 @@ end
 
 function OnPluginSelectionChanged()
    if rect then
-      local csl = GetSelectionStartLine()
-      local cel = GetSelectionEndLine()
-      local csp = GetSelectionStartColumn()
-      local cep = GetSelectionEndColumn()
+      local new_csl = GetSelectionStartLine()
+      local new_cel = GetSelectionEndLine()
+      local new_csp = GetSelectionStartColumn()
+      local new_cep = GetSelectionEndColumn()
+      if csl == new_csl and cel == new_cel and csp == new_csp and cep == new_cep then
+         return
+      end
+      csl, cel, csp, cep = new_csl, new_cel, new_csp, new_csl
       if (csl ~= cel) or (csp ~= cep) then
          local sstxt = GetLineInfo(csl, 1):sub(1, csp - 1)
          local setxt = GetLineInfo(cel, 1):sub(1, cep - 1)
@@ -290,6 +294,9 @@ end
 
 function ScrollMain(flags, hotspot_id)
    local delta = math.ceil(bit.shr(flags, 16) / 3)
+   if delta == 0 then
+      return
+   end
    if bit.band (flags, miniwin.wheel_scroll_back) ~= 0 then
       direction = 1   -- wheel scrolled down
    else
