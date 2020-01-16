@@ -72,7 +72,6 @@ posx             = ""
 posy             = ""
 hotspot_id       = ""
 orig_height      = 400  -- saves old height when we collapse window.
-MIN_SIZE         = 50
 
 require "serialize"
 
@@ -243,6 +242,10 @@ function ResizeMainCallback(flags)
       return
    end
    end_startup_check()
+
+   local font_height = GetInfo(212)
+   local MIN_SIZE = (12 * font_height) + 1
+
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
    textrect_right = textrect_right + posx - startx
    startx = posx
@@ -264,8 +267,12 @@ function ResizeMainCallback(flags)
       starty = textrect_bottom
    end
 
-   draw_main_window()
+   if (utils.timer() - lastRefresh > 0.0333) then
+      draw_main_window()
+      lastRefresh = utils.timer()
+   end
 end
+lastRefresh = 0
 
 function DragMainCallback()
    if GetVariable("lock_down_miniwindows") == "1" then
@@ -312,6 +319,7 @@ function ResizeReleaseMainCallback(flags)
    if bit.band(flags, 0x20) == 0 then
       SaveLayout()
    end
+   draw_main_window()
 end
 
 function DragReleaseMainCallback()
@@ -533,14 +541,14 @@ function add_main_resizer()
    if WindowInfo(textResizer, 1) then -- if it already exists
       --- Reposition the resize tag.
       WindowPosition(textResizer, l, t, 0, 18)
-      WindowResize(textResizer, Theme.RESIZER_SIZE + 4, b-t, GetNormalColour(2))
+      WindowResize(textResizer, Theme.RESIZER_SIZE + 4, b-t, Theme.CLICKABLE)
    else
       -- Add another mini-window in bottom right corner for resizer tag.
-      check (WindowCreate (textResizer,
+      WindowCreate(textResizer,
          l, t, Theme.RESIZER_SIZE + 4, b-t,
          12, miniwin.create_transparent + miniwin.create_absolute_location,
-         GetNormalColour(2)
-      ))
+         Theme.CLICKABLE
+      )
    end
    local il, it, ir, ib = Theme.DrawBorder(textResizer)
 
