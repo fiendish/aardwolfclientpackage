@@ -238,8 +238,8 @@ function LayoutRestore(key)
    end
 end
 
-function ResizeMainCallback()
-   if GetVariable("lock_down_miniwindows") == "1" then
+function ResizeMainCallback(flags)
+   if (bit.band(flags, 0x20) ~= 0) or (GetVariable("lock_down_miniwindows") == "1") then
       return
    end
    end_startup_check()
@@ -308,8 +308,10 @@ end
 ---------------------------------------------------------------------------------
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
-function ResizeReleaseMainCallback()
-   SaveLayout()
+function ResizeReleaseMainCallback(flags)
+   if bit.band(flags, 0x20) == 0 then
+      SaveLayout()
+   end
 end
 
 function DragReleaseMainCallback()
@@ -322,6 +324,13 @@ end
 function MouseDown(flags, hotspot_id)
    if (hotspot_id == "resize") then
       startx, starty = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
+      if bit.band(flags, 0x20) ~= 0 then
+         local result = WindowMenu(textResizer, WindowInfo(textResizer, 14), WindowInfo(textResizer, 15), "!"..(GetInfo(120) and "+" or "").."Show exterior scrollbar -->")
+         if result == "1" then
+            SetVariable("hide_main_scroll", tostring(GetInfo(120)))
+            SetScroll(-2, not GetInfo(120))
+         end
+      end
    elseif (hotspot_id == "dragmain") then
       startx, starty = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
    end
@@ -459,6 +468,15 @@ function OnPluginInstall()
    AddTimer("startupCheckTimer", 0, 0, 0.3, "", timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
    -- ten seconds is probably overkill, but it should be pretty harmless
    DoAfterSpecial(10, 'end_startup_check()', sendto.script)
+
+   if GetVariable("scrollbar_hidden_once") ~= "true" then
+      SetScroll(-2, false)
+      SetVariable("hide_main_scroll", "true")
+      SetVariable("scrollbar_hidden_once", "true")
+   end
+
+   SetScroll(-2, GetVariable("hide_main_scroll") ~= "true")
+   SaveState()
 end
 
 function end_startup_check()
