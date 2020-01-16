@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2063 snapshot
+- bug fix: scrollbar.lua scroll callbacks may not always have parent objects.
+- bug fix: scrollbar.lua was missing require "wait" if it wasn't loaded by something else.
+- bug fix: Update MUSHclient.exe to fix several performance issues when scrolling with the scrollbar hidden.
+- new feature: Add a setting to scrollbar.lua for minimum "thumb" size.
+- new feature: Attach a themed scrollbar to the main output. Right-click on the main output resizer in the corner for a quick option to show/hide the external scrollbar.
+- info: Want to know how I add a scrollbar to something now? See the highlighted section of https://github.com/fiendish/aardwolfclientpackage/commit/3d83ea99b65c9245b63535e0f38e8761b618c7fa#diff-12c0930bea5951bfca63a681220fb542R529-R535
+
 r2058 snapshot
 - misc change: GMCPify the prompt fixer plugin. I'm looking forward to a whole new set of bugs in 2020!
 - misc change: Add the keyboard lockout and splitscreen plugins to the base world file.
