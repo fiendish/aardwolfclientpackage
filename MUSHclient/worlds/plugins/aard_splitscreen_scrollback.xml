@@ -207,6 +207,8 @@ function check_display()
                csp = rect.start_copying_pos
                cep = rect.end_copying_pos
                cptxt = rect.copied_text
+            end
+            if rect then
                rect:unInit()
                rect = nil
             end

@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2064 snapshot
+- bug fix: Clear hotspots from defunct scrollback splits.
+
 r2063 snapshot
 - bug fix: scrollbar.lua scroll callbacks may not always have parent objects.
 - bug fix: scrollbar.lua was missing require "wait" if it wasn't loaded by something else.
