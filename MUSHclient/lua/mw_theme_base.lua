@@ -198,23 +198,31 @@ function Draw3DRect (win, left, top, right, bottom, depressed)
    end
 end
 
-function Draw3DTextBox(win, font, left, top, text, utf8)
-   local right = left + WindowTextWidth(win, font, text)
-   local bottom = top + TextHeight(win, font)
-   Draw3DRect(win, left, top, right+3, bottom+3)
-   WindowText(win, font, text, left+2, top+2, right+1, bottom+1, THREE_D_SURFACE_DETAIL, utf8)
+function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y_padding)
+   x_padding = x_padding or 0
+   y_padding = y_padding or 0
+   local right = left + WindowTextWidth(win, font, text, utf8) + (2*x_padding)
+   local bottom = top + TextHeight(win, font) + (2*y_padding)
+   Draw3DRect(win, left, top, right+4, bottom+2, depressed)
+   local offset = 0
+   if depressed then
+      offset = 2
+   end
+   WindowText(win, font, text, left+2+x_padding+offset, top+1+y_padding+offset, right+1, bottom+1, THREE_D_SURFACE_DETAIL, utf8)
    return right-left
 end
 
-function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textcolor)
+function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textcolor, x_padding, y_padding)
    if nil == bgcolor then
       bgcolor = CLICKABLE
    end
    if nil == textcolor then
       textcolor = CLICKABLE_TEXT
    end
-   local right = left + WindowTextWidth(win, font, text) + 4
-   local bottom = top + TextHeight(win, font)
+   x_padding = x_padding or 0
+   y_padding = y_padding or 0
+   local right = left + WindowTextWidth(win, font, text, utf8) + 4 + (2*x_padding)
+   local bottom = top + TextHeight(win, font) + (2*y_padding)
    WindowRectOp(win, 2, left, top+1, right, bottom+2, bgcolor)
    if outlined then
       WindowRectOp(win, 1, left-1, top, right+1, bottom+3, textcolor)
@@ -328,7 +336,7 @@ function DrawTitleBar(win, font, title, text_alignment, utf8)
       else
          txt = v
       end
-      local width = WindowTextWidth(win, font, txt)
+      local width = WindowTextWidth(win, font, txt, utf8)
 
       local text_left = (WindowInfo(win, 3) - width) / 2  -- default text align center
       if text_alignment == "left" then
