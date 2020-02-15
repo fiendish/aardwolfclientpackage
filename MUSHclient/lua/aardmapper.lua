@@ -105,7 +105,7 @@ local total_time_taken = 0
 
 default_width = 269
 default_height = 335
-default_x = 868
+default_x = 868 + Theme.RESIZER_SIZE + 2
 default_y = 0
 
 function reset_pos()
