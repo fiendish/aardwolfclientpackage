@@ -221,7 +221,7 @@ require "mw"
 
 default_width         = 209
 default_height        = 263
-default_x             = 658
+default_x             = 658 + Theme.RESIZER_SIZE + 2
 default_y             = 0
 map_lines = {}
 coord_data= {}

@@ -48,7 +48,7 @@ require "gmcphelper"
 require "serialize"
 require "colors"
 
-default_width         = 1137
+default_width         = 1137 + Theme.RESIZER_SIZE + 2
 default_x             = 0
 default_y             = 552
 

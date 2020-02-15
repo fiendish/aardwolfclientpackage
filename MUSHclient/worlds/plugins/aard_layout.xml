@@ -60,8 +60,8 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-default_top = 140
-default_bottom = 544
+default_top = 139
+default_bottom = 545
 default_left = 7
 default_right = 650
 
