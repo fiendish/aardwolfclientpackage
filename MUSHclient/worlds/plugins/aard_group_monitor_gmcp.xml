@@ -144,7 +144,7 @@ require "gmcphelper"
 require "copytable"
 require "serialize"
 
-default_x = 868
+default_x = 868 + Theme.RESIZER_SIZE + 2
 default_y = 336
 default_height = 215
 default_width = 269
