@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2068 snapshot
+- bug fix: MUSHclient's main output area should be easier to scroll with high resolution touchpads.
+- bug fix: Fix leftover group monitor tooltip hotspots by just not making them in the first place. Crowley said this would be ok.
+- misc change: Adjust the layout reset positions so that the new main output scrollbar isn't behind stuff.
+- new feature: The Draw3DTextBox theme function now takes arguments for being pressed in and also X and Y padding.
+
 r2064 snapshot
 - bug fix: Clear hotspots from defunct scrollback splits.
 
