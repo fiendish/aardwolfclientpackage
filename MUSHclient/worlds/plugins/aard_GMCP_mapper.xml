@@ -397,6 +397,14 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
+   match="^mapper portals find (.+)$"
+   enabled="y"
+   sequence="100"
+   script="map_portal_find"
+   regexp="y"
+></alias>
+
+<alias
    match="^mapper portal (.+)$"
    enabled="y"
    sequence="100"
@@ -1549,6 +1557,39 @@ function map_portal_list ()
    Note ("+-------------------------------------------------+\n")
 
 end -- map_portal_list
+
+function map_portal_find (name, line, wildcards)
+   local line
+   local cmd
+   local txt
+   -- show portals stored in the exits table
+   local hl = "+-----+------------+----------------------+-------+----------------------+-----+"
+   local hr = "|   # | area       | room name            |  vnum | portal commands      | lvl |"
+
+   Note ("\n"..hl)
+   Note (hr)
+   Note (hl)
+
+   local count = 0
+   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+      if string.match(row.area, wildcards[1]) then
+         count = count + 1
+         line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
+         if row.level <= mylevel+(mytier*10) then
+            -- make the whole line clickable
+            cmd = "mapper goto " .. row.touid
+            txt = "click here to run to " .. (row.name or "N/A") .. "\n[ " .. row.dir .. " ]"
+            Hyperlink(cmd, line, txt, (((row.fromuid=="*") and "") or "red"), "", false, NoUnderline_hyperlinks)
+            Note()
+         else
+            Note(line)
+         end -- if row.level
+      end -- string match
+   end -- for row (portals query)
+   Note (hl)
+   Note ("|* Indicates designated bouncerecall/bounceportal |")
+   Note ("+-------------------------------------------------+\n")
+end
 
 BASE_CEXIT_DELAY = 2
 
