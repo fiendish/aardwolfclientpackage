@@ -389,7 +389,7 @@ mapper.gotoNextResult(Trim("%1"))
 </alias>
 
 <alias
-   match="^mapper portals$"
+   match="^mapper portals( .*)?$"
    enabled="y"
    sequence="100"
    script="map_portal_list"
@@ -979,7 +979,12 @@ function findpathfast(name, line, wildcards)
    end
 end
 
-PORTALS_QUERY = "select rooms.area,rooms.name,exits.touid,exits.fromuid,exits.dir,exits.level from exits left outer join rooms on rooms.uid=exits.touid where exits.fromuid in ('*','**') order by rooms.area,exits.touid"
+function PORTALS_QUERY(filter)
+   if not filter then
+      filter = "%"
+   end
+   return "select rooms.area,rooms.name,exits.touid,exits.fromuid,exits.dir,exits.level from exits left outer join rooms on rooms.uid=exits.touid where exits.fromuid in ('*','**') and rooms.area LIKE '"..filter.."' order by rooms.area,exits.touid"
+end
 
 function map_bounceportal (name, line, wildcards)
    wildcards[1] = Trim(wildcards[1])
@@ -1006,7 +1011,7 @@ function map_bounceportal (name, line, wildcards)
 
    local count = 1
    local found = false
-   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY()) do
       if count == pnum then
          if row.fromuid == "*" then
             bounce_portal = {dir=row.dir, uid=row.touid}
@@ -1050,7 +1055,7 @@ function map_bouncerecall (name, line, wildcards)
 
    local count = 1
    local found = false
-   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY()) do
       if count == pnum then
          if row.fromuid == "**" then
             bounce_recall = {dir=row.dir, uid=row.touid}
@@ -1323,7 +1328,7 @@ function map_portal_delete (name, line, wildcards)
       target_index = tonumber(string.sub(keywords,2))
       local count = 0
       local found = false
-      for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+      for row in dbnrowsWRAPPER(PORTALS_QUERY()) do
          count = count + 1
          if count == target_index then
             keywords = row.dir
@@ -1392,7 +1397,7 @@ function map_portal_recall (name, line, wildcards)
 
    local count = 1
    local found = false
-   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY()) do
       if count == pnum then
 
          -- toggle between '*' and '**'
@@ -1495,7 +1500,7 @@ function map_portal_level (name, line, wildcards)
 
    local count = 1
    local found = false
-   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY()) do
       if count == pnum then
          query = string.format ([[
             INSERT OR REPLACE INTO exits (dir, fromuid, touid, level)
@@ -1517,21 +1522,37 @@ function map_portal_level (name, line, wildcards)
    end
 end -- map_portal_level
 
--- map_portal_list function contributed by Spartacus
-function map_portal_list ()
+-- map_portal_list function contributed by Spartacus with filtering amendment for from Crowley
+function map_portal_list (name, line, wildcards)
    local line
    local cmd
    local txt
+
+   local pattern = Trim(wildcards[1])
+   if pattern == "here" then
+      title = "Mapper portals in the current area:"
+      pattern = gmcp("room.info.zone")
+   else
+      if pattern == "" then
+         title = "Mapper portals:"
+      else
+         title = "Mapper portals to areas matching '"..pattern.."':"
+      end
+      pattern = "%"..pattern.."%"
+   end
+
    -- show portals stored in the exits table
    local hl = "+-----+------------+----------------------+-------+----------------------+-----+"
    local hr = "|   # | area       | room name            |  vnum | portal commands      | lvl |"
 
-   Note ("\n"..hl)
+   Note ()
+   Note (title)
+   Note (hl)
    Note (hr)
    Note (hl)
 
    local count = 0
-   for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+   for row in dbnrowsWRAPPER(PORTALS_QUERY(pattern)) do
       count = count + 1
       line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
@@ -1547,8 +1568,7 @@ function map_portal_list ()
    Note (hl)
    Note ("|* Indicates designated bouncerecall/bounceportal |")
    Note ("+-------------------------------------------------+\n")
-
-end -- map_portal_list
+end
 
 BASE_CEXIT_DELAY = 2
 
@@ -3215,7 +3235,7 @@ function check_bounce_consistency()
    local inconsistent_portal_flag = nil
    if (bounce_portal_orphaned or bounce_recall_orphaned) then
       local row_id = 1
-      for row in dbnrowsWRAPPER(PORTALS_QUERY) do
+      for row in dbnrowsWRAPPER(PORTALS_QUERY()) do
          if (bounce_portal_orphaned and (row.dir==bounce_portal.dir)) then
             if (row.fromuid == "*") then
                bounce_portal_orphaned = false
@@ -4488,8 +4508,9 @@ function OnHelp (name, line, wildcards)
 
    ['portals'] = {
 ['header'] = [[===== PORTAL ACTIONS ============>]],
-[[mapper portals                 --> List known hand-held portals
-                                 > Recall-flagged portals (below) show in red]],
+[[mapper portals                 --> List known hand-held portals]],
+[[mapper portals <here/area>     --> List known hand-held portals only to this
+                                 > or another area]],
 [[mapper portal <command>        --> Link a handheld portal to the current
                                  > room as a special exit from everwhere else
                                  > (ex: 'mapper portal recall' at recall).
