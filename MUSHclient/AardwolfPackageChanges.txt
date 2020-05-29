@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2070 snapshot
+- bug fix: Communication log plugin state-trashing error during color theme management was happening because state files have a previously-unknown-to-me size limit.
+- new feature: The mapper portals command has a new here/<area> filter argument.
+
 r2068 snapshot
 - bug fix: MUSHclient's main output area should be easier to scroll with high resolution touchpads.
 - bug fix: Fix leftover group monitor tooltip hotspots by just not making them in the first place. Crowley said this would be ok.
