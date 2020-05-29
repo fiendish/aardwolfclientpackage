@@ -28,7 +28,6 @@ USAGE:
 </description>
 
 </plugin>
-
 <triggers>
 <trigger
    enabled="n"
@@ -449,8 +448,12 @@ function init ()
    tabs_rects = {}
    tabs_scrollbars = {}
 
-   loadstring("temp_tabs_data =" .. (GetVariable("temp_tabs_data") or "nil"))()
-   DeleteVariable("temp_tabs_data")
+   f = io.open(tmpfile, "r")
+   if f then
+      loadstring("temp_tabs_data =" .. (f:read("*a") or "nil"))()
+      f:close()
+      os.remove(tmpfile)
+   end
 end
 
 function drawTabs (mouseover)
@@ -610,6 +613,8 @@ function setupDisplay ()
    drawTabs()
 end
 
+tmpfile = GetInfo(66) .. GetPluginID() .. "_temp_data.txt"
+
 function OnPluginClose ()
    WindowDelete(win)
    if GetVariable(Theme.reloading_variable) then
@@ -620,7 +625,12 @@ function OnPluginClose ()
             ["activity"] = tabs_activity[i]
          }
       end
-      SetVariable("temp_tabs_data", serialize.save_simple(temp_tabs_data))
+      f = io.open(tmpfile, "w")
+      if f then
+         f:write(serialize.save_simple(temp_tabs_data))
+         f:flush()
+         f:close()
+      end
    end
 end -- OnPluginClose
 
