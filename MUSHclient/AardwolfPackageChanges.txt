@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2071 snapshot
+- bug fix: The filtered mapper portals index numbers should now be safe for deletion.
+
 r2070 snapshot
 - bug fix: Communication log plugin state-trashing error during color theme management was happening because state files have a previously-unknown-to-me size limit.
 - new feature: The mapper portals command has a new here/<area> filter argument.
