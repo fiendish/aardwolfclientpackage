@@ -23,6 +23,10 @@ require "mw_theme_base"
 require "text_rect"
 require "color_copy"
 
+if not utils.getfontfamilies().Dina then
+    AddFont(GetInfo(66).."Dina.fon")
+end
+
 function at_bottom()
    cur_scroll_position = GetInfo(296)
    total_output_lines = GetInfo(224)
