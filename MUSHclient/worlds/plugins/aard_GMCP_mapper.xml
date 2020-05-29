@@ -1522,7 +1522,7 @@ function map_portal_level (name, line, wildcards)
    end
 end -- map_portal_level
 
--- map_portal_list function contributed by Spartacus with filtering amendment for from Crowley
+-- map_portal_list function contributed by Spartacus with filtering amendment from Crowley
 function map_portal_list (name, line, wildcards)
    local line
    local cmd
@@ -1552,9 +1552,13 @@ function map_portal_list (name, line, wildcards)
    Note (hl)
 
    local count = 0
-   for row in dbnrowsWRAPPER(PORTALS_QUERY(pattern)) do
+   local all_portals = {}
+   for row in dbnrowsWRAPPER(PORTALS_QUERY("%%")) do
       count = count + 1
-      line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", count, row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
+      all_portals[row.dir] = count
+   end
+   for row in dbnrowsWRAPPER(PORTALS_QUERY(pattern)) do
+      line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", all_portals[row.dir], row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
          -- make the whole line clickable
          cmd = "mapper goto " .. row.touid
