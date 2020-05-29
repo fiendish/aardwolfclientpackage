@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Aardwolf_Package_Requirements"
+   author="Fiendish"
+   id="50f4e1fc89999ce02a216a3c"
+   language="Lua"
+   purpose="Manages Aardwolf package requirements"
+   requires="5.05"
+   save_state="y"
+>
+</plugin>
+<script>
+<![CDATA[
+require "checkplugin"
+
+function OnPluginListChanged()
+   -- Load plugins which are either necessary for the package to function or unobjectionably utile.
+   do_plugin_check_now("162bba4a5ecef2bb32b5652f", "aard_package_update_checker") -- package update checker
+   do_plugin_check_now("abc1a0944ae4af7586ce88dc", "aard_repaint_buffer") -- repaint buffer
+   do_plugin_check_now("3e7dedbe37e44942dd46d264", "aard_GMCP_handler")    -- GMCP handler
+   do_plugin_check_now("462b665ecb569efbf261422f", "aard_miniwindow_z_order_monitor") -- z order manager
+   do_plugin_check_now("55616ea13339bc68e963e1f8", "aard_chat_echo") -- gmcp channels in main display
+   do_plugin_check_now("520bc4f29806f7af0017985f", "Hyperlink_URL2") -- make hyperlinks from urls
+   do_plugin_check_now("04d9e64f835452b045b427a7", "aard_Copy_Colour_Codes") -- Ctrl+D to copy selected text with color codes
+   do_plugin_check_now("23832d1089f727f5f34abad8", "aard_soundpack") -- pre-made collection of common sound triggers
+   do_plugin_check_now("60ad15b3cb2a5757d2611c28", "aard_help") -- help command for aardmush-specific plugins
+   do_plugin_check_now("b14162092957e88ec16d99e7", "aard_keyboard_lockout") -- feline assistance prevention
+
+   -- consolidate the new connection plugins
+   if IsPluginInstalled("9f796334ab9ed476ef44f1dd") then
+      UnloadPlugin("9f796334ab9ed476ef44f1dd")
+   end
+   do_plugin_check_now("9f796334ab9ed476ef44f1dc", "aard_new_connection")
+end
+
+function OnPluginInstall()
+   -- Guarantee various useful world file settings
+   SetOption("omit_date_from_save_files", 1)  -- slightly less clutter in settings files
+   SetAlphaOption("terminal_identification", "MUSHclient-Aard") -- helps Lasher count for the 'clients' in-game command
+
+   -- Edit the preferences db to stop opening the activity window at startup
+   if tonumber(GetGlobalOption("OpenActivityWindow")) ~= 0 then
+      local aard_req_prefs_db = sqlite3.open(GetInfo(82))
+      aard_req_prefs_db:exec 'UPDATE prefs SET value = 0 WHERE name = "OpenActivityWindow"'
+      aard_req_prefs_db:close()
+      utils.reload_global_prefs()
+   end
+end
+
+]]>
+</script>
+</muclient>

@@ -38,7 +38,11 @@ reloading_variable = "aard_theme_just_reloading"
 
 function just_reloading()
    SetVariable(reloading_variable, 1)
+   SaveState()
 end
+
+DeleteVariable(reloading_variable)
+SaveState()
 
 local default_theme = {
    LOGO_OPACITY = 0.02,
