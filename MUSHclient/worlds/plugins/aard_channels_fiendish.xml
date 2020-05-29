@@ -396,6 +396,7 @@ function OnPluginListChanged ()
 end
 
 function OnPluginInstall ()
+   DeleteVariable("temp_tabs_data") -- clean up after 9531ad91a3ed70b6bf9722bb218df8a9daa08614
    init()
    setupDisplay()
    OnPluginEnable()
