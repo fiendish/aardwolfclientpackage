@@ -97,9 +97,10 @@
   var Storage = store.namespace('aardwolfclientpackage').session;
 
   function SetChanges(changes) {
-    changes = changes.replace(/(Aardwolf Client Package Major Changes List)\r\n/, '<h3>$1</h3>\r\n')
-    changes = changes.replace(/\n(\-.*?\:)/g, '\n<strong>$1</strong>')
-    changes = changes.replace(/\n(r.*? snapshot|Beta)/g, '\n<em>$1</em>')
+    changes = changes.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    changes = changes.replace(/(Aardwolf Client Package Major Changes List)\r\n/, '<h3>$1</h3>\r\n');
+    changes = changes.replace(/\n(\-.*?\:)/g, '\n<strong>$1</strong>');
+    changes = changes.replace(/\n(r.*? snapshot|Beta)/g, '\n<em>$1</em>');
     changes = '<p>' + changes.replace(/(?:\r\n\r\n|\r\r|\n\n)/g, '</p><br><p>').replace(/(?:\r\n|\r|\n)/g, '</p><p>') + '</p>';
     changes = changes.replace(/(https?\:\/\/[^)\n\s<]+)/g, '<a href="$1">$1</a>');
     $("#changes").html(changes);
