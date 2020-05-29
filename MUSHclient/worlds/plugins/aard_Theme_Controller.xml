@@ -52,7 +52,6 @@ function apply_theme(theme)
          rc, t = CallPlugin(v, "Theme.get_theme")
          if t ~= theme then
             CallPlugin(v, "Theme.just_reloading")
-            CallPlugin(v, "Theme.load_theme", theme)
             ReloadPlugin(v)
          end
       end
