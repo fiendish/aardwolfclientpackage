@@ -27,9 +27,6 @@ if not utils.getfontfamilies().Dina then
     AddFont(GetInfo(66).."Dina.fon")
 end
 
-AcceleratorTo("PageUp", "pageUp()", sendto.script)
-AcceleratorTo("PageDown", "pageDown()", sendto.script)
-
 function at_bottom()
    cur_scroll_position = GetInfo(296)
    total_output_lines = GetInfo(224)
@@ -44,7 +41,7 @@ win = GetPluginID()
 
 function move_amount()
    return font_height * (
-      math.floor(text_rectangle_height / font_height) - (desired_lines or base_desired_lines)
+      math.floor(text_rectangle_height / font_height) - (desired_lines or base_desired_lines) - 1
    )
 end
 
@@ -75,6 +72,9 @@ function OnPluginEnable()
    LoadTitleFont()
    WindowShow(win, false)
    check_display()
+   
+   AcceleratorTo("PageUp", "pageUp()", sendto.script)
+   AcceleratorTo("PageDown", "pageDown()", sendto.script)
 end
 
 base_desired_lines = tonumber(GetVariable("base_desired_lines")) or 17
@@ -313,6 +313,9 @@ function OnPluginDisable()
    WindowDelete(win)
    SetOption("auto_pause", original_auto_pause)
    SetOption("unpause_on_send", original_unpause_on_send)
+
+   Accelerator("PageUp", "")
+   Accelerator("PageDown", "")
 end
 
 function ScrollMain(flags, hotspot_id)
