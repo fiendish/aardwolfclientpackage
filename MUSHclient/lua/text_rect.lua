@@ -602,7 +602,7 @@ function TextRect.dragMove(flags, hotspot_id)
    local copied_part = ""
    for copy_line = tr.copy_start_line, tr.copy_end_line do
       if (tr.wrapped_lines[copy_line] ~= nil) then
-         local startpos = 1
+         local startpos = 0
          local endpos = 99999
          if (copy_line - tr.start_line + 1 > 0 and copy_line - tr.start_line < tr.rect_lines and copy_line - tr.start_line < #tr.wrapped_lines) then
 
@@ -611,7 +611,6 @@ function TextRect.dragMove(flags, hotspot_id)
             -- Get the line without color codes so we can reference position to character
             local line_no_colors = strip_colours_from_styles(tr.wrapped_lines[copy_line][1])
 
-            startpos = 0
             endpos = #line_no_colors
 
             -- Clamp the selection start position
@@ -647,7 +646,9 @@ function TextRect.dragMove(flags, hotspot_id)
             copied_part = StylesToColours(TruncateStyles(styles, startpos+1, endpos))
             -- end in @w if line starts with a color code
             if (#styles > 1) or ((copied_part:sub(1,1) == "@") and (copied_part:sub(2,2) ~= "@")) then
-               copied_part = copied_part.."@w"
+               if copied_part:sub(-2) ~= "@w" then
+                  copied_part = copied_part.."@w"
+               end
             end
             if (copy_line ~= tr.num_wrapped_lines) and (tr.wrapped_lines[copy_line + 1][2] == true) then
                -- put a line break if the next line is from a different message
@@ -655,8 +656,9 @@ function TextRect.dragMove(flags, hotspot_id)
             end
             tr.copied_text = tr.copied_text..(((copied_part ~= nil) and copied_part) or "")
          elseif (endpos == 0) and (startpos == 0) and (copy_line ~= tr.copy_end_line) and (copy_line ~= tr.copy_start_line) then
-            tr.copied_text = tr.copied_text.."@w\n"
+            tr.copied_text = tr.copied_text..((tr.copied_text:sub(-2) ~= "@w") and "@w" or "").."\n"
          end
+
       end -- if valid line
    end -- copying lines
    if tr.copied_text:sub(-1) == "\n" then
