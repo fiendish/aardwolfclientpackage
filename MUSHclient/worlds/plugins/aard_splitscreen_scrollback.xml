@@ -27,6 +27,9 @@ if not utils.getfontfamilies().Dina then
     AddFont(GetInfo(66).."Dina.fon")
 end
 
+AcceleratorTo("PageUp", "pageUp()", sendto.script)
+AcceleratorTo("PageDown", "pageDown()", sendto.script)
+
 function at_bottom()
    cur_scroll_position = GetInfo(296)
    total_output_lines = GetInfo(224)
@@ -38,6 +41,20 @@ function at_bottom()
 end
 
 win = GetPluginID()
+
+function move_amount()
+   return font_height * (
+      math.floor(text_rectangle_height / font_height) - (desired_lines or base_desired_lines)
+   )
+end
+
+function pageUp()
+   SetScroll(math.max(0, GetInfo(296) - move_amount()), GetInfo(120))
+end
+
+function pageDown()
+   SetScroll(math.min(max_scroll_position, GetInfo(296) + move_amount()), GetInfo(120))
+end
 
 function LoadTitleFont()
    title_font = GetAlphaOption("output_font_name")
