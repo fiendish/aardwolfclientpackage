@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2072 snapshot
+- bug fix: Pressing PageUp/PageDown when the splitscreen scrollback plugin is active should scroll the right amount according to where the screen split is. Now watchmen have to go back to their old logo plz thx. Icecool says so.
+
 r2071 snapshot
 - bug fix: The filtered mapper portals index numbers should now be safe for deletion.
 
