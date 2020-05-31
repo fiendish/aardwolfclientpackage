@@ -146,9 +146,7 @@ function is_rect()
    return (GetInfo(272) ~= 0) or (GetInfo(273) ~= 0) or (GetInfo(274) ~= 0) or (GetInfo(275) ~= 0)
 end
 
-function select_in_main(start_line, end_line, start_pos, end_pos, start_x, end_x, text)
-   last_start_line, last_end_line, last_start_pos, last_end_pos, last_start_x, last_end_x = start_line, end_line, start_pos, end_pos, start_x, end_x
-
+function select_in_main(start_line, end_line, start_pos, end_pos, start_x, end_x)
    if start_line and end_line and start_pos and end_pos then
       start_line = start_line - rect.rect_lines + num_lines - 1
       end_line = end_line - rect.rect_lines + num_lines - 1
