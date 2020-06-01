@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2073 snapshot
+- bug fix: Copying text from the communication log was skipping some characters at line breaks. Should be fixed now.
+
 r2072 snapshot
 - bug fix: Pressing PageUp/PageDown when the splitscreen scrollback plugin is active should scroll the right amount according to where the screen split is. Now watchmen have to go back to their old logo plz thx. Icecool says so.
 
