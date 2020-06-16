@@ -536,7 +536,7 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
-   match="^mapper fullcexit {(.+)} {(.+)} {(.+)} $"
+   match="^mapper fullcexit {(.+)} {(.+)} {(.+)}$"
    enabled="y"
    sequence="100"
    script="custom_fullexit"
@@ -2469,7 +2469,7 @@ function room_change_cexit (room, uid, exit)
 
       -- construct available exits list for display
       for k,v in pairs (room.exits) do
-        if not directions[k] then
+        if not string.find("n s e w u d", ex) then
           available [k] = k .. " --> " .. room.exits [k]
         end
       end -- for
@@ -2498,18 +2498,17 @@ function room_change_cexit (room, uid, exit)
          UPDATE exits SET dir = %s WHERE fromuid = %s AND dir = %s;
          ]],
          fixsql (new_cexit),
-         fixsql (uid)  -- from current room
-         fixsql (chosen_exit),  -- direction (eg. "n")
+         fixsql (uid),  -- from current room
+         fixsql (chosen_exit)  -- direction (eg. "n")
 
       ))
-
-      mapper.mapprint ("Modified custom exit", chosen_exit, "from room", uid, "to new custom exit", new_cexit, "in database.")
-
-      -- update in-memory table
-      rooms[uid].exits[cexit_command] = rooms[uid].exits[k]
-      rooms[uid].exit_locks[cexit_command] = rooms[uid].exit_locks[k]
-      rooms[uid].exits[k] = nil
-      rooms[uid].exit_locks[k] = nil
+	
+	mapper.mapprint ("Modified custom exit", chosen_exit, "from room", uid, "to new custom exit", new_cexit, "in database.")
+      -- update in-memory table	
+      rooms[uid].exits[new_cexit] = rooms[uid].exits[chosen_exit]
+      rooms[uid].exit_locks[new_cexit] = rooms[uid].exit_locks[chosen_exit]
+      rooms[uid].exits[chosen_exit] = nil
+      rooms[uid].exit_locks[chosen_exit] = nil
       
       mapper.draw (current_room)
    else
@@ -2617,9 +2616,9 @@ function room_click (uid, flags)
    end
    table.insert(handlers, { name = "<", })
 
-  table.insert(handlers, { name = ">Change Custom Exit", })
+  table.insert(handlers, { name = ">Change CExit Command", })
   for ex, to in pairs(room.exits) do
-    if not directions[k] then
+    if not string.find("n s e w u d", ex) then
       table.insert(handlers, { name = ex.." -> "..to, func = room_change_cexit, param = ex})
     end
   end
