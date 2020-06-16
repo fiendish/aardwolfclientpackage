@@ -4623,7 +4623,7 @@ function OnHelp (name, line, wildcards)
                                  > to get around the line break parser
                                  > (ex: 'mapper cexit open south;;south')]],
 [[mapper fullcexit {<command>} <source> <destination> --> Create a custom exit
- 				 > without following it,
+                                 > without following it]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits in database]],
 [[mapper cexit_wait <seconds>    --> Wait this number of seconds instead of
