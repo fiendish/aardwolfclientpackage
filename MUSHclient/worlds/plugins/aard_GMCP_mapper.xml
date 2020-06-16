@@ -536,6 +536,14 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
+   match="^mapper fullcexit {(.+)} {(.+)} {(.+)} $"
+   enabled="y"
+   sequence="100"
+   script="custom_fullexit"
+   regexp="y"
+></alias>   
+   
+<alias
    match="^mapper cexit_wait (.+)$"
    enabled="y"
    sequence="100"
@@ -1685,6 +1693,53 @@ function custom_exit (name, line, wildcards)
    end)
 end -- custom_exit
 
+function custom_fullexit (name, line, wildcards)
+
+  local cexit_command = wildcards [1] or ""
+
+  if cexit_command == "" then
+    world.Note("Nothing to do!")
+      return
+  end 
+
+  local cexit_start = wildcards[2]
+  if not cexit_start then
+    print ("cexit FAILED: No room provided.")
+    return
+  end
+
+  if not load_room_from_database(cexit_start) then
+    print("cexit ["..wildcards[2].."] FAILED: Room "..cexit_start.." is unknown.")
+    return
+  end
+
+
+  local cexit_dest = wildcards[3]
+  if not cexit_dest then
+    print ("cexit FAILED: No room provided.")
+    return
+  end
+
+  if not load_room_from_database(cexit_dest) then
+    print("cexit ["..wildcards[3].."] FAILED: Room "..cexit_dest.." is unknown.")
+    return
+  end
+
+  if cexit_dest ~= cexit_start then
+    world.Note (string.format("Custom Exit CONFIRMED: %s (%s) -> %s", cexit_start, cexit_command, cexit_dest))
+    dbCheckExecute(string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid) VALUES (%s, %s, %s);",
+     fixsql  (cexit_command),  -- direction (eg. "n")
+     fixsql  (cexit_start),  -- from current room
+     fixsql  (cexit_dest) -- destination room
+     ))
+    rooms[cexit_start].exits[cexit_command] = cexit_dest
+    rooms[cexit_start].exit_locks[cexit_command] = "0"
+    mapper.draw (current_room)
+  else
+    world.Note (string.format("CEXIT FAILED: Custom Exit %s leads back here!", cexit_command))
+  end
+end -- custom_fullexit
+
 last_area_requested = ""
 function save_room_to_database (uid,room)
 
@@ -2406,6 +2461,65 @@ function room_change_exit (room, uid, exit)
 
 end -- room_change_exit
 
+function room_change_cexit (room, uid, exit)
+   local chosen_exit = exit
+
+   if chosen_exit == nil then
+      local available =  {}  -- end of available
+
+      -- construct available exits list for display
+      for k,v in pairs (room.exits) do
+        if not directions[k] then
+          available [k] = k .. " --> " .. room.exits [k]
+        end
+      end -- for
+
+      if next (available) == nil then
+         utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
+         return
+      end -- not known
+
+      local chosen_exit = utils.listbox ("Choose exit to change destination of:", "Exits ...", available )
+      if not chosen_exit then
+         return
+      end
+   end
+
+
+   local new_cexit = utils.inputbox ("Enter new custom exit command to replace " .. chosen_exit, room.name, chosen_exit)
+
+   if not new_cexit then
+      return
+   end -- cancelled
+
+
+   if new_cexit ~= chosen_exit then
+      dbCheckExecute(string.format ([[
+         UPDATE exits SET dir = %s WHERE fromuid = %s AND dir = %s;
+         ]],
+         fixsql (new_cexit),
+         fixsql (uid)  -- from current room
+         fixsql (chosen_exit),  -- direction (eg. "n")
+
+      ))
+
+      mapper.mapprint ("Modified custom exit", chosen_exit, "from room", uid, "to new custom exit", new_cexit, "in database.")
+
+      -- update in-memory table
+      rooms[uid].exits[cexit_command] = rooms[uid].exits[k]
+      rooms[uid].exit_locks[cexit_command] = rooms[uid].exit_locks[k]
+      rooms[uid].exits[k] = nil
+      rooms[uid].exit_locks[k] = nil
+      
+      mapper.draw (current_room)
+   else
+      mapper.mapprint ("Destination unchanged for exit '"..chosen_exit.."'.")
+   end
+
+end -- room_change_exit
+
+
+
 function room_lock_exit (room, uid, exit)
    if uid == nil and current_room ~= nil then
       uid = current_room
@@ -2502,6 +2616,14 @@ function room_click (uid, flags)
       table.insert(handlers, { name = ex.."  [ "..lock.." ]", func = room_lock_exit, param = ex})
    end
    table.insert(handlers, { name = "<", })
+
+  table.insert(handlers, { name = ">Change Custom Exit", })
+  for ex, to in pairs(room.exits) do
+    if not directions[k] then
+      table.insert(handlers, { name = ex.." -> "..to, func = room_change_cexit, param = ex})
+    end
+  end
+  table.insert(handlers, { name = "<", })
 
    table.insert(handlers, { name = "-", })
    table.insert(handlers, { name = (room.ignore_exits_mismatch and "+" or "").."Ignore Exits Mismatch Here", func = ignore_mismatch_toggle, param = room.ignore_exits_mismatch})
