@@ -10,11 +10,10 @@
    purpose="Replace text with other text"
    date_written="2016-12-27 01:00:00"
    requires="5.05"
-   version="1.0"
+   version="2.0"
    save_state="y"
    sequence="-10000"
 >
-
 <description trim="y">
 This plugin substitutes text with something else.
 
@@ -34,11 +33,11 @@ Type "#sub help" or make a syntax mistake for usage details.
    regexp="y"
    sequence="100"
    ignore_case="y"
-   script="listsub"
+   script="listall"
 ></alias>
 
 <alias
-   match="^#sub +\{(.*)\} *\{(.*)\}( *(#nocase)| *(#alone)| *(#function))* *$"
+   match="^#sub +\{(.*)\} *\{(.*)\}( *(#nocase)| *(#alone)| *(#function)| *(#regex))* *$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -79,11 +78,11 @@ Type "#sub help" or make a syntax mistake for usage details.
    regexp="y"
    sequence="100"
    ignore_case="y"
-   script="listgag"
+   script="listall"
 ></alias>
 
 <alias
-   match="^#gag +\{(.*?)\}( *(#nocase)| *(#alone)| *\{(.*?)\})* *$"
+   match="^#gag +\{(.*?)\}( *(#nocase)| *(#alone)| *(#regex)| *\{(.*?)\})* *$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -120,25 +119,6 @@ Type "#sub help" or make a syntax mistake for usage details.
 
 </aliases>
 
-<!--
-   <triggers>
-   <trigger
-      name="all"
-      enabled="y"
-      match="^(.*)$"
-      omit_from_output="y"
-      regexp="y"
-      sequence="100"
-      send_to="12"
-      script="filter_trigger"
-   >
-   <send>
-      StopEvaluatingTriggers(true)
-   </send>
-   </trigger>
-   </triggers>
--->
-
 <script>
 <![CDATA[
 -- fix stupid syntax highlighting in SublimeText --> '
@@ -148,11 +128,62 @@ require "serialize"
 dofile(GetInfo(60) .. "aardwolf_colors.lua")
 
 require "addxml"
-function apply_pattern_as_trigger(original_pattern, nocase, alone)
+
+
+rex.gsub = function(str, re, rep)
+   output = ""
+
+   local startfrom = 1
+   local s, e, t = re:exec(str, startfrom)
+   while s ~= nil do
+      local filled_rep = rep:gsub("%%(%d+)", 
+         function(index) 
+            local i = tonumber(index)*2
+            return str:sub(t[i-1], t[i]) or ""
+         end)
+      output = output..str:sub(startfrom, s-1)..filled_rep
+
+      startfrom = e+1
+      s, e, t = re:exec(str, startfrom)
+   end
+
+   return output..str:sub(startfrom)
+end
+
+
+function update_pattern(match_str, is_regex, alone)
+   if not is_regex then
+      local quotepattern = rex.new("(["..[[\.\^\$\*\+\-\?\(\)\[\]\{\}\\\|]].."])")
+      match_str = rex.gsub(match_str, quotepattern, [[\%1]])
+   end
+   if alone then
+      match_str = "(?<![^\\W_])(?:"..match_str..")(?![^\\W_])"
+   end
+   return match_str
+end
+
+
+-- CallPlugin("48f867c18f6ff1d6d3b52918", "show_triggers")
+function show_triggers()
+   print()
+   ptl = GetPluginTriggerList("48f867c18f6ff1d6d3b52918")
+   if ptl == nil then
+      print("No sub/gag triggers found")
+   else
+      print("Found sub/gag triggers for:")
+      for k, v in pairs(ptl) do
+         Note(GetPluginTriggerInfo("48f867c18f6ff1d6d3b52918", v, 1))
+      end
+   end
+   print()
+end
+
+
+function apply_pattern_as_trigger(matchstr, nocase)
    if pcall(
       addxml.trigger,
       {
-         match = original_pattern:gsub("([^%%]?)%%([^%%])", "%1\\%2"), -- replace % escapes with \ escapes
+         match = matchstr,
          enabled = true,
          ignore_case = nocase,
          regexp = true,
@@ -168,25 +199,45 @@ function apply_pattern_as_trigger(original_pattern, nocase, alone)
    ) then
       return true
    else
-      AnsiNote(ColoursToANSI("@RERROR CREATING PATTERN: @Y"..original_pattern))
-      Simulate(ColoursToANSI("@RThis may be caused by needing to escape dangling magic characters in your pattern with @Y%@R (Read https://www.lua.org/pil/20.2.html for information about Lua patterns)\r\n"))
+      AnsiNote(ColoursToANSI("@RERROR CREATING PATTERN: @Y"..matchstr))
       return false
    end
 end
 
 function set_triggers()
    DeleteTriggerGroup("all")
-   for i,sub in ipairs(subs) do
-      apply_pattern_as_trigger(sub.original, sub.nocase, sub.alone)
+   for i,sub in ipairs(rex_subs) do
+      apply_pattern_as_trigger(sub.match_str, sub.nocase)
    end
-   for i,gag in ipairs(gags) do
-      apply_pattern_as_trigger(gag.original, gag.nocase, gag.alone)
+   for i,gag in ipairs(rex_gags) do
+      apply_pattern_as_trigger(gag.match_str, gag.nocase)
    end
 end
 
 -- init tables
-loadstring( GetVariable("subs") or "subs = {}" )()
-loadstring( GetVariable("gags") or "gags = {}" )()
+
+loadstring( GetVariable("rex_subs") or "rex_subs = {}" )()
+loadstring( GetVariable("rex_gags") or "rex_gags = {}" )()
+
+for k, v in pairs(rex_subs) do
+   v.match_str = update_pattern(v.original, v.is_regex, v.alone)
+end
+for k, v in pairs(rex_gags) do
+   v.match_str = update_pattern(v.original, v.is_regex, v.alone)
+end
+
+function make_rex(where, what, nocase)
+   where[what] = rex.new(what, nocase and rex.flags().CASELESS or 0)
+end
+
+sub_rexes = {}
+gag_rexes = {}
+for k,v in pairs(rex_subs) do
+   make_rex(sub_rexes, v.match_str, v.nocase)
+end
+for k,v in pairs(rex_gags) do
+   make_rex(gag_rexes, v.match_str, v.nocase)
+end
 
 set_triggers()
 
@@ -212,6 +263,7 @@ function usagesub(line, embedded)
    end
    AnsiNote(ColoursToANSI("\n@w Note that you must use curly braces around each phrase for demarcation,"..
    "\n@w not quotation marks or anything else."..
+   "\n@w Add @C#regex@w to the line to treat the match pattern as a regular expression, otherwise it will be used literally."..
    "\n@w Add @C#alone@w to the line to only match at word or color boundaries."..
    "\n@w Add @C#nocase@w to the line to do case-insensitive matching."))
    if not embedded then
@@ -242,10 +294,10 @@ function helpsub(name, line, wildcards)
    "@w example: @C#sub {hello} {Howdy} #alone #nocase"..
    "\n@w          This will match HeLlO but not othello."..
    "\n@w"..
-   "\n@w Parentheses will act as captures. Use '%' to escape literal '(', ')', and '%'."..
-   "\n@w example: @C#sub {(player)} {%1 (rude)} #alone #nocase"..
-   "\n@w          This will do almost the same things as"..
-   "\n@w          @C#sub {player} {player (rude)} #alone #nocase"..
+   "\n@w Regular expression matches allow you to use captures which can be referenced with % and the number."..
+   "\n@w example: @C#sub {(player)} {%1 (rude)} #regex #alone #nocase"..
+   "\n@w          This example will do almost the same thing as"..
+   "\n@w          @C#sub {player} {player (rude)} #regex #alone #nocase"..
    "\n@w          but it will preserve the original capitalization."..
    "\n@w"..
    "\n@w Add @C#function@w to a #sub line to pass matching components to a plugin function"..
@@ -258,7 +310,7 @@ function helpsub(name, line, wildcards)
    "\n@w@C        function my_example(...)"..
    "\n@w@C          local args = {...}"..
    "\n@w@C          if my_plugin_variable == 100 then"..
-   "\n@w@C            -- returning a string says replace with this"..
+   "\n@w@C            -- returning a string says replace the match with this"..
    "\n@w@C            return args[1]..\" (@@Rbutternut squash$C)\""..
    "\n@w@C          else"..
    "\n@w@C            -- returning false or nil says don't do a replacement"..
@@ -274,7 +326,7 @@ function helpsub(name, line, wildcards)
    "\n@w@C        function my_new_gag()"..
    "\n@w@C          local line = CallPlugin(\"26240e292291e159e1ff3cde\",\"current_line\")"..
    "\n@w@C          if line:sub(1,15) == string.char(255,250,201)..\"comm.channel\" then"..
-   "\n@w@C            -- returning true says gag this if it's a gmcp comm.channel message"..
+   "\n@w@C            -- returning true says gag this"..
    "\n@w@C            return true"..
    "\n@w@C          else"..
    "\n@w@C            -- returning false or nil says don't gag"..
@@ -287,29 +339,28 @@ function helpsub(name, line, wildcards)
    "\n@Y"..string.rep(" ", (60-#header:gsub("begin","end"))/2)..header:gsub("begin","end")))
 end
 
-
-function listsub(name, line, wildcards)
+function listall()
+   ColourNote("yellow","","")
+   ColourNote("yellow","","#regex    : Treat the pattern as a regular expression, otherwise literal.")
+   ColourNote("yellow","","#nocase   : Ignore letter case when matching.")
+   ColourNote("yellow","","#alone    : Only match at word or color boundaries.")
+   ColourNote("yellow","","#function : Call a plugin function to decide what to do.")
    ColourNote("yellow","","")
    ColourNote("yellow",""," Current #subs:")
    ColourNote("yellow","","/-----------------------------------------------------------------------------\\")
-   for i,v in ipairs(subs) do
+   for i,v in ipairs(rex_subs) do
       AnsiNote(ColoursToANSI("@Y"..string.format("   %4u",i)..": "..format_sub(v)))
    end
    ColourNote("yellow","","\\-----------------------------------------------------------------------------/")
    ColourNote("yellow","","")
- end
-
-
-function listgag(name, line, wildcards)
-   ColourNote("yellow","","")
    ColourNote("yellow",""," Current #gags:")
    ColourNote("yellow","","/-----------------------------------------------------------------------------\\")
-   for i,v in ipairs(gags) do
+   for i,v in ipairs(rex_gags) do
       AnsiNote(ColoursToANSI("@Y"..string.format("   %4u",i)..": "..format_gag(v)))
    end
    ColourNote("yellow","","\\-----------------------------------------------------------------------------/")
    ColourNote("yellow","","")
- end
+end
 
 
 function find_in(set, original, nocase, alone, use_function)
@@ -323,7 +374,7 @@ end
 
 function remsub(name, line, wildcards, silent)
    local found_index = tonumber(wildcards[1])
-   local found = found_index and subs[found_index] or false
+   local found = found_index and rex_subs[found_index] or false
 
    if not silent then
       Note()
@@ -334,29 +385,31 @@ function remsub(name, line, wildcards, silent)
       end
    end
    if found then
-      table.remove(subs, found_index)
+      table.remove(rex_subs, found_index)
       set_triggers()
       SaveState()
    end
 end
 
 
+function format_firstpart(x)
+   return "\"@W"..x.original:gsub("@","@@").."@Y\""..(x.is_regex and " #regex" or "")..(x.nocase and " #nocase" or "")..(x.alone and " #alone" or "")
+end
+
+
 function format_gag(gag)
-   return "\"@W"..gag.original:gsub("@","@@").."@Y\""..(gag.nocase and " #nocase" or "")..(gag.alone and " #alone" or "")..
-            (gag.use_function and (" @Y--> #function \"@W"..gag.use_function:gsub("@","@@").."@Y\"") or "")
+   return format_firstpart(gag)..(gag.use_function and (" @Y--> #function \"@W"..gag.use_function:gsub("@","@@").."@Y\"") or "")
 end
 
 
 function format_sub(sub)
-   return "\"@W"..sub.original:gsub("@","@@").."@Y\""..(sub.nocase and " #nocase" or "")..(sub.alone and " #alone" or "")..
-            " @Y--> "..
-            (sub.use_function and "#function " or "").."\"@W"..sub.tostr:gsub("@","@@").."@Y\""
+   return format_firstpart(sub).." @Y--> "..(sub.use_function and "#function " or "").."\"@W"..sub.tostr:gsub("@","@@").."@Y\""
 end
 
 
 function remgag(name, line, wildcards, silent)
    local found_index = tonumber(wildcards[1])
-   local found = found_index and gags[found_index] or false
+   local found = found_index and rex_gags[found_index] or false
 
    if not silent then
       Note()
@@ -367,57 +420,54 @@ function remgag(name, line, wildcards, silent)
       end
    end
    if found then
-      table.remove(gags,found_index)
+      table.remove(rex_gags,found_index)
       set_triggers()
       SaveState()
    end
 end
 
+plugin_function_pattern = rex.new("^[[:xdigit:]]{24}:\\S+$")
+function bad_function(str)
+   local s,e,_ = plugin_function_pattern:exec(str)
+   if s == nil then
+      AnsiNote(ColoursToANSI("\n@YYou specified @W#function@Y, but pattern '@W"..str.."@Y' does not meet the format requirements."..
+         "\nPlease use {@W24_hexadecimal_digit_plugin_id:plugin_function_name@Y} as indicated in @W#sub help@Y."))
+      return true
+   end
+end
+
+
 function addsub(name, line, wildcards)
-   local fromstr = wildcards[1]
+   local match_str = wildcards[1]
    local tostr = wildcards[2]
    local nocase = wildcards[4] ~= ""
    local alone = wildcards[5] ~= ""
    local use_function = wildcards[6] ~= ""
+   local is_regex = wildcards[7] ~= ""
 
    if use_function then
-      local s,e = tostr:find("%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x:%S*")
-      if s ~= 1 or e ~= #tostr then
-         AnsiNote(ColoursToANSI("\n@YYou specified @W#function@Y, but pattern '@W"..tostr.."@Y' does not meet the format requirements."..
-            "\nPlease use {@W24_hexadecimal_digit_plugin_id:plugin_function_name@Y} as indicated in @W#sub help@Y."))
-         return
+      if bad_function(tostr) then 
+         return 
       end
    end
 
-   if nocase then
-      fromstr = string.gsub(fromstr, '(%a)', function (v) return '['..string.upper(v)..string.lower(v)..']' end)
-   end
-   if alone then
-      fromstr = "%f[^%c%z%s%p]"..fromstr.."%f[%c%z%s%p]"
-   end
-   if nocase or alone then
-      ColourNote("yellow", "", "You specified"..(nocase and " #nocase" or "")..(alone and " #alone" or "")..", so converting your #sub patterns...")
-      ColourNote("yellow", "", "")
-      ColourNote("yellow", "", "\""..wildcards[1].."\"")
-      ColourNote("yellow", "", "becomes")
-      ColourNote("yellow", "", "\""..fromstr.."\"")
-   end
+   match_str = update_pattern(match_str, is_regex, alone)
 
-   local found = find_in(subs, wildcards[1], nocase, alone, use_function)
+   local found = find_in(rex_subs, wildcards[1], nocase, alone, use_function)
    if found then remsub(nil, nil, {found}) end
 
-   if apply_pattern_as_trigger(wildcards[1], nocase, alone) then
-      table.insert(subs,
-      {
-         fromstr=fromstr,
+   if apply_pattern_as_trigger(match_str, nocase) then
+      table.insert(rex_subs, {
+         match_str=match_str,
          tostr=tostr,
          original=wildcards[1],
          nocase=nocase,
          alone=alone,
+         is_regex=is_regex,
          use_function=use_function
       })
-
-      AnsiNote(ColoursToANSI("@YCreated sub "..#subs..": "..format_sub(subs[#subs])))
+      make_rex(sub_rexes, match_str, nocase)
+      AnsiNote(ColoursToANSI("@YCreated sub "..#rex_subs..": "..format_sub(rex_subs[#rex_subs])))
    end
 
    SaveState()
@@ -426,49 +476,35 @@ end
 
 function addgag(name, line, wildcards)
 
-   local gagstr = wildcards[1]
+   local match_str = wildcards[1]
    local nocase = wildcards[3] ~= ""
    local alone = wildcards[4] ~= ""
+   local is_regex = wildcards[5] ~= ""
 
-   local use_function = wildcards[5] ~= "" and wildcards[5] or nil
+   local use_function = wildcards[6] ~= "" and wildcards[6] or nil
 
    if use_function then
-      local s,e = use_function:find("%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x:%S*")
-      if s ~= 1 or e ~= #use_function then
-         AnsiNote(ColoursToANSI("\n@YYou specified @W#function@Y, but pattern '@W"..use_function.."@Y' does not meet the format requirements."..
-            "\nPlease use {@W24_hexadecimal_digit_plugin_id:plugin_function_name@Y} as indicated in @W#sub help@Y."))
-         return
+      if bad_function(use_function) then 
+         return 
       end
    end
 
-   if nocase then
-      gagstr = string.gsub(gagstr, '(%a)', function (v) return '['..string.upper(v)..string.lower(v)..']' end)
-   end
-   if alone then
-      gagstr = "%f[^%c%z%s%p]"..gagstr.."%f[%c%z%s%p]"
-   end
+   match_str = update_pattern(match_str, is_regex, alone)
 
-   if alone or nocase then
-      ColourNote("yellow", "", "You specified"..(nocase and " #nocase" or "")..(alone and " #alone" or "")..", so converting your #gag pattern...")
-      ColourNote("yellow", "", "")
-      ColourNote("yellow", "", "\""..wildcards[1].."\"")
-      ColourNote("yellow", "", "becomes")
-      ColourNote("yellow", "", "\""..gagstr.."\"")
-   end
-
-   local found = find_in(gags, wildcards[1], nocase, alone, use_function)
+   local found = find_in(rex_gags, wildcards[1], nocase, alone, use_function)
    if found then remgag(nil, nil, {found}) end
 
-   if apply_pattern_as_trigger(wildcards[1], nocase, alone) then
-      table.insert(gags, {
-         gagstr=gagstr,
+   if apply_pattern_as_trigger(match_str, nocase) then
+      table.insert(rex_gags, {
+         match_str=match_str,
          original=wildcards[1],
          nocase=nocase,
          alone=alone,
+         is_regex=is_regex,
          use_function=use_function
-         })
-
-      AnsiNote(ColoursToANSI("@YCreated gag "..#gags..": "..format_gag(gags[#gags])))
+      })
+      make_rex(gag_rexes, match_str, nocase)
+      AnsiNote(ColoursToANSI("@YCreated gag "..#rex_gags..": "..format_gag(rex_gags[#rex_gags])))
    end
 
    SaveState()
@@ -476,23 +512,8 @@ end
 
 
 function OnPluginSaveState()
-   SetVariable("subs", serialize.save("subs"))
-   SetVariable("gags", serialize.save("gags"))
-end
-
-
-prev_text = ""
-EOL = "\n"
-
-
-function OnPluginDisconnect()
-   OnPluginConnect()
-end
-
-
-function OnPluginConnect()
-   dosubs = false
-   prev_text = ""
+   SetVariable("rex_subs", serialize.save("rex_subs"))
+   SetVariable("rex_gags", serialize.save("rex_gags"))
 end
 
 
@@ -535,8 +556,9 @@ end
 function do_gags_against_coded_colors_table(msg_t)
    for i = 1,#msg_t,2 do
       local color_bit = msg_t[i]
-      for _,v in ipairs(gags) do
-         if color_bit:find(v.gagstr) then
+      for _,v in ipairs(rex_gags) do
+         s, e, _ = gag_rexes[v.match_str]:exec(color_bit)
+         if s ~= nil then
             if not v.use_function then
                return true
             else
@@ -552,10 +574,10 @@ end
 function do_subs_against_coded_colors_table(msg_t)
    for i = 1,#msg_t,2 do
       local color_bit = msg_t[i]
-      for _,v in ipairs(subs) do
+      for _,v in ipairs(rex_subs) do
          local prev_color = msg_t[i-1] or "@x007"
          local replacement = v.use_function and proxy_sub(v.tostr, prev_color) or v.tostr:gsub("%$C", prev_color)
-         local ok,ret = pcall(string.gsub, color_bit, v.fromstr, replacement)
+         local ok,ret = pcall(rex.gsub, color_bit, sub_rexes[v.match_str], replacement)
          if not ok then
             AnsiNote(ColoursToANSI("@YError in sub ["..format_sub(v).."]: "..ret))
          else
@@ -588,10 +610,8 @@ end
 -- returns nil if gagged, otherwise returns the modified message
 -- input: string with Aardwolf color codes
 function filter_string(msg)
-   cur_line = msg
-
    -- Matching #alone patterns at color and line boundaries is easier if
-   -- we canonicalize the color codes first.
+   -- we split at the color codes first.
    local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
 
    local gagged = do_gags_against_coded_colors_table(msg_t)
