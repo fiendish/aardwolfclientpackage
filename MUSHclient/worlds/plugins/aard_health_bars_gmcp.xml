@@ -313,8 +313,8 @@ function DisplayStatsPage()
                WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, dark_bar_colour, 0, 2, bar_colour, 0)
 
                -- add ticks at alignment change boundaries
-               local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width);
-               local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width);
+               local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width)
+               local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width)
                WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
                WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
             else
