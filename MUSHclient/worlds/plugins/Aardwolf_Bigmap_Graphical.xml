@@ -806,7 +806,7 @@ function OnPluginEnable ()
    if (mapwin == GetPluginID().."_mapper") then
       WindowShow (mapwin, show_map == 1)
    else
-      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", ((show_map == 1) and "true") or "false");
+      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", ((show_map == 1) and "true") or "false")
    end
    if IsConnected() then
       Send_GMCP_Packet("request room")
@@ -819,7 +819,7 @@ function OnPluginDisable ()
    if (mapwin == GetPluginID().."_mapper") then
       WindowShow (mapwin, false)
    else
-      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false");
+      CallPlugin("b6eae87ccedd84f510b74714", "override_continents", "false")
    end
    if IsConnected() then
       TelnetOptionOff(TELOPT_BIGMAP)
