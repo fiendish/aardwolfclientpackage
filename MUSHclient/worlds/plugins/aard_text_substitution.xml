@@ -128,6 +128,25 @@ Type "#sub help" or make a syntax mistake for usage details.
 
 </aliases>
 
+<triggers>
+<trigger
+   enabled="n"
+   name="prevent_double_blanks"
+   match="^$"
+   regexp="y"
+   sequence="100"
+   omit_from_output="y"
+   send_to="14"
+>
+<send>
+   EnableTrigger("prevent_double_blanks", false)
+   lastline = Trim(GetLineInfo(GetLinesInBufferCount()-1, 1))
+   if lastline ~= "" then
+      Simulate("\\r\\n")
+   end
+</send>
+</trigger>
+</triggers>
 <script>
 <![CDATA[
 -- fix stupid syntax highlighting in SublimeText --> '
@@ -670,6 +689,8 @@ function filter_trigger(name, line, wildcards, styles)
       EnableTriggerGroup("all", false)
       Simulate(ColoursToANSI(new_line).."\r\n")
       EnableTriggerGroup("all", true)
+   else -- gagged
+      EnableTrigger("prevent_double_blanks", true)
    end
 end
 

@@ -194,7 +194,7 @@ EnableTriggerGroup("end_gag", false)
 
 <trigger
 enabled="n"
-match=".+"
+match="."
 regexp="y"
 name="end_gag_keep"
 group="end_gag"
