@@ -698,6 +698,8 @@ end
 -- returns nil if gagged, otherwise returns the modified message
 -- input: string with Aardwolf color codes
 function filter_string(msg)
+   cur_line = msg
+
    -- Matching #alone patterns at color and line boundaries is easier if
    -- we split at the color codes first.
    local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
