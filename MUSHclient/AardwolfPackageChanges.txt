@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2074 snapshot
+- misc change: The sub/gag plugin now uses regular expressions but defaults to plain text with a new #regex flag. It should automatically convert your existing patterns. If anything stops working, contact Fiendish.
+
 r2073 snapshot
 - bug fix: Copying text from the communication log was skipping some characters at line breaks. Should be fixed now.
 
