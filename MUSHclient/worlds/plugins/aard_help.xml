@@ -54,7 +54,8 @@ name_to_id = {
    ["mapper"] = "b6eae87ccedd84f510b74714",
    ["echo"] = "55616ea13339bc68e963e1f8",
    ["updater"] = "162bba4a5ecef2bb32b5652f",
-   ["lockout"] = "b14162092957e88ec16d99e7"
+   ["lockout"] = "b14162092957e88ec16d99e7",
+   ["subgag"] = "48f867c18f6ff1d6d3b52918"
 }
 
 split_col = 30
@@ -99,6 +100,9 @@ function aard_help()
    end
    if is_active("soundpack") then
       help("sphelp", "Pwar's soundpack plugin help")
+   end
+   if is_active("subgag") then
+      help("#sub help", "Text gag/substitute plugin help")
    end
 
    ColourNote("royalblue", "", line)
