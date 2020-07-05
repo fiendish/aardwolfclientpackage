@@ -167,10 +167,10 @@ function check_display()
    else
       local text_rectangle_lines = text_rectangle_height / font_height
       desired_lines = math.max(
-         10,
+         5,
          math.min(
             base_desired_lines + new_desired_lines,
-            text_rectangle_lines - 10
+            text_rectangle_lines - 5
          )
       )
       if text_rectangle_lines > (desired_lines+2) then
