@@ -407,19 +407,24 @@ end -- strip_colours
 
 
 -- Convert Aardwolf and short x codes to 3 digit x codes
-function canonicalize_colours (s)
+function canonicalize_colours (s, keep_original)
    if s:find(CODE_PREFIX, nil, true) then
       s = s:gsub(X_DIGITS_CAPTURE_PATTERN, function(a)
          local b = tonumber(a)
          if b and b <= 255 and b >= 0 then
+            if keep_original and b <= 15 then
+               return first_15_to_code[b]
+            end
             return string.format(X3DIGIT_FORMAT, b)
          else
             return ""
          end
       end)
-      s = s:gsub(NONX_CODES_CAPTURE_PATTERN, function(a)
-         return code_to_xterm[a]
-      end)
+      if not keep_original then
+         s = s:gsub(NONX_CODES_CAPTURE_PATTERN, function(a)
+            return code_to_xterm[a]
+         end)
+      end
    end
    return s
 end
