@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2078 snapshot
+- bug fix: Fix the error doing arithmetic on end_copying_pos when copying past the end of available comm log text. I rewrote all of the selection and copying code. Bug fix or bug add? We'll find out!
+- misc change: The minimum output scrollback split size when is reduced from 10 lines to 5.
+- new feature: A 'mapper fullcexit' command has been added to the GMCP mapper.
+- new feature: An entry for the sub/gag plugin has been added to 'aard help'.
+
 r2074 snapshot
 - misc change: The sub/gag plugin now uses regular expressions but defaults to plain text with a new #regex flag. It should automatically convert your existing patterns. If anything stops working, contact Fiendish.
 
