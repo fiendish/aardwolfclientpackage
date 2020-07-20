@@ -10,32 +10,10 @@ environment:
   auth_token:
     secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
 install:
-- cmd: '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86'
-- cmd: git clone -b v2.1 --single-branch --depth=1 https://github.com/fiendish/LuaJIT.git C:\luajit
-- cmd: git clone --recurse --depth=1 https://github.com/fiendish/lua-openssl.git c:\lua-openssl
-- cmd: git clone https://github.com/fiendish/lua-llthreads2.git C:\llthreads2
-- ps: pushd c:\luajit\src
-- ps: (Get-Content msvcbuild.bat) | ForEach-Object { $_ -replace " /MD " , " /MT " } | Set-Content msvcbuild.bat
-- cmd: ./msvcbuild.bat
-- cmd: copy luajit.exe C:\
-- cmd: copy lua51.* C:\
-- ps: popd
-- ps: pushd c:\lua-openssl
-- ps: (Get-Content Makefile.win) | ForEach-Object { $_ -replace '"' , '' } | Set-Content Makefile.win
-- ps: (Get-Content config.win) | ForEach-Object { $_ -replace '"' , '' } | Set-Content config.win
-- ps: (Get-Content config.win) | ForEach-Object { $_ -replace " /MD " , " /MT " } | Set-Content config.win
-- ps: (Get-Content config.win) | ForEach-Object { $_ -replace "libeay32" , "VC\static\libeay32MT" } | Set-Content config.win
-- ps: (Get-Content config.win) | ForEach-Object { $_ -replace "ssleay32" , "VC\static\ssleay32MT" } | Set-Content config.win
-- ps: (Get-Content config.win) | ForEach-Object { $_ -replace "LUA_INC=.+" , "LUA_INC=C:\luajit\src" } | Set-Content config.win
-- ps: (Get-Content config.win) | ForEach-Object { $_ -replace "LUA_LIB=.+" , "LUA_LIB=C:\lua51.lib" } | Set-Content config.win
-- cmd: nmake -f Makefile.win
-- cmd: copy src\openssl.dll c:\
-- ps: popd
 - ps: pushd C:\
-- cmd: cl /nologo /MT /O2 -c -Fol52util.obj -Ic:\luajit\src c:\llthreads2\src\l52util.c -DLLTHREAD_MODULE_NAME=llthreads2
-- cmd: cl /nologo /MT /O2 -c -Follthread.obj -Ic:\luajit\src c:\llthreads2\src\llthread.c -DLLTHREAD_MODULE_NAME=llthreads2
-- cmd: link -dll -export:luaopen_llthreads2 -out:llthreads2.dll lua51.lib l52util.obj llthread.obj kernel32.lib
-- ps: popd
+- ps: Start-FileDownload 'https://github.com/fiendish/LuaJIT-build/releases/download/latest/lua51.dll'
+- ps: Start-FileDownload 'https://github.com/fiendish/lua-llthreads2-build/releases/download/latest/llthreads2.dll'
+- ps: Start-FileDownload 'https://github.com/fiendish/lua-openssl-build/releases/download/latest/openssl.dll'
 - ps: pushd C:\projects\aardwolfclientpackage
 - ps: |
       Move-Item C:\*.dll MUSHclient -force
