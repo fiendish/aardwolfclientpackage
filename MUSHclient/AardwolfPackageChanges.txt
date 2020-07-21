@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2079 snapshot
+- new feature: Adds a require stub for aardwolf_colors.lua in the lua folder. Only use it if you understand how require and dofile differ.
+
 r2078 snapshot
 - bug fix: Fix the error doing arithmetic on end_copying_pos when copying past the end of available comm log text. I rewrote all of the selection and copying code. Bug fix or bug add? We'll find out!
 - misc change: The minimum output scrollback split size when is reduced from 10 lines to 5.
