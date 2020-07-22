@@ -6,6 +6,7 @@ r2079 snapshot
 r2078 snapshot
 - bug fix: Fix the error doing arithmetic on end_copying_pos when copying past the end of available comm log text. I rewrote all of the selection and copying code. Bug fix or bug add? We'll find out!
 - misc change: The minimum output scrollback split size when is reduced from 10 lines to 5.
+- new feature: Mapper cexits can be edited through the GUI.
 - new feature: A 'mapper fullcexit' command has been added to the GMCP mapper.
 - new feature: An entry for the sub/gag plugin has been added to 'aard help'.
 
