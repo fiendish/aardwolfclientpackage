@@ -294,9 +294,11 @@ function TextRect:clear()
    self:draw()
 end
 
-function TextRect:debug()
+function TextRect:debug(when)
    require "pairsbykeys"
+   print("ERROR in `"..when.."`: SEND THIS TO FIENDISH")
    for k,v in pairsByKeys(self) do print(k, "--", v) end
+   print()
 end
 
 function TextRect:reWrapLines()
@@ -307,8 +309,7 @@ function TextRect:reWrapLines()
 
    if self.num_wrapped_lines ~= 0 then
       if self.wrapped_lines[start_line] == nil then
-         print("ERROR: SEND THIS TO FIENDISH")
-         self:debug()
+         self:debug("reWrapLines")
       end
       raw_index = start_line - self.wrapped_lines[start_line][4]
    end
@@ -529,121 +530,30 @@ function TextRect:unInit()
 end
 
 function TextRect.mouseDown(flags, hotspot_id)
-   if (flags == miniwin.hotspot_got_lh_mouse) then
-      local tr = TextRect.hotspot_map[hotspot_id]
-      tr.temp_start_copying_x = WindowInfo(tr.window, 14)
-      tr.copy_start_windowline = math.floor((WindowInfo(tr.window, 15) - tr.top) / tr.line_height)
-      tr.temp_start_line = tr.copy_start_windowline + tr.start_line
-      tr.copy_start_line = nil
-      tr.copy_end_line = nil
-      tr.start_copying_x = nil
-      tr.end_copying_x = nil
-      tr.start_copying_pos = nil
-      tr.end_copying_pos = nil
-      tr:draw(false)
-      if tr.call_on_select then
-         tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
-      end
+   if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
+      return  -- ignore non-left mouse button
    end
-end
-
-function TextRect.mouseUp(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
-   tr.keepscrolling = ""
-   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-      tr:rightClickMenu(hotspot_id)
-   else
-      tr:draw()
-   end
-   return true
-end
-
-function TextRect.cancelMouseDown(flags, hotspot_id)
-   local tr = TextRect.hotspot_map[hotspot_id]
-   tr.keepscrolling = ""
-   tr:draw()
-end
-
-function TextRect.updateSelect(tr)
-   tr.copy_start_line = tr.temp_start_line
-   tr.start_copying_x = tr.temp_start_copying_x
-
-   tr.end_copying_y = WindowInfo(tr.window, 18) - WindowInfo(tr.window, 2)
-   tr.copy_end_windowline = math.floor((tr.end_copying_y - tr.top) / tr.line_height)
-   tr.copy_end_line = tr.copy_end_windowline + tr.start_line
-   tr.end_copying_x = math.max(tr.left, math.min(tr.right, WindowInfo(tr.window, 17) - WindowInfo(tr.window, 1)))
-
-   -- the user is selecting backwards, so reverse the start/end orders
-   if tr.copy_end_line < tr.copy_start_line then
-      tr.copy_start_line, tr.copy_end_line = tr.copy_end_line, tr.copy_start_line
-      tr.start_copying_x, tr.end_copying_x = tr.end_copying_x, tr.start_copying_x
-   elseif (tr.copy_end_line == tr.copy_start_line) and (tr.end_copying_x < tr.start_copying_x) then
-      tr.start_copying_x, tr.end_copying_x = tr.end_copying_x, tr.start_copying_x
-   end
-
-   -- get the entire line if we drag off the top/bottom
-   if tr.copy_end_line > tr.num_wrapped_lines then
-      tr.end_copying_x = tr.right
-   end
-   if tr.copy_start_line < 1 then
-      tr.start_copying_x = tr.padded_left
-   end
-
-   tr.copy_start_line = math.max(1, math.min(tr.num_wrapped_lines, tr.copy_start_line))
-   tr.copy_end_line = math.max(1, math.min(tr.num_wrapped_lines, tr.copy_end_line)) 
-
-   for copy_line = tr.copy_start_line, tr.copy_end_line do
-      -- Clamp to character boundaries instead of selecting arbitrary pixel positions...
-      local nline = 0
-      local line_no_colors = nil
-
-      -- Clamp the selection start position
-      if copy_line == tr.copy_start_line then
-         line_no_colors = strip_colours_from_styles(tr.wrapped_lines[copy_line][1])
-         nline = #line_no_colors
-         local marker = nil
-         local best_marker = tr.padded_left
-         for cur=0,nline do
-            marker = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, cur)) + tr.padded_left
-            if marker <= tr.start_copying_x then
-               best_marker = marker
-               tr.start_copying_pos = cur
-            else
-               break
-            end
-         end
-         tr.start_copying_x = best_marker
-      end
-
-      -- Clamp the selection end position
-      if copy_line == tr.copy_end_line then
-         if line_no_colors == nil then
-            line_no_colors = strip_colours_from_styles(tr.wrapped_lines[copy_line][1])
-            nline = #line_no_colors
-         end
-         local marker = nil
-         local best_marker = tr.padded_left
-         for cur=1,nline do
-            marker = WindowTextWidth(tr.window, tr.font, string.sub(line_no_colors, 1, cur)) + tr.padded_left
-            if marker <= tr.end_copying_x then
-               best_marker = marker
-               tr.end_copying_pos = cur
-            else
-               break
-            end
-         end
-         tr.end_copying_x = best_marker
-      end
-   end
-
+   tr.temp_start_copying_x = WindowInfo(tr.window, 14)
+   tr.copy_start_windowline = math.floor((WindowInfo(tr.window, 15) - tr.top) / tr.line_height)
+   tr.temp_start_line = tr.copy_start_windowline + tr.start_line
+   tr.copy_start_line = nil
+   tr.copy_end_line = nil
+   tr.start_copying_x = nil
+   tr.end_copying_x = nil
+   tr.start_copying_pos = nil
+   tr.end_copying_pos = nil
    tr:draw(false)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
    end
 end
 
+
 function TextRect.dragMove(flags, hotspot_id)
-   if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then return end -- only on left mouse button
+   if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
+      return  -- ignore non-left mouse button
+   end
    local tr = TextRect.hotspot_map[hotspot_id]
 
    if tr.num_wrapped_lines == 0 then
@@ -676,6 +586,101 @@ function TextRect.dragRelease(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
+   end
+end
+
+function TextRect.mouseUp(flags, hotspot_id)
+   local tr = TextRect.hotspot_map[hotspot_id]
+   tr.keepscrolling = ""
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      tr:rightClickMenu(hotspot_id)
+   else
+      tr:draw()
+   end
+   return true
+end
+
+function TextRect.cancelMouseDown(flags, hotspot_id)
+   local tr = TextRect.hotspot_map[hotspot_id]
+   tr.keepscrolling = ""
+   tr:draw()
+end
+
+function TextRect:updateSelect()
+   self.copy_start_line = self.temp_start_line
+   self.start_copying_x = self.temp_start_copying_x
+
+   self.end_copying_y = WindowInfo(self.window, 18) - WindowInfo(self.window, 2)
+   self.copy_end_windowline = math.floor((self.end_copying_y - self.top) / self.line_height)
+   self.copy_end_line = self.copy_end_windowline + self.start_line
+   self.end_copying_x = math.max(self.left, math.min(self.right, WindowInfo(self.window, 17) - WindowInfo(self.window, 1)))
+
+   -- the user is selecting backwards, so reverse the start/end orders
+   if self.copy_end_line < self.copy_start_line then
+      self.copy_start_line, self.copy_end_line = self.copy_end_line, self.copy_start_line
+      self.start_copying_x, self.end_copying_x = self.end_copying_x, self.start_copying_x
+   elseif (self.copy_end_line == self.copy_start_line) and (self.end_copying_x < self.start_copying_x) then
+      self.start_copying_x, self.end_copying_x = self.end_copying_x, self.start_copying_x
+   end
+
+   -- get the entire line if we drag off the top/bottom
+   if self.copy_end_line > self.num_wrapped_lines then
+      self.end_copying_x = self.right
+   end
+   if self.copy_start_line < 1 then
+      self.start_copying_x = self.padded_left
+   end
+
+   self.copy_start_line = math.max(1, math.min(self.num_wrapped_lines, self.copy_start_line))
+   self.copy_end_line = math.max(1, math.min(self.num_wrapped_lines, self.copy_end_line)) 
+
+   for copy_line = self.copy_start_line, self.copy_end_line do
+      -- Clamp to character boundaries instead of selecting arbitrary pixel positions...
+      local nline = 0
+      local line_no_colors = nil
+
+      -- Clamp the selection start position
+      if copy_line == self.copy_start_line then
+         line_no_colors = strip_colours_from_styles(self.wrapped_lines[copy_line][1])
+         nline = #line_no_colors
+         local marker = nil
+         local best_marker = self.padded_left
+         for cur=0,nline do
+            marker = WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, cur)) + self.padded_left
+            if marker <= self.start_copying_x then
+               best_marker = marker
+               self.start_copying_pos = cur
+            else
+               break
+            end
+         end
+         self.start_copying_x = best_marker
+      end
+
+      -- Clamp the selection end position
+      if copy_line == self.copy_end_line then
+         if line_no_colors == nil then
+            line_no_colors = strip_colours_from_styles(self.wrapped_lines[copy_line][1])
+            nline = #line_no_colors
+         end
+         local marker = nil
+         local best_marker = self.padded_left
+         for cur=1,nline do
+            marker = WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, cur)) + self.padded_left
+            if marker <= self.end_copying_x then
+               best_marker = marker
+               self.end_copying_pos = cur
+            else
+               break
+            end
+         end
+         self.end_copying_x = best_marker
+      end
+   end
+
+   self:draw(false)
+   if self.call_on_select then
+      self.call_on_select(self.copy_start_line, self.copy_end_line, self.start_copying_pos, self.end_copying_pos, self.start_copying_x, self.end_copying_x)
    end
 end
 
