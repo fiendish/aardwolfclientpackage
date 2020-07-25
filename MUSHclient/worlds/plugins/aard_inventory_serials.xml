@@ -386,7 +386,7 @@ function hint_message()
    if show_hint then
       ColourNote("", "", "This message will show ","red","",tostring(3-times_hinted),"",""," more time"..(times_hinted<2 and "s." or "."))
    else
-      Note("This message will not show any more.")
+      Note("This message will not show anymore.")
    end
 end
 
