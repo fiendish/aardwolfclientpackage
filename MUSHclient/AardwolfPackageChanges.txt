@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2080 snapshot
+- bug fix: The text_rect module used by the communication log and splitscreen scrollback plugins checked for left-button mouse clicks incorrectly, leading to errors when highlighting text after a double-click.
+
 r2079 snapshot
 - new feature: Adds a require stub for aardwolf_colors.lua in the lua folder. Only use it if you understand how require and dofile differ.
 
