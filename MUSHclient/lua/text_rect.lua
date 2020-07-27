@@ -69,10 +69,13 @@ end
 function TextRect:loadFont(name, size)
    if (not self.font) or (name ~= self.font_name) or (size ~= self.font_size) then
       self.font = self.id.."_font"
+      self.font_bold = self.id.."_font_bold"
       self.font_name = name
       self.font_size = size
 
       WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
+      WindowFont(self.window, self.font_bold, self.font_name, self.font_size, true, false, false, false, 0)
+
       self.line_height = WindowFontInfo(self.window, self.font, 1)
       self.rect_lines = math.floor(self.padded_height / self.line_height)
    end
@@ -162,7 +165,11 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          foundbreak = true
       end
 
-      local whole_width = WindowTextWidth(self.window, self.font, style.text)
+      local font = self.font
+      if style.bold then
+         font = self.font_bold
+      end
+      local whole_width = WindowTextWidth(self.window, font, style.text)
       local t_width = whole_width
 
       -- if it fits, copy whole style in
@@ -182,7 +189,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          local fit_col = nil
          while col < style.length do
             if sub(style.text, col, col) == " " then
-               t_width = WindowTextWidth(self.window, self.font, sub(style.text, 1, col-1))
+               t_width = WindowTextWidth(self.window, font, sub(style.text, 1, col-1))
                if t_width > available then
                   break
                else
@@ -195,7 +202,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
             if available == self.padded_width then -- starts at the beginning of the line
                -- step backward from the last measured col
                while col > 1 do
-                  t_width = WindowTextWidth(self.window, self.font, sub(style.text, 1, col))
+                  t_width = WindowTextWidth(self.window, font, sub(style.text, 1, col))
                   if t_width <= available then
                      fit_col = col
                      break
@@ -259,7 +266,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
             urls[i].stop = urls[i].stop - length
             if urls[i].start <= 1 then
                urls[i].start = 1
-               urls[i].stop = urls[i].stop+1
+               urls[i].stop = urls[i].stop
             end
          end
 
@@ -336,14 +343,19 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
       WindowRectOp(self.window, 2, backfill_start, top, backfill_end-1, top + self.line_height, self.highlight_color)
    end -- backfill
    if styles then
-      utf8 = GetOption("utf_8")
+      local utf8 = (GetOption("utf_8") == 1)
+      local show_bold = (GetOption("show_bold")== 1)
       for _, v in ipairs(styles) do
          local t = v.text
+         local font = self.font
+         if show_bold and v.bold then
+            font = self.font_bold
+         end
          -- now clean up dangling newlines that cause block characters to show
          if string.sub(v.text, -1) == "\n" then
             t = string.sub(v.text, 1, -2)
          end
-         left = left + WindowText(self.window, self.font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour, utf8 and utils.utf8valid(t))
+         left = left + WindowText(self.window, font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour, utf8 and utils.utf8valid(t))
       end
    end
 end
@@ -359,27 +371,55 @@ function TextRect:draw(cleanup_first, inside_callback)
    WindowRectOp(self.window, 2, self.left, self.top, self.right, self.bottom+1, self.background_color) -- clear
    local ax = nil
    local zx = nil
-   local line_no_colors = ""
+   local line_styles = {}
    local count = 0
    self.display_start_line, self.display_end_line = self:snapToBottom()
    if self.num_wrapped_lines >= 1 then
+      local show_bold = (GetOption("show_bold")== 1)
       for count = self.display_start_line, self.display_end_line do
          ax = nil
          zx = nil
-         line_no_colors = strip_colours_from_styles(self.wrapped_lines[count][1])
-
+         line_styles = self.wrapped_lines[count][1]
          if self.keepscrolling == "" then
             -- create clickable links for urls
-            for i,v in ipairs(self.wrapped_lines[count][3]) do
-               local left = self.padded_left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, v.start-1))
-               local right = left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, v.start-1, v.stop-1))
+            for _,url_part in ipairs(self.wrapped_lines[count][3]) do
+               -- bold widths in urls. replacement for: local left = self.padded_left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, url_part.start-1))
+               local left = self.padded_left
+               local left_chars = 0
+               for _,v in ipairs(line_styles) do
+                  local font = self.font
+                  if show_bold and v.bold then
+                     font = self.font_bold
+                  end
+                  if left_chars + v.length > url_part.start then
+                     left = left + WindowTextWidth(self.window, font, string.sub(v.text, 1, url_part.start-left_chars-1))
+                     break
+                  end
+                  left = left + WindowTextWidth(self.window, font, v.text)
+                  left_chars = left_chars + v.length
+               end
+               -- bold widths in urls. replacement for: local right = left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, url_part.start-1, url_part.stop-1))
+               local right = self.padded_left
+               local right_chars = 0
+               for _,v in ipairs(line_styles) do
+                  local font = self.font
+                  if show_bold and v.bold then
+                     font = self.font_bold
+                  end
+                  if right_chars + v.length > url_part.stop then
+                     right = right + WindowTextWidth(self.window, font, string.sub(v.text, 1, url_part.stop-right_chars))
+                     break
+                  end
+                  right = right + WindowTextWidth(self.window, font, v.text)
+                  right_chars = right_chars + v.length
+               end
                local top = self.padded_top + ((count - self.display_start_line) * self.line_height)-1
                local bottom = top + self.line_height
-               local link_id = self:generateHotspotID(table.concat({v.text, " ", count, " ", v.start, " ", v.stop}))
+               local link_id = self:generateHotspotID(table.concat({url_part.text, " ", count, " ", url_part.start, " ", url_part.stop}))
 
                if not WindowHotspotInfo(self.window, link_id, 1) then
-                  self.hyperlinks[link_id] = v.text
-                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.clickUrl", "", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..v.text, 1)
+                  self.hyperlinks[link_id] = url_part.text
+                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.clickUrl", "", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..url_part.text, 1)
                   if self.scrollable then
                      WindowScrollwheelHandler(self.window, link_id, "TextRect.wheelMove")
                   elseif self.external_scroll_handler then
@@ -389,12 +429,21 @@ function TextRect:draw(cleanup_first, inside_callback)
             end
          end
 
+         local line_length = self.padded_left
+         for _,v in ipairs(line_styles) do
+            local font = self.font
+            if show_bold and v.bold then
+               font = self.font_bold
+            end
+            line_length = line_length + WindowTextWidth(self.window, font, v.text)
+         end
+
          -- create highlighting parameters when text is selected
          if self.copy_start_line ~= nil and self.copy_end_line ~= nil and count >= self.copy_start_line and count <= self.copy_end_line then
             ax = (
                (count == self.copy_start_line)
                and self.start_copying_x
-               and math.min(self.start_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)
+               and math.min(self.start_copying_x, line_length)
                or self.padded_left
             )
             -- end of highlight for this line
@@ -403,8 +452,8 @@ function TextRect:draw(cleanup_first, inside_callback)
                (
                   (count == self.copy_end_line)
                   and self.end_copying_x
-                  and math.min(self.end_copying_x, WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)
-                  or (WindowTextWidth(self.window, self.font, line_no_colors) + self.padded_left)
+                  and math.min(self.end_copying_x, line_length)
+                  or line_length
                )
             )
          end
@@ -634,47 +683,50 @@ function TextRect:updateSelect()
    self.copy_start_line = math.max(1, math.min(self.num_wrapped_lines, self.copy_start_line))
    self.copy_end_line = math.max(1, math.min(self.num_wrapped_lines, self.copy_end_line)) 
 
+   local show_bold = (GetOption("show_bold")== 1)
+
    for copy_line = self.copy_start_line, self.copy_end_line do
       -- Clamp to character boundaries instead of selecting arbitrary pixel positions...
-      local nline = 0
-      local line_no_colors = nil
+      local line_styles = self.wrapped_lines[copy_line][1]
 
       -- Clamp the selection start position
       if copy_line == self.copy_start_line then
-         line_no_colors = strip_colours_from_styles(self.wrapped_lines[copy_line][1])
-         nline = #line_no_colors
-         local marker = nil
-         local best_marker = self.padded_left
-         for cur=0,nline do
-            marker = WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, cur)) + self.padded_left
-            if marker <= self.start_copying_x then
-               best_marker = marker
-               self.start_copying_pos = cur
-            else
-               break
+         local last_marker = self.padded_left
+         for _,v in ipairs(line_styles) do
+            local marker = self.padded_left
+            local font = self.font
+            if show_bold and v.bold then
+               font = self.font_bold
             end
+            for cur=v.length,0,-1 do
+               marker = last_marker + WindowTextWidth(self.window, font, string.sub(v.text, 1, cur))
+               if marker <= self.start_copying_x then
+                  break
+               end
+            end
+            last_marker = marker
          end
-         self.start_copying_x = best_marker
+         self.start_copying_x = last_marker
       end
 
       -- Clamp the selection end position
       if copy_line == self.copy_end_line then
-         if line_no_colors == nil then
-            line_no_colors = strip_colours_from_styles(self.wrapped_lines[copy_line][1])
-            nline = #line_no_colors
-         end
-         local marker = nil
-         local best_marker = self.padded_left
-         for cur=1,nline do
-            marker = WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, cur)) + self.padded_left
-            if marker <= self.end_copying_x then
-               best_marker = marker
-               self.end_copying_pos = cur
-            else
-               break
+         local last_marker = self.padded_left
+         for _,v in ipairs(line_styles) do
+            local marker = self.padded_left
+            local font = self.font
+            if show_bold and v.bold then
+               font = self.font_bold
             end
+            for cur=v.length,0,-1 do
+               marker = last_marker + WindowTextWidth(self.window, font, string.sub(v.text, 1, cur))
+               if marker <= self.end_copying_x then
+                  break
+               end
+            end
+            last_marker = marker
          end
-         self.end_copying_x = best_marker
+         self.end_copying_x = last_marker
       end
    end
 
