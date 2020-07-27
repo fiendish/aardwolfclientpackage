@@ -53,13 +53,6 @@ function pageDown()
    SetScroll(math.min(max_scroll_position, GetInfo(296) + move_amount()), GetInfo(120))
 end
 
-function LoadTitleFont()
-   title_font = GetAlphaOption("output_font_name")
-   title_font_size = GetOption("output_font_height")
-   WindowFont(win, "title", GetAlphaOption("output_font_name"), GetOption("output_font_height"), false, false, false)
-   title_height = 6
-end
-
 function OnPluginEnable()
    original_unpause_on_send = GetOption("unpause_on_send")
    original_auto_pause = GetOption("auto_pause")
@@ -69,7 +62,7 @@ function OnPluginEnable()
    WindowAddHotspot(win, 'bar', 0, 0, 0, 0, "", "", "BarDown", "", "", "", miniwin.cursor_ns_arrow, 0)
    WindowDragHandler(win, 'bar', "BarDrag", "BarDragRelease")
    WindowScrollwheelHandler(win, 'bar', 'ScrollMain')
-   LoadTitleFont()
+   title_height = 6
    WindowShow(win, false)
    check_display()
    
@@ -190,9 +183,6 @@ function check_display()
          local width = right - left
          local output_font = GetAlphaOption("output_font_name")
          local output_font_size = GetOption("output_font_height")
-         if (output_font ~= title_font) or (output_font_size ~= title_font_size) then
-            LoadTitleFont()
-         end
          local height = (font_height * desired_lines) + border_offset + (2*border_width) + text_offset + title_height
          local top = bottom - height
          if (
