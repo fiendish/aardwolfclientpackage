@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2081 snapshot
+- new feature: The text_rect module used by the communication log and splitscreen scrollback plugins now supports bold text. If you have the "show bold" output setting enabled, bold colors use the bold font variant in MUSHclient. This will now be reflected in those plugins as well. Plugins aren't notified when output settings changes occur, so if you change this you may have to click in those miniwindows to force them to update.
+
 r2080 snapshot
 - bug fix: The text_rect module used by the communication log and splitscreen scrollback plugins checked for left-button mouse clicks incorrectly, leading to errors when highlighting text after a double-click.
 
