@@ -14,9 +14,10 @@
    >
 <description trim="y">
 <![CDATA[
-Type 'hp' or 'hit' to print your hitpoint percentage.
-Type 'mv' or 'moves' to print your moves percentage.
-Type 'mn' or 'mana' to print your mana percentage.
+None of the following commands are case sensitive.
+Type 'HP' or 'hit' to print your hitpoint percentage.
+Type 'MV' or 'moves' to print your moves percentage.
+Type 'MN' or 'mana' to print your mana percentage.
 Type 'vitals' to print all three.
 Adding a target after, like 'hp fiendish', will print theirs if you are grouped.
 Adding 'below' and a number after, like 'hp below 40', will print you or anyone in your group below that percent.
@@ -83,12 +84,13 @@ group_vitals = {["hitpoints"] = "hp", ["mana"] = "mn", ["moves"] = "mv"}
 function help()
    Note()
    ColourNote("plum", "", "Aardwolf Vital Shortcuts help")
-   ColourNote("paleturquoise", "", "Type '", "khaki", "", "hp", "paleturquoise", "", "' or '", "khaki", "", "hit", "paleturquoise", "", "' to print your hitpoint percentage.")
-   ColourNote("paleturquoise", "", "Type '", "khaki", "", "mv", "paleturquoise", "", "' or '", "khaki", "", "moves", "paleturquoise", "", "' to print your moves percentage.")
-   ColourNote("paleturquoise", "", "Type '", "khaki", "", "mn", "paleturquoise", "", "' or '", "khaki", "", "mana", "paleturquoise", "", "' to print your mana percentage.")
+   ColourNote("paleturquoise", "", "None of the following commands are case sensitive.")
+   ColourNote("paleturquoise", "", "Type '", "khaki", "", "HP", "paleturquoise", "", "' or '", "khaki", "", "hit", "paleturquoise", "", "' to print your hitpoint percentage.")
+   ColourNote("paleturquoise", "", "Type '", "khaki", "", "MV", "paleturquoise", "", "' or '", "khaki", "", "moves", "paleturquoise", "", "' to print your moves percentage.")
+   ColourNote("paleturquoise", "", "Type '", "khaki", "", "MN", "paleturquoise", "", "' or '", "khaki", "", "mana", "paleturquoise", "", "' to print your mana percentage.")
    ColourNote("paleturquoise", "", "Type '", "khaki", "", "vitals", "paleturquoise", "", "' to print all three.")
-   ColourNote("paleturquoise", "", "Adding a target after, like '", "khaki", "", "hp fiendish", "paleturquoise", "", "', will print theirs if you are grouped.")
-   ColourNote("paleturquoise", "", "Adding 'below' and a number after, like '", "khaki", "", "hp below 40", "paleturquoise", "", "', will print you or anyone in your group below that percent.")
+   ColourNote("paleturquoise", "", "Adding a target after, like '", "khaki", "", "HP fiendish", "paleturquoise", "", "', will print theirs if you are grouped.")
+   ColourNote("paleturquoise", "", "Adding 'below' and a number after, like '", "khaki", "", "HP below 40", "paleturquoise", "", "', will print you or anyone in your group below that percent.")
    Note()
 end
 
