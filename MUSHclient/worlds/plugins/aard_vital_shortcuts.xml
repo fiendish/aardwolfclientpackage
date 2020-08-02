@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Aardwolf_Vital_Shortcuts"
+   author="Fiendish"
+   id="d7b7347aefd339a96abb78b0"
+   language="Lua"
+   purpose="Aliases for showing vitals"
+   save_state="n"
+   date_written="2020-08-01 13:00:00"
+   requires="5.07"
+   version="1.0"
+   >
+<description trim="y">
+<![CDATA[
+Type 'hp' or 'hit' to print your hitpoint percentage.
+Type 'mv' or 'moves' to print your moves percentage.
+Type 'mn' or 'mana' to print your mana percentage.
+Type 'vitals' to print all three.
+Adding a target after, like 'hp fiendish', will print theirs if you are grouped.
+Adding 'below' and a number after, like 'hp below 40', will print you or anyone in your group below that percent.
+Type 'vitals help' to display this message in-game.
+]]>
+</description>
+</plugin>
+<aliases>
+   <alias
+      match="^(?<stat>hp|hit|mn|mana|mv|moves)( (?<player>.*))?$"
+      enabled="y"
+      script="show_stat"
+      regexp="y"
+      ignore_case="y"
+      sequence="100"
+   >
+   </alias>
+   <alias
+      match="^(?<stat>hp|hit|mn|mana|mv|moves) below (?<percent>\d+)"
+      enabled="y"
+      script="show_stat_below"
+      regexp="y"
+      ignore_case="y"
+      sequence="100"
+   >
+   </alias>
+   <alias
+      match="^vitals( (?<player>.*))?$"
+      enabled="y"
+      script="show_all"
+      regexp="y"
+      ignore_case="y"
+      sequence="100"
+   >
+   </alias>
+   <alias
+      match="^vitals below (?<percent>\d+)"
+      enabled="y"
+      script="show_all_below"
+      regexp="y"
+      ignore_case="y"
+      sequence="100"
+   >
+   </alias>
+   <alias
+      match="vitals help"
+      enabled="y"
+      script="help"
+      ignore_case="y"
+      sequence="1"
+   >
+   </alias>
+</aliases>
+<script>
+<![CDATA[
+require "gmcphelper"
+
+-- Allow alternate inputs
+stat_labels = {["hp"] = "hitpoints", ["hit"] = "hitpoints", ["mn"] = "mana", ["mana"] = "mana", ["mv"] = "moves", ["moves"] = "moves"}
+char_vitals = {["hitpoints"] = "hp", ["mana"] = "mana", ["moves"] = "moves"}
+group_vitals = {["hitpoints"] = "hp", ["mana"] = "mn", ["moves"] = "mv"}
+
+
+function help()
+   Note()
+   ColourNote("plum", "", "Aardwolf Vital Shortcuts help")
+   ColourNote("paleturquoise", "", "Type '", "khaki", "", "hp", "paleturquoise", "", "' or '", "khaki", "", "hit", "paleturquoise", "", "' to print your hitpoint percentage.")
+   ColourNote("paleturquoise", "", "Type '", "khaki", "", "mv", "paleturquoise", "", "' or '", "khaki", "", "moves", "paleturquoise", "", "' to print your moves percentage.")
+   ColourNote("paleturquoise", "", "Type '", "khaki", "", "mn", "paleturquoise", "", "' or '", "khaki", "", "mana", "paleturquoise", "", "' to print your mana percentage.")
+   ColourNote("paleturquoise", "", "Type '", "khaki", "", "vitals", "paleturquoise", "", "' to print all three.")
+   ColourNote("paleturquoise", "", "Adding a target after, like '", "khaki", "", "hp fiendish", "paleturquoise", "", "', will print theirs if you are grouped.")
+   ColourNote("paleturquoise", "", "Adding 'below' and a number after, like '", "khaki", "", "hp below 40", "paleturquoise", "", "', will print you or anyone in your group below that percent.")
+   Note()
+end
+
+
+function percent_format(current, max)
+   local pct = math.floor(current * 100 / max)
+   local color = "lightgreen"
+   if (pct <= 33) then
+      color = "red"
+   elseif (pct <= 66) then
+      color = "yellow"
+   end
+   return pct, color
+end
+
+
+function my_stats(who, stat)
+   local what
+   if who == "" then
+      what = stat:sub(1,1):upper()..stat:sub(2)
+   else
+      what = who.." "..stat
+   end
+   local current = tonumber(gmcp("char.vitals." .. char_vitals[stat]))
+   local max = tonumber(gmcp("char.maxstats.max" .. char_vitals[stat]))
+   return what, current, max
+end
+
+
+function member_stats(member, stat)
+   local current = member["info"][group_vitals[stat]]
+   local max = member["info"]["m"..group_vitals[stat]]
+   return current, max
+end
+
+
+function their_stats(who, stat)
+   local what = who.." "..stat:lower()
+   local group_members = gmcp("group.members")
+   if group_members == "" then
+      return
+   end
+   member = nil
+   for _,m in ipairs(group_members) do
+      if m["name"]:lower() == who:lower() then
+         member = m
+         break
+      end
+   end
+   if member == nil then
+      return
+   end
+   local current, max = member_stats(member, stat)
+   return what, current, max
+end
+
+
+function show_all(name, line, wildcards)
+   for _,stat in ipairs({"hp", "mn", "mv"}) do
+      wildcards.stat = stat
+      show_stat(name, line, wildcards)
+   end
+end
+
+
+function show_all_below(name, line, wildcards)
+   for _,stat in ipairs({"hp", "mn", "mv"}) do
+      wildcards.stat = stat
+      show_stat_below(name, line, wildcards)
+   end
+end
+
+
+function show_stat(name, line, wildcards)
+   wildcards.player = Trim(wildcards.player)
+   local stat = stat_labels[wildcards.stat:lower()]
+   local what, current, max
+   local who = wildcards.player:sub(1,1):upper()..wildcards.player:sub(2):lower()
+   if (wildcards.player == "") or (who:lower() == gmcp("char.base.name"):lower()) then -- about you
+      what, current, max = my_stats(who, stat)
+      if (current == nil) or (max == nil) then
+         ColourNote("silver", "", "Vital stats not available.")
+         return
+      end
+   else -- about someone else
+      what, current, max = their_stats(who, stat)
+      if (current == nil) or (max == nil) then
+         ColourNote("silver", "", "You don't know vitals for "..who..".")
+         return
+      end
+   end
+   local pct, color = percent_format(current, max)
+   ColourNote("silver", "", what..": ", color, "", pct, "silver", "", "%")
+end
+
+
+function show_stat_below(name, line, wildcards)
+   local stat = stat_labels[wildcards.stat:lower()]
+   local percent = tonumber(wildcards.percent)
+   local group_members = gmcp("group.members")
+   local found = false
+   if group_members == "" then
+      -- not in a group
+      local what, current, max = my_stats("", stat)
+      local pct, color = percent_format(current, max)
+      if pct < percent then
+         found = true
+         ColourNote("silver", "", what..": ", color, "", pct, "silver", "", "%")
+      end
+   else
+      -- in a group
+      for _,m in ipairs(group_members) do
+         local current, max = member_stats(m, stat)
+         local pct, color = percent_format(current, max)
+         if pct < percent then
+            found = true
+            ColourNote("silver", "", m["name"].." "..stat:lower()..": ", color, "", pct, "silver", "", "%")
+         end
+      end
+   end
+   if not found then
+      ColourNote("silver", "", "No one found with "..stat:lower().." below "..percent.."%")
+   end
+end
+
+
+function OnPluginInstall()
+   local name = GetPluginName()
+   ColourNote("silver", "", string.format("Installed plugin %s.", name))
+   ColourNote("silver", "", "Type '", "yellow", "", "vitals help", "silver", "", "' for shortcuts to quickly check vitals.")
+end
+]]>
+</script>
+
+
+</muclient>
