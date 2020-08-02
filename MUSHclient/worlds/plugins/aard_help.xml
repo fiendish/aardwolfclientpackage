@@ -55,7 +55,8 @@ name_to_id = {
    ["echo"] = "55616ea13339bc68e963e1f8",
    ["updater"] = "162bba4a5ecef2bb32b5652f",
    ["lockout"] = "b14162092957e88ec16d99e7",
-   ["subgag"] = "48f867c18f6ff1d6d3b52918"
+   ["subgag"] = "48f867c18f6ff1d6d3b52918",
+   ["vitals"] = "d7b7347aefd339a96abb78b0"
 }
 
 split_col = 30
@@ -103,6 +104,9 @@ function aard_help()
    end
    if is_active("subgag") then
       help("#sub help", "Text gag/substitute plugin help")
+   end
+   if is_active("vitals") then
+      help("vitals help", "Shortcuts for displaying player vitals")
    end
 
    ColourNote("royalblue", "", line)
