@@ -578,6 +578,15 @@ function TextRect:unInit()
    self:_deleteHyperlinks()
 end
 
+function TextRect:reset_copy()
+   self.copy_start_line = nil
+   self.copy_end_line = nil
+   self.start_copying_x = nil
+   self.end_copying_x = nil
+   self.start_copying_pos = nil
+   self.end_copying_pos = nil
+end
+
 function TextRect.mouseDown(flags, hotspot_id)
    if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
       return  -- ignore non-left mouse button
@@ -586,12 +595,7 @@ function TextRect.mouseDown(flags, hotspot_id)
    tr.temp_start_copying_x = WindowInfo(tr.window, 14)
    tr.copy_start_windowline = math.floor((WindowInfo(tr.window, 15) - tr.top) / tr.line_height)
    tr.temp_start_line = tr.copy_start_windowline + tr.start_line
-   tr.copy_start_line = nil
-   tr.copy_end_line = nil
-   tr.start_copying_x = nil
-   tr.end_copying_x = nil
-   tr.start_copying_pos = nil
-   tr.end_copying_pos = nil
+   tr:reset_copy()
    tr:draw(false)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
@@ -692,6 +696,7 @@ function TextRect:updateSelect()
       -- Clamp the selection start position
       if copy_line == self.copy_start_line then
          local last_marker = self.padded_left
+         self.start_copying_pos = 0
          for _,v in ipairs(line_styles) do
             local marker = self.padded_left
             local font = self.font
@@ -701,6 +706,7 @@ function TextRect:updateSelect()
             for cur=v.length,0,-1 do
                marker = last_marker + WindowTextWidth(self.window, font, string.sub(v.text, 1, cur))
                if marker <= self.start_copying_x then
+                  self.start_copying_pos = self.start_copying_pos + cur
                   break
                end
             end
@@ -712,6 +718,7 @@ function TextRect:updateSelect()
       -- Clamp the selection end position
       if copy_line == self.copy_end_line then
          local last_marker = self.padded_left
+         self.end_copying_pos = 0
          for _,v in ipairs(line_styles) do
             local marker = self.padded_left
             local font = self.font
@@ -721,6 +728,7 @@ function TextRect:updateSelect()
             for cur=v.length,0,-1 do
                marker = last_marker + WindowTextWidth(self.window, font, string.sub(v.text, 1, cur))
                if marker <= self.end_copying_x then
+                  self.end_copying_pos = self.end_copying_pos + cur
                   break
                end
             end
@@ -728,6 +736,10 @@ function TextRect:updateSelect()
          end
          self.end_copying_x = last_marker
       end
+   end
+
+   if (self.copy_start_line == self.copy_end_line) and (self.start_copying_pos == self.end_copying_pos) then
+      self:reset_copy()
    end
 
    self:draw(false)
@@ -942,17 +954,20 @@ function TextRect:selected_text()
             endpos = self.end_copying_pos
          end
 
-         if endpos >= startpos then
+         if (endpos ~= startpos) or (self.copy_start_line ~= self.copy_end_line) then
             -- store current message when starting a new one
             if self.wrapped_lines[copy_line][2] then
                store_message()
             end
             -- add styles from this wrapped line to the current message
-            for _, s in ipairs(TruncateStyles(self.wrapped_lines[copy_line][1], startpos+1, endpos)) do
-               table.insert(current_message, s)
+            local line_styles = TruncateStyles(self.wrapped_lines[copy_line][1], startpos+1, endpos)
+            if line_styles then
+               for _, s in ipairs(line_styles) do
+                  table.insert(current_message, s)
+               end
+            else
+               table.insert(s_text, "")
             end
-         elseif (endpos == 0) and (startpos == 0) and (copy_line ~= self.copy_end_line) and (copy_line ~= self.copy_start_line) then
-            table.insert(s_text, "")
          end
       end
    end
