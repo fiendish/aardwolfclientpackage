@@ -259,7 +259,7 @@ end
 require "copytable"
 function TruncateStyles (styles, startcol, endcol)
    if not styles or #styles == 0 then
-      return ""
+      return nil
    end
 
    local startcol = startcol or 1
