@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2083 snapshot
+- bug fix: While fixing text_rect selection in 2078, I broke copying (oops). Copying from text_rect plugins like the communication log should work again now.
+
 r2082 snapshot
 - new feature: There's a new plugin aard_vital_shortcuts.xml that adds some aliases for briefly displaying player vital percentages. I'm told that this will be useful to players using screen readers. It will be loaded by default for brand new installs, but current users will need to add the plugin manually after upgrading. The help command for this plugin is "vitals help".
 
