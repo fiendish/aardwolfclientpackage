@@ -99,10 +99,11 @@ function OnPluginDrawOutputWindow(a, b, c)
 end
 
 function OnPluginSelectionChanged()
-   new_csl = GetSelectionStartLine()
-   new_cel = GetSelectionEndLine()
-   new_csp = GetSelectionStartColumn()
-   new_cep = GetSelectionEndColumn()
+   local new_csl = GetSelectionStartLine()
+   local new_cel = GetSelectionEndLine()
+   local new_csp = GetSelectionStartColumn()
+   local new_cep = GetSelectionEndColumn()
+
    if rect then
       if csl == new_csl and cel == new_cel and csp == new_csp and cep == new_cep then
          return
@@ -132,6 +133,14 @@ function OnPluginSelectionChanged()
          rect.copied_text = ""
          rect:draw()
       end
+   else
+      if (new_csl == 0) 
+         and (new_cel == 0)
+         and (new_csp == 0)
+         and (new_cep == 0)
+      then
+         Pause(false)
+      end
    end
 end
 
@@ -151,14 +160,6 @@ end
 
 function check_display()
    if at_bottom() then
-      if (new_csl == 0) 
-         and (new_cel == 0)
-         and (new_csp == 0)
-         and (new_cep == 0)
-         and (bit.band(GetInfo(294), 0x10000) == 0)
-      then
-         Pause(false)
-      end
       if rect then
          WindowShow(win, false)
          rect:unInit()
