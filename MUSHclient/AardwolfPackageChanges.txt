@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2085 snapshot
+- bug fix: Update MUSHclient.exe to fix some reported I-beam cursor display problems (cursor turns black, doesn't obey OS size settings, etc).
+- bug fix: Cancelling a selection by clicking in the main area will now unpause (selecting pauses) if the output is scrolled to the end so that the backscroll split isn't invoked when the next output arrives if nothing is selected.
+
 r2083 snapshot
 - bug fix: While fixing text_rect selection in 2078, I broke copying (oops). Copying from text_rect plugins like the communication log should work again now.
 
