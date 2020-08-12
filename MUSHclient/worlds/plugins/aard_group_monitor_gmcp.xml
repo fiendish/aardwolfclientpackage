@@ -381,14 +381,29 @@ function DisplayGroupPage()
                      hpColor2 = thresh2color
                   end
                end
-               gauge(win, nil, tonumber(v.info.hp), tonumber(v.info.mhp), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
-               txt = string.lpad(v.info.hp, 5, ' ').."/"..string.rpad(v.info.mhp,5,' ')
-               if overlay_numbers == 1 then
+			      if overlay_numbers == 0 then -- NONE
+			    gauge(win, nil, tonumber(v.info.hp), tonumber(v.info.mhp), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
+			      txtlen = WindowTextWidth(win,font_id,txt)
+               end
+                   if overlay_numbers == 1 then -- STANDARD
+			    gauge(win, nil, tonumber(v.info.hp), tonumber(v.info.mhp), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
+                  txt = string.lpad(v.info.hp, 5, ' ').."/"..string.rpad(v.info.mhp,5,' ')
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
-               else
-                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
-               end
+				  end
+				  if overlay_numbers == 2 then -- PERCENTAGES
+				gauge(win, nil, tonumber(v.info.hp), tonumber(v.info.mhp), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
+                  txt = " ("..string.lpad(string.format('%d',100*v.info.hp/v.info.mhp).."%",4,' ')..")"
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
+				  end
+				  if overlay_numbers == 3 then -- STANDARD + PERCENTAGES
+				gauge(win, nil, tonumber(v.info.hp), tonumber(v.info.mhp), x, y, bar_width, line_height, hpColor1, 0x000000, 0, 0x000000, hpColor2, nil, flat_gauges==1)
+			      txt = string.lpad(v.info.hp, 5, ' ').."/"..string.rpad(v.info.mhp,5,' ').." ("..string.lpad(string.format('%d',100*v.info.hp/v.info.mhp).."%",4,' ')..")"
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
+				end  
+
                y = y + line_height + 1
             end
 
@@ -396,14 +411,34 @@ function DisplayGroupPage()
                x = baseX
                WindowText(win, font_id, "MN", x, y, 0, 0, Theme.BODY_TEXT, utf8)
                x = x + labels_width + GAP
-               gauge(win, nil, tonumber(v.info.mn), tonumber(v.info.mmn), x, y, bar_width, line_height, colorVals.Mana[1], 0x000000, 0, 0x000000, colorVals.Mana[2], nil, flat_gauges==1)
-               txt = string.lpad(v.info.mn,5,' ').."/"..string.rpad(v.info.mmn,5,' ')
-               if overlay_numbers == 1 then
+               if overlay_numbers == 0 then -- NONE
+			    gauge(win, nil, tonumber(v.info.mn), tonumber(v.info.mmn), x, y, bar_width, line_height, colorVals.Mana[1], 0x000000, 0, 0x000000, colorVals.Mana[2], nil, flat_gauges==1)
+                  txtlen = WindowTextWidth(win,font_id,txt)
+				  end
+			   if overlay_numbers == 1 then -- STANDARD
+			    gauge(win, nil, tonumber(v.info.mn), tonumber(v.info.mmn), x, y, bar_width, line_height, colorVals.Mana[1], 0x000000, 0, 0x000000, colorVals.Mana[2], nil, flat_gauges==1)
+                  txt = string.lpad(v.info.mn,5,' ').."/"..string.rpad(v.info.mmn,5,' ')
                   txtlen = WindowTextWidth(win,font_id,txt)
                   outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
-               else
-                  WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
-               end
+				  end
+               if overlay_numbers == 2 then -- PERCENTAGES
+			    gauge(win, nil, tonumber(v.info.mn), tonumber(v.info.mmn), x, y, bar_width, line_height, colorVals.Mana[1], 0x000000, 0, 0x000000, colorVals.Mana[2], nil, flat_gauges==1)
+                  txt = " ("..string.lpad(string.format('%d',100*v.info.mn/v.info.mmn).."%",4,' ')..")"
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
+				  end				  
+               if overlay_numbers == 3 then -- STANDARD+PERCENTAGES
+			    gauge(win, nil, tonumber(v.info.mn), tonumber(v.info.mmn), x, y, bar_width, line_height, colorVals.Mana[1], 0x000000, 0, 0x000000, colorVals.Mana[2], nil, flat_gauges==1)
+                  txt = string.lpad(v.info.mn, 5, ' ').."/"..string.rpad(v.info.mmn,5,' ').." ("..string.lpad(string.format('%d',100*v.info.mn/v.info.mmn).."%",4,' ')..")"
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, baseX+labels_width+((bar_width-txtlen)/2)+(GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
+				  end		
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- NOT SURE IF WE ACTUALLY NEED THIS ANYMORE: I THINK NOT 				  
+              --else
+              --   WindowText(win, font_id, txt, baseX+labels_width+bar_width+(2*GAP), y, 0, 0, Theme.BODY_TEXT, utf8)
+              -- end
+--------------------------------------------------------------------------------------------------------------------------------------------
                y = y + line_height + 1
             end
 
@@ -483,7 +518,7 @@ function right_click_menu ()
          end
       end
    end
-   menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|"..((overlay_numbers==1 and "+") or "").."Overlay Numbers|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|>Sort By...|"..(((sort_hp and (sort_hp_which == "percent")) and "+") or "").."% Damage|"..(((sort_hp and (sort_hp_which == "total")) and "+") or "").."Total Damage|<|-|Bring To Front|Send To Back|-|Reset Defaults"
+   menustring = menustring.."<|-|>Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>Align|Evil|Good|<|<|>Show Info|"..((show_hp==1 and "+") or "").."Health|"..((show_mn==1 and "+") or "").."Mana|"..((show_mv==1 and "+") or "").."Moves|<|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|>Overlay Numbers|"..((overlay_numbers==0 and "+") or "").."None"..(((graphicalMode==0) and " (Same as \"Standard\" in Text Mode)") or "").."|"..((overlay_numbers==1 and "+") or "").."Standard|"..((overlay_numbers==2 and "+") or "").."Percentages|"..((overlay_numbers==3 and "+") or "").."Standard+Percentages|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|>Sort By...|"..(((sort_hp and (sort_hp_which == "percent")) and "+") or "").."% Damage|"..(((sort_hp and (sort_hp_which == "total")) and "+") or "").."Total Damage|<|-|Bring To Front|Send To Back|-|Reset Defaults"
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
@@ -557,9 +592,15 @@ function right_click_menu ()
       elseif numResult == member_count+17 then
          -- toggle overlay numbers on top of gauges
          overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
-      elseif numResult == member_count+18 then
-         thresh1active = (((thresh1active == 0) and 1) or 0)
+         elseif numResult == member_count+18 then
+         overlay_numbers = 1
       elseif numResult == member_count+19 then
+         overlay_numbers = 2
+      elseif numResult == member_count+20 then
+         overlay_numbers = 3
+      elseif numResult == member_count+21 then
+         thresh1active = (((thresh1active == 0) and 1) or 0)
+      elseif numResult == member_count+22 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -567,14 +608,14 @@ function right_click_menu ()
             end
             thresh1percent = tonumber(perc)
          end
-      elseif numResult == member_count+20 then
+      elseif numResult == member_count+23 then
          local newColor = PickColour (thresh1color)
          if newcolor ~= -1 then
             thresh1color = newColor
          end
-      elseif numResult == member_count+21 then
+      elseif numResult == member_count+24 then
          thresh2active = (((thresh2active == 0) and 1) or 0)
-      elseif numResult == member_count+22 then
+      elseif numResult == member_count+25 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -582,12 +623,12 @@ function right_click_menu ()
             end
             thresh2percent = tonumber(perc)
          end
-      elseif numResult == member_count+23 then
+      elseif numResult == member_count+26 then
          local newColor = PickColour (thresh2color)
          if newcolor ~= -1 then
             thresh2color = newColor
          end
-      elseif numResult == member_count+24 then
+      elseif numResult == member_count+27 then
          -- sort by % damage
          if sort_hp_which == "percent" then -- current sort so disable
             sort_hp = false
@@ -596,7 +637,7 @@ function right_click_menu ()
             sort_hp = true
             sort_hp_which = "percent"
          end
-      elseif numResult == member_count+25 then
+      elseif numResult == member_count+28 then
          -- sort by total damage
          if sort_hp_which == "total" then -- current sort so disable
             sort_hp = false
@@ -605,13 +646,13 @@ function right_click_menu ()
             sort_hp = true
             sort_hp_which = "total"
          end
-      elseif numResult == member_count+26 then
+      elseif numResult == member_count+29 then
          -- bring to front
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == member_count+27 then
+      elseif numResult == member_count+30 then
          -- send to back
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-      elseif numResult == member_count+28 then
+      elseif numResult == member_count+31 then
          -- reset
          font_name        = default_font_name
          font_size        = default_font_size
