@@ -50,7 +50,17 @@ AUTOMATIC MAPPER by Fiendish
 </timers>
 
 <aliases>
-
+<alias
+   match="^recon?"
+   regexp="y"
+   enabled="y"
+   send_to="12"
+   sequence="100"
+><send>
+EnableTriggerGroup("recon", true)
+Send("recon")
+</send>
+</alias>
 <alias
    match="mapper showroom *"
    enabled="y"
@@ -734,6 +744,27 @@ StopEvaluatingTriggers(true)
 
   <trigger
    enabled="y"
+   match="^You fail to carry out recon on the area\.$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+   group="recon"
+  ><send>
+   EnableTriggerGroup("recon", false)
+  </send>
+  </trigger>
+
+  <trigger
+  enabled="y"
+  match="^Base flags      :(.*)"
+  regexp="y"
+  script="recon"
+  sequence="100"
+  group="recon"
+ ></trigger>
+   
+  <trigger
+   enabled="y"
    match="^You cannot (recall|return home) from this room\.$"
    regexp="y"
    script="norecall_room"
@@ -841,6 +872,26 @@ directioncount = 0
 environmentcount = 0
 
 directions = {}
+current_room = nil
+
+function recon(name, line, wildcards)
+   EnableTriggerGroup("recon", false)
+   if current_room == nil then
+      return
+   end
+
+   if string.find(wildcards[1], "norecall") then
+      manual_norecall(current_room, 1)
+   else
+      manual_norecall(current_room, 0)
+   end
+
+   if string.find(wildcards[1], "prison") then
+      manual_noportal(current_room, 1)
+   else
+      manual_noportal(current_room, 0)
+   end
+end
 
 function reset_aard()
    mapper.reset_pos()
@@ -3499,9 +3550,11 @@ end
 function manual_norecall(room_id, norecall)
    local room = load_room_from_database(room_id)
    if room ~= nil then
-      room.norecall = norecall
-      save_room_to_database(room_id, room)
-      Note("No-recall flag "..(norecall == 1 and "set on" or "removed from").." room "..room_id..".")
+      if room.norecall ~= norecall then
+         room.norecall = norecall
+         save_room_to_database(room_id, room)
+         Note("No-recall flag "..(norecall == 1 and "set on" or "removed from").." room "..room_id..".")
+      end
    else
       Note("NORECALL ERROR: Room "..room_id.." is not in the database.")
    end
@@ -3510,9 +3563,11 @@ end
 function manual_noportal(room_id, noportal)
    local room = load_room_from_database(room_id)
    if room ~= nil then
-      room.noportal = noportal
-      save_room_to_database(room_id, room)
-      Note("No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".")
+      if room.noportal ~= noportal then
+         room.noportal = noportal
+         save_room_to_database(room_id, room)
+         Note("No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".")
+      end
    else
       Note("NOPORTAL ERROR: Room "..room_id.." is not in the database.")
    end
