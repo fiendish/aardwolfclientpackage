@@ -388,7 +388,7 @@ function OutlinedText(win, font, text, startx, starty, endx, endy, color, outlin
          right = WindowText(win, font, text, startx+xi, starty+yi, endx+1, endy+1, outline_color, utf8)
       end
    end
-   local right = WindowText(win, font, text, startx+1, starty+1, endx, endy, outline_color, utf8)
+   -- local right = WindowText(win, font, text, startx+1, starty+1, endx, endy, outline_color, utf8)
    WindowText(win, font, text, startx, starty, endx, endy, color, utf8)
    return right
 end
