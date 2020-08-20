@@ -826,6 +826,8 @@ function TextRect:rightClickMenu(hotspot_id)
 
    table.insert(menu_text, "Copy All")
    table.insert(menu_functions, TextRect.copyFull)
+   table.insert(menu_text, "Copy All Without Colors")
+   table.insert(menu_functions, TextRect.copyFullPlain)
 
    local inner_count = #menu_functions
 
@@ -916,29 +918,25 @@ function TextRect:copyUrl(hotspot_id)
 end
 
 function TextRect:copyPlain()
-   self:copyAndNotify(strip_colours(self:selected_text()))
+   self:copyAndNotify(self:selected_text(false))
 end
 
 function TextRect:copy()
-   self:copyAndNotify(canonicalize_colours(self:selected_text(), true))
+   self:copyAndNotify(self:selected_text(true))
 end
 
-function TextRect:selected_text()
+function TextRect:selected_text(with_colors)
    s_text = {}
    current_message = {}
 
    function store_message()
       if current_message[1] then
-         -- -- end in white if line contains any other color
-         -- for _,s in ipairs(current_message) do
-         --    if s.textcolour then
-         --       table.insert(current_message, {text="", textcolour=GetNormalColour(8)})
-         --       break
-         --    end
-         -- end
-
          -- preserve the message and start the next one
-         table.insert(s_text, StylesToColours(current_message))
+         if with_colors then
+            table.insert(s_text, canonicalize_colours(StylesToColours(current_message), true))
+         else
+            table.insert(s_text, strip_colours_from_styles(current_message))
+         end
          current_message = {}
       end
    end
@@ -981,10 +979,19 @@ end
 function TextRect:copyFull()
    local t = {}
    for _,line in ipairs(self.raw_lines) do
-      table.insert(t, StylesToColours(line[1]))
+      table.insert(t, canonicalize_colours(StylesToColours(line[1]), true))
    end
-   SetClipboard(table.concat(t, WHITE_CODE.."\n")..WHITE_CODE)
-   ColourNote("yellow","","All text copied to clipboard.")
+   SetClipboard(table.concat(t, "\n"))
+   ColourNote("yellow","","All text copied to clipboard ","limegreen","","with","yellow",""," colors.")
+end
+
+function TextRect:copyFullPlain()
+   local t = {}
+   for _,line in ipairs(self.raw_lines) do
+      table.insert(t, strip_colours_from_styles(line[1]))
+   end
+   SetClipboard(table.concat(t, "\n"))
+   ColourNote("yellow","","All text copied to clipboard ","red","","without","yellow",""," colors.")
 end
 
 function TextRect:generateHotspotID(id)
