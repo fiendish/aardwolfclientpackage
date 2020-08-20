@@ -47,14 +47,16 @@ function ScrollBar:unInit()
 end
 
 function ScrollBar:setRect(left, top, right, bottom)
-   self.left = left
-   self.top = top
-   self.right = right
-   self.bottom = bottom
-   self.width = right-left
-   self.height = bottom-top
-   WindowMoveHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.right, self.top + self.width)
-   WindowMoveHotspot(self.window, self:generateHotspotID("down"), self.left, self.bottom - self.width, self.right, self.bottom)
+   if (self.left ~= left) or (self.top ~= top) or (self.right ~= right) or (self.bottom ~= bottom) then
+      self.left = left
+      self.top = top
+      self.right = right
+      self.bottom = bottom
+      self.width = right-left
+      self.height = bottom-top
+      WindowMoveHotspot(self.window, self:generateHotspotID("up"), self.left, self.top, self.right, self.top + self.width)
+      WindowMoveHotspot(self.window, self:generateHotspotID("down"), self.left, self.bottom - self.width, self.right, self.bottom)
+   end
 end
 
 function ScrollBar:doUpdateCallbacks()
@@ -72,10 +74,12 @@ function ScrollBar:doUpdateCallbacks()
 end
 
 function ScrollBar:setScroll(step, visible_steps, total_steps)
-   self.step = step or self.step
-   self.visible_steps = visible_steps or self.visible_steps
-   self.total_steps = total_steps or self.total_steps
-   self:draw(true)
+   if (self.step ~= step) or (self.visible_steps ~= visible_steps) or (self.total_steps ~= total_steps) then
+      self.step = step or self.step
+      self.visible_steps = visible_steps or self.visible_steps
+      self.total_steps = total_steps or self.total_steps
+      self:draw(true)
+   end
 end
 
 function ScrollBar:draw(inside_callback)
