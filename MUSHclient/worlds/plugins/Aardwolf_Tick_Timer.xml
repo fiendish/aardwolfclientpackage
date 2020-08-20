@@ -58,7 +58,7 @@
 </aliases>
 
 <timers>
-  <timer enabled="y" second="1.00" offset_second="0.00" send_to="12">
+  <timer name="seconds_since_tick" enabled="y" second="1.00" offset_second="0.00" send_to="12">
    <send>
    display()
    </send>
