@@ -523,6 +523,9 @@ function OnPluginDrawOutputWindow(a, b, c)
 end
 
 function add_main_resizer()
+   if textResizer == nil then
+      return
+   end
    local l = GetInfo(274) + GetInfo(276)
    local t = GetInfo(273) - GetInfo(276) - 1
    local b = GetInfo(275) + GetInfo(276) + 1
@@ -550,7 +553,13 @@ function add_main_resizer()
          Theme.CLICKABLE
       )
    end
-   local il, it, ir, ib = Theme.DrawBorder(textResizer)
+
+   if (prev_l ~= l) or (prev_t ~= t) or (prev_b ~= b) then
+      il, it, ir, ib = Theme.DrawBorder(textResizer)
+      -- allows textrectangle to be resized
+      Theme.AddResizeTag(textResizer, "full", il, ib-Theme.RESIZER_SIZE+1, "MouseDown", "ResizeMainCallback", "ResizeReleaseMainCallback")
+      prev_l, prev_t, prev_b = l, t, b
+   end
 
    if sb then
       sb:setRect(il, it, ir, ib-Theme.RESIZER_SIZE)
@@ -560,12 +569,6 @@ function add_main_resizer()
    end
    sb:setScroll(cur_scroll_line, text_rectangle_lines, total_output_lines)
 
-   -- allows textrectangle to be resized
-   local new_x, new_y = il, ib-Theme.RESIZER_SIZE+1
-   if resizer_x ~= new_x or resizer_y ~= new_y then
-      Theme.AddResizeTag(textResizer, "full", new_x, new_y, "MouseDown", "ResizeMainCallback", "ResizeReleaseMainCallback")
-      resizer_x, resizer_y = new_x, new_y
-   end
    WindowShow(textResizer, true)
 end
 
