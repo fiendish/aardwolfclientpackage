@@ -392,8 +392,15 @@ end
 function DisplayMapPage()
    styles = { }
    bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, (show_title == 1) and "\n" or "", "left")
-   if (show_title == 1) and (map_lines[1] ~= nil) then
-      title_lines = {strip_colours_from_styles(map_lines[1]), strip_colours_from_styles(map_lines[2])}
+
+   local n = #map_lines
+
+   if (show_title == 1) then
+      if (n > 0) then
+         title_lines = {strip_colours_from_styles(map_lines[1]), strip_colours_from_styles(map_lines[2])}
+      else
+         title_lines = {"", ""}
+      end
       title_color = Theme.THREE_D_SURFACE_DETAIL
       draw_title()
       if is_pk then
@@ -422,7 +429,7 @@ function DisplayMapPage()
       txt = "Right-click here to pick another."
       txtlen = WindowTextWidth(win,font_id,txt)
       WindowText (win, font_id, txt, (width-txtlen)/2, height/2+line, bodyright, bodybottom, Theme.BODY_TEXT)
-   elseif not requested_since_empty then
+   elseif n == 0 then
       line = -font_height-5
       txt = "The map will appear"
       txtlen = WindowTextWidth(win,font_id,txt)
@@ -436,7 +443,6 @@ function DisplayMapPage()
       WindowAddHotspot(win, "legend", bodyleft, bodytop, bodyleft+(3*font_width), bodytop+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", miniwin.cursor_help, 0)
       Theme.DrawTextBox(win, font_id, bodyleft+2, bodytop+1, "?", false, true)
 
-      local n = #map_lines
       for i = 3, n-1 do
          Display_Line(i, map_lines[i])
       end -- for
