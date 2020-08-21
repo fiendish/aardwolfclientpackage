@@ -744,7 +744,7 @@ StopEvaluatingTriggers(true)
 
   <trigger
    enabled="y"
-   match="^You fail to carry out recon on the area\.$"
+   match="^(You fail to carry out recon on the area\.|You can't recon while resting\.|You just about manage to determine you're in a room somewhere!|You dream about being able to recon\.|You cannot use that command while AFK\.)$"
    regexp="y"
    send_to="12"
    sequence="100"
@@ -3553,10 +3553,10 @@ function manual_norecall(room_id, norecall)
       if room.norecall ~= norecall then
          room.norecall = norecall
          save_room_to_database(room_id, room)
-         Note("No-recall flag "..(norecall == 1 and "set on" or "removed from").." room "..room_id..".")
+         Note("GMCP Mapper: No-recall flag "..(norecall == 1 and "set on" or "removed from").." room "..room_id..".")
       end
    else
-      Note("NORECALL ERROR: Room "..room_id.." is not in the database.")
+      Note("GMCP MAPPER NORECALL ERROR: Room "..room_id.." is not in the database.")
    end
 end
 
@@ -3566,10 +3566,10 @@ function manual_noportal(room_id, noportal)
       if room.noportal ~= noportal then
          room.noportal = noportal
          save_room_to_database(room_id, room)
-         Note("No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".")
+         Note("GMCP Mapper: No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".")
       end
    else
-      Note("NOPORTAL ERROR: Room "..room_id.." is not in the database.")
+      Note("GMCP MAPPER NOPORTAL ERROR: Room "..room_id.." is not in the database.")
    end
 end
 function ignore_mismatch_toggle(room, room_id, ignore_exits_mismatch)
