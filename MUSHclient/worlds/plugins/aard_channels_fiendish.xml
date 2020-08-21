@@ -1059,33 +1059,25 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
 end
 
 function extend_rightclick_menu_string(tr)
-   local function check(t, i)
-      t[i] = "+"..t[i]
-   end
-
-   local function disable(t, i)
-      t[i] = "^"..t[i]
-   end
-
    local menu_strings = {
       "Configure Font",
       ">Timestamp",
-      "No Timestamps",
-      "30 Aug 13:29:49",
-      "30 Aug 01:20:12PM",
-      "13:29:08",
-      "1:22:06 PM",
+      ((date_format == "") and "+" or "").."No Timestamps",
+      ((date_format == "[%d %b %H:%M:%S] ") and "+" or "").."30 Aug 13:29:49",
+      ((date_format == "[%d %b %I:%M:%S%p] ") and "+" or "").."30 Aug 01:20:12PM",
+      ((date_format == "[%H:%M:%S] ") and "+" or "").."13:29:08",
+      ((date_format == "[%I:%M:%S%p] ") and "+" or "").."1:22:06 PM",
       "<",
       ">Logging to File",
-      log_to_file==1 and "Disable" or "Enable",
-      "Log with Color Codes",
-      "Log with Timestamps",
+      (log_to_file==1) and "Disable" or "Enable",
+      ((log_colour_codes == 1) and "+" or "").."Log with Color Codes",
+      ((log_timestamps == 1) and "+" or "").."Log with Timestamps",
       "-",
       "Set Log File Split Size ("..((log_file_size == 0) and "None" or (tostring(log_file_size).."MB"))..")",
       "<",
       "Add New Tab",
       "-",
-      "Remove This Tab",
+      ((num_tabs < 2) and "^" or "").."Remove This Tab",
       "-",
       "Name This Tab",
       ">Tab Capture Settings",
@@ -1098,20 +1090,9 @@ function extend_rightclick_menu_string(tr)
       "Send to Back",
       "Show/Hide Titlebar"
    }
-   local ms = menu_strings
-
-   if date_format == "" then check(ms, 3) end
-   if date_format == "[%d %b %H:%M:%S] " then check(ms, 4) end
-   if date_format == "[%d %b %I:%M:%S%p] " then check(ms, 5) end
-   if date_format == "[%H:%M:%S] " then check(ms, 6) end
-   if date_format == "[%I:%M:%S%p] " then check(ms, 7) end
-
-   if log_colour_codes == 1 then check(ms, 11) end
-   if log_timestamps == 1 then check(ms, 12) end
-
-   if num_tabs < 2 then disable(ms, 18) end
 
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
+      -- chat echo plugin
       local echo_menu_strings = {
          ">Echo In Main Window Settings",
          "Echo All",
@@ -1121,14 +1102,12 @@ function extend_rightclick_menu_string(tr)
          "Edit Non-channel Echoes",
          "<"
       }
-      local ems = echo_menu_strings
 
       for i,v in ipairs(echo_menu_strings) do
          table.insert(menu_strings, 15+i, v)
       end
-
-      return table.concat(menu_strings, "|")
    end
+   return table.concat(menu_strings, "|")
 end
 
 function getmemoryusage()
