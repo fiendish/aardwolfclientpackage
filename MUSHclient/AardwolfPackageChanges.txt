@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r2090 snapshot
+- new feature: The GMCP mapper will now automatically mark rooms noportal/norecall during recon.
+- new feature: The group monitor has a few new display options, including one without any gauges. I'm still working on the draw layout for that mode.
+- misc change: Some minor code reshuffling should hopefully make the fake themed scrollbar that I put on the main output rectangle redraw itself less when not needed.
+- bug fix: The ascii map miniwindow would error if you tried to resize it while the plugin was initializing.
+- bug fix: You probably wouldn't hit this, but a bug would have broken the communication log right-click menu if the chat echo plugin weren't loaded.
+
 r2085 snapshot
 - bug fix: Update MUSHclient.exe to fix some reported I-beam cursor display problems (cursor turns black, doesn't obey OS size settings, etc).
 - bug fix: Cancelling a selection by clicking in the main area will now unpause (selecting pauses) if the output is scrolled to the end so that the backscroll split isn't invoked when the next output arrives if nothing is selected.
