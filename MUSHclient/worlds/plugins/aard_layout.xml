@@ -419,6 +419,7 @@ function OnPluginInstall()
    textResizer = win.."txtresize"
    bgwin = win.."text_background"
    bgoffscreen = win.."text_background_offscreen"
+   image_ratio, prev_l, prev_t, prev_b, sb = nil, nil, nil, nil, nil
 
    local dir = GetInfo(66)
    local imgpath = "-"
@@ -441,6 +442,7 @@ function OnPluginInstall()
 
       imgpath = dir.."worlds\\plugins\\images\\temp_theme_blend.png"
       WindowWrite("WiLl_It_BlEnD", imgpath)
+      WindowDelete("WiLl_It_BlEnD")
    end
 
    if 0 ~= SetBackgroundImage(imgpath, 13) then
