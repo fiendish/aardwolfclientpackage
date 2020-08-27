@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2092 snapshot
+- bug fix: MUSHclient.exe is updated to fix sometimes not being able to select the last character on a line.
+- bug fix: Disabling and reenabling the layout plugin should properly re-draw the synthetic scrollbar.
+
 r2090 snapshot
 - new feature: The GMCP mapper will now automatically mark rooms noportal/norecall during recon.
 - new feature: The group monitor has a few new display options, including one without any gauges. I'm still working on the draw layout for that mode.
