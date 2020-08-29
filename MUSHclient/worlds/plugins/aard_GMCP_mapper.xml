@@ -51,7 +51,7 @@ AUTOMATIC MAPPER by Fiendish
 
 <aliases>
 <alias
-   match="^recon?"
+   match="^recon?$"
    regexp="y"
    enabled="y"
    send_to="12"
