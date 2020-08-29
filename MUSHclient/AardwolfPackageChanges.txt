@@ -1,7 +1,7 @@
 Aardwolf Client Package Major Changes List
 
 r2093 snapshot
--bug fix: The recon capture added in r2090 was overly greedy, and blocked access to recoveries.
+- bug fix: The recon capture added in r2090 was overly greedy, and blocked access to recoveries.
 
 r2092 snapshot
 - bug fix: MUSHclient.exe is updated to fix sometimes not being able to select the last character on a line.
