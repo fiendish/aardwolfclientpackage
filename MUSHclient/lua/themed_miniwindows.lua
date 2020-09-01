@@ -183,7 +183,7 @@ end
 
 function TextWindow(
    id, default_left, default_top, default_width, default_height, title, title_alignment, 
-   is_temporary, resizeable, text_scrollable, title_font_name, title_font_size,
+   is_temporary, resizeable, text_scrollable, text_unselectable, title_font_name, title_font_size,
    text_font_name, text_font_size, text_max_lines, text_padding
 )
    require "text_rect"
@@ -246,7 +246,7 @@ function TextWindow(
    if resizeable then
       scrollbar_bottom = scrollbar_bottom-Theme.RESIZER_SIZE
    end
-   self.textrect = TextRect.new(self.id, "textrect", self.bodyleft, self.bodytop, tr_right, self.bodybottom, text_max_lines, text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size)
+   self.textrect = TextRect.new(self.id, "textrect", self.bodyleft, self.bodytop, tr_right, self.bodybottom, text_max_lines, text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size, nil, nil, text_unselectable)
    if text_scrollable then
       self.min_height = 100   
       self.scrollbar = ScrollBar.new(self.id, "scrollbar", tr_right, self.bodytop, self.bodyright, scrollbar_bottom)
