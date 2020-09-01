@@ -41,16 +41,20 @@ TextRect_defaults = {
 }
 TextRect_mt = { __index = TextRect }
 
-function TextRect.new(window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select)
+function TextRect.new(
+   window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select, unselectable
+)
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..name
    new_tr.window = window
    new_tr.name = name
-   new_tr:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select)
+   new_tr:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select, unselectable)
    return new_tr
 end
 
-function TextRect:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select)
+function TextRect:configure(
+   left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select, unselectable
+)
    self.scrollable = scrollable
    self.external_scroll_handler = external_scroll_handler
    self.call_on_select = call_on_select
@@ -58,6 +62,7 @@ function TextRect:configure(left, top, right, bottom, max_lines, scrollable, bac
    self.max_lines = max_lines or self.max_lines
    self.font_name = font_name or self.font_name
    self.font_size = font_size or self.font_size
+   self.unselectable = unselectable
    if background_color ~= self.background_color then
       self.background_color = background_color or self.background_color
       self.highlight_color = getHighlightColor(self.background_color)
@@ -548,8 +553,12 @@ end
 function TextRect:initArea()
    --highlight, right click, scrolling
    self.area_hotspot = self:generateHotspotID("textarea")
-   WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "", miniwin.cursor_ibeam, 0)
-   WindowDragHandler(self.window, self.area_hotspot, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
+   if self.unselectable then
+      WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "", "", "TextRect.mouseUp", "", nil, 0)
+   else
+      WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "", miniwin.cursor_ibeam, 0)
+      WindowDragHandler(self.window, self.area_hotspot, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
+   end
    if self.scrollable then
       WindowScrollwheelHandler(self.window, self.area_hotspot, "TextRect.wheelMove")
    elseif self.external_scroll_handler then
