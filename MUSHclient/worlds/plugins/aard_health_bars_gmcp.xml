@@ -537,7 +537,7 @@ end
 -- Called when mouse button is pressed on hotspot.
 ---------------------------------------------------------------------------------
 function MouseDown(flags, hotspot_id)
-   if (hotspot_id == "resize") then
+   if (hotspot_id == win.."_resize") then
       startx, starty = WindowInfo(win, 17), WindowInfo(win, 18)
    end
 end
