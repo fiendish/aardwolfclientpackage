@@ -70,8 +70,8 @@ function TextRect:loadFont(name, size)
    if (not self.font) or (name ~= self.font_name) or (size ~= self.font_size) then
       self.font = self.id.."_font"
       self.font_bold = self.id.."_font_bold"
-      self.font_name = name
-      self.font_size = size
+      self.font_name = name or self.font_name
+      self.font_size = size or self.font_size
 
       WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
       WindowFont(self.window, self.font_bold, self.font_name, self.font_size, true, false, false, false, 0)
