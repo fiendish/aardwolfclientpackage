@@ -205,15 +205,15 @@ end
 function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y_padding)
    x_padding = x_padding or 0
    y_padding = y_padding or 0
-   local right = left + WindowTextWidth(win, font, text, utf8) + (2*x_padding)
-   local bottom = top + TextHeight(win, font) + (2*y_padding)
-   Draw3DRect(win, left, top, right+4, bottom+2, depressed)
+   local right = left + WindowTextWidth(win, font, text, utf8) + (2*x_padding) +4
+   local bottom = top + TextHeight(win, font) + (2*y_padding) + 2
+   Draw3DRect(win, left, top, right, bottom, depressed)
    local offset = 0
    if depressed then
       offset = 2
    end
-   WindowText(win, font, text, left+2+x_padding+offset, top+1+y_padding+offset, right+1, bottom+1, THREE_D_SURFACE_DETAIL, utf8)
-   return right-left
+   WindowText(win, font, text, left+2+x_padding+offset, top+1+y_padding+offset, right-3, bottom-1, THREE_D_SURFACE_DETAIL, utf8)
+   return right, bottom
 end
 
 function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textcolor, x_padding, y_padding)
@@ -235,13 +235,49 @@ function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textco
    return right-left
 end
 
+Theme.button_callbacks = {}
+Theme.button_metrics = {}
+function Add3DButton(win, button_id, font, left, top, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback)
+   local right, bottom = Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
+   Theme.button_metrics[button_id] = {win, font, left, top, text, utf8, x_padding, y_padding}
+   Theme.button_callbacks[button_id] = {mousedown_callback=mousedown_callback, mouseup_callback=mouseup_callback}
+   if WindowMoveHotspot(win, button_id, left, top, right, bottom) ~= 0 then
+      WindowAddHotspot(win, button_id, left, top, right, bottom, nil, nil, "Theme.ButtonMouseDown", "Theme.ButtonMouseCancel", "Theme.ButtonMouseUp", tooltip, 1, 0)
+   end
+end
+
+function ButtonMouseDown(flags, hotspot_id)
+   local callbacks = Theme.button_callbacks[hotspot_id]
+   local win, font, left, top, text, utf8, x_padding, y_padding = unpack(Theme.button_metrics[hotspot_id])
+   Draw3DTextBox(win, font, left, top, text, utf8, true, x_padding, y_padding)
+   if callbacks.mousedown_callback then
+      callbacks.mousedown_callback(flags, hotspot_id)
+   end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end
+
+function ButtonMouseUp(flags, hotspot_id)
+   local callbacks = Theme.button_callbacks[hotspot_id]
+   local win, font, left, top, text, utf8, x_padding, y_padding = unpack(Theme.button_metrics[hotspot_id])
+   Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
+   if callbacks.mouseup_callback then
+      callbacks.mouseup_callback(flags, hotspot_id)
+   end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end
+
+function ButtonMouseCancel(flags, hotspot_id)
+   local win, font, left, top, text, utf8, x_padding, y_padding = unpack(Theme.button_metrics[hotspot_id])
+   Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
+end
+
 function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, dragrelease_callback)
    local x1, y1 = DrawResizeTag(win, type, x1, y1)
 
    -- Add handler hotspots
-   if WindowMoveHotspot(win, "resize", x1, y1, 0, 0) ~= 0 then
-      WindowAddHotspot(win, "resize", x1, y1, 0, 0, nil, nil, mousedown_callback, nil, nil, "", 6, 0)
-      WindowDragHandler(win, "resize", dragmove_callback, dragrelease_callback, 0)
+   if WindowMoveHotspot(win, win.."_resize", x1, y1, 0, 0) ~= 0 then
+      WindowAddHotspot(win, win.."_resize", x1, y1, 0, 0, nil, nil, mousedown_callback, nil, nil, "", 6, 0)
+      WindowDragHandler(win, win.."_resize", dragmove_callback, dragrelease_callback, 0)
    end
 
    return x1, y1
@@ -299,18 +335,20 @@ function DressWindow(win, font, title, title_alignment)
       if t > 1 then
          movewindow.add_drag_handler(win, 0, 0, 0, t)
       end
+   else
+      movewindow.add_drag_handler(win, 0, 0, 0, 0)
    end
 
    return l, t, r, b
 end
 
-function DrawTitleBar(win, font, title, text_alignment, utf8)
-   local title_lines
+function BodyMetrics(win, font, title)
    if type(title) == "string" then
       title_lines = utils.split(title, "\n")
    else
       title_lines = title
    end
+   local l, t, r, b = BorderMetrics(win)
 
    local line_height = 0
    local title_height = 0
@@ -319,8 +357,14 @@ function DrawTitleBar(win, font, title, text_alignment, utf8)
       if line_height == nil then
         return (2*TITLE_PADDING)
       end
-      title_height = (2*TITLE_PADDING) + (line_height * #title_lines)
+      title_height = (2*TITLE_PADDING) + (line_height * #title_lines) + 1
+      t = title_height + 1
    end
+   return title_lines, line_height, title_height, l, t, r, b
+end
+
+function DrawTitleBar(win, font, title, text_alignment, utf8)
+   local title_lines, line_height, title_height = BodyMetrics(win, font, title)
 
    __theme_istitle = true
    Draw3DRect(
@@ -346,7 +390,7 @@ function DrawTitleBar(win, font, title, text_alignment, utf8)
       if text_alignment == "left" then
          text_left = TITLE_PADDING + 2
       elseif text_alignment == "right" then
-         text_left = WindowInfo(win, 3) - width - TITLE_PADDING
+         text_left = WindowInfo(win, 3) - width - TITLE_PADDING - 2
       end
       local text_right = math.min(text_left + width, WindowInfo(win, 3) - TITLE_PADDING - 2)
 
@@ -364,15 +408,17 @@ function DrawTitleBar(win, font, title, text_alignment, utf8)
          WindowTextFromStyles(win, font, v, text_left, text_top, text_right, title_height, utf8)
       end
    end
-   return title_height
+   return title_height+1
+end
+
+function BorderMetrics(win)
+   return 2, 2, WindowInfo(win, 3)-3, WindowInfo(win, 4)-3
 end
 
 function DrawBorder(win)
-   local r = WindowInfo(win, 3)-3
-   local b = WindowInfo(win, 4)-3
    WindowRectOp(win, 1, 0, 0, 0, 0, THREE_D_HIGHLIGHT)
    WindowRectOp(win, 1, 1, 1, -1, -1, THREE_D_SOFTSHADOW)
-   return 2, 2, r, b
+   return BorderMetrics(win)
 end
 
 function OutlinedText(win, font, text, startx, starty, endx, endy, color, outline_color, utf8, thickness)
@@ -512,5 +558,4 @@ function Popup(win,   -- window name to use
 
    -- display popup window
    WindowShow(win, true)
-
 end -- popup
