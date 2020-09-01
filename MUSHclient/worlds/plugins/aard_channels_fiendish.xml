@@ -435,8 +435,8 @@ function init ()
    WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
 
    -- Add handler for resizing
-   WindowAddHotspot(win, "resize", width-Theme.RESIZER_SIZE, height-Theme.RESIZER_SIZE, width, height, nil, nil, "MouseDown", nil, nil, "", 6, 0)
-   WindowDragHandler(win, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+   WindowAddHotspot(win, win.."_resize", width-Theme.RESIZER_SIZE, height-Theme.RESIZER_SIZE, width, height, nil, nil, "MouseDown", nil, nil, "", 6, 0)
+   WindowDragHandler(win, win.."_resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
 
    WindowShow(win, true)
 
@@ -595,7 +595,7 @@ function ResizeReleaseCallback ()
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
 
-   WindowMoveHotspot(win, "resize", draw_right-Theme.RESIZER_SIZE, draw_bottom-Theme.RESIZER_SIZE, 0, 0)
+   WindowMoveHotspot(win, win.."_resize", draw_right-Theme.RESIZER_SIZE, draw_bottom-Theme.RESIZER_SIZE, 0, 0)
 end
 
 function setupDisplay ()
@@ -889,7 +889,7 @@ function OnPluginBroadcast(msg, id, name, text)
 end
 
 function MouseDown(flags, hotspot_id)
-   if (hotspot_id == "resize") then
+   if (hotspot_id == win.."_resize") then
       startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
    end
 end

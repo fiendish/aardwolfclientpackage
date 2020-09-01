@@ -330,7 +330,7 @@ end
 -- Called when mouse button is pressed on hotspot.
 ---------------------------------------------------------------------------------
 function MouseDown(flags, hotspot_id)
-   if (hotspot_id == "resize") then
+   if (hotspot_id == textResizer.."_resize") then
       startx, starty = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
       if bit.band(flags, 0x20) ~= 0 then
          local result = WindowMenu(textResizer, WindowInfo(textResizer, 14), WindowInfo(textResizer, 15), "!"..(GetInfo(120) and "+" or "").."Show exterior scrollbar -->")

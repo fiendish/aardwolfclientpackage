@@ -230,11 +230,6 @@ show_coords = 0
 MIN_SIZE        = 100
 
 -- Variables not saved.
-startx           = ""
-starty           = ""
-posx             = ""
-posy             = ""
-hotspot_id       = ""
 requested_since_empty       = false
 
 always_echo_rooms = {
@@ -744,7 +739,7 @@ end
 -- Called when mouse button is pressed on hotspot.
 ---------------------------------------------------------------------------------
 function MouseDown(flags, hotspot_id)
-   if (hotspot_id == "resize") then
+   if (hotspot_id == win.."_resize") then
       startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
    end
 end

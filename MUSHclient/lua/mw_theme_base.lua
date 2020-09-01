@@ -275,9 +275,10 @@ function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, 
    local x1, y1 = DrawResizeTag(win, type, x1, y1)
 
    -- Add handler hotspots
-   if WindowMoveHotspot(win, win.."_resize", x1, y1, 0, 0) ~= 0 then
-      WindowAddHotspot(win, win.."_resize", x1, y1, 0, 0, nil, nil, mousedown_callback, nil, nil, "", 6, 0)
-      WindowDragHandler(win, win.."_resize", dragmove_callback, dragrelease_callback, 0)
+   local hs = win.."_resize"
+   if WindowMoveHotspot(win, hs, x1, y1, 0, 0) ~= 0 then
+      WindowAddHotspot(win, hs, x1, y1, 0, 0, nil, nil, mousedown_callback, nil, nil, "", 6, 0)
+      WindowDragHandler(win, hs, dragmove_callback, dragrelease_callback, 0)
    end
 
    return x1, y1
