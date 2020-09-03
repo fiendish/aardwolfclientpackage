@@ -67,8 +67,8 @@ function TextRect:configure(
       self.background_color = background_color or self.background_color
       self.highlight_color = getHighlightColor(self.background_color)
    end
-   self:setRect(left, top, right, bottom)
    self:loadFont(self.font_name, self.font_size)
+   self:setRect(left, top, right, bottom)
 end
 
 function TextRect:loadFont(name, size)
@@ -80,8 +80,10 @@ function TextRect:loadFont(name, size)
 
       WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
       WindowFont(self.window, self.font_bold, self.font_name, self.font_size, true, false, false, false, 0)
-
       self.line_height = WindowFontInfo(self.window, self.font, 1)
+      self.font_padding = WindowFontInfo(self.window, self.font, 4) + 1
+   end
+   if self.padded_height then
       self.rect_lines = math.floor(self.padded_height / self.line_height)
    end
 end
@@ -496,11 +498,11 @@ function TextRect:setRect(left, top, right, bottom)
    self.width = right-left
    self.height = bottom-top + 1
    self.padded_left = self.left + self.padding
-   self.padded_top = self.top + self.padding
+   self.padded_top = self.top + self.padding - self.font_padding
    self.padded_right = self.right - self.padding
-   self.padded_bottom = self.bottom - self.padding
-   self.padded_width = self.width - (2*self.padding)
-   self.padded_height = self.height - (2*self.padding)
+   self.padded_bottom = self.bottom - self.padding + self.font_padding
+   self.padded_width = self.padded_right - self.padded_left
+   self.padded_height = self.padded_bottom - self.padded_top
    if self.area_hotspot then
       WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.bottom)
    end
