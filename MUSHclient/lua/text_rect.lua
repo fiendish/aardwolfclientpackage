@@ -147,6 +147,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
    local insert = table.insert
    local sub = string.sub
    local find = string.find
+   local show_bold = (GetOption("show_bold")==1)
 
    -- Keep pulling out styles and trying to fit them on the current line
    while #styles > 0 do
@@ -173,11 +174,10 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       end
 
       local font = self.font
-      if style.bold then
+      if style.bold and show_bold then
          font = self.font_bold
       end
-      local whole_width = WindowTextWidth(self.window, font, style.text)
-      local t_width = whole_width
+      local t_width = WindowTextWidth(self.window, font, style.text)
 
       -- if it fits, copy whole style in
       if t_width <= available then
