@@ -85,6 +85,7 @@ function OnPluginScreendraw(type, log, line)
          rect:addStyles(GetStyleInfo(i))
       end
       rect:draw()
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       num_lines = new_num_lines+1
    else
       check_display()
@@ -123,6 +124,7 @@ function OnPluginSelectionChanged()
          rect.copy_end_line = rect.rect_lines - (num_lines - 1 - cel)
          rect.copied_text = cptxt
          rect:draw()
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       elseif ((csl == 0) and (cel == 0) and (csp == 0) and (cep == 0)) then
          rect.start_copying_x = nil
          rect.end_copying_x = nil
@@ -132,6 +134,7 @@ function OnPluginSelectionChanged()
          rect.copy_end_line = nil
          rect.copied_text = ""
          rect:draw()
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end
    else
       if (new_csl == 0) 
@@ -191,8 +194,8 @@ function check_display()
          local bottom = GetInfo(293) + border_offset + border_width
          local width = right - left
          local output_font = GetAlphaOption("output_font_name")
-         local output_font_size = GetOption("output_font_height")
-         local height = (font_height * desired_lines) + border_offset + (2*border_width) + text_offset + title_height
+         local output_font_size = GetOption("output_font_height")  -- output_font_height is actually the pt size
+         local height = (font_height * desired_lines) + border_offset + (2*border_width) + text_offset + title_height + 1
          local top = bottom - height
          if (
             (not WindowInfo(win, 5))
@@ -236,8 +239,8 @@ function check_display()
                t + border_width,
                r - border_offset + border_width,
                b - text_offset - border_offset + border_width,
-               desired_lines, false, bgcolor, 0,
-               output_font, output_font_size,  -- output_font_height is actually the pt size
+               desired_lines, false, Theme.PRIMARY_BODY, 0,
+               output_font, output_font_size,
                'ScrollMain',
                select_in_main
             )
@@ -326,6 +329,12 @@ function ScrollMain(flags, hotspot_id)
       direction = -1  -- wheel scrolled up
    end
    SetScroll(GetInfo(296) + delta*direction, GetInfo(120))
+end
+
+function OnPluginTrace (line)
+   if not line:find("OnPluginScreendraw") then
+      print("TRACE:", line)
+   end
 end
 
 ]]>

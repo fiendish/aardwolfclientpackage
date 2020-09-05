@@ -416,7 +416,7 @@ function set_tr_shape()
    bump_top_for_tabs()
 
    tr_right = draw_right - Theme.RESIZER_SIZE + 1
-   tr_bottom = draw_bottom
+   tr_bottom = draw_bottom - 1
    return tr_left, tr_top, tr_right, tr_bottom
 end
 
@@ -594,6 +594,7 @@ function ResizeReleaseCallback ()
 
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 
    WindowMoveHotspot(win, win.."_resize", draw_right-Theme.RESIZER_SIZE, draw_bottom-Theme.RESIZER_SIZE, 0, 0)
 end
@@ -828,6 +829,7 @@ function storeTab(styles, tab)
       if tab == current_tab then
          tabs_rects[tab]:draw()
          tabs_scrollbars[tab]:draw()
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       else
          if not tabs_activity[tab] then
             tabs_activity[tab] = true
@@ -907,7 +909,7 @@ end -- function chat_hide
 
 require "pairsbykeys"
 
-function extend_rightclick_menu_result(sender, hotspot_id, result)
+function extend_rightclick_menu_result(result)
    if result == 1 then
       wanted_font = utils.fontpicker(font_name, font_size) --font dialog
       if wanted_font then
@@ -969,7 +971,7 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       end
       ls = tonumber(ls)
       if not ls then -- not a number
-         extend_rightclick_menu_result(sender, hotspot_id, result)
+         extend_rightclick_menu_result(result)
          return
       else
          log_file_size = ls
@@ -1043,6 +1045,7 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       EnableTrigger("remote_socials", check_nonchannel_trigger("remote_socials"))
    elseif result == 16+echo_skip-noremove then
       tabs_rects[current_tab]:clear()
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    elseif result == 17+echo_skip-noremove then
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == 18+echo_skip-noremove then

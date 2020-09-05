@@ -570,6 +570,7 @@ function add_main_resizer()
       sb:addUpdateCallback(self, scrollMain)
    end
    sb:setScroll(cur_scroll_line, text_rectangle_lines, total_output_lines)
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 
    WindowShow(textResizer, true)
 end
