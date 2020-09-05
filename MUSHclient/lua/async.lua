@@ -60,7 +60,7 @@ function HEAD(request_url, result_callback_function, request_protocol, timeout_a
 end
 
 function GETFILE(request_url, result_callback_function, request_protocol, file_name, timeout_after, callback_on_timeout)
-   local request_body = { sink = _ltn12.sink.file(io.open(file_name, "wb")) }
+   local request_body = { sink = file_name }
    doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
 end
 
