@@ -11,16 +11,22 @@ local result_callbacks = {}
 local timeout_callbacks = {}
 local timeouts = {}
 
--- This is really the function you should use instead of calling request directly.
+-- Use doAsyncRemoteRequest to make generic asynchronous requests.
+-- Use HEAD to retrieve just file header information.
+
 -- result_callback_function gets arguments (retval, page, status, headers, full_status, requested_url, request_body)
 -- You can set result_callback_function to nil if you just want to print everything that comes back to the screen.
--- callback_on_timeout function gets arguments (requested_url, timeout_after)
--- request_protocol is HTTP or HTTPS
+-- callback_on_timeout function gets arguments (requested_url, timeout_after, request_body)
+-- request_protocol is HTTP or HTTPS (if not provided, it will be inferred from the request_url)
 -- timeout_after is in seconds
--- request_body is either nil, a string (which will switch the HTTP method to POST instead of the default GET), or a table of additional HTTP request parameters such as source/sink/method/headers. See http://w3.impa.br/~diego/software/luasocket/http.html for more details
+-- request_body is either nil, a string (which will switch the HTTP method to POST instead of the default GET), or a table of HTTP request parameters such as source/sink/method/headers. See http://w3.impa.br/~diego/software/luasocket/http.html for more details
 function doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
    if request_protocol == nil then
-      request_protocol = "HTTPS"
+      if starts_with(request_url:lower(), "https:") then
+         request_protocol = "HTTPS"
+      elseif starts_with(request_url:lower(), "http:") then
+         request_protocol = "HTTP"
+      end
    end
    if timeout_after == nil then
       timeout_after = 30
@@ -65,11 +71,22 @@ function GETFILE(request_url, result_callback_function, request_protocol, file_n
 end
 
 
+function starts_with(str, start)
+   return str:sub(1, #start) == start
+end
 
-
-
-function default_timeout_callback(requested_url, timeout)
-   print("Async Request ["..requested_url.."] Thread Timed Out After "..tostring(timeout).."s")
+function default_timeout_callback(requested_url, timeout, request_body)
+   print("Request to ["..requested_url.."] timed out after "..tostring(timeout).." second"..(timeout ~= 1 and "s." or "."))
+   if request_body then
+      if type(request_body) == "table" then
+         require "tprint"
+         print("Message body was: {")
+         tprint(request_body, 3)
+         print("}")
+      else
+         print("Message Body Was:", request_body)
+      end
+   end
 end
 
 local network_thread_code = string.dump(function(arg)
