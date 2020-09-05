@@ -288,6 +288,7 @@ end
 function ThemedTextWindow(
    id, default_left, default_top, default_width, default_height, title, title_alignment, 
    is_temporary, resizeable, text_scrollable, text_unselectable, text_uncopyable, no_url_hyperlinks,
+   no_autowrap,
    title_font_name, title_font_size, text_font_name, text_font_size, text_max_lines, text_padding,
    menu_string_generator_function, menu_result_handler_function
 )
@@ -321,7 +322,7 @@ function ThemedTextWindow(
    self.textrect = TextRect.new(
       self.id, "textrect", self.bodyleft, self.bodytop, tr_right, self.bodybottom-1, text_max_lines, 
       text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size, nil, nil, text_unselectable,
-      text_uncopyable, no_url_hyperlinks
+      text_uncopyable, no_url_hyperlinks, no_autowrap
    )
    self.textrect:setExternalMenuFunction(menu_string_generator_function, menu_result_handler_function)
    if text_scrollable then
