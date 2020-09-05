@@ -44,7 +44,8 @@ TextRect_mt = { __index = TextRect }
 function TextRect.new(
    window, name, left, top, right, bottom, max_lines, scrollable, background_color, 
    padding, font_name, font_size, external_scroll_handler, call_on_select, 
-   unselectable, uncopyable, no_url_hyperlinks, menu_string_generator_function, menu_result_handler_function
+   unselectable, uncopyable, no_url_hyperlinks, no_autowrap,
+   menu_string_generator_function, menu_result_handler_function
 )
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..name
@@ -53,14 +54,16 @@ function TextRect.new(
    new_tr:configure(
       left, top, right, bottom, max_lines, scrollable, background_color, 
       padding, font_name, font_size, external_scroll_handler, call_on_select, 
-      unselectable, uncopyable, no_url_hyperlinks, menu_string_generator_function, menu_result_handler_function)
+      unselectable, uncopyable, no_url_hyperlinks, no_autowrap, 
+      menu_string_generator_function, menu_result_handler_function)
    return new_tr
 end
 
 function TextRect:configure(
    left, top, right, bottom, max_lines, scrollable, background_color,
    padding, font_name, font_size, external_scroll_handler, call_on_select,
-   unselectable, uncopyable, no_url_hyperlinks, menu_string_generator_function, menu_result_handler_function
+   unselectable, uncopyable, no_url_hyperlinks, no_autowrap,
+   menu_string_generator_function, menu_result_handler_function
 )
    self:setExternalMenuFunction(menu_string_generator_function, menu_result_handler_function)
    self.scrollable = scrollable
@@ -70,6 +73,7 @@ function TextRect:configure(
    self.max_lines = max_lines or self.max_lines
    self.font_name = font_name or self.font_name
    self.font_size = font_size or self.font_size
+   self.no_autowrap = no_autowrap
    self.unselectable = unselectable
    self.uncopyable = uncopyable
    self.no_url_hyperlinks = no_url_hyperlinks
@@ -144,7 +148,42 @@ function TextRect:doUpdateCallbacks()
    end
 end
 
+function TextRect:cap_messages()
+   if self.num_wrapped_lines >= self.max_lines then
+      -- if the history buffer is full then remove the oldest line
+      remove(self.wrapped_lines, 1)
+      self.num_wrapped_lines = self.num_wrapped_lines - 1
+      self.start_line = math.max(1, self.start_line - 1)
+      self.end_line = math.max(1, self.end_line - 1)
+      self.display_start_line = math.max(1, self.display_start_line - 1)
+      self.display_end_line = math.max(1, self.display_end_line - 1)
+      if self.copy_start_line then
+         self.copy_start_line = math.max(0, self.copy_start_line - 1)
+         self.copy_end_line = math.max(self.copy_start_line, self.copy_end_line - 1)
+      end
+   end -- buffer full
+end
+
+function TextRect:lockstep()
+   -- scroll down if viewing the bottom
+   if self.end_line == self.num_wrapped_lines then
+      if self.end_line >= self.rect_lines then
+         self.start_line = self.start_line + 1
+         self.display_start_line = self.start_line
+      end
+      self.end_line = self.end_line + 1
+      self.display_end_line = self.end_line
+   end
+end
+
 function TextRect:wrapLine(stylerun, rawURLs, raw_index)
+   if self.no_autowrap then
+      self:cap_messages()
+      self:lockstep()
+      self.num_wrapped_lines = self.num_wrapped_lines + 1
+      table.insert(self.wrapped_lines, {[1]=copytable.deep(stylerun), [2]=true, [3]=copytable.deep(rawURLs), [4]=0})
+      return
+   end
    local available = self.padded_width
    local line_styles = {}
    local beginning = true
@@ -250,19 +289,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
 
       -- out of styles or out of room? add a line for what we have so far
       if #styles == 0 or available <= 0 then
-         if self.num_wrapped_lines >= self.max_lines then
-            -- if the history buffer is full then remove the oldest line
-            remove(self.wrapped_lines, 1)
-            self.num_wrapped_lines = self.num_wrapped_lines - 1
-            self.start_line = math.max(1, self.start_line - 1)
-            self.end_line = math.max(1, self.end_line - 1)
-            self.display_start_line = math.max(1, self.display_start_line - 1)
-            self.display_end_line = math.max(1, self.display_end_line - 1)
-            if self.copy_start_line then
-               self.copy_start_line = math.max(0, self.copy_start_line - 1)
-               self.copy_end_line = math.max(self.copy_start_line, self.copy_end_line - 1)
-            end
-         end -- buffer full
+         self:cap_messages()
 
          local line_urls = {}
          while urls[1] and urls[1].stop <= length do
@@ -286,15 +313,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
             end
          end
 
-         -- scroll down if viewing the bottom
-         if self.end_line == self.num_wrapped_lines then
-            if self.end_line >= self.rect_lines then
-               self.start_line = self.start_line + 1
-               self.display_start_line = self.start_line
-            end
-            self.end_line = self.end_line + 1
-            self.display_end_line = self.end_line
-         end
+         self:lockstep()
 
          -- add new wrapped line component
          self.num_wrapped_lines = self.num_wrapped_lines + 1
