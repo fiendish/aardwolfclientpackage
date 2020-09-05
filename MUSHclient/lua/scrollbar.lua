@@ -157,7 +157,7 @@ function ScrollBar:draw(inside_callback)
       WindowMoveHotspot(self.window, self:generateHotspotID("scroller"), self.left, position, self.right, position + self.size)
    end
    Theme.Draw3DRect(self.window, self.left, position, self.right, position + self.size, false)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+
    self.has_hotspots = true
 
    if not inside_callback then
@@ -167,7 +167,7 @@ end
 
 function ScrollBar.mouseDown(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
-   sb.start_pos = WindowHotspotInfo(sb.window, sb:generateHotspotID("scroller"), 2) - WindowInfo(sb.window, 15)
+   sb.start_pos = WindowHotspotInfo(sb.window, hotspot_id, 2) - WindowInfo(sb.window, 15)
    sb.dragging_scrollbar = true
 end
 
@@ -203,24 +203,28 @@ function ScrollBar.dragMove(flags, hotspot_id)
       sb.step = math.floor(position / space_per_step) + 1
    end
    sb:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function ScrollBar.dragRelease(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
    sb.dragging_scrollbar = false
    sb:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function ScrollBar.cancelMouseDown(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
    sb.keepscrolling = ""
    sb:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function ScrollBar.mouseUp(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
    sb.keepscrolling = ""
    sb:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    return true
 end
 
@@ -244,6 +248,7 @@ function ScrollBar:scroll()
             end
          end
          self:draw()
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
          wait.time(0.01)
       end
    end)

@@ -42,19 +42,27 @@ TextRect_defaults = {
 TextRect_mt = { __index = TextRect }
 
 function TextRect.new(
-   window, name, left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select, unselectable
+   window, name, left, top, right, bottom, max_lines, scrollable, background_color, 
+   padding, font_name, font_size, external_scroll_handler, call_on_select, 
+   unselectable, uncopyable, no_url_hyperlinks, menu_string_generator_function, menu_result_handler_function
 )
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..name
    new_tr.window = window
    new_tr.name = name
-   new_tr:configure(left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select, unselectable)
+   new_tr:configure(
+      left, top, right, bottom, max_lines, scrollable, background_color, 
+      padding, font_name, font_size, external_scroll_handler, call_on_select, 
+      unselectable, uncopyable, no_url_hyperlinks, menu_string_generator_function, menu_result_handler_function)
    return new_tr
 end
 
 function TextRect:configure(
-   left, top, right, bottom, max_lines, scrollable, background_color, padding, font_name, font_size, external_scroll_handler, call_on_select, unselectable
+   left, top, right, bottom, max_lines, scrollable, background_color,
+   padding, font_name, font_size, external_scroll_handler, call_on_select,
+   unselectable, uncopyable, no_url_hyperlinks, menu_string_generator_function, menu_result_handler_function
 )
+   self:setExternalMenuFunction(menu_string_generator_function, menu_result_handler_function)
    self.scrollable = scrollable
    self.external_scroll_handler = external_scroll_handler
    self.call_on_select = call_on_select
@@ -63,6 +71,8 @@ function TextRect:configure(
    self.font_name = font_name or self.font_name
    self.font_size = font_size or self.font_size
    self.unselectable = unselectable
+   self.uncopyable = uncopyable
+   self.no_url_hyperlinks = no_url_hyperlinks
    if background_color ~= self.background_color then
       self.background_color = background_color or self.background_color
       self.highlight_color = getHighlightColor(self.background_color)
@@ -81,7 +91,6 @@ function TextRect:loadFont(name, size)
       WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
       WindowFont(self.window, self.font_bold, self.font_name, self.font_size, true, false, false, false, 0)
       self.line_height = WindowFontInfo(self.window, self.font, 1)
-      self.font_padding = WindowFontInfo(self.window, self.font, 4) + 1
    end
    if self.padded_height then
       self.rect_lines = math.floor(self.padded_height / self.line_height)
@@ -345,7 +354,7 @@ end
 
 function TextRect:drawLine(line, styles, backfill_start, backfill_end)
    local left = self.padded_left
-   local top = self.padded_top + (line * self.line_height)
+   local top = self.padded_top + (line * self.line_height) + 1
    if (backfill_start ~= nil and backfill_end ~= nil) then
       WindowRectOp(self.window, 2, backfill_start, top, backfill_end-1, top + self.line_height, self.highlight_color)
    end -- backfill
@@ -387,7 +396,7 @@ function TextRect:draw(cleanup_first, inside_callback)
          ax = nil
          zx = nil
          line_styles = self.wrapped_lines[count][1]
-         if self.keepscrolling == "" then
+         if (self.keepscrolling == "") and not self.no_url_hyperlinks then
             -- create clickable links for urls
             for _,url_part in ipairs(self.wrapped_lines[count][3]) do
                -- bold widths in urls. replacement for: local left = self.padded_left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, url_part.start-1))
@@ -475,8 +484,6 @@ function TextRect:draw(cleanup_first, inside_callback)
    if not inside_callback then
       self:doUpdateCallbacks()
    end
-
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function TextRect:addUpdateCallback(object, callback)
@@ -498,9 +505,9 @@ function TextRect:setRect(left, top, right, bottom)
    self.width = right-left
    self.height = bottom-top + 1
    self.padded_left = self.left + self.padding
-   self.padded_top = self.top + self.padding - self.font_padding
+   self.padded_top = self.top + self.padding
    self.padded_right = self.right - self.padding
-   self.padded_bottom = self.bottom - self.padding + self.font_padding
+   self.padded_bottom = self.bottom - self.padding
    self.padded_width = self.padded_right - self.padded_left
    self.padded_height = self.padded_bottom - self.padded_top
    if self.area_hotspot then
@@ -547,6 +554,7 @@ function TextRect:scroll(dragging)
          else
             self:draw(false)
          end
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
          wait.time(0.01)
       end
    end)
@@ -611,6 +619,7 @@ function TextRect.mouseDown(flags, hotspot_id)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
    end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 
@@ -644,6 +653,7 @@ function TextRect.dragMove(flags, hotspot_id)
          tr.keepscrolling = ""
       end
    end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function TextRect.dragRelease(flags, hotspot_id)
@@ -651,6 +661,7 @@ function TextRect.dragRelease(flags, hotspot_id)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
    end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function TextRect.mouseUp(flags, hotspot_id)
@@ -660,6 +671,7 @@ function TextRect.mouseUp(flags, hotspot_id)
       tr:rightClickMenu(hotspot_id)
    else
       tr:draw()
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    end
    return true
 end
@@ -668,6 +680,7 @@ function TextRect.cancelMouseDown(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
    tr.keepscrolling = ""
    tr:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function TextRect:updateSelect()
@@ -771,6 +784,7 @@ function TextRect.wheelMove(flags, hotspot_id)
          tr.display_start_line = tr.start_line
          tr.display_end_line = tr.end_line
          tr:draw()
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end
    else
       if tr.start_line > 1 then
@@ -780,6 +794,7 @@ function TextRect.wheelMove(flags, hotspot_id)
          tr.display_start_line = tr.start_line
          tr.display_end_line = tr.end_line
          tr:draw()
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end -- if
    end
 end
@@ -808,10 +823,14 @@ function TextRect.cancelLinkHover(flags, hotspot_id)
 
    if not string.find(WindowInfo(tr.window, 19), url, 1, true) then
       tr:draw(false)
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    end
 end
 
 function TextRect:setExternalMenuFunction(menu_string_generator, menu_result_function)
+   if menu_string_generator and not menu_result_function then
+      menu_result_function = function(x) print("No menu handler defined for "..x) end
+   end
    self.external_menu_string_generator = menu_string_generator
    self.external_menu_result_function = menu_result_function
 end
@@ -828,17 +847,18 @@ function TextRect:rightClickMenu(hotspot_id)
       table.insert(menu_functions, TextRect.copyUrl)
    end
 
-   if (self.copy_start_line ~= nil) and (self.copy_end_line ~= nil) then
-      table.insert(menu_text, "Copy Selected")
-      table.insert(menu_text, "Copy Selected Without Colors")
-      table.insert(menu_functions, TextRect.copy)
-      table.insert(menu_functions, TextRect.copyPlain)
+   if not self.uncopyable then
+      if (self.copy_start_line ~= nil) and (self.copy_end_line ~= nil) then
+         table.insert(menu_text, "Copy Selected")
+         table.insert(menu_text, "Copy Selected Without Colors")
+         table.insert(menu_functions, TextRect.copy)
+         table.insert(menu_functions, TextRect.copyPlain)
+      end
+      table.insert(menu_text, "Copy All")
+      table.insert(menu_functions, TextRect.copyFull)
+      table.insert(menu_text, "Copy All Without Colors")
+      table.insert(menu_functions, TextRect.copyFullPlain)
    end
-
-   table.insert(menu_text, "Copy All")
-   table.insert(menu_functions, TextRect.copyFull)
-   table.insert(menu_text, "Copy All Without Colors")
-   table.insert(menu_functions, TextRect.copyFullPlain)
 
    local inner_count = #menu_functions
 
@@ -868,7 +888,7 @@ function TextRect:rightClickMenu(hotspot_id)
          result = result - inner_count
          func = inner_count + 1
       end
-      menu_functions[func](self, hotspot_id, result)
+      menu_functions[func](result)
    end
 end
 

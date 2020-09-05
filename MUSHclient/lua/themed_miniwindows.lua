@@ -192,7 +192,7 @@ function ThemedBasicWindow(
    end
 
    self.window_map[self.id] = self
-   WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, 0x00ff00)
+   WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, Theme.PRIMARY_BODY)
    WindowFont(self.id, self.title_font, self.title_font_name, self.title_font_size, false, false, false, false, 0)
    self:dress_window()
    WindowShow(self.id, true)
@@ -202,15 +202,21 @@ end
 
 
 
+
+
+
 ThemedTextWindowClass = setmetatable({}, ThemedWindowClass)
 ThemedTextWindowClass.__index = ThemedTextWindowClass
 
-function ThemedTextWindowClass:__set_text_rect()
+function ThemedTextWindowClass:__set_text_rect(rewrap)
    local tr_right = self.bodyright
    if self.scrollbar then
       tr_right = tr_right - Theme.RESIZER_SIZE + 1
    end
    self.textrect:setRect(self.bodyleft, self.bodytop, tr_right, self.bodybottom-1)
+   if rewrap then
+      self.textrect:reWrapLines()
+   end
    self.textrect:draw()
 end
 
@@ -223,14 +229,13 @@ function ThemedTextWindowClass:__set_scrollbar()
 end
 
 function ThemedTextWindowClass:do_while_resizing()
-   self:__set_text_rect()
+   self:__set_text_rect(false)
    self:__set_scrollbar()
 end
 
 
 function ThemedTextWindowClass:do_after_resizing()
-   self:__set_text_rect()
-   self.textrect:reWrapLines()
+   self:__set_text_rect(true)
    self:__set_scrollbar()
 end
 
@@ -252,6 +257,7 @@ function ThemedTextWindowClass:addColorLine(color_text)
          self:dress_window()
       end
    end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function ThemedTextWindowClass:addStyles(styles)
@@ -265,6 +271,7 @@ function ThemedTextWindowClass:addStyles(styles)
          self:dress_window()
       end
    end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function ThemedTextWindowClass:clear()
@@ -280,8 +287,9 @@ end
 
 function ThemedTextWindow(
    id, default_left, default_top, default_width, default_height, title, title_alignment, 
-   is_temporary, resizeable, text_scrollable, text_unselectable, title_font_name, title_font_size,
-   text_font_name, text_font_size, text_max_lines, text_padding
+   is_temporary, resizeable, text_scrollable, text_unselectable, text_uncopyable, no_url_hyperlinks,
+   title_font_name, title_font_size, text_font_name, text_font_size, text_max_lines, text_padding,
+   menu_string_generator_function, menu_result_handler_function
 )
    require "text_rect"
    if text_scrollable then
@@ -310,7 +318,12 @@ function ThemedTextWindow(
    if self.resizer_type then
       scrollbar_bottom = scrollbar_bottom-Theme.RESIZER_SIZE
    end
-   self.textrect = TextRect.new(self.id, "textrect", self.bodyleft, self.bodytop, tr_right, self.bodybottom-1, text_max_lines, text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size, nil, nil, text_unselectable)
+   self.textrect = TextRect.new(
+      self.id, "textrect", self.bodyleft, self.bodytop, tr_right, self.bodybottom-1, text_max_lines, 
+      text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size, nil, nil, text_unselectable,
+      text_uncopyable, no_url_hyperlinks
+   )
+   self.textrect:setExternalMenuFunction(menu_string_generator_function, menu_result_handler_function)
    if text_scrollable then
       self.min_height = 100   
       self.scrollbar = ScrollBar.new(self.id, "scrollbar", tr_right, self.bodytop, self.bodyright, scrollbar_bottom)
