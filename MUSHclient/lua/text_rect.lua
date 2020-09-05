@@ -533,7 +533,8 @@ function TextRect:setRect(left, top, right, bottom)
       WindowMoveHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.bottom)
    end
    if self.line_height then
-      self.rect_lines = math.floor(self.padded_height / self.line_height)
+      -- add a third of a line before subdividing to make resizing a bit more comfortable
+      self.rect_lines = math.floor((self.padded_height+(self.line_height/3)) / self.line_height)
    end
 end
 
