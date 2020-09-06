@@ -1,4 +1,3 @@
-require "aard_register_z_on_create"
 require "mw_theme_base"
 require "movewindow"
 
@@ -342,3 +341,50 @@ function ThemedTextWindow(
    self:clear()
    return self
 end
+
+
+
+-- global function overrides
+
+ThemedWindowClass.proxyStore = {}
+
+function proxy_G(proxy_function_map)
+   local proxyMetatable = {}
+   function proxyMetatable.__index(t, k)
+      return proxy_function_map[k] or rawget(world, k)
+   end
+   function proxyMetatable.__newindex(t, k, v)
+      if proxy_function_map[k] then
+         ThemedWindowClass.proxyStore[k] = v
+      else
+         rawset(_G, k, v)
+      end
+   end
+   for k, _ in pairs(proxy_function_map) do
+      ThemedWindowClass.proxyStore[k] = _G[k]
+      _G[k] = nil
+   end
+   setmetatable(_G, proxyMetatable)   
+end
+
+-- wrap world.WindowCreate
+function NewWindowCreate(w, ...)
+   ret = world.WindowCreate(w, ...)
+   CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", w)
+   return ret
+end
+
+-- wrap OnPluginBroadcast even if it hasn't been created yet
+function NewOnPluginBroadcast(msg, id, name, text)
+   if (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
+      for win_id, _ in pairs(ThemedWindowClass.window_map) do
+         CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win_id)
+      end
+   end
+   local func = ThemedWindowClass.proxyStore["OnPluginBroadcast"] or rawget(_G, "OnPluginBroadcast")
+   if func then
+      func(msg, id, name, text)
+   end
+end
+
+proxy_G({OnPluginBroadcast=NewOnPluginBroadcast, WindowCreate=NewWindowCreate})
