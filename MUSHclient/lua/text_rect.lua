@@ -503,6 +503,8 @@ function TextRect:draw(cleanup_first, inside_callback)
    if not inside_callback then
       self:doUpdateCallbacks()
    end
+   
+   self:underline_hyperlinks()
 end
 
 function TextRect:addUpdateCallback(object, callback)
@@ -796,6 +798,7 @@ function TextRect.wheelMove(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
    local delta = math.ceil(bit.shr(flags, 16) / 3)
    local line_delta = math.ceil(delta / tr.line_height)
+   tr.wheeling = true
    if bit.band(flags, miniwin.wheel_scroll_back) ~= 0 then
       -- down
       if tr.start_line < tr.num_wrapped_lines - tr.rect_lines + 1 then
@@ -807,8 +810,8 @@ function TextRect.wheelMove(flags, hotspot_id)
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end
    else
+      -- up
       if tr.start_line > 1 then
-         -- up
          tr.start_line = math.max(1, tr.start_line - line_delta)
          tr.end_line = math.min(tr.num_wrapped_lines, tr.start_line + tr.rect_lines - 1)
          tr.display_start_line = tr.start_line
@@ -817,23 +820,32 @@ function TextRect.wheelMove(flags, hotspot_id)
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end -- if
    end
+   tr.wheeling = false
+end
+
+function TextRect:underline_hyperlinks()
+   local hotspot_id = WindowInfo(self.window, 19)
+   if hotspot_id then
+      local url = self.hyperlinks[hotspot_id]
+      if url then
+         for _, v in ipairs (WindowHotspotList(self.window)) do
+            if string.find(v, url, 1, true) then
+               local left = WindowHotspotInfo(self.window, v, 1)
+               local right = WindowHotspotInfo(self.window, v, 3)
+               local bottom = WindowHotspotInfo(self.window, v, 4) + 1
+               WindowLine(self.window, left, bottom, right, bottom, 0xffffff, 256, 1);
+            end
+         end
+      end
+   end
 end
 
 function TextRect.linkHover(flags, hotspot_id)
-   if GetOption("underline_hyperlinks") == 0 then
+   local tr = TextRect.hotspot_map[hotspot_id]
+   if tr.wheeling or (GetOption("underline_hyperlinks") == 0) then
       return
    end
-   local tr = TextRect.hotspot_map[hotspot_id]
-   local url = tr.hyperlinks[hotspot_id]
-   local hotspots = WindowHotspotList(tr.window)
-   for _, v in ipairs (hotspots) do
-      if string.find(v, url, 1, true) then
-         local left = WindowHotspotInfo(tr.window, v, 1)
-         local right = WindowHotspotInfo(tr.window, v, 3)
-         local bottom = WindowHotspotInfo(tr.window, v, 4) + 1
-         WindowLine(tr.window, left, bottom, right, bottom, 0xffffff, 256, 1);
-      end
-   end
+   tr:underline_hyperlinks()
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
