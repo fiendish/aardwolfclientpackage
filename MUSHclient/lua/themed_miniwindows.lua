@@ -43,7 +43,9 @@ function ThemedWindowClass.DeleteCallback(flags, hotspot_id)
    if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
       return  -- ignore non-left mouse button
    end
-   ThemedWindowClass.hotspot_map[hotspot_id]:delete(true)
+   if ThemedWindowClass.hotspot_map[hotspot_id] then
+      ThemedWindowClass.hotspot_map[hotspot_id]:delete(true)
+   end
 end
 
 function ThemedWindowClass.ResizeMouseDownCallback(flags, hotspot_id)
