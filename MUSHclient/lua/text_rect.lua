@@ -689,12 +689,11 @@ end
 function TextRect.mouseUp(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
    tr.keepscrolling = ""
+   tr:draw()
    if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       tr:rightClickMenu(hotspot_id)
-   else
-      tr:draw()
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    return true
 end
 
@@ -920,7 +919,7 @@ function TextRect:rightClickMenu(hotspot_id)
          result = result - inner_count
          func = inner_count + 1
       end
-      menu_functions[func](result)
+      menu_functions[func](self, hotspot_id, result)
    end
 end
 

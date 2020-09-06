@@ -909,7 +909,7 @@ end -- function chat_hide
 
 require "pairsbykeys"
 
-function extend_rightclick_menu_result(result)
+function extend_rightclick_menu_result(self, hotspot_id, result)
    if result == 1 then
       wanted_font = utils.fontpicker(font_name, font_size) --font dialog
       if wanted_font then
@@ -971,7 +971,7 @@ function extend_rightclick_menu_result(result)
       end
       ls = tonumber(ls)
       if not ls then -- not a number
-         extend_rightclick_menu_result(result)
+         extend_rightclick_menu_result(self, hotspot_id, result)
          return
       else
          log_file_size = ls
