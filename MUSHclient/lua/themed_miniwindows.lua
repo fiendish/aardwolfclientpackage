@@ -159,6 +159,14 @@ function ThemedWindowClass.SavePositionAfterDrag(flags, hotspot_id, win)
    return false
 end
 
+function ThemedWindowClass:show()
+   WindowShow(self.id, true)
+end
+
+function ThemedWindowClass:hide()
+   WindowShow(self.id, false)
+end
+
 function ThemedBasicWindow(
    id, default_left, default_top, default_width, default_height, title, title_alignment, is_temporary, 
    resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size
