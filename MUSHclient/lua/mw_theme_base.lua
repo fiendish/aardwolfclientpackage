@@ -331,11 +331,9 @@ end
 function DressWindow(win, font, title, title_alignment)
    local l, t, r, b = DrawBorder(win)
 
-   if title and (title ~= "") then
+   if title and (#title > 0) then
       t = DrawTitleBar(win, font, title, title_alignment)
-      if t > 1 then
-         movewindow.add_drag_handler(win, 0, 0, 0, t)
-      end
+      movewindow.add_drag_handler(win, 0, 0, 0, t)
    else
       movewindow.add_drag_handler(win, 0, 0, 0, 0)
    end
