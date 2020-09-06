@@ -143,6 +143,76 @@ function ThemedWindowClass:dress_window()
    end
 end
 
+function ThemedWindowClass:right_click_menu(hotspot_id)
+   local menu, menu_string, menu_table = {}, "", {}
+   local external_row_count = 0
+
+   if self.external_menu_generator and self.external_menu_result_function then
+      menu = self:external_menu_generator(hotspot_id)
+      assert(type(menu)=="string" or type(menu)=="table")
+      if type(menu) == "string" then
+         menu_table = utils.split(menu, "|")
+         menu_string = menu
+      elseif type(menu) == "table" then
+         for i, v in ipairs(menu) do
+            table.insert(menu_table, v)
+         end
+         menu_string = table.concat(menu, "|")
+      end
+      for i,v in ipairs(menu_table) do
+         if (
+            (v ~= "-") and (v:sub(1,1) ~= "^") and  (v:sub(1,2) ~= "+^") and (v:sub(1,1) ~= ">") 
+            and (v:sub(1,1) ~= "<") and (Trim(v) ~= "") 
+         ) then
+            external_row_count = external_row_count + 1
+         end
+      end
+      menu_string = menu_string.."|-|"
+   end
+
+   local addon_table = {"Bring To Front", "Send To Back"}
+   local addon_functions = {self.bring_to_front, self.send_to_back}
+   local addon_string = table.concat(addon_table, "|")
+   menu_string = menu_string..addon_string
+   
+   if menu_string:sub(1,1) ~= "!" then
+      menu_string = "!"..menu_string
+   end
+   
+   result = tonumber(WindowMenu(
+      self.id,
+      WindowInfo(self.id, 14), -- x coord
+      WindowInfo(self.id, 15), -- y coord
+      menu_string
+   ))
+
+   if result then
+      if result <= external_row_count then
+         self.external_menu_result_function(result)
+      else
+         result = result - external_row_count
+         assert(result <= #addon_functions)
+         addon_functions[result](self)
+      end
+   end
+end
+
+function ThemedWindowClass:set_external_menu(menu_generator, menu_result_function)
+   if menu_generator and not menu_result_function then
+      menu_result_function = function(x) print("No external menu result handler defined.") end
+   end
+   self.external_menu_generator = menu_generator
+   self.external_menu_result_function = menu_result_function
+end
+
+function ThemedWindowClass.RightClickMenuCallback(flags, hotspot_id, win)
+   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      local window = ThemedWindowClass.window_map[win]
+      window:right_click_menu(hotspot_id)
+   end
+   return true
+end
+
 function ThemedWindowClass.LeftDragOnlyCallback(flags, hotspot_id, win)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       return true
@@ -166,9 +236,19 @@ function ThemedWindowClass:hide()
    WindowShow(self.id, false)
 end
 
+function ThemedWindowClass:bring_to_front()
+   CallPlugin("462b665ecb569efbf261422f","boostMe", self.id)
+end
+
+function ThemedWindowClass:send_to_back()
+   CallPlugin("462b665ecb569efbf261422f","dropMe", self.id)
+end
+
+
 function ThemedBasicWindow(
    id, default_left, default_top, default_width, default_height, title, title_alignment, is_temporary, 
-   resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size
+   resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size,
+   external_menu_generator, external_menu_result_function
 )
 
    local self = {
@@ -192,13 +272,14 @@ function ThemedBasicWindow(
       height = tonumber(GetVariable(id.."height")) or default_height,
    }
    setmetatable(self, ThemedWindowClass)
-   self.windowinfo = movewindow.install(id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mousedown=self.LeftDragOnlyCallback, dragmove=self.LeftDragOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left, y=default_top})
    
    if self.window_map[id] then
       self.window_map[id]:delete()
    end
-
    self.window_map[self.id] = self
+
+   self.windowinfo = movewindow.install(id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftDragOnlyCallback, dragmove=self.LeftDragOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left, y=default_top})
+   self:set_external_menu(external_menu_generator, external_menu_result_function)
    WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, Theme.PRIMARY_BODY)
    WindowFont(self.id, self.title_font, self.title_font_name, self.title_font_size, false, false, false, false, 0)
    self:dress_window()
