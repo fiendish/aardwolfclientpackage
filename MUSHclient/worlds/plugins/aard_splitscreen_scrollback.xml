@@ -102,8 +102,8 @@ end
 function OnPluginSelectionChanged()
    local new_csl = GetSelectionStartLine()
    local new_cel = GetSelectionEndLine()
-   local new_csp = GetSelectionStartColumn()-1
-   local new_cep = GetSelectionEndColumn()-1
+   local new_csp = GetSelectionStartColumn()
+   local new_cep = GetSelectionEndColumn()
 
    if rect then
       if csl == new_csl and cel == new_cel and csp == new_csp and cep == new_cep then
@@ -114,7 +114,7 @@ function OnPluginSelectionChanged()
          rect:set_selection(
             rect.rect_lines - (num_lines - 1 - csl),
             rect.rect_lines - (num_lines - 1 - cel),
-            csp, cep
+            csp-1, cep-1
          )
          rect:draw()
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
@@ -124,11 +124,7 @@ function OnPluginSelectionChanged()
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end
    else
-      if (new_csl == 0) 
-         and (new_cel == 0)
-         and (new_csp == 0)
-         and (new_cep == 0)
-      then
+      if (new_csl == 0) and (new_cel == 0) and (new_csp == 0) and (new_cep == 0) then
          Pause(false)
       end
    end
@@ -204,15 +200,6 @@ function check_display()
             local l, t, r, b = Theme.DrawBorder(win)
             Theme.Draw3DRect(win, -1, 1, 0, title_height)
             t = title_height
-            local copy_main_selection_to_split = false
-            local csl, cel = nil, nil
-            if rect and rect.copy_start_line then
-               copy_main_selection_to_split = true
-               csl = num_lines - rect.rect_lines - 1 + rect.copy_start_line
-               cel = num_lines - rect.rect_lines - 1 + rect.copy_end_line
-               csp = rect.start_copying_pos
-               cep = rect.end_copying_pos
-            end
             if rect then
                rect:unInit()
                rect = nil
@@ -228,22 +215,19 @@ function check_display()
                'ScrollMain',
                select_in_main
             )
-            local wsl = GetSelectionStartLine()
-            if wsl ~= 0 then
-               copy_main_selection_to_split = true
-               csl = wsl
-               cel = GetSelectionEndLine()
-               csp = GetSelectionStartColumn()-1
-               cep = GetSelectionEndColumn()-1
-            end
             for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
                rect:addStyles(GetStyleInfo(num_lines - i))
             end
-            if copy_main_selection_to_split then
+            local wsl = GetSelectionStartLine()
+            if wsl ~= 0 then
+               csl = wsl
+               cel = GetSelectionEndLine()
+               csp = GetSelectionStartColumn()
+               cep = GetSelectionEndColumn()
                rect:set_selection(
                   rect.rect_lines - (num_lines - 1 - csl),
                   rect.rect_lines - (num_lines - 1 - cel),
-                  csp, cep
+                  csp-1, cep-1
                )
             end
             rect:draw()
