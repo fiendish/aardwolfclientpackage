@@ -31,7 +31,7 @@ function ThemedWindowClass:delete(deferred)
 end
 
 function ThemedWindowClass:reset()
-   WindowPosition(self.id, self.default_x, self.default_y, 0, 18)
+   WindowPosition(self.id, self.default_left_position, self.default_top_position, 0, 18)
    self:resize(self.default_width, self.default_height)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    SetVariable(self.id.."width", self.default_width)
@@ -231,9 +231,14 @@ end
 
 
 function ThemedBasicWindow(
-   id, default_left, default_top, default_width, default_height, title, title_alignment, is_temporary, 
+   id, default_left_position, default_top_position, default_width, default_height, title, title_alignment, is_temporary, 
    resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size
 )
+   assert(id, "ThemedBasicWindow Error: argument 1, id is required")
+   assert(default_left_position, "ThemedBasicWindow Error: argument 2, default_left_position is required")
+   assert(default_top_position, "ThemedBasicWindow Error: argument 3, default_top_position is required")
+   assert(default_width, "ThemedBasicWindow Error: argument 4, default_width is required")
+   assert(default_height, "ThemedBasicWindow Error: argument 5, default_height is required")
 
    local self = {
       id = id,
@@ -242,8 +247,8 @@ function ThemedBasicWindow(
       title = title,
       min_width = 100,
       min_height = 50,
-      default_x = default_x,
-      default_y = default_y,
+      default_left_position = default_left_position,
+      default_top_position = default_top_position,
       default_width = default_width,
       default_height = default_height,
       title_alignment = title_alignment,
@@ -262,7 +267,7 @@ function ThemedBasicWindow(
    end
    self.window_map[self.id] = self
 
-   self.windowinfo = movewindow.install(id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left, y=default_top})
+   self.windowinfo = movewindow.install(id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left_position, y=default_top_position})
    WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, Theme.PRIMARY_BODY)
    WindowFont(self.id, self.title_font, self.title_font_name, self.title_font_size, false, false, false, false, 0)
    self:dress_window()
@@ -357,11 +362,17 @@ function ThemedTextWindowClass:clear()
 end
 
 function ThemedTextWindow(
-   id, default_left, default_top, default_width, default_height, title, title_alignment, 
-   is_temporary, resizeable, text_scrollable, text_unselectable, text_uncopyable, no_url_hyperlinks,
-   no_autowrap,
+   id, default_left_position, default_top_position, default_width, default_height, title, title_alignment, 
+   is_temporary, resizeable, text_scrollable, text_selectable, text_copyable, url_hyperlinks,
+   autowrap,
    title_font_name, title_font_size, text_font_name, text_font_size, text_max_lines, text_padding
 )
+   assert(id, "ThemedTextWindow Error: argument 1, id is required")
+   assert(default_left_position, "ThemedTextWindow Error: argument 2, default_left_position is required")
+   assert(default_top_position, "ThemedTextWindow Error: argument 3, default_top_position is required")
+   assert(default_width, "ThemedTextWindow Error: argument 4, default_width is required")
+   assert(default_height, "ThemedTextWindow Error: argument 5, default_height is required")
+
    require "text_rect"
    if text_scrollable then
       require "scrollbar"
@@ -376,8 +387,9 @@ function ThemedTextWindow(
    end
 
    local self = ThemedBasicWindow(
-      id, default_left, default_top, default_width, default_height, title, title_alignment, is_temporary, 
-      resizer_type, ThemedTextWindowClass.do_while_resizing, ThemedTextWindowClass.do_after_resizing, ThemedTextWindowClass.OnDelete, title_font_name, title_font_size
+      id, default_left_position, default_top_position, default_width, default_height, title, title_alignment, is_temporary, 
+      resizer_type, ThemedTextWindowClass.do_while_resizing, ThemedTextWindowClass.do_after_resizing, 
+      ThemedTextWindowClass.OnDelete, title_font_name, title_font_size
    )
    setmetatable(self, ThemedTextWindowClass)
 
@@ -391,8 +403,8 @@ function ThemedTextWindow(
    end
    self.textrect = TextRect.new(
       self.id, "textrect", self.bodyleft, self.bodytop, tr_right, self.bodybottom-1, text_max_lines, 
-      text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size, nil, nil, text_unselectable,
-      text_uncopyable, no_url_hyperlinks, no_autowrap
+      text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size, nil, nil, not text_selectable,
+      not text_copyable, not url_hyperlinks, not autowrap
    )
    self.textrect:setExternalMenuFunction(function() return self:get_menu_items() end)
    if text_scrollable then
