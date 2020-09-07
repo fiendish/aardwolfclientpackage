@@ -145,7 +145,7 @@ function ThemedWindowClass:dress_window()
 
    if self.is_temporary then
       self.hotspot_map[self.id.."_close"] = self
-      Theme.Add3DButton(self.id, self.id.."_close", self.title_font, -1, -1, "X", false, Theme.TITLE_PADDING, Theme.TITLE_PADDING, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback)
+      Theme.Add3DTextButton(self.id, self.id.."_close", self.title_font, -1, -1, "X", false, Theme.TITLE_PADDING, Theme.TITLE_PADDING, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback)
    else
       self.hotspot_map[self.id.."_close"] = nil
    end
