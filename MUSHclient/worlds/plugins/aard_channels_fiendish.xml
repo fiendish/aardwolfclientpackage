@@ -250,7 +250,7 @@ function makeRect(i)
    tabs_rects[i]:addUpdateCallback(tabs_scrollbars[i], tabs_scrollbars[i].setScroll)
    tabs_scrollbars[i]:addUpdateCallback(tabs_rects[i], tabs_rects[i].setScroll)
 
-   tabs_rects[i]:setExternalMenuFunction(extend_rightclick_menu_string, extend_rightclick_menu_result)
+   tabs_rects[i]:setExternalMenuFunction(extend_rightclick_menu)
    tabs_rects[i]:loadFont(font_name, font_size)
 
    bump_top_for_tabs()
@@ -899,218 +899,308 @@ end
 
 function chat_show(name, line, wildcards)
    WindowShow( win, true )
-   ColourNote ("yellow", "", "Chats window now shown. Type 'chats hide' to hide it.")
+   ColourNote("yellow", "", "Chats window now shown. Type 'chats hide' to hide it.")
 end -- function chat_show
 
 function chat_hide(name, line, wildcards)
    WindowShow( win, false )
-   ColourNote ("yellow", "", "Chats window now hidden. Type 'chats show' to see it again.")
+   ColourNote("yellow", "", "Chats window now hidden. Type 'chats show' to see it again.")
 end -- function chat_hide
 
 require "pairsbykeys"
 
-function extend_rightclick_menu_result(self, hotspot_id, result)
-   if result == 1 then
-      wanted_font = utils.fontpicker(font_name, font_size) --font dialog
-      if wanted_font then
-         font_name = wanted_font.name
-         font_size = wanted_font.size
-         SetVariable("font_name", font_name)
-         SetVariable("font_size", font_size)
-         WindowFont(win, "channels_font", font_name, font_size, false, false, false, false, 0)
-         tab_font_height = Theme.TextHeight(win, "channels_font")
-         for i = 1,num_tabs do
-            tabs_rects[i]:loadFont(font_name, font_size)
-            tabs_rects[i]:reWrapLines()
+function extend_rightclick_menu()
+   local menu_items = {}
+   for i, v in ipairs({
+      {
+         "Configure Font",
+         function() 
+            wanted_font = utils.fontpicker(font_name, font_size) --font dialog
+            if wanted_font then
+               font_name = wanted_font.name
+               font_size = wanted_font.size
+               SetVariable("font_name", font_name)
+               SetVariable("font_size", font_size)
+               WindowFont(win, "channels_font", font_name, font_size, false, false, false, false, 0)
+               tab_font_height = Theme.TextHeight(win, "channels_font")
+               for i = 1,num_tabs do
+                  tabs_rects[i]:loadFont(font_name, font_size)
+                  tabs_rects[i]:reWrapLines()
+               end
+               setupDisplay()
+            end
+            SaveState()
          end
-         setupDisplay()
-      end
-   elseif result == 2 then
-      date_format = ""
-      ColourNote ("yellow", "", "Timestamps in communication window DISABLED.")
-   elseif result == 3 then
-      date_format = "[%d %b %H:%M:%S] "
-      ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
-   elseif result == 4 then
-      date_format = "[%d %b %I:%M:%S%p] "
-      ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
-   elseif result == 5 then
-      date_format = "[%H:%M:%S] "
-      ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
-   elseif result == 6 then
-      date_format = "[%I:%M:%S%p] "
-      ColourNote ("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
-   elseif result == 7 then
-      log_to_file = (((0 == log_to_file) and 1) or 0)
-      SetVariable("log_to_file", log_to_file)
-      if log_to_file == 0 then
-         ColourNote ("yellow", "", "Logging to file is now DISABLED.")
-      else
-         ColourNote ("yellow", "", "Logging to file is now ENABLED.")
-      end
-   elseif result == 8 then
-      log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
-      SetVariable("log_colour_codes", log_colour_codes)
-      if log_colour_codes == 0 then
-         ColourNote ("yellow", "", "Color codes will be stripped from the log file.")
-      else
-         ColourNote ("yellow", "", "Color codes will be included in the log file.")
-      end
-   elseif result == 9 then
-      log_timestamps = (((0 == log_timestamps) and 1) or 0)
-      SetVariable("log_timestamps", log_timestamps)
-      if log_timestamps == 0 then
-         ColourNote ("yellow", "", "Timestamps will not be included in the log file.")
-      else
-         ColourNote ("yellow", "", "Timestamps will be included in the log file.")
-      end
-   elseif result == 10 then
-      local ls = utils.inputbox("Input a size in MB. (0 for None)", "Log File Split Size", log_file_size, "", 10, {prompt_height = 16, box_width = 180, box_height = 130, reply_width = 40, reply_height = 20})
-      if not ls then -- canceled
-         return
-      end
-      ls = tonumber(ls)
-      if not ls then -- not a number
-         extend_rightclick_menu_result(self, hotspot_id, result)
-         return
-      else
-         log_file_size = ls
-      end
-      if log_file_size == 0 then
-         ColourNote ("yellow", "", "Log file will not be split.")
-      else
-         ColourNote ("yellow", "", "Log files will be split at "..log_file_size.." MB.")
-      end
-   end
-
-   local echo_skip = 0
-   if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
-      echo_skip = 4
-      if result == 11 then
-         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "on")
-      elseif result == 12 then
-         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "off")
-      elseif result == 13 then
-         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "channels")
-      elseif result == 14 then
-         CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "nonchannels")
-      end
-   end
-
-   noremove = (num_tabs < 2) and 1 or 0
-
-   if result == 11+echo_skip then
-      setTab(addTab())
-   elseif result == 12+echo_skip-noremove then
-      removeTab()
-   elseif result == 13+echo_skip-noremove then
-      local name = utils.inputbox("Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab))
-      if not name then
-         return -- cancel was pressed, so keep existing name
-      end
-      nameTab(current_tab, name)
-   elseif result == 14+echo_skip-noremove then
-      local defaults = {}
-      local tbl = {}
-      for k,v in pairs(tabs_channel_captures[current_tab]) do
-         tbl[k] = k
-         defaults[k] = v["capture"]
-      end
-
-      local capture_result = utils.multilistbox ("Choose which channels to capture to this communication log tab.", "Communication Log Channel Selection", tbl, defaults)
-      if capture_result then
-         for k,v in pairs(tabs_channel_captures[current_tab]) do
-            v["capture"] = capture_result[k]
+      },
+      {">Timestamp", ""},
+      {
+         ((date_format == "") and "+" or "").."No Timestamps",
+         function()
+            date_format = ""
+            ColourNote("yellow", "", "Timestamps in communication window DISABLED.")
+            SaveState()
          end
-      end
-      reduce_diverse_channels()
-   elseif result == 15+echo_skip-noremove then
-      local defaults = {}
-      for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
-         defaults[k] = v["capture"]
-      end
-
-      local capture_result = utils.multilistbox ("Choose which non-channel messages to capture to this communication log tab.", "Communication Log Channel Selection", init_nonchannel_pairs, defaults)
-      if capture_result then
-         for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
-            v["capture"] = capture_result[k]
+      },
+      {
+         ((date_format == "[%d %b %H:%M:%S] ") and "+" or "").."30 Aug 13:29:49",
+         function()
+            date_format = "[%d %b %H:%M:%S] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 13:29:49'.")
+            SaveState()
          end
-      end
-      EnableTrigger("info", check_nonchannel_trigger("info"))
-      EnableTrigger("raidinfo", check_nonchannel_trigger("raidinfo"))
-      EnableTrigger("claninfo", check_nonchannel_trigger("claninfo"))
-      EnableTrigger("global_quest", check_nonchannel_trigger("global_quest"))
-      EnableTrigger("remort_auction", check_nonchannel_trigger("remort_auction"))
-      EnableTrigger("warfare", check_nonchannel_trigger("warfare"))
-      EnableTrigger("remote_socials", check_nonchannel_trigger("remote_socials"))
-   elseif result == 16+echo_skip-noremove then
-      tabs_rects[current_tab]:clear()
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
-   elseif result == 17+echo_skip-noremove then
-      CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-   elseif result == 18+echo_skip-noremove then
-      CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-   elseif result == 19+echo_skip-noremove then
-    if window_title == "" then
-        window_title = "Communication Log"
-    else
-        window_title = ""
-    end
-    setupDisplay()
+      },
+      {
+         ((date_format == "[%d %b %I:%M:%S%p] ") and "+" or "").."30 Aug 01:20:12PM",
+         function()
+            date_format = "[%d %b %I:%M:%S%p] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
+            SaveState()
+         end
+      },
+      {
+         ((date_format == "[%H:%M:%S] ") and "+" or "").."13:29:08",
+         function()
+            date_format = "[%H:%M:%S] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '13:29:08'.")
+            SaveState()
+         end
+      },
+      {
+         ((date_format == "[%I:%M:%S%p] ") and "+" or "").."1:22:06 PM",
+         function()
+            date_format = "[%I:%M:%S%p] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
+            SaveState()
+         end
+      },
+      {"<", ""},
+      {">Logging to File", ""},
+      {
+         (log_to_file==1) and "Disable" or "Enable",
+         function()
+            log_to_file = (((0 == log_to_file) and 1) or 0)
+            SetVariable("log_to_file", log_to_file)
+            if log_to_file == 0 then
+               ColourNote("yellow", "", "Logging to file is now DISABLED.")
+            else
+               ColourNote("yellow", "", "Logging to file is now ENABLED.")
+            end
+            SaveState()
+         end
+      },
+      {
+         ((log_colour_codes == 1) and "+" or "").."Log with Color Codes",
+         function()
+            log_colour_codes = (((0 == log_colour_codes) and 1) or 0)
+            SetVariable("log_colour_codes", log_colour_codes)
+            if log_colour_codes == 0 then
+               ColourNote("yellow", "", "Color codes will be stripped from the log file.")
+            else
+               ColourNote("yellow", "", "Color codes will be included in the log file.")
+            end
+            SaveState()
+         end
+      },
+      {
+         ((log_timestamps == 1) and "+" or "").."Log with Timestamps",
+         function()
+            log_timestamps = (((0 == log_timestamps) and 1) or 0)
+            SetVariable("log_timestamps", log_timestamps)
+            if log_timestamps == 0 then
+               ColourNote("yellow", "", "Timestamps will not be included in the log file.")
+            else
+               ColourNote("yellow", "", "Timestamps will be included in the log file.")
+            end
+            SaveState()
+         end
+      },
+      {"-", ""},
+      {
+         "Set Log File Split Size ("..((log_file_size == 0) and "None" or (tostring(log_file_size).."MB"))..")",
+         function()
+            local ls = nil
+            while not ls do
+               ls = utils.inputbox("Input a size in MB. (0 for None)", "Log File Split Size", log_file_size, "", 10, {prompt_height = 16, box_width = 180, box_height = 130, reply_width = 40, reply_height = 20})
+               if not ls then -- canceled
+                  return
+               end
+               ls = tonumber(ls)
+            end
+            log_file_size = ls
+            if log_file_size == 0 then
+               ColourNote("yellow", "", "Log file will not be split.")
+            else
+               ColourNote("yellow", "", "Log files will be split at "..log_file_size.." MB.")
+            end
+            SaveState()
+         end
+      },
+      {"<", ""},
+   }) do
+      table.insert(menu_items, v)
    end
-   SaveState()
-end
-
-function extend_rightclick_menu_string(tr)
-   local menu_strings = {
-      "Configure Font",
-      ">Timestamp",
-      ((date_format == "") and "+" or "").."No Timestamps",
-      ((date_format == "[%d %b %H:%M:%S] ") and "+" or "").."30 Aug 13:29:49",
-      ((date_format == "[%d %b %I:%M:%S%p] ") and "+" or "").."30 Aug 01:20:12PM",
-      ((date_format == "[%H:%M:%S] ") and "+" or "").."13:29:08",
-      ((date_format == "[%I:%M:%S%p] ") and "+" or "").."1:22:06 PM",
-      "<",
-      ">Logging to File",
-      (log_to_file==1) and "Disable" or "Enable",
-      ((log_colour_codes == 1) and "+" or "").."Log with Color Codes",
-      ((log_timestamps == 1) and "+" or "").."Log with Timestamps",
-      "-",
-      "Set Log File Split Size ("..((log_file_size == 0) and "None" or (tostring(log_file_size).."MB"))..")",
-      "<",
-      "Add New Tab",
-      "-",
-      ((num_tabs < 2) and "^" or "").."Remove This Tab",
-      "-",
-      "Name This Tab",
-      ">Tab Capture Settings",
-      "Edit Channel Captures",
-      "Edit Non-channel Captures",
-      "<",
-      "Clear Tab",
-      "-",
-      "Bring to Front",
-      "Send to Back",
-      "Show/Hide Titlebar"
-   }
 
    if (IsPluginInstalled("55616ea13339bc68e963e1f8")) then
       -- chat echo plugin
-      local echo_menu_strings = {
-         ">Echo In Main Window Settings",
-         "Echo All",
-         "Echo None",
-         "-",
-         "Edit Channel Echoes",
-         "Edit Non-channel Echoes",
-         "<"
-      }
-
-      for i,v in ipairs(echo_menu_strings) do
-         table.insert(menu_strings, 15+i, v)
+      for i,v in ipairs({
+         {">Echo In Main Window Settings", ""},
+         {
+            "Echo All",
+            function()
+               CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "on")
+               SaveState()
+            end
+         },
+         {
+            "Echo None",
+            function()
+               CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "off")
+               SaveState()
+            end
+         },
+         {"-", ""},
+         {
+            "Edit Channel Echoes",
+            function()
+               CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "channels")
+               SaveState()
+            end
+         },
+         {
+            "Edit Non-channel Echoes",
+            function()
+               CallPlugin("55616ea13339bc68e963e1f8", "chat_echo", "nonchannels")
+               SaveState()
+            end
+         },
+         {"<", ""}
+      }) do
+         table.insert(menu_items, v)
       end
    end
-   return table.concat(menu_strings, "|")
+
+   for i,v in ipairs({
+      {
+         "Add New Tab",
+         function()
+            setTab(addTab())
+            SaveState()
+         end
+      },
+      {"-", ""},
+      {
+         ((num_tabs < 2) and "^" or "").."Remove This Tab",
+         function()
+            removeTab()
+            SaveState()
+         end
+      },
+      {"-", ""},
+      {
+         "Name This Tab",
+         function()
+            local name = utils.inputbox("Choose a (preferably short) name for this channel capture tab", "Name Channel Tab", tostring(tabs_names[current_tab] or current_tab))
+            if not name then
+               return -- cancel was pressed, so keep existing name
+            end
+            nameTab(current_tab, name)
+            SaveState()
+         end
+      },
+      {">Tab Capture Settings", ""},
+      {
+         "Edit Channel Captures",
+         function()
+            local defaults = {}
+            local tbl = {}
+            for k,v in pairs(tabs_channel_captures[current_tab]) do
+               tbl[k] = k
+               defaults[k] = v["capture"]
+            end
+      
+            local capture_result = utils.multilistbox ("Choose which channels to capture to this communication log tab.", "Communication Log Channel Selection", tbl, defaults)
+            if capture_result then
+               for k,v in pairs(tabs_channel_captures[current_tab]) do
+                  v["capture"] = capture_result[k]
+               end
+            end
+            reduce_diverse_channels()
+            SaveState()
+         end
+      },
+      {
+         "Edit Non-channel Captures",
+         function()
+            local defaults = {}
+            for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
+               defaults[k] = v["capture"]
+            end
+      
+            local capture_result = utils.multilistbox ("Choose which non-channel messages to capture to this communication log tab.", "Communication Log Channel Selection", init_nonchannel_pairs, defaults)
+            if capture_result then
+               for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
+                  v["capture"] = capture_result[k]
+               end
+            end
+            EnableTrigger("info", check_nonchannel_trigger("info"))
+            EnableTrigger("raidinfo", check_nonchannel_trigger("raidinfo"))
+            EnableTrigger("claninfo", check_nonchannel_trigger("claninfo"))
+            EnableTrigger("global_quest", check_nonchannel_trigger("global_quest"))
+            EnableTrigger("remort_auction", check_nonchannel_trigger("remort_auction"))
+            EnableTrigger("warfare", check_nonchannel_trigger("warfare"))
+            EnableTrigger("remote_socials", check_nonchannel_trigger("remote_socials"))
+            SaveState()
+         end
+      },
+      {"<", ""},
+      {
+         "Clear Tab",
+         function()
+            tabs_rects[current_tab]:clear()
+            CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+            SaveState()
+         end
+      },
+      {"-", ""},
+      {
+         "Bring to Front",
+         function()
+            CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+            SaveState()
+         end
+      },
+      {
+         "Send to Back",
+         function()
+            CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+            SaveState()
+         end
+      },
+      {
+         "Show/Hide Titlebar",
+         function()
+            if window_title == "" then
+               window_title = "Communication Log"
+           else
+               window_title = ""
+           end
+           setupDisplay()
+           SaveState()
+         end
+      }
+   }) do
+      table.insert(menu_items, v)
+   end
+   local menu_strings = {}
+   local menu_functions = {}
+   for i,v in ipairs(menu_items) do
+      table.insert(menu_strings, v[1])
+      if type(v[2]) == "function" then
+         table.insert(menu_functions, v[2])
+      end
+   end
+
+   return table.concat(menu_strings, "|"), menu_functions
 end
 
 function getmemoryusage()

@@ -45,7 +45,7 @@ function TextRect.new(
    window, name, left, top, right, bottom, max_lines, scrollable, background_color, 
    padding, font_name, font_size, external_scroll_handler, call_on_select, 
    unselectable, uncopyable, no_url_hyperlinks, no_autowrap,
-   menu_string_generator_function, menu_result_handler_function
+   menu_generator_function
 )
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..name
@@ -55,7 +55,7 @@ function TextRect.new(
       left, top, right, bottom, max_lines, scrollable, background_color, 
       padding, font_name, font_size, external_scroll_handler, call_on_select, 
       unselectable, uncopyable, no_url_hyperlinks, no_autowrap, 
-      menu_string_generator_function, menu_result_handler_function)
+      menu_generator_function)
    return new_tr
 end
 
@@ -63,9 +63,9 @@ function TextRect:configure(
    left, top, right, bottom, max_lines, scrollable, background_color,
    padding, font_name, font_size, external_scroll_handler, call_on_select,
    unselectable, uncopyable, no_url_hyperlinks, no_autowrap,
-   menu_string_generator_function, menu_result_handler_function
+   menu_generator_function
 )
-   self:setExternalMenuFunction(menu_string_generator_function, menu_result_handler_function)
+   self:setExternalMenuFunction(menu_generator_function)
    self.scrollable = scrollable
    self.external_scroll_handler = external_scroll_handler
    self.call_on_select = call_on_select
@@ -151,7 +151,7 @@ end
 function TextRect:cap_messages()
    if self.num_wrapped_lines >= self.max_lines then
       -- if the history buffer is full then remove the oldest line
-      remove(self.wrapped_lines, 1)
+      table.remove(self.wrapped_lines, 1)
       self.num_wrapped_lines = self.num_wrapped_lines - 1
       self.start_line = math.max(1, self.start_line - 1)
       self.end_line = math.max(1, self.end_line - 1)
@@ -858,12 +858,8 @@ function TextRect.cancelLinkHover(flags, hotspot_id)
    end
 end
 
-function TextRect:setExternalMenuFunction(menu_string_generator, menu_result_function)
-   if menu_string_generator and not menu_result_function then
-      menu_result_function = function(x) print("No menu handler defined for "..x) end
-   end
-   self.external_menu_string_generator = menu_string_generator
-   self.external_menu_result_function = menu_result_function
+function TextRect:setExternalMenuFunction(menu_generator_function)
+   self.external_menu_generator = menu_generator_function
 end
 
 function TextRect:rightClickMenu(hotspot_id)
@@ -891,17 +887,17 @@ function TextRect:rightClickMenu(hotspot_id)
       table.insert(menu_functions, TextRect.copyFullPlain)
    end
 
-   local inner_count = #menu_functions
-
-   if self.external_menu_string_generator and self.external_menu_result_function then
-      local ems = self.external_menu_string_generator()
-      if ems:sub(1,1) == "!" then
-         ems = ems:sub(2)
+   if self.external_menu_generator then
+      local external_string, external_functions = self.external_menu_generator()
+      if external_string:sub(1,1) == "!" then
+         external_string = external_string:sub(2)
       end
 
       table.insert(menu_text, "-")
-      table.insert(menu_text, ems)
-      table.insert(menu_functions, self.external_menu_result_function)
+      table.insert(menu_text, external_string)
+      for _, v in ipairs(external_functions) do
+         table.insert(menu_functions, v)
+      end
    end
 
    result = tonumber(
@@ -914,12 +910,7 @@ function TextRect:rightClickMenu(hotspot_id)
    )
 
    if result then
-      func = result
-      if result > inner_count then
-         result = result - inner_count
-         func = inner_count + 1
-      end
-      menu_functions[func](self, hotspot_id, result)
+      menu_functions[result](self, hotspot_id, result)
    end
 end
 
