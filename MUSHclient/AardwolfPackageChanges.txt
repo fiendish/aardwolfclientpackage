@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2102 snapshot
+- new feature: New add_3d_text_button method for the easy miniwindows.
+
 r2101 snapshot
 - bug fix: Fixed a few more scrollback split highlighting issues introduced by the recent MUSHclient executable update. Might have added some new ones too. I hope not!
 
