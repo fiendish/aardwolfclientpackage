@@ -249,10 +249,12 @@ end
 function ButtonMouseDown(flags, hotspot_id)
    local callbacks = Theme.button_callbacks[hotspot_id]
    local win, font, left, top, text, utf8, x_padding, y_padding = unpack(Theme.button_metrics[hotspot_id])
-   Draw3DTextBox(win, font, left, top, text, utf8, true, x_padding, y_padding)
    if callbacks.mousedown_callback then
-      callbacks.mousedown_callback(flags, hotspot_id)
+      if callbacks.mousedown_callback(flags, hotspot_id) then
+         return
+      end
    end
+   Draw3DTextBox(win, font, left, top, text, utf8, true, x_padding, y_padding)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
