@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2101 snapshot
+- bug fix: Fixed a few more scrollback split highlighting issues introduced by the recent MUSHclient executable update. Might have added some new ones too. I hope not!
+
 r2100 snapshot
 - MAJOR NEW FEATURE: There's a new experimental Lua module to make creating miniwindow plugins one-click easy. A lot of things had to change internally for this to work, so it may cause problems in existing plugins. Let me know. Read about it at https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows
 - bug fix: The MUSHclient.exe update in r2092 made highlighting text in the scrollback split lower section bounce around a bit.
