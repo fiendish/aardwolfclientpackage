@@ -322,7 +322,7 @@ function ThemedTextWindowClass:OnDelete()
    end
 end
 
-function ThemedTextWindowClass:addColorLine(color_text)
+function ThemedTextWindowClass:add_color_line(color_text)
    self.textrect:addColorLine(color_text)
    self.textrect:draw()
    if self.scrollbar then
@@ -336,7 +336,7 @@ function ThemedTextWindowClass:addColorLine(color_text)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
-function ThemedTextWindowClass:addStyles(styles)
+function ThemedTextWindowClass:add_styles(styles)
    self.textrect:addStyles(styles)
    self.textrect:draw()
    if self.scrollbar then
