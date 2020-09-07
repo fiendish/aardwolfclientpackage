@@ -1,7 +1,8 @@
 Aardwolf Client Package Major Changes List
 
 r2100 snapshot
-- MAJOR NEW FEATURE: There's a new experimental Lua module to make creating miniwindow plugins one-click easy. A lot of things had to change internally for this to work, so it may cause problems in existing plugins. Let me know. Read about the feature at https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows
+- MAJOR NEW FEATURE: There's a new experimental Lua module to make creating miniwindow plugins one-click easy. A lot of things had to change internally for this to work, so it may cause problems in existing plugins. Let me know. Read about it at https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows
+- bug fix: The MUSHclient.exe update in r2092 made highlighting text in the scrollback split lower section bounce around a bit.
 
 r2093 snapshot
 - bug fix: The recon capture added in r2090 was overly greedy, and blocked access to recoveries.
