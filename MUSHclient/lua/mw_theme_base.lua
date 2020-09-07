@@ -238,6 +238,9 @@ end
 Theme.button_callbacks = {}
 Theme.button_metrics = {}
 function Add3DTextButton(win, button_id, font, left, top, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback)
+   if type(win) == "table" then
+      win = win.id
+   end
    local right, bottom = Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
    Theme.button_metrics[button_id] = {win, font, left, top, text, utf8, x_padding, y_padding}
    Theme.button_callbacks[button_id] = {mousedown_callback=mousedown_callback, mouseup_callback=mouseup_callback}
