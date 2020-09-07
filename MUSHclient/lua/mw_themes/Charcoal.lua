@@ -34,8 +34,11 @@ return {
    SCROLL_TRACK_COLOR2 = 0x696969,         -- Main color of scrollbar
    VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,  -- Scrollbar background texture
 
-   DYNAMIC_BUTTON_PADDING = 20,            -- Padding around button text if button is dynamically sized to the text
+   VERTICAL_BUTTON_PADDING = 15,           -- Space around text in dynamically-sized text buttons
+   HORIZONTAL_BUTTON_PADDING = 20,         -- Space around text in dynamically-sized text buttons
    RESIZER_SIZE = 16,                      -- Miniwindow resizer
+
+   DYNAMIC_BUTTON_PADDING = 20,            -- deprecated
 
    -- bg_texture_function is optional to override the default behavior.
    -- See Pink_Neon.lua for a "glitter on black" variant.

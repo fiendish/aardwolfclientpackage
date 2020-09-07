@@ -75,8 +75,11 @@ local default_theme = {
    SCROLL_TRACK_COLOR2 = 0x888888,
    VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
 
-   DYNAMIC_BUTTON_PADDING = 20,
-   RESIZER_SIZE = 16
+   VERTICAL_BUTTON_PADDING = 15,
+   HORIZONTAL_BUTTON_PADDING = 20,
+   RESIZER_SIZE = 16,
+
+   DYNAMIC_BUTTON_PADDING = 20  -- deprecated
 }
 
 function load_theme(file)
@@ -205,6 +208,7 @@ end
 function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y_padding)
    x_padding = x_padding or 0
    y_padding = y_padding or 0
+   text = text or ""
    local right = left + WindowTextWidth(win, font, text, utf8) + (2*x_padding) +4
    local bottom = top + TextHeight(win, font) + (2*y_padding) + 2
    Draw3DRect(win, left, top, right, bottom, depressed)
@@ -241,6 +245,8 @@ function Add3DTextButton(win, button_id, font, left, top, text, utf8, x_padding,
    if type(win) == "table" then
       win = win.id
    end
+   x_padding = x_padding or VERTICAL_BUTTON_PADDING or DYNAMIC_BUTTON_PADDING
+   y_padding = y_padding or HORIZONTAL_BUTTON_PADDING or DYNAMIC_BUTTON_PADDING
    local right, bottom = Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
    Theme.button_metrics[button_id] = {win, font, left, top, text, utf8, x_padding, y_padding}
    Theme.button_callbacks[button_id] = {mousedown_callback=mousedown_callback, mouseup_callback=mouseup_callback}
