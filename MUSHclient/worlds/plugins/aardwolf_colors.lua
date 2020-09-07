@@ -258,7 +258,7 @@ end
 
 require "copytable"
 function TruncateStyles (styles, startcol, endcol)
-   if not styles or #styles == 0 then
+   if (styles == nil) or (styles[1] == nil) then
       return nil
    end
 
@@ -266,7 +266,7 @@ function TruncateStyles (styles, startcol, endcol)
    local endcol = endcol or 99999 -- 99999 is assumed to be long enough to cover ANY style run
 
    -- negative column indices are used to measure back from the end
-   if startcol < 0 or endcol < 0 then
+   if (startcol < 0) or (endcol < 0) then
       local total_chars = 0
       for k,v in ipairs(styles) do
          total_chars = total_chars + v.length
@@ -285,7 +285,7 @@ function TruncateStyles (styles, startcol, endcol)
    end
 
    -- Trim to start and end positions in styles
-   local first_style = 0 -- not 1 because we check for foundness
+   local found_first = false
    local col_counter = 0
    local new_styles = {}
    local break_after = false
@@ -293,15 +293,17 @@ function TruncateStyles (styles, startcol, endcol)
       local new_style = copytable.shallow(v)
       col_counter = col_counter + new_style.length
       if endcol <= col_counter then
-         new_style.text = new_style.text:sub(1, endcol - (col_counter - v.length))
-         new_style.length = #(new_style.text)
+         local marker = endcol - (col_counter - v.length)
+         new_style.text = new_style.text:sub(1, marker)
+         new_style.length = marker
          break_after = true
       end
       if startcol <= col_counter then
-         if first_style == 0 then
-            first_style = k
-            new_style.text = new_style.text:sub(startcol - (col_counter - v.length))
-            new_style.length = #(new_style.text)
+         if not found_first then
+            local marker = startcol - (col_counter - v.length)
+            found_first = true
+            new_style.text = new_style.text:sub(marker)
+            new_style.length = new_style.length - marker
          end
          table.insert(new_styles, new_style)
       end
@@ -309,6 +311,18 @@ function TruncateStyles (styles, startcol, endcol)
    end
 
    return new_styles
+end
+
+function StylesWidth (win, plain_font, bold_font, styles, show_bold)
+   local width = 0
+   for i,v in ipairs(styles) do
+      local font = plain_font
+      if show_bold and v.bold and bold_font then
+         font = bold_font
+      end
+      width = width + WindowTextWidth(win, font, v.text)
+   end
+   return width
 end
 
 

@@ -102,8 +102,8 @@ end
 function OnPluginSelectionChanged()
    local new_csl = GetSelectionStartLine()
    local new_cel = GetSelectionEndLine()
-   local new_csp = GetSelectionStartColumn()
-   local new_cep = GetSelectionEndColumn()
+   local new_csp = GetSelectionStartColumn()-1
+   local new_cep = GetSelectionEndColumn()-1
 
    if rect then
       if csl == new_csl and cel == new_cel and csp == new_csp and cep == new_cep then
@@ -111,28 +111,15 @@ function OnPluginSelectionChanged()
       end
       csl, cel, csp, cep = new_csl, new_cel, new_csp, new_cep
       if (csl ~= cel) or (csp ~= cep) then
-         local sstxt = GetLineInfo(csl, 1):sub(1, csp - 1)
-         local setxt = GetLineInfo(cel, 1):sub(1, cep - 1)
-         local csx = WindowTextWidth(rect.window, rect.font, sstxt) + rect.padded_left
-         local cex = WindowTextWidth(rect.window, rect.font, setxt) + rect.padded_left + 1
-         local cptxt = get_selection_with_color() .. "@w"
-         rect.start_copying_x = csx
-         rect.end_copying_x = cex
-         rect.start_copying_pos = csp
-         rect.end_copying_pos = cep
-         rect.copy_start_line = rect.rect_lines - (num_lines - 1 - csl)
-         rect.copy_end_line = rect.rect_lines - (num_lines - 1 - cel)
-         rect.copied_text = cptxt
+         rect:set_selection(
+            rect.rect_lines - (num_lines - 1 - csl),
+            rect.rect_lines - (num_lines - 1 - cel),
+            csp, cep
+         )
          rect:draw()
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       elseif ((csl == 0) and (cel == 0) and (csp == 0) and (cep == 0)) then
-         rect.start_copying_x = nil
-         rect.end_copying_x = nil
-         rect.start_copying_pos = nil
-         rect.end_copying_pos = nil
-         rect.copy_start_line = nil
-         rect.copy_end_line = nil
-         rect.copied_text = ""
+         rect:set_selection(nil, nil, nil, nil)
          rect:draw()
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end
@@ -217,17 +204,14 @@ function check_display()
             local l, t, r, b = Theme.DrawBorder(win)
             Theme.Draw3DRect(win, -1, 1, 0, title_height)
             t = title_height
-            local carry = false
-            local csl, cel, csx, cex, cptxt = nil, nil, nil, nil, nil
+            local copy_main_selection_to_split = false
+            local csl, cel = nil, nil
             if rect and rect.copy_start_line then
-               carry = true
+               copy_main_selection_to_split = true
                csl = num_lines - rect.rect_lines - 1 + rect.copy_start_line
                cel = num_lines - rect.rect_lines - 1 + rect.copy_end_line
-               csx = rect.start_copying_x
-               cex = rect.end_copying_x
                csp = rect.start_copying_pos
                cep = rect.end_copying_pos
-               cptxt = rect.copied_text
             end
             if rect then
                rect:unInit()
@@ -246,28 +230,21 @@ function check_display()
             )
             local wsl = GetSelectionStartLine()
             if wsl ~= 0 then
-               carry = true
+               copy_main_selection_to_split = true
                csl = wsl
                cel = GetSelectionEndLine()
-               csp = GetSelectionStartColumn()
-               cep = GetSelectionEndColumn()
-               sstxt = GetLineInfo(csl, 1):sub(1, csp - 1)
-               setxt = GetLineInfo(cel, 1):sub(1, cep - 1)
-               csx = WindowTextWidth(rect.window, rect.font, sstxt) + rect.padded_left
-               cex = WindowTextWidth(rect.window, rect.font, setxt) + rect.padded_left + 1
-               cptxt = get_selection_with_color() .. "@w"
+               csp = GetSelectionStartColumn()-1
+               cep = GetSelectionEndColumn()-1
             end
             for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
                rect:addStyles(GetStyleInfo(num_lines - i))
             end
-            if carry then
-               rect.start_copying_x = csx
-               rect.end_copying_x = cex
-               rect.start_copying_pos = csp
-               rect.end_copying_pos = cep
-               rect.copy_start_line = rect.rect_lines - (num_lines - 1 - csl)
-               rect.copy_end_line = rect.rect_lines - (num_lines - 1 - cel)
-               rect.copied_text = cptxt
+            if copy_main_selection_to_split then
+               rect:set_selection(
+                  rect.rect_lines - (num_lines - 1 - csl),
+                  rect.rect_lines - (num_lines - 1 - cel),
+                  csp, cep
+               )
             end
             rect:draw()
             WindowMoveHotspot(win, 'bar', 0, 0, 0, t)
