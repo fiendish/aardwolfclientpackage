@@ -24,7 +24,7 @@ function get_selection_with_color()
    -- iterate to build up copy text
    for line = first_line, last_line do
       if line < last_line then
-         cpstr = cpstr..StylesToColoursOneLine(GetStyleInfo(line), first_column, GetLineInfo(line).length)
+         cpstr = cpstr..StylesToColours(TruncateStyles(GetStyleInfo(line), first_column, GetLineInfo(line).length))
          first_column = 1
 
          -- Is this a new line or merely the continuation of a paragraph?
@@ -32,7 +32,7 @@ function get_selection_with_color()
             cpstr = cpstr.."\r\n"
          end  -- new line
       else
-         cpstr = cpstr..StylesToColoursOneLine(GetStyleInfo(line), first_column, last_column-1)
+         cpstr = cpstr..StylesToColours(TruncateStyles(GetStyleInfo(line), first_column, last_column-1))
       end -- if
    end  -- for loop
 
