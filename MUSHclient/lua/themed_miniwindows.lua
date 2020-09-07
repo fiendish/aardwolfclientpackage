@@ -130,7 +130,7 @@ function ThemedWindowClass:resize(width, height, still_dragging)
 end
 
 function ThemedWindowClass:add_3d_text_button(id, left, top, text, utf8, tooltip, mousedown_callback, mouseup_callback, font, x_padding, y_padding)
-   self.hotspot_map[self.id..id] = self
+   self.hotspot_map[id] = self
    Theme.Add3DTextButton(self.id, id, font or self.title_font, left or self.bodyleft, top or self.bodytop, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback)
 end
 
@@ -149,7 +149,7 @@ function ThemedWindowClass:dress_window()
    end
 
    if self.is_temporary then
-      self:add_3d_text_button("_close", -1, -1, "X", false, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback, self.title_font, Theme.TITLE_PADDING, Theme.TITLE_PADDING)
+      self:add_3d_text_button(self.id.."_close", -1, -1, "X", false, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback, self.title_font, Theme.TITLE_PADDING, Theme.TITLE_PADDING)
    else
       self.hotspot_map[self.id.."_close"] = nil
    end
