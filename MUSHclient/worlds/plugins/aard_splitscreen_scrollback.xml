@@ -158,7 +158,7 @@ function select_in_main(start_line, end_line, start_pos, end_pos, start_x, end_x
    else
       start_line, end_line, start_pos, end_pos = 1, 1, 1, 1
    end
-   SetSelection(start_line, end_line, start_pos, end_pos)
+   SetSelection(start_line, end_line, start_pos+1, end_pos+1)
 end
 
 function check_display()
