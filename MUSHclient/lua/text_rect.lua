@@ -701,9 +701,7 @@ function TextRect:set_selection(start_line, end_line, start_pos, end_pos)
       self.start_copying_x = nil
       self.end_copying_x = nil      
    end
-      -- if self.call_on_select then
-      --    self.call_on_select(self.copy_start_line, self.copy_end_line, self.start_copying_pos, self.end_copying_pos, self.start_copying_x, self.end_copying_x)
-      -- end
+   -- do not call self.call_on_select here
 end
 
 function TextRect:updateSelect()
