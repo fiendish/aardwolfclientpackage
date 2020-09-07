@@ -35,8 +35,11 @@ return {
    SCROLL_TRACK_COLOR2 = 0x551111,
    VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
 
-   DYNAMIC_BUTTON_PADDING = 20,
+   VERTICAL_BUTTON_PADDING = 15,
+   HORIZONTAL_BUTTON_PADDING = 20,
    RESIZER_SIZE = 16,
+
+   DYNAMIC_BUTTON_PADDING = 20,  -- deprecated
 
    -- bg_texture_function is optional to override the default behavior.
    -- See Charcoal.lua for a "do nothing" variant.
