@@ -395,6 +395,13 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
    end
 end
 
+function TextRect:styles_width(styles, show_bold)
+   if show_bold == nil then
+      show_bold = (GetOption("show_bold")== 1)
+   end
+   return StylesWidth(self.window, self.font, self.font_bold, styles, show_bold)
+end
+
 function TextRect:draw(cleanup_first, inside_callback)
    if cleanup_first ~= false then -- default true
       self:_deleteHyperlinks()
@@ -419,35 +426,9 @@ function TextRect:draw(cleanup_first, inside_callback)
             -- create clickable links for urls
             for _,url_part in ipairs(self.wrapped_lines[count][3]) do
                -- bold widths in urls. replacement for: local left = self.padded_left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, url_part.start-1))
-               local left = self.padded_left
-               local left_chars = 0
-               for _,v in ipairs(line_styles) do
-                  local font = self.font
-                  if show_bold and v.bold then
-                     font = self.font_bold
-                  end
-                  if left_chars + v.length > url_part.start then
-                     left = left + WindowTextWidth(self.window, font, string.sub(v.text, 1, url_part.start-left_chars-1))
-                     break
-                  end
-                  left = left + WindowTextWidth(self.window, font, v.text)
-                  left_chars = left_chars + v.length
-               end
+               local left = self.padded_left + self:styles_width(TruncateStyles(line_styles, 0, url_part.start-1), show_bold)
                -- bold widths in urls. replacement for: local right = left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, url_part.start-1, url_part.stop-1))
-               local right = self.padded_left
-               local right_chars = 0
-               for _,v in ipairs(line_styles) do
-                  local font = self.font
-                  if show_bold and v.bold then
-                     font = self.font_bold
-                  end
-                  if right_chars + v.length > url_part.stop then
-                     right = right + WindowTextWidth(self.window, font, string.sub(v.text, 1, url_part.stop-right_chars))
-                     break
-                  end
-                  right = right + WindowTextWidth(self.window, font, v.text)
-                  right_chars = right_chars + v.length
-               end
+               local right = left + self:styles_width(TruncateStyles(line_styles, url_part.start, url_part.stop), show_bold)
                local top = self.padded_top + ((count - self.display_start_line) * self.line_height)-1
                local bottom = top + self.line_height
                local link_id = self:generateHotspotID(table.concat({url_part.text, " ", count, " ", url_part.start, " ", url_part.stop}))
@@ -464,14 +445,7 @@ function TextRect:draw(cleanup_first, inside_callback)
             end
          end
 
-         local line_length = self.padded_left
-         for _,v in ipairs(line_styles) do
-            local font = self.font
-            if show_bold and v.bold then
-               font = self.font_bold
-            end
-            line_length = line_length + WindowTextWidth(self.window, font, v.text)
-         end
+         local line_length = self.padded_left + self:styles_width(line_styles, show_bold)
 
          -- create highlighting parameters when text is selected
          if self.copy_start_line ~= nil and self.copy_end_line ~= nil and count >= self.copy_start_line and count <= self.copy_end_line then
@@ -619,15 +593,6 @@ function TextRect:unInit()
    self:_deleteHyperlinks()
 end
 
-function TextRect:reset_copy()
-   self.copy_start_line = nil
-   self.copy_end_line = nil
-   self.start_copying_x = nil
-   self.end_copying_x = nil
-   self.start_copying_pos = nil
-   self.end_copying_pos = nil
-end
-
 function TextRect.mouseDown(flags, hotspot_id)
    if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
       return  -- ignore non-left mouse button
@@ -636,7 +601,7 @@ function TextRect.mouseDown(flags, hotspot_id)
    tr.temp_start_copying_x = WindowInfo(tr.window, 14)
    tr.copy_start_windowline = math.floor((WindowInfo(tr.window, 15) - tr.top) / tr.line_height)
    tr.temp_start_line = tr.copy_start_windowline + tr.start_line
-   tr:reset_copy()
+   tr:set_selection(nil, nil, nil, nil)
    tr:draw(false)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
@@ -702,6 +667,43 @@ function TextRect.cancelMouseDown(flags, hotspot_id)
    tr.keepscrolling = ""
    tr:draw()
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end
+
+function TextRect:set_selection(start_line, end_line, start_pos, end_pos)
+   if (
+      start_line and end_line and start_pos and end_pos and
+      ((start_line >= 1) or (end_line >= 1)) and
+      ((start_line <= self.num_wrapped_lines) or (end_line <= self.num_wrapped_lines))
+   ) then
+      if start_line < 1 and end_line >= 1 then
+         start_line = 1
+         start_pos = 0
+      end
+      if end_line > self.num_wrapped_lines and start_line <= self.num_wrapped_lines then
+         end_line = self.num_wrapped_lines
+         end_pos = #strip_colours_from_styles(self.wrapped_lines[end_line][1])
+      end
+      self.start_copying_pos = start_pos
+      self.end_copying_pos = end_pos
+      self.copy_end_line = end_line
+      self.copy_start_line = start_line
+      self.start_copying_x = self.padded_left + self:styles_width(
+         TruncateStyles(self.wrapped_lines[start_line][1], 0, start_pos)
+      )
+      self.end_copying_x = self.padded_left + self:styles_width(
+         TruncateStyles(self.wrapped_lines[end_line][1], 0, end_pos)
+      )
+   else
+      self.start_copying_pos = nil
+      self.end_copying_pos = nil
+      self.copy_end_line = nil
+      self.copy_start_line = nil
+      self.start_copying_x = nil
+      self.end_copying_x = nil      
+   end
+      -- if self.call_on_select then
+      --    self.call_on_select(self.copy_start_line, self.copy_end_line, self.start_copying_pos, self.end_copying_pos, self.start_copying_x, self.end_copying_x)
+      -- end
 end
 
 function TextRect:updateSelect()
@@ -784,7 +786,7 @@ function TextRect:updateSelect()
    end
 
    if (self.copy_start_line == self.copy_end_line) and (self.start_copying_pos == self.end_copying_pos) then
-      self:reset_copy()
+      self:set_selection(nil, nil, nil, nil)
    end
 
    self:draw(false)
