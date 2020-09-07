@@ -893,7 +893,9 @@ function TextRect:rightClickMenu(hotspot_id)
          external_string = external_string:sub(2)
       end
 
-      table.insert(menu_text, "-")
+      if #menu_text > 0 then
+         table.insert(menu_text, "-")
+      end
       table.insert(menu_text, external_string)
       for _, v in ipairs(external_functions) do
          table.insert(menu_functions, v)
