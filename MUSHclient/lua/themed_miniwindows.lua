@@ -131,9 +131,21 @@ end
 
 function ThemedWindowClass:dress_window()
    self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.DressWindow(self.id, self.title_font, self.title, self.title_alignment)
+   
+   if not WindowHotspotInfo(self.id, "zzzzzzzzzz"..self.id.."_body", 1) then
+      local cursor = 0
+      if (self.title == nil) or (#(self.title) == 0) then
+         cursor = 1
+      end
+      self.hotspot_map["zzzzzzzzzz"..self.id.."_body"] = self
+      WindowAddHotspot(self.id, "zzzzzzzzzz"..self.id.."_body", self.bodyleft, self.bodytop, self.bodyright, self.bodybottom, nil, nil, nil, nil, "ThemedWindowClass.RightClickMenuCallback", "", cursor, 0)
+   else
+      WindowMoveHotspot(self.id, "zzzzzzzzzz"..self.id.."_body", self.bodyleft, self.bodytop, self.bodyright, self.bodybottom)
+   end
+
    if self.is_temporary then
       self.hotspot_map[self.id.."_close"] = self
-      Theme.Add3DButton(self.id, self.id.."_close", self.title_font, -1, -1, "X", false, Theme.TITLE_PADDING, Theme.TITLE_PADDING, "Remove Window", nil, ThemedWindowClass.DeleteCallback)
+      Theme.Add3DButton(self.id, self.id.."_close", self.title_font, -1, -1, "X", false, Theme.TITLE_PADDING, Theme.TITLE_PADDING, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback)
    else
       self.hotspot_map[self.id.."_close"] = nil
    end
@@ -145,77 +157,48 @@ function ThemedWindowClass:dress_window()
    end
 end
 
+function ThemedWindowClass:get_menu_items()
+   local menu_table = {
+      "Bring To Front",
+      "Send To Back"
+   }
+   local menu_handlers = {
+      function() self:bring_to_front() end,
+      function() self:send_to_back() end
+   }
+   local menu_string = table.concat(menu_table, "|")
+   return menu_string, menu_handlers
+end
+
 function ThemedWindowClass:right_click_menu(hotspot_id)
-   local menu, menu_string, menu_table = {}, "", {}
-   local external_row_count = 0
-
-   if self.external_menu_generator and self.external_menu_result_function then
-      menu = self:external_menu_generator(hotspot_id)
-      assert(type(menu)=="string" or type(menu)=="table")
-      if type(menu) == "string" then
-         menu_table = utils.split(menu, "|")
-         menu_string = menu
-      elseif type(menu) == "table" then
-         for i, v in ipairs(menu) do
-            table.insert(menu_table, v)
-         end
-         menu_string = table.concat(menu, "|")
-      end
-      for i,v in ipairs(menu_table) do
-         if (
-            (v ~= "-") and (v:sub(1,1) ~= "^") and  (v:sub(1,2) ~= "+^") and (v:sub(1,1) ~= ">") 
-            and (v:sub(1,1) ~= "<") and (Trim(v) ~= "") 
-         ) then
-            external_row_count = external_row_count + 1
-         end
-      end
-      menu_string = menu_string.."|-|"
-   end
-
-   local addon_table = {"Bring To Front", "Send To Back"}
-   local addon_functions = {self.bring_to_front, self.send_to_back}
-   local addon_string = table.concat(addon_table, "|")
-   menu_string = menu_string..addon_string
+   local menu_string, menu_handlers = self:get_menu_items()
    
    if menu_string:sub(1,1) ~= "!" then
       menu_string = "!"..menu_string
    end
-   
-   result = tonumber(WindowMenu(
+
+   local result = tonumber(WindowMenu(
       self.id,
       WindowInfo(self.id, 14), -- x coord
       WindowInfo(self.id, 15), -- y coord
       menu_string
    ))
-
    if result then
-      if result <= external_row_count then
-         self.external_menu_result_function(result)
-      else
-         result = result - external_row_count
-         assert(result <= #addon_functions)
-         addon_functions[result](self)
-      end
+      menu_handlers[result]()
    end
 end
 
-function ThemedWindowClass:set_external_menu(menu_generator, menu_result_function)
-   if menu_generator and not menu_result_function then
-      menu_result_function = function(x) print("No external menu result handler defined.") end
-   end
-   self.external_menu_generator = menu_generator
-   self.external_menu_result_function = menu_result_function
-end
 
 function ThemedWindowClass.RightClickMenuCallback(flags, hotspot_id, win)
-   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-      local window = ThemedWindowClass.window_map[win]
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      local window = ThemedWindowClass.hotspot_map[hotspot_id] or ThemedWindowClass.window_map[win]
       window:right_click_menu(hotspot_id)
+      return true
    end
-   return true
+   return false
 end
 
-function ThemedWindowClass.LeftDragOnlyCallback(flags, hotspot_id, win)
+function ThemedWindowClass.LeftButtonOnlyCallback(flags, hotspot_id, win)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       return true
    end
@@ -249,8 +232,7 @@ end
 
 function ThemedBasicWindow(
    id, default_left, default_top, default_width, default_height, title, title_alignment, is_temporary, 
-   resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size,
-   external_menu_generator, external_menu_result_function
+   resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size
 )
 
    local self = {
@@ -280,8 +262,7 @@ function ThemedBasicWindow(
    end
    self.window_map[self.id] = self
 
-   self.windowinfo = movewindow.install(id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftDragOnlyCallback, dragmove=self.LeftDragOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left, y=default_top})
-   self:set_external_menu(external_menu_generator, external_menu_result_function)
+   self.windowinfo = movewindow.install(id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left, y=default_top})
    WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, Theme.PRIMARY_BODY)
    WindowFont(self.id, self.title_font, self.title_font_name, self.title_font_size, false, false, false, false, 0)
    self:dress_window()
@@ -379,8 +360,7 @@ function ThemedTextWindow(
    id, default_left, default_top, default_width, default_height, title, title_alignment, 
    is_temporary, resizeable, text_scrollable, text_unselectable, text_uncopyable, no_url_hyperlinks,
    no_autowrap,
-   title_font_name, title_font_size, text_font_name, text_font_size, text_max_lines, text_padding,
-   menu_string_generator_function, menu_result_handler_function
+   title_font_name, title_font_size, text_font_name, text_font_size, text_max_lines, text_padding
 )
    require "text_rect"
    if text_scrollable then
@@ -414,7 +394,7 @@ function ThemedTextWindow(
       text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size, nil, nil, text_unselectable,
       text_uncopyable, no_url_hyperlinks, no_autowrap
    )
-   self.textrect:setExternalMenuFunction(menu_string_generator_function, menu_result_handler_function)
+   self.textrect:setExternalMenuFunction(function() return self:get_menu_items() end)
    if text_scrollable then
       self.min_height = 100   
       self.scrollbar = ScrollBar.new(self.id, "scrollbar", tr_right, self.bodytop, self.bodyright, scrollbar_bottom)
