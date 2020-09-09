@@ -326,8 +326,8 @@ function ThemedTextWindowClass:OnDelete()
    end
 end
 
-function ThemedTextWindowClass:add_color_line(color_text)
-   self.textrect:addColorLine(color_text)
+function ThemedTextWindowClass:add_text(styles_or_color_coded_text)
+   self.textrect:addText(styles_or_color_coded_text)
    self.textrect:draw()
    if self.scrollbar then
       self.scrollbar:draw()
@@ -340,18 +340,14 @@ function ThemedTextWindowClass:add_color_line(color_text)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
+-- deprecated
+function ThemedTextWindowClass:add_color_line(color_text)
+   self:add_text(color_text)
+end
+
+-- deprecated
 function ThemedTextWindowClass:add_styles(styles)
-   self.textrect:addStyles(styles)
-   self.textrect:draw()
-   if self.scrollbar then
-      self.scrollbar:draw()
-   else
-      if self.resizer_type then
-         -- the text goes "under" the resizer, so we have to re-dress
-         self:dress_window()
-      end
-   end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   self:add_text(styles)
 end
 
 function ThemedTextWindowClass:clear()

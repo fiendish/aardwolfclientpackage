@@ -116,13 +116,26 @@ function TextRect:findURLs(text)
    return URLs
 end -- function findURL
 
-function TextRect:addColorLine(line)
-   self:addStyles(ColoursToStyles(line))
-end
+function TextRect:addText(message, limit_break)
+   if type(message) == "string" then
+      message = ColoursToStyles(message)
+   end
+   -- try to be flexible about input
+   assert(type(message) == "table", "TextRect:addText must be given a color coded string, table of styles, or table of tables (multiple lines) of styles")
+   if message.text then
+      message = {message}
+   elseif message[1] then
+      if message[1][1] and not limit_break then
+         for _,v in ipairs(message) do
+            self:addText(v, true)
+         end
+         return
+      end
+      assert(message[1].text, "TextRect:addText must be given a color coded string, table of styles, or table of tables (multiple lines) of styles")
+   end
 
-function TextRect:addStyles(styles)
    -- extract URLs so we can add our movespots later
-   local urls = self:findURLs(strip_colours_from_styles(styles))
+   local urls = self:findURLs(strip_colours_from_styles(message))
 
    -- pop the oldest line from our buffer if we're at capacity
    if self.num_raw_lines >= self.max_lines then
@@ -131,11 +144,19 @@ function TextRect:addStyles(styles)
    end
 
    -- add to raw lines table
-   table.insert(self.raw_lines, {[1]=styles, [2]=urls})
+   table.insert(self.raw_lines, {[1]=message, [2]=urls})
    self.num_raw_lines = self.num_raw_lines + 1
 
    -- add to wrapped lines table for display
-   self:wrapLine(styles, urls, self.num_raw_lines)
+   self:wrapLine(message, urls, self.num_raw_lines)
+end
+
+function TextRect:addColorLine(line)
+   self:addText(line)
+end
+
+function TextRect:addStyles(styles)
+   self:addText(styles)
 end
 
 function TextRect:doUpdateCallbacks()

@@ -326,8 +326,9 @@ function StylesWidth (win, plain_font, bold_font, styles, show_bold)
 end
 
 
--- Converts text with colour codes in it into style runs
-function ColoursToStyles (input, default_foreground_code, default_background_code)
+-- Converts text with colour codes in it into a line of style runs
+-- (or multiple lines of style runs if multiline is true)
+function ColoursToStyles (input, default_foreground_code, default_background_code, multiline)
    init_basic_to_color()
    if default_foreground_code and default_foreground_code:sub(1,1) ~= CODE_PREFIX then
       default_foreground_code = CODE_PREFIX..default_foreground_code
@@ -349,64 +350,79 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
       default_background = default_black
    end
 
-   if input:find(CODE_PREFIX, nil, true) then
-      local astyles = {}
+   if multiline then
+      input = utils.split(input, "\n")
+   else
+      input = {input}
+   end
+   local prev_color = default_foreground
+   local prev_code = default_foreground_code
+   local all_styles = {}
+   for _, section in ipairs(input) do
+      if section:find(CODE_PREFIX, nil, true) then
+         local styles = {}
 
-      -- make sure we start with a color
-      if input:sub(1, 1) ~= CODE_PREFIX then
-         input = default_foreground_code .. input
-      end -- if
+         -- make sure we start with a color
+         if section:sub(1, 1) ~= CODE_PREFIX then
+            section = prev_code .. section
+         end -- if
 
-      input = input:gsub(PREFIX_ESCAPE, "\0") -- change @@ to 0x00
-      input = input:gsub(TILDE_PATTERN, "~") -- fix tildes (historical)
-      input = input:gsub(X_NONNUMERIC_PATTERN,"%1") -- strip invalid xterm codes (non-number)
-      input = input:gsub(X_THREEHUNDRED_PATTERN,"") -- strip invalid xterm codes (300+)
-      input = input:gsub(X_TWOSIXTY_PATTERN,"") -- strip invalid xterm codes (260+)
-      input = input:gsub(X_TWOFIFTYSIX_PATTERN,"") -- strip invalid xterm codes (256+)
-      input = input:gsub(HIDDEN_GARBAGE_PATTERN, "")  -- strip hidden garbage
+         section = section:gsub(PREFIX_ESCAPE, "\0") -- change @@ to 0x00
+         section = section:gsub(TILDE_PATTERN, "~") -- fix tildes (historical)
+         section = section:gsub(X_NONNUMERIC_PATTERN,"%1") -- strip invalid xterm codes (non-number)
+         section = section:gsub(X_THREEHUNDRED_PATTERN,"") -- strip invalid xterm codes (300+)
+         section = section:gsub(X_TWOSIXTY_PATTERN,"") -- strip invalid xterm codes (260+)
+         section = section:gsub(X_TWOFIFTYSIX_PATTERN,"") -- strip invalid xterm codes (256+)
+         section = section:gsub(HIDDEN_GARBAGE_PATTERN, "")  -- strip hidden garbage
 
-      for code, text in input:gmatch(CODE_REST_CAPTURE_PATTERN) do
-         local from_x = nil
-         text = text:gsub("%z", CODE_PREFIX) -- put any @ characters back
+         for code, text in section:gmatch(CODE_REST_CAPTURE_PATTERN) do
+            local from_x = nil
+            text = text:gsub("%z", CODE_PREFIX) -- put any @ characters back
 
-         if code == XTERM_CODE then -- xterm 256 colors
-            num,text = text:match("(%d%d?%d?)(.*)")
-            code = code..num
-            -- Aardwolf treats x1...x15 as normal ANSI colors.
-            -- That behavior does not match MUSHclient's.
-            num = tonumber(num)
-            from_x = code
-            if num <= 15 then
-               textcolor = code_to_client_color[first_15_to_code[num]]
+            if code == XTERM_CODE then -- xterm 256 colors
+               num,text = text:match("(%d%d?%d?)(.*)")
+               code = code..num
+               -- Aardwolf treats x1...x15 as normal ANSI colors.
+               -- That behavior does not match MUSHclient's.
+               num = tonumber(num)
+               from_x = code
+               if num <= 15 then
+                  textcolor = code_to_client_color[first_15_to_code[num]]
+               else
+                  textcolor = x_to_client_color[code]
+               end
             else
-               textcolor = x_to_client_color[code]
+               textcolor = code_to_client_color[code]
             end
-         else
-            textcolor = code_to_client_color[code]
-         end
-
-         table.insert(astyles,
-         {
-            fromx = from_x,
-            text = text,
-            bold = bold_codes[code] or false,
-            length = #text,
-            textcolour = textcolor or default_foreground,
+            table.insert(styles,
+            {
+               fromx = from_x,
+               text = text,
+               bold = bold_codes[code] or false,
+               length = #text,
+               textcolour = textcolor or default_foreground,
+               backcolour = default_background
+            })
+            prev_code = code
+            prev_color = textcolor
+         end -- for each colour run
+         table.insert(all_styles, styles)
+      else
+         -- No colour codes, create a single style.
+         table.insert(all_styles, {{
+            text = section,
+            bold = bold_codes[prev_code] or false,
+            length = #section,
+            textcolour = prev_color,
             backcolour = default_background
-         })
-      end -- for each colour run.
-
-      return astyles
-   end -- if any colour codes at all
-
-   -- No colour codes, create a single style.
-   return {{
-      text = input,
-      bold = default_bold,
-      length = #input,
-      textcolour = default_foreground,
-      backcolour = default_background
-   }}
+         }})
+      end
+   end
+   if multiline then
+      return all_styles
+   else
+      return all_styles[1]
+   end
 end  -- function ColoursToStyles
 
 
