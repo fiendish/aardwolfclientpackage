@@ -132,7 +132,7 @@ require "gmcphelper"
 require "text_rect"
 require "scrollbar"
 
-dofile(GetPluginInfo(GetPluginID(), 20) .. "aardwolf_colors.lua")
+dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
 local gap = 1
 MAX_LINES = 10000 -- how many lines to store in scrollback
@@ -245,7 +245,7 @@ reduce_diverse_channels()
 
 function makeRect(i)
    tabs_rects[i] = TextRect.new(win, "tr"..tostring(i), tr_left, tr_top, tr_right, tr_bottom, 1000, true, Theme.PRIMARY_BODY, 3, "Dina", 10)
-   tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), tr_right, tr_top, draw_right, draw_bottom-Theme.RESIZER_SIZE)
+   tabs_scrollbars[i] = ScrollBar.new(win, "sb"..tostring(i), tr_right, tr_top, draw_right, draw_bottom-Theme.RESIZER_SIZE+1)
 
    tabs_rects[i]:addUpdateCallback(tabs_scrollbars[i], tabs_scrollbars[i].setScroll)
    tabs_scrollbars[i]:addUpdateCallback(tabs_rects[i], tabs_rects[i].setScroll)
@@ -255,7 +255,7 @@ function makeRect(i)
 
    bump_top_for_tabs()
    tabs_rects[i]:setRect(tr_left, tr_top, tr_right, tr_bottom)
-   tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-Theme.RESIZER_SIZE)
+   tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-Theme.RESIZER_SIZE+1)
 
    if temp_tabs_data and temp_tabs_data[i] then
       tabs_rects[i]:deserializeContents(temp_tabs_data[i].contents)
@@ -606,7 +606,7 @@ function setupDisplay ()
    for i = 1,num_tabs do
       if tabs_rects[i] then
          tabs_rects[i]:setRect(tr_left, tr_top, tr_right, tr_bottom)
-         tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-Theme.RESIZER_SIZE)
+         tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-Theme.RESIZER_SIZE+1)
       else
          makeRect(i)
       end
