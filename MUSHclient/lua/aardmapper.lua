@@ -67,7 +67,8 @@ require "movewindow"
 require "copytable"
 require "gauge"
 require "pairsbykeys"
-require "mw"
+dofile (GetInfo(60) .. "aardwolf_colors.lua")
+
 
 local FONT_ID     = "fn"  -- internal font identifier
 local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
@@ -235,7 +236,7 @@ local function get_room (uid)
 
    -- defaults in case they didn't supply them ...
    room.name = room.name or string.format ("Room %s", uid)
-   room.name = mw.strip_colours (room.name)  -- no colour codes for now
+   room.name = strip_colours (room.name)  -- no colour codes for now
    room.exits = room.exits or {}
    room.area = room.area or "<No area>"
    room.hovermessage = room.hovermessage or "<Unexplored room>"

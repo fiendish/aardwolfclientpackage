@@ -217,7 +217,6 @@ require "aard_register_z_on_create"
 require "mw_theme_base"
 require "gmcphelper"
 require "movewindow"
-require "mw"
 
 default_width         = 209
 default_height        = 263
