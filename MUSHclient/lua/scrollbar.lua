@@ -74,12 +74,10 @@ function ScrollBar:doUpdateCallbacks()
 end
 
 function ScrollBar:setScroll(step, visible_steps, total_steps)
-   if (self.step ~= step) or (self.visible_steps ~= visible_steps) or (self.total_steps ~= total_steps) then
-      self.step = step or self.step
-      self.visible_steps = visible_steps or self.visible_steps
-      self.total_steps = total_steps or self.total_steps
-      self:draw(true)
-   end
+   self.step = step or self.step
+   self.visible_steps = visible_steps or self.visible_steps
+   self.total_steps = total_steps or self.total_steps
+   self:draw(true)
 end
 
 function ScrollBar:draw(inside_callback)
