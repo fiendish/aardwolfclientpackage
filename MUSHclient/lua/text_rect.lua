@@ -177,13 +177,6 @@ function TextRect:lockstep()
 end
 
 function TextRect:wrapLine(stylerun, rawURLs, raw_index)
-   if self.no_autowrap then
-      self:cap_messages()
-      self:lockstep()
-      self.num_wrapped_lines = self.num_wrapped_lines + 1
-      table.insert(self.wrapped_lines, {[1]=copytable.deep(stylerun), [2]=true, [3]=copytable.deep(rawURLs), [4]=0})
-      return
-   end
    local available = self.padded_width
    local line_styles = {}
    local beginning = true
@@ -228,7 +221,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       local t_width = WindowTextWidth(self.window, font, style.text)
 
       -- if it fits, copy whole style in
-      if t_width <= available then
+      if self.no_autowrap or (t_width <= available) then
          if style.length > 0 then
             insert(line_styles, style)
          end
@@ -288,7 +281,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       end -- if could/not fit whole thing in
 
       -- out of styles or out of room? add a line for what we have so far
-      if #styles == 0 or available <= 0 then
+      if foundbreak or ((available <= 0) and not self.no_autowrap) or (#styles == 0) then
          self:cap_messages()
 
          local line_urls = {}
