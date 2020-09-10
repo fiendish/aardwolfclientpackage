@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2107 snapshot
+- bug fix: Undo the main output scrollbar change from r2090. It was causing display issues when resizing the main area.
+- bug fix: Fix text_rect newline handling when the new autowrap toggle is disabled.
+- bug fix: Fix a new gap between the scrollbar and the resizer in the channel capture miniwindow. Probably caused by changes made for the new easy miniwindows.
+- new feature: The ColoursToStyles function in aardwolf_colors.lua now has a multiline option that will split at newlines into a nested table with multiple lines of style runs.
+- new feature: The new ThemedTextWindow easy miniwindow now has a "do the right thing" :addText function that combines both :add_styles and :add_color_line into one and also allows you to pass in multiple lines of styles at once (table of tables of styles).
+- bug fix: Fix the inventory serials plugin to even show flags it doesn't yet know about. Aardwolf is getting a new item flag for cursed items and this should not have been a problem.
+
 r2102 snapshot
 - new feature: New add_3d_text_button method for the easy miniwindows.
 
