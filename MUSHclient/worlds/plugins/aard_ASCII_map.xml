@@ -385,7 +385,7 @@ end
 
 function DisplayMapPage()
    styles = { }
-   bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, (show_title == 1) and "\n" or "", "left")
+   bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, font_id, (show_title == 1) and "\n" or nil, "left")
 
    local n = #map_lines
 
