@@ -180,6 +180,9 @@ tabs_names = {}
 loadstring(GetVariable("tabs_names") or "")()
 
 window_title = GetVariable("window_title") or "Communication Log"
+if window_title == "" then
+   window_title = nil
+end
 
 function reduce_diverse_channels()
    channels_table = {}
@@ -672,7 +675,7 @@ function OnPluginSaveState()
    SetVariable("tabs_names", serialize.save("tabs_names"))
    SetVariable("tabs_channel_captures", serialize.save("tabs_channel_captures"))
    SetVariable("tabs_nonchannel_captures", serialize.save("tabs_nonchannel_captures"))
-   SetVariable("window_title", window_title)
+   SetVariable("window_title", window_title or "")
 end
 
 function sanitize_filename(str)
