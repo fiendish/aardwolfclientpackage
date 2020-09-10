@@ -372,7 +372,8 @@ function movewindow.add_drag_handler (win, left, top, right, bottom, cursor)
                      "mw_" .. win .. "_movewindow_info.dragmove",
                      "mw_" .. win .. "_movewindow_info.dragrelease",
                      0)   -- flags
-
+  
+   return hotspot_id
 end --  movewindow.add_drag_handler
 
 -- call movewindow.save_state in OnPluginSaveState

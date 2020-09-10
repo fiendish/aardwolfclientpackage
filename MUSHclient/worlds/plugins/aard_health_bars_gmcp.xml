@@ -164,7 +164,7 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
                end
             end
          end
-         gauge(win,showBar[bar][3],num_val,num_maxval,xpos+label_width,ypos,bar_width,line_height,color1,0x000000,num_ticks,0x000000,color2,nil,flat_gauges==1)
+         gauge(win,showBar[bar][3],num_val,num_maxval,xpos+label_width,ypos,bar_width,line_height,color1,0x000000,num_ticks,0x000000,color2,nil,flat_gauges==1,movewin_hotspot)
          if overlay_numbers ~= 0 then
             txtlen = WindowTextWidth(win,font_id,txt)
             outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
@@ -258,7 +258,7 @@ function DisplayStatsPage()
                end
             end
             if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1)
+               gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1,movewin_hotspot)
                if overlay_numbers ~= 0 then
                   txt = string.lpad(enemypct.."%", 4, ' ')
                   txtlen = WindowTextWidth(win,font_id,txt)
@@ -276,7 +276,7 @@ function DisplayStatsPage()
                end
             end
             if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1)
+               gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1,movewin_hotspot)
             else
                xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
             end
@@ -697,7 +697,7 @@ function resize_window()
    effectiveWidth = math.max(MIN_WIDTH, math.min(width, GetInfo(281)-windowinfo.window_left))
 
    WindowResize(win, effectiveWidth, height, Theme.SECONDARY_BODY)
-   movewindow.add_drag_handler(win, 0, 0, 0, 0)
+   movewin_hotspot = movewindow.add_drag_handler(win, 0, 0, 0, 0)
 
    DisplayStatsPage()
 end

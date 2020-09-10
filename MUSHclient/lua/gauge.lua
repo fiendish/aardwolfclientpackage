@@ -5,7 +5,7 @@
   You specify the starting point, width, and height.
   Also the name to show for the mouse-over window (eg. "HP).
   
-  Author: Nick Gammon
+  Author(s): Nick Gammon + Fiendish
   Date:   14 February 2010
   
   --]]
@@ -19,7 +19,8 @@ function gauge (win,                        -- miniwindow ID to draw in
                 ticks, tick_colour,         -- number of ticks to draw, and in what colour
                 frame_colour,               -- colour for frame around bar
                 shadow_colour,              -- colour for shadow, nil for no shadow
-                no_gradient)                -- don't use the gradient fill effect
+                no_gradient,                -- don't use the gradient fill effect
+                backing_hotspot)            -- hotspot to use callbacks from
 
   local Fraction
   
@@ -102,18 +103,55 @@ function gauge (win,                        -- miniwindow ID to draw in
   
   if name and #name > 0 then
     -- mouse-over information: add hotspot
-      WindowAddHotspot (win, name, left, top, left + width, top + height, 
-                    "", "", "", "", "", "", 0, 0)
-    
-      -- store numeric values in case they mouse over it
-    if max then
-      WindowHotspotTooltip(win, name, string.format ("%s\t%i / %i (%i%%)", 
-                            name, current, max, Fraction * 100) )
-    else
-      WindowHotspotTooltip(win, name, string.format ("%s\t(%i%%)", 
-                            name, Fraction * 100) )  
-    end -- if
+      local mouseover, cancelmouseover, mousedown, cancelmousedown, mouseup, cursor, flags = "", "", "", "", "", 0, 0
+      local dragmove, dragrelease, dragflags = nil, nil, nil
 
+      local tooltip
+      if max then
+         tooltip = string.format("%s\t%i / %i (%i%%)", name, current, max, Fraction * 100)
+       else
+         tooltip = string.format("%s\t(%i%%)", name, Fraction * 100)
+       end -- if
+
+      if backing_hotspot == true then
+         local hotspots = WindowHotspotList(win)
+         if hotspots then
+            for _, hs in ipairs(hotspots) do 
+               if (
+                  (WindowHotspotInfo(win, hs, 1) <= left) and
+                  (WindowHotspotInfo(win, hs, 3) >= left) and
+                  (WindowHotspotInfo(win, hs, 2) <= top) and
+                  (WindowHotspotInfo(win, hs, 4) >= top)
+               ) then
+                  backing_hotspot = hs
+                  break
+               end
+            end
+         end -- if any
+      end
+      if type(backing_hotspot) == "string" then
+         mouseover = WindowHotspotInfo(win, backing_hotspot, 5) or mouseover
+         cancelmouseover = WindowHotspotInfo(win, backing_hotspot, 6) or cancelmouseover
+         mousedown = WindowHotspotInfo(win, backing_hotspot, 7) or mousedown
+         cancelmousedown = WindowHotspotInfo(win, backing_hotspot, 8) or cancelmousedown
+         mouseup = WindowHotspotInfo(win, backing_hotspot, 9) or mouseup
+         cursor = WindowHotspotInfo(win, backing_hotspot, 11) or cursor
+         flags = WindowHotspotInfo(win, backing_hotspot, 12) or flags
+
+         dragmove = WindowHotspotInfo(win, backing_hotspot, 13) or dragmove
+         dragrelease = WindowHotspotInfo(win, backing_hotspot, 14) or dragrelease
+         dragflags = WindowHotspotInfo(win, backing_hotspot, 15) or dragflags
+      end
+
+      WindowAddHotspot (
+         win, name, left, top, left + width, top + height,
+         mouseover, cancelmouseover, mousedown, cancelmousedown, mouseup,
+         tooltip, cursor, flags
+      )
+
+      if dragmove or dragrelease then
+         WindowDragHandler(win, name, dragmove, dragrelease, dragflags)
+      end
   end -- hotspot wanted
                                     
 end -- function gauge
