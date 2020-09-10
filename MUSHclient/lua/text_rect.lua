@@ -996,8 +996,8 @@ function TextRect:selected_text(with_colors)
          end
 
          if (endpos ~= startpos) or (self.copy_start_line ~= self.copy_end_line) then
-            -- store current message when starting a new one
-            if self.wrapped_lines[copy_line][2] then
+            -- store current message when starting a new one after the first one
+            if (copy_line ~= self.copy_start_line) and self.wrapped_lines[copy_line][2] then
                store_message()
             end
             -- add styles from this wrapped line to the current message
