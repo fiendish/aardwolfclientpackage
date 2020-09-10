@@ -1139,10 +1139,10 @@ function extend_rightclick_menu()
       {
          "Show/Hide Titlebar",
          function()
-            if window_title == "" then
+            if window_title == nil then
                window_title = "Communication Log"
            else
-               window_title = ""
+               window_title = nil
            end
            setupDisplay()
            SaveState()
