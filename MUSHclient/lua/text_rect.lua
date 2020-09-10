@@ -118,7 +118,7 @@ end -- function findURL
 
 function TextRect:addText(message, limit_break)
    if type(message) == "string" then
-      message = ColoursToStyles(message)
+      message = ColoursToStyles(message, nil, nil, true)
    end
    -- try to be flexible about input
    assert(type(message) == "table", "TextRect:addText must be given a color coded string, table of styles, or table of tables (multiple lines) of styles")
@@ -216,25 +216,6 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       -- break off the next style
       local style = remove(styles, 1)
 
-      -- make this handle forced newlines like in the flickoff social
-      -- by splitting off and sticking the next part back into the
-      -- styles list for the next pass
-      foundbreak = false
-      newline = find(style.text, "\n")
-      if newline then
-         insert(styles, 1, {text = sub(style.text, newline+1),
-               length = style.length-newline+1,
-               textcolour = style.textcolour,
-               backcolour = style.backcolour}
-         )
-         -- we're leaving in the newline characters here because we need to be
-         -- able to copy them. I'll clean up the buggy visual later when
-         -- actually displaying the lines.
-         style.length = newline
-         style.text = sub(style.text, 1, newline)
-         foundbreak = true
-      end
-
       local font = self.font
       if style.bold and show_bold then
          font = self.font_bold
@@ -248,9 +229,6 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          end
          length = length + style.length
          available = available - t_width
-         if foundbreak then
-            available = 0
-         end
       else -- otherwise, have to split style
          -- look for spaces to break at
          local col = 2
@@ -302,7 +280,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       end -- if could/not fit whole thing in
 
       -- out of styles or out of room? add a line for what we have so far
-      if foundbreak or ((available <= 0) and not self.no_autowrap) or (#styles == 0) then
+      if ((available <= 0) and not self.no_autowrap) or (#styles == 0) then
          self:cap_messages()
 
          local line_urls = {}
@@ -399,10 +377,6 @@ function TextRect:drawLine(line, styles, backfill_start, backfill_end)
          local font = self.font
          if show_bold and v.bold then
             font = self.font_bold
-         end
-         -- now clean up dangling newlines that cause block characters to show
-         if string.sub(v.text, -1) == "\n" then
-            t = string.sub(v.text, 1, -2)
          end
          left = left + WindowText(self.window, font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour, utf8 and utils.utf8valid(t))
       end
@@ -999,7 +973,7 @@ function TextRect:selected_text(with_colors)
    current_message = {}
 
    function store_message()
-      if current_message[1] then
+      if current_message then
          -- preserve the message and start the next one
          if with_colors then
             table.insert(s_text, canonicalize_colours(StylesToColours(current_message), true))
