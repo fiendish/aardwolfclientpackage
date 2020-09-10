@@ -681,8 +681,7 @@ end
 
 re = require "re"
 
-function log(styles_or_text, timestamp)
-   local text = ((type(styles_or_text) == "table") and StylesToColours(styles_or_text) or styles_or_text)
+function log(text, timestamp)
    local log_text = text
 
    if log_timestamps == 1 then
@@ -708,54 +707,22 @@ function log(styles_or_text, timestamp)
    end
 end
 
-function stampAndLog(styles_or_text, timestamp, omit_log)
+function stampAndLog(text, timestamp, omit_log)
    if not timestamp then
       timestamp = ""
    end
 
    -- remove control characters, but preserve newlines,
    -- and don't use %g because that clobbers multibyte symbols
-   local is_styles = false
-   if type(styles_or_text) == "table" then
-      is_styles = true
-   end
-
-   if is_styles then
-      for i,v in ipairs(styles_or_text) do
-         v.text = v.text:gsub("[^%C\n]", "")
-         v.length = v.text:len()
-      end
-   else
-      styles_or_text = styles_or_text:gsub("[^%C\n]", "")
-   end
+   text = text:gsub("[^%C\n]", "")
 
    if (log_to_file == 1) and not omit_log then
-      log(styles_or_text, timestamp)
+      log(text, timestamp)
    end
-
    if timestamp ~= "" then
-      if is_styles then
-         table.insert(styles_or_text,1,{text=timestamp, length=string.len(timestamp), textcolour=0xc0c0c0})
-      else
-         styles_or_text = "@w"..timestamp..styles_or_text
-      end
+      text = "@w"..timestamp..text
    end
-
-   return styles_or_text
-end
-
-function stampAndStore(msg, chan, is_gmcp)
-   if is_gmcp then
-      msg = filter_as_needed(msg)
-   end
-   if msg then
-      msg = stampAndLog(msg, os.date(date_format))
-      if is_gmcp then
-         storeChannel(msg, chan)
-      else
-         storeNonChannel(msg, chan)
-      end
-   end
+   return text
 end
 
 -- storeFromOutside takes four arguments:
@@ -772,7 +739,7 @@ end
 --
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", "Q/A", false)
 --   This example will use Tab Q/A, Not add a timestamp, and Log it
-function storeFromOutside(msg, tab, add_timestamp, omit_log)
+function storeFromOutside(text, tab, add_timestamp, omit_log)
    if add_timestamp == nil then
       add_timestamp = true
    end
@@ -781,51 +748,42 @@ function storeFromOutside(msg, tab, add_timestamp, omit_log)
    elseif type(tab) == "string" then
       tab = findTab(tab)
    end
-
+   
+   local res = nil
    if tab then
-      msg = stampAndLog(msg, add_timestamp and os.date(date_format) or "", omit_log)
-      local should_redraw = (storeTab(ColoursToStyles(msg), tab) == 1)
-      if should_redraw == true then
+      text = stampAndLog(text, add_timestamp and os.date(date_format) or "", omit_log)
+      res = addToTab(text, tab)
+      if res == 1 then
          drawTabs()
       end
    end
 
-   if should_redraw ~= nil then
-      return true  -- stored
-   end
-   return false  -- not stored
+   return (res >= 0)
 end
 
 -- stolen from Mendaloth
 function rsocial (name, line, wildcards, styles)
-	-- Remote socials will always start with a dark cyan or bright magenta *
-	-- Checking color cuts down on non-socials ending up in the chat log...
-	if (styles[1].textcolour == GetNormalColour(7) or styles[1].textcolour == GetBoldColour(6)) then
-		stampAndStore(styles, "remote_socials")
-	end
+   -- Remote socials will always start with a dark cyan or bright magenta *
+   -- Checking color cuts down on non-socials ending up in the chat log...
+   if (styles[1].textcolour == GetNormalColour(7) or styles[1].textcolour == GetBoldColour(6)) then
+      storeNonChannel(styles, "remote_socials")
+   end
 end
 
 function untagged_info (name, line, wildcards, styles)
-   stampAndStore(styles, name)
+   storeNonChannel(styles, name)
 end -- untagged info
 
-function filter_as_needed(msg)
+function filter_as_needed(text)
    if GetPluginInfo("48f867c18f6ff1d6d3b52918", 17) then -- if using the #sub plugin
-      if type(msg) == "table" then
-         msg = StylesToColours(msg)
-      end
-      rc, msg = CallPlugin("48f867c18f6ff1d6d3b52918", "filter_string", msg)
+      rc, text = CallPlugin("48f867c18f6ff1d6d3b52918", "filter_string", text)
    end
-   if type(msg) == "string" then
-      return ColoursToStyles(msg)
-   else
-      return msg
-   end
+   return text
 end
 
-function storeTab(styles, tab)
+function addToTab(text, tab)
    if (tab >= 1) and (tab <= num_tabs) then
-      tabs_rects[tab]:addStyles(styles)
+      tabs_rects[tab]:addText(ColoursToStyles(text, nil, nil, true))
       if tab == current_tab then
          tabs_rects[tab]:draw()
          tabs_scrollbars[tab]:draw()
@@ -841,11 +799,11 @@ function storeTab(styles, tab)
    return -1
 end
 
-function storeNonChannel(styles, label)
+function storeMessage(text, label, captures)
    will_draw = false
-   for tab, whats_inside_the_tab in ipairs(tabs_nonchannel_captures) do
+   for tab, whats_inside_the_tab in ipairs(captures) do
       if whats_inside_the_tab[label]["capture"] then
-         if storeTab(styles, tab) == 1 then
+         if addToTab(text, tab) == 1 then
             will_draw = true
          end
       end
@@ -855,21 +813,19 @@ function storeNonChannel(styles, label)
    end
 end
 
-function storeChannel(styles, label)
-   will_draw = false
+function storeNonChannel(styles, label)
+   text = stampAndLog(StylesToColours(styles), os.date(date_format))
+   storeMessage(text, label, tabs_nonchannel_captures)
+end
+
+function storeChannel(text, label)
+   text = stampAndLog(text, os.date(date_format))
    for tab, whats_inside_the_tab in ipairs(tabs_channel_captures) do
       if not whats_inside_the_tab[label] then
          addNewChannel(label)
       end
-      if whats_inside_the_tab[label]["capture"] then
-         if storeTab(styles, tab) == 1 then
-            will_draw = true
-         end
-      end
    end
-   if will_draw then
-      drawTabs()
-   end
+   storeMessage(text, label, tabs_channel_captures)
 end
 
 function OnPluginBroadcast(msg, id, name, text)
@@ -881,7 +837,10 @@ function OnPluginBroadcast(msg, id, name, text)
          chan = gmcpcomm.chan or ""
          if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if (not channels_table[chan]) or channels_table[chan]["capture"] then
-               stampAndStore(msg, chan, true)
+               msg = filter_as_needed(msg)
+               if msg then
+                  storeChannel(msg, chan)
+               end
             end
          end
       end
