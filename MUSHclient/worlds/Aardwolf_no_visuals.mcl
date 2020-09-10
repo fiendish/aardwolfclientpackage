@@ -485,7 +485,6 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <include name="aard_miniwindow_z_order_monitor.xml" plugin="y" />
 <include name="aard_Copy_Colour_Codes.xml" plugin="y" />
 <include name="aard_repaint_buffer.xml" plugin="y" />
-<include name="aard_inventory_serials.xml" plugin="y" />
 <include name="Hyperlink_URL2.xml" plugin="y" />
 <include name="aard_GMCP_mapper.xml" plugin="y" />
 <include name="aard_package_update_checker.xml" plugin="y" />
