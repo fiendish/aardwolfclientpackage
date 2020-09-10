@@ -166,10 +166,12 @@ loadstring(GetVariable("channels_table") or "")()
 
 tabs_activity = {}
 
-tabs_channel_captures = {{}}
 loadstring(GetVariable("tabs_channel_captures") or "")()
+if (tabs_channel_captures == nil) or (#tabs_channel_captures == 0) then
+   tabs_channel_captures = {{}}
+end
 num_tabs = #tabs_channel_captures
-current_tab = math.min(tonumber(GetVariable("current_tab")) or 1, #tabs_channel_captures)
+current_tab = math.max(1, math.min(tonumber(GetVariable("current_tab")) or 1, #tabs_channel_captures))
 
 tabs_nonchannel_captures = {{}}
 loadstring(GetVariable("tabs_nonchannel_captures") or "")()
@@ -463,7 +465,6 @@ function drawTabs (mouseover)
       local tab_padding = Theme.DYNAMIC_BUTTON_PADDING
       local active_left = nil
       local active_width = nil
-
       WindowRectOp(win, miniwin.rect_fill, draw_left, draw_top, draw_right+1, draw_top + (4*gap) + tab_font_height+1, Theme.SECONDARY_BODY)
 
       for i,_ in ipairs(tabs_channel_captures) do
@@ -1047,8 +1048,8 @@ function extend_rightclick_menu()
          end
       },
       {"-", ""},
-      {
-         ((num_tabs < 2) and "^" or "").."Remove This Tab",
+      (num_tabs < 2) and {"^Remove This Tab", ""} or {
+         "Remove This Tab",
          function()
             removeTab()
             SaveState()
