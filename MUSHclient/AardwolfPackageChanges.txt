@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2110 snapshot
+- bug fix: One of the menu code changes needed to make easy miniwindows work got screwed up in the communication log plugin, which broke the plugin if you tried to rename the main tab. Thanks Khadaji!
+- bug fix: An empty string for miniwindow title should also draw a titlebar and just be blank instead of no titlebar at all.
+
 r2108 snapshot
 - bug fix: Fix the inventory serials plugin to also show any flags it doesn't yet know about. Aardwolf is getting a new item flag for cursed items.
 - bug fix: Undo the main output scrollbar change from r2090. It was causing display issues when resizing the main area.
