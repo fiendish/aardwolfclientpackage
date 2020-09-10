@@ -82,7 +82,7 @@ function OnPluginScreendraw(type, log, line)
    if rect then
       new_num_lines = GetLinesInBufferCount()
       for i=num_lines,new_num_lines do
-         rect:addStyles(GetStyleInfo(i))
+         rect:addText(GetStyleInfo(i))
       end
       rect:draw()
       CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
@@ -216,7 +216,7 @@ function check_display()
                select_in_main
             )
             for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
-               rect:addStyles(GetStyleInfo(num_lines - i))
+               rect:addText(GetStyleInfo(num_lines - i))
             end
             local wsl = GetSelectionStartLine()
             if wsl ~= 0 then
