@@ -186,7 +186,7 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       params =  "[" .. params .. "]"  -- JSON hack, make msg first element of an array. (I don't think this is needed - fiendish)
    end -- if
 
-   local succ, t = pcall(json.decode,params)
+   local succ, t = pcall(json.decode, params)
 
    if succ and type(t) == "table" then
       gmcpdata = gmcpdata or {}
@@ -264,7 +264,10 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
          inited = true
       end
   else
-      ColourNote("white","red","GMCP DATA ERROR: "..t)
+      ColourNote("white", "red", "GMCP DECODE ERROR: "..t)
+      ColourNote("white", "red", "Received invalid GMCP message: "..utils.utf8convert(data))
+      ColourNote("white", "red", "Please send that invalid message to Fiendish for analysis.")
+      ColourNote("white", "red", "If this happens more than once, disconnect and reconnect to Aardwolf or restart MUSHclient.")
   end  -- if
 
 end -- function OnPluginTelnetSubnegotiation
