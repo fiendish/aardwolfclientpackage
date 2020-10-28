@@ -1,3 +1,5 @@
+require "string_split"
+
 local BLACK = 1
 local RED = 2
 local GREEN = 3
@@ -125,14 +127,14 @@ for k,v in pairs(first_15_to_code) do
    code_to_xterm[v] = string.format(X3DIGIT_FORMAT, k)
 end
 
-local bold_codes = {
+local is_bold_code = {
    [BOLD_BLACK_CODE]=true, [BOLD_RED_CODE]=true, [BOLD_GREEN_CODE]=true, [BOLD_YELLOW_CODE]=true, [BOLD_BLUE_CODE]=true,
    [BOLD_MAGENTA_CODE]=true, [BOLD_CYAN_CODE]=true, [BOLD_WHITE_CODE]=true
 }
 for i = 9,15 do
-   bold_codes[string.format(X3DIGIT_FORMAT,i)] = true
-   bold_codes[string.format(X2DIGIT_FORMAT,i)] = true
-   bold_codes[string.format(X1DIGIT_FORMAT,i)] = true
+   is_bold_code[string.format(X3DIGIT_FORMAT,i)] = true
+   is_bold_code[string.format(X2DIGIT_FORMAT,i)] = true
+   is_bold_code[string.format(X1DIGIT_FORMAT,i)] = true
 end
 
 
@@ -313,41 +315,46 @@ function TruncateStyles (styles, startcol, endcol)
    return new_styles
 end
 
-function StylesWidth (win, plain_font, bold_font, styles, show_bold)
+function StylesWidth (win, plain_font, bold_font, styles, show_bold, utf8)
    local width = 0
    for i,v in ipairs(styles) do
       local font = plain_font
       if show_bold and v.bold and bold_font then
          font = bold_font
       end
-      width = width + WindowTextWidth(win, font, v.text)
+      width = width + WindowTextWidth(win, font, v.text, utf8)
    end
    return width
 end
 
 
--- Converts text with colour codes in it into a line of style runs
--- (or multiple lines of style runs if multiline is true)
-function ColoursToStyles (input, default_foreground_code, default_background_code, multiline)
+-- Converts text with colour codes in it into a line of style runs or multiple
+-- lines of style runs split at newlines if multiline is true.
+-- default_foreground_color and background_color can be Aardwolf color codes or MUSHclient's raw numeric color values
+function ColoursToStyles (input, default_foreground_color, background_color, multiline)
    init_basic_to_color()
-   if default_foreground_code and default_foreground_code:sub(1,1) ~= CODE_PREFIX then
-      default_foreground_code = CODE_PREFIX..default_foreground_code
-   end
-   if default_background_code and default_background_code:sub(1,1) ~= CODE_PREFIX then
-      default_background_code = CODE_PREFIX..default_background_code
-   end
-   local default_bold = false
-   local default_foreground = code_to_client_color[default_foreground_code] or x_to_client_color[default_foreground_code]
-   if not default_foreground then
-      default_foreground = code_to_client_color[WHITE_CODE]
+
+   local default_foreground_code = nil
+   if default_foreground_color == nil then
+      default_foreground_color = code_to_client_color[WHITE_CODE]
       default_foreground_code = WHITE_CODE
-   else
-      default_bold = bold_codes[default_foreground_code] or false
-      default_foreground_code = default_foreground_code
+   elseif type(default_foreground_color) == "string" then
+      default_foreground_code = default_foreground_color
+      if default_foreground_code:sub(1,1) ~= CODE_PREFIX then
+         default_foreground_code = CODE_PREFIX..default_foreground_code
+      end
+      default_foreground_color = code_to_client_color[default_foreground_code] or x_to_client_color[default_foreground_code]
+   elseif type(default_foreground_color) == "number" then
+      default_foreground_code = client_color_to_xterm_code[default_foreground_color]
    end
-   local default_background = code_to_client_color[default_background_code] or x_to_client_color[default_background_code]
-   if not default_background then
-      default_background = default_black
+
+   if background_color == nil then
+      background_color = default_black
+   elseif type(background_color) == "string" then
+      if background_color:sub(1,1) ~= CODE_PREFIX then
+         background_color = CODE_PREFIX..background_color
+      end
+      background_color = code_to_client_color[background_color] or x_to_client_color[background_color]
    end
 
    if multiline then
@@ -355,17 +362,12 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
    else
       input = {input}
    end
-   local prev_color = default_foreground
-   local prev_code = default_foreground_code
+   local color = default_foreground_color
+   local code = default_foreground_code
    local all_styles = {}
    for _, section in ipairs(input) do
       if section:find(CODE_PREFIX, nil, true) then
          local styles = {}
-
-         -- make sure we start with a color
-         if section:sub(1, 1) ~= CODE_PREFIX then
-            section = prev_code .. section
-         end -- if
 
          section = section:gsub(PREFIX_ESCAPE, "\0") -- change @@ to 0x00
          section = section:gsub(TILDE_PATTERN, "~") -- fix tildes (historical)
@@ -375,46 +377,63 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
          section = section:gsub(X_TWOFIFTYSIX_PATTERN,"") -- strip invalid xterm codes (256+)
          section = section:gsub(HIDDEN_GARBAGE_PATTERN, "")  -- strip hidden garbage
 
-         for code, text in section:gmatch(CODE_REST_CAPTURE_PATTERN) do
-            local from_x = nil
-            text = text:gsub("%z", CODE_PREFIX) -- put any @ characters back
+         local tokens = section:split(ALL_CODES_PATTERN, true)
 
-            if code == XTERM_CODE then -- xterm 256 colors
-               num,text = text:match("(%d%d?%d?)(.*)")
-               code = code..num
-               -- Aardwolf treats x1...x15 as normal ANSI colors.
-               -- That behavior does not match MUSHclient's.
-               num = tonumber(num)
-               from_x = code
-               if num <= 15 then
-                  textcolor = code_to_client_color[first_15_to_code[num]]
-               else
-                  textcolor = x_to_client_color[code]
-               end
-            else
-               textcolor = code_to_client_color[code]
+         local num_tokens = #tokens
+         local first_i = 1
+         if tokens[1] == "" then 
+            if num_tokens > 2 then
+               first_i = 2
             end
-            table.insert(styles,
-            {
-               fromx = from_x,
-               text = text,
-               bold = bold_codes[code] or false,
-               length = #text,
-               textcolour = textcolor or default_foreground,
-               backcolour = default_background
-            })
-            prev_code = code
-            prev_color = textcolor
-         end -- for each colour run
+         else
+            tokens[0] = ""
+            first_i = 0
+         end
+
+         for i=first_i,num_tokens do
+            local v = tokens[i]
+            if i % 2 == 0 then -- color code
+               code = v
+            else
+               local from_x = nil
+               local num = nil
+               local text = v:gsub("%z", CODE_PREFIX) -- put any @ characters back
+               if code == XTERM_CODE then -- xterm 256 colors
+                  num, text = text:match("(%d%d?%d?)(.*)")
+                  code = code..num
+
+                  -- Aardwolf treats x1...x15 as normal ANSI colors.
+                  -- That behavior does not match MUSHclient's.
+                  num = tonumber(num)
+                  from_x = code
+                  if num <= 15 then
+                     color = code_to_client_color[first_15_to_code[num]]
+                  else
+                     color = x_to_client_color[code]
+                  end
+               else
+                  color = code_to_client_color[code]
+               end
+               table.insert(styles,
+               {
+                  fromx = from_x,
+                  text = text,
+                  bold = is_bold_code[code] or false,
+                  length = #text,
+                  textcolour = color or default_foreground_color,
+                  backcolour = background_color
+               })
+            end
+         end
          table.insert(all_styles, styles)
       else
          -- No colour codes, create a single style.
          table.insert(all_styles, {{
             text = section,
-            bold = bold_codes[prev_code] or false,
+            bold = is_bold_code[code] or false,
             length = #section,
-            textcolour = prev_color,
-            backcolour = default_background
+            textcolour = color or default_foreground_color,
+            backcolour = background_color
          }})
       end
    end
@@ -538,7 +557,7 @@ function AnsiToColours (ansi, default_foreground_code)
             bold = true
             xstage = 0
          elseif nc == 0 then
-            bold = bold_codes[default_foreground_code] or false
+            bold = is_bold_code[default_foreground_code] or false
             -- not actually sure if we should set color here or not
             color = default_foreground_code
          elseif nc <= 37 and nc >= 30 then -- regular color
