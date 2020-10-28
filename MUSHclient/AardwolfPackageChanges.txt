@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2112 snapshot
+- new feature: The easy miniwindows now get colorized multi-line titles. Examples will be added to the wiki page at https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows
+- new feature: Improved multiline color-coded-text-to-styles conversion in ColoursToStyles function in aardwolf_colors.lua.
+- misc change: GMCP parsing errors will generate more verbose output and instructions.
+
 r2110 snapshot
 - bug fix: One of the menu code changes needed to make easy miniwindows work got screwed up in the communication log plugin, which broke the plugin if you tried to rename the main tab. Thanks Khadaji!
 - bug fix: An empty string for miniwindow title should also draw a titlebar and just be blank instead of no titlebar at all.
