@@ -210,7 +210,7 @@ function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y
    y_padding = y_padding or 0
    text = text or ""
    local right = left + WindowTextWidth(win, font, text, utf8) + (2*x_padding) +4
-   local bottom = top + TextHeight(win, font) + (2*y_padding) + 2
+   local bottom = top + WindowFontInfo(win, font, 1) + (2*y_padding) + 2
    Draw3DRect(win, left, top, right, bottom, depressed)
    local offset = 0
    if depressed then
@@ -230,7 +230,7 @@ function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textco
    x_padding = x_padding or 0
    y_padding = y_padding or 0
    local right = left + WindowTextWidth(win, font, text, utf8) + 4 + (2*x_padding)
-   local bottom = top + TextHeight(win, font) + (2*y_padding)
+   local bottom = top + WindowFontInfo(win, font, 1) + (2*y_padding)
    WindowRectOp(win, 2, left, top+1, right, bottom+2, bgcolor)
    if outlined then
       WindowRectOp(win, 1, left-1, top, right+1, bottom+3, textcolor)
@@ -352,71 +352,71 @@ function DressWindow(win, font, title, title_alignment)
    return l, t, r, b
 end
 
-function BodyMetrics(win, font, title)
-   if type(title) == "string" then
-      title_lines = utils.split(title, "\n")
-   else
-      title_lines = title
-   end
+function BodyMetrics(win, font, title_line_height, num_title_lines)
    local l, t, r, b = BorderMetrics(win)
-
-   local line_height = 0
    local title_height = 0
-   if font and title_lines then
-      line_height = TextHeight(win, font)
-      if line_height == nil then
+   if num_title_lines > 0 then
+      if title_line_height == nil then
         return (2*TITLE_PADDING)
       end
-      title_height = (2*TITLE_PADDING) + (line_height * #title_lines) + 1
+      title_height = (2*TITLE_PADDING) + (title_line_height * num_title_lines) + 1
       t = title_height + 1
    end
-   return title_lines, line_height, title_height, l, t, r, b
+   return title_height, l, t, r, b
 end
 
+
+function ToMultilineStyles(msg)
+   if type(msg) == "string" then
+      msg = ColoursToStyles(msg, Theme.THREE_D_SURFACE_DETAIL, nil, true)
+   elseif type(msg) == "table" then
+      if msg.text then  -- single style, wrap in line and container
+         msg = {{msg}}
+      elseif msg[1] then
+         if msg[1].text then  -- single line, wrap in container
+            msg = {msg}
+         elseif msg[1][1] then
+            if msg[1][1].text or (msg[1][1][1] == nil) then  -- already multiline styles (probably)
+               return msg
+            else
+               return nil
+            end
+         end
+      else  -- empty
+         msg = {{{}}}
+      end
+   else 
+      return nil
+   end
+   return msg
+end
+
+
 function DrawTitleBar(win, font, title, text_alignment, utf8)
-   local title_lines, line_height, title_height = BodyMetrics(win, font, title)
+   local title_lines = ToMultilineStyles(title, nil, nil, Theme.THREE_D_SURFACE_DETAIL)
+   assert(title_lines, "Title must be a string, table of styles, or table of tables of styles.")
+
+   local title_line_height = WindowFontInfo(win, font, 1)
+   local title_height, l, t, r, b = BodyMetrics(win, font, title_line_height, #title_lines)
 
    __theme_istitle = true
-   Draw3DRect(
-      win,
-      -1,
-      -1,
-      WindowInfo(win, 3)-1,
-      title_height,
-      false
-   )
+   Draw3DRect(win, -1, -1, WindowInfo(win, 3)-1, title_height, false)
 
    local first_color = nil
    local txt = nil
-   for i,v in ipairs(title_lines) do
-      if type(v) == "table" then
-         txt = strip_colours_from_styles(v)
-      else
-         txt = v
-      end
-      local width = WindowTextWidth(win, font, txt, utf8)
+   for i,styles in ipairs(title_lines) do
+      local text_width = StylesWidth (win, font, nil, styles, false, utf8)
 
-      local text_left = (WindowInfo(win, 3) - width) / 2  -- default text align center
+      local text_left = (WindowInfo(win, 3) - text_width) / 2  -- default text align center
       if text_alignment == "left" then
-         text_left = TITLE_PADDING + 2
+         text_left = TITLE_PADDING + l
       elseif text_alignment == "right" then
-         text_left = WindowInfo(win, 3) - width - TITLE_PADDING - 2
+         text_left = WindowInfo(win, 3) - text_width - TITLE_PADDING
       end
-      local text_right = math.min(text_left + width, WindowInfo(win, 3) - TITLE_PADDING - 2)
+      local text_right = WindowInfo(win, 3) - TITLE_PADDING
 
-      local text_top = (line_height * (i-1)) + TITLE_PADDING
-      if type(v) == "string" then
-         WindowText(win, font, v, text_left, text_top, text_right, title_height, THREE_D_SURFACE_DETAIL, utf8)
-      else
-         -- The colors of all styles matching the first style color get stripped out and replaced with the default title color
-         for i,w in ipairs(v) do
-            first_color = first_color or w.textcolour
-            if w.textcolour == first_color then
-               w.textcolour = THREE_D_SURFACE_DETAIL
-            end
-         end
-         WindowTextFromStyles(win, font, v, text_left, text_top, text_right, title_height, utf8)
-      end
+      local text_top = (title_line_height * (i-1)) + TITLE_PADDING
+      WindowTextFromStyles(win, font, styles, text_left, text_top, text_right, title_height, utf8)
    end
    return title_height+1
 end
