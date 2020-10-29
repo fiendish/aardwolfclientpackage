@@ -136,7 +136,8 @@ function ThemedWindowClass:add_3d_text_button(id, left, top, text, utf8, tooltip
 end
 
 function ThemedWindowClass:dress_window()
-   self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.DressWindow(self.id, self.title_font, self.title, self.title_alignment)
+   boxwidth = WindowTextWidth(self.id, self.title_font, "!") + (3*Theme.TITLE_PADDING) + 5
+   self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.DressWindow(self.id, self.title_font, self.title, self.title_alignment, self.is_temporary and boxwidth or 0)
    
    if not WindowHotspotInfo(self.id, "zzzzzzzzzz"..self.id.."_body", 1) then
       local cursor = 0
@@ -150,7 +151,7 @@ function ThemedWindowClass:dress_window()
    end
 
    if self.is_temporary then
-      local right, bottom = self:add_3d_text_button(self.id.."_close", -1, -1, "X", false, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback, self.title_font, Theme.TITLE_PADDING, Theme.TITLE_PADDING)
+      local right, bottom = self:add_3d_text_button(self.id.."_close", -1, -1, "!", false, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback, self.title_font, Theme.TITLE_PADDING, Theme.TITLE_PADDING)
       right = right+1
       WindowLine(self.id, right, -1, right, bottom, Theme.THREE_D_HIGHLIGHT, miniwin.pen_solid, 1)
    else
