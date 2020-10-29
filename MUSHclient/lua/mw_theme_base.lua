@@ -253,6 +253,7 @@ function Add3DTextButton(win, button_id, font, left, top, text, utf8, x_padding,
    if WindowMoveHotspot(win, button_id, left, top, right, bottom) ~= 0 then
       WindowAddHotspot(win, button_id, left, top, right, bottom, nil, nil, "Theme.ThreeDeeTextButtonMouseDown", "Theme.ThreeDeeTextButtonMouseCancel", "Theme.ThreeDeeTextButtonMouseUp", tooltip, 1, 0)
    end
+   return right, bottom
 end
 
 function ThreeDeeTextButtonMouseDown(flags, hotspot_id)

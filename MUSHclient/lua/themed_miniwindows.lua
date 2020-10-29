@@ -131,7 +131,8 @@ end
 
 function ThemedWindowClass:add_3d_text_button(id, left, top, text, utf8, tooltip, mousedown_callback, mouseup_callback, font, x_padding, y_padding)
    self.hotspot_map[id] = self
-   Theme.Add3DTextButton(self.id, id, font or self.title_font, left or self.bodyleft, top or self.bodytop, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback)
+   local right, bottom = Theme.Add3DTextButton(self.id, id, font or self.title_font, left or self.bodyleft, top or self.bodytop, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback)
+   return right, bottom
 end
 
 function ThemedWindowClass:dress_window()
@@ -149,10 +150,13 @@ function ThemedWindowClass:dress_window()
    end
 
    if self.is_temporary then
-      self:add_3d_text_button(self.id.."_close", -1, -1, "X", false, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback, self.title_font, Theme.TITLE_PADDING, Theme.TITLE_PADDING)
+      local right, bottom = self:add_3d_text_button(self.id.."_close", -1, -1, "X", false, "Remove Window", ThemedWindowClass.LeftButtonOnlyCallback, ThemedWindowClass.DeleteCallback, self.title_font, Theme.TITLE_PADDING, Theme.TITLE_PADDING)
+      right = right+1
+      WindowLine(self.id, right, -1, right, bottom, Theme.THREE_D_HIGHLIGHT, miniwin.pen_solid, 1)
    else
       self.hotspot_map[self.id.."_close"] = nil
    end
+
    if self.resizer_type then
       self.hotspot_map[self.id.."_resize"] = self
       Theme.AddResizeTag(self.id, self.resizer_type, nil, nil, "ThemedWindowClass.ResizeMouseDownCallback", "ThemedWindowClass.ResizeMoveCallback", "ThemedWindowClass.ResizeReleaseCallback")
