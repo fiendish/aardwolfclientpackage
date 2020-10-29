@@ -248,7 +248,7 @@ function ThemedBasicWindow(
       id = id,
       title_font_name = title_font_name or "Dina",
       title_font_size = title_font_size or 10,
-      title = title,
+      title = Theme.ToMultilineStyles(title),
       min_width = 100,
       min_height = 50,
       default_left_position = default_left_position,
