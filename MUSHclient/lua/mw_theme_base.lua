@@ -210,7 +210,7 @@ function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y
    y_padding = y_padding or 0
    text = text or ""
    local right = left + WindowTextWidth(win, font, text, utf8) + (2*x_padding) +4
-   local bottom = top + WindowFontInfo(win, font, 1) + (2*y_padding) + 2
+   local bottom = top + WindowFontInfo(win, font, 1) + (2*y_padding)
    Draw3DRect(win, left, top, right, bottom, depressed)
    local offset = 0
    if depressed then
@@ -341,11 +341,11 @@ function TextHeight(win, font)
 end
 
 -- title_alignment can be "left", "right", or "center" (the default)
-function DressWindow(win, font, title, title_alignment)
+function DressWindow(win, font, title, title_alignment, title_leftpadding)
    local l, t, r, b = DrawBorder(win)
 
    if title and ((type(title) == "string") or (#title > 0)) then
-      t = DrawTitleBar(win, font, title, title_alignment)
+      t = DrawTitleBar(win, font, title, title_alignment, title_leftpadding)
       movewindow.add_drag_handler(win, 0, 0, 0, t)
    else
       movewindow.add_drag_handler(win, 0, 0, 0, 0)
@@ -394,7 +394,7 @@ function ToMultilineStyles(msg)
 end
 
 
-function DrawTitleBar(win, font, title, text_alignment, utf8)
+function DrawTitleBar(win, font, title, title_alignment, title_leftpadding, utf8)
    local title_lines = ToMultilineStyles(title)
    assert(title_lines, "Title must be a string, table of styles, or table of tables of styles.")
 
@@ -409,10 +409,11 @@ function DrawTitleBar(win, font, title, text_alignment, utf8)
    for i,styles in ipairs(title_lines) do
       local text_width = StylesWidth (win, font, nil, styles, false, utf8)
 
-      local text_left = (WindowInfo(win, 3) - text_width) / 2  -- default text align center
-      if text_alignment == "left" then
-         text_left = TITLE_PADDING + l
-      elseif text_alignment == "right" then
+      title_leftpadding = title_leftpadding or 0
+      local text_left = math.max(TITLE_PADDING + l + title_leftpadding, (WindowInfo(win, 3) - text_width) / 2)  -- default text align center
+      if title_alignment == "left" then
+         text_left = TITLE_PADDING + l + title_leftpadding
+      elseif title_alignment == "right" then
          text_left = WindowInfo(win, 3) - text_width - TITLE_PADDING
       end
       local text_right = WindowInfo(win, 3) - TITLE_PADDING
