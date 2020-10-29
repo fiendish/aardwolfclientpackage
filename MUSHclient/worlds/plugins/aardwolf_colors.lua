@@ -331,7 +331,8 @@ end
 -- Converts text with colour codes in it into a line of style runs or multiple
 -- lines of style runs split at newlines if multiline is true.
 -- default_foreground_color and background_color can be Aardwolf color codes or MUSHclient's raw numeric color values
-function ColoursToStyles (input, default_foreground_color, background_color, multiline)
+-- dollarC_resets is a boolean determining whether "$C" in the input text will behave like the default foreground color
+function ColoursToStyles (input, default_foreground_color, background_color, multiline, dollarC_resets)
    init_basic_to_color()
 
    local default_foreground_code = nil
@@ -344,6 +345,7 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
          default_foreground_code = CODE_PREFIX..default_foreground_code
       end
       default_foreground_color = code_to_client_color[default_foreground_code] or x_to_client_color[default_foreground_code]
+      assert(default_foreground_color, "Invalid default_foreground_color setting. Codes must correspond to one of the available color codes.")
    elseif type(default_foreground_color) == "number" then
       default_foreground_code = client_color_to_xterm_code[default_foreground_color]
    end
@@ -355,6 +357,7 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
          background_color = CODE_PREFIX..background_color
       end
       background_color = code_to_client_color[background_color] or x_to_client_color[background_color]
+      assert(background_color, "Invalid background_color setting. Codes must correspond to one of the available color codes.")
    end
 
    if multiline then
@@ -414,15 +417,30 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
                else
                   color = code_to_client_color[code]
                end
-               table.insert(styles,
-               {
-                  fromx = from_x,
-                  text = text,
-                  bold = is_bold_code[code] or false,
-                  length = #text,
-                  textcolour = color or default_foreground_color,
-                  backcolour = background_color
-               })
+
+               if dollarC_resets then
+                  for i, v in ipairs(text:split("%$C")) do
+                     table.insert(styles,
+                     {
+                        fromx = from_x,
+                        text = v,
+                        bold = is_bold_code[code] or false,
+                        length = #v,
+                        textcolour = (i == 1) and color or default_foreground_color,
+                        backcolour = background_color
+                     })
+                  end
+               else
+                  table.insert(styles,
+                  {
+                     fromx = from_x,
+                     text = text,
+                     bold = is_bold_code[code] or false,
+                     length = #text,
+                     textcolour = color or default_foreground_color,
+                     backcolour = background_color
+                  })
+               end
             end
          end
          table.insert(all_styles, styles)
