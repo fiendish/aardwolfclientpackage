@@ -281,6 +281,7 @@ end
 function ThreeDeeTextButtonMouseCancel(flags, hotspot_id)
    local win, font, left, top, text, utf8, x_padding, y_padding = unpack(Theme.button_metrics[hotspot_id])
    Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, dragrelease_callback)
