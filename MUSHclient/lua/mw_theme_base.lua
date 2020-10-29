@@ -368,7 +368,7 @@ end
 
 function ToMultilineStyles(msg)
    if type(msg) == "string" then
-      msg = ColoursToStyles(msg, Theme.THREE_D_SURFACE_DETAIL, nil, true)
+      msg = ColoursToStyles(msg, Theme.THREE_D_SURFACE_DETAIL, nil, true, true)
    elseif type(msg) == "table" then
       if msg.text then  -- single style, wrap in line and container
          msg = {{msg}}
@@ -393,7 +393,7 @@ end
 
 
 function DrawTitleBar(win, font, title, text_alignment, utf8)
-   local title_lines = ToMultilineStyles(title, nil, nil, Theme.THREE_D_SURFACE_DETAIL)
+   local title_lines = ToMultilineStyles(title)
    assert(title_lines, "Title must be a string, table of styles, or table of tables of styles.")
 
    local title_line_height = WindowFontInfo(win, font, 1)
