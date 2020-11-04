@@ -551,7 +551,7 @@ function add_main_resizer()
       -- Add another mini-window in bottom right corner for resizer tag.
       WindowCreate(textResizer,
          l, t, Theme.RESIZER_SIZE + 4, b-t,
-         12, miniwin.create_transparent + miniwin.create_absolute_location,
+         12, miniwin.create_absolute_location,
          Theme.CLICKABLE
       )
    end
@@ -598,7 +598,7 @@ end
 
 function draw_main_window()
    -- addresses a problem where new users are trying to play without the window maximized
-   local t_right = math.min(textrect_right,GetInfo(281)-7)
+   local t_right = math.min(textrect_right, GetInfo(281)-7-Theme.RESIZER_SIZE-4)
    local t_bottom = math.min(textrect_bottom, GetInfo(280)-7)
 
    TextRectangle(textrect_left, textrect_top, t_right, t_bottom,
