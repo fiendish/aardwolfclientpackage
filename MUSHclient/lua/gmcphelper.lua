@@ -99,6 +99,7 @@ end
 --   item - depends on the flag. Called by gmcpval (table ok) and gmcpitem (not ok).
 ---------------------------------------------------------------------------------------------------
 function gmcpsection(fieldname,nesting)
+   assert (gmcpdata, "No gmcpdata variable set.")
    local outval = get_gmcp(fieldname,gmcpdata)
    if (type(outval) == "table") then
       assert(nesting,"nested table value requested from GMCP. Should be single element.")
