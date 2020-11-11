@@ -762,7 +762,7 @@ function storeFromOutside(text, tab, add_timestamp, omit_log)
       end
    end
 
-   return (res >= 0)
+   return res and (res >= 0) or false
 end
 
 -- stolen from Mendaloth
