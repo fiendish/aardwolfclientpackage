@@ -331,9 +331,15 @@ function ThemedTextWindowClass:OnDelete()
    end
 end
 
-function ThemedTextWindowClass:add_text(styles_or_color_coded_text)
+function ThemedTextWindowClass:add_text(styles_or_color_coded_text, draw_after)
+   draw_after = (draw_after == nil) or (draw_after == true)
    self.textrect:addText(styles_or_color_coded_text)
-   self.textrect:draw()
+   if draw_after then
+      self:draw()
+   end
+end
+
+function ThemedTextWindowClass:__draw_framing()
    if self.scrollbar then
       self.scrollbar:draw()
    else
@@ -343,6 +349,11 @@ function ThemedTextWindowClass:add_text(styles_or_color_coded_text)
       end
    end
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end
+
+function ThemedTextWindowClass:draw()
+   self.textrect:draw()
+   self:__draw_framing()
 end
 
 -- deprecated
@@ -355,14 +366,11 @@ function ThemedTextWindowClass:add_styles(styles)
    self:add_text(styles)
 end
 
-function ThemedTextWindowClass:clear()
-   self.textrect:clear()
-   if self.scrollbar then
-      self.scrollbar:draw()
-   else
-      if self.resizer_type then
-         self:dress_window()
-      end
+function ThemedTextWindowClass:clear(draw_after)
+   draw_after = (draw_after == nil) or (draw_after == true)
+   self.textrect:clear(draw_after)
+   if draw_after then
+      self:__draw_framing()
    end
 end
 

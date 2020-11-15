@@ -321,11 +321,13 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
    end -- while we still have styles left
 end
 
-function TextRect:clear()
+function TextRect:clear(draw_after)
    self.raw_lines = {}
    self.num_raw_lines = 0
    self:reWrapLines()
-   self:draw()
+   if draw_after then
+      self:draw()
+   end
 end
 
 function TextRect:debug(when)
