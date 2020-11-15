@@ -14,6 +14,9 @@ function ThemedWindowClass:blank()
 end
 
 function ThemedWindowClass:delete(deferred)
+   movewindow.save_state(self.id)
+   SetVariable(self.id.."width", WindowInfo(self.id, 3))
+   SetVariable(self.id.."height", WindowInfo(self.id, 4))
    for k, v in pairs(self.hotspot_map) do
       if v.id == self.id then
          self.hotspot_map[k] = nil
@@ -249,6 +252,10 @@ function ThemedBasicWindow(
    assert(default_width, "ThemedBasicWindow Error: argument 4, default_width is required")
    assert(default_height, "ThemedBasicWindow Error: argument 5, default_height is required")
 
+   if ThemedWindowClass.window_map[id] then
+      ThemedWindowClass.window_map[id]:delete()
+   end
+
    local self = {
       id = id,
       title_font_name = title_font_name or "Dina",
@@ -270,13 +277,10 @@ function ThemedBasicWindow(
       height = tonumber(GetVariable(id.."height")) or default_height,
    }
    setmetatable(self, ThemedWindowClass)
-   
-   if self.window_map[id] then
-      self.window_map[id]:delete()
-   end
+
    self.window_map[self.id] = self
 
-   self.windowinfo = movewindow.install(id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left_position, y=default_top_position})
+   self.windowinfo = movewindow.install(self.id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left_position, y=default_top_position})
    WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, Theme.PRIMARY_BODY)
    WindowFont(self.id, self.title_font, self.title_font_name, self.title_font_size, false, false, false, false, 0)
    self:dress_window()
