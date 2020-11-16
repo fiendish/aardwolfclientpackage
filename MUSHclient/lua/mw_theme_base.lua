@@ -205,18 +205,30 @@ function Draw3DRect (win, left, top, right, bottom, depressed)
    end
 end
 
-function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y_padding)
+function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y_padding, width, height)
    x_padding = x_padding or 0
    y_padding = y_padding or 0
    text = text or ""
-   local right = left + WindowTextWidth(win, font, text, utf8) + (2*x_padding) +4
-   local bottom = top + WindowFontInfo(win, font, 1) + (2*y_padding)
+   local text_width = WindowTextWidth(win, font, text, utf8)
+   local text_height = WindowFontInfo(win, font, 1)
+   if width then
+      right = left + width
+   else
+      right = (left + text_width + (2*x_padding) + 4)
+   end
+   if height then
+      bottom = top + height
+   else
+      bottom = (top + text_height + (2*y_padding)) + 2
+   end
    Draw3DRect(win, left, top, right, bottom, depressed)
    local offset = 0
    if depressed then
       offset = 2
    end
-   WindowText(win, font, text, left+2+x_padding+offset, top+1+y_padding+offset, right-3, bottom-1, THREE_D_SURFACE_DETAIL, utf8)
+   local text_left = math.max(left + 2, (left + right - text_width)/2)
+   local text_top = math.max(top, (top + bottom + 2 - text_height)/2)
+   WindowText(win, font, text, text_left + offset, text_top + offset, right-1, bottom-1, THREE_D_SURFACE_DETAIL, utf8)
    return right, bottom
 end
 
@@ -241,14 +253,14 @@ end
 
 Theme.button_callbacks = {}
 Theme.button_metrics = {}
-function Add3DTextButton(win, button_id, font, left, top, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback)
+function Add3DTextButton(win, button_id, font, left, top, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback, width, height)
    if type(win) == "table" then
       win = win.id
    end
    x_padding = x_padding or VERTICAL_BUTTON_PADDING or DYNAMIC_BUTTON_PADDING
    y_padding = y_padding or HORIZONTAL_BUTTON_PADDING or DYNAMIC_BUTTON_PADDING
-   local right, bottom = Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
-   Theme.button_metrics[button_id] = {win, font, left, top, text, utf8, x_padding, y_padding}
+   local right, bottom = Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
+   Theme.button_metrics[button_id] = {win, font, left, top, text, utf8, x_padding, y_padding, width, height}
    Theme.button_callbacks[button_id] = {mousedown_callback=mousedown_callback, mouseup_callback=mouseup_callback}
    if WindowMoveHotspot(win, button_id, left, top, right, bottom) ~= 0 then
       WindowAddHotspot(win, button_id, left, top, right, bottom, nil, nil, "Theme.ThreeDeeTextButtonMouseDown", "Theme.ThreeDeeTextButtonMouseCancel", "Theme.ThreeDeeTextButtonMouseUp", tooltip, 1, 0)
@@ -258,20 +270,20 @@ end
 
 function ThreeDeeTextButtonMouseDown(flags, hotspot_id)
    local callbacks = Theme.button_callbacks[hotspot_id]
-   local win, font, left, top, text, utf8, x_padding, y_padding = unpack(Theme.button_metrics[hotspot_id])
+   local win, font, left, top, text, utf8, x_padding, y_padding, width, height= unpack(Theme.button_metrics[hotspot_id])
    if callbacks.mousedown_callback then
       if callbacks.mousedown_callback(flags, hotspot_id) then
          return
       end
    end
-   Draw3DTextBox(win, font, left, top, text, utf8, true, x_padding, y_padding)
+   Draw3DTextBox(win, font, left, top, text, utf8, true, x_padding, y_padding, width, height)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function ThreeDeeTextButtonMouseUp(flags, hotspot_id)
    local callbacks = Theme.button_callbacks[hotspot_id]
-   local win, font, left, top, text, utf8, x_padding, y_padding = unpack(Theme.button_metrics[hotspot_id])
-   Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
+   local win, font, left, top, text, utf8, x_padding, y_padding, width, height = unpack(Theme.button_metrics[hotspot_id])
+   Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
    if callbacks.mouseup_callback then
       callbacks.mouseup_callback(flags, hotspot_id)
    end
@@ -279,8 +291,8 @@ function ThreeDeeTextButtonMouseUp(flags, hotspot_id)
 end
 
 function ThreeDeeTextButtonMouseCancel(flags, hotspot_id)
-   local win, font, left, top, text, utf8, x_padding, y_padding = unpack(Theme.button_metrics[hotspot_id])
-   Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding)
+   local win, font, left, top, text, utf8, x_padding, y_padding, width, height = unpack(Theme.button_metrics[hotspot_id])
+   Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
