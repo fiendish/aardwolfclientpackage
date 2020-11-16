@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2118 snapshot
+- bug fix: Don't error if something tries to write to a non-existent tab in the communication log using storeFromOutside.
+- bug fix: Keep main output scrollbar in view if exterior window is smaller than nominal.
+- bug fix: The easy miniwindows should save their last size and position if deleted while resizing.
+- new feature: Add warning message if something uses the obsolete ugly way of accessing GMCP data but forgot to populate the gmcpdata variable. This is only for old things that don't use the gmcp() function.
+- new feature: The add_text function of the ThemedTextWindow easy miniwindow has an optional second argument for whether to immediately redraw the window after adding the text. The default value is true.
+- new feature: The add_3d_text_button function of the ThemedBasicWindow easy miniwindow has optional width and height arguments to control the button size. Using these will negate the x_padding and y_padding arguments.
+
 r2112 snapshot
 - new feature: The easy miniwindows now get colorized multi-line titles. Examples have been added to the wiki page at https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows
 - new feature: Improved multiline conversion in ColoursToStyles function in aardwolf_colors.lua.
