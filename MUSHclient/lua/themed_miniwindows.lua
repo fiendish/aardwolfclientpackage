@@ -14,9 +14,13 @@ function ThemedWindowClass:blank()
 end
 
 function ThemedWindowClass:delete(deferred)
-   movewindow.save_state(self.id)
-   SetVariable(self.id.."width", WindowInfo(self.id, 3))
-   SetVariable(self.id.."height", WindowInfo(self.id, 4))
+   local width = WindowInfo(self.id, 3)
+   local height = WindowInfo(self.id, 4)
+   if width and height then
+      movewindow.save_state(self.id)
+      SetVariable(self.id.."width", width)
+      SetVariable(self.id.."height", height)
+   end
    for k, v in pairs(self.hotspot_map) do
       if v.id == self.id then
          self.hotspot_map[k] = nil
