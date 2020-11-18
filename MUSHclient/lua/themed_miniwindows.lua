@@ -430,7 +430,7 @@ function ThemedTextWindow(
       self.textrect:addUpdateCallback(self.scrollbar, self.scrollbar.setScroll)
       self.scrollbar:addUpdateCallback(self.textrect, self.textrect.setScroll)
    end
-   self:clear()
+   self:clear(true)
    return self
 end
 

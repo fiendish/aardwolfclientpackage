@@ -1119,7 +1119,7 @@ function extend_rightclick_menu()
       {
          "Clear Tab",
          function()
-            tabs_rects[current_tab]:clear()
+            tabs_rects[current_tab]:clear(true)
             CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
             SaveState()
          end
