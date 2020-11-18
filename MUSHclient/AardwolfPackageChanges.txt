@@ -1,11 +1,15 @@
 Aardwolf Client Package Major Changes List
 
+r2120 snapshot
+- bug fix: The default true value for the second argument added to ThemedTextWindow:clear in r2118 wasn't being applied properly everywhere.
+- bug fix: Don't try to save nil width/height when deleting the easy themed miniwindows.
+
 r2118 snapshot
 - bug fix: Don't error if something tries to write to a non-existent tab in the communication log using storeFromOutside.
 - bug fix: Keep main output scrollbar in view if exterior window is smaller than nominal.
 - bug fix: The easy miniwindows should save their last size and position if deleted while resizing.
 - new feature: Add warning message if something uses the obsolete ugly way of accessing GMCP data but forgot to populate the gmcpdata variable. This is only for old things that don't use the gmcp() function.
-- new feature: The add_text function of the ThemedTextWindow easy miniwindow has an optional second argument for whether to immediately redraw the window after adding the text. The default value is true.
+- new feature: The add_text and clear functions of the ThemedTextWindow easy miniwindow has an optional second argument for whether to immediately redraw the window after adding/clearing the text. The default value is true.
 - new feature: The add_3d_text_button function of the ThemedBasicWindow easy miniwindow has optional width and height arguments to control the button size. Using these will negate the x_padding and y_padding arguments.
 
 r2112 snapshot
