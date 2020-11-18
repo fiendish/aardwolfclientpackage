@@ -322,6 +322,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
 end
 
 function TextRect:clear(draw_after)
+   local draw_after = (draw_after == nil) or (draw_after == true)
    self.raw_lines = {}
    self.num_raw_lines = 0
    self:reWrapLines()
