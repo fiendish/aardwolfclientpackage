@@ -1,0 +1,32 @@
+MUSHclient, packaged in this project in binary form, is free software as
+defined by the Free Software Foundation. If you want to compile it yourself,
+source code and compilation instructions are available at
+https://github.com/nickgammon/mushclient
+
+MUSHclient and this package use several third party software libraries.
+Licenses for those libraries are included in the licenses directory.
+
+All other code included in this package written by Fiendish (Avi Kelman) and
+contributors is released under the GPL version 3 or higher license (GPLv3 full
+text is in the licenses folder). If you borrow code from this package, please
+credit "Avi Kelman <fiendish @ Aardwolf MUD>", link to this project repository,
+and release your modifications, adaptations, and extensions under the same GPL
+version 3 (or higher) license so that others may also benefit.
+
+---- Package license body begins below ----
+
+https://github.com/fiendish/aardwolfclientpackage
+Copyright 2010-2020 Avi Kelman <fiendish @ Aardwolf MUD>
+
+This package is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.

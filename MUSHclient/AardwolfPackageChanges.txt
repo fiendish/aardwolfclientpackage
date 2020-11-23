@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2121 snapshot
+- misc change: Add missing license files. Credit is important.
+
 r2120 snapshot
 - bug fix: The default true value for the second argument added to ThemedTextWindow:clear in r2118 wasn't being applied properly everywhere.
 - bug fix: Don't try to save nil width/height when deleting the easy themed miniwindows.
