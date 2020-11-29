@@ -4342,9 +4342,9 @@ function findpath(src, dst, noportals, norecalls)
    table.insert(rooms_list, fixsql(dst))
 
    local visited = ""
-   local main_status = GetInfo(53)
+   local main_status = GetInfo(53):gsub(" %(mapper searching depth %d+%)", "")
    while not found and depth < max_depth do
-      SetStatus(main_status.." (searching depth "..depth..")")
+      SetStatus(main_status.." (mapper searching depth "..depth..")")
       CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       depth = depth + 1
       if depth > 1 then
@@ -4385,9 +4385,12 @@ function findpath(src, dst, noportals, norecalls)
       end -- for select
 
       if dcount == 0 then
-         return -- there is no path from here to there
+         found = false
+         break -- there is no path from here to there
       end -- if dcount
    end -- while
+
+   SetStatus(main_status)
 
    if found == false then
       return
@@ -4459,9 +4462,9 @@ function findNearestJumpRoom(src, dst, target_type)
    local path_type = ""
 
    table.insert(rooms_list, fixsql(src))
-   local main_status = GetInfo(53)
+   local main_status = GetInfo(53):gsub(" %(mapper searching jump depth %d+%)", "")
    while not found and depth < max_depth do
-      SetStatus(main_status.." (searching jump depth "..depth..")")
+      SetStatus(main_status.." (mapper searching jump depth "..depth..")")
       CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       depth = depth + 1
 
@@ -4494,7 +4497,8 @@ function findNearestJumpRoom(src, dst, target_type)
       end -- for select
 
       if dcount == 0 then
-         return -- there is no path to a portalable or recallable room
+         found = false
+         break -- there is no path to a portalable or recallable room
       end -- if dcount
    end -- while
 
