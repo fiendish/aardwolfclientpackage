@@ -1201,7 +1201,11 @@ function map_cexits_delete (name, line, wildcards)
    dbCheckExecute(query)
    for k,v in pairs(rooms[current_room].exits) do
       if not directions[k] then
-         print("Found custom exit \""..k.."\" to room "..rooms[current_room].exits[k].." \""..rooms[rooms[current_room].exits[k]].name.."\"")
+         local dest = rooms[current_room].exits[k]
+         if not rooms[dest] then
+            load_room_from_database(dest)
+         end
+         print("Found custom exit \""..k.."\" to room "..dest.." \""..rooms[dest].name.."\"")
          rooms[current_room].exits[k] = nil
          rooms[current_room].exit_locks[k] = nil
       end
