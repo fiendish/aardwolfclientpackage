@@ -212,7 +212,7 @@ Send("recon")
    enabled="y"
    sequence="100"
    omit_from_output="y"
-   script="findpathfast"
+   script="printpath_alias"
 ></alias>
 
 <alias
@@ -1004,39 +1004,6 @@ function fixbool (b)
       return 0
    end -- if
 end -- fixbool
-
-function findpathfast(name, line, wildcards)
-   local src = wildcards[1]
-   local dest = wildcards[2]
-   rooms[src] = load_room_from_database(src)
-   rooms[dest] = load_room_from_database(dest)
-
-   if rooms[src] == nil then
-      mapper.mapprint (string.format ("Room %s not known.", src))
-   end
-   if rooms[dest] == nil then
-      mapper.mapprint (string.format ("Room %s not known.", dest))
-   end
-   if rooms[src] == nil or rooms[dest] == nil then
-      return
-   end
-
-   local foundpath = findpath(src, dest)
-   if foundpath == nil then
-      mapper.mapprint (string.format ("Path from %s to %s not found.", wildcards[1], wildcards[2]))
-      return
-   end
-
-   -- turn into speedwalk
-   local speedwalk = mapper.build_speedwalk (foundpath, speedwalk_prefix)
-
-   -- display it
-   if speedwalk ~= nil then
-      mapper.mapprint (string.format ("Path from %s to %s is: %s", wildcards[1], wildcards[2], speedwalk))
-   else
-      mapper.mapprint ("Pick different start and end rooms.")
-   end
-end
 
 function PORTALS_QUERY(filter)
    if not filter then
@@ -4183,46 +4150,71 @@ function map_goto (name, line, wildcards)
    )
 end -- map_goto
 
+function printpath_alias(name, line, wildcards)
+   printpath(wildcards[1], wildcards[2])
+end
+
+function printpath(src, dest)
+   if src == dest then
+      mapper.mapprint ("Pick different start and end rooms.")
+      return
+   end
+
+   rooms[src] = load_room_from_database(src)
+   rooms[dest] = load_room_from_database(dest)
+
+   if rooms[src] == nil then
+      mapper.mapprint (string.format ("Room %s not known.", src))
+      return
+   end
+   if rooms[dest] == nil then
+      mapper.mapprint (string.format ("Room %s not known.", dest))
+      return
+   end
+
+   local foundpath = findpath(src, dest)
+   if foundpath == nil then
+      mapper.mapprint (string.format ("Path from %s to %s not found.", src, dest))
+      return
+   end
+
+   -- turn into speedwalk
+   local speedwalk, stack_char = mapper.build_speedwalk(foundpath, speedwalk_prefix)
+   -- hack to split runs of exits apart with spaces for better screen reader sound
+   local split_speedwalk = speedwalk:split(stack_char)
+   for i,v in ipairs(split_speedwalk) do
+      local parts = Trim(v):split("run ", false, 1)
+      if (parts[1] == "") and (parts[2] ~= "") then -- found a run section
+         split_speedwalk[i] = Trim("run "..parts[2]:gsub("%a", "%1 "))
+      end
+   end
+
+   speedwalk = table.concat(split_speedwalk, " ; ")
+
+   -- display it
+   if current_room ~= src then
+      mapper.mapprint (string.format ("Path from %s to %s is:\n%s\n", src, dest, speedwalk))
+   else
+      mapper.mapprint (string.format ("Path to %s is:\n%s\n", dest, speedwalk))
+   end
+end
+
 function map_where (name, line, wildcards)
    if not mapper.check_we_can_find () then
       return
    end -- if
 
-   local wanted = tonumber(wildcards [1])
-
-   if not wanted then
+   local dest = tonumber(wildcards [1])
+   if not dest then
       mapper.mapprint ("The mapper where command expects a room id number as input.")
       return
    end
-
-   if current_room and wanted == current_room then
+   if dest == current_room then
       mapper.mapprint ("You are already in that room.")
-      return
+      return 
    end -- if
 
-   local paths = {}
-   local foundpath = findpath(current_room, wanted)
-   if foundpath ~= nil then
-      paths[wanted] = {path=foundpath, reason=true}
-   end
-
-   local uid, item = next (paths, nil) -- extract first (only) path
-
-   -- nothing? room not found
-   if not item then
-      mapper.mapprint (string.format ("Room %s not found", wanted))
-      return
-   end -- if
-
-   -- turn into speedwalk
-   local speedwalk = mapper.build_speedwalk (item.path, speedwalk_prefix)
-
-   -- display it
-   if speedwalk ~= nil then
-      mapper.mapprint (string.format ("Path to %s is:\n%s\n", wanted, speedwalk))
-   else
-      mapper.mapprint (string.format("You're IN room %s!", wanted))
-   end
+   printpath(current_room, dest)
 end -- map_where
 
 function map_resume (name, line, wildcards)
