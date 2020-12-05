@@ -356,11 +356,14 @@ end
 function DressWindow(win, font, title, title_alignment, title_leftpadding)
    local l, t, r, b = DrawBorder(win)
 
+   local handler_bottom = 0
    if title and ((type(title) == "string") or (#title > 0)) then
       t = DrawTitleBar(win, font, title, title_alignment, title_leftpadding)
+      handler_bottom = t
+   end
+
+   if WindowMoveHotspot(win, "zz_mw_" .. win .. "_movewindow_hotspot", 0, 0, 0, handler_bottom) ~= 0 then
       movewindow.add_drag_handler(win, 0, 0, 0, t)
-   else
-      movewindow.add_drag_handler(win, 0, 0, 0, 0)
    end
 
    return l, t, r, b

@@ -1444,13 +1444,16 @@ function build_speedwalk (path, prefix)
    end -- if
 
    if prefix ~= nil then
-      if s:sub(1,1) == stack_char then
-         return string.gsub(s:sub(2),";",stack_char)
+      if s:sub(1, #stack_char) == stack_char then
+         s = s:sub(#stack_char+1)
       else
-         return string.gsub(prefix.." "..s,";",stack_char)
+         s = prefix.." "..s
       end
    end
-   return string.gsub(s,";",stack_char)
+
+   s = string.gsub(s, ";", stack_char)
+
+   return s, stack_char
 end -- build_speedwalk
 
 -- start a speedwalk to a path
