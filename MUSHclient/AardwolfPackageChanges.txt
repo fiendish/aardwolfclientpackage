@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2125 snapshot
+- bug fix: GMCP mapper will no longer error if you delete a custom exit in the room right after reloading the mapper.
+- bug fix: GMCP mapper pathfinding should pollute the bottom status area a bit less.
+- bug fix: My easy DIY text window should handle text updates while the user is dragging the window better now.
+- misc change: GMCP mapper where output will now be printed with spaces between letter groups (27e 19u etc). I'm told that this helps screen readers.
+
 r2121 snapshot
 - misc change: Add missing license files. Credit is important.
 
