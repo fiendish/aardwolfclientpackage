@@ -699,10 +699,10 @@ function TextRect:updateSelect()
    self.copy_start_line = self.temp_start_line
    self.start_copying_x = self.temp_start_copying_x
 
-   self.end_copying_y = WindowInfo(self.window, 18) - WindowInfo(self.window, 2)
+   self.end_copying_y = WindowInfo(self.window, 18) - WindowInfo(self.window, 11)
    self.copy_end_windowline = math.floor((self.end_copying_y - self.top) / self.line_height)
    self.copy_end_line = self.copy_end_windowline + self.start_line
-   self.end_copying_x = math.max(self.left, math.min(self.right, WindowInfo(self.window, 17) - WindowInfo(self.window, 1)))
+   self.end_copying_x = math.max(self.left, math.min(self.right, WindowInfo(self.window, 17) - WindowInfo(self.window, 10)))
 
    -- the user is selecting backwards, so reverse the start/end orders
    if self.copy_end_line < self.copy_start_line then
