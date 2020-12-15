@@ -1022,6 +1022,14 @@ function TextRect:selected_text(with_colors)
    return table.concat(s_text, "\n")
 end
 
+function TextRect:getStyles()
+   local t = {}
+   for _,line in ipairs(self.raw_lines) do
+      table.insert(t, line[1])
+   end
+   return t
+end
+
 function TextRect:copyFull()
    local t = {}
    for _,line in ipairs(self.raw_lines) do
