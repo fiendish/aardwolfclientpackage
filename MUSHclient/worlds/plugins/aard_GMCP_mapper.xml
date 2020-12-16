@@ -4209,6 +4209,8 @@ function map_where (name, line, wildcards)
       mapper.mapprint ("The mapper where command expects a room id number as input.")
       return
    end
+
+   dest = tostring(dest)
    if dest == current_room then
       mapper.mapprint ("You are already in that room.")
       return 

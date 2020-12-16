@@ -114,10 +114,10 @@ function ThemedWindowClass.ResizeReleaseCallback(flags, hotspot_id)
 end
 
 function ThemedWindowClass:resize(width, height, still_dragging)
-   self.width = width
-   self.height = height
+   self.width = width or self.width
+   self.height = height or self.height
    CallPlugin("abc1a0944ae4af7586ce88dc", "pause")
-   WindowResize(self.id, width, height, Theme.PRIMARY_BODY)
+   WindowResize(self.id, self.width, self.height, Theme.PRIMARY_BODY)
    _, self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.BodyMetrics(self.id, self.title_font, WindowFontInfo(self.id, self.title_font, 1), #self.title)
    if still_dragging then
       if self.do_while_resizing then
@@ -314,7 +314,11 @@ end
 function ThemedTextWindowClass:__set_scrollbar()
    if self.scrollbar then
       local tr_right = self.bodyright - Theme.RESIZER_SIZE + 1
-      self.scrollbar:setRect(tr_right, self.bodytop, self.bodyright, self.bodybottom-Theme.RESIZER_SIZE)
+      local bottom = self.bodybottom
+      if self.resizer_type then
+         bottom = bottom - Theme.RESIZER_SIZE
+      end
+      self.scrollbar:setRect(tr_right, self.bodytop, self.bodyright, bottom)
       self.scrollbar:draw()
    end
 end
