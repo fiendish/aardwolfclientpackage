@@ -127,6 +127,18 @@
     }
   }
 
+  function ParseLinkHeader(link_header) {
+      var links = {};
+      var parts = link_header.split(",");
+      for(var i=0; i<parts.length; i++) {
+          var section = parts[i].split(";");
+          var url = section[0].replace(/<(.*)>/, "$1").trim();
+          var name = section[1].replace(/rel="(.*)"/, "$1").trim();
+          links[name] = url;
+      }
+      return links;
+  }
+
   function GetAllReleasesInfo() {
     var allReleasesInfo = Storage.get('allReleasesInfo');
     var rname = Storage.get("rname");
@@ -138,48 +150,56 @@
       SetAllReleasesInfo(allReleasesInfo);
       SetLatestReleaseInfo(rname, url, info);
     } else {
-        $.ajax(
-        {
-            url: "https://api.github.com/repos/fiendish/aardwolfclientpackage/releases?per_page=1000&nocache=" + (new Date()).getTime(),
-            headers: {
-                "Accept": "application/vnd.github.v3+json",
-            },
-            dataType: "json",
-            success: function (releases) {
-                var downloadCount = 0;
-                for (var i = 0; i < releases.length; i++) {
-                    for (var j = 0; j < releases[i].assets.length; j++) {
-                    var asset = releases[i].assets[j];
-                    downloadCount += asset.download_count;
-                    }
-                }
-                var allReleasesInfo = "<span style='opacity: 0.5'>All installer versions combined since r1871 (the first installer build), <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
-                Storage.set('allReleasesInfo', allReleasesInfo, fiveMinutes);
+      var total_download_count = 0;
 
-                SetAllReleasesInfo(allReleasesInfo);
-
-                var release = releases[0];
-                var asset = release.assets[0];
-                var downloadCount = asset.download_count;
-                var oneHour = 60 * 60 * 1000;
-                var oneDay = 24 * oneHour;
-                var dateDiff = new Date() - new Date(asset.updated_at);
-                var timeAgo;
-                if (dateDiff < oneDay) {
-                    timeAgo = (dateDiff / oneHour).toFixed(1) + " hours ago";
-                } else {
-                    timeAgo = (dateDiff / oneDay).toFixed(1) + " days ago";
-                }
-                var rname = release.name;
-                var url = asset.browser_download_url;
-                var info = "The latest Aardwolf MUSHclient Package version is: <span class='number'>" + release.name + "</span><br>Its installer was created <span class='number'>" + timeAgo + "</span> and has been downloaded <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
-                Storage.set('rname', rname, fiveMinutes);
-                Storage.set('url', url, fiveMinutes);
-                Storage.set('info', info, fiveMinutes);
-
-                SetLatestReleaseInfo(rname, url, info);
+      function CountAssets(githubURL) {
+        $.ajax({
+          url: githubURL,
+          headers: {
+            "Accept": "application/vnd.github.v3+json"
+          },
+          dataType: "json",
+          success: function (releases, status, jqXHR) {
+            for (var i = 0; i < releases.length; i++) {
+              for (var j = 0; j < releases[i].assets.length; j++) {
+                total_download_count += releases[i].assets[j].download_count;
+              }
             }
+            var links = ParseLinkHeader(jqXHR.getResponseHeader("Link"))
+            if (!("prev" in links)) {
+              var release = releases[0];
+              var asset = release.assets[0];
+              var downloadCount = asset.download_count;
+              var oneHour = 60 * 60 * 1000;
+              var oneDay = 24 * oneHour;
+              var dateDiff = new Date() - new Date(asset.updated_at);
+              var timeAgo;
+              if (dateDiff < oneDay) {
+                timeAgo = (dateDiff / oneHour).toFixed(1) + " hours ago";
+              } else {
+                timeAgo = (dateDiff / oneDay).toFixed(1) + " days ago";
+              }
+              var rname = release.name;
+              var url = asset.browser_download_url;
+              var info = "The latest Aardwolf MUSHclient Package version is: <span class='number'>" + release.name + "</span><br>Its installer was created <span class='number'>" + timeAgo + "</span> and has been downloaded <span class='number'>" + downloadCount.toLocaleString() + "</span> times.";
+              Storage.set('rname', rname, fiveMinutes);
+              Storage.set('url', url, fiveMinutes);
+              Storage.set('info', info, fiveMinutes);
+              SetLatestReleaseInfo(rname, url, info);
+            } 
+
+            if ("next" in links) {
+              CountAssets(links["next"]);
+            } else{
+              var allReleasesInfo = "<span style='opacity: 0.5'>All installer versions combined since r1871 (the first installer build), <span class='number'>" + total_download_count.toLocaleString() + "</span> times.";
+              Storage.set('allReleasesInfo', allReleasesInfo, fiveMinutes);
+              SetAllReleasesInfo(allReleasesInfo);
+            }
+          }
         });
+      }
+
+      CountAssets("https://api.github.com/repos/fiendish/aardwolfclientpackage/releases?per_page=100");
     }
   }
 
