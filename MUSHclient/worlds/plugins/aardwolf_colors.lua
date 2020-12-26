@@ -328,6 +328,33 @@ function StylesWidth (win, plain_font, bold_font, styles, show_bold, utf8)
 end
 
 
+function ToMultilineStyles(message, default_foreground_color, background_color, multiline, dollarC_resets)
+   function err()
+      assert(false, "Function '"..(debug.getinfo(3, "n").name or debug.getinfo(2, "n").name).."' cannot convert message to multiline styles if it isn't a color coded string, table of styles, or table of tables (multiple lines) of styles.")
+   end
+
+   if type(message) == "string" then
+      message = ColoursToStyles(message, default_foreground_color, background_color, multiline, dollarC_resets)
+   end
+
+   if type(message) ~= "table" then
+      err()
+   end
+
+   if message.text then
+      message = {{message}}
+   elseif (type(message[1]) == "table") and message[1].text then
+      message = {message}
+   end
+
+   if (type(message[1]) ~= "table") or (type(message[1][1]) ~= "table") or not message[1][1].text then
+      err()
+   end
+
+   return message
+end
+
+
 -- Converts text with colour codes in it into a line of style runs or multiple
 -- lines of style runs split at newlines if multiline is true.
 -- default_foreground_color and background_color can be Aardwolf color codes or MUSHclient's raw numeric color values

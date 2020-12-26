@@ -116,39 +116,32 @@ function TextRect:findURLs(text)
    return URLs
 end -- function findURL
 
-function TextRect:addText(message, limit_break)
-   if type(message) == "string" then
-      message = ColoursToStyles(message, nil, nil, true)
+function TextRect:textWidth(styles_or_color_coded_text)
+   local width = 0
+   for _, styles in ipairs(ToMultilineStyles(styles_or_color_coded_text, nil, nil, true)) do
+      width = math.max(width, self:styles_width(styles))
    end
-   -- try to be flexible about input
-   assert(type(message) == "table", "TextRect:addText must be given a color coded string, table of styles, or table of tables (multiple lines) of styles")
-   if message.text then
-      message = {message}
-   elseif message[1] then
-      if message[1][1] and not limit_break then
-         for _,v in ipairs(message) do
-            self:addText(v, true)
-         end
-         return
+   return width
+end
+
+function TextRect:addText(message)
+   for _, message in ipairs(ToMultilineStyles(message, nil, nil, true)) do
+      -- extract URLs so we can add our movespots later
+      local urls = self:findURLs(strip_colours_from_styles(message))
+
+      -- pop the oldest line from our buffer if we're at capacity
+      if self.num_raw_lines >= self.max_lines then
+         table.remove(self.raw_lines, 1)
+         self.num_raw_lines = self.num_raw_lines - 1
       end
-      assert(message[1].text, "TextRect:addText must be given a color coded string, table of styles, or table of tables (multiple lines) of styles")
+
+      -- add to raw lines table
+      table.insert(self.raw_lines, {[1]=message, [2]=urls})
+      self.num_raw_lines = self.num_raw_lines + 1
+
+      -- add to wrapped lines table for display
+      self:wrapLine(message, urls, self.num_raw_lines)
    end
-
-   -- extract URLs so we can add our movespots later
-   local urls = self:findURLs(strip_colours_from_styles(message))
-
-   -- pop the oldest line from our buffer if we're at capacity
-   if self.num_raw_lines >= self.max_lines then
-      table.remove(self.raw_lines, 1)
-      self.num_raw_lines = self.num_raw_lines - 1
-   end
-
-   -- add to raw lines table
-   table.insert(self.raw_lines, {[1]=message, [2]=urls})
-   self.num_raw_lines = self.num_raw_lines + 1
-
-   -- add to wrapped lines table for display
-   self:wrapLine(message, urls, self.num_raw_lines)
 end
 
 function TextRect:addColorLine(line)
@@ -1030,21 +1023,21 @@ function TextRect:getStyles()
    return t
 end
 
-function TextRect:copyFull()
+function TextRect:getText()
    local t = {}
    for _,line in ipairs(self.raw_lines) do
       table.insert(t, canonicalize_colours(StylesToColours(line[1]), true))
    end
-   SetClipboard(table.concat(t, "\n"))
+   return table.concat(t, "\n")
+end
+
+function TextRect:copyFull()
+   SetClipboard(self:getText())
    ColourNote("yellow","","All text copied to clipboard ","limegreen","","with","yellow",""," colors.")
 end
 
 function TextRect:copyFullPlain()
-   local t = {}
-   for _,line in ipairs(self.raw_lines) do
-      table.insert(t, strip_colours_from_styles(line[1]))
-   end
-   SetClipboard(table.concat(t, "\n"))
+   SetClipboard(strip_colours(self:getText()))
    ColourNote("yellow","","All text copied to clipboard ","red","","without","yellow",""," colors.")
 end
 

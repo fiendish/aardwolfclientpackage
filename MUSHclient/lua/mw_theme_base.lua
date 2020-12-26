@@ -14,7 +14,7 @@ Steps for use: (also see https://github.com/fiendish/aardwolfclientpackage/wiki/
    The border, titlebar, resize widget, and 3D boxes all have special draw functions included below. The colors are defined in the theme files.
 4) Optional: Make your own themes (clone one of the files in lua/mw_themes and customize your colors).
 5) Optional: If your plugin wants to preserve state between theme changes (changing theme reloads the plugin),
-   you can detect whether the plugin is closing because of a theme change with GetVariable(Theme.reloading_variable).
+   you can detect whether the plugin is closing because of a theme change by looking at Theme.is_reloading.
 --]]
 require "checkplugin"
 require "movewindow"
@@ -34,15 +34,11 @@ function get_theme()
    return theme_file
 end
 
-reloading_variable = "aard_theme_just_reloading"
+is_reloading = false
 
 function just_reloading()
-   SetVariable(reloading_variable, 1)
-   SaveState()
+   is_reloading = true
 end
-
-DeleteVariable(reloading_variable)
-SaveState()
 
 local default_theme = {
    LOGO_OPACITY = 0.02,
@@ -382,37 +378,8 @@ function BodyMetrics(win, font, title_line_height, num_title_lines)
    return title_height, l, t, r, b
 end
 
-
-function ToMultilineStyles(msg)
-   if type(msg) == "string" then
-      msg = ColoursToStyles(msg, Theme.THREE_D_SURFACE_DETAIL, nil, true, true)
-   elseif type(msg) == "table" then
-      if msg.text then  -- single style, wrap in line and container
-         msg = {{msg}}
-      elseif msg[1] then
-         if msg[1].text then  -- single line, wrap in container
-            msg = {msg}
-         elseif msg[1][1] then
-            if msg[1][1].text or (msg[1][1][1] == nil) then  -- already multiline styles (probably)
-               return msg
-            else
-               return nil
-            end
-         end
-      else  -- empty
-         msg = {{{}}}
-      end
-   else 
-      return nil
-   end
-   return msg
-end
-
-
 function DrawTitleBar(win, font, title, title_alignment, title_leftpadding, utf8)
-   local title_lines = ToMultilineStyles(title)
-   assert(title_lines, "Title must be a string, table of styles, or table of tables of styles.")
-
+   local title_lines = ToMultilineStyles(title, Theme.THREE_D_SURFACE_DETAIL, nil, true, true)
    local title_line_height = WindowFontInfo(win, font, 1)
    local title_height, l, t, r, b = BodyMetrics(win, font, title_line_height, #title_lines)
 

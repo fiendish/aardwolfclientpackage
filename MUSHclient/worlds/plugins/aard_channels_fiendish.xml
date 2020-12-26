@@ -623,7 +623,7 @@ tmpfile = GetInfo(66) .. GetPluginID() .. "_temp_data.txt"
 
 function OnPluginClose ()
    WindowDelete(win)
-   if GetVariable(Theme.reloading_variable) then
+   if Theme.is_reloading then
       local temp_tabs_data = {}
       for i,v in ipairs(tabs_rects) do
          temp_tabs_data[i] = {
