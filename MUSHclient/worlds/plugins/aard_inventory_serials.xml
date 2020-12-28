@@ -228,6 +228,10 @@ EnableTriggerGroup("squelch", false)
    group="commands"
 >
 <send>
+   if blocked_by_status() then
+      Send("%0")
+      return
+   end
    EchoTypedCommand("%0")
    if not manually_requested and not visible_always then
       if show_hint then
@@ -255,6 +259,10 @@ EnableTriggerGroup("squelch", false)
    group="commands"
 >
 <send>
+   if blocked_by_status() then
+      Send("%0")
+      return
+   end
    EchoTypedCommand("%0")
    if not manually_requested and not visible_always then
       if show_hint then
@@ -279,6 +287,10 @@ EnableTriggerGroup("squelch", false)
    group="commands"
 >
 <send>
+   if blocked_by_status() then
+      Send("%0")
+      return
+   end
    EchoTypedCommand("%0")
    if not manually_requested and not visible_always then
       if show_hint then
@@ -306,6 +318,14 @@ EnableTriggerGroup("squelch", false)
 <script>
 <![CDATA[
 require "gmcphelper"
+
+function blocked_by_status()
+   local state = tonumber(gmcp("char.status.state"))
+   if (state == nil) or not ({[3]=true, [8]=true, [9]=true, [11]=true})[state] then
+      return true
+   end
+   return false
+end
 
 original_SendNoEcho = SendNoEcho
 function SendNoEcho(foo, unprompt)
