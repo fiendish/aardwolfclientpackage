@@ -1,9 +1,15 @@
 Aardwolf Client Package Major Changes List
 
+r2133 snapshot
+- bug fix: Easy scrollbar movement was using the wrong reference coordinates if dragged after moving the window with WindowPosition.
+- bug fix: Don't activate inventory serials in note mode.
+- new feature: Easy DIY miniwindows have too many improvements to list here. Review https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows
+- new feature: There's now a demonstration plugin for easy miniwindows that captures helpfiles. Check out aard_ingame_help_window.xml in your plugins folder.
+
 r2129 snapshot
 - bug fix: Easy ThemedTextWindow resizing calculated the new scrollbar length incorrectly if the window was not resizeable.
 - bug fix: Only reposition during the movewindow install 5 second check if the window is actually out of bounds.
-- bug fix: Easy ThemedTextWindow text selection was using the wrong coordinates if done after moving the window with WindowPosition.
+- bug fix: Easy textrect text selection was using the wrong reference coordinates if dragged after moving the window with WindowPosition.
 - bug fix: Using the new mapper where from 2125 on the current room would error.
 
 r2125 snapshot
