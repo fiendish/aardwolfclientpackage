@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+
+<plugin
+   name="Aardwolf_Helpfile_Window"
+   author="Fiendish"
+   id="a1965272c8ca966b76f36fa3"
+   language="Lua"
+   purpose="Capture Aardwolf in-game help to a miniwindow"
+   date_written="2020-12-05 16:33:00"
+   requires="5.07"
+   version="1.0"
+   save_state="y"
+   sequence="-9999"
+>
+</plugin>
+
+
+<aliases>
+  <alias
+   match="^help( .+)?$"
+   enabled="y"
+   regexp="y"
+   script="send_help"
+   sequence="100"
+  >
+  </alias>
+</aliases>
+
+<triggers>
+<trigger
+   enabled="y"
+   match="{help}*"
+   omit_from_output="y"
+   sequence="100"
+   script="start_help"
+>
+</trigger>
+<trigger
+   enabled="y"
+   match="*{/help}"
+   omit_from_output="y"
+   sequence="100"
+   script="end_help"
+>
+</trigger>
+
+<trigger
+   enabled="n"
+   match=".*"
+   regexp="y"
+   omit_from_output="y"
+   sequence="101"
+   script="header"
+   name="header"
+   group="toggled"
+   send_to="12"
+><send>
+   StopEvaluatingTriggers(true)
+</send>
+</trigger>
+
+<trigger
+   enabled="y"
+   match="{helpkeywords}*"
+   omit_from_output="y"
+   sequence="100"
+   script="keywords"
+>
+</trigger>
+
+<trigger
+   enabled="y"
+   match="{helpbody}*"
+   omit_from_output="y"
+   sequence="100"
+   script="start_body"
+>
+</trigger>
+<trigger
+   enabled="n"
+   match=".*"
+   regexp="y"
+   omit_from_output="y"
+   sequence="101"
+   script="body"
+   name="body"
+   group="toggled"
+   send_to="12"
+><send>
+   StopEvaluatingTriggers(true)
+</send>
+</trigger>
+<trigger
+   enabled="y"
+   match="*{/helpbody}"
+   omit_from_output="y"
+   sequence="100"
+   script="end_body"
+>
+</trigger>
+
+<trigger
+   enabled="y"
+   match="{helpsearch}*"
+   omit_from_output="y"
+   sequence="100"
+>
+</trigger>
+<trigger
+   enabled="y"
+   match="*{/helpsearch}"
+   omit_from_output="y"
+   sequence="100"
+>
+</trigger>
+
+</triggers>
+
+<script>
+<![CDATA[
+require "themed_miniwindows"
+require "string_split"
+
+WINDOW_ID = GetPluginID()
+
+function OnPluginListChanged()
+   dofile "lua/aard_requirements.lua"
+end
+
+
+function send_help(name, line, wildcards)
+   requested = true
+   Send(line)
+end
+
+
+function start_help()
+   EnableTrigger("header", true)
+   help_styles = {}
+end
+
+
+function header(name, line, wildcards, styles)
+   table.insert(help_styles, styles)
+end
+
+
+function keywords(name, line, wildcards, styles)
+   table.remove(styles, 1)
+   table.insert(help_styles, styles)
+end
+
+
+function start_body()
+   EnableTrigger("header", false)
+   EnableTrigger("body", true)
+end
+
+
+function body(name, line, wildcards, styles)
+   table.insert(help_styles, styles)
+end
+
+
+function end_body()
+   has_body = true
+end
+
+
+function end_help()
+   EnableTriggerGroup("toggled", false)
+   if requested and has_body then
+      draw_window(help_styles)
+   else
+      simulate_styles(help_styles)
+   end
+   requested = nil
+   has_body = nil
+   help_styles = {}
+end
+
+
+function simulate_styles(help_styles)
+   for _,v in ipairs(help_styles) do
+      Simulate(stylesToANSI(v).."\n")
+   end
+end
+
+function draw_window(window_styles)
+   -- I create a zero-size window first, because MUSHclient has a limitation
+   -- where you can only find the width of some text from inside a miniwindow,
+   -- and I want to use font metrics to set exactly the right width and height.
+   -- I set the defer_showing flag to true because I'm going to move it after
+   -- creation and I don't want to see it jump around.
+   my_window = ThemedTextWindow(
+      WINDOW_ID,
+      0,
+      0,
+      0,
+      0,
+      "Aardwolf In-Game Help",
+      "center",
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      nil,
+      nil,
+      GetAlphaOption("output_font_name"),
+      GetOption("output_font_height"),
+      nil,
+      nil,
+      true
+   )
+
+   -- Load the contents of the helpfile into the window.
+   for _, styles in ipairs(window_styles) do
+      my_window:add_text(styles)
+   end
+
+   -- Now that the window is populated, use its font metrics to set the right
+   -- width and height, but give reasonable maxima so it doesn't go off the
+   -- screen.
+   my_window:fit_contents(GetInfo(281)-20, GetInfo(280)-80)
+
+   -- Now that the size is set, auto-center the window on the screen.
+   WindowPosition(WINDOW_ID, 0, 0, 12, 16)
+
+   -- Make sure we're scrolled up to the top.
+   my_window:set_scroll(1)
+
+   -- Add a button to the title bar that will echo the helpfile to the main area.
+   local button_width = my_window:text_width("Print") + 10
+   my_window:add_3d_text_button(
+      "print_button",
+      my_window.width - button_width,
+      -1,
+      "Print",
+      nil,
+      "Print Helpfile In Main Output",
+      nil,
+      function() simulate_styles(my_window:get_styles()) end,
+      nil,
+      nil,
+      nil,
+      button_width,
+      my_window.bodytop
+   )
+
+   -- I used the defer_showing flag, so now I have to show the window.
+   my_window:show()
+   
+   -- Make sure it isn't behind any other miniwindows.
+   my_window:bring_to_front()
+end
+
+function OnPluginThemeChange()
+   -- Miniwindow color themes are applied at their creation, so create an
+   -- existing window again if the theme changes.
+   if WindowInfo(WINDOW_ID, 1) ~= nil then
+      draw_window(my_window:get_styles())
+   end
+end
+
+]]>
+</script>
+</muclient>
