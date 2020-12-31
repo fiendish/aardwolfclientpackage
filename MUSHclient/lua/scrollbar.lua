@@ -188,7 +188,7 @@ end
 
 function ScrollBar.dragMove(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
-   local mouse_y = WindowInfo(sb.window, 18) - WindowInfo(sb.window, 2)
+   local mouse_y = WindowInfo(sb.window, 18) - WindowInfo(sb.window, 11)
    local top_coord = mouse_y + sb.start_pos
    local bottom_coord = top_coord + sb.size
    local available_begin = sb.top + sb.width
