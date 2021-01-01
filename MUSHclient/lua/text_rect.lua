@@ -216,7 +216,8 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       local t_width = WindowTextWidth(self.window, font, style.text)
 
       -- if it fits, copy whole style in
-      if self.no_autowrap or (t_width <= available) then
+      -- also if literally no room for anything, just wedge the whole style in because that's silly
+      if self.no_autowrap or (t_width <= available) or (WindowTextWidth(self.window, font, sub(style.text, 1, 1)) > available) then
          if style.length > 0 then
             insert(line_styles, style)
          end
@@ -225,7 +226,6 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       else -- otherwise, have to split style
          -- look for spaces to break at
          local col = 2
-         local fits = true
          local fit_col = nil
          while col < style.length do
             if sub(style.text, col, col) == " " then
