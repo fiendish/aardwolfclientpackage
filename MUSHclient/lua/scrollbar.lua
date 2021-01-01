@@ -112,7 +112,11 @@ function ScrollBar:draw(inside_callback)
          self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.top + round_banker(self.width/2) + 1,
          self.left + math.ceil(mid_x) + 1, self.top + math.ceil(self.width/4 + 0.5) + 1)
    end
-   WindowPolygon(self.window, points, Theme.THREE_D_SURFACE_DETAIL, miniwin.pen_solid + miniwin.pen_join_miter, 1, Theme.THREE_D_SURFACE_DETAIL, 0, true, false)
+   local color = Theme.THREE_D_SURFACE_DETAIL
+   if self.step == 1 then
+      color = Theme.THREE_D_SOFTSHADOW
+   end
+   WindowPolygon(self.window, points, color, miniwin.pen_solid + miniwin.pen_join_miter, 1, color, 0, true, false)
 
    -- draw the down button
    if (self.keepscrolling == "down") then -- button depressed
@@ -130,10 +134,16 @@ function ScrollBar:draw(inside_callback)
          self.left + math.ceil(mid_x) + math.floor(mid_x/2) + 1, self.bottom - 1 - round_banker(self.width/2),
          self.left + math.ceil(mid_x) + 1, self.bottom - 1 - math.ceil(self.width/4 + 0.5))
    end
-   WindowPolygon(self.window, points, Theme.THREE_D_SURFACE_DETAIL, miniwin.pen_solid + miniwin.pen_join_miter, 1, Theme.THREE_D_SURFACE_DETAIL, 0, true, false)
+
+   local slots = math.max(0, self.total_steps - self.visible_steps)
+
+   color = Theme.THREE_D_SURFACE_DETAIL
+   if self.step > slots then
+      color = Theme.THREE_D_SOFTSHADOW
+   end
+   WindowPolygon(self.window, points, color, miniwin.pen_solid + miniwin.pen_join_miter, 1, color, 0, true, false)
 
    -- draw the content indicator
-   slots = math.max(0, self.total_steps - self.visible_steps)
    local position
    local scroll_height = self.height - (2 * self.width) - 2
    if slots ~= 0 then
