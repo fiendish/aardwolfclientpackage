@@ -874,6 +874,8 @@ local rsound = {}
 local self = {}
 local sp_debug = "0"
 
+SetOption("play_sounds_in_background", 1)
+
 local async = require "async"
 require "gmcphelper"
 require "serialize"  -- serialize tables to strings
