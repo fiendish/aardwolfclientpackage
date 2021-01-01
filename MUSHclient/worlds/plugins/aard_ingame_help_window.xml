@@ -122,6 +122,8 @@
 <![CDATA[
 require "themed_miniwindows"
 require "string_split"
+require "gmcphelper"
+dofile(GetInfo(60).."telnet_options.lua")
 
 WINDOW_ID = GetPluginID()
 
@@ -257,6 +259,31 @@ function draw_window(window_styles)
    
    -- Make sure it isn't behind any other miniwindows.
    my_window:bring_to_front()
+end
+
+function OnPluginInstall()
+   OnPluginEnable()
+end
+
+function OnPluginEnable()
+   if IsConnected() then
+      OnPluginConnect()
+   end
+end
+
+function OnPluginConnect()
+   Send_GMCP_Packet("tags on")
+   TelnetOptionOn(TELOPT_HELPS)
+end
+
+function OnPluginDisable()
+   if IsConnected() then
+      TelnetOptionOff(TELOPT_HELPS)
+   end
+end
+
+function OnPluginClose()
+   OnPluginDisable()
 end
 
 function OnPluginThemeChange()
