@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2135 snapshot
+- bug fix: Don't freeze MUSHclient in pathological case of wrapping text in textrect with literally no space for anything. I'm not sure why I didn't catch this in r2133.
+- misc change: The soundpack plugin should now play sounds by default when the client is backgrounded.
+
 r2133 snapshot
 - bug fix: Easy scrollbar movement was using the wrong reference coordinates if dragged after moving the window with WindowPosition.
 - bug fix: Don't activate inventory serials in note mode.
