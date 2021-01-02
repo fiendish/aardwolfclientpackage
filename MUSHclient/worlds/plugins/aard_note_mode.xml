@@ -78,7 +78,7 @@ function OnPluginBroadcast(msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then
       if text == "char.status" then -- only watch for char.status.state change
          state = gmcp("char.status.state")
-         if previous_state == "5" and state ~= "5" then
+         if ((previous_state == nil) or (previous_state == "5")) and (state ~= "5") then
             toggleStuff(true)
          elseif previous_state ~= "5" and state == "5" then
             toggleStuff(false)

@@ -160,7 +160,7 @@ log_file_size = tonumber(GetVariable("log_file_size")) or default_log_file_size
 
 local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction", "remote_socials"}
 local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations", ["remote_socials"]="Remote Socials"}
-local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","dtell","ftalk","gametalk","gclan","gossip","grapevine","gratz","group","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mchat","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
+local init_channel_keys = {"answer","auction","barter","cant","chant","claninfo","clantalk","commune","curse","debate","dtell","epics","ftalk","gametalk","gclan","gossip","grapevine","gratz","group","gtell","helper","immtalk","inform","lasertag","ltalk","mafiainfo","market","mchat","mobsay","music","newbie","pchat","pokerinfo","ptell","question","racetalk","rauction","restores","rp","say","snewbie","sports","spouse","tech","telepathy","tell","tiertalk","trivia","wangrp","wardrums","yell"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
 
@@ -462,7 +462,7 @@ function init ()
    end
 end
 
-function drawTabs (mouseover)
+function drawTabs ()
    if num_tabs > 1 then
       local tab_left = draw_left+5
       local tab_padding = Theme.DYNAMIC_BUTTON_PADDING
@@ -470,6 +470,9 @@ function drawTabs (mouseover)
       local active_width = nil
       WindowRectOp(win, miniwin.rect_fill, draw_left, draw_top, draw_right+1, draw_top + (4*gap) + tab_font_height+1, Theme.SECONDARY_BODY)
 
+      if added_to_current then
+         tabs_activity = {}
+      end
       for i,_ in ipairs(tabs_channel_captures) do
          local name = tabs_names[i] or tostring(i)
          local tab_width = WindowTextWidth(win, "channels_font", name) + (tab_padding * 2)
@@ -532,10 +535,12 @@ function drawTabs (mouseover)
 end
 
 function tabMouseOver (flags, hotspot_id)
-   drawTabs(tonumber(hotspot_id:sub(4)))
+   mouseover = tonumber(hotspot_id:sub(4))
+   drawTabs()
 end
 
 function tabCancelMouseOver (flags, hotspot_id)
+   mouseover = nil
    drawTabs()
 end
 
@@ -756,6 +761,7 @@ function storeFromOutside(text, tab, add_timestamp, omit_log)
    local res = nil
    if tab then
       text = stampAndLog(text, add_timestamp and os.date(date_format) or "", omit_log)
+      added_to_current = false
       res = addToTab(text, tab)
       if res == 1 then
          drawTabs()
@@ -789,6 +795,7 @@ function addToTab(text, tab)
    if (tab >= 1) and (tab <= num_tabs) then
       tabs_rects[tab]:addText(ColoursToStyles(text, nil, nil, true))
       if tab == current_tab then
+         added_to_current = true
          tabs_rects[tab]:draw()
          tabs_scrollbars[tab]:draw()
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
@@ -805,6 +812,7 @@ end
 
 function storeMessage(text, label, captures)
    will_draw = false
+   added_to_current = false
    for tab, whats_inside_the_tab in ipairs(captures) do
       if whats_inside_the_tab[label]["capture"] then
          if addToTab(text, tab) == 1 then

@@ -3,6 +3,7 @@
 require "wait"
 require "copytable"
 require "colors"
+require "mw_theme_base"
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
 local function getHighlightColor(bg)
@@ -463,6 +464,19 @@ function TextRect:draw(cleanup_first, inside_callback)
    end
    
    self:underline_hyperlinks()
+
+   self:draw_scrollback_marker()
+end
+
+function TextRect:draw_scrollback_marker()
+   if self.display_end_line < self.num_wrapped_lines then
+      local text = "Scroll down for more"
+      local width = self:textWidth(text)
+      local left = self.right - width - 15
+      local top = self.bottom - WindowFontInfo(self.window, self.font, 1) + 1
+      WindowCircleOp(self.window, 2, left, top, self.right-5, self.bottom+2, Theme.THREE_D_SOFTSHADOW, 0, 1, Theme.THREE_D_GRADIENT_FIRST, 0)
+      WindowText(self.window, self.font, text, left+5, top, self.right-3, self.bottom, Theme.THREE_D_SURFACE_DETAIL, false)
+   end
 end
 
 function TextRect:addUpdateCallback(object, callback)

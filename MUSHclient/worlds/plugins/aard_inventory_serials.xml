@@ -23,8 +23,9 @@ Makes inventory command slightly more useful by displaying item serial numbers
 
 <trigger
    enabled="n"
-   match="{invdata}"
+   match="{invdata( \d+)?}"
    name="start_inv"
+   regexp="y"
    omit_from_output="y"
    sequence="100"
    send_to="14"
@@ -219,7 +220,7 @@ EnableTriggerGroup("squelch", false)
 <aliases>
 
 <alias
-   match="^(i|in|inv|inve|inven|invent|invento|inventor|inventory) *$"
+   match="^(i|in|inv|inve|inven|invent|invento|inventor|inventory)( .*)?$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -244,7 +245,7 @@ EnableTriggerGroup("squelch", false)
       EnableTrigger("start_key", true)
       EnableTrigger("start_inv", true)
       SendNoEcho("keyring data", true)
-      SendNoEcho("invdata")
+      SendNoEcho("invdata %2")
    end
 </send>
 </alias>
@@ -505,14 +506,7 @@ keysorted = {}
 vault = {}
 vaultsorted = {}
 
-function parse(styles, wildcards, results, sorted)
-   -- Work around ansi mismatch between invdata and keyring data.
-   -- If we got an ansi line, convert the many styles it generates to color codes.
-   if #styles > 1 then
-      table.remove(styles)
-      table.remove(styles, 1)
-      wildcards[3] = StylesToColoursOneLine(styles)
-   end
+function parse(wildcards, results, sorted)
    local flags = wildcards[2]
    local name = wildcards[3]
    local level = wildcards[4]
@@ -538,15 +532,15 @@ function parse(styles, wildcards, results, sorted)
 end
 
 function parseInvdata(name, line, wildcards, styles)
-   parse(styles, wildcards, inv, invsorted)
+   parse(wildcards, inv, invsorted)
 end
 
 function parseKeyring(name, line, wildcards, styles)
-   parse(styles, wildcards, keys, keysorted)
+   parse(wildcards, keys, keysorted)
 end
 
 function parseVault(name, line, wildcards, styles)
-   parse(styles, wildcards, vault, vaultsorted)
+   parse(wildcards, vault, vaultsorted)
 end
 
 function displaySorted(which)

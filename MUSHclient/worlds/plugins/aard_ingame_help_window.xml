@@ -122,6 +122,8 @@
 <![CDATA[
 require "themed_miniwindows"
 require "string_split"
+require "gmcphelper"
+dofile(GetInfo(60).."telnet_options.lua")
 
 WINDOW_ID = GetPluginID()
 
@@ -188,7 +190,7 @@ function simulate_styles(help_styles)
    end
 end
 
-function draw_window(window_styles)
+function draw_window(window_styles, keep_position)
    -- I create a zero-size window first, because MUSHclient has a limitation
    -- where you can only find the width of some text from inside a miniwindow,
    -- and I want to use font metrics to set exactly the right width and height.
@@ -228,8 +230,14 @@ function draw_window(window_styles)
    -- screen.
    my_window:fit_contents(GetInfo(281)-20, GetInfo(280)-80)
 
-   -- Now that the size is set, auto-center the window on the screen.
-   WindowPosition(WINDOW_ID, 0, 0, 12, 16)
+   -- Now that the size is set, center the window on the screen if we're not
+   -- just changing themes.
+   if not keep_position then
+      -- Use fixed position instead of the auto-centering mode because of a
+      -- subtle position retrieval conflict during theme changes between
+      -- movewindow and WindowPosition.
+      WindowPosition(WINDOW_ID, (GetInfo(281)-my_window.width)/2, (GetInfo(280)-my_window.height)/2, 12, 18)
+   end
 
    -- Make sure we're scrolled up to the top.
    my_window:set_scroll(1)
@@ -254,16 +262,41 @@ function draw_window(window_styles)
 
    -- I used the defer_showing flag, so now I have to show the window.
    my_window:show()
-   
+
    -- Make sure it isn't behind any other miniwindows.
    my_window:bring_to_front()
+end
+
+function OnPluginInstall()
+   OnPluginEnable()
+end
+
+function OnPluginEnable()
+   if IsConnected() then
+      OnPluginConnect()
+   end
+end
+
+function OnPluginConnect()
+   Send_GMCP_Packet("tags on")
+   TelnetOptionOn(TELOPT_HELPS)
+end
+
+function OnPluginDisable()
+   if IsConnected() then
+      TelnetOptionOff(TELOPT_HELPS)
+   end
+end
+
+function OnPluginClose()
+   OnPluginDisable()
 end
 
 function OnPluginThemeChange()
    -- Miniwindow color themes are applied at their creation, so create an
    -- existing window again if the theme changes.
    if WindowInfo(WINDOW_ID, 1) ~= nil then
-      draw_window(my_window:get_styles())
+      draw_window(my_window:get_styles(), true)
    end
 end
 
