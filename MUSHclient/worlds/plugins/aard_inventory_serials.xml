@@ -505,14 +505,7 @@ keysorted = {}
 vault = {}
 vaultsorted = {}
 
-function parse(styles, wildcards, results, sorted)
-   -- Work around ansi mismatch between invdata and keyring data.
-   -- If we got an ansi line, convert the many styles it generates to color codes.
-   if #styles > 1 then
-      table.remove(styles)
-      table.remove(styles, 1)
-      wildcards[3] = StylesToColoursOneLine(styles)
-   end
+function parse(wildcards, results, sorted)
    local flags = wildcards[2]
    local name = wildcards[3]
    local level = wildcards[4]
@@ -538,15 +531,15 @@ function parse(styles, wildcards, results, sorted)
 end
 
 function parseInvdata(name, line, wildcards, styles)
-   parse(styles, wildcards, inv, invsorted)
+   parse(wildcards, inv, invsorted)
 end
 
 function parseKeyring(name, line, wildcards, styles)
-   parse(styles, wildcards, keys, keysorted)
+   parse(wildcards, keys, keysorted)
 end
 
 function parseVault(name, line, wildcards, styles)
-   parse(styles, wildcards, vault, vaultsorted)
+   parse(wildcards, vault, vaultsorted)
 end
 
 function displaySorted(which)
