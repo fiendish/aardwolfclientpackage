@@ -23,8 +23,9 @@ Makes inventory command slightly more useful by displaying item serial numbers
 
 <trigger
    enabled="n"
-   match="{invdata}"
+   match="{invdata( \d+)?}"
    name="start_inv"
+   regexp="y"
    omit_from_output="y"
    sequence="100"
    send_to="14"
@@ -219,7 +220,7 @@ EnableTriggerGroup("squelch", false)
 <aliases>
 
 <alias
-   match="^(i|in|inv|inve|inven|invent|invento|inventor|inventory) *$"
+   match="^(i|in|inv|inve|inven|invent|invento|inventor|inventory)( .*)?$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -244,7 +245,7 @@ EnableTriggerGroup("squelch", false)
       EnableTrigger("start_key", true)
       EnableTrigger("start_inv", true)
       SendNoEcho("keyring data", true)
-      SendNoEcho("invdata")
+      SendNoEcho("invdata %2")
    end
 </send>
 </alias>
