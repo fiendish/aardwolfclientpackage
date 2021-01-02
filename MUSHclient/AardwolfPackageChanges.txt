@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2142 snapshot
+- bug fix: The easy miniwindows documentation says a nil title turns into no titlebar, so let's do that instead of erroring. 
+
 r2141 snapshot
 - bug fix: The tab mouseover highlight in the communication log should no longer go away when a new message arrives.
 - bug fix: The inventory serials plugin should now correctly display item names that match color-changing triggers or #subs.
