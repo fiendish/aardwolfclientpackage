@@ -351,6 +351,14 @@ function ToMultilineStyles(message, default_foreground_color, background_color, 
       err()
    end
 
+   for _,line in ipairs(message) do
+      for _,style in ipairs(line) do
+         if style.length == nil then
+            style.length = #(style.text)
+         end
+      end
+   end
+
    return message
 end
 
