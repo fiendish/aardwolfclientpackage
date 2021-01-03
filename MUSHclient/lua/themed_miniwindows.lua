@@ -347,8 +347,13 @@ function ThemedTextWindowClass:OnDelete()
    end
 end
 
+function ThemedTextWindowClass:show()
+   self:draw()
+   ThemedWindowClass.show(self)
+end
+
 function ThemedTextWindowClass:add_text(styles_or_color_coded_text, draw_after)
-   draw_after = (draw_after == nil) or (draw_after == true)
+   draw_after = ((draw_after == nil) or (draw_after == true)) and WindowInfo(self.id, 5)
    self.textrect:addText(styles_or_color_coded_text)
    if draw_after then
       self:draw()
@@ -434,7 +439,7 @@ function ThemedTextWindowClass:add_styles(styles)
 end
 
 function ThemedTextWindowClass:clear(draw_after)
-   draw_after = (draw_after == nil) or (draw_after == true)
+   draw_after = ((draw_after == nil) or (draw_after == true)) and WindowInfo(self.id, 5)
    self.textrect:clear(draw_after)
    if draw_after then
       self:__draw_framing()
