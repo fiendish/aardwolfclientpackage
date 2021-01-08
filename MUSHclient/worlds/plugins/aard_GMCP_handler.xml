@@ -120,7 +120,6 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-local IAC, SB, SE, DO = 0xFF, 0xFA, 0xF0, 0xFD
 local GMCP      = 201
 local GMCPDebug = tonumber(GetVariable("GMCPDebug")) or 0
 
@@ -154,19 +153,8 @@ function gmcpdebug(name, line, wildcards)
 end
 
 
-function GMCP_send(what)
-   if what == nil then
-      print("GMCP_send passed a nil message.")
-      return
-   end
-
-   SendPkt (string.char (IAC, SB, GMCP) ..
-           (string.gsub (what, "\255", "\255\255")) ..  -- IAC becomes IAC IAC
-            string.char (IAC, SE))
-end
-
 function GMCP_Alias (name, line, wildcards)
-   GMCP_send(wildcards[1])
+   Send_GMCP_Packet(wildcards[1])
 end
 
 function OnPluginTelnetSubnegotiation (msg_type, data)
@@ -250,19 +238,6 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       if message == "config" then
          BroadcastPlugin(1, "config."..next(t))
       end
-
-      if not inited then
-         GMCP_send("config xterm yes")
-         GMCP_send("rawcolor on")
-         GMCP_send("request char")
-         GMCP_send("request room")
-         GMCP_send("request area")
-         GMCP_send("request quest")
-         GMCP_send("request group")
-         GMCP_send("config prompt")
-         GMCP_send("config compact")
-         inited = true
-      end
   else
       ColourNote("white", "red", "GMCP DECODE ERROR: "..t)
       ColourNote("white", "red", "Received invalid GMCP message: "..utils.utf8convert(data))
@@ -294,8 +269,15 @@ function OnPluginSaveState()
 end
 
 function OnPluginConnect()
-   inited = false
-   GMCP_send("config compact") -- give the server a little kick
+   Send_GMCP_Packet("config compact")
+   Send_GMCP_Packet("config prompt")
+   Send_GMCP_Packet("config xterm yes")
+   Send_GMCP_Packet("rawcolor on")
+   Send_GMCP_Packet("request char")
+   Send_GMCP_Packet("request room")
+   Send_GMCP_Packet("request area")
+   Send_GMCP_Packet("request quest")
+   Send_GMCP_Packet("request group")
 end
 
 function OnPluginTelnetRequest (msg_type, data)
@@ -305,16 +287,16 @@ function OnPluginTelnetRequest (msg_type, data)
 
    if msg_type == GMCP and data == "SENT_DO" then
       -- This hard-coded block may need to be made into a config table as we add more message types.
-      GMCP_send (
+      Send_GMCP_Packet (
          string.format ('Core.Hello { "client": "MUSHclient", "version": "%s", "ident": "%s" }',
                         Version().." r"..aard_extras.PackageVersionFull(), ident)
       )
-      GMCP_send ('Core.Supports.Set [ "Char 1", "Comm 1", "Room 1" ]')
+      Send_GMCP_Packet ('Core.Supports.Set [ "Char 1", "Comm 1", "Room 1" ]')
       return true
-   end -- if GMCP login needed (just sent DO)
+   end
 
    return false
-end -- function OnPluginTelnetRequest
+end
 
 function OnPluginDisable()
    EnablePlugin(GetPluginID(), true)

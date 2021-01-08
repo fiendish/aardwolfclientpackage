@@ -1,26 +1,25 @@
---~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
---- gmcphelper.lua
---~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 require "serialize"
 
----------------------------------------------------------------------------------------------------
--- FUNCTION:: gmcp
---   Returns, in DWIM manner, the GMCP data from matching category.
---   Examples: gmcp("room"), gmcp("char.base.tier")
----------------------------------------------------------------------------------------------------
+local IAC, SB, SE, DO = 0xFF, 0xFA, 0xF0, 0xFD
+local GMCP      = 201
+
+-- Returns, in DWIM manner, the GMCP data from matching category.
+-- Examples: gmcp("room"), gmcp("char.base.tier")
 function gmcp(what)
    local ret, datastring = CallPlugin("3e7dedbe37e44942dd46d264", "gmcpdata_as_string", what)
    pcall(loadstring("data = "..datastring))
    return data
-end -- gmcp
+end
 
 
----------------------------------------------------------------------------------------------------
 -- Helper function to send GMCP data.
----------------------------------------------------------------------------------------------------
 function Send_GMCP_Packet (what)
-   CallPlugin("3e7dedbe37e44942dd46d264", "GMCP_send", what)
-end -- Send_GMCP_Packet
+   assert(what ~= nil, "Send_GMCP_Packet was asked to send a nil message.")
+
+   SendPkt (string.char (IAC, SB, GMCP) ..
+           (string.gsub (what, "\255", "\255\255")) ..  -- IAC becomes IAC IAC
+            string.char (IAC, SE))
+end
 
 
 
