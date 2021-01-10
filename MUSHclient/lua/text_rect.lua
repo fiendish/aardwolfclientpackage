@@ -126,7 +126,7 @@ function TextRect:textWidth(styles_or_color_coded_text)
 end
 
 function TextRect:addText(message)
-   for _, message in ipairs(ToMultilineStyles(message, nil, nil, true)) do
+   for _, message in ipairs(ToMultilineStyles(message, Theme.BODY_TEXT, nil, true)) do
       -- extract URLs so we can add our movespots later
       local urls = self:findURLs(strip_colours_from_styles(message))
 
@@ -557,16 +557,18 @@ end
 function TextRect:initArea()
    --highlight, right click, scrolling
    self.area_hotspot = self:generateHotspotID("textarea")
-   if self.unselectable then
-      WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "", "", "TextRect.mouseUp", "", nil, 0)
-   else
-      WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "", miniwin.cursor_ibeam, 0)
-      WindowDragHandler(self.window, self.area_hotspot, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
-   end
-   if self.scrollable then
-      WindowScrollwheelHandler(self.window, self.area_hotspot, "TextRect.wheelMove")
-   elseif self.external_scroll_handler then
-      WindowScrollwheelHandler(self.window, self.area_hotspot, self.external_scroll_handler)
+   if (not self.unselectable) or self.scrollable or self.external_scroll_handler or (not self.no_url_hyperlinks) then
+      if self.unselectable then
+         WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "", "", "TextRect.mouseUp", "", nil, 0)
+      else
+         WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "TextRect.mouseDown", "TextRect.cancelMouseDown", "TextRect.mouseUp", "", miniwin.cursor_ibeam, 0)
+         WindowDragHandler(self.window, self.area_hotspot, "TextRect.dragMove", "TextRect.dragRelease", 0x10)
+      end
+      if self.scrollable then
+         WindowScrollwheelHandler(self.window, self.area_hotspot, "TextRect.wheelMove")
+      elseif self.external_scroll_handler then
+         WindowScrollwheelHandler(self.window, self.area_hotspot, self.external_scroll_handler)
+      end
    end
    self.hyperlinks = {}
 end
