@@ -22,7 +22,7 @@
 
 Shortcut keys:
 
-Alt + Right and Alt + Left - selects next and previous categorey
+Alt + Right and Alt + Left - selects next and previous category
 
 Shift + Alt + Right and Left - moves category in direction
 
@@ -621,8 +621,9 @@ category. You could also create your own category.
 
 require "gmcphelper"
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
+require "json"
 
-local internal_ver = "1.0.8"
+local internal_ver = "1.1.0"
 local gmcp_handler_id = "3e7dedbe37e44942dd46d264"
 local modes = {} -- for keyboard states
 local messages = {}
@@ -642,8 +643,6 @@ local current_category = 0 -- not set yet
 local current_msg_id = 0
 local on_global_quest = false
 local listIndexing = true
-
-local categories = {}
 
 -- set up accelerators
 for i = 1, 9 do
@@ -859,7 +858,8 @@ function review_category_move(name, line, w)
       end
    end
    table.insert(categories, current_category, name)
-   speak("moved.")
+   speak(name.." moved "..w[1])
+   SaveState()
 end
 
 local function has_value(table, val)
@@ -887,6 +887,7 @@ function review_add(name, line, wc)
          messages[cat] = {}
          indices[cat] = 0
          table.insert(categories, cat)
+         SaveState()
       end
    end
 
@@ -1838,18 +1839,22 @@ function vi(alias, line, wc)
    end
 end
 
---set up initial important categories
-review_add(nil, nil, {"All", ""})
+function OnPluginSaveState()
+   SetVariable("categories_list", json.encode(categories))
+end
+
+-- set up initial important categories
+
+local default_categories = json.encode(
+   {"All","Say","Tells","Group","Clan","Answers","Commerce","URLs","Kill Summary","Quests"}
+)
+categories = json.decode(GetVariable("categories_list") or default_categories)
+for _,c in ipairs(categories) do
+   review_add(nil, nil, {c, ""})
+end
 current_category = 1
-review_add(nil, nil, {"Say", ""})
-review_add(nil, nil, {"Tells", ""})
-review_add(nil, nil, {"Group", ""})
-review_add(nil, nil, {"Clan", ""})
-review_add(nil, nil, {"Answers", ""})
-review_add(nil, nil, {"Commerce", ""})
-review_add(nil, nil, {"URLs", ""})
-review_add(nil, nil, {"Kill Summary", ""})
-review_add(nil, nil, {"Quests", ""})
+SaveState()
+
 ]]>
 </script>
 </muclient>
