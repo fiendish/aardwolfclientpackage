@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Time"
+   author="Fiendish"
+   id="0f66211eb132e555af92697f"
+   language="Lua"
+   purpose="The time in a miniwindow."
+   date_written="2021-01-02 03:46:01"
+   requires="5.07"
+   version="1.0"
+   >
+</plugin>
+<script>
+<![CDATA[
+require "themed_miniwindows"
+
+function update()
+   my_window:clear(false)
+   my_window:add_text(os.date("[%d %b %H:%M:%S]"))
+   my_window:fit_contents()
+end
+
+my_window = ThemedTextWindow(GetPluginID(), 0, 0, 0, 0)
+update()
+AddTimer("update", 0, 0, 1, "", timer_flag.Enabled + timer_flag.ActiveWhenClosed + timer_flag.Temporary, "update")
+]]>
+</script>
+</muclient>
