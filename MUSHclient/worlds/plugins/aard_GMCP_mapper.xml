@@ -2786,14 +2786,14 @@ function checkDatabaseIntegrity(full_check, second_run)
       end
    end
    if integrityCheck == false and second_run ~= true then
-      ColourNote("yellow", "red", "MAPPER DB INTEGRITY CHECK FAILED. REBUILDING INDEXES AND TRYING AGAIN.")
+      ColourNote("yellow", "red", "MAPPER DB INTEGRITY CHECK FAILED. THIS IS A SIGN OF DATABASE CORRUPTION. REBUILDING INDEXES AND TRYING AGAIN.")
+      CorruptionAlert()
       dbCheckExecute("REINDEX")
       return checkDatabaseIntegrity(true, true)
    end
    if not integrityCheck then
-      ColourNote("yellow", "red", "FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.")
+      ColourNote("yellow", "red", "FAILED SECOND INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.")
       utils.msgbox("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.", "Error!", "ok", "!", 1)
-      CorruptionAlert()
       return false
    end
    maybe_Note("MAP DATABASE INTEGRITY CHECK PASSED", second_run)
@@ -2975,7 +2975,7 @@ end
 
 function CorruptionAlert()
    if not compact_mode then Note("") end
-   Note("WARNING, PLEASE READ THE DATA CORRUPTION GUIDE AT: https://github.com/fiendish/aardwolfclientpackage/wiki/GMCP-driven-world-mapper#database-corruption")
+   Note("PLEASE READ THE DATA CORRUPTION GUIDE AT: https://github.com/fiendish/aardwolfclientpackage/wiki/GMCP-driven-world-mapper#database-corruption")
    Note("If the information there does not help you 100%, then try asking on the Tech channel and report this error to Fiendish by email.")
    if not compact_mode then Note("") end
 end
