@@ -179,6 +179,9 @@ loadstring(GetVariable("tabs_nonchannel_captures") or "")()
 tabs_names = {}
 loadstring(GetVariable("tabs_names") or "")()
 
+tabs_active_seen_highlight = {}
+loadstring(GetVariable("tabs_active_seen_highlight") or "")()
+
 window_title = GetVariable("window_title") or "Communication Log"
 if window_title == "" then
    window_title = nil
@@ -471,7 +474,11 @@ function drawTabs ()
       WindowRectOp(win, miniwin.rect_fill, draw_left, draw_top, draw_right+1, draw_top + (4*gap) + tab_font_height+1, Theme.SECONDARY_BODY)
 
       if added_to_current then
-         tabs_activity = {}
+         for k,_ in pairs(tabs_activity) do
+            if not tabs_active_seen_highlight[k] then
+               tabs_activity[k] = nil
+            end
+         end
       end
       for i,_ in ipairs(tabs_channel_captures) do
          local name = tabs_names[i] or tostring(i)
@@ -680,6 +687,7 @@ function OnPluginSaveState()
    SetVariable("tabs_names", serialize.save("tabs_names"))
    SetVariable("tabs_channel_captures", serialize.save("tabs_channel_captures"))
    SetVariable("tabs_nonchannel_captures", serialize.save("tabs_nonchannel_captures"))
+   SetVariable("tabs_active_seen_highlight", serialize.save("tabs_active_seen_highlight"))
    SetVariable("window_title", window_title or "")
 end
 
@@ -1129,6 +1137,13 @@ function extend_rightclick_menu()
          function()
             tabs_rects[current_tab]:clear(true)
             CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+            SaveState()
+         end
+      },
+      {
+         (tabs_active_seen_highlight[current_tab] and "+" or "").."Highlight If Message Appears In Other Active Tab",
+         function()
+            tabs_active_seen_highlight[current_tab] = not tabs_active_seen_highlight[current_tab]
             SaveState()
          end
       },
