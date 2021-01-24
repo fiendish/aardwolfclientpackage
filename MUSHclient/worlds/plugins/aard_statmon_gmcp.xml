@@ -57,7 +57,6 @@ startx     = ""
 starty     = ""
 posx       = ""
 posy       = ""
-hotspot_id = ""
 cstyles    = {}
 page_built = false
 max_width  = 0
@@ -621,6 +620,10 @@ end
 function ResizeMoveCallback()
    if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
       return
+   end
+   if (startx == "") or (starty == "") then
+      -- catch an impossible situation that, despite being impossible, seems to be happening anyway
+      startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
    end
    posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
    width = width + posx - startx
