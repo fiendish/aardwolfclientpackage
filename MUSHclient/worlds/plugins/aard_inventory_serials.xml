@@ -220,7 +220,7 @@ EnableTriggerGroup("squelch", false)
 <aliases>
 
 <alias
-   match="^(i|in|inv|inve|inven|invent|invento|inventor|inventory)( .*)?$"
+   match="^(i|in|inv|inve|inven|invent|invento|inventor|inventory) *$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -245,7 +245,7 @@ EnableTriggerGroup("squelch", false)
       EnableTrigger("start_key", true)
       EnableTrigger("start_inv", true)
       SendNoEcho("keyring data", true)
-      SendNoEcho("invdata %2")
+      SendNoEcho("invdata")
    end
 </send>
 </alias>
