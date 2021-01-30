@@ -1,5 +1,14 @@
 Aardwolf Client Package Major Changes List
 
+r2149 snapshot
+- bug fix: I guess I shouldn't have changed the way the inventory command works in r2141. Sorry about that.
+- bug fix: The VI buffers plugin will now remember the order of your buffers if you rearrange them.
+- new feature: Time.xml is a new demo plugin for how simple easy DIY miniwindow plugins can be. It's teeny tiny and just shows the current time in a miniwindow.
+- new feature: There's now a toggle for the communication log tab highlighting change introduced in r2141.
+- misc change: The GMCP mapper plugin will show the database corruption alert after the first integrity check fails instead of waiting until after the second check because the second check might error.
+- misc change: Easy DIY miniwindow efficiency improvements.
+- misc change: MUSHclient.exe has been updated so that the plugin wizard no longer selects all of your triggers, aliases, and timers by default.
+
 r2142 snapshot
 - bug fix: The easy miniwindows documentation says a nil title turns into no titlebar, so let's do that instead of erroring. 
 
