@@ -171,7 +171,7 @@ if (tabs_channel_captures == nil) or (#tabs_channel_captures == 0) then
    tabs_channel_captures = {{}}
 end
 num_tabs = #tabs_channel_captures
-current_tab = math.max(1, math.min(tonumber(GetVariable("current_tab")) or 1, #tabs_channel_captures))
+current_tab = math.max(1, math.min(tonumber(GetVariable("current_tab")) or 1, num_tabs))
 
 tabs_nonchannel_captures = {{}}
 loadstring(GetVariable("tabs_nonchannel_captures") or "")()
@@ -181,6 +181,9 @@ loadstring(GetVariable("tabs_names") or "")()
 
 tabs_active_seen_highlight = {}
 loadstring(GetVariable("tabs_active_seen_highlight") or "")()
+for i=1,num_tabs do
+   tabs_active_seen_highlight[i] = (tabs_active_seen_highlight[i]==0) and 0 or 2
+end
 
 window_title = GetVariable("window_title") or "Communication Log"
 if window_title == "" then
@@ -313,7 +316,7 @@ function setTab(i)
    current_tab = math.min(math.max(i, 1), num_tabs)
    tabs_activity[current_tab] = false
 
-   setupDisplay()
+   setUpDisplay()
    Repaint()
    return current_tab
 end
@@ -338,8 +341,10 @@ function addTab()
    tabs_channel_captures[num_tabs] = {}
    tabs_nonchannel_captures[num_tabs] = {}
    tabs_activity[num_tabs] = false
+   tabs_active_seen_highlight[num_tabs] = 2
+
    addDefaultChannels()
-   setupDisplay()
+   setUpDisplay()
 
    return num_tabs
 end
@@ -368,7 +373,7 @@ function getNamedTab(name)
 end
 
 function clearTabHotspots()
-   for i=1,#tabs_names do
+   for i=1,num_tabs do
       WindowDeleteHotspot(win, "tab"..tostring(i))
    end
 end
@@ -383,6 +388,8 @@ function removeTab()
    table.remove(tabs_scrollbars, current_tab)
    table.remove(tabs_channel_captures, current_tab)
    table.remove(tabs_nonchannel_captures, current_tab)
+   table.remove(tabs_active_seen_highlight, current_tab)
+   table.remove(tabs_activity, current_tab)
 
    num_tabs = num_tabs - 1
    setTab(current_tab)
@@ -406,7 +413,7 @@ end
 function OnPluginInstall ()
    DeleteVariable("temp_tabs_data") -- clean up after 9531ad91a3ed70b6bf9722bb218df8a9daa08614
    init()
-   setupDisplay()
+   setUpDisplay()
    OnPluginEnable()
 end
 
@@ -475,7 +482,7 @@ function drawTabs ()
 
       if added_to_current then
          for k,_ in pairs(tabs_activity) do
-            if not tabs_active_seen_highlight[k] then
+            if tabs_active_seen_highlight[k] == 2 then
                tabs_activity[k] = nil
             end
          end
@@ -594,7 +601,7 @@ function ResizeMoveCallback ()
       starty = GetInfo(280)
    end
    if (utils.timer() - lastRefresh > 0.0333) then
-      setupDisplay()
+      setUpDisplay()
       lastRefresh = utils.timer()
    end
 end
@@ -602,7 +609,7 @@ end
 lastRefresh = 0
 
 function ResizeReleaseCallback ()
-   setupDisplay()
+   setUpDisplay()
 
    for i = 1,num_tabs do
       tabs_rects[i]:reWrapLines()
@@ -615,7 +622,7 @@ function ResizeReleaseCallback ()
    WindowMoveHotspot(win, win.."_resize", draw_right-Theme.RESIZER_SIZE, draw_bottom-Theme.RESIZER_SIZE, 0, 0)
 end
 
-function setupDisplay ()
+function setUpDisplay ()
    WindowResize(win, width, height, 0x00ff00)
    drawBackground()
    set_tr_shape()
@@ -906,7 +913,7 @@ function extend_rightclick_menu()
                   tabs_rects[i]:loadFont(font_name, font_size)
                   tabs_rects[i]:reWrapLines()
                end
-               setupDisplay()
+               setUpDisplay()
             end
             SaveState()
          end
@@ -1132,18 +1139,27 @@ function extend_rightclick_menu()
          end
       },
       {"<", ""},
+      {">Tab Highlighting On New Messages", ""},
+      {
+         ((tabs_active_seen_highlight[current_tab] == 0) and "+" or "").."Always Highlight On New Message If Not Active",
+         function()
+            tabs_active_seen_highlight[current_tab] = 0
+            SaveState()
+         end
+      },
+      {
+         ((tabs_active_seen_highlight[current_tab] == 2) and "+" or "").."Highlight If New Message Not Shown In Active Tab",
+         function()
+            tabs_active_seen_highlight[current_tab] = 2
+            SaveState()
+         end
+      },
+      {"<", ""},
       {
          "Clear Tab",
          function()
             tabs_rects[current_tab]:clear(true)
             CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
-            SaveState()
-         end
-      },
-      {
-         (tabs_active_seen_highlight[current_tab] and "+" or "").."Highlight If Message Appears In Other Active Tab",
-         function()
-            tabs_active_seen_highlight[current_tab] = not tabs_active_seen_highlight[current_tab]
             SaveState()
          end
       },
@@ -1170,7 +1186,7 @@ function extend_rightclick_menu()
            else
                window_title = nil
            end
-           setupDisplay()
+           setUpDisplay()
            SaveState()
          end
       }
@@ -1220,7 +1236,7 @@ function test(arg)
    for i = 1, math.random(arg) do
       storeFromOutside(
          string.random(math.random(200)),
-         math.random(#tabs_rects)
+         math.random(num_tabs)
       )
    end
 end
