@@ -16,112 +16,24 @@
 >
 </plugin>
 
-
 <aliases>
-  <alias
-   match="^help( .+)?$"
+<alias
+   match="^(h|he|hel|help)( .*)?$"
    enabled="y"
    regexp="y"
-   script="send_help"
    sequence="100"
-  >
-  </alias>
+   ignore_case="y"
+   send_to="12"
+><send>
+Capture.command("%0", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, draw_window)
+</send>
+</alias>
 </aliases>
-
-<triggers>
-<trigger
-   enabled="y"
-   match="{help}*"
-   omit_from_output="y"
-   sequence="100"
-   script="start_help"
->
-</trigger>
-<trigger
-   enabled="y"
-   match="*{/help}"
-   omit_from_output="y"
-   sequence="100"
-   script="end_help"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   match=".*"
-   regexp="y"
-   omit_from_output="y"
-   sequence="101"
-   script="header"
-   name="header"
-   group="toggled"
-   send_to="12"
-><send>
-   StopEvaluatingTriggers(true)
-</send>
-</trigger>
-
-<trigger
-   enabled="y"
-   match="{helpkeywords}*"
-   omit_from_output="y"
-   sequence="100"
-   script="keywords"
->
-</trigger>
-
-<trigger
-   enabled="y"
-   match="{helpbody}*"
-   omit_from_output="y"
-   sequence="100"
-   script="start_body"
->
-</trigger>
-<trigger
-   enabled="n"
-   match=".*"
-   regexp="y"
-   omit_from_output="y"
-   sequence="101"
-   script="body"
-   name="body"
-   group="toggled"
-   send_to="12"
-><send>
-   StopEvaluatingTriggers(true)
-</send>
-</trigger>
-<trigger
-   enabled="y"
-   match="*{/helpbody}"
-   omit_from_output="y"
-   sequence="100"
-   script="end_body"
->
-</trigger>
-
-<trigger
-   enabled="y"
-   match="{helpsearch}*"
-   omit_from_output="y"
-   sequence="100"
->
-</trigger>
-<trigger
-   enabled="y"
-   match="*{/helpsearch}"
-   omit_from_output="y"
-   sequence="100"
->
-</trigger>
-
-</triggers>
 
 <script>
 <![CDATA[
 require "themed_miniwindows"
-require "string_split"
+require "wrapped_captures"
 require "gmcphelper"
 dofile(GetInfo(60).."telnet_options.lua")
 
@@ -131,66 +43,31 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-
-function send_help(name, line, wildcards)
-   requested = true
-   Send(line)
-end
-
-
-function start_help()
-   EnableTrigger("header", true)
-   help_styles = {}
-end
-
-
-function header(name, line, wildcards, styles)
-   table.insert(help_styles, styles)
-end
-
-
-function keywords(name, line, wildcards, styles)
-   table.remove(styles, 1)
-   table.insert(help_styles, styles)
-end
-
-
-function start_body()
-   EnableTrigger("header", false)
-   EnableTrigger("body", true)
-end
-
-
-function body(name, line, wildcards, styles)
-   table.insert(help_styles, styles)
-end
-
-
-function end_body()
-   has_body = true
-end
-
-
-function end_help()
-   EnableTriggerGroup("toggled", false)
-   if requested and has_body then
-      draw_window(help_styles)
-   else
-      simulate_styles(help_styles)
+function sanitize_response(style_lines)
+   local new_styles = {}
+   local startdone = false -- help search starts with a blank line that I want to remove
+   for _,line in ipairs(style_lines) do
+      if startdone or (line[1].length > 0) then
+         startdone = true
+         if (line[1].text ~= "{helpbody}") and (line[1].text ~= "{/helpbody}") then
+            if line[1].text == "{helpkeywords}" then
+               line[1].text = ""
+               line[1].length = 0
+            end
+            table.insert(new_styles, line)
+         end
+      end
    end
-   requested = nil
-   has_body = nil
-   help_styles = {}
-end
-
-
-function simulate_styles(help_styles)
-   for _,v in ipairs(help_styles) do
-      Simulate(stylesToANSI(v).."\n")
-   end
+   return new_styles
 end
 
 function draw_window(window_styles, keep_position)
+   if window_styles == nil then
+      return
+   end
+   ColourNote("paleturquoise", "", "Help Captured To Miniwindow")
+   window_styles = sanitize_response(window_styles)
+
    -- I create a zero-size window first, because MUSHclient has a limitation
    -- where you can only find the width of some text from inside a miniwindow,
    -- and I want to use font metrics to set exactly the right width and height.
@@ -222,7 +99,7 @@ function draw_window(window_styles, keep_position)
 
    -- Load the contents of the helpfile into the window.
    for _, styles in ipairs(window_styles) do
-      my_window:add_text(styles)
+      my_window:add_text(styles, false)
    end
 
    -- Now that the window is populated, use its font metrics to set the right
@@ -252,7 +129,7 @@ function draw_window(window_styles, keep_position)
       nil,
       "Print Helpfile In Main Output",
       nil,
-      function() simulate_styles(my_window:get_styles()) end,
+      function() for _,v in ipairs(window_styles) do Simulate(stylesToANSI(v).."\n") end end,
       nil,
       nil,
       nil,
@@ -280,16 +157,6 @@ end
 function OnPluginConnect()
    Send_GMCP_Packet("tags on")
    TelnetOptionOn(TELOPT_HELPS)
-end
-
-function OnPluginDisable()
-   if IsConnected() then
-      TelnetOptionOff(TELOPT_HELPS)
-   end
-end
-
-function OnPluginClose()
-   OnPluginDisable()
 end
 
 function OnPluginThemeChange()

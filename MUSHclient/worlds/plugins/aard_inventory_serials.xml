@@ -18,205 +18,6 @@ Makes inventory command slightly more useful by displaying item serial numbers
 </plugin>
 
 <!--  Triggers  -->
-
-<triggers>
-
-<trigger
-   enabled="n"
-   match="{invdata( \d+)?}"
-   name="start_inv"
-   regexp="y"
-   omit_from_output="y"
-   sequence="100"
-   send_to="14"
->
-<send>
-   EnableTrigger("invdata", true)
-   EnableTrigger("end_inv", true)
-</send>
-</trigger>
-
-<trigger
-   enabled="n"
-   match="{/invdata}"
-   name="end_inv"
-   omit_from_output="y"
-   sequence="100"
-   send_to="14"
->
-<send>
-   displayInventory()
-   EnableTrigger("invdata", false)
-   EnableTrigger("end_inv", false)
-   if inv_sent_count == 0 then
-      EnableTrigger("start_inv", false)
-   end
-   if key_sent_count == 0 then
-      EnableTrigger("start_key", false)
-   end
-</send>
-</trigger>
-
-<trigger
-   enabled="n"
-   match="^(\d+),(\w*),(.+),(\d+),(\d+),([01]),(-?\d+),(-?\d+)"
-   name="invdata"
-   omit_from_output="y"
-   regexp="y"
-   sequence="100"
-   send_to="14"
-   script="parseInvdata"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   match="{keyring}"
-   name="start_key"
-   omit_from_output="y"
-   sequence="100"
-   send_to="14"
->
-<send>
-   EnableTrigger("keyring", true)
-   EnableTrigger("end_key", true)
-</send>
-</trigger>
-
-<trigger
-   enabled="n"
-   match="{/keyring}"
-   name="end_key"
-   omit_from_output="y"
-   sequence="100"
-   send_to="14"
->
-<send>
-   if GetTriggerOption("start_inv", "enabled") == 0 then
-      displayKeyring()
-   end
-   EnableTrigger("keyring", false)
-   EnableTrigger("end_key", false)
-   if key_sent_count == 0 then
-      EnableTrigger("start_key", false)
-   end
-</send>
-</trigger>
-
-<trigger
-   enabled="n"
-   match="^\s*(\d+),(\w*),(.+),(\d+),(\d+),([01]),(-?\d+),(-?\d+)"
-   name="keyring"
-   omit_from_output="y"
-   regexp="y"
-   sequence="100"
-   send_to="14"
-   script="parseKeyring"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   match="{vault}"
-   name="start_vault"
-   omit_from_output="y"
-   sequence="100"
-   send_to="14"
->
-<send>
-   EnableTrigger("vault", true)
-   EnableTrigger("end_vault1", true)
-   EnableTrigger("end_vault2", true)
-</send>
-</trigger>
-
-<trigger
-   enabled="y"
-   match="You must be in a bank room to access your vault."
-   name="no_vault"
-   omit_from_output="n"
-   sequence="100"
-   send_to="12"
->
-<send>
-   vault_sent_count = vault_sent_count - 1
-   if vault_sent_count == 0 then
-      EnableTrigger("start_vault", false)
-   end
-</send>
-</trigger>
-
-<trigger
-   enabled="n"
-   match="{/vault}"
-   name="end_vault1"
-   omit_from_output="y"
-   sequence="100"
-></trigger>
-
-<trigger
-   enabled="n"
-   regexp="y"
-   match="^{vaultcounts}(\d+),(\d+),(\d+){/vaultcounts}$"
-   name="end_vault2"
-   omit_from_output="y"
-   sequence="100"
-   send_to="14"
->
-<send>
-   displayVault("%1", "%2", "%3")
-   EnableTrigger("vault", false)
-   EnableTrigger("end_vault1", false)
-   EnableTrigger("end_vault2", false)
-   if vault_sent_count == 0 then
-      EnableTrigger("start_vault", false)
-   end
-</send>
-</trigger>
-
-<trigger
-   enabled="n"
-   match="^\s*(\d+),(\w*),(.+),(\d+),(\d+),([01]),(-?\d+),(-?\d+)"
-   name="vault"
-   omit_from_output="y"
-   regexp="y"
-   sequence="100"
-   send_to="14"
-   script="parseVault"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   match="^$"
-   name="squelch_empty"
-   omit_from_output="y"
-   regexp="y"
-   sequence="100"
-   send_to="12"
-   group="squelch"
-   keep_evaluating="y"
-><send>
-</send>
-
-</trigger>
-<trigger
-   enabled="n"
-   match="^.+$"
-   name="squelch_not_empty"
-   omit_from_output="n"
-   regexp="y"
-   sequence="100"
-   send_to="12"
-   group="squelch"
-   keep_evaluating="y"
-><send>
-EnableTriggerGroup("squelch", false)
-</send>
-</trigger>
-
-</triggers>
-
 <aliases>
 
 <alias
@@ -240,12 +41,8 @@ EnableTriggerGroup("squelch", false)
       end
       SendNoEcho("%0")
    else
-      inv_sent_count = inv_sent_count + 1
-      key_sent_count = key_sent_count + 1
-      EnableTrigger("start_key", true)
-      EnableTrigger("start_inv", true)
-      SendNoEcho("keyring data", true)
-      SendNoEcho("invdata")
+      Capture.command("keyring data", "{keyring}", "{/keyring}", false, true, true, true, parseKeyringNoDisplay)
+      Capture.command("invdata", "{invdata}", "{/invdata}", false, true, true, false, parseInvdata)
    end
 </send>
 </alias>
@@ -271,9 +68,7 @@ EnableTriggerGroup("squelch", false)
       end
       SendNoEcho("%0")
    else
-      key_sent_count = key_sent_count + 1
-      EnableTrigger("start_key", true)
-      SendNoEcho("keyring data")
+      Capture.command("keyring data", "{keyring}", "{/keyring}", false, true, true, false, parseKeyring)
    end
 </send>
 </alias>
@@ -299,9 +94,7 @@ EnableTriggerGroup("squelch", false)
       end
       SendNoEcho("%0")
    else
-      vault_sent_count = vault_sent_count + 1
-      EnableTrigger("start_vault", true)
-      SendNoEcho("vault data")
+      Capture.command("vault data", "{vault}", "{/vault}", false, true, true, false, parseVault)
    end
 </send>
 </alias>
@@ -319,6 +112,7 @@ EnableTriggerGroup("squelch", false)
 <script>
 <![CDATA[
 require "gmcphelper"
+require "wrapped_captures"
 
 function blocked_by_status()
    local state = tonumber(gmcp("char.status.state"))
@@ -326,29 +120,6 @@ function blocked_by_status()
       return true
    end
    return false
-end
-
-original_SendNoEcho = SendNoEcho
-function SendNoEcho(foo, unprompt)
-   compact_mode = gmcp("config.compact")
-   prompt_mode = gmcp("config.prompt")
-
-   if unprompt and prompt_mode ~= "" then
-      Send_GMCP_Packet("config prompt NO")
-   end
-   if unprompt and compact_mode ~= "" then
-      Send_GMCP_Packet("config compact YES")
-   end
-
-   EnableTriggerGroup("squelch", true)
-   original_SendNoEcho(foo)
-
-   if unprompt and prompt_mode ~= "" then
-      Send_GMCP_Packet("config prompt "..prompt_mode)
-   end
-   if unprompt and compact_mode ~= "" then
-      Send_GMCP_Packet("config compact "..compact_mode)
-   end
 end
 
 function EchoTypedCommand(foo)
@@ -494,9 +265,6 @@ function OnPluginEnable()
 end
 
 function OnPluginConnect()
-   inv_sent_count = 0
-   key_sent_count = 0
-   vault_sent_count = 0
 end
 
 inv = {}
@@ -506,17 +274,16 @@ keysorted = {}
 vault = {}
 vaultsorted = {}
 
-function parse(wildcards, results, sorted)
+function insertLine(wildcards, results, sorted)
    local flags = wildcards[2]
    local name = wildcards[3]
    local level = wildcards[4]
    local hash = flags..name..level -- flags, name, level
    if not results[hash] then
-      local stringsub = string.sub
       results[hash] = {{},{}}
       local flag_lookup = {K="@R(K)@w",M="@B(M)@w",G="@W(G)@w",H="@C(H)@w",I="@w(I)",T="@R(T)@w",C="@D(C)@w"}
       for i=1,#flags do
-         local c = stringsub(flags, i, i)
+         local c = string.sub(flags, i, i)
          local disp = flag_lookup[c]
          if disp then
             table.insert(results[hash][2], disp)
@@ -531,16 +298,40 @@ function parse(wildcards, results, sorted)
    table.insert(results[hash][1], wildcards[1]) -- id
 end
 
-function parseInvdata(name, line, wildcards, styles)
-   parse(wildcards, inv, invsorted)
+keyrex = rex.new("^\\s*(\\d+),(\\w*),(.+),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
+invrex = rex.new("^(\\d+),(\\w*),(.+),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
+vaultrex = rex.new("^\\s*(\\d+),(\\w*),(.+),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
+
+function insertAllLines(style_lines, re, results, sorted)
+   for _, line in ipairs(style_lines) do
+      _, _, wildcards = re:match(line[1].text)
+      insertLine(wildcards, results, sorted)
+   end
 end
 
-function parseKeyring(name, line, wildcards, styles)
-   parse(wildcards, keys, keysorted)
+function parseKeyringNoDisplay(style_lines)
+   insertAllLines(style_lines, keyrex, keys, keysorted)
 end
 
-function parseVault(name, line, wildcards, styles)
-   parse(wildcards, vault, vaultsorted)
+function parseKeyring(style_lines)
+   insertAllLines(style_lines, keyrex, keys, keysorted)
+   displayKeyring()
+end
+
+function parseInvdata(style_lines)
+   insertAllLines(style_lines, invrex, inv, invsorted)
+   displayInventory()
+end
+
+function parseVault(style_lines)
+   insertAllLines(style_lines, vaultrex, vault, vaultsorted)
+   AddTriggerEx(
+      "vault_count",
+      "^{vaultcounts}(\\d+),(\\d+),(\\d+){/vaultcounts}$",
+      "displayVault('%1', '%2', '%3')",
+      trigger_flag.OneShot + trigger_flag.RegularExpression + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Temporary + trigger_flag.Enabled,
+      -1, 0, "", "", sendto.scriptafteromit, 100
+   )
 end
 
 function displaySorted(which)
@@ -556,39 +347,46 @@ function displaySorted(which)
 end
 
 function displayVault(num_items, num_including_kept, capacity)
-   Simulate(ColoursToANSI("@wYour vault holds:\r\n"))
-   local num_vaulted = displaySorted(vaultsorted)
+   num_items = tonumber(num_items)
+   if num_items > 0 then
+      Simulate(ColoursToANSI("@wYour vault contains:\r\n"))
+      local num_vaulted = displaySorted(vaultsorted)
+      Simulate("\r\n")
+   else
+      Simulate(ColoursToANSI("@wYour vault is currently empty.\r\n"))
+   end
    Simulate(ColoursToANSI(string.format("@wYou are using @Y%d@w of @Y%d@w item slots in your vault.@w\r\n", num_items, capacity)))
    vault = {}
    vaultsorted = {}
-   vault_sent_count = vault_sent_count - 1
 end
 
 function displayKeyring()
-   Simulate(ColoursToANSI("@wYour keyring holds:\r\n"))
-   local num_keys = displaySorted(keysorted)
-   Simulate(ColoursToANSI(string.format("@wYou have @Y%d@w items on your keyring (%d unique).@w\r\n", num_keys, #keysorted)))
+   if #keysorted > 0 then
+      Simulate(ColoursToANSI("@wYour keyring holds:\r\n"))
+      local num_keys = displaySorted(keysorted)
+      Simulate("\r\n")
+      Simulate(ColoursToANSI(string.format("@wYou have @Y%d@w item"..(num_keys == 1 and "" or "s").." on your keyring (%d unique).@w\r\n", num_keys, #keysorted)))
+   else
+      Simulate(ColoursToANSI("@wYour keyring is currently empty.@w\r\n"))
+      Simulate(ColoursToANSI(string.format("@wYou have @Y0@w items on your keyring.@w\r\n")))
+   end
    keys = {}
    keysorted = {}
-   key_sent_count = key_sent_count - 1
 end
 
 function displayInventory()
    Simulate(ColoursToANSI("@wYou are carrying:\r\n"))
    displaySorted(invsorted)
-   if #keysorted > 0 then
-      local num_keys = 0
-      for k,v in ipairs(keysorted) do
-         num_keys = num_keys + #v[1]
-      end
-      Simulate(ColoursToANSI(string.format("@C(%2d) @W** Items on Keyring (%d unique) **@w\r\n", num_keys, #keysorted)))
+
+   local num_keys = 0
+   for k,v in ipairs(keysorted) do
+      num_keys = num_keys + #v[1]
    end
+   Simulate(ColoursToANSI(string.format("@C(%2d) @W** Items on Keyring (%d unique) **@w\r\n", num_keys, #keysorted)))
    invsorted = {}
    inv = {}
    keys = {}
    keysorted = {}
-   inv_sent_count = inv_sent_count - 1
-   key_sent_count = key_sent_count - 1
 end
 
 function getmemoryusage()
