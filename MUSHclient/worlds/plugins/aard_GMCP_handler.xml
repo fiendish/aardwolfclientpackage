@@ -160,19 +160,19 @@ end
 function OnPluginTelnetSubnegotiation (msg_type, data)
    if msg_type ~= GMCP then
       return
-   end -- if not GMCP
+   end
 
    if GMCPDebug > 0 then ColourNote ("#FFAF00", "", utils.utf8convert(data)) end
 
-   message, params = string.match (data, "([%a.]+)%s+(.*)")
+   local message, params = string.match (data, "([%a.]+)%s+(.*)")
 
    if not message then
       return
-   end -- if
+   end
 
    if not string.match (params, "^[%[{]") then
       params =  "[" .. params .. "]"  -- JSON hack, make msg first element of an array. (I don't think this is needed - fiendish)
-   end -- if
+   end
 
    local succ, t = pcall(json.decode, params)
 
@@ -191,8 +191,8 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       end
 
       -- A loveletter.
-      -- Some GMCP messages are just messages, not state. The "current" comm.channel message isn't a meaningful
-      -- concept except in the exact moment it arrives, for example (though most recent might be).
+      -- Some GMCP messages are just messages, not state. For example, the "current" comm.channel 
+      -- message isn't a meaningful concept except in the exact moment it arrives (though most recent might be).
       -- Since room.area is not sent automatically, and is only ever sent in response to a request,
       -- having seen a room.area message tells you only what the area details were for the area your
       -- character was in at the time the request was processed, but has no relation to where you are
