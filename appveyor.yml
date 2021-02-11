@@ -8,49 +8,41 @@ image: Visual Studio 2015
 clone_depth: 1
 environment:
   auth_token:
-    secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
+    secure: zD0l+yBJscs3IjjlD85Vc1cdXXGWhEXiCrthKrhXe+B8iR03sJW9zAoBJz9md65X
 install:
 - ps: pushd C:\
 - ps: Start-FileDownload 'https://github.com/fiendish/LuaJIT-build/releases/download/latest/lua51.dll'
 - ps: Start-FileDownload 'https://github.com/fiendish/lua-llthreads2-build/releases/download/latest/llthreads2.dll'
 - ps: Start-FileDownload 'https://github.com/fiendish/lua-openssl-build/releases/download/latest/openssl.dll'
 - ps: Start-FileDownload 'https://github.com/nickgammon/mushclient/releases/download/latest_commit/MUSHclient.exe'
-- ps: pushd C:\projects\aardwolfclientpackage
+- ps: pushd C:\projects\redemptionclientpackage
 - ps: |
       Move-Item C:\lua51.dll MUSHclient -force
       Move-Item C:\llthreads2.dll MUSHclient -force
       Move-Item C:\openssl.dll MUSHclient -force
       Move-Item C:\MUSHclient.exe MUSHclient -force
-      $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
-      7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
-      Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
-      Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/get_version.nsi'
-      Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/hello.rtf'
-- cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi'
+      $env:PACKAGE_VERSION=(Get-Content MUSHclient\RedemptionPackageChanges.txt)[2].split()[0]
+      7z a -tzip -mx=9 -mfb=257 Redemption_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
+      Start-FileDownload 'https://raw.githubusercontent.com/Xinefus-Braska/redemptionclientpackage-installer/master/dbnumush_installer.nsi'
+      Start-FileDownload 'https://raw.githubusercontent.com/Xinefus-Braska/redemptionclientpackage-installer/master/get_version.nsi'
+      Start-FileDownload 'https://raw.githubusercontent.com/Xinefus-Braska/redemptionclientpackage-installer/master/hello.rtf'
+- cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" dbnumush_installer.nsi'
 - ps: |
-      function Insert-Content { param ( [String]$Path ); process { $( ,$_; Get-Content $Path -ea SilentlyContinue) | Out-File -encoding ASCII $Path } }
-      "aard_req_novisuals_mode = true  -- this line added by the no-visuals installer`r`n" | Insert-Content .\MUSHclient\lua\aard_requirements.lua
-      Move-Item .\MUSHclient\worlds\Aardwolf_no_visuals.mcl .\MUSHclient\worlds\Aardwolf.mcl -force
-      $env:VIAPPOUT = 'OutFile "Aardwolf_MUSHclient_${PackageVersion}_no_visuals.exe"'
-      (Get-Content aardmush_installer.nsi) | ForEach-Object { $_ -replace "OutFile.+" , "$env:VIAPPOUT" } | Set-Content aardmush_installer.nsi
-- cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi'
-- ps: |
-      7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip .\MUSHclient
-      Get-ChildItem .\Aardwolf_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-      Get-ChildItem .\Aardwolf_MUSHclient_r*.zip -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+      Get-ChildItem .\Redemption_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+      Get-ChildItem .\Redemption_MUSHclient_r*.zip -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
       git checkout -- .
 build: off
 before_deploy:
 - ps: >-
-    $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
+    $env:PACKAGE_VERSION=(Get-Content MUSHclient\RedemptionPackageChanges.txt)[2].split()[0]
 
     git config --global credential.helper store
 
     Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:auth_token):x-oauth-basic@github.com`n"
 
-    git config --global user.name "fiendish"
+    git config --global user.name "Xinefus-Braska"
 
-    git config --global user.email "patcherton.fixesthings@gmail.com"
+    git config --global user.email "hahnhell@gmail.com"
 
     git remote set-branches --add origin 'gh-pages' 2>&1 | write-host
 
@@ -73,8 +65,8 @@ deploy:
 - provider: GitHub
   tag: $(PACKAGE_VERSION)
   auth_token:
-    secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
-  artifact: /Aardwolf_MUSHclient_r.*\.(exe|zip)/
+    secure: zD0l+yBJscs3IjjlD85Vc1cdXXGWhEXiCrthKrhXe+B8iR03sJW9zAoBJz9md65X
+  artifact: /Redemption_MUSHclient_r.*\.(exe|zip)/
   force_update: true
   on:
     branch: MUSHclient
