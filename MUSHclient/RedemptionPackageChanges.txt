@@ -1,0 +1,4 @@
+Redemption Client Package Major Changes List
+
+Beta
+- initial beta release (Yay!)
