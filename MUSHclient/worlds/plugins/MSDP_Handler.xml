@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin name="MSDPHandler"
+author="Other"
+id="b3aae34498d5bf19b5b2e2af"
+language="Lua"
+purpose="Handle MSDP Communications"
+save_state="y"
+requires="4.73"
+version="0.56">
+<description trim="y">
+<![CDATA[
+--MSDP Handler--
+
+This plugin handles all MSDP communications between the MUD server and MUSHclient.
+Upon login or plugin install, the plugin will send a request for the list of all
+reportable variables, publish its plugin ID, and finally request all currently
+available MSDP variables so that will be sent in pulses whenever their values change
+and stored in a global table for other plugins to access.
+
+To use this plugin to send MSDP variables to your plugin, enter this into the top of your plugin code:
+  dofile(GetPluginInfo(GetPluginID(), 20) .. "MSDPHelper.lua")
+
+Then whenever you want to set a variable, use this syntax:
+  myVariable = getmsdp("VARIABLE NAME")
+
+To see a particular MSDP variable use the syntax 'msdpshow <variable>'.
+
+Parts of this plugin were based on GMCP_handler written by Lasher of AardwolfMud.
+]]>
+
+</description>
+<!--
+
+Thanks to Fiendish of Aardwolf who provided the base and starting point for all of this.
+Original files sourced from: https://github.com/fiendish/aardwolfclientpackage
+My process: http://www.gammon.com.au/forum/?id=14718
+Thank you!!
+
+My Github : https://github.com/Xinefus-Braska
+
+ -->
+</plugin>
+
+<triggers>
+
+
+</triggers>
+
+<aliases>
+<alias script="msdpdebug" match="^msdpdebug (.*)?$" enabled="y" regexp="y" sequence="100" ignore_case="y" />
+<alias script="MSDP_Alias" match="msdpsend *" enabled="y" send_to="12" sequence="100" />
+<alias script="printMSDP" match="^msdpshow( +(.*))?$" enabled="y" regexp="y" ignore_case="y" sequence="100" />
+
+</aliases>
+<timers>
+
+</timers>
+
+<script>
+<![CDATA[
+
+AUTHOR = GetPluginInfo(GetPluginID(), 2) -- author info
+VERSION = string.format("%1.2f", GetPluginInfo(GetPluginID(), 19)) -- version info
+local IAC, SB, SE, DO = 0xFF, 0xFA, 0xF0, 0xFD
+local MSDP 		= 69
+local MSDPDebug = tonumber(GetVariable("MSDPDebug")) or 0
+msdp = {}
+
+require "serialize"
+
+function printMSDP(name, line, args)
+  local count = 0
+  if args[1] == "" then -- entered nothing, print everything
+    ColourNote("white","","Stored MSDP variable list. Use ","red","","'","white","","msdpshow <variable>","red","","'","white",""," to access a specific variable.")
+    for i, v in pairs(msdp) do
+      count = count + 1
+      ColourTell("white","","'","darkgray","",string.format("%-20s",i),"white","","'")
+      if math.fmod(count,3)==0 then
+        Note()
+      end
+    end
+  else -- entered something
+    v=Trim(args[1]:upper())
+    ColourNote("white","","MSDP Variable '","darkgray","",v,"white","","'")
+    if type(msdp[v])=="table" then
+      ColourNote("white","","msdp[","red","",v,"white","","]=")
+      for i, v in ipairs(msdp[v]) do
+        ColourNote("darkgray","","  "..v)
+      end
+    else
+      ColourNote("white","","msdp[","red","",v,"white","","]=","darkgray","",((msdp[v]~=nil and msdp[v]) or "Not Found."))
+    end
+  end
+end
+
+function msdpdebug(name, line, wildcards)
+	newval = tonumber(wildcards[1])
+	if not newval or newval > 2 or newval < 0 then
+		msdpmsg(-1, "MSDPDebug valid values are: 0 - off, 1 - simple, 2 - verbose")
+		return
+	end
+	MSDPDebug = newval
+	local msg = "off"
+	if MSDPDebug == 1 then
+		msg = "simple"
+	elseif MSDPDebug == 2 then
+		msg = "verbose"
+	end
+	msdpmsg(-1, "MSDPDebug: " .. msg)
+end
+
+function MSDP_Alias(name, line, wildcards)
+	if (wildcards[1] ~= nil) then
+		msdpmsg(0, "Sent "..wildcards[1].." via MSDP frequency.")
+		Send_MSDP_Packet(wildcards[1])
+	end
+end
+
+-------------------------------------------------------------------------------
+--   Mushclient callback function when telnet SB data received
+-------------------------------------------------------------------------------
+function OnPluginTelnetSubnegotiation (type, data)
+	if type ~= MSDP then
+		return
+	end
+
+  -- output full data in hex to preserve non-printable chars
+	if MSDPDebug > 1 then ColourNote ("darkorange", "", "hex="..utils.tohex(data)) end
+
+  local key, value, str = "", "", ""
+  local tTable, tList, tKey, tValue = false, false, false, false
+  local list = {}
+  for i=1,#data,1 do
+    b = string.byte(data, i)
+    if b==1 then -- 'START OF HEADING' MSDP_VAR '
+      if not tList then -- list member key start, ignore if tList seems to do nothing
+        --if MSDPDebug > 0 then ColourTell("white","","\'") end -- key start
+        tKey = true
+      end
+    elseif b==2 then -- 'START OF TEXT' MSDP_VAL , | '=
+      if tTable or tList then -- middle of a table
+        --if MSDPDebug > 0 then ColourTell("white","",",") end -- table or list member
+        if value ~= "" then -- avoid appending empty strings
+          list[#list+1] = value
+          value = ""
+        end
+      elseif tKey then
+        --if MSDPDebug > 0 then ColourTell("white","","\'=") end -- key end
+        tKey = false
+        tValue = true
+      end
+    elseif b==3 then -- 'END OF TEXT' MSDP_TABLE_OPEN [
+      --if MSDPDebug > 0 then ColourTell("white","","[") end -- list start
+      tList = true
+      tValue = true
+    elseif b==4 then -- 'END OF TRANSMISSION' MSDP_TABLE_CLOSE ]
+      if tList then
+        tList = false
+        --if MSDPDebug > 0 then ColourTell("white","","]") end -- separated list end
+        if value ~= "" then -- avoid appending empty strings
+          list[#list+1] = value
+        end
+        value = list
+      end
+    elseif b==5 then -- 'ENQUIRY' MSDP_ARRAY_OPEN {
+      --if MSDPDebug > 0 then ColourTell("white","",'{') end
+      tTable = true
+      tValue = true
+    elseif b==6 then -- 'ACKNOWLEDGE' MSDP_ARRAY_CLOSE }
+      if tTable then
+        --if MSDPDebug > 0 then ColourNote("white","",'}') end
+        tTable = false
+        tValue = false
+        if value ~= "" then
+          list[#list+1] = value
+        end
+        value = list
+      end
+    elseif b==67 or b==79 then -- 'C' or 'O' CHARACTERS ??? No idea why these are here.
+      if tList then -- middle of a separated list
+        -- do nothing, probably where a direction,vnum pair should be, but isn't!
+      else
+        if tKey then
+          key = key..string.char(b)
+        elseif tValue then
+          value = value..string.char(b)
+        end
+        --if MSDPDebug > 0 then ColourTell("darkgray","",string.char(b)) end
+      end
+    else -- not a special character, append it to key or value
+      --if MSDPDebug > 0 then ColourTell("darkgray","",string.char(b)) end
+      if tKey then
+        key = key..string.char(b)
+      elseif tValue then
+        value = value..string.char(b)
+      end
+    end
+  end
+  --if MSDPDebug > 0 then Note() end
+    StoreVariable(key, value)
+end
+
+function StoreVariable (MSDP_var, MSDP_val)
+  -- To get MSDP variables in external plugins:
+  --	dofile(GetPluginInfo(GetPluginID(), 20) .. "MSDPHelper.lua")
+  --	myVariable = getmsdp("VARIABLE NAME")
+  msdp[MSDP_var] = (type(MSDP_val)=="table" and table.concat(MSDP_val, ",")) or MSDP_val
+  msdpmsg(0, "msdp["..MSDP_var.."]="..msdp[MSDP_var])
+  BroadcastPlugin(91,MSDP_var) -- broadcasts variable name so other plugins can see if they need to update
+end
+
+function Send_MSDP_Packet (what)
+   assert (what, "Send_MSDP_Packet passed a nil message.")
+   SendPkt ("\255\250\69" .. what .. "\255\240")
+end
+
+function OnPluginInstall()
+  BroadcastPlugin(1, "reload") -- tell other plugins to clear all msdp data
+  if IsConnected() then
+    Send_MSDP_Packet ("\1LIST\2COMMANDS\2LISTS\2CONFIGURABLE_VARIABLES\2REPORTABLE_VARIABLES\2REPORTED_VARIABLES\2SENDABLE_VARIABLES\2GUI_VARIABLES")
+    Send_MSDP_Packet ("\1PLUGINID\2MSDPHandler_v"..VERSION) -- Send our PLUGIN ID
+    waitForReply()
+ 	end
+end
+
+
+function waitForReply()
+  if msdp["REPORTABLE_VARIABLES"] ~= nil then -- variable list is populated
+    Send_MSDP_Packet("\1REPORT\2"..string.gsub(msdp["REPORTABLE_VARIABLES"], ",", "\2"))
+  else
+    DoAfterSpecial(0.5, 'waitForReply()', sendto.script)
+  end
+end
+
+function OnPluginSaveState()
+	SetVariable("MSDPDebug", MSDPDebug)
+end
+
+function OnPluginTelnetRequest (type, data)
+  if type == MSDP and data == "WILL" then
+    return true
+  end -- if
+
+  if type == MSDP and data == "SENT_DO" then
+    msdpmsg(-1, "Enabled MSDP")
+    OnPluginInstall()
+    return true
+  end
+
+  return false
+end
+
+function OnPluginDisable()
+  EnablePlugin(GetPluginID(), true)
+  ColourNote("white", "blue", "You are not allowed to disable the "..
+  GetPluginInfo(GetPluginID(), 1).." plugin. It is necessary for other plugins.")
+end
+
+function msdpmsg(level, msg)
+  if MSDPDebug > level then
+    ColourNote("red","",">>>","darkgray","",((type(msg)=="table" and table.concat(msg, ","))or msg),"red","","<<<")
+  end
+end
+
+function msdpval(fieldname)
+  if not IsConnected() then
+    return ""
+  end
+  assert (fieldname, "nil fieldname passed to msdpval")
+  local result = msdp[fieldname]
+
+  if result ~= nil then -- variable was found in local msdp table
+    return result
+  else
+    return "" -- fail safely
+  end
+  return ""
+end
+
+
+]]>
+</script>
+
+</muclient>
