@@ -3134,7 +3134,7 @@ function OnPluginInstall ()
 
    if db_user_version < 11 then
       performing_maintenance = true
-      DoAfterSpecial(3, "update_db_schema("..db_user_version..")",sendto.script)
+      update_db_schema(db_user_version)
    else
       after_update_check()
    end
