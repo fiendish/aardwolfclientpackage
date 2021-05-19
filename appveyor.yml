@@ -8,7 +8,7 @@ image: Visual Studio 2015
 clone_depth: 1
 environment:
   auth_token:
-    secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
+    secure: sc2iImdfbB8Q0GWI90ElJqiWh9kCN/siFoVoJx1+XgAyG67GE2pzGQ+uzPQHU1Bt
 install:
 - ps: pushd C:\
 - ps: Start-FileDownload 'https://github.com/fiendish/LuaJIT-build/releases/download/latest/lua51.dll'
@@ -73,7 +73,7 @@ deploy:
 - provider: GitHub
   tag: $(PACKAGE_VERSION)
   auth_token:
-    secure: /WceWguzAExHlMwJIOMl2MxPw+QmMne5MGQItu45rQ66xLoKLYGVQ8taqaLkrMYD
+    secure: sc2iImdfbB8Q0GWI90ElJqiWh9kCN/siFoVoJx1+XgAyG67GE2pzGQ+uzPQHU1Bt
   artifact: /Aardwolf_MUSHclient_r.*\.(exe|zip)/
   force_update: true
   on:
