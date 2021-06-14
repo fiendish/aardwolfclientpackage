@@ -1,5 +1,5 @@
 # Aardwolf MUSHclient Package development project<br>[![Build status](https://ci.appveyor.com/api/projects/status/wlob2haa2991a8sc?svg=true)](https://ci.appveyor.com/project/fiendish/aardwolfclientpackage)
-Get the latest Aardwolf MUSHclient Package pre-release installer at https://fiendish.github.io/aardwolfclientpackage/
+Get the latest Aardwolf MUSHclient Package installer at https://fiendish.github.io/aardwolfclientpackage/
 
 Documentation and help can by found on the project wiki at https://github.com/fiendish/aardwolfclientpackage/wiki
 
