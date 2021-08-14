@@ -142,6 +142,16 @@ local function say (what)
 end
 
 
+local function pause ()
+   engine:Pause()
+end
+
+
+local function resume ()
+   engine:Resume()
+end
+
+
 local function list_filtering_levels ()
    say("Filtering level options are:")
    for i,v in ipairs(filter_descs) do
@@ -149,6 +159,7 @@ local function list_filtering_levels ()
    end
    say("Level "..tostring(#filter_descs).." is recommended.")
 end
+
 
 local function list_voices ()
    local enumerate_voices = luacom.GetEnumerator(engine:GetVoices())
@@ -321,6 +332,8 @@ end
 
 return {
    say = say,
+   pause = pause,
+   resume = resume,
    skip_sentence = skip_sentence,
    skip_all = skip_all,
    set_voice_by_number = set_voice_by_number,
