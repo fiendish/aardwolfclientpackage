@@ -942,9 +942,30 @@ function DBisOpen(warn)
    return false
 end
 
+max_retries = 10
+sleep_duration = 1
 function dbnrowsWRAPPER(query)
    forceOpenDB()
-   iter,vm,i = db:nrows(query)
+   local ok, iter, vm, i = pcall(db.nrows, db, query)
+
+   local count = 0
+   while (not ok) and (count < max_retries) do
+      local code = db:errcode()
+      ColourNote("yellow", "red", string.format("MAPPER ERROR: %s. Retrying %dX just in case: `%s`", db:errmsg():upper(), max_retries, query))
+      if (code ~= sqlite3.BUSY) and (code ~= sqlite3.LOCKED) then
+         break
+      end
+      db:exec("ROLLBACK")
+      local socket = require "socket"
+      socket.sleep(sleep_duration)
+      ok, iter, vm, i = pcall(db.nrows, db, query)
+      count = count + 1
+   end
+
+   if (not dbcheck(db:errcode(), db:errmsg(), query)) and (count > 0) then
+      ColourNote("black", "greenyellow", string.format("MAPPER SUCCESS AFTER RETRIES: `%s`", query))
+   end
+
    local function itwrap(vm, i)
       retval = iter(vm, i)
       if not retval then
@@ -959,33 +980,31 @@ end
 function dbCheckExecute(query)
    forceOpenDB()
    local code = db:exec(query)
---~ failed attempt to make concurrent sessions viable
---~    if code == 5 or code == 6 then -- SQLITE_BUSY or SQLITE_LOCKED (oops?)
---~       wait.make (function()
---~          local code = 5
---~          local count = 0
---~          while ((code == 5 or code == 6) and count < 20) do
---~             db:exec ("ROLLBACK")
---~             wait.time(.1)
---~             code = db:exec(query)
---~             count = count + 1
---~          end
---~          dbcheck(code, query)
---~       end)
---~    else
-   dbcheck(code, query)
---~    end
+   local count = 0
+   while ((code == sqlite3.BUSY) or (code == sqlite3.LOCKED)) and (count < max_retries) do
+      ColourNote("yellow", "red", string.format("MAPPER ERROR: %s. Retrying %dX just in case: `%s`", db:errmsg():upper(), max_retries, query))
+      db:exec("ROLLBACK")
+      local socket = require "socket"
+      socket.sleep(sleep_duration)
+      code = db:exec(query)
+      count = count + 1
+   end
+
+   if (not dbcheck(code, db:errmsg(), query)) and (count > 0) then
+      ColourNote("black", "greenyellow", string.format("MAPPER SUCCESS AFTER RETRIES: `%s`", query))
+   end
+
    closeDBifForcedOpen()
 end
 
-function dbcheck (code, query)
+function dbcheck (code, msg, query)
    if code ~= sqlite3.OK and    -- no error
       code ~= sqlite3.ROW and   -- completed OK with another row of data
       code ~= sqlite3.DONE then -- completed OK, no more rows
-         local err = db:errmsg ()  -- the rollback will change the error message
-         err = err.."\n\nCODE: "..code.."\nQUERY: "..query.."\n"
-         db:exec ("ROLLBACK")      -- rollback any transaction to unlock the database
-         error (err, 3)            -- show error in caller's context
+         local err = msg.."\n\nCODE: "..code.."\nQUERY: "..query.."\n"
+         db:exec("ROLLBACK")      -- rollback any transaction to unlock the database
+         closeDBifForcedOpen()
+         error(err, 3)            -- show error in caller's context
    end -- if
 end -- dbcheck
 
@@ -3083,11 +3102,7 @@ end
 
 function OnPluginInstall ()
    SetVariable("backup_timer_enabled", GetVariable("backup_timer_enabled") or "1")
-   if GetVariable("backup_timer_enabled") ~= "1" then
-      toggleBackups(false, true)
-   end
-
-   last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
+   quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
 
    SetOption ("tool_tip_visible_time", 10000) -- prolong the tooltip display
 
@@ -3132,13 +3147,17 @@ function OnPluginInstall ()
       db_user_version = row.user_version
    end
 
+   if GetVariable("backup_timer_enabled") ~= "1" then
+      toggleBackups(false, true)
+   end
+   last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
+
    if db_user_version < 11 then
       performing_maintenance = true
       update_db_schema(db_user_version)
    else
       after_update_check()
    end
-   quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
 end
 
 function update_db_schema(db_user_version)
