@@ -2984,6 +2984,8 @@ function backup_databases(manual)
          Note("ABORTING BACKUP.")
          CorruptionAlert()
       end
+      SaveState()
+
       if not compact_mode then Note("") end
       db = assert (sqlite3.open(worldPath..".db")) -- re-open database
       Repaint()
