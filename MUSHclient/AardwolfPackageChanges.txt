@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r2154 snapshot
+- bug fix: Changing color themes sometimes caused wrong communication log tab contents to show when clicking in their text areas. One cause of this has been fixed.
+- bug fix: The GMCP mapper plugin wasn't saving its state after automatic backups, so it would keep retriggering the 24 hour backup during reconnects.
+- new feature: I'm resurrecting some locked database retry logic in the GMCP mapper plugin. Maybe this will be good, maybe bad, maybe just noisy with no benefit. Let me know.
+- new feature: Added pause/resume commands to the SAPI interface lua module.
+- misc change: I don't remember why there was a 3 second asynchronous delay before updating the GMCP mapper database schema, but we're going to try not doing that. Hopefully nothing terrible happens.
+
 r2149 snapshot
 - bug fix: I guess I shouldn't have changed the way the inventory command works in r2141. Sorry about that.
 - bug fix: The VI buffers plugin will now remember the order of your buffers if you rearrange them.
