@@ -262,7 +262,7 @@ function makeRect(i)
    tabs_scrollbars[i]:setRect(tr_right, tr_top, draw_right, tr_bottom-Theme.RESIZER_SIZE+1)
 
    if temp_tabs_data and temp_tabs_data[i] then
-      tabs_rects[i]:deserializeContents(temp_tabs_data[i].contents)
+      tabs_rects[i]:deserializeContents(temp_tabs_data[i].contents, true)
       tabs_activity[i] = temp_tabs_data[i].activity
       temp_tabs_data[i] = nil -- cleanup
    end

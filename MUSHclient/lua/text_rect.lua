@@ -516,12 +516,14 @@ function TextRect:getScroll()
    return self.start_line
 end
 
-function TextRect:setScroll(new_pos)
+function TextRect:setScroll(new_pos, no_draw_after)
    self.start_line = math.max(1, math.min(new_pos, self.num_wrapped_lines - self.rect_lines + 1))
    self.end_line = math.min(self.start_line + self.rect_lines - 1, self.num_wrapped_lines)
    self.display_start_line = self.start_line
    self.display_end_line = self.end_line
-   self:draw(true, true)
+   if not no_draw_after then
+      self:draw(true, true)
+   end
 end
 
 -- Scroll through the window contents line by line. Used when dragging out of text area
@@ -946,14 +948,14 @@ function TextRect:serializeContents()
    return serialize.save_simple(contents)
 end
 
-function TextRect:deserializeContents(contents)
+function TextRect:deserializeContents(contents, no_draw_after)
    if (type(contents) == "string") and (contents ~= "") then
       local contents = loadstring("return "..contents)()
       if (type(contents) == "table") and contents.raw_lines and contents.start_line then
          self.raw_lines = contents.raw_lines
          self.num_raw_lines = #self.raw_lines
          self:reWrapLines()
-         self:setScroll(contents.start_line)
+         self:setScroll(contents.start_line, no_draw_after)
       end
    end
 end
