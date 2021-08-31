@@ -1182,6 +1182,39 @@ function map_list (name, line, wildcards)
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end -- map_list
 
+-- accessible only through CallPlugin
+function map_delete_exits_for_many_rooms (...)
+   local rooms_to_delete_exits_from = {...}
+   for i,v in ipairs(rooms_to_delete_exits_from) do
+      rooms_to_delete_exits_from[i] = tostring(v)
+   end
+
+   local lookup = {}
+   for i,v in ipairs(rooms_to_delete_exits_from) do
+      lookup[v] = true
+   end
+
+   local rooms_string = table.concat(rooms_to_delete_exits_from, ",")
+   local query = string.format("delete from exits where touid in (%s) or fromuid in (%s)", rooms_string, rooms_string)
+   dbCheckExecute(query)
+
+   for k,v in pairs(rooms) do
+      for j,u in pairs(v.exits) do
+         if lookup[u] then
+            v.exits[j] = nil
+            v.exit_locks[j] = nil
+         end
+      end
+      if lookup[k] then
+         v.exits = {}
+         v.exit_locks = {}
+      end
+   end
+
+   mapper.draw (current_room)
+   print("Purged all exits for rooms: "..rooms_string)
+end
+
 function map_cexits_delete (name, line, wildcards)
    local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", fixsql(current_room))
    dbCheckExecute(query)
