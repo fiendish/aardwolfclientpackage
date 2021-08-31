@@ -1182,6 +1182,28 @@ function map_list (name, line, wildcards)
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end -- map_list
 
+function map_cexits_deleteRange (room_range_low, room_range_high)
+   if room_range_low >= room_range_high then
+      print("Please format the input to this function with the low number first")
+      return
+   end
+   local query = string.format("delete from exits where touid between %s AND %s", fixsql(room_range_low),fixsql(room_range_high))
+   dbCheckExecute(query)
+   
+   -- i cant get this piece to work, mostly because i dont understand it fully.
+   
+   for k,v in pairs(rooms) do
+      for j,u in pairs(v.exits) do
+         if u >= room_range_low and u <= room_range_high then
+            v.exits[j] = nil
+         end
+      end
+   end
+
+   mapper.draw (current_room)
+   print("Purged all exits for rooms "..room_range_low.."-"..room_range_high..".")
+end
+
 function map_cexits_delete (name, line, wildcards)
    local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", fixsql(current_room))
    dbCheckExecute(query)
