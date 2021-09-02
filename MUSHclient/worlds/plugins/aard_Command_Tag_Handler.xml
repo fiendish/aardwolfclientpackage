@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+
+<plugin
+   name="Aardwolf_Command_Tag_Handler"
+   author="Fiendish"
+   id="0f4ddde78206d78b41bb365b"
+   language="Lua"
+   purpose="Centrally manage hiding command tags"
+   date_written="2020-12-05 16:33:00"
+   requires="5.07"
+   version="1.0"
+   sequence="-10000"
+>
+</plugin>
+<aliases>
+<alias
+   match="^showcommandtags(.*)$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+><send>
+   if "%1" == " 1" then
+      ColourNote("#FFAF00", "", "Command Tag Debug: showing command tags") 
+      SetTriggerOption("tag", "omit_from_output", "n")
+   elseif "%1" == " 0" then
+      ColourNote("#FFAF00", "", "Command Tag Debug: hiding command tags") 
+      SetTriggerOption("tag", "omit_from_output", "y")
+   else
+      ColourNote("#FFAF00", "", "Command Tag Debug: commandtagdebug valid parameters are 0 - tags hidden, 1 - tags shown")
+   end
+</send>
+</alias>
+</aliases>
+
+<triggers>
+<trigger
+   enabled="y"
+   match="^{Command:\w+ (Start|End)}$"
+   omit_from_output="y"
+   omit_from_log="y"
+   custom_colour="17"
+   other_text_colour="#FFAF00"
+   sequence="100"
+   regexp="y"
+   name="tag"
+></trigger>
+</triggers>
+
+<script>
+<![CDATA[
+require "wrapped_captures"
+]]>
+</script>
+</muclient>
