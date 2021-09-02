@@ -1239,8 +1239,8 @@ function map_cexits_purge (name, line, wildcards)
    for k,v in pairs(rooms) do
       for l,w in pairs(v.exits) do
          if not directions[l] then
-            rooms[k].exits[l] = nil
-            rooms[k].exit_locks[l] = nil
+            v.exits[l] = nil
+            v.exit_locks[l] = nil
          end
       end
    end
@@ -1901,6 +1901,7 @@ function purgezone(zoneuid)
       for j,u in pairs(v.exits) do
          if (rooms[u] ~= nil) and (rooms[u].area == zoneuid) then
             v.exits[j] = nil
+            v.exit_locks[j] = nil
          end
       end
    end
@@ -1958,6 +1959,7 @@ function map_purgeroom (uid, new_area)
       for j,u in pairs(v.exits) do
          if u == uid then
             v.exits[j] = nil
+            v.exit_locks[j] = nil
          end
       end
    end
