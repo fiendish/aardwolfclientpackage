@@ -165,7 +165,7 @@ end
 visible_always = tonumber(GetVariable("visible_always")) == 1  -- default false
 show_hint = tonumber(GetVariable("show_hint")) ~= 0 -- default true
 manually_requested = false
-times_hinted = 0
+max_hints = 5
 serials_color = GetVariable("serials_color") or "@w"
 while not update_colorname(serials_color) do
    serials_color = "@w"
@@ -183,51 +183,55 @@ function OnPluginInstall()
 end
 
 function hint_message()
+   times_hinted = tonumber(GetVariable("times_hinted") or "0")
    times_hinted = times_hinted + 1
-   if times_hinted == 3 then
+   SetVariable("times_hinted", times_hinted)
+
+   if times_hinted == max_hints then
       show_hint = false
       SetVariable("show_hint", 0)
    end
-   Note("")
-   Note("The Aardwolf MUSHclient Package includes a plugin for displaying object serial numbers in your inventory.")
-   Note("The information can give you more precise control over which items you give/drop/wear/etc.")
-   Note("")
+   ColourNote("cornflowerblue", "", "")
+   ColourNote("cornflowerblue", "", "The Aardwolf MUSHclient Package includes a plugin for displaying object serial numbers in your inventory.")
+   ColourNote("cornflowerblue", "", "The information can give you more precise control over which items you give/drop/wear/etc.")
+   ColourNote("cornflowerblue", "", "")
    ColourNote("", "", "To review the commands for this plugin and stop seeing this message, type '", "yellow", "", "inventory serials help", "", "", "'.")
    ColourNote("", "", "To learn more about object serial numbers in general, type '", "yellow", "", "help ObjectId", "", "", "'.")
    if show_hint then
-      ColourNote("", "", "This message will show ","red","",tostring(3-times_hinted),"",""," more time"..(times_hinted<2 and "s." or "."))
+      ColourNote("", "", "This message will show ","red","",tostring(max_hints-times_hinted),"",""," more time"..(((max_hints-times_hinted)>1) and "s." or "."))
    else
-      Note("This message will not show anymore.")
+      ColourNote("cornflowerblue", "", "This message will not show anymore.")
    end
 end
 
 function show_help()
-   Note("")
-   Note("Aardwolf Inventory Serials Plugin Help")
-   Note("--------------------------------------")
-   Note("")
-   Note("Command syntax:")
-   Note("")
+   ColourNote("cornflowerblue", "", "")
+   ColourNote("cornflowerblue", "", "Aardwolf Inventory Serials Plugin Help")
+   ColourNote("cornflowerblue", "", "--------------------------------------")
+   ColourNote("cornflowerblue", "", "")
+   ColourNote("cornflowerblue", "", "Command syntax:")
+   ColourNote("cornflowerblue", "", "")
    ColourNote("yellow", "", "   inventory serials <on/off>")
-   Note("        Whether to always automatically include item serial numbers when listing inventory.")
-   Note("")
+   ColourNote("cornflowerblue", "", "        Whether to always automatically include item serial numbers when listing inventory.")
+   ColourNote("cornflowerblue", "", "")
    ColourNote("yellow", "", "   inventory serials")
    ColourNote("yellow", "", "   keyring list serials")
    ColourNote("yellow", "", "   vault list serials")
-   Note("        Request the display of item serial numbers once.")
-   Note("")
+   ColourNote("cornflowerblue", "", "        Request the display of item serial numbers once.")
+   ColourNote("cornflowerblue", "", "")
    ColourNote("yellow", "", "   inventory serials color <Aardwolf color code>")
-   Note("        Which color to display serial numbers in.")
-   Note("")
+   ColourNote("cornflowerblue", "", "        Which color to display serial numbers in.")
+   ColourNote("cornflowerblue", "", "")
    ColourNote("yellow", "", "   inventory serials help")
-   Note("        Print this help.")
-   Note("")
-   Note("Current status:")
-   Tell("Always include item serial numbers when listing inventory? ")
+   ColourNote("cornflowerblue", "", "        Print this help.")
+   ColourNote("cornflowerblue", "", "")
+   ColourNote("cornflowerblue", "", "Current status:")
+   ColourNote("cornflowerblue", "", "")
+   ColourTell("cornflowerblue", "", "Always include item serial numbers when listing inventory? ")
    ColourNote(visible_always and "lime" or "red", "", visible_always and "Yes" or "No")
-   ColourNote("", "", "Serial numbers will be displayed in color: ", colorname, "", serials_color)
-   Note("--------------------------------------")
-   Note("")
+   ColourNote("cornflowerblue", "", "Serial numbers will be displayed in color: ", colorname, "", serials_color)
+   ColourNote("cornflowerblue", "", "--------------------------------------")
+   ColourNote("cornflowerblue", "", "")
 end
 
 function serials_command(name, line, wildcards)
@@ -251,7 +255,7 @@ function serials_command(name, line, wildcards)
          SetVariable("serials_color", serials_color)
          ColourNote("", "", "You have set inventory serial numbers to display using the color code: ", colorname, "", serials_color, "", "", ".")
       else
-         Note("Could not use the color code: "..colorcode.." for serial numbers. Is it a valid color code?")
+         ColourNote("cornflowerblue", "", "Could not use the color code: "..colorcode.." for serial numbers. Is it a valid color code?")
       end
    elseif cmd == "" then
       if visible_always then
