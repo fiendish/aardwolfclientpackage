@@ -352,9 +352,9 @@ function ThemedTextWindowClass:show()
    ThemedWindowClass.show(self)
 end
 
-function ThemedTextWindowClass:add_text(styles_or_color_coded_text, draw_after)
+function ThemedTextWindowClass:add_text(styles_or_color_coded_text, draw_after, hyperlinks)
    draw_after = ((draw_after == nil) or (draw_after == true)) and WindowInfo(self.id, 5)
-   self.textrect:addText(styles_or_color_coded_text)
+   self.textrect:addText(styles_or_color_coded_text, hyperlinks)
    if draw_after then
       self:draw()
    end
