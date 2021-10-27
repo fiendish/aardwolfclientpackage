@@ -289,6 +289,19 @@ end
 invsorted = {}
 keysorted = {}
 vaultsorted = {}
+color_lookup = {
+   ["B"]="@c", -- blue aura
+   ["R"]="@R", -- red aura
+   ["K"]="@R", -- k(ept)
+   ["M"]="@B", -- magic
+   ["G"]="@W", -- glow(ing)
+   ["H"]="@C", -- hum(ming)
+   ["I"]="@w", -- invis(ible)
+   ["C"]="@D", -- cursed
+   ["T"]="@R", -- tempered
+   ["E"]="@G", -- envenomed
+   ["W"]="@D", -- weakened
+}
 
 function insertLine(wildcards, results, sorted)
    local flags = wildcards[2]
@@ -297,15 +310,10 @@ function insertLine(wildcards, results, sorted)
    local hash = flags..name..level -- flags, name, level
    if not results[hash] then
       results[hash] = {{},{}}
-      local flag_lookup = {K="@R(K)@w",M="@B(M)@w",G="@W(G)@w",H="@C(H)@w",I="@w(I)",T="@R(T)@w",C="@D(C)@w"}
       for i=1,#flags do
          local c = string.sub(flags, i, i)
-         local disp = flag_lookup[c]
-         if disp then
-            table.insert(results[hash][2], disp)
-         else
-            table.insert(results[hash][2], "@w("..c..")")
-         end
+         local color = color_lookup[c] or "@w"
+         table.insert(results[hash][2], color.."("..c..")@w")
       end
       results[hash][3] = name
       results[hash][4] = level
