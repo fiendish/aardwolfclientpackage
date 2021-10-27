@@ -61,12 +61,52 @@ function sanitize_response(style_lines)
    return new_styles
 end
 
+string.find_indices = function(self, pattern, after)
+   indices = {}
+   local first, last = 0, 0
+   while true do
+      first, last = self:find(pattern, last+1)
+      if not first then break end
+      if first > after then
+         table.insert(indices, {text=self:sub(first, last), start=first, stop=last})
+      end
+   end
+   return indices
+end
+
+function help_keywords(line, after, verb)
+   indices = strip_colours_from_styles(line):find_indices("[%w-]+", after)
+   for _,v in ipairs(indices) do
+      v.label = verb.." "..v.text
+      v.text = 'Capture.command("'..verb.." "..v.text..'", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, draw_window)'
+   end
+   return indices
+end
+
+string.starts_with = function(self, start)
+   return self:sub(1, #start) == start
+end
+
+function get_hyperlinks(style_lines)
+   related_helps = {}
+   related_categories = {}
+   for i,line in ipairs(style_lines) do
+      if line[1].text:starts_with("Related Helps") then
+         related_helps[i] = help_keywords(line, #"Related Helps", "help")
+      -- elseif line[1].text:starts_with("Help Category") then
+      --    related_categories[i] = help_keywords(line, #"Help Category", "contents")
+      end
+   end
+   return related_helps, related_categories
+end
+
 function draw_window(window_styles, keep_position)
    if window_styles == nil then
       return
    end
    ColourNote("paleturquoise", "", "Help Captured To Miniwindow")
    window_styles = sanitize_response(window_styles)
+   related_helps, related_categories = get_hyperlinks(window_styles)
 
    -- I create a zero-size window first, because MUSHclient has a limitation
    -- where you can only find the width of some text from inside a miniwindow,
@@ -98,8 +138,8 @@ function draw_window(window_styles, keep_position)
    )
 
    -- Load the contents of the helpfile into the window.
-   for _, styles in ipairs(window_styles) do
-      my_window:add_text(styles, false)
+   for i, styles in ipairs(window_styles) do
+      my_window:add_text(styles, false, related_helps[i] or related_categories[i])
    end
 
    -- Now that the window is populated, use its font metrics to set the right

@@ -125,10 +125,15 @@ function TextRect:textWidth(styles_or_color_coded_text)
    return width
 end
 
-function TextRect:addText(message)
+function TextRect:addText(message, hyperlinks)
    for _, message in ipairs(ToMultilineStyles(message, Theme.BODY_TEXT, nil, true)) do
       -- extract URLs so we can add our movespots later
-      local urls = self:findURLs(strip_colours_from_styles(message))
+      local urls
+      if hyperlinks then
+         urls = copytable.deep(hyperlinks)
+      else
+         urls = self:findURLs(strip_colours_from_styles(message))
+      end
 
       -- pop the oldest line from our buffer if we're at capacity
       if self.num_raw_lines >= self.max_lines then
@@ -420,7 +425,7 @@ function TextRect:draw(cleanup_first, inside_callback)
 
                if not WindowHotspotInfo(self.window, link_id, 1) then
                   self.hyperlinks[link_id] = url_part.text
-                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.clickUrl", "", "TextRect.mouseUp", "Right-click this URL if you want to open it:\n"..url_part.text, 1)
+                  WindowAddHotspot(self.window, link_id, left, top, math.min(right, self.padded_right), bottom, "TextRect.linkHover", "TextRect.cancelLinkHover", "TextRect.clickUrl", "", "TextRect.mouseUp", url_part.label or ("Right-click this URL if you want to open it:\n"..url_part.text), 1)
                   if self.scrollable then
                      WindowScrollwheelHandler(self.window, link_id, "TextRect.wheelMove")
                   elseif self.external_scroll_handler then
@@ -921,7 +926,11 @@ end
 function TextRect:browseUrl(hotspot_id)
    local url = self.hyperlinks[hotspot_id]
    if url then
-      OpenBrowser(url)
+      if #(self:findURLs(url)) > 0 then
+         OpenBrowser(url)
+      else
+         loadstring(url)()
+      end
    end
 end
 
