@@ -3373,6 +3373,16 @@ function after_update_check()
       end
    end
 
+   -- fix obsolete area names
+   area_name_replacements = {
+      ["Gypsy Caravan"]="Wayfarer's Caravan"
+   }
+   for old, new in pairs(area_name_replacements) do
+      dbCheckExecute(
+         string.format("UPDATE areas SET name = %s WHERE name = %s;", fixsql(new), fixsql(old))
+      )
+   end
+
    -- grab all area names
    for row in dbnrowsWRAPPER("SELECT * FROM areas") do
       area = {
@@ -3416,7 +3426,7 @@ function after_update_check()
    if not IsConnected() then
       OnPluginDisconnect()
    end
-end -- OnPluginInstall
+end
 
 -- check for consistency mistakes with bounce portal/recall flags
 function check_bounce_consistency()
