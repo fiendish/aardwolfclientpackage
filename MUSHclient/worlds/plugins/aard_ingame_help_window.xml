@@ -75,7 +75,7 @@ string.find_indices = function(self, pattern, after)
 end
 
 function help_keywords(line, after, verb)
-   indices = strip_colours_from_styles(line):find_indices("[%w-]+", after)
+   indices = strip_colours_from_styles(line):find_indices("[%w-]+[%w- ]*", after)
    for _,v in ipairs(indices) do
       v.label = verb.." "..v.text
       v.text = 'Capture.command("'..verb.." "..v.text..'", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, draw_window)'
@@ -92,7 +92,7 @@ function get_hyperlinks(style_lines)
    related_categories = {}
    for i,line in ipairs(style_lines) do
       if line[1].text:starts_with("Related Helps") then
-         related_helps[i] = help_keywords(line, #"Related Helps", "help")
+         related_helps[i] = help_keywords(line, #"Related Helps : ", "help")
       -- elseif line[1].text:starts_with("Help Category") then
       --    related_categories[i] = help_keywords(line, #"Help Category", "contents")
       end
@@ -100,7 +100,7 @@ function get_hyperlinks(style_lines)
    return related_helps, related_categories
 end
 
-function draw_window(window_styles, keep_position)
+function draw_window(window_styles)
    if window_styles == nil then
       return
    end
@@ -108,33 +108,38 @@ function draw_window(window_styles, keep_position)
    window_styles = sanitize_response(window_styles)
    related_helps, related_categories = get_hyperlinks(window_styles)
 
+   local already_on_screen = false
+   if WindowInfo(WINDOW_ID, 1) ~= nil then
+      already_on_screen = true
+   end
+
    -- I create a zero-size window first, because MUSHclient has a limitation
    -- where you can only find the width of some text from inside a miniwindow,
    -- and I want to use font metrics to set exactly the right width and height.
    -- I set the defer_showing flag to true because I'm going to move it after
    -- creation and I don't want to see it jump around.
    my_window = ThemedTextWindow(
-      WINDOW_ID,
-      0,
-      0,
-      0,
-      0,
-      "Aardwolf In-Game Help",
-      "center",
-      true,
-      false,
-      true,
-      true,
-      true,
-      true,
-      true,
-      nil,
-      nil,
-      GetAlphaOption("output_font_name"),
-      GetOption("output_font_height"),
-      nil,
-      nil,
-      true
+      WINDOW_ID,  -- id
+      0,  -- default_left_position
+      0,  -- default_top_position
+      0,  -- default_width
+      0,  -- default_height
+      "Aardwolf In-Game Help",  -- title
+      "center",  -- title alignment
+      true,  -- is_temporary (closeable)
+      true,  -- resizeable
+      true,  -- text_scrollable
+      true,  -- text_selectable
+      true,  -- text_copyable
+      true,  -- url_hyperlinks
+      true,  -- autowrap
+      nil,  -- title_font_name
+      nil,  -- title_font_size
+      GetAlphaOption("output_font_name"), -- text_font_name
+      GetOption("output_font_height"),  -- text_font_size
+      nil,  -- text_max_lines
+      nil,  -- text_padding
+      true  -- defer_showing
    )
 
    -- Load the contents of the helpfile into the window.
@@ -142,14 +147,15 @@ function draw_window(window_styles, keep_position)
       my_window:add_text(styles, false, related_helps[i] or related_categories[i])
    end
 
-   -- Now that the window is populated, use its font metrics to set the right
-   -- width and height, but give reasonable maxima so it doesn't go off the
-   -- screen.
-   my_window:fit_contents(GetInfo(281)-20, GetInfo(280)-80)
+   -- Now that the window is populated, set the size and position if new.
+   if not already_on_screen then
+      -- Use window font metrics to set the right width and height, but give 
+      -- reasonable maxima so it doesn't go entirely off the screen.
+      my_window:fit_contents(
+         GetInfo(281)-20,  -- max_width
+         GetInfo(280)-80  -- max_height
+      )
 
-   -- Now that the size is set, center the window on the screen if we're not
-   -- just changing themes.
-   if not keep_position then
       -- Use fixed position instead of the auto-centering mode because of a
       -- subtle position retrieval conflict during theme changes between
       -- movewindow and WindowPosition.
@@ -158,24 +164,6 @@ function draw_window(window_styles, keep_position)
 
    -- Make sure we're scrolled up to the top.
    my_window:set_scroll(1)
-
-   -- Add a button to the title bar that will echo the helpfile to the main area.
-   local button_width = my_window:text_width("Print") + 10
-   my_window:add_3d_text_button(
-      "print_button",
-      my_window.width - button_width,
-      -1,
-      "Print",
-      nil,
-      "Print Helpfile In Main Output",
-      nil,
-      function() for _,v in ipairs(window_styles) do Simulate(stylesToANSI(v).."\n") end end,
-      nil,
-      nil,
-      nil,
-      button_width,
-      my_window.bodytop
-   )
 
    -- I used the defer_showing flag, so now I have to show the window.
    my_window:show()
@@ -202,9 +190,7 @@ end
 function OnPluginThemeChange()
    -- Miniwindow color themes are applied at their creation, so create an
    -- existing window again if the theme changes.
-   if WindowInfo(WINDOW_ID, 1) ~= nil then
-      draw_window(my_window:get_styles(), true)
-   end
+   draw_window(my_window:get_styles())
 end
 
 ]]>
