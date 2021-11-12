@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2160 snapshot
+- misc change: The caravan area name is updated in the GMCP mapper.
+- new feature: By request, I added a function to the GMCP mapper to delete all exits from a set of rooms. Since I don't know why a person would want to do it, it's only available via CallPlugin("b6eae87ccedd84f510b74714", "map_delete_exits_for_many_rooms", 32426, 32425, 32424, etc.)
+- new feature: The new temper/envenom/weakened object flags have been added to the inventory serials plugin display.
+- new feature: Added an experimental output capturing module wrapped_captures.lua. I'll add documentation for the wiki when I'm more comfortable with it, but for now...
+- misc change: Updated the inventory serials plugin (aard_inventory_serials.xml) to use the new capture module, which simplifies the plugin code.
+- new feature: There's a new miniwindow plugin for capturing in-game help files using the new capture module. See aard_ingame_help_window.xml.
+
 r2154 snapshot
 - bug fix: Changing color themes sometimes caused wrong communication log tab contents to show when clicking in their text areas. One cause of this has been fixed.
 - bug fix: The GMCP mapper plugin wasn't saving its state after automatic backups, so it would keep retriggering the 24 hour backup during reconnects.
