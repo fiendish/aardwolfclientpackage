@@ -187,6 +187,16 @@ function OnPluginConnect()
    TelnetOptionOn(TELOPT_HELPS)
 end
 
+function OnPluginDisable()
+   if IsConnected() then
+      TelnetOptionOff(TELOPT_HELPS)
+   end
+end
+
+function OnPluginClose()
+   OnPluginDisable()
+end
+
 function OnPluginThemeChange()
    -- Miniwindow color themes are applied at their creation, so create an
    -- existing window again if the theme changes.

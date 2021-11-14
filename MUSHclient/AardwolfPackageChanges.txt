@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2162 snapshot
+- misc change: It seems reasonable to turn off help tags when disabling/removing the helpfile miniwindow plugin.
+
 r2161 snapshot
 - bug fix: The new helpfile capture miniwindow plugin should no longer error when a theme update is invoked and the window doesn't exist.
 
