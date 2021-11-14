@@ -190,7 +190,9 @@ end
 function OnPluginThemeChange()
    -- Miniwindow color themes are applied at their creation, so create an
    -- existing window again if the theme changes.
-   draw_window(my_window:get_styles())
+   if my_window and my_window.id then
+      draw_window(my_window:get_styles())
+   end
 end
 
 ]]>
