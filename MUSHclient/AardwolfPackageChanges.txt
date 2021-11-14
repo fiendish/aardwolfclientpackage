@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2161 snapshot
+- bug fix: The new helpfile capture miniwindow plugin should no longer error when a theme update is invoked and the window doesn't exist.
+
 r2160 snapshot
 - misc change: The caravan area name is updated in the GMCP mapper.
 - new feature: By request, I added a function to the GMCP mapper to delete all exits from a set of rooms. Since I don't know why a person would want to do it, it's only available via CallPlugin("b6eae87ccedd84f510b74714", "map_delete_exits_for_many_rooms", 32426, 32425, 32424, etc.)
