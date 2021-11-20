@@ -1554,7 +1554,7 @@ function create_portal(keyword, destination, level)
       query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('*', '___HERE___', '___EVERYWHERE___')"
       dbCheckExecute(query)
    end
-   print (string.format("Storing '%s' as a portal to %s.", keyword, destination))
+   print (string.format("Storing '%s' as a portal to room %s.", keyword, destination))
    print (string.format("\nPortal given minimum level lock of %s.\n", level))
    query = string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) VALUES (%s, %s, %s, %s);",
       fixsql  (keyword),
@@ -1570,9 +1570,10 @@ function map_portal_level (name, line, wildcards)
    local keys = Trim(wildcards[1]):split("[%s]+")
    local pnum = tonumber(keys[1])
    local level = tonumber(keys[2])
+   local quiet = (keys[3] == "quiet")
 
    if pnum==nil or level==nil then
-      world.Note("\nPORTALLEVEL FAILED: The parameters for mapper portal level are <portal_index> <min_level>. Current portal indexes can be found in the 'mapper portals' output.\n")
+      world.Note("\nPORTALLEVEL FAILED: The parameters for mapper portallevel are <portal_index> <min_level> [quiet]. Current portal indexes can be found in the 'mapper portals' output.\n")
       return
    end
 
@@ -1594,7 +1595,9 @@ function map_portal_level (name, line, wildcards)
             fixsql(level)
          )
          dbCheckExecute(query)
-         world.Note(string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",row.dir,row.name,level))
+         if not quiet then
+            world.Note(string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",row.dir,row.name,level))
+         end
          found = true
       end
       count = count + 1
@@ -4774,8 +4777,8 @@ you set all portal aspects in one command without being in the target room.]],
                                  > portals use recall or home with the
                                  > portalrecall command listed above.
                                  > Find the indices with 'mapper portals']],
-[[mapper bouncerecall <index>    --> Specifies which home/recall mapper portal to
-                                 > bounce through when the path calculation
+[[mapper bouncerecall <index>    --> Specifies which home/recall mapper portal
+                                 > to bounce through when the path calculation
                                  > wants to portal from a recall-friendly
                                  > noportal room. You may only choose a portal
                                  > that has been marked as being a recall
@@ -4791,9 +4794,10 @@ you set all portal aspects in one command without being in the target room.]],
 [[mapper norecall <id> [true/false] --> Manually set norecall flag]],
 [[+----------------------------------------------------------------------------+]],
 [[]],
-[[mapper portallevel <ind> <lvl> --> Change the level lock on a stored portal
-                                 > Find the indices with 'mapper portals'
-                                 > Do not manually account for tiers]],
+[[mapper portallevel <ind> <lvl> [quiet] --> Change the level lock on a portal. 
+                                           > Find indices with 'mapper portals'.
+                                           > Do not manually account for tiers.
+                                           > Adding 'quiet' means no output.]],
 [[mapper delete portal <command> --> Remove the specified hand-held portal alias]],
 [[mapper delete portal #<index>  --> Remove a hand-held portal by its index
                                  > Find the indices with 'mapper portals']],
