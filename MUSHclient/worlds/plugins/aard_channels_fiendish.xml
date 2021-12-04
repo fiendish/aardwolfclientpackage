@@ -1231,7 +1231,7 @@ function test(arg)
 end
 
 function show(i)
-   tabs_rects[i]:debug()
+   tabs_rects[i]:debug("show")
 end
 -- \\\CallPlugin("b555825a4a5700c35fa80780","test")
 -- \\\CallPlugin("b555825a4a5700c35fa80780","show", 1)
