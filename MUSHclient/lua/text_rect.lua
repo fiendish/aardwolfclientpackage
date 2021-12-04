@@ -223,7 +223,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
 
       -- if it fits, copy whole style in
       -- also if literally no room for anything, just wedge the whole style in because that's silly
-      if self.no_autowrap or (t_width <= available) or (WindowTextWidth(self.window, font, sub(style.text, 1, 1)) > available) then
+      if self.no_autowrap or (t_width <= available) or ((length == 0) and (WindowTextWidth(self.window, font, sub(style.text, 1, 1)) > available)) then
          if style.length > 0 then
             insert(line_styles, style)
          end
