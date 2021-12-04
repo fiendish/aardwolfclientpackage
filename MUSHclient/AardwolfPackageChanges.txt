@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2164 snapshot
+- new feature: The GMCP mapper's portallevel command now has a toggle for setting the level silently without printing a message by adding 'quiet' to the end: 'mapper portallevel <portal_index> <level> quiet'.
+- bug fix: The communication log miniwindow (and any other miniwindow using my text_rect module with line wrapping) did not wrap the line as expected if the first character of the next color style was wider than the remaining space on the line.
+
 r2162 snapshot
 - misc change: It seems reasonable to turn off help tags when disabling/removing the helpfile miniwindow plugin.
 
