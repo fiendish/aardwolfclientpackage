@@ -960,10 +960,12 @@ function draw (uid)
    end -- if
 
    is_pk = false
-   for _,v in ipairs(utils.split(room.info, ",")) do
-      if v == "pk" then
-         is_pk = true
-         break
+   if room.info then
+      for _,v in ipairs(utils.split(room.info, ",")) do
+         if v == "pk" then
+            is_pk = true
+            break
+         end
       end
    end
 
