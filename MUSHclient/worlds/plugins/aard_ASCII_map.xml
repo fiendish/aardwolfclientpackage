@@ -365,7 +365,7 @@ blink_cycle = {
    0x00FFFF,
    0xFFFFFF
 }
-function blink_title(lines)
+function blink_title()
    if (show_title == 1) and (want_blinks == 1) then
       next_blink_color = (next_blink_color % (#blink_cycle)) + 1
       title_color = blink_cycle[next_blink_color]

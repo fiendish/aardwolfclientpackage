@@ -767,6 +767,87 @@ function halt_drawing(halt)
    dont_draw = halt
 end
 
+blink_cycle = {
+   "@R",
+   "@Y",
+   "@W"
+}
+function blink_title()
+   next_blink_color = (next_blink_color % (#blink_cycle)) + 1
+   title_color = blink_cycle[next_blink_color]
+   dress_window(truncated_room_name, current_room, current_area)
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end
+
+function dress_window(room_name, room_uid, area_name)
+   bodyleft, bodytop, bodyright, bodybottom = Theme.DressWindow(win, FONT_ID, title_color..room_name, "center")
+
+   -- room ID number
+   if config.SHOW_ROOM_ID then
+      Theme.DrawTextBox(win, FONT_ID,
+         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..room_uid)) / 2,   -- left
+         bodytop,    -- top
+         "ID: "..room_uid, false, false
+      )
+   end
+
+   -- area name
+   if area_name then
+      Theme.DrawTextBox(win, FONT_ID,
+         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, area_name)) / 2,   -- left
+         config.WINDOW.height - 4 - font_height,    -- top
+         area_name:gsub("^%l", string.upper), false, false
+      )
+   end
+
+   -- help button
+   if type (show_help) == "function" then
+      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
+      local y = math.max(2, (bodytop-font_height)/2)
+      local text_width = Theme.DrawTextBox(win, FONT_ID,
+         x-1,   -- left
+         y-2,   -- top
+         "?", false, false
+      )
+
+      WindowAddHotspot(win, "<help>",
+         x-3, y-4, x+text_width+3, y + font_height,   -- rectangle
+         "",  -- mouseover
+         "",  -- cancelmouseover
+         "",  -- mousedown
+         "",  -- cancelmousedown
+         "mapper.show_help",  -- mouseup
+         "Click for help",
+         miniwin.cursor_help, 0
+      )
+   end -- if
+
+   -- configuration
+   if draw_configure_box then
+      -- dropdown
+      draw_configuration ()
+   else
+      -- button
+      WindowShow(config_win, false)
+      local x = 2
+      local y = math.max(2, (bodytop-font_height)/2)
+      local text_width = Theme.DrawTextBox(win, FONT_ID,
+         x,   -- left
+         y-2,   -- top
+         "*", false, false)
+
+      WindowAddHotspot(win, "<configure>",
+         x-2, y-4, x+text_width, y + font_height,   -- rectangle
+         "",  -- mouseover
+         "",  -- cancelmouseover
+         "",  -- mousedown
+         "",  -- cancelmousedown
+         "mapper.mouseup_configure",  -- mouseup
+         "Click to configure map",
+         miniwin.cursor_plus, 0)
+   end
+end
+
 function draw (uid)
    if not uid then
       maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
@@ -859,90 +940,43 @@ function draw (uid)
       draw_zone_exit (zone_exit)
    end -- for
 
-   local room_name = room.name
-   local name_width = WindowTextWidth (win, FONT_ID, room_name)
+   truncated_room_name = room.name
+   local name_width = WindowTextWidth (win, FONT_ID, truncated_room_name)
    local add_dots = false
 
    -- truncate name if too long
    local available_width = (config.WINDOW.width - 20 - WindowTextWidth (win, FONT_ID, "*?"))
    while name_width > available_width do
-      room_name = room_name:sub(1, -3)
-      name_width = WindowTextWidth (win, FONT_ID, room_name .. "...")
+      truncated_room_name = truncated_room_name:sub(1, -3)
+      name_width = WindowTextWidth (win, FONT_ID, truncated_room_name .. "...")
       add_dots = true
-      if room_name == "" then
+      if truncated_room_name == "" then
          break
       end
    end -- while
 
    if add_dots then
-      room_name = room_name .. "..."
+      truncated_room_name = truncated_room_name .. "..."
    end -- if
 
-   Theme.DrawBorder(win)
-
-   -- room name
-   title_bottom = Theme.DrawTitleBar(win, FONT_ID, room_name)
-
-   if config.SHOW_ROOM_ID then
-      Theme.DrawTextBox(win, FONT_ID,
-         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..uid)) / 2,   -- left
-         title_bottom,    -- top
-         "ID: "..uid, false, false)
+   is_pk = false
+   for _,v in ipairs(utils.split(room.info, ",")) do
+      if v == "pk" then
+         is_pk = true
+         break
+      end
    end
 
-   -- area name
-
-   local areaname = room.area
-
-   if areaname then
-      Theme.DrawTextBox(win, FONT_ID,
-         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, areaname)) / 2,   -- left
-         config.WINDOW.height - 4 - font_height,    -- top
-         areaname:gsub("^%l", string.upper), false, false)
-   end -- if area known
-
-   -- configure?
-
-   if draw_configure_box then
-      draw_configuration ()
+   title_color = ""
+   next_blink_color = 0
+   if not is_pk then
+      DeleteTimer("blink_title")
    else
-      WindowShow(config_win, false)
-      local x = 2
-      local y = math.max(2, (title_bottom-font_height)/2)
-      local text_width = Theme.DrawTextBox(win, FONT_ID,
-         x,   -- left
-         y-2,   -- top
-         "*", false, false)
+      blink_title()
+      AddTimer("blink_title", 0, 0, 0.5, "", timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace, "mapper.blink_title")
+   end
 
-      WindowAddHotspot(win, "<configure>",
-         x-2, y-4, x+text_width, y + font_height,   -- rectangle
-         "",  -- mouseover
-         "",  -- cancelmouseover
-         "",  -- mousedown
-         "",  -- cancelmousedown
-         "mapper.mouseup_configure",  -- mouseup
-         "Click to configure map",
-         miniwin.cursor_plus, 0)
-   end -- if
-
-   if type (show_help) == "function" then
-      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
-      local y = math.max(2, (title_bottom-font_height)/2)
-      local text_width = Theme.DrawTextBox(win, FONT_ID,
-         x-1,   -- left
-         y-2,   -- top
-         "?", false, false)
-
-      WindowAddHotspot(win, "<help>",
-         x-3, y-4, x+text_width+3, y + font_height,   -- rectangle
-         "",  -- mouseover
-         "",  -- cancelmouseover
-         "",  -- mousedown
-         "",  -- cancelmousedown
-         "mapper.show_help",  -- mouseup
-         "Click for help",
-         miniwin.cursor_help, 0)
-   end -- if
+   dress_window(truncated_room_name, uid, room.area)
 
    Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
@@ -968,9 +1002,6 @@ function draw (uid)
          total_times_drawn,
          total_time_taken / total_times_drawn))
    end -- if
-
-   -- let them move it around
-   movewindow.add_drag_handler (win, 0, 0, 0, title_bottom)
 
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- draw
