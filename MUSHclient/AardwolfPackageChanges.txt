@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2165 snapshot
+- new feature: Blinking room name for PK rooms has been added to the GMCP mapper.
+
 r2164 snapshot
 - new feature: The GMCP mapper's portallevel command now has a toggle for setting the level silently without printing a message by adding 'quiet' to the end: 'mapper portallevel <portal_index> <level> quiet'.
 - bug fix: The communication log miniwindow (and any other miniwindow using my text_rect module with line wrapping) did not wrap the line as expected if the first character of the next color style was wider than the remaining space on the line.
