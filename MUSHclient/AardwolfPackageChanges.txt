@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2166 snapshot
+- bug fix: The previous snapshot would error in any room without details.
+
 r2165 snapshot
 - new feature: Blinking room name for PK rooms has been added to the GMCP mapper.
 
