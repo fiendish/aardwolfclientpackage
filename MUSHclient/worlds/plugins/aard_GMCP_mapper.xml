@@ -3709,7 +3709,7 @@ function got_gmcp_room()
       z = 0,
       exits = {},
       exit_locks = {}
-      }
+   }
    if gmcproom.area ~= lastarea then
       lastarea = gmcproom.area
       -- purge all virtual areas except the current area
