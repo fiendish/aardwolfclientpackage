@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2170 snapshot
+- new feature: The helpfile miniwindow search capture will now display the searched term.
+
 r2169 snapshot
 - new feature: I've added hyperlinks to help search results in the helpfile capture miniwindow plugin for convenient access to the listed helpfiles.
 - new feature: The helpfile capture miniwindow plugin won't bother capturing the message that there's no help available anymore.
