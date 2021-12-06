@@ -37,7 +37,7 @@ Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, fa
    ignore_case="y"
    send_to="12"
 ><send>
-not_found_msg = "Help '"..Trim(string.lower("%2")).."' was not found - possible alternatives are:"
+not_found_msg = build_notfound_message("%2")
 Capture.command("%0", "^{help}$", "^{/help}$", true, false, true, false, process_help)
 </send>
 </alias>
@@ -49,6 +49,10 @@ require "themed_miniwindows"
 require "wrapped_captures"
 require "gmcphelper"
 dofile(GetInfo(60).."telnet_options.lua")
+
+function build_notfound_message(subject)
+   return "Help '"..Trim(string.lower(subject)).."' was not found - possible alternatives are:"
+end
 
 
 WINDOW_ID = GetPluginID()
@@ -68,7 +72,7 @@ end
 function sanitize_search(style_lines)
    local new_lines = {}
    for i,line in ipairs(style_lines) do
-      -- help search starts with a blank line that I want to remove
+      -- help search starts with a blank line
       if i ~= 1 then
           -- search lines have a bunch of trailing whitespace that makes wrapping worse
          new_lines[i-1] = remove_trailing_whitespace(line)
@@ -108,8 +112,12 @@ end
 function build_links(line, pattern, after, before, verb)
    links = strip_colours_from_styles(line):find_indices(pattern, after, before)
    for _,v in ipairs(indices) do
-      v.label = verb.." "..v.text
-      v.text = 'not_found_msg = "Help \'"..Trim(string.lower("'..v.text..'")).."\' was not found - possible alternatives are:";Capture.command("'..verb.." "..v.text..'", "^{help}$", "^{/help}$", true, false, true, false, process_help)'
+      text = v.text
+      v.label = verb.." "..text
+      v.text = 'Capture.command("'..verb.." "..text..'", "^{help}$", "^{/help}$", true, false, true, false, process_help)'
+      if verb == "help" then
+         v.text = 'not_found_msg = build_notfound_message("'..text..'");'..v.text
+      end
    end
    return links
 end
@@ -119,7 +127,7 @@ function get_related_help_hyperlinks(style_lines)
    related_categories = {}
    for i,line in ipairs(style_lines) do
       if line[1].text:starts_with("Related Helps") then
-         related_helps[i] = build_links(line, "[%w-]+[%w- ]*", #"Related Helps : ", nil, "help")
+         related_helps[i] = build_links(line, "[%w&-]+[%w&- ]*", #"Related Helps : ", nil, "help")
       -- elseif line[1].text:starts_with("Help Category") then
       --    related_categories[i] = build_links(line, "[%w-]+[%w- ]*", #"Help Category", nil, "contents")
       end
@@ -131,7 +139,7 @@ function get_search_hyperlinks(style_lines)
    related_helps = {}
    for i,line in ipairs(style_lines) do
       if (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
-         related_helps[i] = build_links(line, "[%w-]+[%w- ]*", 0, 21, "help")
+         related_helps[i] = build_links(line, "[%w&-]+[%w&- ]*", 0, 21, "help")
       end
    end
    return related_helps, {}
