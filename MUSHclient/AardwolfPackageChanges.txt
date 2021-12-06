@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2169 snapshot
+- new feature: I've added hyperlinks to help search results in the helpfile capture miniwindow plugin for convenient access to the listed helpfiles.
+- new feature: The helpfile capture miniwindow plugin won't bother capturing the message that there's no help available anymore.
+- misc change: The helpfile capture miniwindow now removes trailing whitespace on captured lines to improve line wrapping when resizing the miniwindow.
+
 r2166 snapshot
 - bug fix: The previous snapshot would error in any room without details.
 
