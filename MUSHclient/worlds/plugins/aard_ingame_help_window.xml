@@ -25,6 +25,7 @@
    ignore_case="y"
    send_to="12"
 ><send>
+last_search = "%2"
 Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, false, process_search)
 </send>
 </alias>
@@ -37,6 +38,7 @@ Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, fa
    ignore_case="y"
    send_to="12"
 ><send>
+last_search = nil
 not_found_msg = build_notfound_message("%2")
 Capture.command("%0", "^{help}$", "^{/help}$", true, false, true, false, process_help)
 </send>
@@ -71,12 +73,19 @@ end
 
 function sanitize_search(style_lines)
    local new_lines = {}
+
+   -- The response to help search starts with a blank line. We could just remove it, but let's instead put the
+   -- search expression before it if this was an actual search attempt and not a redirected failed help.
+   if last_search and last_search ~= "" then
+      table.insert(new_lines, ColoursToStyles("@Y"..string.format("%-77s", "help search '"..last_search.."'")))
+   end
+
    for i,line in ipairs(style_lines) do
-      -- help search starts with a blank line
-      if i ~= 1 then
-          -- search lines have a bunch of trailing whitespace that makes wrapping worse
-         new_lines[i-1] = remove_trailing_whitespace(line)
+      if i > 1 then
+         -- search lines have a bunch of trailing whitespace that makes wrapping worse
+         line = remove_trailing_whitespace(line)
       end
+      table.insert(new_lines, line)
    end
    return new_lines
 end
@@ -116,7 +125,7 @@ function build_links(line, pattern, after, before, verb)
       v.label = verb.." "..text
       v.text = 'Capture.command("'..verb.." "..text..'", "^{help}$", "^{/help}$", true, false, true, false, process_help)'
       if verb == "help" then
-         v.text = 'not_found_msg = build_notfound_message("'..text..'");'..v.text
+         v.text = 'last_search = nil;not_found_msg = build_notfound_message("'..text..'");'..v.text
       end
    end
    return links
@@ -150,12 +159,11 @@ function divert_to_search_result_handler(window_styles)
    if GetLineInfo(GetLinesInBufferCount() - 1, 1) == not_found_msg then
       DeleteLines(1)
       new_window_styles = {
-         ColoursToStyles(""),
-         ColoursToStyles("@W"..not_found_msg),
+         ColoursToStyles("@W"..string.format("%-77s", not_found_msg)),
          ColoursToStyles("")
       }
-      for i,v in ipairs(window_styles) do
-         new_window_styles[i+3] = v
+      for _,v in ipairs(window_styles) do
+         table.insert(new_window_styles, v)
       end
       process_search(new_window_styles)
       return true
