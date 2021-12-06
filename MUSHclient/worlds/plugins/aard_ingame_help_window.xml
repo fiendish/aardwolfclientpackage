@@ -37,7 +37,7 @@ Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, fa
    ignore_case="y"
    send_to="12"
 ><send>
-not_found_msg = "Help '"..Trim("%2").."' was not found - possible alternatives are:"
+not_found_msg = "Help '"..Trim(string.lower("%2")).."' was not found - possible alternatives are:"
 Capture.command("%0", "^{help}$", "^{/help}$", true, false, true, false, process_help)
 </send>
 </alias>
@@ -104,7 +104,7 @@ function build_links(line, pattern, after, before, verb)
    links = strip_colours_from_styles(line):find_indices(pattern, after, before)
    for _,v in ipairs(indices) do
       v.label = verb.." "..v.text
-      v.text = 'Capture.command("'..verb.." "..v.text..'", "^{help}$", "^{/help}$", true, false, true, false, process_help)'
+      v.text = 'not_found_msg = "Help \'"..Trim(string.lower("'..v.text..'")).."\' was not found - possible alternatives are:";Capture.command("'..verb.." "..v.text..'", "^{help}$", "^{/help}$", true, false, true, false, process_help)'
    end
    return links
 end
@@ -132,8 +132,9 @@ function get_search_hyperlinks(style_lines)
    return related_helps, {}
 end
 
-function process_help(window_styles)
-   if GetLineInfo(GetLinesInBufferCount() - 1 , 1) == not_found_msg then
+function divert_to_search_result_handler(window_styles)
+   -- Should the game have used helpsearch tags instead of help tags?
+   if GetLineInfo(GetLinesInBufferCount() - 1, 1) == not_found_msg then
       DeleteLines(1)
       new_window_styles = {
          ColoursToStyles(""),
@@ -144,9 +145,22 @@ function process_help(window_styles)
          new_window_styles[i+3] = v
       end
       process_search(new_window_styles)
-      return
+      return true
    end
-   if window_styles == nil then
+end
+
+function no_help(window_styles)
+   -- Is this just saying there's no help?
+   if window_styles[1][1].text == "There is no help with that keyword." then
+      for _,v in ipairs(window_styles) do
+         Simulate(stylesToANSI(v).."\r\n")
+      end
+      return true
+   end
+end
+
+function process_help(window_styles)
+   if (window_styles == nil) or divert_to_search_result_handler(window_styles) or no_help(window_styles) then
       return
    end
    local window_styles = sanitize_help(window_styles)
