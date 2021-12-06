@@ -61,29 +61,34 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
+function remove_trailing_whitespace(line)
+   return ColoursToStyles(Trim(StylesToColours(line)))
+end
+
 function sanitize_search(style_lines)
-   -- help search starts with a blank line that I want to remove
-   local new_styles = {}
+   local new_lines = {}
    for i,line in ipairs(style_lines) do
+      -- help search starts with a blank line that I want to remove
       if i ~= 1 then
-         new_styles[i-1] = line
+          -- search lines have a bunch of trailing whitespace that makes wrapping worse
+         new_lines[i-1] = remove_trailing_whitespace(line)
       end
    end
-   return new_styles
+   return new_lines
 end
 
 function sanitize_help(style_lines)
-   local new_styles = {}
+   local new_lines = {}
    for _,line in ipairs(style_lines) do
       if (line[1].text ~= "{helpbody}") and (line[1].text ~= "{/helpbody}") then
          if line[1].text == "{helpkeywords}" then
             line[1].text = ""
             line[1].length = 0
          end
-         table.insert(new_styles, line)
+         table.insert(new_lines, remove_trailing_whitespace(line))
       end
    end
-   return new_styles
+   return new_lines
 end
 
 string.find_indices = function(self, pattern, after, before)
