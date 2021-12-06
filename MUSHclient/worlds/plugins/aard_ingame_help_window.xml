@@ -18,6 +18,18 @@
 
 <aliases>
 <alias
+   match="^(h|he|hel|help) +search +(.+)$"
+   enabled="y"
+   regexp="y"
+   sequence="99"
+   ignore_case="y"
+   send_to="12"
+><send>
+Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, false, process_search)
+</send>
+</alias>
+
+<alias
    match="^(h|he|hel|help)( .*)?$"
    enabled="y"
    regexp="y"
@@ -25,7 +37,8 @@
    ignore_case="y"
    send_to="12"
 ><send>
-Capture.command("%0", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, draw_window)
+not_found_msg = "Help '"..Trim("%2").."' was not found - possible alternatives are:"
+Capture.command("%0", "^{help}$", "^{/help}$", true, false, true, false, process_help)
 </send>
 </alias>
 </aliases>
@@ -37,76 +50,121 @@ require "wrapped_captures"
 require "gmcphelper"
 dofile(GetInfo(60).."telnet_options.lua")
 
+
 WINDOW_ID = GetPluginID()
+
+string.starts_with = function(self, start)
+   return self:sub(1, #start) == start
+end
 
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-function sanitize_response(style_lines)
+function sanitize_search(style_lines)
+   -- help search starts with a blank line that I want to remove
    local new_styles = {}
-   local startdone = false -- help search starts with a blank line that I want to remove
-   for _,line in ipairs(style_lines) do
-      if startdone or (line[1].length > 0) then
-         startdone = true
-         if (line[1].text ~= "{helpbody}") and (line[1].text ~= "{/helpbody}") then
-            if line[1].text == "{helpkeywords}" then
-               line[1].text = ""
-               line[1].length = 0
-            end
-            table.insert(new_styles, line)
-         end
+   for i,line in ipairs(style_lines) do
+      if i ~= 1 then
+         new_styles[i-1] = line
       end
    end
    return new_styles
 end
 
-string.find_indices = function(self, pattern, after)
+function sanitize_help(style_lines)
+   local new_styles = {}
+   for _,line in ipairs(style_lines) do
+      if (line[1].text ~= "{helpbody}") and (line[1].text ~= "{/helpbody}") then
+         if line[1].text == "{helpkeywords}" then
+            line[1].text = ""
+            line[1].length = 0
+         end
+         table.insert(new_styles, line)
+      end
+   end
+   return new_styles
+end
+
+string.find_indices = function(self, pattern, after, before)
    indices = {}
    local first, last = 0, 0
+   before = before or #self+1
    while true do
       first, last = self:find(pattern, last+1)
       if not first then break end
-      if first > after then
+      if (first > after) and (last < before) then
          table.insert(indices, {text=self:sub(first, last), start=first, stop=last})
       end
    end
    return indices
 end
 
-function help_keywords(line, after, verb)
-   indices = strip_colours_from_styles(line):find_indices("[%w-]+[%w- ]*", after)
+function build_links(line, pattern, after, before, verb)
+   links = strip_colours_from_styles(line):find_indices(pattern, after, before)
    for _,v in ipairs(indices) do
       v.label = verb.." "..v.text
-      v.text = 'Capture.command("'..verb.." "..v.text..'", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, draw_window)'
+      v.text = 'Capture.command("'..verb.." "..v.text..'", "^{help}$", "^{/help}$", true, false, true, false, process_help)'
    end
-   return indices
+   return links
 end
 
-string.starts_with = function(self, start)
-   return self:sub(1, #start) == start
-end
-
-function get_hyperlinks(style_lines)
+function get_related_help_hyperlinks(style_lines)
    related_helps = {}
    related_categories = {}
    for i,line in ipairs(style_lines) do
       if line[1].text:starts_with("Related Helps") then
-         related_helps[i] = help_keywords(line, #"Related Helps : ", "help")
+         related_helps[i] = build_links(line, "[%w-]+[%w- ]*", #"Related Helps : ", nil, "help")
       -- elseif line[1].text:starts_with("Help Category") then
-      --    related_categories[i] = help_keywords(line, #"Help Category", "contents")
+      --    related_categories[i] = build_links(line, "[%w-]+[%w- ]*", #"Help Category", nil, "contents")
       end
    end
    return related_helps, related_categories
 end
 
-function draw_window(window_styles)
+function get_search_hyperlinks(style_lines)
+   related_helps = {}
+   for i,line in ipairs(style_lines) do
+      if (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
+         related_helps[i] = build_links(line, "[%w-]+[%w- ]*", 0, 21, "help")
+      end
+   end
+   return related_helps, {}
+end
+
+function process_help(window_styles)
+   if GetLineInfo(GetLinesInBufferCount() - 1 , 1) == not_found_msg then
+      DeleteLines(1)
+      new_window_styles = {
+         ColoursToStyles(""),
+         ColoursToStyles("@W"..not_found_msg),
+         ColoursToStyles("")
+      }
+      for i,v in ipairs(window_styles) do
+         new_window_styles[i+3] = v
+      end
+      process_search(new_window_styles)
+      return
+   end
    if window_styles == nil then
       return
    end
+   local window_styles = sanitize_help(window_styles)
+   build_window(window_styles, get_related_help_hyperlinks)
+end
+
+function process_search(window_styles)
+   if window_styles == nil then
+      return
+   end
+   local window_styles = sanitize_search(window_styles)
+   build_window(window_styles, get_search_hyperlinks)
+end
+
+function build_window(window_styles, hyperlinks_function)
    ColourNote("paleturquoise", "", "Help Captured To Miniwindow")
-   window_styles = sanitize_response(window_styles)
-   related_helps, related_categories = get_hyperlinks(window_styles)
+
+   local related_helps, related_categories = hyperlinks_function(window_styles)
 
    local already_on_screen = false
    if WindowInfo(WINDOW_ID, 1) ~= nil then
@@ -201,7 +259,7 @@ function OnPluginThemeChange()
    -- Miniwindow color themes are applied at their creation, so create an
    -- existing window again if the theme changes.
    if my_window and my_window.id then
-      draw_window(my_window:get_styles())
+      build_window(my_window:get_styles())
    end
 end
 
