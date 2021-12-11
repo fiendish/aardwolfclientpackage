@@ -43,6 +43,20 @@ not_found_msg = build_notfound_message("%2")
 Capture.command("%0", "^{help}$", "^{/help}$", true, false, true, false, process_help)
 </send>
 </alias>
+
+<alias
+   match="closehelp"
+   enabled="y"
+   regexp="n"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+><send>
+if my_window and my_window.id then
+   my_window:delete()
+end
+</send>
+</alias>
 </aliases>
 
 <script>
