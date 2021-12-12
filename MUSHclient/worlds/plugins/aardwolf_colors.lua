@@ -362,6 +362,31 @@ function ToMultilineStyles(message, default_foreground_color, background_color, 
    return message
 end
 
+-- Splits a line of styles at some separator pattern (default is "%s+" for blank space)
+-- returns {{nonspace styles},{space styles},{nonspace styles},...}
+function partition_boundaries(styles, separator_pattern)
+   separator_pattern = separator_pattern or "%s+"
+   local partitions = {}
+   local last_text = nil
+   local cur_partition = {}
+   for _,style in ipairs(styles) do
+      style_tokens = style.text:split(separator_pattern, true)
+      for _,text in ipairs(style_tokens) do
+         if last_text then
+            last_start = last_text:sub(1,1)
+            this_start = text:sub(1,1)
+            if ((last_start == " ") and (this_start ~= " ")) or ((last_start ~= " ") and (this_start == " ")) then
+               table.insert(partitions, cur_partition)
+               cur_partition = {}
+            end
+         end
+         table.insert(cur_partition, {text=text, length=#text})--, bold=style.bold, backcolour=style.backcolour, textcolour=style.textcolour})
+         last_text = text
+      end
+   end
+   table.insert(partitions, cur_partition)
+   return partitions
+end
 
 -- Converts text with colour codes in it into a line of style runs or multiple
 -- lines of style runs split at newlines if multiline is true.
