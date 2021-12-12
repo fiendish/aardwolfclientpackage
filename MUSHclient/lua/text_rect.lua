@@ -4,6 +4,8 @@ require "wait"
 require "copytable"
 require "colors"
 require "mw_theme_base"
+local socket = require "socket"
+
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
 local function getHighlightColor(bg)
@@ -600,6 +602,41 @@ function TextRect:unInit()
    self:_deleteHyperlinks()
 end
 
+function TextRect:multiclick(separator_pattern)
+   local line_number = self.temp_start_line
+   local line_styles = self.wrapped_lines[self.temp_start_line][1]
+   local show_bold = (GetOption("show_bold")== 1)
+   local target = self.temp_start_copying_x
+   local line_sections
+   if separator_pattern then
+      line_sections = partition_boundaries(line_styles, separator_pattern)
+   else
+      line_sections = {line_styles}
+   end
+   local section_start = self.padded_left
+   local start_pos = 0
+   for _,section in ipairs(line_sections) do
+      local section_size = 0
+      local section_length = 0
+      for _,style in ipairs(section) do
+         local font = self.font
+         if show_bold and style.bold then
+            font = self.font_bold
+         end
+         section_size = section_size + WindowTextWidth(self.window, font, style.text)
+         section_length = section_length + style.length
+      end
+      section_end = section_start + section_size
+      end_pos = start_pos + section_length
+      if (section_start <= target) and (section_end >= target) then
+         self:set_selection(line_number, line_number, start_pos, end_pos)
+         return
+      end
+      section_start = section_end
+      start_pos = end_pos
+   end
+end
+
 function TextRect.mouseDown(flags, hotspot_id)
    if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
       return  -- ignore non-left mouse button
@@ -608,7 +645,21 @@ function TextRect.mouseDown(flags, hotspot_id)
    tr.temp_start_copying_x = WindowInfo(tr.window, 14)
    tr.copy_start_windowline = math.floor((WindowInfo(tr.window, 15) - tr.top) / tr.line_height)
    tr.temp_start_line = tr.copy_start_windowline + tr.start_line
-   tr:set_selection(nil, nil, nil, nil)
+   local now = socket.gettime()
+   tr.num_clicks = tr.num_clicks or 1
+   if tr.last_click_time and ((now - tr.last_click_time) < 0.4) then
+      tr.num_clicks = tr.num_clicks + 1
+      if tr.num_clicks == 2 then
+         tr:multiclick("%s+")
+      else
+         tr.num_clicks = 1
+         tr:multiclick()
+      end
+   else
+      tr.num_clicks = 1
+      tr:set_selection(nil, nil, nil, nil)
+   end
+   tr.last_click_time = now
    tr:draw(false)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
@@ -706,7 +757,7 @@ function TextRect:set_selection(start_line, end_line, start_pos, end_pos)
       self.copy_end_line = nil
       self.copy_start_line = nil
       self.start_copying_x = nil
-      self.end_copying_x = nil      
+      self.end_copying_x = nil
    end
    -- do not call self.call_on_select here
 end
@@ -873,6 +924,19 @@ function TextRect:rightClickMenu(hotspot_id)
    local menu_text = {}
    local menu_functions = {}
 
+   local function extend_options(external_string, external_functions)
+      if external_string:sub(1,1) == "!" then
+         external_string = external_string:sub(2)
+      end
+      if #menu_text > 0 then
+         table.insert(menu_text, "-")
+      end
+      table.insert(menu_text, external_string)
+      for _, v in ipairs(external_functions) do
+         table.insert(menu_functions, v)
+      end
+   end
+
    if self.hyperlinks[hotspot_id] then
       table.insert(menu_text, "Browse URL: " .. self.hyperlinks[hotspot_id])
       table.insert(menu_text, "Copy URL to Clipboard")
@@ -895,18 +959,8 @@ function TextRect:rightClickMenu(hotspot_id)
    end
 
    if self.external_menu_generator then
-      local external_string, external_functions = self.external_menu_generator()
-      if external_string:sub(1,1) == "!" then
-         external_string = external_string:sub(2)
-      end
-
-      if #menu_text > 0 then
-         table.insert(menu_text, "-")
-      end
-      table.insert(menu_text, external_string)
-      for _, v in ipairs(external_functions) do
-         table.insert(menu_functions, v)
-      end
+      local external_string, external_functions = self.external_menu_generator((self.copy_start_line ~= nil) and (self.copy_end_line ~= nil) and self:selected_text(false) or nil)
+      extend_options(external_string, external_functions)
    end
 
    result = tonumber(
