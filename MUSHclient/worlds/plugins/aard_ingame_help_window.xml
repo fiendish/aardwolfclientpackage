@@ -248,6 +248,17 @@ function build_window(window_styles, hyperlinks_function)
       nil,  -- text_padding
       true  -- defer_showing
    )
+   my_window.textrect:setExternalMenuFunction(
+      function(selection)
+         menu_string, menu_handlers = my_window:get_menu_items()
+         if selection then
+            command = "help "..selection
+            menu_string = "Send '"..command.."'|-|"..menu_string
+            table.insert(menu_handlers, 1, function() Execute(command) end)
+         end
+         return menu_string, menu_handlers
+      end
+   )
 
    -- Load the contents of the helpfile into the window.
    for i, styles in ipairs(window_styles) do
