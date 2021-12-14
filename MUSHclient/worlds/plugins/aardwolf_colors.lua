@@ -373,9 +373,9 @@ function partition_boundaries(styles, separator_pattern)
       style_tokens = style.text:split(separator_pattern, true)
       for _,text in ipairs(style_tokens) do
          if last_text then
-            last_start = last_text:sub(1,1)
-            this_start = text:sub(1,1)
-            if ((last_start == " ") and (this_start ~= " ")) or ((last_start ~= " ") and (this_start == " ")) then
+            last_endswith = last_text:match(separator_pattern.."$")
+            this_startswith = text:match("^"..separator_pattern)
+            if last_endswith ~= this_startswith then
                table.insert(partitions, cur_partition)
                cur_partition = {}
             end
