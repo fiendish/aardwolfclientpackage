@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2174 snapshot
+- new feature: The helpfile miniwindow now has a 'closehelp' alias to close the miniwindow from the command line without clicking the miniwindow's close button.
+- new feature: There's a new color function in plugins/aardwolf_colors.lua called partition_boundaries that can be used to repartition a table of styles according to separator boundaries. For example, if the separator pattern is "%s+" (one or more spaces), the result would be {{nonspace styles},{space styles},{nonspace styles},...}.
+- new feature: Added double/triple-click word/line highlighting to all text_rects.
+- new feature: The helpfile capture miniwindow now adds a right-click menu option for sending 'help <the highlighted text>' when text is highlighted in the miniwindow.
+
 r2170 snapshot
 - new feature: The helpfile miniwindow search capture will now display the searched term.
 
