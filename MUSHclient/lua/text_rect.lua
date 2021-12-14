@@ -604,7 +604,11 @@ end
 
 function TextRect:multiclick(separator_pattern)
    local line_number = self.temp_start_line
-   local line_styles = self.wrapped_lines[self.temp_start_line][1]
+   local line = self.wrapped_lines[line_number]
+   if not line then
+      return
+   end
+   local line_styles = line[1]
    local show_bold = (GetOption("show_bold")== 1)
    local target = self.temp_start_copying_x
    local line_sections
