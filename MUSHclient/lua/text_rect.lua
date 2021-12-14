@@ -650,7 +650,7 @@ function TextRect.mouseDown(flags, hotspot_id)
    if tr.last_click_time and ((now - tr.last_click_time) < 0.4) then
       tr.num_clicks = tr.num_clicks + 1
       if tr.num_clicks == 2 then
-         tr:multiclick("%s+")
+         tr:multiclick("[^%w%-]+")
       else
          tr.num_clicks = 1
          tr:multiclick()
