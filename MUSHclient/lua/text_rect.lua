@@ -602,24 +602,25 @@ function TextRect:unInit()
    self:_deleteHyperlinks()
 end
 
-function TextRect:multiclick(separator_pattern)
-   local line_number = self.temp_start_line
+function TextRect:get_target_bounds(separator_pattern, line_number, target_x, partition_cache_key)
    local line = self.wrapped_lines[line_number]
    if not line then
       return
    end
    local line_styles = line[1]
    local show_bold = (GetOption("show_bold")== 1)
-   local target = self.temp_start_copying_x
    local line_sections
    if separator_pattern then
-      line_sections = partition_boundaries(line_styles, separator_pattern)
+      if line_styles ~= self.last_partitioned_styles[partition_cache_key] then
+         self.last_partitioned_styles[partition_cache_key] = line_styles
+         self.last_partitioned_line_sections[partition_cache_key] = partition_boundaries(line_styles, separator_pattern)
+      end
    else
-      line_sections = {line_styles}
+      self.last_partitioned_line_sections[partition_cache_key] = {line_styles}
    end
    local section_start = self.padded_left
    local start_pos = 0
-   for _,section in ipairs(line_sections) do
+   for _,section in ipairs(self.last_partitioned_line_sections[partition_cache_key]) do
       local section_size = 0
       local section_length = 0
       for _,style in ipairs(section) do
@@ -632,9 +633,8 @@ function TextRect:multiclick(separator_pattern)
       end
       section_end = section_start + section_size
       end_pos = start_pos + section_length
-      if (section_start <= target) and (section_end >= target) then
-         self:set_selection(line_number, line_number, start_pos, end_pos)
-         return
+      if (section_start <= target_x) and (section_end >= target_x) then
+         return start_pos, end_pos, section_start, section_end
       end
       section_start = section_end
       start_pos = end_pos
@@ -651,18 +651,25 @@ function TextRect.mouseDown(flags, hotspot_id)
    tr.temp_start_line = tr.copy_start_windowline + tr.start_line
    local now = socket.gettime()
    tr.num_clicks = tr.num_clicks or 1
+
+   tr.last_partitioned_styles = {}
+   tr.last_partitioned_line_sections = {}
+
    if tr.last_click_time and ((now - tr.last_click_time) < 0.4) then
       tr.num_clicks = tr.num_clicks + 1
-      if tr.num_clicks == 2 then
-         tr:multiclick("[^%w%-]+")
-      else
+      tr.separator_pattern = "[^%w%-]+" -- whole words
+      if tr.num_clicks ~= 2 then
+         tr.separator_pattern = nil -- whole lines
          tr.num_clicks = 1
-         tr:multiclick()
       end
+      local start_pos, end_pos, _, _ = tr:get_target_bounds(tr.separator_pattern, tr.temp_start_line, tr.temp_start_copying_x, "start")
+      tr:set_selection(tr.temp_start_line, tr.temp_start_line, start_pos, end_pos)
    else
+      tr.separator_pattern = "."
       tr.num_clicks = 1
       tr:set_selection(nil, nil, nil, nil)
    end
+
    tr.last_click_time = now
    tr:draw(false)
    if tr.call_on_select then
@@ -768,12 +775,14 @@ end
 
 function TextRect:updateSelect()
    self.copy_start_line = self.temp_start_line
-   self.start_copying_x = self.temp_start_copying_x
 
    self.end_copying_y = WindowInfo(self.window, 18) - WindowInfo(self.window, 11)
    self.copy_end_windowline = math.floor((self.end_copying_y - self.top) / self.line_height)
    self.copy_end_line = self.copy_end_windowline + self.start_line
-   self.end_copying_x = math.max(self.left, math.min(self.right, WindowInfo(self.window, 17) - WindowInfo(self.window, 10)))
+
+   local cursor_x = WindowInfo(self.window, 17) - WindowInfo(self.window, 10)
+   self.start_copying_x = self.temp_start_copying_x
+   self.end_copying_x = math.max(self.left, math.min(self.right, cursor_x))
 
    -- the user is selecting backwards, so reverse the start/end orders
    if self.copy_end_line < self.copy_start_line then
@@ -796,54 +805,13 @@ function TextRect:updateSelect()
 
    local show_bold = (GetOption("show_bold")== 1)
 
-   for copy_line = self.copy_start_line, self.copy_end_line do
-      -- Clamp to character boundaries instead of selecting arbitrary pixel positions...
-      local line_styles = self.wrapped_lines[copy_line][1]
-
-      -- Clamp the selection start position
-      if copy_line == self.copy_start_line then
-         local last_marker = self.padded_left
-         self.start_copying_pos = 0
-         for _,v in ipairs(line_styles) do
-            local marker = self.padded_left
-            local font = self.font
-            if show_bold and v.bold then
-               font = self.font_bold
-            end
-            for cur=v.length,0,-1 do
-               marker = last_marker + WindowTextWidth(self.window, font, string.sub(v.text, 1, cur))
-               if marker <= self.start_copying_x then
-                  self.start_copying_pos = self.start_copying_pos + cur
-                  break
-               end
-            end
-            last_marker = marker
-         end
-         self.start_copying_x = last_marker
-      end
-
-      -- Clamp the selection end position
-      if copy_line == self.copy_end_line then
-         local last_marker = self.padded_left
-         self.end_copying_pos = 0
-         for _,v in ipairs(line_styles) do
-            local marker = self.padded_left
-            local font = self.font
-            if show_bold and v.bold then
-               font = self.font_bold
-            end
-            for cur=v.length,0,-1 do
-               marker = last_marker + WindowTextWidth(self.window, font, string.sub(v.text, 1, cur))
-               if marker <= self.end_copying_x then
-                  self.end_copying_pos = self.end_copying_pos + cur
-                  break
-               end
-            end
-            last_marker = marker
-         end
-         self.end_copying_x = last_marker
-      end
-   end
+   -- Clamp to boundaries instead of selecting arbitrary pixel positions...
+   local start_pos, _, start_x, _ = self:get_target_bounds(self.separator_pattern, self.copy_start_line, self.start_copying_x, "start")
+   self.start_copying_pos = start_pos
+   self.start_copying_x = start_x
+   local _, end_pos, _, end_x = self:get_target_bounds(self.separator_pattern, self.copy_end_line, self.end_copying_x, "end")
+   self.end_copying_pos = end_pos
+   self.end_copying_x = end_x
 
    if (self.copy_start_line == self.copy_end_line) and (self.start_copying_pos == self.end_copying_pos) then
       self:set_selection(nil, nil, nil, nil)
