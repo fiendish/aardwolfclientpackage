@@ -380,8 +380,11 @@ function partition_boundaries(styles, separator_pattern)
                cur_partition = {}
             end
          end
-         table.insert(cur_partition, {text=text, length=#text})--, bold=style.bold, backcolour=style.backcolour, textcolour=style.textcolour})
-         last_text = text
+         length = #text
+         if length > 0 then
+            table.insert(cur_partition, {text=text, length=length, bold=style.bold, backcolour=style.backcolour, textcolour=style.textcolour})
+            last_text = text
+         end
       end
    end
    table.insert(partitions, cur_partition)
