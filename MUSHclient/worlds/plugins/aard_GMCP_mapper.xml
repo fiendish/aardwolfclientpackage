@@ -423,10 +423,20 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
+   name="DELETE"
    match="^mapper delete portal (.+)$"
    enabled="y"
    sequence="100"
-   script="map_portal_delete"
+   script="map_portal_edit"
+   regexp="y"
+></alias>
+
+<alias
+   name="CHANGE"
+   match="^mapper change portal (.+) {(.+)}$"
+   enabled="y"
+   sequence="100"
+   script="map_portal_edit"
    regexp="y"
 ></alias>
 
@@ -551,8 +561,8 @@ mapper.gotoNextResult(Trim("%1"))
    sequence="100"
    script="custom_fullexit"
    regexp="y"
-></alias>   
-   
+></alias>
+
 <alias
    match="^mapper cexit_wait (.+)$"
    enabled="y"
@@ -762,7 +772,7 @@ StopEvaluatingTriggers(true)
   sequence="100"
   group="recon"
  ></trigger>
-   
+
   <trigger
    enabled="y"
    match="^You cannot (recall|return home) from this room\.$"
@@ -1403,8 +1413,9 @@ function show_known_unmapped_exits (name, line, wildcards)
    print (line.."\n")
 end -- show_known_unmapped_exits
 
-function map_portal_delete (name, line, wildcards)
+function map_portal_edit (name, line, wildcards)
    local keywords = wildcards[1]
+   local new_command = wildcards[2]
    local target_index = nil
    if string.sub(keywords,1,1) == "#" and type(tonumber(string.sub(keywords,2)))=="number" then
       target_index = tonumber(string.sub(keywords,2))
@@ -1418,7 +1429,7 @@ function map_portal_delete (name, line, wildcards)
          end
       end
       if found == false then
-         world.Note(string.format("\nDELETE FAILED: Did not find portal #%s in the list of portals. Try 'mapper portals' to see the list.\n", target_index))
+         world.Note(string.format("\n%s FAILED: Did not find portal #%s in the list of portals. Try 'mapper portals' to see the list.\n", name, target_index))
          return
       end
    end
@@ -1429,15 +1440,23 @@ function map_portal_delete (name, line, wildcards)
    end
 
    if portal_exists then
-      print (string.format("Deleted mapper portal"..(((target_index ~= nil) and " index #"..target_index) or "").." with keywords '%s'.", keywords))
+      if name == "DELETE" then
+         print (string.format("Deleted mapper portal"..(((target_index ~= nil) and " index #"..target_index) or "").." with keywords '%s'.", keywords))
+      else
+         print (string.format("Changed mapper portal"..(((target_index ~= nil) and " index #"..target_index) or "").." to command '%s'.", new_command))
+      end
    else
-      print (string.format("DELETE FAILED: Did not find a mapper portal with keywords '%s'.", keywords))
+      print (string.format("%s FAILED: Did not find a mapper portal with keywords '%s'.", name, keywords))
    end
 
-   query = string.format("DELETE FROM exits WHERE fromuid in ('*','**') AND dir = %s;", fixsql(keywords))
+   if name == "DELETE" then
+      query = string.format("DELETE FROM exits WHERE fromuid in ('*','**') AND dir = %s;", fixsql(keywords))
+   else
+      query = string.format("UPDATE exits SET dir = %s WHERE fromuid in ('*', '**') AND dir = %s;", fixsql(new_command), fixsql(keywords))
+   end
    dbCheckExecute(query)
    check_bounce_consistency()
-end -- map_portal_delete
+end -- map_portal_edit
 
 function map_portal_purge(name, line, wildcards)
    query = "DELETE FROM exits WHERE fromuid in ('*','**');"
@@ -1777,7 +1796,7 @@ function custom_fullexit (name, line, wildcards)
   if cexit_command == "" then
      print("Nothing to do!")
      return
-  end 
+  end
 
   local cexit_start = wildcards[2]
   if not cexit_start then
@@ -1802,7 +1821,7 @@ function custom_fullexit (name, line, wildcards)
   end
 
   local cexit_level = wildcards[4] and Trim(wildcards[4])
-  if cexit_level == "" then 
+  if cexit_level == "" then
      cexit_level = "0"
   end
 
@@ -2566,12 +2585,12 @@ function room_change_cexit_command (room, uid, exit)
 
       mapper.mapprint ("New custom exit from room "..uid.." to "..to..": '"..new_cexit.."'")
 
-      -- update in-memory table	
+      -- update in-memory table
       rooms[uid].exits[new_cexit] = rooms[uid].exits[chosen_exit]
       rooms[uid].exit_locks[new_cexit] = rooms[uid].exit_locks[chosen_exit]
       rooms[uid].exits[chosen_exit] = nil
       rooms[uid].exit_locks[chosen_exit] = nil
-      
+
       mapper.draw (current_room)
    end
 end -- room_change_cexit_command
@@ -4282,7 +4301,7 @@ function map_where (name, line, wildcards)
    dest = tostring(dest)
    if dest == current_room then
       mapper.mapprint ("You are already in that room.")
-      return 
+      return
    end -- if
 
    printpath(current_room, dest)
@@ -4752,8 +4771,8 @@ which lets you set all cexit aspects in one command without running it.]],
    ['portals'] = {
 ['header'] = [[===== PORTAL ACTIONS ============>]],
 [[mapper portals                 --> List known hand-held portals]],
-[[mapper portals <here/area>     --> List known hand-held portals only to this
-                                 > or another area]],
+[[mapper portals <here/area/key> --> List known hand-held portals only to this
+                                 > or another area, or searches by area key.]],
 [[mapper portal <command>        --> Link a handheld portal to the current
                                  > room as a special exit from everwhere else
                                  > (ex: 'mapper portal recall' at recall).
@@ -4794,13 +4813,14 @@ you set all portal aspects in one command without being in the target room.]],
 [[mapper norecall <id> [true/false] --> Manually set norecall flag]],
 [[+----------------------------------------------------------------------------+]],
 [[]],
-[[mapper portallevel <ind> <lvl> [quiet] --> Change the level lock on a portal. 
+[[mapper portallevel <ind> <lvl> [quiet] --> Change the level lock on a portal.
                                            > Find indices with 'mapper portals'.
                                            > Do not manually account for tiers.
                                            > Adding 'quiet' means no output.]],
 [[mapper delete portal <command> --> Remove the specified hand-held portal alias]],
 [[mapper delete portal #<index>  --> Remove a hand-held portal by its index
                                  > Find the indices with 'mapper portals']],
+[[mapper change portal #<index> {<newcommand} --> Change the command on a portal.]],
 [[mapper purge portals           --> Remove all hand-held portal aliases]]
 },
 
