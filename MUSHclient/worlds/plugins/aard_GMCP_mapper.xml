@@ -4820,7 +4820,10 @@ you set all portal aspects in one command without being in the target room.]],
 [[mapper delete portal <command> --> Remove the specified hand-held portal alias]],
 [[mapper delete portal #<index>  --> Remove a hand-held portal by its index
                                  > Find the indices with 'mapper portals']],
-[[mapper change portal #<index> {<newcommand} --> Change the command on a portal.]],
+[[mapper change portal <command> {<newcommand>} --> Change the command on a portal
+                                                > based on command.]],
+[[mapper change portal #<index> {<newcommand>}  --> Change the command on a portal
+                                                > based on index.]],
 [[mapper purge portals           --> Remove all hand-held portal aliases]]
 },
 
