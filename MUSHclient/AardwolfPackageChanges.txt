@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2177 snapshot
+- bug fix: Fix unfound help -> search capturing in the helpfile miniwindow after the new tag change.
+
 r2176 snapshot
 - new feature: If double/triple-click text_rect word/line highlighting from r2174 is used, holding the mouse button down while dragging will continue to snap the selection to word/line boundaries.
 - bug fix: Fix character boundary selection snap in text_rects when inline bold font style is present.
