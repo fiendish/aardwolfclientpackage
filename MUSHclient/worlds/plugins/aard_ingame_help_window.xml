@@ -25,8 +25,8 @@
    ignore_case="y"
    send_to="12"
 ><send>
-last_search = "%2"
-Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, false, process_search)
+search_msg = ColoursToStyles("@Y"..string.format("%-77s", "help search '%2'"))
+Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, false, process_response)
 </send>
 </alias>
 
@@ -38,9 +38,8 @@ Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, fa
    ignore_case="y"
    send_to="12"
 ><send>
-last_search = nil
-not_found_msg = build_notfound_message("%2")
-Capture.command("%0", "^{help}$", "^{/help}$", true, false, true, false, process_help)
+search_msg = nil
+Capture.command("%0", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, process_response)
 </send>
 </alias>
 
@@ -67,7 +66,9 @@ require "gmcphelper"
 dofile(GetInfo(60).."telnet_options.lua")
 
 function build_notfound_message(subject)
-   return "Help '"..Trim(string.lower(subject)).."' was not found - possible alternatives are:"
+   return ColoursToStyles(
+      "@W"..string.format("%-77s", "Help '"..Trim(string.lower(subject)).."' was not found - possible alternatives are:")
+   )
 end
 
 
@@ -88,10 +89,12 @@ end
 function sanitize_search(style_lines)
    local new_lines = {}
 
-   -- The response to help search starts with a blank line. We could just remove it, but let's instead put the
+   -- The response to help search starts with a blank line. We could remove it, but let's instead put the
    -- search expression before it if this was an actual search attempt and not a redirected failed help.
-   if last_search and last_search ~= "" then
-      table.insert(new_lines, ColoursToStyles("@Y"..string.format("%-77s", "help search '"..last_search.."'")))
+   if search_msg then
+      table.insert(new_lines, search_msg)
+   else
+      table.insert(style_lines, 2, ColoursToStyles(""))
    end
 
    for i,line in ipairs(style_lines) do
@@ -124,7 +127,7 @@ string.find_indices = function(self, pattern, after, before)
    before = before or #self+1
    while true do
       first, last = self:find(pattern, last+1)
-      if not first then break end
+      if (not first) or (last > before) then break end
       if (first > after) and (last < before) then
          table.insert(indices, {text=self:sub(first, last), start=first, stop=last})
       end
@@ -137,9 +140,9 @@ function build_links(line, pattern, after, before, verb)
    for _,v in ipairs(indices) do
       text = v.text
       v.label = verb.." "..text
-      v.text = 'Capture.command("'..verb.." "..text..'", "^{help}$", "^{/help}$", true, false, true, false, process_help)'
+      v.text = 'Capture.command("'..verb.." "..text..'", "^{help}$", "^{/help}$", true, false, true, false, process_response)'
       if verb == "help" then
-         v.text = 'last_search = nil;not_found_msg = build_notfound_message("'..text..'");'..v.text
+         v.text = 'search_msg = nil;'..v.text
       end
    end
    return links
@@ -150,7 +153,7 @@ function get_related_help_hyperlinks(style_lines)
    related_categories = {}
    for i,line in ipairs(style_lines) do
       if line[1].text:starts_with("Related Helps") then
-         related_helps[i] = build_links(line, "[%w&-]+[%w&- ]*", #"Related Helps : ", nil, "help")
+         related_helps[i] = build_links(line, "%w[%w&%- ]*%w", #"Related Helps : ", nil, "help")
       -- elseif line[1].text:starts_with("Help Category") then
       --    related_categories[i] = build_links(line, "[%w-]+[%w- ]*", #"Help Category", nil, "contents")
       end
@@ -162,26 +165,10 @@ function get_search_hyperlinks(style_lines)
    related_helps = {}
    for i,line in ipairs(style_lines) do
       if (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
-         related_helps[i] = build_links(line, "[%w&-]+[%w&- ]*", 0, 21, "help")
+         related_helps[i] = build_links(line, "%w[%w&%- ]*%w", 0, 21, "help")
       end
    end
    return related_helps, {}
-end
-
-function divert_to_search_result_handler(window_styles)
-   -- Should the game have used helpsearch tags instead of help tags?
-   if GetLineInfo(GetLinesInBufferCount() - 1, 1) == not_found_msg then
-      DeleteLines(1)
-      new_window_styles = {
-         ColoursToStyles("@W"..string.format("%-77s", not_found_msg)),
-         ColoursToStyles("")
-      }
-      for _,v in ipairs(window_styles) do
-         table.insert(new_window_styles, v)
-      end
-      process_search(new_window_styles)
-      return true
-   end
 end
 
 function no_help(window_styles)
@@ -194,8 +181,19 @@ function no_help(window_styles)
    end
 end
 
+function process_response(window_styles, start_line, end_line)
+   if window_styles == nil then
+      return
+   end
+   if start_line == '{helpsearch}' then
+      process_search(window_styles)
+   else
+      process_help(window_styles)
+   end
+end
+
 function process_help(window_styles)
-   if (window_styles == nil) or divert_to_search_result_handler(window_styles) or no_help(window_styles) then
+   if no_help(window_styles) then
       return
    end
    local window_styles = sanitize_help(window_styles)
@@ -203,9 +201,6 @@ function process_help(window_styles)
 end
 
 function process_search(window_styles)
-   if window_styles == nil then
-      return
-   end
    local window_styles = sanitize_search(window_styles)
    build_window(window_styles, get_search_hyperlinks)
 end

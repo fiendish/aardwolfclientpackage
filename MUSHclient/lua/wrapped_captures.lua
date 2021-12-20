@@ -14,16 +14,16 @@ end
 function ___capture_end(name, line, wildcards, styles)
    local i = name:sub(27)
    ___storage[i]["callback"](
-      ___storage[i]["captured_lines"]
+      ___storage[i]["captured_lines"], ___storage[i]["start_line"], line
    )
 end
 
-function ___create_capture(i)
+function ___create_capture(i, start_line)
    local omit = ___storage[i]["omit"]
    local end_tag = ___storage[i]["end_tag"]
    local regexp = ___storage[i]["regexp"]
+   ___storage[i]["start_line"] = start_line
    ___storage[i]["captured_lines"] = {}
-
    AddTriggerEx(
       "tag_captures_module___body_"..i,
       ".*",
@@ -88,7 +88,7 @@ function contents(start_tag, end_tag, regexp, omit, call_with_result, one_shot)
    AddTriggerEx(
       "tag_captures_module___start_"..i,
       start_tag,
-      "Capture.___create_capture('"..i.."');StopEvaluatingTriggers(true)",
+      "Capture.___create_capture('"..i.."', '%0');StopEvaluatingTriggers(true)",
       flags + (one_shot and trigger_flag.OneShot or 0) + (regexp and trigger_flag.RegularExpression or 0),
       -1, 0, "", "", sendto.script, ___storage[i]["sequence_low"]
    )
