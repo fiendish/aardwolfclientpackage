@@ -603,6 +603,7 @@ function TextRect:unInit()
 end
 
 function TextRect:get_target_bounds(separator_pattern, line_number, target_x, partition_cache_key)
+   target_x = math.min(math.max(target_x, self.padded_left), self.padded_right)
    local line = self.wrapped_lines[line_number]
    if not line then
       return
