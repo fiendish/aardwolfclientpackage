@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2178 snapshot
+- bug fix: The new text_rect selection clamping code didn't handle selection starting/ending outside the text and would error on right-click in those situations.
+
 r2177 snapshot
 - bug fix: Fix unfound help -> search capturing in the helpfile miniwindow after the new tag change.
 
