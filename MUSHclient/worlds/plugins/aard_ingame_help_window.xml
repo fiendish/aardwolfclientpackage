@@ -39,6 +39,7 @@ Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, fa
    send_to="12"
 ><send>
 search_msg = nil
+notfound_message = build_notfound_message("%2")
 Capture.command("%0", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, process_response)
 </send>
 </alias>
@@ -65,6 +66,7 @@ require "wrapped_captures"
 require "gmcphelper"
 dofile(GetInfo(60).."telnet_options.lua")
 
+
 function build_notfound_message(subject)
    return ColoursToStyles(
       "@W"..string.format("%-77s", "Help '"..Trim(string.lower(subject)).."' was not found - possible alternatives are:")
@@ -87,19 +89,19 @@ function remove_trailing_whitespace(line)
 end
 
 function sanitize_search(style_lines)
+   -- search lines have a bunch of trailing whitespace that makes wrapping worse, but it's
+   -- handy for the first line to be long to make sure that fresh windows are the right size.
    local new_lines = {}
 
-   -- The response to help search starts with a blank line. We could remove it, but let's instead put the
-   -- search expression before it if this was an actual search attempt and not a redirected failed help.
    if search_msg then
       table.insert(new_lines, search_msg)
    else
+      style_lines[1] = notfound_message
       table.insert(style_lines, 2, ColoursToStyles(""))
    end
 
    for i,line in ipairs(style_lines) do
       if i > 1 then
-         -- search lines have a bunch of trailing whitespace that makes wrapping worse
          line = remove_trailing_whitespace(line)
       end
       table.insert(new_lines, line)
@@ -142,7 +144,7 @@ function build_links(line, pattern, after, before, verb)
       v.label = verb.." "..text
       v.text = 'Capture.command("'..verb.." "..text..'", "^{help}$", "^{/help}$", true, false, true, false, process_response)'
       if verb == "help" then
-         v.text = 'search_msg = nil;'..v.text
+         v.text = 'search_msg = nil;notfound_message = build_notfound_message("'..text..'");'..v.text
       end
    end
    return links
@@ -173,7 +175,8 @@ end
 
 function no_help(window_styles)
    -- Is this just saying there's no help?
-   if window_styles[1][1].text == "There is no help with that keyword." then
+   local first_line = window_styles[1][1].text
+   if (first_line == "There is no help with that keyword.") or (first_line == "No helpfiles matched requested search.") then
       for _,v in ipairs(window_styles) do
          Simulate(stylesToANSI(v).."\r\n")
       end
@@ -201,6 +204,9 @@ function process_help(window_styles)
 end
 
 function process_search(window_styles)
+   if no_help(window_styles) then
+      return
+   end
    local window_styles = sanitize_search(window_styles)
    build_window(window_styles, get_search_hyperlinks)
 end
