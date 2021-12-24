@@ -36,14 +36,61 @@ function OnPluginListChanged()
 end
 
 function OnPluginInstall()
+   fix_settings()
+end
+
+function OnPluginSaveState()
+   fix_settings()
+end
+
+function OnPluginClose()
+   fix_settings()
+end
+
+function fix_settings()
    -- Guarantee various useful world file settings
    SetOption("omit_date_from_save_files", 1)  -- slightly less clutter in settings files
    SetAlphaOption("terminal_identification", "MUSHclient-Aard") -- helps Lasher count for the 'clients' in-game command
 
+   -- Convert settings that start with the MUSHclient folder path to relative paths
+   local function relative_paths()
+      local mushclient_path = GetInfo(66)
+      local mpathlen = #mushclient_path
+   
+      for _, maybe_pathname in ipairs(GetAlphaOptionList()) do
+         local maybe_path = tostring(GetAlphaOption(maybe_pathname))
+         local new_path = (maybe_path:sub(0, mpathlen) == mushclient_path) and maybe_path:sub(mpathlen+1) or maybe_path
+         if new_path ~= maybe_path then
+            SetAlphaOption(maybe_pathname, new_path)
+         end
+      end
+   
+      local exec_lines = {}
+      for _, maybe_pathname in ipairs(GetGlobalOptionList()) do
+         local maybe_path = tostring(GetGlobalOption(maybe_pathname))
+         local new_path = (maybe_path:sub(0, mpathlen) == mushclient_path) and maybe_path:sub(mpathlen+1) or maybe_path
+         if new_path ~= maybe_path then
+            table.insert(exec_lines, 'UPDATE prefs SET value = "'..new_path..'" WHERE name = "'..maybe_pathname..'"')
+         end
+      end
+      return exec_lines
+   end
+   local exec_lines = relative_paths()
+
    -- Edit the preferences db to stop opening the activity window at startup
    if tonumber(GetGlobalOption("OpenActivityWindow")) ~= 0 then
+      table.insert(exec_lines, 'UPDATE prefs SET value = 0 WHERE name = "OpenActivityWindow"')
+   end
+
+   update_prefs(exec_lines)
+end
+
+function update_prefs(exec_lines)
+   if #exec_lines > 0 then
       local aard_req_prefs_db = sqlite3.open(GetInfo(82))
-      aard_req_prefs_db:exec 'UPDATE prefs SET value = 0 WHERE name = "OpenActivityWindow"'
+      for _,line in ipairs(exec_lines) do
+         aard_req_prefs_db:exec(line)
+      end
       aard_req_prefs_db:close()
       utils.reload_global_prefs()
    end
