@@ -432,8 +432,15 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
-   name="CHANGE"
-   match="^mapper change portal (.+) {(.+)}$"
+   match="^mapper change portal (#\d+) {(.+)}$"
+   enabled="y"
+   sequence="100"
+   script="map_portal_edit"
+   regexp="y"
+></alias>
+
+<alias
+   match="^mapper change portal {(.+)} {(.+)}$"
    enabled="y"
    sequence="100"
    script="map_portal_edit"
@@ -1446,7 +1453,7 @@ function map_portal_edit (name, line, wildcards)
          print (string.format("Changed mapper portal"..(((target_index ~= nil) and " index #"..target_index) or "").." to command '%s'.", new_command))
       end
    else
-      print (string.format("%s FAILED: Did not find a mapper portal with keywords '%s'.", name, keywords))
+      print (string.format("%s FAILED: Did not find a mapper portal with keywords '%s'.", name or "CHANGE", keywords))
    end
 
    if name == "DELETE" then
@@ -4771,8 +4778,8 @@ which lets you set all cexit aspects in one command without running it.]],
    ['portals'] = {
 ['header'] = [[===== PORTAL ACTIONS ============>]],
 [[mapper portals                 --> List known hand-held portals]],
-[[mapper portals <here/area/key> --> List known hand-held portals only to this
-                                 > or another area, or searches by area key.]],
+[[mapper portals here/<area>     --> List known hand-held portals only to this
+                                 > or another area (by area keyword).]],
 [[mapper portal <command>        --> Link a handheld portal to the current
                                  > room as a special exit from everwhere else
                                  > (ex: 'mapper portal recall' at recall).
@@ -4820,10 +4827,9 @@ you set all portal aspects in one command without being in the target room.]],
 [[mapper delete portal <command> --> Remove the specified hand-held portal alias]],
 [[mapper delete portal #<index>  --> Remove a hand-held portal by its index
                                  > Find the indices with 'mapper portals']],
-[[mapper change portal <command> {<newcommand>} --> Change the command on a portal
-                                                > based on command.]],
-[[mapper change portal #<index> {<newcommand>}  --> Change the command on a portal
-                                                > based on index.]],
+[[mapper change portal {<old cmd>} {<new cmd>} --> Change a portal command.]],
+[[mapper change portal #<index> {<new cmd>}    --> Change a portal command
+                                               > by index.]],
 [[mapper purge portals           --> Remove all hand-held portal aliases]]
 },
 
