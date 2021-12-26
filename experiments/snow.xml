@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="Snow"
+   author="Fiendish"
+   id="7b3ec26a0b1a9c9b1798adc2"
+   language="Lua"
+   purpose="Makes snow"
+   date_written="2021-12-25 10:30:00"
+   requires="5.06"
+   version="1.0"
+   save_state="n"
+>
+</plugin>
+<script>
+<![CDATA[
+require "wait"
+win = GetPluginID()
+
+function OnPluginClose()
+    WindowDelete(win)
+end
+
+function OnPluginDisable()
+    WindowRectOp(win, 2, 0,0,0,0, 0)
+    map = {}
+    next_map = {}
+end
+
+width = GetInfo(264)
+height = GetInfo(263)
+WindowCreate(win, 0, 0, width, height, miniwin.pos_center_all, miniwin.create_transparent + miniwin.create_ignore_mouse, 0)
+WindowSetZOrder(win, 100000000)
+WindowShow(win)
+math.randomseed(os.time())
+map = {}
+next_map = {}
+
+wait.make(
+    function ()
+        while true do
+            for x = 1,width do
+                if math.random() > 0.999 then
+                    table.insert(map, {x,0})
+                end
+            end
+            next_map = {}
+            WindowRectOp(win, 2, 0,0,0,0, 0)
+            for _,flake in ipairs(map) do
+                local x = flake[1]
+                local y = flake[2]
+                if y < height then
+                    if math.random() <= 0.95 then
+                        flake[2] = y + math.random(6,10)
+                    end
+                    if math.random() > 0.4 then
+                        flake[1] = x + math.random(-4,4)
+                    end
+                    table.insert(next_map, flake)
+                end
+                local left, top, right, bottom = x-2, y-2, x+2, y+2
+                if left > 0 and right > 0 and top > 0 and bottom > 0 then
+                    WindowCircleOp (
+                        win, 1, left, top, right, bottom,
+                        ColourNameToRGB("white"), 0, 1, ColourNameToRGB("white"), 0
+                    )
+                end
+            end
+            map = next_map
+            Redraw()
+            wait.time(0.01)
+        end
+    end
+)
+
+]]>
+</script>
+</muclient>
