@@ -25,7 +25,7 @@
    ignore_case="y"
    send_to="12"
 ><send>
-search_msg = ColoursToStyles("@Y"..string.format("%-77s", "help search '%2'"))
+search_msg = ColoursToStyles("@Yhelp search '%2'")
 Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, false, process_response)
 </send>
 </alias>
@@ -69,7 +69,7 @@ dofile(GetInfo(60).."telnet_options.lua")
 
 function build_notfound_message(subject)
    return ColoursToStyles(
-      "@W"..string.format("%-77s", "Help '"..Trim(string.lower(subject)).."' was not found - possible alternatives are:")
+      "@WHelp '"..Trim(string.lower(subject)).."' was not found - possible alternatives are:"
    )
 end
 
@@ -84,29 +84,15 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
-function remove_trailing_whitespace(line)
-   return ColoursToStyles(Trim(StylesToColours(line)))
-end
-
 function sanitize_search(style_lines)
-   -- search lines have a bunch of trailing whitespace that makes wrapping worse, but it's
-   -- handy for the first line to be long to make sure that fresh windows are the right size.
-   local new_lines = {}
-
    if search_msg then
-      table.insert(new_lines, search_msg)
+      table.insert(style_lines, 1, search_msg)
    else
       style_lines[1] = notfound_message
       table.insert(style_lines, 2, ColoursToStyles(""))
    end
 
-   for i,line in ipairs(style_lines) do
-      if i > 1 then
-         line = remove_trailing_whitespace(line)
-      end
-      table.insert(new_lines, line)
-   end
-   return new_lines
+   return style_lines
 end
 
 function sanitize_help(style_lines)
@@ -117,7 +103,7 @@ function sanitize_help(style_lines)
             line[1].text = ""
             line[1].length = 0
          end
-         table.insert(new_lines, remove_trailing_whitespace(line))
+         table.insert(new_lines, line)
       end
    end
    return new_lines
@@ -188,6 +174,12 @@ function process_response(window_styles, start_line, end_line)
    if window_styles == nil then
       return
    end
+
+   -- Remove trailing blank space because it makes wrapping worse.
+   for i,line_styles in ipairs(window_styles) do
+      window_styles[i] = ColoursToStyles(Trim(StylesToColours(line_styles)))
+   end
+
    if start_line == '{helpsearch}' then
       process_search(window_styles)
    else
@@ -270,10 +262,9 @@ function build_window(window_styles, hyperlinks_function)
    if not already_on_screen then
       -- Use window font metrics to set the right width and height, but give 
       -- reasonable maxima so it doesn't go entirely off the screen.
-      my_window:fit_contents(
-         GetInfo(281)-20,  -- max_width
-         GetInfo(280)-80  -- max_height
-      )
+      -- (Width first, then height, to account for new line wrap.)
+      my_window:fit_size(my_window:text_width("@W"..string.rep(" ", 77)), nil, GetInfo(281)-20, nil)
+      my_window:fit_size(nil, my_window.textrect.num_wrapped_lines, nil, GetInfo(280)-80)
 
       -- Use fixed position instead of the auto-centering mode because of a
       -- subtle position retrieval conflict during theme changes between
