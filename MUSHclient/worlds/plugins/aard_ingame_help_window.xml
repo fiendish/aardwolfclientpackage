@@ -245,7 +245,7 @@ function build_window(window_styles, hyperlinks_function)
       function(selection)
          menu_string, menu_handlers = my_window:get_menu_items()
          if selection then
-            command = "help "..selection
+            command = "HELP "..selection:gsub("(.)\n(.)", "%1 %2"):gsub("\n", ""):upper()
             menu_string = "Send '"..command.."'|-|"..menu_string
             table.insert(menu_handlers, 1, function() Execute(command) end)
          end
