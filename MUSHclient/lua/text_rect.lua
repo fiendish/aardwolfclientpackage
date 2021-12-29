@@ -620,7 +620,9 @@ function TextRect:get_target_bounds(separator_pattern, line_number, target_x, pa
       self.last_partitioned_line_sections[partition_cache_key] = {line_styles}
    end
    local section_start = self.padded_left
+   local section_end = self.padded_left
    local start_pos = 0
+   local end_pos = 0
    for _,section in ipairs(self.last_partitioned_line_sections[partition_cache_key]) do
       local section_size = 0
       local section_length = 0
@@ -635,11 +637,12 @@ function TextRect:get_target_bounds(separator_pattern, line_number, target_x, pa
       section_end = section_start + section_size
       end_pos = start_pos + section_length
       if (section_start <= target_x) and (section_end >= target_x) then
-         return start_pos, end_pos, section_start, section_end
+         break
       end
       section_start = section_end
       start_pos = end_pos
    end
+   return start_pos, end_pos, section_start, section_end
 end
 
 function TextRect.mouseDown(flags, hotspot_id)
