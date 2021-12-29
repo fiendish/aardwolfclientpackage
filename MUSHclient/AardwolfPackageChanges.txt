@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2182 snapshot
+- bug fix: Strip newline tofu out of the "Send 'HELP...'" menu item in the helpfile capture miniwindow.
+- bug fix: Fix a probably recent error when right-clicking on a textrect after highlighting from/into a blank line.
+- new feature: New GMCP mapper command from Crowley makes changing portal commands easier. See 'mapper help search change portal'.
+- new feature: Experimentally replace any discovered file paths to locations inside the MUSHclient folder with relative ones to hopefully make moving the MUSHclient folder around easier.
+
 r2178 snapshot
 - bug fix: The new text_rect selection clamping code didn't handle selection starting/ending outside the text and would error on right-click in those situations.
 
