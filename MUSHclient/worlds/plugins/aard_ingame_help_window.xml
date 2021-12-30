@@ -140,7 +140,7 @@ function get_related_help_hyperlinks(style_lines)
    related_helps = {}
    related_categories = {}
    for i,line in ipairs(style_lines) do
-      if line[1].text:starts_with("Related Helps") then
+      if (#line >= 1) and line[1].text:starts_with("Related Helps") then
          related_helps[i] = build_links(line, "%w[%w&%- ]*%w", #"Related Helps : ", nil, "help")
       -- elseif line[1].text:starts_with("Help Category") then
       --    related_categories[i] = build_links(line, "[%w-]+[%w- ]*", #"Help Category", nil, "contents")
@@ -152,7 +152,7 @@ end
 function get_search_hyperlinks(style_lines)
    related_helps = {}
    for i,line in ipairs(style_lines) do
-      if (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
+      if (#line >= 2) and (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
          related_helps[i] = build_links(line, "%w[%w&%- ]*%w", 0, 21, "help")
       end
    end
