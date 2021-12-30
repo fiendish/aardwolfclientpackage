@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2183 snapshot
+- bug fix: Fix an error in the helpfile miniwindow capture plugin when capturing some help searches.
+
 r2182 snapshot
 - bug fix: Strip newline tofu out of the "Send 'HELP...'" menu item in the helpfile capture miniwindow.
 - bug fix: Fix a probably recent error when right-clicking on a textrect after highlighting from/into a blank line.
