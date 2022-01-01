@@ -271,6 +271,14 @@ require "gmcphelper"
 
 AcceleratorTo("Ctrl+Space", "CallPlugin('"..GetPluginID().."', 'silence_if_can')", sendto.script)
 
+no_sapi_msg = [[
+Could not open SAPI.
+Note for Linux and Mac OS users...
+SAPI speech functionality depends on the Microsoft Speech API.
+This is not included by default in Wine, and SpeechSDK51.exe must be separately installed.
+You can install it with winetricks or from https://web.archive.org/web/20110805062427/https://download.microsoft.com/download/B/4/3/B4314928-7B71-4336-9DE7-6FA4CF00B7B3/SpeechSDK51.exe
+]]
+
 -- convert wchar_t[] to lua str
 function widestr_to_luastr(wstr)
    local size_needed = ffi.C.WideCharToMultiByte(CP_UTF8, 0, wstr, -1, nil, 0, nil, false)
@@ -471,20 +479,14 @@ function sapi_fallback()
    sapi = require "sapi_interface"
 
    if sapi == -1 then
-      print([[
-      Could not open SAPI.
-      Note for Linux and Mac OS users...
-      SAPI speech functionality depends on the Microsoft Speech API.
-      This is not included by default in Wine, and SpeechSDK51.exe must be separately installed.
-      You can download it from http://download.microsoft.com/download/B/4/3/B4314928-7B71-4336-9DE7-6FA4CF00B7B3/SpeechSDK51.exe
-      ]])
       sapi = nil
+      print(no_sapi_msg)
       return
    end
 
    if sapi == -2 then
-      print("No SAPI voices found.")
       sapi = nil
+      print("No SAPI voices found.")
       return
    end
 

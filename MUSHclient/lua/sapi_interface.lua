@@ -28,7 +28,7 @@ require "luacom"
 -- Instantiate a SAPI voice obejct
 local engine = luacom.CreateObject("SAPI.SpVoice")
 
-if not engine then
+if not (engine and engine.GetVoices) then
    return -1
 end
 
