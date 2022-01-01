@@ -191,7 +191,7 @@
             if ("next" in links) {
               CountAssets(links["next"]);
             } else{
-              var allReleasesInfo = "<span style='opacity: 0.5'>All installer versions combined since r1871 (the first installer build), <span class='number'>" + total_download_count.toLocaleString() + "</span> times.";
+              var allReleasesInfo = "<span style='opacity: 0.5'>All installer versions combined since " + releases[releases.length - 1].name + " (the oldest found installer build), <span class='number'>" + total_download_count.toLocaleString() + "</span> times.";
               Storage.set('allReleasesInfo', allReleasesInfo, fiveMinutes);
               SetAllReleasesInfo(allReleasesInfo);
             }
