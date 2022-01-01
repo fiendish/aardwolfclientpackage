@@ -263,6 +263,14 @@ Scripts can also speak stuff by doing:
 <![CDATA[
 AcceleratorTo("Ctrl+Space", "Execute('sapi clear')", sendto.script)
 
+no_sapi_msg = [[
+Could not open SAPI.
+Note for Linux and Mac OS users...
+SAPI speech functionality depends on the Microsoft Speech API.
+This is not included by default in Wine, and SpeechSDK51.exe must be separately installed.
+You can install it with winetricks or from https://web.archive.org/web/20110805062427/https://download.microsoft.com/download/B/4/3/B4314928-7B71-4336-9DE7-6FA4CF00B7B3/SpeechSDK51.exe
+]]
+
 function say (line)
    if sapi_interface then
       sapi_interface.say(line)
@@ -273,20 +281,14 @@ function OnPluginInstall ()
    sapi_interface = require "sapi_interface"
    
    if sapi_interface == -1 then
-      print([[
-      Could not open SAPI.
-      Note for Linux and Mac OS users...
-      SAPI speech functionality depends on the Microsoft Speech API.
-      This is not included by default in Wine, and SpeechSDK51.exe must be separately installed.
-      You can download it from http://download.microsoft.com/download/B/4/3/B4314928-7B71-4336-9DE7-6FA4CF00B7B3/SpeechSDK51.exe
-      ]])
       sapi_interface = nil
+      print(no_sapi_msg)
       return
    end
 
    if sapi_interface == -2 then
-      print("No SAPI voices found.")
       sapi_interface = nil
+      print("No SAPI voices found.")
       return
    end
 
