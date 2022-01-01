@@ -129,6 +129,7 @@ function aard_help()
    if is_active("gmcp") then
       help("gmcpdebug <0-2>", "Set GMCP debugging verbosity")
    end
+   help("aard plugins default", "Load any new default package plugins")
 
    ColourNote("royalblue", "", line)
    if is_active("updater") then
