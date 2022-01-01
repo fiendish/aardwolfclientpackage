@@ -7,7 +7,7 @@
    author="Fiendish"
    id="9f796334ab9ed476ef44f1dd"
    language="Lua"
-   purpose="Welcome players to the new client package"
+   purpose="Connect to Aardwolf automatically"
    date_written="2010-11-22 18:32:06"
    requires="4.73"
    version="1.0"

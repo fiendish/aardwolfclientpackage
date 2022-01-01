@@ -499,4 +499,6 @@ ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
 <include name="aard_keyboard_lockout.xml" plugin="y" />
 <include name="aard_splitscreen_scrollback.xml" plugin="y" />
 <include name="aard_vital_shortcuts.xml" plugin="y" />
+<include name="aard_Theme_Controller.xml" plugin="y" />
+<include name="aard_ingame_help_window.xml" plugin="y" />
 </muclient>
