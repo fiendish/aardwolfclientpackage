@@ -121,7 +121,7 @@ function ThemedWindowClass:resize(width, height, still_dragging)
    self.height = height or self.height
    CallPlugin("abc1a0944ae4af7586ce88dc", "pause")
    WindowResize(self.id, self.width, self.height, Theme.PRIMARY_BODY)
-   _, self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.BodyMetrics(self.id, self.title_font, WindowFontInfo(self.id, self.title_font, 1), #self.title)
+   self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.BodyMetrics(self.id, self.title_font, WindowFontInfo(self.id, self.title_font, 1), #self.title)
    if still_dragging then
       if self.do_while_resizing then
          self:do_while_resizing()

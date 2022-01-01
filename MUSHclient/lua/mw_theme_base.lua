@@ -367,43 +367,40 @@ end
 
 function BodyMetrics(win, font, title_line_height, num_title_lines)
    local l, t, r, b = BorderMetrics(win)
-   local title_height = 0
-   if num_title_lines > 0 then
-      if title_line_height == nil then
-        return (2*TITLE_PADDING)
-      end
-      title_height = (2*TITLE_PADDING) + (title_line_height * num_title_lines) + 1
-      t = title_height + 1
+   if (num_title_lines > 0) and (title_line_height ~= nil) then
+      t = (2*TITLE_PADDING) + (title_line_height * num_title_lines) + 2
    end
-   return title_height, l, t, r, b
+   return l, t, r, b
 end
 
 function DrawTitleBar(win, font, title, title_alignment, title_leftpadding, utf8)
    local title_lines = ToMultilineStyles(title, Theme.THREE_D_SURFACE_DETAIL, nil, true, true)
    local title_line_height = WindowFontInfo(win, font, 1)
-   local title_height, l, t, r, b = BodyMetrics(win, font, title_line_height, #title_lines)
+   local l, t, r, b = BodyMetrics(win, font, title_line_height, #title_lines)
 
    __theme_istitle = true
-   Draw3DRect(win, -1, -1, WindowInfo(win, 3)-1, title_height, false)
+   Draw3DRect(win, -1, -1, WindowInfo(win, 3)-1, t-1, false)
 
-   local first_color = nil
-   local txt = nil
-   for i,styles in ipairs(title_lines) do
-      local text_width = StylesWidth (win, font, nil, styles, false, utf8)
+   if (title_line_height ~= nil) then
+      local first_color = nil
+      local txt = nil
+      for i,styles in ipairs(title_lines) do
+         local text_width = StylesWidth (win, font, nil, styles, false, utf8)
 
-      title_leftpadding = title_leftpadding or 0
-      local text_left = math.max(TITLE_PADDING + l + title_leftpadding, (WindowInfo(win, 3) - text_width) / 2)  -- default text align center
-      if title_alignment == "left" then
-         text_left = TITLE_PADDING + l + title_leftpadding
-      elseif title_alignment == "right" then
-         text_left = WindowInfo(win, 3) - text_width - TITLE_PADDING
+         title_leftpadding = title_leftpadding or 0
+         local text_left = math.max(TITLE_PADDING + l + title_leftpadding, (WindowInfo(win, 3) - text_width) / 2)  -- default text align center
+         if title_alignment == "left" then
+            text_left = TITLE_PADDING + l + title_leftpadding
+         elseif title_alignment == "right" then
+            text_left = WindowInfo(win, 3) - text_width - TITLE_PADDING
+         end
+         local text_right = WindowInfo(win, 3) - TITLE_PADDING
+
+         local text_top = (title_line_height * (i-1)) + TITLE_PADDING
+         WindowTextFromStyles(win, font, styles, text_left, text_top, text_right, t-1, utf8)
       end
-      local text_right = WindowInfo(win, 3) - TITLE_PADDING
-
-      local text_top = (title_line_height * (i-1)) + TITLE_PADDING
-      WindowTextFromStyles(win, font, styles, text_left, text_top, text_right, title_height, utf8)
    end
-   return title_height+1
+   return t
 end
 
 function BorderMetrics(win)
