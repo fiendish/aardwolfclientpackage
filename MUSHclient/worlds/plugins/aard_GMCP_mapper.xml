@@ -2852,7 +2852,6 @@ function quote(str)
 end
 
 function checkDatabaseIntegrity(full_check, second_run)
-   maybe_Note("CHECKING MAP DATABASE INTEGRITY")
    Repaint()
    -- If needed, force wal_checkpoint databases to make sure everything gets written out
    -- this is a harmless no-op if not using journal_mode=WAL
@@ -2869,19 +2868,18 @@ function checkDatabaseIntegrity(full_check, second_run)
       end
    end
    if integrityCheck == false and second_run ~= true then
-      ColourNote("yellow", "red", "MAPPER DB INTEGRITY CHECK FAILED. THIS IS A SIGN OF DATABASE CORRUPTION. REBUILDING INDEXES AND TRYING AGAIN.")
+      ColourNote("yellow", "red", "MAPPER DATABASE INTEGRITY CHECK FAILED. THIS IS A SIGN OF DATABASE CORRUPTION. REBUILDING INDEXES AND TRYING AGAIN.")
       CorruptionAlert()
       dbCheckExecute("REINDEX")
       return checkDatabaseIntegrity(true, true)
    end
    if not integrityCheck then
       ColourNote("yellow", "red", "FAILED SECOND INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.")
-      utils.msgbox("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.", "Error!", "ok", "!", 1)
+      utils.msgbox("FAILED MAPPER DATABASE INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.", "Error!", "ok", "!", 1)
       return false
    end
-   maybe_Note("MAP DATABASE INTEGRITY CHECK PASSED", second_run)
    if second_run then
-      ColourNote("white", "blue", "WHEW! LUCKY!")
+      ColourNote("white", "blue", "MAP DATABASE INTEGRITY CHECK PASSED! LUCKY!")
    end
    return true
 end
