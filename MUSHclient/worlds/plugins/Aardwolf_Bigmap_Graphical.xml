@@ -381,7 +381,7 @@ function NoMap(messages)
    if not messages then
       messages = {"The continent bigmap will appear", "when play begins."}
    end
-   if show_map ~= 1 then
+   if (show_map ~= 1) or (WindowInfo(mapwin, 1) == nil) then
       return
    end
    WindowRectOp (mapwin, 2, 0, 0, 0, 0, Theme.PRIMARY_BODY)  -- blank
@@ -672,18 +672,19 @@ end
 require "checkplugin"
 function OnPluginListChanged ()
    dofile "lua/aard_requirements.lua"
-   if IsPluginInstalled("b6eae87ccedd84f510b74714") then
+   if IsPluginInstalled("b6eae87ccedd84f510b74714") and GetPluginInfo("b6eae87ccedd84f510b74714", 17) then
       if not mapper_is_loaded then
          WindowDelete(GetPluginID().."_mapper")
          OnPluginInstall()
       end
-   else
+   elseif mapper_is_loaded then
       mapper_is_loaded = false
+      OnPluginInstall()
    end
 end
 
 function OnPluginInstall ()
-   if IsPluginInstalled("b6eae87ccedd84f510b74714") then
+   if IsPluginInstalled("b6eae87ccedd84f510b74714") and GetPluginInfo("b6eae87ccedd84f510b74714", 17) then
       mapper_is_loaded = true
    end
 
