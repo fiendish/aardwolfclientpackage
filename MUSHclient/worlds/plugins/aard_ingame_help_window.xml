@@ -98,8 +98,8 @@ end
 function sanitize_help(style_lines)
    local new_lines = {}
    for _,line in ipairs(style_lines) do
-      if (line[1].text ~= "{helpbody}") and (line[1].text ~= "{/helpbody}") then
-         if line[1].text == "{helpkeywords}" then
+      if not line[1].text:find("^%s*{/?helpbody}%s*$") then
+         if line[1].text:find("^%s*{helpkeywords}%s*$") then
             line[1].text = ""
             line[1].length = 0
          end
