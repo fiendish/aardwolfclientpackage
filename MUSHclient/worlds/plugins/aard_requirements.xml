@@ -15,12 +15,12 @@
 
 <aliases>
 <alias
-   match="^aard plugins default$"
+   match="^aard plugins check$"
    enabled="y"
    regexp="y"
    sequence="100"
    ignore_case="y"
-   script="plugin_load_alias"
+   script="plugin_check_alias"
 ></alias>
 </aliases>
 
@@ -77,6 +77,28 @@ function load_plugins(plugin_list)
    end
 end
 
+function check_plugins(plugin_list)
+   local messages = {}
+   for id,name in pairs(plugin_list) do
+      local plugin_msg = {
+         "khaki", "", "Plugin ",
+         "lightskyblue", "", name..".xml",
+         "khaki", "", " [",
+         "lightskyblue", "", id,
+         "khaki", "", "] ",
+         "khaki", ""
+      }
+      if not IsPluginInstalled(id) then
+         table.insert(plugin_msg, "is not loaded.")
+         table.insert(messages, plugin_msg)
+      elseif not GetPluginInfo(id, 17) then
+         table.insert(plugin_msg, "is loaded but not enabled.")
+         table.insert(messages, plugin_msg)
+      end
+   end
+   return messages
+end
+
 function load_required_plugins()
    -- Load plugins which are necessary for the package to function.
 
@@ -88,25 +110,34 @@ function load_required_plugins()
    load_plugins(required_plugins)
 end
 
-function load_optional_plugins()
-   -- Load plugins which are considered sufficiently useful and stable to be
-   -- included by default but may be removed.
-   require "aard_requirements"
-   if aard_req_novisuals_mode then
-      load_plugins(optional_vimode_plugins)
-   else
-      load_plugins(optional_visual_plugins)
+function extend(orig, new)
+   for _,v in ipairs(new) do
+      table.insert(orig, v)
    end
-
-   load_plugins(other_optional_plugins)
 end
 
+function plugin_check_alias(name, line, wildcards, styles)
+   local messages = {}
 
-function plugin_load_alias(name, line, wildcards, styles)
-   print("Loading any default plugins that aren't currently loaded")
-   load_required_plugins()
-   load_optional_plugins()
-   print("Done loading default plugins")
+   require "aard_requirements"
+   if aard_req_novisuals_mode then
+      extend(messages, check_plugins(optional_vimode_plugins))
+   else
+      extend(messages, check_plugins(optional_visual_plugins))
+   end
+
+   extend(messages, check_plugins(other_optional_plugins))
+
+   print()
+   if #messages > 0 then
+      ColourNote("paleturquoise", "", "The following optional plugins aren't currently active...")
+      for _,m in ipairs(messages) do
+         ColourNote(unpack(m))
+      end
+   else
+      ColourNote("paleturquoise", "", "No new plugins found.")
+   end
+   print()
 end
 
 function OnPluginListChanged()
