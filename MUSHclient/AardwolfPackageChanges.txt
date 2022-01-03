@@ -1,9 +1,13 @@
 Aardwolf Client Package Major Changes List
 
-r2186 snapshot
+r2190 snapshot
+- bug fix: Stop the Bigmap plugin from trying to draw to a miniwindow that doesn't exist.
+- bug fix: Better Bigmap plugin reinitialization when the GMCP mapper plugin goes away.
 - bug fix: Fix an incomplete return from Theme.BodyMetrics in mw_theme_base that caused an error in the Bigmap plugin.
 - bug fix: Fix a couple of initialization errors when trying to load the SAPI module if it's not available.
-- new feature: There's a new command `aard plugins default` (shown in `aard help`) to load any currently default-but-optional plugins that aren't loaded. This is a stopgap on the way to automatically loading new default plugins. I've also changed the mechanism for loading required and non-required default plugins. I hope it doesn't cause any issues.
+- misc change: Allow for leading/trailing spaces when detecting helpbody and helpkeywords tags in the helpfile capture miniwindow plugin.
+- misc change: I've removed some neutral GMCP mapper database integrity check output because it's noisy and unnecessary.
+- new feature: There's a new command `aard plugins check` (shown in `aard help`) to look for any default-but-optional plugins that aren't currently loaded. I've also changed the mechanism for loading required and non-required default plugins. I hope it doesn't cause any issues.
 
 r2183 snapshot
 - bug fix: Fix an error in the helpfile miniwindow capture plugin when capturing some help searches.
