@@ -371,11 +371,19 @@ Send("recon")
 </send></alias>
 
 <alias
-   match="mapper area *"
+   match="^mapper area (?P<room>.*)@@@(?P<areaKeyword>.*)$"
+   enabled="y"
+   sequence="99"
+   script="map_area"
+   regexp="y"
+></alias>
+
+<alias
+   match="^mapper area (?P<room>.*)$"
    enabled="y"
    sequence="100"
    script="map_area"
-   regexp="n"
+   regexp="y"
 ></alias>
 
 <alias
@@ -4076,33 +4084,47 @@ function map_find_query(query, name, max_paths, show_uid, walk, quick_list, no_p
 end -- map_find_query
 
 function map_area (name, line, wildcards)
+   local key = Trim(wildcards['room'])
+   local areaInput = Trim(wildcards['areaKeyword'] or '')
 
-   uid = mapper.current_room
+   local name = nil
+   local area = nil
 
-   -- check we got room at all
-   if not uid then
-      print("I do not know your room! Try typing 'LOOK' first.")
-      return
-   end -- if
+   if areaInput ~= '' then
+      -- room name and area name specified as 'The Grand City of Aylor|The Grand City of Aylor'
+      name = key
+      area = areaInput
+   else
+      -- only room name specified in wildcard
+      -- original logic
 
-   -- look it up
-   local ourroom = rooms [uid]
+      local uid = mapper.current_room
 
-   -- not cached - see if in database
-   if not ourroom then
-      ourroom = load_room_from_database (uid)
-      rooms [uid] = ourroom -- cache for later
-   end -- not in cache
+      -- check we got room at all
+      if not uid then
+          print("I do not know your room! Try typing 'LOOK' first.")
+          return
+      end -- if
 
-   if not ourroom then
-      print("AREA ERROR: The area has not been initialized yet. Please try again in a second.")
-      return
-   end -- if
+      -- look it up
+      local ourroom = rooms [uid]
 
-   local area = rooms[uid].area
+      -- not cached - see if in database
+      if not ourroom then
+          ourroom = load_room_from_database (uid)
+          rooms [uid] = ourroom -- cache for later
+      end -- not in cache
 
-   local key = Trim(wildcards[1])
-   local name = "%"..key.."%"
+      if not ourroom then
+         print("AREA ERROR: The area has not been initialized yet. Please try again in a second.")
+         return
+      end -- if
+
+      area = rooms[uid].area
+   end
+
+   name = "%"..key.."%"
+
    if string.sub(key,1,1) == "\"" and string.sub(key,-1) == "\"" then
       name = Trim(string.sub(key,2,-2))
    end
