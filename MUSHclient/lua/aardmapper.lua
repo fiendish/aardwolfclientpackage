@@ -921,7 +921,7 @@ function draw (uid)
    WindowScrollwheelHandler (win, "zzz_zoom", "mapper.zoom_map")
 
    -- set up for initial room, in middle
-   drawn, drawn_coords, rooms_to_be_drawn, plan_to_draw, area_exits = {}, {}, {}, {}, {}, {}
+   drawn, drawn_coords, rooms_to_be_drawn, plan_to_draw, area_exits = {}, {}, {}, {}, {}
    depth = 0
 
    -- insert initial room
