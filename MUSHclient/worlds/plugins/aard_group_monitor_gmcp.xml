@@ -148,17 +148,18 @@ default_x = 868 + Theme.RESIZER_SIZE + 2
 default_y = 336
 default_height = 215
 default_width = 269
-height = tonumber (GetVariable ("height")) or default_height
-width = tonumber (GetVariable ("width")) or default_width
-show_self = tonumber (GetVariable ("show_self")) or 1
-show_hp = tonumber (GetVariable ("show_hp")) or 1
-show_mn = tonumber (GetVariable ("show_mn")) or 1
-show_mv = tonumber (GetVariable ("show_mv")) or 1
-show_quest = tonumber (GetVariable ("show_quest")) or 1
-show_tnl = tonumber (GetVariable ("show_tnl")) or 1
-hidden = tonumber (GetVariable ("hidden")) or 0
-sort_hp = loadstring("return "..(GetVariable("sort_hp") or "false"))()
+height = tonumber(GetVariable("height")) or default_height
+width = tonumber(GetVariable("width")) or default_width
+show_self = tonumber(GetVariable("show_self")) or 1
+show_hp = tonumber(GetVariable("show_hp")) or 1
+show_mn = tonumber(GetVariable("show_mn")) or 1
+show_mv = tonumber(GetVariable("show_mv")) or 1
+show_quest = tonumber(GetVariable("show_quest")) or 1
+show_tnl = tonumber(GetVariable("show_tnl")) or 1
+hidden = tonumber(GetVariable("hidden")) or 0
 sort_hp_which = GetVariable("sort_hp_which") or "" -- percent damage or total damage
+DeleteVariable("sort_hp")
+sort_quests = tonumber(GetVariable("sort_quests")) or 0
 gauge_style = tonumber(GetVariable("flat_gauges")) or tonumber(GetVariable("gauge_style")) or 0
 DeleteVariable("flat_gauges")
 number_style = tonumber(GetVariable("number_style")) or 1
@@ -270,7 +271,7 @@ function byTotalDamage(a, b)
    return (tonumber(a.info.mhp) - tonumber(a.info.hp)) > (tonumber(b.info.mhp) - tonumber(b.info.hp))
 end
 
-function byPerCentDamage(a, b)
+function byPercentDamage(a, b)
    return (tonumber(a.info.hp) / tonumber(a.info.mhp)) < (tonumber(b.info.hp) / tonumber(b.info.mhp))
 end
 
@@ -278,7 +279,7 @@ function sortMembers()
    if sort_hp_which == "total" then
       table.sort(group_members, byTotalDamage)
    else
-      table.sort(group_members, byPerCentDamage)
+      table.sort(group_members, byPercentDamage)
    end
 end
 
@@ -348,10 +349,14 @@ function DisplayGroupPage()
             v.namestring = string.rpad(v.name, 12, ' ')
             local txt = ""
             if show_quest == 1 then
-               txt = txt.."Q:"..string.lpad(v.info.qt, 2, ' ')
-            end
-            if (show_quest == 1) and (show_tnl == 1) then
-               txt = txt..", "
+               if v.info.qs == "1" then
+                  txt = txt.."[Q]"
+               else
+                  txt = txt.."Q:"..string.lpad(v.info.qt, 2, ' ')
+               end
+               if show_tnl == 1 then
+                  txt = txt..", "
+               end
             end
             if show_tnl == 1 then 
                txt = txt.."TNL:"..string.lpad(v.info.tnl, 5, ' ')
@@ -411,8 +416,28 @@ function DisplayGroupPage()
          end
 
          -- sort or not
-         if sort_hp then
+         if sort_hp_which ~= "" then
             sortMembers()
+         end
+         if sort_quests == 1 then
+            non_quest = {}
+            quest = {}
+            for i,v in ipairs(group_members) do
+               if v.info.qs == "1" then
+                  table.insert(quest, v)
+               else
+                  table.insert(non_quest, v)
+               end
+            end
+            group_members = {}
+            for i,v in ipairs(non_quest) do
+               table.insert(group_members, v)
+            end
+            for i,v in ipairs(quest) do
+               table.insert(group_members, v)
+            end
+            non_quest = {}
+            quest = {}
          end
 
          for i,v in ipairs(group_members) do
@@ -555,7 +580,7 @@ function right_click_menu ()
    menustring = menustring..((number_style==1 and "+") or "").."Standard|"
    menustring = menustring..((number_style==2 and "+") or "").."Percentages|"
    menustring = menustring..((number_style==3 and "+") or "").."Standard+Percentages|"
-   menustring = menustring.."<|-|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Gauge Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Gauge Color ("..RGBColourToName(thresh2color)..")|<|<|>Sort By...|"..(((sort_hp and (sort_hp_which == "percent")) and "+") or "").."% Damage|"..(((sort_hp and (sort_hp_which == "total")) and "+") or "").."Total Damage|<|-|Bring To Front|Send To Back|-|Reset Defaults"
+   menustring = menustring.."<|-|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Gauge Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Gauge Color ("..RGBColourToName(thresh2color)..")|<|<|>Sort By...|"..((sort_hp_which == "percent") and "+" or "").."% Damage|"..((sort_hp_which == "total") and "+" or "").."Total Damage|-|"..((sort_quests == 1) and "+" or "").."Players On Quests Go Last|<|-|Bring To Front|Send To Back|-|Reset Defaults"
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
@@ -692,28 +717,31 @@ function right_click_menu ()
       elseif numResult == member_count+31 then
          -- sort by % damage
          if sort_hp_which == "percent" then -- current sort so disable
-            sort_hp = false
             sort_hp_which = ""
          else
-            sort_hp = true
             sort_hp_which = "percent"
          end
       elseif numResult == member_count+32 then
          -- sort by total damage
          if sort_hp_which == "total" then -- current sort so disable
-            sort_hp = false
             sort_hp_which = ""
          else
-            sort_hp = true
             sort_hp_which = "total"
          end
       elseif numResult == member_count+33 then
+         -- Players On Quests Go Last
+         if sort_quests == 1 then
+            sort_quests = 0
+         else
+            sort_quests = 1
+         end
+      elseif numResult == member_count+34 then
          -- bring to front
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == member_count+34 then
+      elseif numResult == member_count+35 then
          -- send to back
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-      elseif numResult == member_count+35 then
+      elseif numResult == member_count+36 then
          -- reset
          font_name        = default_font_name
          font_size        = default_font_size
@@ -886,8 +914,8 @@ function OnPluginSaveState()
    SetVariable("show_mv", show_mv)
    SetVariable("show_quest", show_quest)
    SetVariable("show_tnl", show_tnl)
-   SetVariable("sort_hp", tostring(sort_hp))
    SetVariable("sort_hp_which", sort_hp_which)
+   SetVariable("sort_quests", sort_quests)
    SetVariable("hidden", hidden)
    SetVariable("colorVals", serialize.save ("colorVals"))
    SetVariable("gauge_style", gauge_style)
