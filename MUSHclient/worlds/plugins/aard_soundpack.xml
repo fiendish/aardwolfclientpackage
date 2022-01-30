@@ -209,7 +209,7 @@
   </alias>
 
 <alias
-   match="sp focus"
+   match="^sp focus$"
    enabled="y"
    sequence="100"
    regexp="y"
