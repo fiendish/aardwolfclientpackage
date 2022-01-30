@@ -22,6 +22,26 @@
    ignore_case="y"
    script="plugin_check_alias"
 ></alias>
+
+<alias
+   match="^aard sounds in background$"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+   ignore_case="y"
+   send_to="12"
+>
+<send>
+   if GetOption("play_sounds_in_background") == 0 then 
+      SetOption("play_sounds_in_background", 1)
+      Note("Sounds will now continue to play when the client in the background.")
+   else
+      SetOption("play_sounds_in_background", 0)
+      Note("Sounds will now only play while the client is active.")
+   end
+</send>
+</alias>
+
 </aliases>
 
 <script>

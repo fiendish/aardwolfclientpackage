@@ -130,6 +130,7 @@ function aard_help()
       help("gmcpdebug <0-2>", "Set GMCP debugging verbosity")
    end
    help("aard plugins check", "Look for package plugins that aren't loaded")
+   help("aard sounds in background", "Play sounds while client is backgrounded?")
 
    ColourNote("royalblue", "", line)
    if is_active("updater") then
