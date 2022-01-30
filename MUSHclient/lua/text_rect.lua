@@ -292,7 +292,6 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          if urls[1] and urls[1].start < length then
             local url = copytable.deep(urls[1])
             url.stop = length + 1
-            urls[1].stop = urls[1].stop-1
             urls[1].old = true
             insert(line_urls, url)
          end
@@ -302,7 +301,6 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
             urls[i].stop = urls[i].stop - length
             if urls[i].start <= 1 then
                urls[i].start = 1
-               urls[i].stop = urls[i].stop
             end
          end
 
