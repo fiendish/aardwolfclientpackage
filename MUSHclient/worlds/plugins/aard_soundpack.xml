@@ -199,7 +199,6 @@
    regexp="y"
   >
   </alias>
-
   <alias
    match="^(.+)!!SOUND\((?<url>.+?)\)"
    script="parse_input_rsound"
@@ -208,6 +207,28 @@
    regexp="y"
   >
   </alias>
+
+<alias
+   match="sp focus"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+   ignore_case="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   omit_from_output="y"
+   send_to="12"
+>
+<send>
+   if GetOption("play_sounds_in_background") == 0 then 
+      SetOption("play_sounds_in_background", 1)
+      Note("Sounds will now continue to play when the client in the background.")
+   else
+      SetOption("play_sounds_in_background", 0)
+      Note("Sounds will now only play while the client is active.")
+   end
+</send>
+</alias>
 
 </aliases>
 <triggers>
