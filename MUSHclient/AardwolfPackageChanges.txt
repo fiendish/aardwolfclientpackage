@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2198 snapshot
+- bug fix: The text_rect change in r2194 was majorly broken. Sorry. It should be fixed now, but I'm sure that everyone will let me know right away if they notice any new problems.
+- misc change: The communication log plugin has been changed to use styles tables internally. I'm sure that everyone will let me know right away if they notice any new problems.
+- new feature: Various functions in aardwolf_colors.lua have been changed to handle multi-line styles tables.  I'm sure that everyone will let me know right away if they notice any new problems.
+- new feature: The storeFromOutside function in the communication log plugin can now be passed a serialized styles table instead of a color-coded string. The table has to be serialized because MUSHclient doesn't allow passing tables through CallPlugin.
+
 r2194 snapshot
 - new feature: The text_rect Lua module is now able to display text background colors. This is not in the communication log plugin yet, but is available to EZ DIY text miniwindows.
 - new feature: A new command 'aard sounds in background' has been added (also listed in 'aard help') for toggling whether MUSHclient should keep playing sounds (e.g. from the soundpack plugin) while it is backgrounded.
