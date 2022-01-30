@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2194 snapshot
+- new feature: The text_rect Lua module is now able to display text background colors. This is not in the communication log plugin yet, but is available to EZ DIY text miniwindows.
+- new feature: A new command 'aard sounds in background' has been added (also listed in 'aard help') for toggling whether MUSHclient should keep playing sounds (e.g. from the soundpack plugin) while it is backgrounded.
+- new feature: There's a new color theme partly from Khadaji (though I made changes) called 'Green Dragonscale'. Check it out with 'aard theme change'.
+- new feature: The group monitor miniwindow will now show when groupmates are currently on a quest and will allow you to set whether you want to always list them at the end of the group.
+
 r2190 snapshot
 - bug fix: Stop the Bigmap plugin from trying to draw to a miniwindow that doesn't exist.
 - bug fix: Better Bigmap plugin reinitialization when the GMCP mapper plugin goes away.
