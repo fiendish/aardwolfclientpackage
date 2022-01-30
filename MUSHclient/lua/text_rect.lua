@@ -365,23 +365,57 @@ function TextRect:reWrapLines()
    self.display_end_line = self.end_line
 end
 
-function TextRect:drawLine(line, styles, backfill_start, backfill_end)
+function TextRect:drawLine(line, styles, selection_start, selection_end)
    local left = self.padded_left
    local top = self.padded_top + (line * self.line_height) + 1
-   if (backfill_start ~= nil and backfill_end ~= nil) then
-      WindowRectOp(self.window, 2, backfill_start, top, backfill_end-1, top + self.line_height, self.highlight_color)
-   end -- backfill
-   if styles then
-      local utf8 = (GetOption("utf_8") == 1)
-      local show_bold = (GetOption("show_bold")== 1)
-      for _, v in ipairs(styles) do
-         local t = v.text
-         local font = self.font
-         if show_bold and v.bold then
-            font = self.font_bold
-         end
-         left = left + WindowText(self.window, font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour, utf8 and utils.utf8valid(t))
+   local utf8 = (GetOption("utf_8") == 1)
+   local show_bold = (GetOption("show_bold")== 1)
+
+   -- selection backfill
+   if (selection_start ~= nil) and (selection_end ~= nil) then
+      WindowRectOp(self.window, 2, selection_start, top, selection_end-1, top + self.line_height, self.highlight_color)
+   end
+
+   -- text colors
+   for _, v in ipairs(styles) do
+      local t = v.text
+      local is_utf = utf8 and utils.utf8valid(t)
+      local font = self.font
+      if show_bold and v.bold then
+         font = self.font_bold
       end
+
+      -- background
+      if v.backcolour and (v.backcolour ~= 0) then
+         local bgwidth = WindowTextWidth(self.window, font, t, is_utf)
+         local bgleft = left
+         local bgright = left + bgwidth
+
+         -- The different scenarios for interaction between bgcolor and selection color are:
+         --     S
+         --   BBBBB
+         --  SSS SSS
+         --  SSSSSSS
+         if (selection_start ~= nil) and (selection_end ~= nil) then
+            if (bgleft <= selection_start) and (bgright >= selection_end) then
+               WindowRectOp(self.window, 2, bgleft, top, math.min(self.padded_right, selection_start), math.min(self.padded_bottom, top + self.line_height), v.backcolour)
+               bgleft = selection_end
+            else
+               if (bgleft >= selection_start) and (bgleft <= selection_end) then
+                  bgleft = selection_end
+               end
+               if (bgright >= selection_start) and (bgright <= selection_end) then
+                  bgright = selection_start
+               end
+            end
+         end
+         if bgleft < bgright then
+            WindowRectOp(self.window, 2, bgleft, top, math.min(self.padded_right, bgright), math.min(self.padded_bottom, top + self.line_height), v.backcolour)
+         end
+      end
+
+      -- foreground
+      left = left + WindowText(self.window, font, t, left, top, self.padded_right, self.padded_bottom, v.textcolour, is_utf)
    end
 end
 
