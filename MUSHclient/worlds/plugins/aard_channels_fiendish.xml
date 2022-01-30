@@ -694,15 +694,19 @@ end
 
 re = require "re"
 
-function log(text, timestamp)
-   local log_text = text
+function log(multiline_styles, timestamp)
+   local log_text
+
+   if log_colour_codes == 0 then
+      log_text = strip_colours_from_styles(multiline_styles)
+   else
+      log_text = StylesToColours(multiline_styles)
+   end
 
    if log_timestamps == 1 then
-      log_text = "@w"..timestamp..text
+      log_text = "@w"..timestamp..log_text
    end
-   if log_colour_codes == 0 then
-      log_text = strip_colours(log_text)
-   end
+
    local filename = GetInfo(58):gsub("^.\\",GetInfo(56))..sanitize_filename(GetInfo(2)).."ChatLog.txt"
    local f, err = io.open(filename, "a+") -- handle to chat log file
    if f then
@@ -720,22 +724,36 @@ function log(text, timestamp)
    end
 end
 
-function stampAndLog(text, timestamp, omit_log)
+function stampAndLog(multiline_styles, timestamp, omit_log)
    if not timestamp then
       timestamp = ""
    end
 
-   -- remove control characters, but preserve newlines,
-   -- and don't use %g because that clobbers multibyte symbols
-   text = text:gsub("[^%C\n]", "")
+   -- remove control characters, but don't use %g because that clobbers multibyte symbols
+   for _,line in ipairs(multiline_styles) do
+      for _,style in ipairs(line) do
+         style.text = style.text:gsub("[^%C]", "")
+         style.length = #style.text
+      end
+   end
 
    if (log_to_file == 1) and not omit_log then
-      log(text, timestamp)
+      log(multiline_styles, timestamp)
    end
    if timestamp ~= "" then
-      text = "@w"..timestamp..text
+      table.insert(
+         multiline_styles[1],
+         1,
+         {
+            text = timestamp,
+            length = #timestamp,
+            backcolour = 0,
+            textcolour = GetNormalColour(8),
+            bold = false
+         }
+      )
    end
-   return text
+   return multiline_styles
 end
 
 -- storeFromOutside takes four arguments:
@@ -764,9 +782,18 @@ function storeFromOutside(text, tab, add_timestamp, omit_log)
    
    local res = nil
    if tab then
-      text = stampAndLog(text, add_timestamp and os.date(date_format) or "", omit_log)
+      local multiline_styles
+      is_serialized_styles_table, multiline_styles = pcall(
+         function()
+            return ToMultilineStyles(loadstring("return "..text)(), nil, nil, true)
+         end
+      )
+      if not is_serialized_styles_table then
+         multiline_styles = ToMultilineStyles(text, nil, nil, true)
+      end
+      multiline_styles = stampAndLog(multiline_styles, add_timestamp and os.date(date_format) or "", omit_log)
       added_to_current = false
-      res = addToTab(text, tab)
+      res = addToTab(multiline_styles, tab)
       if res == 1 then
          drawTabs()
       end
@@ -780,12 +807,14 @@ function rsocial (name, line, wildcards, styles)
    -- Remote socials will always start with a dark cyan or bright magenta *
    -- Checking color cuts down on non-socials ending up in the chat log...
    if (styles[1].textcolour == GetNormalColour(7) or styles[1].textcolour == GetBoldColour(6)) then
-      storeNonChannel(styles, "remote_socials")
+      local multiline_styles = ToMultilineStyles(styles, nil, nil, true)
+      storeNonChannel(multiline_styles, "remote_socials")
    end
 end
 
 function untagged_info (name, line, wildcards, styles)
-   storeNonChannel(styles, name)
+   local multiline_styles = ToMultilineStyles(styles, nil, nil, true)
+   storeNonChannel(multiline_styles, name)
 end -- untagged info
 
 function filter_as_needed(text)
@@ -795,9 +824,9 @@ function filter_as_needed(text)
    return text
 end
 
-function addToTab(text, tab)
+function addToTab(multiline_styles, tab)
    if (tab >= 1) and (tab <= num_tabs) then
-      tabs_rects[tab]:addText(ColoursToStyles(text, nil, nil, true))
+      tabs_rects[tab]:addText(multiline_styles, nil, nil, true)
       if tab == current_tab then
          added_to_current = true
          tabs_rects[tab]:draw()
@@ -814,12 +843,12 @@ function addToTab(text, tab)
    return -1
 end
 
-function storeMessage(text, label, captures)
+function storeMessage(multiline_styles, label, captures)
    will_draw = false
    added_to_current = false
    for tab, whats_inside_the_tab in ipairs(captures) do
       if whats_inside_the_tab[label]["capture"] then
-         if addToTab(text, tab) == 1 then
+         if addToTab(multiline_styles, tab) == 1 then
             will_draw = true
          end
       end
@@ -829,33 +858,33 @@ function storeMessage(text, label, captures)
    end
 end
 
-function storeNonChannel(styles, label)
-   text = stampAndLog(StylesToColours(styles), os.date(date_format))
-   storeMessage(text, label, tabs_nonchannel_captures)
+function storeNonChannel(multiline_styles, label)
+   multiline_styles = stampAndLog(multiline_styles, os.date(date_format))
+   storeMessage(multiline_styles, label, tabs_nonchannel_captures)
 end
 
-function storeChannel(text, label)
-   text = stampAndLog(text, os.date(date_format))
+function storeChannel(multiline_styles, label)
+   multiline_styles = stampAndLog(multiline_styles, os.date(date_format))
    for tab, whats_inside_the_tab in ipairs(tabs_channel_captures) do
       if not whats_inside_the_tab[label] then
          addNewChannel(label)
       end
    end
-   storeMessage(text, label, tabs_channel_captures)
+   storeMessage(multiline_styles, label, tabs_channel_captures)
 end
 
 function OnPluginBroadcast(msg, id, name, text)
    -- Look for GMCP handler.
    if (id == '3e7dedbe37e44942dd46d264') then
       if (text == "comm.channel") then
-         gmcpcomm = gmcp("comm.channel")
-         msg = gmcpcomm.msg or ""
-         chan = gmcpcomm.chan or ""
-         if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+         local gmcpcomm = gmcp("comm.channel")
+         local msg_text = gmcpcomm.msg or ""
+         local chan = gmcpcomm.chan or ""
+         if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg_text), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if (not channels_table[chan]) or channels_table[chan]["capture"] then
-               msg = filter_as_needed(msg)
-               if msg then
-                  storeChannel(msg, chan)
+               msg_text = filter_as_needed(msg_text)
+               if msg_text then
+                  storeChannel(ColoursToStyles(msg_text, nil, nil, true), chan)
                end
             end
          end

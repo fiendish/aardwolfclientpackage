@@ -234,27 +234,39 @@ init_basic_colors()
 
 function StylesToColours (styles, dollarC_resets)
    init_basic_colors()
-   local line = {}
    local lastcode = ""
-   for i,style in ipairs(styles) do
-      local bold = style.bold or (style.style and ((style.style % 2) == 1))
-      local text = string.gsub(style.text, CODE_PREFIX, PREFIX_ESCAPE)
-      local textcolor = style.textcolour
-      local code = style.fromx
-                   or bold and client_color_to_bold_code[textcolor]
-                   or client_color_to_dim_code[textcolor]
-                   or client_color_to_xterm_code[textcolor]
 
-      if code and (lastcode ~= code) then
-         table.insert(line, code)
-         lastcode = code
-      end
-      if dollarC_resets then
-         text = text:gsub("%$C", lastcode)
-      end
-      table.insert(line, text)
+   -- convert to multiline if needed
+   local style_lines = styles
+   if styles[1] and not styles[1][1] then
+      style_lines = {styles}
    end
-   return table.concat(line)
+
+   local line_texts = {}
+   for _,line in ipairs(style_lines) do
+      local line_parts = {}
+      for _,style in ipairs(line) do
+         local bold = style.bold or (style.style and ((style.style % 2) == 1))
+         local text = string.gsub(style.text, CODE_PREFIX, PREFIX_ESCAPE)
+         local textcolor = style.textcolour
+         local code = style.fromx
+                     or bold and client_color_to_bold_code[textcolor]
+                     or client_color_to_dim_code[textcolor]
+                     or client_color_to_xterm_code[textcolor]
+
+         if code and (lastcode ~= code) then
+            table.insert(line_parts, code)
+            lastcode = code
+         end
+         if dollarC_resets then
+            text = text:gsub("%$C", lastcode)
+         end
+         table.insert(line_parts, text)
+      end
+      table.insert(line_texts, table.concat(line_parts))
+   end
+
+   return table.concat(line_texts, "\n")
 end
 
 
@@ -328,7 +340,7 @@ function StylesWidth (win, plain_font, bold_font, styles, show_bold, utf8)
 end
 
 
-function ToMultilineStyles(message, default_foreground_color, background_color, multiline, dollarC_resets)
+function ToMultilineStyles (message, default_foreground_color, background_color, multiline, dollarC_resets)
    function err()
       assert(false, "Function '"..(debug.getinfo(3, "n").name or debug.getinfo(2, "n").name).."' cannot convert message to multiline styles if it isn't a color coded string, table of styles, or table of tables (multiple lines) of styles.")
    end
@@ -362,25 +374,25 @@ function ToMultilineStyles(message, default_foreground_color, background_color, 
    return message
 end
 
--- Splits a line of styles at some separator pattern (default is "%s+" for blank space)
+-- Partitions a line of styles at some separator pattern (default is "%s+" for blank space)
 -- returns {{nonspace styles},{space styles},{nonspace styles},...}
-function partition_boundaries(styles, separator_pattern)
+function partition_boundaries (styles, separator_pattern)
    separator_pattern = separator_pattern or "%s+"
    local partitions = {}
    local last_text = nil
    local cur_partition = {}
    for _,style in ipairs(styles) do
-      style_tokens = style.text:split(separator_pattern, true)
+      local style_tokens = style.text:split(separator_pattern, true)
       for _,text in ipairs(style_tokens) do
          if last_text then
-            last_endswith = last_text:match(separator_pattern.."$")
-            this_startswith = text:match("^"..separator_pattern)
+            local last_endswith = last_text:match(separator_pattern.."$")
+            local this_startswith = text:match("^"..separator_pattern)
             if last_endswith ~= this_startswith then
                table.insert(partitions, cur_partition)
                cur_partition = {}
             end
          end
-         length = #text
+         local length = #text
          if length > 0 then
             table.insert(cur_partition, {text=text, length=length, bold=style.bold, backcolour=style.backcolour, textcolour=style.textcolour})
             last_text = text
@@ -389,6 +401,17 @@ function partition_boundaries(styles, separator_pattern)
    end
    table.insert(partitions, cur_partition)
    return partitions
+end
+
+-- Splits a line of styles at some separator pattern (default is "%s+" for blank space)
+-- returns {{nonspace styles},{nonspace styles},...}
+function split_boundaries (styles, separator)
+   local partitioned_styles = partition_boundaries(styles, separator)
+   local style_lines = {}
+   for i=1,#partitioned_styles,2 do
+      table.insert(style_lines, partitioned_styles[i])
+   end
+   return style_lines
 end
 
 -- Converts text with colour codes in it into a line of style runs or multiple
@@ -562,11 +585,22 @@ end
 
 -- Strip all color codes from a table of styles
 function strip_colours_from_styles (styles)
-   local ret = {}
-   for i,v in ipairs(styles) do
-      table.insert(ret, v.text)
+   -- convert to multiline if needed
+   local style_lines = styles
+   if styles[1] and not styles[1][1] then
+      style_lines = {styles}
    end
-   return table.concat(ret)
+
+   local line_texts = {}
+   for _,line in ipairs(style_lines) do
+      local line_parts = {}
+      for i,v in ipairs(line) do
+         table.insert(line_parts, v.text)
+      end
+      table.insert(line_texts, table.concat(line_parts))
+   end
+
+   return table.concat(line_texts, "\n")
 end
 
 
