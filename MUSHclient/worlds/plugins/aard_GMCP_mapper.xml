@@ -1325,11 +1325,15 @@ end -- custom_exits_list
 
 function show_this_room (name, line, wildcards)
    local room = rooms[current_room]
+   local room_uid = current_room
+   if room_uid:sub(1,5) == "nomap" then
+      room_uid = "None (this room isn't mappable)"
+   end
    if room ~= nil then
       Note("Details about this room:")
       Note("+---------------------------+")
       Note("Name: "..(room.name or ""))
-      Note("ID: "..(current_room or ""))
+      Note("ID: "..(room_uid or ""))
       Note("Area: "..(room.area or ""))
       Note("Terrain: "..(room.terrain or ""))
       Note("Info: "..(room.info or ""))
@@ -3663,12 +3667,18 @@ flagType = nil
 function mark_prison_flag()
    if (flagType ~= nil) and (room_at_bounceback ~= nil) and (rooms[room_at_bounceback] ~= nil) then
       if (current_room == room_at_bounceback) then
+         local room_uid_str = room_at_bounceback
+         if room_uid_str:sub(1,5) == "nomap" then
+            room_uid_str = " "
+         else
+            room_uid_str = " ("..room_uid_str..") "
+         end
          if (flagType == "noportal") and (rooms[room_at_bounceback].noportal ~= 1) then
-            Note('Marking room (', room_at_bounceback, ') noportal')
+            Note('Marking room', room_uid_str, 'noportal.')
             rooms[room_at_bounceback].noportal = 1
          end
          if (flagType == "norecall") and (rooms[room_at_bounceback].norecall ~= 1) then
-            Note('Marking room (', room_at_bounceback, ') norecall')
+            Note('Marking room', room_uid_str, 'norecall.')
             rooms[room_at_bounceback].norecall = 1
          end
          dbCheckExecute("BEGIN TRANSACTION;")

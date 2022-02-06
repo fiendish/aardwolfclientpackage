@@ -784,6 +784,10 @@ function dress_window(room_name, room_uid, area_name)
 
    -- room ID number
    if config.SHOW_ROOM_ID then
+      if room_uid:sub(1,5) == "nomap" then
+         room_uid = "NONE"
+      end
+
       Theme.DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..room_uid)) / 2,   -- left
          bodytop,    -- top
