@@ -1561,7 +1561,7 @@ function map_portal (name, line, wildcards)
       return
    end
 
-   local level = (level_check(wildcards[3]) and wildcards[3]) or tonumber(utils.inputbox (string.format("Please enter the level of your portal to %s, or leave at 0 for the default",destination), "Portal Level", "0", "Courier", 9, {validate=level_check}))
+   local level = (level_check(wildcards[3]) and wildcards[3]) or tonumber(utils.inputbox (string.format("Please enter the level of your portal to %s, or leave at 0 to not add a level-lock",destination), "Portal Level", "0", "Courier", 9, {validate=level_check}))
 
    if not level then
       Note("Portal creation cancelled.")
