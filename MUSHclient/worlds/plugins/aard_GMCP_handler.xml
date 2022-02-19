@@ -234,9 +234,11 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       if GMCPDebug > 1 then
          print ("gmcpdata serialized: " .. gmcpdata_as_string(""))
       end
-      BroadcastPlugin(1, message)
+
       if message == "config" then
          BroadcastPlugin(1, "config."..next(t))
+      else
+         BroadcastPlugin(1, message)
       end
   else
       ColourNote("white", "red", "GMCP DECODE ERROR: "..t)
