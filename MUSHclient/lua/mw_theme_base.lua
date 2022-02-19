@@ -404,6 +404,9 @@ function DrawTitleBar(win, font, title, title_alignment, title_leftpadding, utf8
 end
 
 function BorderMetrics(win)
+   if (WindowInfo(win, 3) == nil) or (WindowInfo(win, 4) == nil) then
+      Repaint() -- hack: try to set the coordinates
+   end
    return 2, 2, WindowInfo(win, 3)-3, WindowInfo(win, 4)-3
 end
 
