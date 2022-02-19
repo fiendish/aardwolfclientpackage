@@ -9,7 +9,7 @@
 
 <plugin
    name="Aardwolf_Main_Layout"
-   author="Fiendish and Lasher"
+   author="Fiendish"
    id="c293f9e7f04dde889f65cb90"
    language="Lua"
    purpose="Layout Aardwolf Main Screen"
