@@ -139,6 +139,7 @@ function ThemedWindowClass:resize(width, height, still_dragging)
    CallPlugin("abc1a0944ae4af7586ce88dc", "resume")
 end
 
+
 function ThemedWindowClass:add_3d_text_button(id, left, top, text, utf8, tooltip, mousedown_callback, mouseup_callback, font, x_padding, y_padding, width, height)
    self.hotspot_map[id] = self
    local right, bottom = Theme.Add3DTextButton(self.id, id, font or self.title_font, left or self.bodyleft, top or self.bodytop, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback, width, height)
@@ -278,8 +279,8 @@ function ThemedBasicWindow(
       do_on_delete = do_on_delete,
       resizer_type = resizer_type,
       is_temporary = is_temporary,
-      width = tonumber(GetVariable(id.."width")) or default_width,
-      height = tonumber(GetVariable(id.."height")) or default_height,
+      width = (resizer_type ~= nil) and tonumber(GetVariable(id.."width")) or default_width,
+      height = (resizer_type ~= nil) and tonumber(GetVariable(id.."height")) or default_height,
    }
    setmetatable(self, ThemedWindowClass)
 
