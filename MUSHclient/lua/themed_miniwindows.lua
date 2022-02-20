@@ -41,7 +41,7 @@ function ThemedWindowClass:delete(deferred)
 end
 
 function ThemedWindowClass:reset()
-   WindowPosition(self.id, self.default_left_position, self.default_top_position, 0, 18)
+   WindowPosition(self.id, self.default_left_position, self.default_top_position, 0, 18+self.create_flags)
    self:resize(self.default_width, self.default_height)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
    SetVariable(self.id.."width", self.default_width)
@@ -250,7 +250,8 @@ end
 
 function ThemedBasicWindow(
    id, default_left_position, default_top_position, default_width, default_height, title, title_alignment, is_temporary, 
-   resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size, defer_showing
+   resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size, defer_showing,
+   body_is_transparent
 )
    assert(id, "ThemedBasicWindow Error: argument 1, id is required")
    assert(default_left_position, "ThemedBasicWindow Error: argument 2, default_left_position is required")
@@ -281,12 +282,13 @@ function ThemedBasicWindow(
       is_temporary = is_temporary,
       width = (resizer_type ~= nil) and tonumber(GetVariable(id.."width")) or default_width,
       height = (resizer_type ~= nil) and tonumber(GetVariable(id.."height")) or default_height,
+      create_flags = body_is_transparent and 4 or 0
    }
    setmetatable(self, ThemedWindowClass)
 
    self.window_map[self.id] = self
 
-   self.windowinfo = movewindow.install(self.id, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left_position, y=default_top_position})
+   self.windowinfo = movewindow.install(self.id, miniwin.pos_top_right, miniwin.create_absolute_location + self.create_flags, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left_position, y=default_top_position})
    WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, Theme.PRIMARY_BODY)
    WindowFont(self.id, self.title_font, self.title_font_name, self.title_font_size, false, false, false, false, 0)
    self:dress_window()
@@ -452,7 +454,7 @@ function ThemedTextWindow(
    is_temporary, resizeable, text_scrollable, text_selectable, text_copyable, url_hyperlinks,
    autowrap,
    title_font_name, title_font_size, text_font_name, text_font_size, text_max_lines, text_padding,
-   defer_showing
+   defer_showing, body_is_transparent
 )
    assert(id, "ThemedTextWindow Error: argument 1, id is required")
    assert(default_left_position, "ThemedTextWindow Error: argument 2, default_left_position is required")
@@ -476,7 +478,7 @@ function ThemedTextWindow(
    local self = ThemedBasicWindow(
       id, default_left_position, default_top_position, default_width, default_height, title, title_alignment, is_temporary, 
       resizer_type, ThemedTextWindowClass.do_while_resizing, ThemedTextWindowClass.do_after_resizing, 
-      ThemedTextWindowClass.OnDelete, title_font_name, title_font_size, defer_showing
+      ThemedTextWindowClass.OnDelete, title_font_name, title_font_size, defer_showing, body_is_transparent
    )
    setmetatable(self, ThemedTextWindowClass)
 
