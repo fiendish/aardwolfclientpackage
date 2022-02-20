@@ -359,7 +359,7 @@ function DressWindow(win, font, title, title_alignment, title_leftpadding)
    end
 
    if WindowMoveHotspot(win, "zz_mw_" .. win .. "_movewindow_hotspot", 0, 0, 0, handler_bottom) ~= 0 then
-      movewindow.add_drag_handler(win, 0, 0, 0, t)
+      movewindow.add_drag_handler(win, 0, 0, 0, handler_bottom)
    end
 
    return l, t, r, b
