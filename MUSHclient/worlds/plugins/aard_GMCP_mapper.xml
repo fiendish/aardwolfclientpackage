@@ -3622,6 +3622,8 @@ function manual_norecall(room_id, norecall)
          room.norecall = norecall
          save_room_to_database(room_id, room)
          Note("GMCP Mapper: No-recall flag "..(norecall == 1 and "set on" or "removed from").." room "..room_id..".")
+      else
+         Note("GMCP Mapper: Room "..room_id.." already has that recall status.")
       end
    else
       Note("GMCP MAPPER NORECALL ERROR: Room "..room_id.." is not in the database.")
@@ -3635,6 +3637,8 @@ function manual_noportal(room_id, noportal)
          room.noportal = noportal
          save_room_to_database(room_id, room)
          Note("GMCP Mapper: No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".")
+      else
+         Note("GMCP Mapper: Room "..room_id.." already has that portal status.")
       end
    else
       Note("GMCP MAPPER NOPORTAL ERROR: Room "..room_id.." is not in the database.")
