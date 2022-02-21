@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2203 snapshot
+- new feature: Easy DIY miniwindows now have a new flag during creation for transparent backgrounds. They'll still show the titlebar (if given a title) and frame border. Per the description of MUSHclient's WindowCreate function, if set, pixels in the contents of the window that match its background color (Theme.PRIMARY_BODY) are not drawn.
+- bug fix: Fixed a bug preventing titleless easy DIY miniwindows from being dragged.
+- bug fix: Non-resizeable easy DIY miniwindows should use the size given as the default during creation instead of whatever the previous width and height were.
+- misc change: Manual mapper noportal and norecall adjustments will now also display a message if the room already has the desired status.
+- misc change: Changed the mapper portal level lock message to clarify the purpose of leaving the level lock at 0.
+- misc change: Cleaned up the room ID display for nomap rooms in the mapper.
+
 r2198 snapshot
 - bug fix: The text_rect change in r2194 was majorly broken. Sorry. It should be fixed now, but I'm sure that everyone will let me know right away if they notice any new problems.
 - misc change: The communication log plugin has been changed to use styles tables internally. I'm sure that everyone will let me know right away if they notice any new problems.
