@@ -945,7 +945,7 @@ function TextRect:rightClickMenu(hotspot_id)
       end
    end
 
-   if self.hyperlinks[hotspot_id] then
+   if self.hyperlinks[hotspot_id] and (#(self:findURLs(self.hyperlinks[hotspot_id])) > 0) then
       table.insert(menu_text, "Browse URL: " .. self.hyperlinks[hotspot_id])
       table.insert(menu_text, "Copy URL to Clipboard")
       table.insert(menu_text, "-")
