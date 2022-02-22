@@ -808,14 +808,15 @@ function dress_window(room_name, room_uid, area_name)
    if type (show_help) == "function" then
       local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
       local y = math.max(2, (bodytop-font_height)/2)
-      local text_width = Theme.DrawTextBox(win, FONT_ID,
+      local box_right, box_bottom = Theme.DrawTextBox(win, FONT_ID,
          x-1,   -- left
          y-2,   -- top
          "?", false, false
       )
+      local box_width = box_right - (x-1)
 
       WindowAddHotspot(win, "<help>",
-         x-3, y-4, x+text_width+3, y + font_height,   -- rectangle
+         x-3, y-4, x+box_width+3, y + font_height,   -- rectangle
          "",  -- mouseover
          "",  -- cancelmouseover
          "",  -- mousedown

@@ -244,7 +244,7 @@ function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textco
       WindowRectOp(win, 1, left-1, top, right+1, bottom+3, textcolor)
    end
    WindowText(win, font, text, left+x_padding, top+y_padding, right, bottom+1, textcolor, utf8)
-   return right-left
+   return right, bottom
 end
 
 Theme.button_callbacks = {}
