@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2205 snapshot
+- misc change: DrawTextBox now returns the right bottom corner, not the width.
+- bug fix: The helpfile capture miniwindow won't show stupidly verbose and unnecessary browse/copy URL menu entries anymore when right-clicking on detected helpfile crossreferences.
+
 r2203 snapshot
 - new feature: Easy DIY miniwindows now have a new flag during creation for transparent backgrounds. They'll still show the titlebar (if given a title) and frame border. Per the description of MUSHclient's WindowCreate function, if set, pixels in the contents of the window that match its background color (Theme.PRIMARY_BODY) are not drawn.
 - bug fix: Fixed a bug preventing titleless easy DIY miniwindows from being dragged.
