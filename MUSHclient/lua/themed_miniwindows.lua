@@ -147,9 +147,12 @@ function ThemedWindowClass:add_3d_text_button(id, left, top, text, utf8, tooltip
 end
 
 function ThemedWindowClass:dress_window()
-   boxwidth = WindowTextWidth(self.id, self.title_font, "!") + (3*Theme.TITLE_PADDING) + 5
-   self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.DressWindow(self.id, self.title_font, self.title, self.title_alignment, self.is_temporary and boxwidth or 0)
-   
+   local boxwidth = 0
+   if self.is_temporary then
+      boxwidth = WindowTextWidth(self.id, self.title_font, "!") + (3*Theme.TITLE_PADDING) + 5
+   end
+   self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.DressWindow(self.id, self.title_font, self.title, self.title_alignment, boxwidth)
+
    if WindowMoveHotspot(self.id, "zzzzzzzzzz"..self.id.."_body", self.bodyleft, self.bodytop, self.bodyright, self.bodybottom) ~= 0 then
       local cursor = 0
       if (self.title == nil) or (#(self.title) == 0) then
