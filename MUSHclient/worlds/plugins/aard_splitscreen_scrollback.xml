@@ -150,9 +150,15 @@ function check_display()
          WindowShow(win, false)
          rect:unInit()
          rect = nil
+         SetOption("unpause_on_send", original_unpause_on_send)
+         just_cached_original_unpause_on_send = false
       end
-      SetOption("unpause_on_send", original_unpause_on_send)
    else
+      if WindowInfo(win, 1) == nil then
+         -- If we're here then we've manually printed to the screen after deleting the window during plugin
+         -- disable/close/reload. We don't care about that scenario, so just return.
+         return
+      end
       local text_rectangle_lines = text_rectangle_height / font_height
       desired_lines = math.max(
          5,
@@ -180,6 +186,7 @@ function check_display()
          local output_font_size = GetOption("output_font_height")  -- output_font_height is actually the pt size
          local height = (font_height * desired_lines) + border_offset + (2*border_width) + text_offset + title_height + 1
          local top = bottom - height
+         -- build the window if it isn't where we want it to be
          if (
             (not WindowInfo(win, 5))
             or (WindowInfo(win, 1) ~= left)
@@ -192,7 +199,7 @@ function check_display()
                   or (output_font_size ~= rect.font_size)
                )
             )
-         ) then -- build the window if it isn't where we want it to be
+         ) then
             num_lines = GetLinesInBufferCount()
             WindowPosition(win, left, top, 0, miniwin.create_absolute_location + miniwin.create_keep_hotspots)
             WindowResize(win, width, height, bgcolor)
@@ -234,8 +241,13 @@ function check_display()
             WindowMoveHotspot(win, 'bar', 0, 0, 0, t)
             WindowShow(win, true)
             CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
-            original_unpause_on_send = GetOption("unpause_on_send")
-            SetOption("unpause_on_send", 0)
+
+            if not just_cached_original_unpause_on_send then -- we need to not do this twice in a row because we'll lose our original value
+               original_unpause_on_send = GetOption("unpause_on_send")
+               SetOption("unpause_on_send", 0)
+               just_cached_original_unpause_on_send = true
+            end
+
             SetOption("auto_pause", 1)
          end
       end
@@ -277,6 +289,7 @@ function OnPluginDisable()
 
    Accelerator("PageUp", "")
    Accelerator("PageDown", "")
+   SaveState()
 end
 
 function ScrollMain(flags, hotspot_id)
