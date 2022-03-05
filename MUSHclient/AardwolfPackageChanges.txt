@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2207 snapshot
+- new feature: A new add_button function replaces the now deprecated add_3d_text_button function. It has a new style argument to choose between 3D, flat, and transparent button styles. The transparent style will only work if the miniwindow was created with the transparent flag set. Details are available on https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows
+- bug fix: Don't overwrite the user's desired "Unpause on Send" setting if the main output resizes while scrolled back when the splitscreen scrollback plugin is active.
+
 r2205 snapshot
 - misc change: DrawTextBox now returns the right bottom corner, not the width.
 - bug fix: The helpfile capture miniwindow won't show stupidly verbose and unnecessary browse/copy URL menu entries anymore when right-clicking on detected helpfile crossreferences.
