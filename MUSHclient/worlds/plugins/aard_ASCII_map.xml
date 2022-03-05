@@ -435,7 +435,7 @@ function DisplayMapPage()
    else -- display the map lines
       -- Add legend-popup handler
       WindowAddHotspot(win, "legend", bodyleft, bodytop, bodyleft+(3*font_width), bodytop+font_height+5 , "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", miniwin.cursor_help, 0)
-      Theme.DrawTextBox(win, font_id, bodyleft+2, bodytop+1, "?", false, true)
+      Theme.DrawTextBox(win, font_id, bodyleft+2, bodytop+1, "?", false, true, nil, nil, 2)
 
       for i = 3, n-1 do
          Display_Line(i, map_lines[i])

@@ -140,10 +140,16 @@ function ThemedWindowClass:resize(width, height, still_dragging)
 end
 
 
-function ThemedWindowClass:add_3d_text_button(id, left, top, text, utf8, tooltip, mousedown_callback, mouseup_callback, font, x_padding, y_padding, width, height)
+function ThemedWindowClass:add_button(id, left, top, text, utf8, tooltip, mousedown_callback, mouseup_callback, font, x_padding, y_padding, width, height, style)
    self.hotspot_map[id] = self
-   local right, bottom = Theme.Add3DTextButton(self.id, id, font or self.title_font, left or self.bodyleft, top or self.bodytop, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback, width, height)
+   local right, bottom = Theme.AddButton(self.id, id, font or self.title_font, left or self.bodyleft, top or self.bodytop, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback, width, height, style)
    return right, bottom
+end
+
+
+-- deprecated
+function ThemedWindowClass:add_3d_text_button(id, left, top, text, utf8, tooltip, mousedown_callback, mouseup_callback, font, x_padding, y_padding, width, height)
+    return self:add_button(id, left, top, text, utf8, tooltip, mousedown_callback, mouseup_callback, font, x_padding, y_padding, width, height, Theme.STYLE_3D)
 end
 
 function ThemedWindowClass:dress_window()

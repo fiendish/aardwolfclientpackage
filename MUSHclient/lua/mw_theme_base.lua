@@ -202,9 +202,14 @@ function Draw3DRect (win, left, top, right, bottom, depressed)
 end
 
 function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y_padding, width, height)
-   x_padding = x_padding or 0
-   y_padding = y_padding or 0
-   text = text or ""
+   if nil == font then
+      font = WindowFontList(win)[1]
+   end
+   local x_padding = x_padding or 0
+   local y_padding = y_padding or 0
+   local text = text or ""
+   local right
+   local bottom
    local text_width = WindowTextWidth(win, font, text, utf8)
    local text_height = WindowFontInfo(win, font, 1)
    if width then
@@ -228,67 +233,130 @@ function Draw3DTextBox(win, font, left, top, text, utf8, depressed, x_padding, y
    return right, bottom
 end
 
-function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textcolor, x_padding, y_padding)
+function DrawTextBox(win, font, left, top, text, utf8, outlined, bgcolor, textcolor, x_padding, y_padding, width, height)
    if nil == bgcolor then
       bgcolor = CLICKABLE
    end
    if nil == textcolor then
       textcolor = CLICKABLE_TEXT
    end
-   x_padding = x_padding or 0
-   y_padding = y_padding or 0
-   local right = left + WindowTextWidth(win, font, text, utf8) + (2*x_padding)
-   local bottom = top + WindowFontInfo(win, font, 1) + (2*y_padding)
-   WindowRectOp(win, 2, left, top+1, right, bottom+2, bgcolor)
-   if outlined then
-      WindowRectOp(win, 1, left-1, top, right+1, bottom+3, textcolor)
+   if nil == font then
+      font = WindowFontList(win)[1]
    end
-   WindowText(win, font, text, left+x_padding, top+y_padding, right, bottom+1, textcolor, utf8)
+   local x_padding = x_padding or 0
+   local y_padding = y_padding or 0
+   local text = text or ""
+   local right
+   local bottom
+   local text_width = WindowTextWidth(win, font, text, utf8)
+   local text_height = WindowFontInfo(win, font, 1)
+   if width then
+      right = left + width
+   else
+      right = left + text_width + (2*x_padding)
+   end
+   if height then
+      bottom = top + height
+   else
+      bottom = top + text_height + (2*y_padding)
+   end
+   WindowRectOp(win, 2, left, top+1, right+1, bottom+2, bgcolor)
+   if outlined then
+      WindowRectOp(win, 1, left-1, top, right+2, bottom+3, textcolor)
+   end
+   local text_left = math.max(left + x_padding , (left + right - text_width)/2)
+   local text_top = math.max(top, (top + bottom + 2 - text_height)/2)
+   WindowText(win, font, text, text_left, text_top, right, bottom+2, textcolor, utf8)
    return right, bottom
 end
 
 Theme.button_callbacks = {}
 Theme.button_metrics = {}
-function Add3DTextButton(win, button_id, font, left, top, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback, width, height)
+Theme.STYLE_3D = "STYLE_3D"
+Theme.STYLE_FLAT = "STYLE_FLAT"
+Theme.STYLE_TRANSPARENT = "STYLE_TRANSPARENT"
+
+function AddButton(win, button_id, font, left, top, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback, width, height, style)
+   local right, bottom
    if type(win) == "table" then
       win = win.id
    end
    x_padding = x_padding or VERTICAL_BUTTON_PADDING or DYNAMIC_BUTTON_PADDING
    y_padding = y_padding or HORIZONTAL_BUTTON_PADDING or DYNAMIC_BUTTON_PADDING
-   local right, bottom = Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
-   Theme.button_metrics[button_id] = {win, font, left, top, text, utf8, x_padding, y_padding, width, height}
+   Theme.button_metrics[button_id] = {win, button_id, left, top, width, height, style, text, font, utf8, x_padding, y_padding}
    Theme.button_callbacks[button_id] = {mousedown_callback=mousedown_callback, mouseup_callback=mouseup_callback}
+   if (style == Theme.STYLE_3D) then
+      right, bottom = Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
+   else
+      local bgcolor = CLICKABLE
+      local textcolor = CLICKABLE_TEXT
+      if (style == Theme.STYLE_TRANSPARENT) and bit.test(WindowInfo(win, 8), miniwin.create_transparent) then
+         bgcolor = PRIMARY_BODY
+      end
+      right, bottom = DrawTextBox(win, font, left, top, text, utf8, true, bgcolor, textcolor, x_padding, y_padding, width, height)
+   end
    if WindowMoveHotspot(win, button_id, left, top, right, bottom) ~= 0 then
-      WindowAddHotspot(win, button_id, left, top, right, bottom, nil, nil, "Theme.ThreeDeeTextButtonMouseDown", "Theme.ThreeDeeTextButtonMouseCancel", "Theme.ThreeDeeTextButtonMouseUp", tooltip, 1, 0)
+      WindowAddHotspot(win, button_id, left, top, right, bottom, nil, nil, "Theme.TextButtonMouseDown", "Theme.TextButtonMouseCancel", "Theme.TextButtonMouseUp", tooltip, 1, 0)
    end
    return right, bottom
 end
 
-function ThreeDeeTextButtonMouseDown(flags, hotspot_id)
+function unpack_hotspot_metrics(hotspot_id)
+   local m = Theme.button_metrics[hotspot_id]
+   return m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11], m[12]
+end
+
+function Add3DTextButton(win, button_id, font, left, top, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback, width, height)
+   return AddButton(win, button_id, font, left, top, text, utf8, x_padding, y_padding, tooltip, mousedown_callback, mouseup_callback, width, height, true)
+end
+
+function TextButtonMouseDown(flags, hotspot_id)
    local callbacks = Theme.button_callbacks[hotspot_id]
-   local win, font, left, top, text, utf8, x_padding, y_padding, width, height= unpack(Theme.button_metrics[hotspot_id])
+   local win, button_id, left, top, width, height, style, text, font, utf8, x_padding, y_padding = unpack_hotspot_metrics(hotspot_id)
    if callbacks.mousedown_callback then
       if callbacks.mousedown_callback(flags, hotspot_id) then
          return
       end
    end
-   Draw3DTextBox(win, font, left, top, text, utf8, true, x_padding, y_padding, width, height)
+   if (style == Theme.STYLE_3D) then
+      Draw3DTextBox(win, font, left, top, text, utf8, true, x_padding, y_padding, width, height)
+   else
+      DrawTextBox(win, font, left, top, text, utf8, true, CLICKABLE_TEXT, CLICKABLE, x_padding, y_padding, width, height)
+   end
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
-function ThreeDeeTextButtonMouseUp(flags, hotspot_id)
+function TextButtonMouseUp(flags, hotspot_id)
    local callbacks = Theme.button_callbacks[hotspot_id]
-   local win, font, left, top, text, utf8, x_padding, y_padding, width, height = unpack(Theme.button_metrics[hotspot_id])
-   Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
+   local win, button_id, left, top, width, height, style, text, font, utf8, x_padding, y_padding = unpack_hotspot_metrics(hotspot_id)
+   if (style == Theme.STYLE_3D) then
+      Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
+   else
+      local bgcolor = CLICKABLE
+      local textcolor = CLICKABLE_TEXT
+      if (style == Theme.STYLE_TRANSPARENT) and bit.test(WindowInfo(win, 8), miniwin.create_transparent) then
+         bgcolor = PRIMARY_BODY
+      end
+      DrawTextBox(win, font, left, top, text, utf8, true, bgcolor, textcolor, x_padding, y_padding, width, height)
+   end
    if callbacks.mouseup_callback then
       callbacks.mouseup_callback(flags, hotspot_id)
    end
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
-function ThreeDeeTextButtonMouseCancel(flags, hotspot_id)
-   local win, font, left, top, text, utf8, x_padding, y_padding, width, height = unpack(Theme.button_metrics[hotspot_id])
-   Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
+function TextButtonMouseCancel(flags, hotspot_id)
+   local win, button_id, left, top, width, height, style, text, font, utf8, x_padding, y_padding = unpack_hotspot_metrics(hotspot_id)
+   if (style == Theme.STYLE_3D) then
+      Draw3DTextBox(win, font, left, top, text, utf8, false, x_padding, y_padding, width, height)
+   else
+      local bgcolor = CLICKABLE
+      local textcolor = CLICKABLE_TEXT
+      if (style == Theme.STYLE_TRANSPARENT) and bit.test(WindowInfo(win, 8), miniwin.create_transparent) then
+         bgcolor = PRIMARY_BODY
+      end
+      DrawTextBox(win, font, left, top, text, utf8, true, bgcolor, textcolor, x_padding, y_padding, width, height)
+   end
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
@@ -404,9 +472,6 @@ function DrawTitleBar(win, font, title, title_alignment, title_leftpadding, utf8
 end
 
 function BorderMetrics(win)
-   if (WindowInfo(win, 3) == nil) or (WindowInfo(win, 4) == nil) then
-      Repaint() -- hack: try to set the coordinates
-   end
    return 2, 2, WindowInfo(win, 3)-3, WindowInfo(win, 4)-3
 end
 
