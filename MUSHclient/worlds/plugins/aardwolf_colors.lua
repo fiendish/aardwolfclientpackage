@@ -363,10 +363,14 @@ function ToMultilineStyles (message, default_foreground_color, background_color,
       err()
    end
 
+   local default_black = GetNormalColour(BLACK)
    for _,line in ipairs(message) do
       for _,style in ipairs(line) do
          if style.length == nil then
             style.length = #(style.text)
+         end
+         if style.backcolour == default_black then
+            style.backcolour = nil
          end
       end
    end
@@ -436,9 +440,7 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
       default_foreground_code = client_color_to_xterm_code[default_foreground_color]
    end
 
-   if background_color == nil then
-      background_color = default_black
-   elseif type(background_color) == "string" then
+   if type(background_color) == "string" then
       if background_color:sub(1,1) ~= CODE_PREFIX then
          background_color = CODE_PREFIX..background_color
       end

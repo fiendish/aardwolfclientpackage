@@ -200,7 +200,7 @@ function reformat(slices, styles, hyperlinks)
 			{startpoint = v.start
 			,endpoint = v.stop
 			,textcolour = styles[styles_i].textcolour
-			,backcolour = styles[styles_i].backcolour
+			,backcolour = 0
 			,style = styles[styles_i].style
 			,hyperlink_number = hyperlink_number}
 		)
