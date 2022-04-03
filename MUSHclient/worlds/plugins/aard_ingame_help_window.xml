@@ -110,23 +110,26 @@ function sanitize_help(style_lines)
 end
 
 string.find_indices = function(self, pattern, after, before)
-   indices = {}
+   local before = before or #self+1
+   local after = after or 0
+   local text = self:sub(after+1, before):gsub("%s+$", "")
+   if pattern == nil then
+      return {{text=text, start=after+1, stop=#text}}
+   end
+   local indices = {}
    local first, last = 0, 0
-   before = before or #self+1
    while true do
-      first, last = self:find(pattern, last+1)
-      if (not first) or (last > before) then break end
-      if (first > after) and (last < before) then
-         table.insert(indices, {text=self:sub(first, last), start=first, stop=last})
-      end
+      first, last = text:find(pattern, last+1)
+      if (not first) then break end
+      table.insert(indices, {text=text:sub(first, last), start=after+first, stop=after+last})
    end
    return indices
 end
 
 function build_links(line, pattern, after, before, verb)
-   links = strip_colours_from_styles(line):find_indices(pattern, after, before)
-   for _,v in ipairs(indices) do
-      text = v.text
+   local links = strip_colours_from_styles(line):find_indices(pattern, after, before)
+   for _,v in ipairs(links) do
+      local text = v.text
       v.label = verb.." "..text
       v.text = 'Capture.command("'..verb.." "..text..'", "^{help}$", "^{/help}$", true, false, true, false, process_response)'
       if verb == "help" then
@@ -153,7 +156,7 @@ function get_search_hyperlinks(style_lines)
    related_helps = {}
    for i,line in ipairs(style_lines) do
       if (#line >= 2) and (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
-         related_helps[i] = build_links(line, "%w[%w&%- ]*%w", 0, 21, "help")
+         related_helps[i] = build_links(line, nil, 0, 20, "help")
       end
    end
    return related_helps, {}
