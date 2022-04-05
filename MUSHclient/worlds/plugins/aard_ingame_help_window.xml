@@ -210,7 +210,8 @@ function build_window(window_styles, hyperlinks_function)
    ColourNote("paleturquoise", "", "Help Captured To Miniwindow")
 
    local related_helps, related_categories = hyperlinks_function(window_styles)
-
+   prev_hyperlinks_function = hyperlinks_function
+   
    local already_on_screen = false
    if WindowInfo(WINDOW_ID, 1) ~= nil then
       already_on_screen = true
@@ -314,7 +315,7 @@ function OnPluginThemeChange()
    -- Miniwindow color themes are applied at their creation, so create an
    -- existing window again if the theme changes.
    if my_window and my_window.id then
-      build_window(my_window:get_styles())
+      build_window(my_window:get_styles(), prev_hyperlinks_function)
    end
 end
 
