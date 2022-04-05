@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2211 snapshot
+- bug fix: Some of the clickable help links in the helpfile miniwindow plugin's "help search" capture display weren't being detected properly.
+- bug fix: Fix an error in the helpfile miniwindow plugin when changing color themes.
+
 r2209 snapshot
 - bug fix: MUSHclient should no longer error if you're dragging a miniwindow on top of another miniwindow when the second miniwindow adds new hotspots under the mouse position.
 - bug fix: Textrect-based miniwindows were picking up non-black background color settings when displaying text. This was probably an error and has been changed.
