@@ -311,14 +311,6 @@ function OnPluginClose()
    OnPluginDisable()
 end
 
-function OnPluginThemeChange()
-   -- Miniwindow color themes are applied at their creation, so create an
-   -- existing window again if the theme changes.
-   if my_window and my_window.id then
-      build_window(my_window:get_styles(), prev_hyperlinks_function)
-   end
-end
-
 ]]>
 </script>
 </muclient>

@@ -62,6 +62,13 @@ function TextRect.new(
    return new_tr
 end
 
+function TextRect:set_bgcolor(bgcolor)
+   if bgcolor ~= self.background_color then
+      self.background_color = bgcolor or self.background_color
+      self.highlight_color = getHighlightColor(self.background_color)
+   end
+end
+
 function TextRect:configure(
    left, top, right, bottom, max_lines, scrollable, background_color,
    padding, font_name, font_size, external_scroll_handler, call_on_select,
@@ -80,10 +87,7 @@ function TextRect:configure(
    self.unselectable = unselectable
    self.uncopyable = uncopyable
    self.no_url_hyperlinks = no_url_hyperlinks
-   if background_color ~= self.background_color then
-      self.background_color = background_color or self.background_color
-      self.highlight_color = getHighlightColor(self.background_color)
-   end
+   self:set_bgcolor(bgcolor)
    self:loadFont(self.font_name, self.font_size)
    self:setRect(left, top, right, bottom)
 end

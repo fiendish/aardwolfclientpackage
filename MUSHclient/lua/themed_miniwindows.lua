@@ -152,7 +152,12 @@ function ThemedWindowClass:add_3d_text_button(id, left, top, text, utf8, tooltip
     return self:add_button(id, left, top, text, utf8, tooltip, mousedown_callback, mouseup_callback, font, x_padding, y_padding, width, height, Theme.STYLE_3D)
 end
 
-function ThemedWindowClass:dress_window()
+
+function ThemedWindowClass:dress_window(new_title)
+   if new_title then
+      self.title = ToMultilineStyles(new_title, Theme.THREE_D_SURFACE_DETAIL, nil, true, true)
+   end
+
    local boxwidth = 0
    if self.is_temporary then
       boxwidth = WindowTextWidth(self.id, self.title_font, "!") + (3*Theme.TITLE_PADDING) + 5
@@ -276,7 +281,7 @@ function ThemedBasicWindow(
       id = id,
       title_font_name = title_font_name or "Dina",
       title_font_size = title_font_size or 10,
-      title = title and ToMultilineStyles(title, Theme.THREE_D_SURFACE_DETAIL, nil, true, true) or {},
+      raw_title = title,
       min_width = 100,
       min_height = 50,
       default_left_position = default_left_position,
@@ -300,7 +305,7 @@ function ThemedBasicWindow(
    self.windowinfo = movewindow.install(self.id, miniwin.pos_top_right, miniwin.create_absolute_location + self.create_flags, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left_position, y=default_top_position})
    WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, Theme.PRIMARY_BODY)
    WindowFont(self.id, self.title_font, self.title_font_name, self.title_font_size, false, false, false, false, 0)
-   self:dress_window()
+   self:dress_window(self.raw_title)
 
    if not defer_showing then
       self:show()
@@ -591,6 +596,17 @@ local function NewOnPluginThemeChange()
    if func then
       _G["package"]["loaded"]["mw_theme_base"] = nil
       require "mw_theme_base"
+      if TextRect then
+         for _, tr in pairs(TextRect.hotspot_map) do
+            tr:set_bgcolor(Theme.PRIMARY_BODY)
+         end
+      end
+      for _, win in pairs(ThemedWindowClass.window_map) do
+         if win.do_after_resizing then
+            win:do_after_resizing()
+         end
+         win:dress_window(win.raw_title)
+      end
       func()
       return true
    else
@@ -605,3 +621,5 @@ proxy_G({
    OnPluginDisable=NewOnPluginDisable,
    OnPluginThemeChange=NewOnPluginThemeChange
 })
+
+function OnPluginThemeChange() end  -- needs to be present for detection during theme change
