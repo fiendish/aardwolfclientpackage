@@ -243,8 +243,7 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
   else
       ColourNote("white", "red", "GMCP DECODE ERROR: "..t)
       ColourNote("white", "red", "Received invalid GMCP message: "..utils.utf8convert(data))
-      ColourNote("white", "red", "Please send that invalid message to Fiendish for analysis.")
-      ColourNote("white", "red", "If this happens more than once, disconnect and reconnect to Aardwolf or restart MUSHclient.")
+      ColourNote("white", "red", "Fiendish still doesn't know what causes this. Please disconnect and reconnect to Aardwolf or restart MUSHclient and then send that invalid message to him for analysis.")
   end  -- if
 
 end -- function OnPluginTelnetSubnegotiation
