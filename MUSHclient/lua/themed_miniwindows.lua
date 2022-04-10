@@ -190,16 +190,7 @@ function ThemedWindowClass:dress_window(new_title)
 end
 
 function ThemedWindowClass:get_menu_items()
-   local menu_table = {
-      "Bring To Front",
-      "Send To Back"
-   }
-   local menu_handlers = {
-      function() self:bring_to_front() end,
-      function() self:send_to_back() end
-   }
-   local menu_string = table.concat(menu_table, "|")
-   return menu_string, menu_handlers
+   return table.concat(self.menu_table, "|"), self.menu_handlers
 end
 
 function ThemedWindowClass:right_click_menu(hotspot_id)
@@ -296,9 +287,18 @@ function ThemedBasicWindow(
       is_temporary = is_temporary,
       width = (resizer_type ~= nil) and tonumber(GetVariable(id.."width")) or default_width,
       height = (resizer_type ~= nil) and tonumber(GetVariable(id.."height")) or default_height,
-      create_flags = body_is_transparent and 4 or 0
+      create_flags = body_is_transparent and 4 or 0,
    }
    setmetatable(self, ThemedWindowClass)
+
+   self.menu_table = {
+      "Bring To Front",
+      "Send To Back"
+   }
+   self.menu_handlers = {
+      function() self:bring_to_front() end,
+      function() self:send_to_back() end
+   }
 
    self.window_map[self.id] = self
 

@@ -74,8 +74,6 @@ function build_notfound_message(subject)
 end
 
 
-WINDOW_ID = GetPluginID()
-
 string.starts_with = function(self, start)
    return self:sub(1, #start) == start
 end
@@ -211,11 +209,6 @@ function build_window(window_styles, hyperlinks_function)
 
    local related_helps, related_categories = hyperlinks_function(window_styles)
    prev_hyperlinks_function = hyperlinks_function
-   
-   local already_on_screen = false
-   if WindowInfo(WINDOW_ID, 1) ~= nil then
-      already_on_screen = true
-   end
 
    -- I create a zero-size window first, because MUSHclient has a limitation
    -- where you can only find the width of some text from inside a miniwindow,
@@ -223,7 +216,7 @@ function build_window(window_styles, hyperlinks_function)
    -- I set the defer_showing flag to true because I'm going to move it after
    -- creation and I don't want to see it jump around.
    my_window = ThemedTextWindow(
-      WINDOW_ID,  -- id
+      GetPluginID(),  -- id
       0,  -- default_left_position
       0,  -- default_top_position
       0,  -- default_width
@@ -245,6 +238,25 @@ function build_window(window_styles, hyperlinks_function)
       nil,  -- text_padding
       true  -- defer_showing
    )
+
+   -- TODO: move this into themed_miniwindows.lua
+   local remember_var = "remember_position"..my_window.id
+   local remember_position = GetVariable(remember_var) == "1"
+   table.insert(my_window.menu_table, "-")
+   table.insert(my_window.menu_table, (remember_position and "+" or "").."Remember Position")
+   table.insert(
+      my_window.menu_handlers,
+      function()
+         local remember_position = GetVariable(remember_var) == "1"
+         my_window.menu_table[#my_window.menu_table] = (remember_position and "" or "+").."Remember Position"
+         if remember_position then
+            SetVariable(remember_var, "0")
+         else
+            SetVariable(remember_var, "1")
+         end
+         SaveState()
+      end
+   )
    my_window.textrect:setExternalMenuFunction(
       function(selection)
          menu_string, menu_handlers = my_window:get_menu_items()
@@ -263,7 +275,7 @@ function build_window(window_styles, hyperlinks_function)
    end
 
    -- Now that the window is populated, set the size and position if new.
-   if not already_on_screen then
+   if not remember_position then
       -- Use window font metrics to set the right width and height, but give 
       -- reasonable maxima so it doesn't go entirely off the screen.
       -- (Width first, then height, to account for new line wrap.)
@@ -273,7 +285,7 @@ function build_window(window_styles, hyperlinks_function)
       -- Use fixed position instead of the auto-centering mode because of a
       -- subtle position retrieval conflict during theme changes between
       -- movewindow and WindowPosition.
-      WindowPosition(WINDOW_ID, (GetInfo(281)-my_window.width)/2, (GetInfo(280)-my_window.height)/2, 12, 18)
+      WindowPosition(my_window.id, (GetInfo(281)-my_window.width)/2, (GetInfo(280)-my_window.height)/2, 12, 18)
    end
 
    -- Make sure we're scrolled up to the top.
