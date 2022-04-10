@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2213 snapshot
+- new feature: Easy DIY themed miniwindows should mostly re-theme themselves properly now when the player changes color themes with 'aard theme change' without needing to define an OnPluginThemeChange function.
+- misc change: The helpfile capture miniwindow plugin now has a right-click toggle to set whether it will remember its position or not instead of basing the check on whether the miniwindow was already open.
+
 r2211 snapshot
 - bug fix: Some of the clickable help links in the helpfile miniwindow plugin's "help search" capture display weren't being detected properly.
 - bug fix: Fix an error in the helpfile miniwindow plugin when changing color themes.
