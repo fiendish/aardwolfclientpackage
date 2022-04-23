@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2214 snapshot
+- new feature: The in-game helpfile capture miniwindow plugin has a new right-click option to print the current help to the main output.
+
 r2213 snapshot
 - new feature: Easy DIY themed miniwindows should mostly re-theme themselves properly now when the player changes color themes with 'aard theme change' without needing to define an OnPluginThemeChange function.
 - misc change: The helpfile capture miniwindow plugin now has a right-click toggle to set whether it will remember its position or not instead of basing the check on whether the miniwindow was already open.
