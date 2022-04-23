@@ -215,7 +215,7 @@ function build_window(window_styles, hyperlinks_function)
    -- and I want to use font metrics to set exactly the right width and height.
    -- I set the defer_showing flag to true because I'm going to move it after
    -- creation and I don't want to see it jump around.
-   my_window = ThemedTextWindow(
+   local my_window = ThemedTextWindow(
       GetPluginID(),  -- id
       0,  -- default_left_position
       0,  -- default_top_position
@@ -240,19 +240,30 @@ function build_window(window_styles, hyperlinks_function)
    )
 
    -- TODO: move this into themed_miniwindows.lua
-   local remember_var = "remember_position"..my_window.id
-   local remember_position = GetVariable(remember_var) == "1"
+   local remember_position = GetVariable("remember_position") == "1"
    table.insert(my_window.menu_table, "-")
+   table.insert(my_window.menu_table, "Print Current Help To Main Output")
    table.insert(my_window.menu_table, (remember_position and "+" or "").."Remember Position")
    table.insert(
       my_window.menu_handlers,
       function()
-         local remember_position = GetVariable(remember_var) == "1"
+         if gmcp("config.compact") == "NO" then
+            Note()
+         end
+         for _,line in ipairs(my_window:get_styles()) do
+            AnsiNote(stylesToANSI(line))
+         end
+      end
+   )
+   table.insert(
+      my_window.menu_handlers,
+      function()
+         local remember_position = GetVariable("remember_position") == "1"
          my_window.menu_table[#my_window.menu_table] = (remember_position and "" or "+").."Remember Position"
          if remember_position then
-            SetVariable(remember_var, "0")
+            SetVariable("remember_position", "0")
          else
-            SetVariable(remember_var, "1")
+            SetVariable("remember_position", "1")
          end
          SaveState()
       end
