@@ -1,7 +1,8 @@
 Aardwolf Client Package Major Changes List
 
-r2214 snapshot
+r2215 snapshot
 - new feature: The in-game helpfile capture miniwindow plugin has a new right-click option to print the current help to the main output.
+- misc change: I've removed exits from the default mapper database that lead to rooms that aren't in the default mapper database.
 
 r2213 snapshot
 - new feature: Easy DIY themed miniwindows should mostly re-theme themselves properly now when the player changes color themes with 'aard theme change' without needing to define an OnPluginThemeChange function.
