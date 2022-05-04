@@ -215,7 +215,7 @@ function build_window(window_styles, hyperlinks_function)
    -- and I want to use font metrics to set exactly the right width and height.
    -- I set the defer_showing flag to true because I'm going to move it after
    -- creation and I don't want to see it jump around.
-   local my_window = ThemedTextWindow(
+   my_window = ThemedTextWindow(
       GetPluginID(),  -- id
       0,  -- default_left_position
       0,  -- default_top_position
