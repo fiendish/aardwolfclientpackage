@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2216 snapshot
+- bug fix: I broke the helpfile miniwindow's closehelp alias from r2174. It should work again now.
+
 r2215 snapshot
 - new feature: The in-game helpfile capture miniwindow plugin has a new right-click option to print the current help to the main output.
 - misc change: I've removed exits from the default mapper database that lead to rooms that aren't in the default mapper database.
