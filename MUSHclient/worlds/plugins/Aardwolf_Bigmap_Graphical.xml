@@ -397,7 +397,7 @@ function NoMap(messages)
 end
 
 function DrawMap(clearHotspotsFirst)
-   if Theme.TextHeight(mapwin, font_id) == nil then
+   if show_map == 1 and Theme.TextHeight(mapwin, font_id) == nil then
       OnPluginInstall()
    end
    if show_map ~= 1 then
