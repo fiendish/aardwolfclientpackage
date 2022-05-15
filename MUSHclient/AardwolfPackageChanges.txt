@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2217 snapshot
+- bug fix: Khadaji found (and then solved) a cool infinite loop bug that would spam the MUD with room info requests (which then caused the map to redraw over and over) if you reloaded the GMCP mapper plugin while the Bigmap plugin was enabled but turned off.
+
 r2216 snapshot
 - bug fix: I broke the helpfile miniwindow's closehelp alias from r2174. It should work again now.
 
