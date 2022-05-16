@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2218 snapshot
+- bug fix: Don't error when calling resize on a DIY themed miniwindow that doesn't have a title.
+
 r2217 snapshot
 - bug fix: Khadaji found (and then solved) a cool infinite loop bug that would spam the MUD with room info requests (which then caused the map to redraw over and over) if you reloaded the GMCP mapper plugin while the Bigmap plugin was enabled but turned off.
 
