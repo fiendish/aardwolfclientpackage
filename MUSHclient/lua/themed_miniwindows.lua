@@ -18,8 +18,8 @@ function ThemedWindowClass:delete(deferred)
    local height = WindowInfo(self.id, 4)
    if width and height then
       movewindow.save_state(self.id)
-      SetVariable(self.id.."width", width)
-      SetVariable(self.id.."height", height)
+      SetVariable("themed_miniwindow_width"..self.id, width)
+      SetVariable("themed_miniwindow_height"..self.id, height)
    end
    for k, v in pairs(self.hotspot_map) do
       if v.id == self.id then
@@ -44,8 +44,8 @@ function ThemedWindowClass:reset()
    WindowPosition(self.id, self.default_left_position, self.default_top_position, 0, 18+self.create_flags)
    self:resize(self.default_width, self.default_height)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
-   SetVariable(self.id.."width", self.default_width)
-   SetVariable(self.id.."height", self.default_height)
+   SetVariable("themed_miniwindow_width"..self.id, self.default_width)
+   SetVariable("themed_miniwindow_height"..self.id, self.default_height)
    movewindow.save_state(self.id)
 end
 
@@ -110,8 +110,8 @@ function ThemedWindowClass.ResizeReleaseCallback(flags, hotspot_id)
       return  -- ignore non-left mouse button
    end
    local window = ThemedWindowClass.hotspot_map[hotspot_id]
-   SetVariable(window.id.."width", window.width)
-   SetVariable(window.id.."height", window.height)
+   SetVariable("themed_miniwindow_width"..window.id, window.width)
+   SetVariable("themed_miniwindow_height"..window.id, window.height)
    window:resize(window.width, window.height, false)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
@@ -285,8 +285,8 @@ function ThemedBasicWindow(
       do_on_delete = do_on_delete,
       resizer_type = resizer_type,
       is_temporary = is_temporary,
-      width = (resizer_type ~= nil) and tonumber(GetVariable(id.."width")) or default_width,
-      height = (resizer_type ~= nil) and tonumber(GetVariable(id.."height")) or default_height,
+      width = (resizer_type ~= nil) and tonumber(GetVariable("themed_miniwindow_width"..id)) or default_width,
+      height = (resizer_type ~= nil) and tonumber(GetVariable("themed_miniwindow_height"..id)) or default_height,
       create_flags = body_is_transparent and 4 or 0,
    }
    setmetatable(self, ThemedWindowClass)
