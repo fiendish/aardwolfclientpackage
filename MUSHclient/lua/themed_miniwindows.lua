@@ -258,7 +258,7 @@ function ThemedBasicWindow(
    resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size, defer_showing,
    body_is_transparent
 )
-   assert(id, "ThemedBasicWindow Error: argument 1, id is required")
+   assert(id and type(id) == "string" and id ~= "", "ThemedBasicWindow Error: argument 1, id is required (must be a non-empty string)")
    assert(default_left_position, "ThemedBasicWindow Error: argument 2, default_left_position is required")
    assert(default_top_position, "ThemedBasicWindow Error: argument 3, default_top_position is required")
    assert(default_width, "ThemedBasicWindow Error: argument 4, default_width is required")
