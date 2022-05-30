@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2219 snapshot
+- bug fix: Easy DIY miniwindows weren't saving their width/height after resizing if their IDs didn't start with a letter because of variable naming rules.
+
 r2218 snapshot
 - bug fix: Don't error when calling resize on a DIY themed miniwindow that doesn't have a title.
 
