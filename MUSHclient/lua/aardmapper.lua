@@ -866,6 +866,7 @@ function draw (uid)
    current_room = uid -- remember where we are
 
    if dont_draw then
+      DeleteTimer("blink_title")
       return
    end
 
