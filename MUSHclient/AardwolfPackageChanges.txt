@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2220 snapshot
+- bug fix: Moving from a PK room into a continent room while the bigmap plugin display is merged into the GMCP mapper window will now clear the title blinking.
+
 r2219 snapshot
 - bug fix: Easy DIY miniwindows weren't saving their width/height after resizing if their IDs didn't start with a letter because of variable naming rules.
 
