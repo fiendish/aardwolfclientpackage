@@ -135,7 +135,7 @@ Send("recon")
    sequence="100"
    send_to="12"
 ><send>
-   manual_noportal("%1", %2 and 1 or 0)
+   manual_noportal("%1", %2 and 1 or 0, true)
 </send></alias>
 
 <alias
@@ -145,7 +145,7 @@ Send("recon")
    sequence="100"
    send_to="12"
 ><send>
-   manual_norecall("%1", %2 and 1 or 0)
+   manual_norecall("%1", %2 and 1 or 0, true)
 </send></alias>
 
 <alias
@@ -3615,14 +3615,14 @@ function override_continents(override)
    mapper.halt_drawing(bigmap_override and current_room_is_cont)
 end
 
-function manual_norecall(room_id, norecall)
+function manual_norecall(room_id, norecall, warn_if_already_set)
    local room = load_room_from_database(room_id)
    if room ~= nil then
       if room.norecall ~= norecall then
          room.norecall = norecall
          save_room_to_database(room_id, room)
          Note("GMCP Mapper: No-recall flag "..(norecall == 1 and "set on" or "removed from").." room "..room_id..".")
-      else
+      elseif warn_if_already_set then
          Note("GMCP Mapper: Room "..room_id.." already has that recall status.")
       end
    else
@@ -3630,14 +3630,14 @@ function manual_norecall(room_id, norecall)
    end
 end
 
-function manual_noportal(room_id, noportal)
+function manual_noportal(room_id, noportal, warn_if_already_set)
    local room = load_room_from_database(room_id)
    if room ~= nil then
       if room.noportal ~= noportal then
          room.noportal = noportal
          save_room_to_database(room_id, room)
          Note("GMCP Mapper: No-portal flag "..(noportal == 1 and "set on" or "removed from").." room "..room_id..".")
-      else
+      elseif warn_if_already_set then
          Note("GMCP Mapper: Room "..room_id.." already has that portal status.")
       end
    else
