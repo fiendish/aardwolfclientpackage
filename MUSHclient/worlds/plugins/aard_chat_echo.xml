@@ -253,7 +253,9 @@ function OnPluginBroadcast (msg, id, name, text)
                if gmcp("char.status.state") ~= "5" and isMuted == 0 then
                   echo_msg(msg)
                else
-                  table.insert(msg_buffer, msg)
+                  if isMuted == 0 then
+                     table.insert(msg_buffer, msg)
+                  end
                end
             end
          end
