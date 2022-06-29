@@ -29,6 +29,33 @@ USAGE:
 
 </plugin>
 <triggers>
+
+<trigger
+   enabled="y"
+   name="ignoreLimit"
+   match="^You are already ignoring 10 people\.$"
+   regexp="y"
+   script="metIgnoreLimit"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+<trigger
+   enabled="n"
+   name="ignoreStart"
+   match="^You are (?:not ignoring anyone\.|ignoring:)$"
+   regexp="y"
+   script="startIgnoreList"
+   sequence="100"
+></trigger>
+<trigger
+   enabled="n"
+   name="ignoreEnd"
+   match="^$"
+   regexp="y"
+   script="endIgnoreList"
+   sequence="100"
+></trigger>
+
 <trigger
    enabled="n"
    name="remort_auction"
@@ -97,6 +124,23 @@ USAGE:
 <aliases>
 
 <alias
+   match="^ig(?:nore|nor|no|n)?([\s\w]+)?$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="clientIgnore"
+></alias>
+<alias
+   match="^mute\s?(\w+)?$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="muteName"
+></alias>
+
+<alias
    match="resetaard"
    enabled="y"
    sequence="100"
@@ -133,6 +177,147 @@ require "text_rect"
 require "scrollbar"
 
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
+
+-- Added by Crowley
+
+--[[
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+From    : Fiendish: Re: Silence Plugin concept
+Forum   : Personal - #427740
+To      : Fiendish Crowley
+Date    : Tue Jun 28 11:06:11 2022
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+| Reply to: Note 427735 posted by Crowley
+|
+| I'd like the comm log to have right-click option(s) for adding/removing names.
+| Free text input for adding and multilist for removing seems appropriate
+| unless you can think of a better unified interface.
+|
+| Don't worry about exact messaging. What you have sounds fine for now.
+|
+| Silencing imms is an interesting issue.
+| At least for current imms, pcheck gives a special response that will help
+| identify them. Obviously that doesn't work for players who become imms later,
+| but it's a start.
+|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]]--
+
+require 'serialize'
+
+if GetVariable("muteList") then
+   assert(loadstring(GetVariable("muteList"))) ()
+else
+   muteList = {}
+   SetVariable("muteList", serialize.save("muteList"))
+end
+
+function muteName(name, line, wildcards)
+
+   local playerName = wildcards[1]:lower():gsub("^%l", string.upper)
+
+	if playerName:upper() == "CLEAR" then
+		muteList = {}
+		Note("Clearing your muted list.")
+
+	elseif playerName ~= "" then
+		local mutePosition = checkIfMuted(playerName)
+
+		if #muteList == 0 then
+			table.insert(muteList, 1, playerName)
+			Note("Adding " .. playerName .. " to your muted list.")
+		else
+			if mutePosition ~= 0 then
+				table.remove(muteList, mutePosition)
+				Note("Removing " .. playerName .. " from your muted list.")
+			else
+				table.insert(muteList, 1, playerName)
+				Note("Adding " .. playerName .. " to your muted list.")
+			end
+		end
+	end
+   Note("")
+   if #muteList == 0 then
+      Note("You are not currently muting anyone.")
+	else
+      Note("You are muting:")
+      for i,v in ipairs(muteList) do
+		   Note(string.format("%3d) - %s", i, v))
+	   end
+   end
+   Note("Muted players are not ignored, only removed from commlog.")
+
+	SetVariable("muteList", serialize.save("muteList"))
+end
+
+
+function startIgnoreList()
+	EnableTrigger("ignoreLimit", false)
+	EnableTrigger("ignoreEnd")
+end
+
+function endIgnoreList()
+	Note("")
+	EnableTrigger("ignoreStart", false)
+	EnableTrigger("ignoreEnd", false)
+
+	if #muteList ~= 0 then
+
+		Note("You are muting:")
+
+		for i,v in ipairs(muteList) do
+			Note(string.format("%3d) - %s", i, v))
+		end
+
+
+   else
+      Note("You are not currently muting anyone.")
+	end
+   Note("Muted players are not ignored, only removed from commlog.")
+
+end
+
+function checkIfMuted(player)
+	local playerInList = 0
+
+	for i,v in ipairs(muteList) do
+		if v == player then
+		   playerInList = i
+		   break
+	   end
+   end
+	return playerInList
+end
+
+function encounterLimit()
+   EnableTrigger("ignoreLimit", false)
+   metIgnoreLimit(playerCapture)
+end
+
+function metIgnoreLimit()
+
+	EnableTrigger("ignoreLimit", false)
+	Note("")
+	Note("You are already ignoring 10 people. Checking your mute list...")
+
+	muteName("", "", {playerCapture})
+	playerCapture = nil
+end
+
+function clientIgnore(name, line, wildcards)
+	playerCapture = wildcards[1]:lower():gsub("^%l", string.upper)
+
+	EnableTrigger("ignoreLimit")
+	EnableTrigger("ignoreStart")
+	SendNoEcho("ignore " .. (playerCapture ~= "" and playerCapture or ""))
+end
+
+function menuEdit(list)
+   for k,_ in ipairs(list) do
+      table.remove(muteList, k)
+   end
+end
+-- end Added by Crowley
 
 local gap = 1
 MAX_LINES = 10000 -- how many lines to store in scrollback
@@ -779,7 +964,7 @@ function storeFromOutside(text, tab, add_timestamp, omit_log)
    elseif type(tab) == "string" then
       tab = findTab(tab)
    end
-   
+
    local res = nil
    if tab then
       local multiline_styles
@@ -880,10 +1065,11 @@ function OnPluginBroadcast(msg, id, name, text)
          local gmcpcomm = gmcp("comm.channel")
          local msg_text = gmcpcomm.msg or ""
          local chan = gmcpcomm.chan or ""
+		 local player = gmcpcomm.player or ""
          if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg_text), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if (not channels_table[chan]) or channels_table[chan]["capture"] then
                msg_text = filter_as_needed(msg_text)
-               if msg_text then
+               if msg_text and checkIfMuted(player) == 0 then
                   storeChannel(ColoursToStyles(msg_text, nil, nil, true), chan)
                end
             end
@@ -918,7 +1104,7 @@ function extend_rightclick_menu()
    for i, v in ipairs({
       {
          "Configure Font",
-         function() 
+         function()
             wanted_font = utils.fontpicker(font_name, font_size) --font dialog
             if wanted_font then
                font_name = wanted_font.name
@@ -1121,7 +1307,7 @@ function extend_rightclick_menu()
                tbl[k] = k
                defaults[k] = v["capture"]
             end
-      
+
             local capture_result = utils.multilistbox ("Choose which channels to capture to this communication log tab.", "Communication Log Channel Selection", tbl, defaults)
             if capture_result then
                for k,v in pairs(tabs_channel_captures[current_tab]) do
@@ -1139,7 +1325,7 @@ function extend_rightclick_menu()
             for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
                defaults[k] = v["capture"]
             end
-      
+
             local capture_result = utils.multilistbox ("Choose which non-channel messages to capture to this communication log tab.", "Communication Log Channel Selection", init_nonchannel_pairs, defaults)
             if capture_result then
                for k,v in pairs(tabs_nonchannel_captures[current_tab]) do
@@ -1182,6 +1368,39 @@ function extend_rightclick_menu()
          end
       },
       {"-", ""},
+	  {">Mute List Options", ""},
+	  {
+			"Add player to Mute list",
+			function()
+			local name = utils.inputbox ("Who would you like to mute?", "Mute player")
+			if not name then
+				return
+			else
+				muteName("", "", {name})
+			end
+			SaveState()
+			end
+	  },
+	  {
+			"Edit Mute List",
+			function()
+         local muted = {}
+         for _,v in ipairs(muteList) do
+            table.insert(muted, v)
+         end
+  			local capture_result = utils.multilistbox ("Choose which players to unmute.", "Muted Players List", muted)
+			if capture_result then
+            for k,_ in ipairs(capture_result) do
+               local player = muted[k]
+               Note("Removing " .. player .. " from mute list.")
+               table.remove(muteList, checkIfMuted(player))
+            end
+         end
+
+			end
+	  },
+	  {"<", ""},
+	  {"-", ""},
       {
          "Bring to Front",
          function()

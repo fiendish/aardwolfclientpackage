@@ -239,6 +239,8 @@ function OnPluginBroadcast (msg, id, name, text)
          local gmcp_comm = gmcp("comm.channel")
          local msg = gmcp_comm.msg or ""
          local chan = gmcp_comm.chan or ""
+         local player = gmcp_comm.player or ""
+         local res, isMuted = CallPlugin("b555825a4a5700c35fa80780", "checkIfMuted", player)
          if msg:find("\a") and (GetOption("enable_beeps") == 1) then
             Sound(GetInfo(50))
          end
@@ -248,7 +250,7 @@ function OnPluginBroadcast (msg, id, name, text)
                addNewChannel(chan)
             end
             if never_hide or channels_table[chan]["echo"] then
-               if gmcp("char.status.state") ~= "5" then
+               if gmcp("char.status.state") ~= "5" and isMuted == 0 then
                   echo_msg(msg)
                else
                   table.insert(msg_buffer, msg)
