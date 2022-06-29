@@ -61,14 +61,14 @@ split_col = 30
 
 function help(cmd, text)
    ColourNote(
-      "khaki", "", "  " .. cmd, 
+      "khaki", "", "  " .. cmd,
       "lightskyblue", "", string.rep(" ", (split_col - string.len(cmd))) .. text
    )
 end
 
 function subheading(cmd, text)
    ColourNote(
-      "paleturquoise", "", "  " .. cmd, 
+      "paleturquoise", "", "  " .. cmd,
       "paleturquoise", "", string.rep(" ", (split_col - string.len(cmd))) .. text
    )
 end
@@ -81,7 +81,7 @@ function aard_help()
    ColourNote("royalblue", "", line)
    subheading("Plugin Help Command", "Does What")
    Note()
-   
+
    if is_active("layout") then
       help("aard layout help", "Miniwindow layouts help")
    end
@@ -116,6 +116,7 @@ function aard_help()
    end
    if is_active("channels") then
       help("chats show / chats hide", "Show/hide the communication log")
+      help("mute [player] / mute clear", "Mutes/unmutes player, displays list, or clears list")
    end
    if is_active("echo") then
       help("chats echo", "List which channels are sent to the main output")
@@ -160,6 +161,6 @@ function getmemoryusage()
 end
 
 ]]>
-</script> 
+</script>
 
 </muclient>
