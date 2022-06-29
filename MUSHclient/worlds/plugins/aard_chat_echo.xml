@@ -249,13 +249,11 @@ function OnPluginBroadcast (msg, id, name, text)
             if not channels_table[chan] then
                addNewChannel(chan)
             end
-            if never_hide or channels_table[chan]["echo"] then
-               if gmcp("char.status.state") ~= "5" and isMuted == 0 then
+            if never_hide or channels_table[chan]["echo"] and isMuted == 0 then
+               if gmcp("char.status.state") ~= "5" then
                   echo_msg(msg)
                else
-                  if isMuted == 0 then
-                     table.insert(msg_buffer, msg)
-                  end
+                  table.insert(msg_buffer, msg)
                end
             end
          end
