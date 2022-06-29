@@ -20,6 +20,8 @@ USAGE:
 
    chats show       : show chats window
    chats hide       : hide chats window
+   mute [player]    : mutes a player from commlog, or displays mute list
+   mute clear       : clears mute list
 
    Drag title bar to move window.
    Drag inside text area to select text.
@@ -845,7 +847,6 @@ function OnPluginDisable()
    WindowShow( win, false )
 end --  OnPluginDisable
 
-require "serialize"
 function OnPluginSaveState()
    -- save window current location for next time
    movewindow.save_state(win)
