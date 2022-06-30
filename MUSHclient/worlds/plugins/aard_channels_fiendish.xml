@@ -182,29 +182,6 @@ dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
 -- Added by Crowley
 
---[[
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-From    : Fiendish: Re: Silence Plugin concept
-Forum   : Personal - #427740
-To      : Fiendish Crowley
-Date    : Tue Jun 28 11:06:11 2022
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-| Reply to: Note 427735 posted by Crowley
-|
-| I'd like the comm log to have right-click option(s) for adding/removing names.
-| Free text input for adding and multilist for removing seems appropriate
-| unless you can think of a better unified interface.
-|
-| Don't worry about exact messaging. What you have sounds fine for now.
-|
-| Silencing imms is an interesting issue.
-| At least for current imms, pcheck gives a special response that will help
-| identify them. Obviously that doesn't work for players who become imms later,
-| but it's a start.
-|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]]--
-
 require 'serialize'
 
 if GetVariable("muteList") then
@@ -283,7 +260,7 @@ function checkIfMuted(player)
 	local playerInList = 0
 
 	for i,v in ipairs(muteList) do
-		if v == player then
+		if v == player:lower():gsub("^%l", string.upper) then
 		   playerInList = i
 		   break
 	   end
