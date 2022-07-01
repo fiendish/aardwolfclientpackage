@@ -20,8 +20,6 @@ USAGE:
 
    chats show       : show chats window
    chats hide       : hide chats window
-   mute [player]    : mutes a player from commlog, or displays mute list
-   mute clear       : clears mute list
 
    Drag title bar to move window.
    Drag inside text area to select text.
@@ -31,32 +29,6 @@ USAGE:
 
 </plugin>
 <triggers>
-
-<trigger
-   enabled="y"
-   name="ignoreLimit"
-   match="^You are already ignoring 10 people\.$"
-   regexp="y"
-   script="metIgnoreLimit"
-   omit_from_output="y"
-   sequence="100"
-></trigger>
-<trigger
-   enabled="n"
-   name="ignoreStart"
-   match="^You are (?:not ignoring anyone\.|ignoring:)$"
-   regexp="y"
-   script="startIgnoreList"
-   sequence="100"
-></trigger>
-<trigger
-   enabled="n"
-   name="ignoreEnd"
-   match="^$"
-   regexp="y"
-   script="endIgnoreList"
-   sequence="100"
-></trigger>
 
 <trigger
    enabled="n"
@@ -126,23 +98,6 @@ USAGE:
 <aliases>
 
 <alias
-   match="^ig(?:nore|nor|no|n)?([\s\w]+)?$"
-   enabled="y"
-   regexp="y"
-   sequence="100"
-   ignore_case="y"
-   script="clientIgnore"
-></alias>
-<alias
-   match="^mute\s?(\w+)?$"
-   enabled="y"
-   regexp="y"
-   sequence="100"
-   ignore_case="y"
-   script="muteName"
-></alias>
-
-<alias
    match="resetaard"
    enabled="y"
    sequence="100"
@@ -180,118 +135,6 @@ require "scrollbar"
 
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
--- Added by Crowley
-
-require 'serialize'
-
-if GetVariable("muteList") then
-   assert(loadstring(GetVariable("muteList"))) ()
-else
-   muteList = {}
-   SetVariable("muteList", serialize.save("muteList"))
-end
-
-function muteName(name, line, wildcards)
-
-   local playerName = wildcards[1]:lower():gsub("^%l", string.upper)
-
-   if playerName:upper() == "CLEAR" then
-      muteList = {}
-      Note("Clearing your muted list.")
-
-   elseif playerName ~= "" then
-      local mutePosition = checkIfMuted(playerName)
-
-      if #muteList == 0 then
-         table.insert(muteList, 1, playerName)
-         Note("Adding " .. playerName .. " to your muted list.")
-      else
-         if mutePosition ~= 0 then
-            table.remove(muteList, mutePosition)
-            Note("Removing " .. playerName .. " from your muted list.")
-         else
-            table.insert(muteList, 1, playerName)
-            Note("Adding " .. playerName .. " to your muted list.")
-         end
-      end
-   end
-   Note("")
-   if #muteList == 0 then
-      Note("You are not currently muting anyone.")
-   else
-      Note("You are muting:")
-      for i,v in ipairs(muteList) do
-         Note(string.format("%3d) - %s", i, v))
-      end
-   end
-   Note("Muted players are not ignored, only removed from commlog.")
-
-   SetVariable("muteList", serialize.save("muteList"))
-end
-
-
-function startIgnoreList()
-   EnableTrigger("ignoreStart", false)
-   EnableTrigger("ignoreLimit", false)
-   EnableTrigger("ignoreEnd")
-end
-
-function endIgnoreList()
-   Note("")
-   EnableTrigger("ignoreEnd", false)
-
-   if #muteList ~= 0 then
-
-      Note("You are muting:")
-
-      for i,v in ipairs(muteList) do
-         Note(string.format("%3d) - %s", i, v))
-      end
-
-
-   else
-      Note("You are not currently muting anyone.")
-   end
-   Note("Muted players are not ignored, only removed from commlog.")
-
-end
-
-function checkIfMuted(player)
-   local playerInList = 0
-
-   for i,v in ipairs(muteList) do
-      if v == player:lower():gsub("^%l", string.upper) then
-         playerInList = i
-         break
-      end
-   end
-   return playerInList
-end
-
-function metIgnoreLimit()
-
-   EnableTrigger("ignoreLimit", false)
-   Note("")
-   Note("You are already ignoring 10 people. Checking your mute list...")
-
-   muteName("", "", {playerCapture})
-   playerCapture = nil
-end
-
-function clientIgnore(name, line, wildcards)
-   playerCapture = wildcards[1]:lower():gsub("^%l", string.upper)
-
-   EnableTrigger("ignoreLimit")
-   EnableTrigger("ignoreStart")
-   SendNoEcho("ignore " .. (playerCapture ~= "" and playerCapture or ""))
-end
-
-function menuEdit(list)
-   for k,_ in ipairs(list) do
-      table.remove(muteList, k)
-   end
-end
--- end Added by Crowley
 
 local gap = 1
 MAX_LINES = 10000 -- how many lines to store in scrollback
@@ -819,6 +662,7 @@ function OnPluginDisable()
    WindowShow( win, false )
 end --  OnPluginDisable
 
+require "serialize"
 function OnPluginSaveState()
    -- save window current location for next time
    movewindow.save_state(win)
@@ -1039,10 +883,11 @@ function OnPluginBroadcast(msg, id, name, text)
          local msg_text = gmcpcomm.msg or ""
          local chan = gmcpcomm.chan or ""
 		 local player = gmcpcomm.player or ""
+       local res, isMuted = CallPlugin("55616ea13339bc68e963e1f8", "checkIfMuted", player)
          if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg_text), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if (not channels_table[chan]) or channels_table[chan]["capture"] then
                msg_text = filter_as_needed(msg_text)
-               if msg_text and checkIfMuted(player) == 0 then
+               if msg_text and isMuted == 0 then
                   storeChannel(ColoursToStyles(msg_text, nil, nil, true), chan)
                end
             end
@@ -1349,15 +1194,17 @@ function extend_rightclick_menu()
 			if not name then
 				return
 			else
-				muteName("", "", {name})
+				CallPlugin("55616ea13339bc68e963e1f8", "muteName", "", "", name, true)
 			end
-			SaveState()
 			end
 	  },
 	  {
 			"Edit Mute List",
 			function()
-         local muted = {}
+         local muted, muteList = {}, {}
+         if GetPluginVariable("55616ea13339bc68e963e1f8", "muteList") then
+            assert(loadstring(GetPluginVariable("55616ea13339bc68e963e1f8", "muteList"))) ()
+         end
          for _,v in ipairs(muteList) do
             table.insert(muted, v)
          end
@@ -1365,11 +1212,9 @@ function extend_rightclick_menu()
 			if capture_result then
             for k,_ in ipairs(capture_result) do
                local player = muted[k]
-               Note("Removing " .. player .. " from mute list.")
-               table.remove(muteList, checkIfMuted(player))
+               CallPlugin("55616ea13339bc68e963e1f8", "muteName", "", "", player, true)
             end
          end
-
 			end
 	  },
 	  {"<", ""},

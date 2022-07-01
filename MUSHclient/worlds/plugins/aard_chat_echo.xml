@@ -22,11 +22,42 @@ USAGE:
    chats echo on      : show all channels in main window
    chats echo off     : do not show any channels in main window
    chats echo custom  : select a custom list of channels to show in the main window
+   mute [player]      : mutes a player from commlog, or displays mute list
+   mute clear         : clears mute list
 </description>
 
 </plugin>
 
 <triggers>
+
+<trigger
+   enabled="y"
+   name="ignoreLimit"
+   match="^You are already ignoring 10 people\.$"
+   regexp="y"
+   script="metIgnoreLimit"
+   omit_from_output="y"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   name="ignoreStart"
+   match="^You are (?:not ignoring anyone\.|ignoring:)$"
+   regexp="y"
+   script="startIgnoreList"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   name="ignoreEnd"
+   match="^$"
+   regexp="y"
+   script="endIgnoreList"
+   sequence="100"
+></trigger>
+
 <trigger
    enabled="n"
    name="warfare"
@@ -127,6 +158,24 @@ USAGE:
 
 <aliases>
 <alias
+   match="^ig(?:nore|nor|no|n)?([\s\w]+)?$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="clientIgnore"
+></alias>
+
+<alias
+   match="^mute\s?(\w+)?$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="muteName"
+></alias>
+
+<alias
    script="chat_echo_wrap"
    match="^chats? echo( on| off| channels| nonchannels)?$"
    enabled="y"
@@ -143,6 +192,126 @@ USAGE:
 
 require "pairsbykeys"
 require "gmcphelper"
+
+-- Added by Crowley
+
+require 'serialize'
+
+if GetVariable("muteList") then
+   assert(loadstring(GetVariable("muteList"))) ()
+else
+   muteList = {}
+   SetVariable("muteList", serialize.save("muteList"))
+end
+
+function muteName(name, line, wildcards, called)
+   local playerName = ""
+
+   if type(wildcards) == "string" then
+      playerName = wildcards:lower():gsub("^%l", string.upper)
+   else
+      playerName = wildcards[1]:lower():gsub("^%l", string.upper)
+   end
+
+   if playerName:upper() == "CLEAR" then
+      muteList = {}
+      Note("Clearing your muted list.")
+
+   elseif playerName ~= "" then
+      local mutePosition = checkIfMuted(playerName)
+
+      if #muteList == 0 then
+         table.insert(muteList, 1, playerName)
+         Note("Adding " .. playerName .. " to your muted list.")
+      else
+         if mutePosition ~= 0 then
+            table.remove(muteList, mutePosition)
+            Note("Removing " .. playerName .. " from your muted list.")
+         else
+            table.insert(muteList, 1, playerName)
+            Note("Adding " .. playerName .. " to your muted list.")
+         end
+      end
+   end
+   if not called then
+      Note("")
+      if #muteList == 0 then
+         Note("You are not currently muting anyone.")
+      else
+         Note("You are muting:")
+         for i,v in ipairs(muteList) do
+            Note(string.format("%3d) - %s", i, v))
+         end
+      end
+      Note("Muted players are not ignored, only removed from commlog.")
+   end
+
+   SetVariable("muteList", serialize.save("muteList"))
+end
+
+
+function startIgnoreList()
+   EnableTrigger("ignoreStart", false)
+   EnableTrigger("ignoreLimit", false)
+   EnableTrigger("ignoreEnd")
+end
+
+function endIgnoreList()
+   Note("")
+   EnableTrigger("ignoreEnd", false)
+
+   if #muteList ~= 0 then
+
+      Note("You are muting:")
+
+      for i,v in ipairs(muteList) do
+         Note(string.format("%3d) - %s", i, v))
+      end
+
+
+   else
+      Note("You are not currently muting anyone.")
+   end
+   Note("Muted players are not ignored, only removed from commlog.")
+
+end
+
+function checkIfMuted(player)
+   local playerInList = 0
+
+   for i,v in ipairs(muteList) do
+      if v == player:lower():gsub("^%l", string.upper) then
+         playerInList = i
+         break
+      end
+   end
+   return playerInList
+end
+
+function metIgnoreLimit()
+
+   EnableTrigger("ignoreLimit", false)
+   Note("")
+   Note("You are already ignoring 10 people. Checking your mute list...")
+
+   muteName("", "", {playerCapture})
+   playerCapture = nil
+end
+
+function clientIgnore(name, line, wildcards)
+   playerCapture = wildcards[1]:lower():gsub("^%l", string.upper)
+
+   EnableTrigger("ignoreLimit")
+   EnableTrigger("ignoreStart")
+   SendNoEcho("ignore " .. (playerCapture ~= "" and playerCapture or ""))
+end
+
+function menuEdit(list)
+   for k,_ in ipairs(list) do
+      table.remove(muteList, k)
+   end
+end
+-- end Added by Crowley
 
 local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction"}
 local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations"}
@@ -344,7 +513,6 @@ function chat_echo_wrap (name, line, wildcards)
    chat_echo(Trim(wildcards[1]):lower())
 end -- chat_echo
 
-require "serialize"
 function OnPluginSaveState()
    SetVariable("channels_table", serialize.save("channels_table"))
    SetVariable("nonchannels_table", serialize.save("nonchannels_table"))
