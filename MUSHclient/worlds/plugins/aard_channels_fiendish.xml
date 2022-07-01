@@ -1201,7 +1201,8 @@ function extend_rightclick_menu()
 	  {
 			"Edit Mute List",
 			function()
-         local muted, muteList = {}, {}
+         local muted = {}
+         muteList = {}
          if GetPluginVariable("55616ea13339bc68e963e1f8", "muteList") then
             assert(loadstring(GetPluginVariable("55616ea13339bc68e963e1f8", "muteList"))) ()
          end
