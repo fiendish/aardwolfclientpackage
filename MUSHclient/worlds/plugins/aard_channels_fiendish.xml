@@ -195,100 +195,95 @@ function muteName(name, line, wildcards)
 
    local playerName = wildcards[1]:lower():gsub("^%l", string.upper)
 
-	if playerName:upper() == "CLEAR" then
-		muteList = {}
-		Note("Clearing your muted list.")
+   if playerName:upper() == "CLEAR" then
+      muteList = {}
+      Note("Clearing your muted list.")
 
-	elseif playerName ~= "" then
-		local mutePosition = checkIfMuted(playerName)
+   elseif playerName ~= "" then
+      local mutePosition = checkIfMuted(playerName)
 
-		if #muteList == 0 then
-			table.insert(muteList, 1, playerName)
-			Note("Adding " .. playerName .. " to your muted list.")
-		else
-			if mutePosition ~= 0 then
-				table.remove(muteList, mutePosition)
-				Note("Removing " .. playerName .. " from your muted list.")
-			else
-				table.insert(muteList, 1, playerName)
-				Note("Adding " .. playerName .. " to your muted list.")
-			end
-		end
-	end
+      if #muteList == 0 then
+         table.insert(muteList, 1, playerName)
+         Note("Adding " .. playerName .. " to your muted list.")
+      else
+         if mutePosition ~= 0 then
+            table.remove(muteList, mutePosition)
+            Note("Removing " .. playerName .. " from your muted list.")
+         else
+            table.insert(muteList, 1, playerName)
+            Note("Adding " .. playerName .. " to your muted list.")
+         end
+      end
+   end
    Note("")
    if #muteList == 0 then
       Note("You are not currently muting anyone.")
-	else
+   else
       Note("You are muting:")
       for i,v in ipairs(muteList) do
-		   Note(string.format("%3d) - %s", i, v))
-	   end
+         Note(string.format("%3d) - %s", i, v))
+      end
    end
    Note("Muted players are not ignored, only removed from commlog.")
 
-	SetVariable("muteList", serialize.save("muteList"))
+   SetVariable("muteList", serialize.save("muteList"))
 end
 
 
 function startIgnoreList()
-	EnableTrigger("ignoreLimit", false)
-	EnableTrigger("ignoreEnd")
+   EnableTrigger("ignoreStart", false)
+   EnableTrigger("ignoreLimit", false)
+   EnableTrigger("ignoreEnd")
 end
 
 function endIgnoreList()
-	Note("")
-	EnableTrigger("ignoreStart", false)
-	EnableTrigger("ignoreEnd", false)
+   Note("")
+   EnableTrigger("ignoreEnd", false)
 
-	if #muteList ~= 0 then
+   if #muteList ~= 0 then
 
-		Note("You are muting:")
+      Note("You are muting:")
 
-		for i,v in ipairs(muteList) do
-			Note(string.format("%3d) - %s", i, v))
-		end
+      for i,v in ipairs(muteList) do
+         Note(string.format("%3d) - %s", i, v))
+      end
 
 
    else
       Note("You are not currently muting anyone.")
-	end
+   end
    Note("Muted players are not ignored, only removed from commlog.")
 
 end
 
 function checkIfMuted(player)
-	local playerInList = 0
+   local playerInList = 0
 
-	for i,v in ipairs(muteList) do
-		if v == player:lower():gsub("^%l", string.upper) then
-		   playerInList = i
-		   break
-	   end
+   for i,v in ipairs(muteList) do
+      if v == player:lower():gsub("^%l", string.upper) then
+         playerInList = i
+         break
+      end
    end
-	return playerInList
-end
-
-function encounterLimit()
-   EnableTrigger("ignoreLimit", false)
-   metIgnoreLimit(playerCapture)
+   return playerInList
 end
 
 function metIgnoreLimit()
 
-	EnableTrigger("ignoreLimit", false)
-	Note("")
-	Note("You are already ignoring 10 people. Checking your mute list...")
+   EnableTrigger("ignoreLimit", false)
+   Note("")
+   Note("You are already ignoring 10 people. Checking your mute list...")
 
-	muteName("", "", {playerCapture})
-	playerCapture = nil
+   muteName("", "", {playerCapture})
+   playerCapture = nil
 end
 
 function clientIgnore(name, line, wildcards)
-	playerCapture = wildcards[1]:lower():gsub("^%l", string.upper)
+   playerCapture = wildcards[1]:lower():gsub("^%l", string.upper)
 
-	EnableTrigger("ignoreLimit")
-	EnableTrigger("ignoreStart")
-	SendNoEcho("ignore " .. (playerCapture ~= "" and playerCapture or ""))
+   EnableTrigger("ignoreLimit")
+   EnableTrigger("ignoreStart")
+   SendNoEcho("ignore " .. (playerCapture ~= "" and playerCapture or ""))
 end
 
 function menuEdit(list)
