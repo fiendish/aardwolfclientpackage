@@ -409,7 +409,7 @@ function OnPluginBroadcast (msg, id, name, text)
          local msg = gmcp_comm.msg or ""
          local chan = gmcp_comm.chan or ""
          local player = gmcp_comm.player or ""
-         local res, isMuted = CallPlugin("b555825a4a5700c35fa80780", "checkIfMuted", player)
+         local isMuted = checkIfMuted(player)
          if msg:find("\a") and (GetOption("enable_beeps") == 1) then
             Sound(GetInfo(50))
          end
