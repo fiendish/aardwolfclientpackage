@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2222 snapshot
+- misg change: The GMCP mapper will make less noise during recon if noportal/norecall flags aren't going to change.
+- bug fix: MUSHclient.exe has been updated so that ColourTell and ColourNote will accept nil for background color in Lua. This fixes a recently uncovered bug in Bast's plugins that use his TextToColourTell function.
+
 r2220 snapshot
 - bug fix: Moving from a PK room into a continent room while the bigmap plugin display is merged into the GMCP mapper window will now clear the title blinking.
 
