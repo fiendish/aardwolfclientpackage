@@ -3,27 +3,27 @@
 
 <muclient>
 <plugin
-   name="Aardwolf_Chat_Echo"
-   author="Fiendish"
-   id="55616ea13339bc68e963e1f8"
-   language="Lua"
-   purpose="Control whether certain channels get hidden from main output"
-   date_written="2011-07-27 01:00:00"
-   requires="4.75"
-   version="1.0"
-   save_state="y"
-   sequence="-8999"
+	name="Aardwolf_Chat_Echo"
+	author="Fiendish"
+	id="55616ea13339bc68e963e1f8"
+	language="Lua"
+	purpose="Control whether certain channels get hidden from main output"
+	date_written="2011-07-27 01:00:00"
+	requires="4.75"
+	version="1.0"
+	save_state="y"
+	sequence="-8999"
 >
 <!-- sequence must be before 0 to not double trigger world triggers -->
 <!-- sequence must be after channels plugin to capture unechoed info -->
 <description trim="y">
 USAGE:
 
-   chats echo on      : show all channels in main window
-   chats echo off     : do not show any channels in main window
-   chats echo custom  : select a custom list of channels to show in the main window
-   mute [player]      : mutes a player from commlog, or displays mute list
-   mute clear         : clears mute list
+	chats echo on		: show all channels in main window
+	chats echo off    : do not show any channels in main window
+	chats echo custom : select a custom list of channels to show in the main window
+	mute [player]     : mutes a player from commlog, or displays mute list
+	mute clear        : clears mute list
 </description>
 
 </plugin>
@@ -31,126 +31,126 @@ USAGE:
 <triggers>
 
 <trigger
-   enabled="y"
-   name="ignoreLimit"
-   match="^You are already ignoring 10 people\.$"
-   regexp="y"
-   script="metIgnoreLimit"
-   omit_from_output="y"
-   sequence="100"
+	enabled="y"
+	name="ignoreLimit"
+	match="^You are already ignoring 10 people\.$"
+	regexp="y"
+	script="metIgnoreLimit"
+	omit_from_output="y"
+	sequence="100"
 ></trigger>
 
 <trigger
-   enabled="n"
-   name="ignoreStart"
-   match="^You are (?:not ignoring anyone\.|ignoring:)$"
-   regexp="y"
-   script="startIgnoreList"
-   sequence="100"
+	enabled="n"
+	name="ignoreStart"
+	match="^You are (?:not ignoring anyone\.|ignoring:)$"
+	regexp="y"
+	script="startIgnoreList"
+	sequence="100"
 ></trigger>
 
 <trigger
-   enabled="n"
-   name="ignoreEnd"
-   match="^$"
-   regexp="y"
-   script="endIgnoreList"
-   sequence="100"
+	enabled="n"
+	name="ignoreEnd"
+	match="^$"
+	regexp="y"
+	script="endIgnoreList"
+	sequence="100"
 ></trigger>
 
 <trigger
-   enabled="n"
-   name="warfare"
-   match="^(WARFARE|GENOCIDE):.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
+	enabled="n"
+	name="warfare"
+	match="^(WARFARE|GENOCIDE):.+$"
+	regexp="y"
+	script="untagged_info"
+	omit_from_output="y"
+	sequence="100"
+	send_to="12"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
 
 <trigger
-   enabled="n"
-   name="remort_auction"
-   match="^Remort Auction:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
+	enabled="n"
+	name="remort_auction"
+	match="^Remort Auction:.+$"
+	regexp="y"
+	script="untagged_info"
+	omit_from_output="y"
+	sequence="100"
+	send_to="12"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
 
 <trigger
-   enabled="n"
-   name="global_quest"
-   match="^Global Quest:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
+	enabled="n"
+	name="global_quest"
+	match="^Global Quest:.+$"
+	regexp="y"
+	script="untagged_info"
+	omit_from_output="y"
+	sequence="100"
+	send_to="12"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
 
 <trigger
-   enabled="n"
-   name="info"
-   match="^INFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
+	enabled="n"
+	name="info"
+	match="^INFO:.+$"
+	regexp="y"
+	script="untagged_info"
+	omit_from_output="y"
+	sequence="100"
+	send_to="12"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
 
 <trigger
-   enabled="n"
-   name="raidinfo"
-   match="^RAIDINFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
+	enabled="n"
+	name="raidinfo"
+	match="^RAIDINFO:.+$"
+	regexp="y"
+	script="untagged_info"
+	omit_from_output="y"
+	sequence="100"
+	send_to="12"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
 
 <trigger
-   enabled="n"
-   name="claninfo"
-   match="^CLANINFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
+	enabled="n"
+	name="claninfo"
+	match="^CLANINFO:.+$"
+	regexp="y"
+	script="untagged_info"
+	omit_from_output="y"
+	sequence="100"
+	send_to="12"
 ><send>StopEvaluatingTriggers(true)</send></trigger>
 
 <trigger
-   enabled="n"
-   match="^$"
-   regexp="y"
-   name="end_gag_omit"
-   group="end_gag"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
+	enabled="n"
+	match="^$"
+	regexp="y"
+	name="end_gag_omit"
+	group="end_gag"
+	omit_from_output="y"
+	sequence="100"
+	send_to="12"
 >
 <send>
-   EnableTriggerGroup("end_gag", false)
+	EnableTriggerGroup("end_gag", false)
 </send>
 </trigger>
 
 <trigger
-   enabled="n"
-   match="."
-   regexp="y"
-   name="end_gag_keep"
-   group="end_gag"
-   omit_from_output="n"
-   sequence="101"
-   send_to="12"
+	enabled="n"
+	match="."
+	regexp="y"
+	name="end_gag_keep"
+	group="end_gag"
+	omit_from_output="n"
+	sequence="101"
+	send_to="12"
 >
 <send>
-   EnableTriggerGroup("end_gag", false)
+	EnableTriggerGroup("end_gag", false)
 </send>
 </trigger>
 
@@ -158,30 +158,30 @@ USAGE:
 
 <aliases>
 <alias
-   match="^ig(?:nore|nor|no|n)?([\s\w]+)?$"
-   enabled="y"
-   regexp="y"
-   sequence="100"
-   ignore_case="y"
-   script="clientIgnore"
+	match="^ig(?:nore|nor|no|n)?([\s\w]+)?$"
+	enabled="y"
+	regexp="y"
+	sequence="100"
+	ignore_case="y"
+	script="clientIgnore"
 ></alias>
 
 <alias
-   match="^mute\s?(\w+)?$"
-   enabled="y"
-   regexp="y"
-   sequence="100"
-   ignore_case="y"
-   script="muteName"
+	match="^mute\s?(\w+)?$"
+	enabled="y"
+	regexp="y"
+	sequence="100"
+	ignore_case="y"
+	script="muteName"
 ></alias>
 
 <alias
-   script="chat_echo_wrap"
-   match="^chats? echo( on| off| channels| nonchannels)?$"
-   enabled="y"
-   regexp="y"
-   sequence="100"
-   ignore_case="y"
+	script="chat_echo_wrap"
+	match="^chats? echo( on| off| channels| nonchannels)?$"
+	enabled="y"
+	regexp="y"
+	sequence="100"
+	ignore_case="y"
 ></alias>
 </aliases>
 
@@ -198,118 +198,118 @@ require "gmcphelper"
 require 'serialize'
 
 if GetVariable("muteList") then
-   assert(loadstring(GetVariable("muteList"))) ()
+	assert(loadstring(GetVariable("muteList"))) ()
 else
-   muteList = {}
-   SetVariable("muteList", serialize.save("muteList"))
+	muteList = {}
+	SetVariable("muteList", serialize.save("muteList"))
 end
 
 function muteName(name, line, wildcards, called)
-   local playerName = ""
+	local playerName = ""
 
-   if type(wildcards) == "string" then
-      playerName = wildcards:lower():gsub("^%l", string.upper)
-   else
-      playerName = wildcards[1]:lower():gsub("^%l", string.upper)
-   end
+	if type(wildcards) == "string" then
+		playerName = wildcards:lower():gsub("^%l", string.upper)
+	else
+		playerName = wildcards[1]:lower():gsub("^%l", string.upper)
+	end
 
-   if playerName:upper() == "CLEAR" then
-      muteList = {}
-      Note("Clearing your muted list.")
+	if playerName:upper() == "CLEAR" then
+		muteList = {}
+		Note("Clearing your muted list.")
 
-   elseif playerName ~= "" then
-      local mutePosition = checkIfMuted(playerName)
+	elseif playerName ~= "" then
+		local mutePosition = checkIfMuted(playerName)
 
-      if #muteList == 0 then
-         table.insert(muteList, 1, playerName)
-         Note("Adding " .. playerName .. " to your muted list.")
-      else
-         if mutePosition ~= 0 then
-            table.remove(muteList, mutePosition)
-            Note("Removing " .. playerName .. " from your muted list.")
-         else
-            table.insert(muteList, 1, playerName)
-            Note("Adding " .. playerName .. " to your muted list.")
-         end
-      end
-   end
-   if not called then
-      Note("")
-      if #muteList == 0 then
-         Note("You are not currently muting anyone.")
-      else
-         Note("You are muting:")
-         for i,v in ipairs(muteList) do
-            Note(string.format("%3d) - %s", i, v))
-         end
-      end
-      Note("Muted players are not ignored, only removed from commlog.")
-   end
+		if #muteList == 0 then
+			table.insert(muteList, 1, playerName)
+			Note("Adding " .. playerName .. " to your muted list.")
+		else
+			if mutePosition ~= 0 then
+				table.remove(muteList, mutePosition)
+				Note("Removing " .. playerName .. " from your muted list.")
+			else
+				table.insert(muteList, 1, playerName)
+				Note("Adding " .. playerName .. " to your muted list.")
+			end
+		end
+	end
+	if not called then
+		Note("")
+		if #muteList == 0 then
+			Note("You are not currently muting anyone.")
+		else
+			Note("You are muting:")
+			for i,v in ipairs(muteList) do
+				Note(string.format("%3d) - %s", i, v))
+			end
+		end
+		Note("Muted players are not ignored, only removed from commlog.")
+	end
 
-   SetVariable("muteList", serialize.save("muteList"))
+	SetVariable("muteList", serialize.save("muteList"))
 end
 
 
 function startIgnoreList()
-   EnableTrigger("ignoreStart", false)
-   EnableTrigger("ignoreLimit", false)
-   EnableTrigger("ignoreEnd")
+	EnableTrigger("ignoreStart", false)
+	EnableTrigger("ignoreLimit", false)
+	EnableTrigger("ignoreEnd")
 end
 
 function endIgnoreList()
-   Note("")
-   EnableTrigger("ignoreEnd", false)
+	Note("")
+	EnableTrigger("ignoreEnd", false)
 
-   if #muteList ~= 0 then
+	if #muteList ~= 0 then
 
-      Note("You are muting:")
+		Note("You are muting:")
 
-      for i,v in ipairs(muteList) do
-         Note(string.format("%3d) - %s", i, v))
-      end
+		for i,v in ipairs(muteList) do
+			Note(string.format("%3d) - %s", i, v))
+		end
 
 
-   else
-      Note("You are not currently muting anyone.")
-   end
-   Note("Muted players are not ignored, only removed from commlog.")
+	else
+		Note("You are not currently muting anyone.")
+	end
+	Note("Muted players are not ignored, only removed from commlog.")
 
 end
 
 function checkIfMuted(player)
-   local playerInList = 0
+	local playerInList = 0
 
-   for i,v in ipairs(muteList) do
-      if v == player:lower():gsub("^%l", string.upper) then
-         playerInList = i
-         break
-      end
-   end
-   return playerInList
+	for i,v in ipairs(muteList) do
+		if v == player:lower():gsub("^%l", string.upper) then
+			playerInList = i
+			break
+		end
+	end
+	return playerInList
 end
 
 function metIgnoreLimit()
 
-   EnableTrigger("ignoreLimit", false)
-   Note("")
-   Note("You are already ignoring 10 people. Checking your mute list...")
+	EnableTrigger("ignoreLimit", false)
+	Note("")
+	Note("You are already ignoring 10 people. Checking your mute list...")
 
-   muteName("", "", {playerCapture})
-   playerCapture = nil
+	muteName("", "", {playerCapture})
+	playerCapture = nil
 end
 
 function clientIgnore(name, line, wildcards)
-   playerCapture = wildcards[1]:lower():gsub("^%l", string.upper)
+	playerCapture = wildcards[1]:lower():gsub("^%l", string.upper)
 
-   EnableTrigger("ignoreLimit")
-   EnableTrigger("ignoreStart")
-   SendNoEcho("ignore " .. (playerCapture ~= "" and playerCapture or ""))
+	EnableTrigger("ignoreLimit")
+	EnableTrigger("ignoreStart")
+	SendNoEcho("ignore " .. (playerCapture ~= "" and playerCapture or ""))
 end
 
 function menuEdit(list)
-   for k,_ in ipairs(list) do
-      table.remove(muteList, k)
-   end
+	for k,_ in ipairs(list) do
+		table.remove(muteList, k)
+	end
 end
 -- end Added by Crowley
 
@@ -332,20 +332,20 @@ echo_warfare = GetVariable("echo_warfare_2") ~= "0"
 never_hide = true
 list_of_filter_enablers = {}
 function enable_hiding(true_false, enabler_id)
-   list_of_filter_enablers[enabler_id] = true_false or nil
-   num_enablers = 0
-   for k,v in pairs(list_of_filter_enablers) do
-      num_enablers = num_enablers + 1
-   end
-   if (not aard_req_novisuals_mode) and (num_enablers > 0) then
-      never_hide = false
-      addDefaultNonChannels()
-   else
-      never_hide = true
-      for i,v in ipairs(init_nonchannel_keys) do
-         EnableTrigger(v, false)
-      end
-   end
+	list_of_filter_enablers[enabler_id] = true_false or nil
+	num_enablers = 0
+	for k,v in pairs(list_of_filter_enablers) do
+		num_enablers = num_enablers + 1
+	end
+	if (not aard_req_novisuals_mode) and (num_enablers > 0) then
+		never_hide = false
+		addDefaultNonChannels()
+	else
+		never_hide = true
+		for i,v in ipairs(init_nonchannel_keys) do
+			EnableTrigger(v, false)
+		end
+	end
 end
 
 enable_hiding(false, GetPluginID())
@@ -357,194 +357,194 @@ loadstring(GetVariable("channels_table") or "")()
 loadstring(GetVariable("nonchannels_table") or "")()
 
 function addNewChannel(name)
-   if not channels_table[name] then
-      channels_table[name] = {["echo"]=true}
-   end
+	if not channels_table[name] then
+		channels_table[name] = {["echo"]=true}
+	end
 end
 
 function other_should_echo(name)
-   if never_hide or nonchannels_table[name]["echo"] then
-      return true
-   end
-   return false
+	if never_hide or nonchannels_table[name]["echo"] then
+		return true
+	end
+	return false
 end
 
 function addDefaultNonChannels()
-   for i,v in ipairs(init_nonchannel_keys) do
-      nonchannels_table[v] = nonchannels_table[v] or {["echo"]=true}
-      EnableTrigger(v, not other_should_echo(v))
-   end
+	for i,v in ipairs(init_nonchannel_keys) do
+		nonchannels_table[v] = nonchannels_table[v] or {["echo"]=true}
+		EnableTrigger(v, not other_should_echo(v))
+	end
 end
 
 function addDefaultChannels()
-   for i,v in ipairs(init_channel_keys) do
-      addNewChannel(v)
-   end
-   addDefaultNonChannels()
+	for i,v in ipairs(init_channel_keys) do
+		addNewChannel(v)
+	end
+	addDefaultNonChannels()
 end
 
 addDefaultChannels()
 
 function echo_msg(msg)
-   Simulate(ColoursToANSI(msg).."\r\n")
-   if gmcp("config.compact") ~= "YES" then
-      Simulate("\r\n")
-   end
-   EnableTriggerGroup("end_gag", true) -- gags trailing blank line
+	Simulate(ColoursToANSI(msg).."\r\n")
+	if gmcp("config.compact") ~= "YES" then
+		Simulate("\r\n")
+	end
+	EnableTriggerGroup("end_gag", true) -- gags trailing blank line
 end
 
 function OnPluginListChanged ()
-   dofile "lua/aard_requirements.lua"
-   for k,v in pairs(list_of_filter_enablers) do
-      enable_hiding(GetPluginInfo(k, 17), k)
-   end
+	dofile "lua/aard_requirements.lua"
+	for k,v in pairs(list_of_filter_enablers) do
+		enable_hiding(GetPluginInfo(k, 17), k)
+	end
 end
 
 msg_buffer = {}
 function OnPluginBroadcast (msg, id, name, text)
-   -- Look for GMCP handler.
-   if (id == '3e7dedbe37e44942dd46d264') then
-      if (text == "comm.channel") then
-         local gmcp_comm = gmcp("comm.channel")
-         local msg = gmcp_comm.msg or ""
-         local chan = gmcp_comm.chan or ""
-         local player = gmcp_comm.player or ""
-         local isMuted = checkIfMuted(player)
-         if msg:find("\a") and (GetOption("enable_beeps") == 1) then
-            Sound(GetInfo(50))
-         end
+	-- Look for GMCP handler.
+	if (id == '3e7dedbe37e44942dd46d264') then
+		if (text == "comm.channel") then
+			local gmcp_comm = gmcp("comm.channel")
+			local msg = gmcp_comm.msg or ""
+			local chan = gmcp_comm.chan or ""
+			local player = gmcp_comm.player or ""
+			local isMuted = checkIfMuted(player)
+			if msg:find("\a") and (GetOption("enable_beeps") == 1) then
+				Sound(GetInfo(50))
+			end
 
-         if (never_hide or other_should_echo("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
-            if not channels_table[chan] then
-               addNewChannel(chan)
-            end
-            if never_hide or channels_table[chan]["echo"] and isMuted == 0 then
-               if gmcp("char.status.state") ~= "5" then
-                  echo_msg(msg)
-               else
-                  table.insert(msg_buffer, msg)
-               end
-            end
-         end
-      elseif (text == "char.status") then
-         if gmcp("char.status.state") ~= "5" then -- show messages that were buffered while in note mode
-            if #msg_buffer > 0 then
-               Note("Replaying all channel messages received while in note writing mode...")
-               for i,v in ipairs(msg_buffer) do
-                  echo_msg(v)
-               end
-               msg_buffer = {}
-            end
-         end
-      end
-   end
+			if (never_hide or other_should_echo("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
+				if not channels_table[chan] then
+					addNewChannel(chan)
+				end
+				if never_hide or channels_table[chan]["echo"] and isMuted == 0 then
+					if gmcp("char.status.state") ~= "5" then
+						echo_msg(msg)
+					else
+						table.insert(msg_buffer, msg)
+					end
+				end
+			end
+		elseif (text == "char.status") then
+			if gmcp("char.status.state") ~= "5" then -- show messages that were buffered while in note mode
+				if #msg_buffer > 0 then
+					Note("Replaying all channel messages received while in note writing mode...")
+					for i,v in ipairs(msg_buffer) do
+						echo_msg(v)
+					end
+					msg_buffer = {}
+				end
+			end
+		end
+	end
 end
 
 function untagged_info (name, line, wildcards, styles)
-   EnableTriggerGroup("end_gag", true) -- gags trailing blank line
+	EnableTriggerGroup("end_gag", true) -- gags trailing blank line
 end
 
 function rejection_message()
   Note()
   ColourNote ("yellow", "", "You can't hide messages with \"chats echo on\" or \"chats echo custom\" unless you have at least one secondary capture plugin active.")
   ColourNote ("yellow", "", "If you want to disable certain channels, do it with the available in-game commands.")
-  ColourNote ("yellow", "", [[Otherwise you must have at least one plugin which uses the following line of code before disabling chat display in the client is allowed:   CallPlugin("55616ea13339bc68e963e1f8", "enable_hiding", true, GetPluginID())]])
+  ColourNote ("yellow", "", [[Otherwise you must have at least one plugin which uses the following line of code before disabling chat display in the client is allowed:	CallPlugin("55616ea13339bc68e963e1f8", "enable_hiding", true, GetPluginID())]])
   Note()
 end
 
 function chat_echo (toggle)
-   if toggle == "" then
-      ColourNote("yellow", "", "Current channel echo status: ")
-      for k,v in pairsByKeys(channels_table) do
-         ColourTell("yellow", "", tostring(k).." ")
-         ColourNote((v["echo"] and "lime") or "red", "", tostring(v["echo"] or "false"))
-      end
-      Note("")
-   elseif toggle == "on" then
-      for k,v in pairs(channels_table) do
-         channels_table[k]["echo"] = true
-      end
-      ColourNote ("yellow", "", "All chats are now", "lime", "", " shown ", "yellow", "", "in the main window.")
-      ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled separately.")
-      Note("")
-   elseif toggle == "off" then
-      if never_hide then
-         return rejection_message()
-      end
-      for k,v in pairs(channels_table) do
-         channels_table[k]["echo"] = nil
-      end
-      ColourNote ("yellow", "", "All chats are now", "red", "", " hidden ", "yellow", "", "in the main window.")
-      ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled separately.")
-      Note("")
-   elseif toggle == "channels" then
-      local tbl = {}
-      local defaults = {}
-      local i = 1
-      for k,v in pairsByKeys(channels_table) do
-         tbl[i] = k
-         defaults[i] = v["echo"]
-         i = i+1
-      end
-      local echo_result = utils.multilistbox("Choose which channels to show in the main window.", "Channel Echo Selection", tbl, defaults)
-      if echo_result then
-         for i,v in ipairs(tbl) do
-            channels_table[v]["echo"] = echo_result[i]
-         end
-      end
-   elseif toggle == "nonchannels" then
-      local defaults = {}
-      for k,v in pairs(nonchannels_table) do
-         defaults[k] = v["echo"]
-      end
-      local echo_result = utils.multilistbox("Choose which non-channel info to show in the main window.", "Non-Channel Info Echo Selection", init_nonchannel_pairs, defaults)
-      if echo_result then
-         for k,v in pairs(nonchannels_table) do
-            v["echo"] = echo_result[k]
-            EnableTrigger(k, not other_should_echo(k))
-         end
-      end
-   end -- if
+	if toggle == "" then
+		ColourNote("yellow", "", "Current channel echo status: ")
+		for k,v in pairsByKeys(channels_table) do
+			ColourTell("yellow", "", tostring(k).." ")
+			ColourNote((v["echo"] and "lime") or "red", "", tostring(v["echo"] or "false"))
+		end
+		Note("")
+	elseif toggle == "on" then
+		for k,v in pairs(channels_table) do
+			channels_table[k]["echo"] = true
+		end
+		ColourNote ("yellow", "", "All chats are now", "lime", "", " shown ", "yellow", "", "in the main window.")
+		ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled separately.")
+		Note("")
+	elseif toggle == "off" then
+		if never_hide then
+			return rejection_message()
+		end
+		for k,v in pairs(channels_table) do
+			channels_table[k]["echo"] = nil
+		end
+		ColourNote ("yellow", "", "All chats are now", "red", "", " hidden ", "yellow", "", "in the main window.")
+		ColourNote ("yellow", "", "Note: This does not affect \"other\" (non-channel) messages, which must be toggled separately.")
+		Note("")
+	elseif toggle == "channels" then
+		local tbl = {}
+		local defaults = {}
+		local i = 1
+		for k,v in pairsByKeys(channels_table) do
+			tbl[i] = k
+			defaults[i] = v["echo"]
+			i = i+1
+		end
+		local echo_result = utils.multilistbox("Choose which channels to show in the main window.", "Channel Echo Selection", tbl, defaults)
+		if echo_result then
+			for i,v in ipairs(tbl) do
+				channels_table[v]["echo"] = echo_result[i]
+			end
+		end
+	elseif toggle == "nonchannels" then
+		local defaults = {}
+		for k,v in pairs(nonchannels_table) do
+			defaults[k] = v["echo"]
+		end
+		local echo_result = utils.multilistbox("Choose which non-channel info to show in the main window.", "Non-Channel Info Echo Selection", init_nonchannel_pairs, defaults)
+		if echo_result then
+			for k,v in pairs(nonchannels_table) do
+				v["echo"] = echo_result[k]
+				EnableTrigger(k, not other_should_echo(k))
+			end
+		end
+	end -- if
 
-   SaveState()
+	SaveState()
 end
 
 function chat_echo_wrap (name, line, wildcards)
-   chat_echo(Trim(wildcards[1]):lower())
+	chat_echo(Trim(wildcards[1]):lower())
 end -- chat_echo
 
 function OnPluginSaveState()
-   SetVariable("channels_table", serialize.save("channels_table"))
-   SetVariable("nonchannels_table", serialize.save("nonchannels_table"))
+	SetVariable("channels_table", serialize.save("channels_table"))
+	SetVariable("nonchannels_table", serialize.save("nonchannels_table"))
 end
 
 function OnPluginInstall()
-   OnPluginEnable()
+	OnPluginEnable()
 end
 
 function OnPluginEnable ()
-   -- if we are connected when the plugin loads, it must have been reloaded while playing
-   if IsConnected() then
-      OnPluginConnect()
-   end -- if already connected
+	-- if we are connected when the plugin loads, it must have been reloaded while playing
+	if IsConnected() then
+		OnPluginConnect()
+	end -- if already connected
 end -- OnPluginEnable
 
 function OnPluginClose()
-   OnPluginDisable()
+	OnPluginDisable()
 end
 
 -- pull in telnet option handling
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 
 function OnPluginDisable()
-   if IsConnected() then
-      Send_GMCP_Packet("gmcpchannels off")
-   end
+	if IsConnected() then
+		Send_GMCP_Packet("gmcpchannels off")
+	end
 end
 
 function OnPluginConnect()
-   Send_GMCP_Packet("gmcpchannels on")
-   Send_GMCP_Packet("request char")
+	Send_GMCP_Packet("gmcpchannels on")
+	Send_GMCP_Packet("request char")
 end
 
 function getmemoryusage()
