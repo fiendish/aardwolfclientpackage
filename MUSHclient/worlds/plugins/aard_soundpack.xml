@@ -505,7 +505,7 @@
    TriggerEvent("level_up_sh")
   </send>
   </trigger>
-  
+
   <trigger
    enabled="n"
    group="Alert"
@@ -1089,17 +1089,23 @@ local soundEvents = {
       panning = "0",
       description = "Comm Chan: Debate"
    },
-   ["gametalk"] = {
-      defaultwav = "gametalk.wav",
+   ["epics"] = {
+      defaultwav = "death.wav",
       volume = "100",
       panning = "0",
-      description = "Comm Chan: Gametalk"
+      description = "Comm Chan: Epics"
    },
    ["ftalk"] = {
       defaultwav = "ftalk.wav",
       volume = "100",
       panning = "0",
       description = "Comm Chan: Ftalk"
+   },
+   ["gametalk"] = {
+      defaultwav = "gametalk.wav",
+      volume = "100",
+      panning = "0",
+      description = "Comm Chan: Gametalk"
    },
    ["gclan"] = {
       defaultwav = "gclan.wav",
@@ -1304,6 +1310,7 @@ function TriggerEvent(event)
    -- 100 event triggered
    BroadcastPlugin(100, event)
    PlaySound(0, filename, false, volume, soundEvents[event].panning)
+
 end
 
 function PlaySettingChanged()
@@ -1469,7 +1476,7 @@ end
 
 function spsetvol(name, line, wc)
    if soundEvents[wc.event] ~= nil then
-      -- set volume by click here print (utils.inputbox ("What is your name?", "Query", "Nick", "Courier", 9)) 
+      -- set volume by click here print (utils.inputbox ("What is your name?", "Query", "Nick", "Courier", 9))
       local volume = tonumber(utils.inputbox ("Specify volume for " .. wc.event .. "\r\nUse a number 0-100", "Event Volume: " .. wc.event, soundEvents[wc.event].volume, "Courier", 9, { validate = isInteger } ))
       if volume == nil then return end
       if (volume >= 0 and volume <= 100) then
@@ -1481,7 +1488,7 @@ function spsetvol(name, line, wc)
       else
          logerr("Invalid value \"" .. wc.value .. "\" for " .. wc.setting .. " -- see spset help")
       end
-   end   
+   end
 end
 
 function spset(name, line, wc)
