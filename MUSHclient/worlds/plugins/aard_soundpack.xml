@@ -1090,7 +1090,7 @@ local soundEvents = {
       description = "Comm Chan: Debate"
    },
    ["epics"] = {
-      defaultwav = "death.wav",
+      defaultwav = "epic.wav",
       volume = "100",
       panning = "0",
       description = "Comm Chan: Epics"
