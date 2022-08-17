@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2224 snapshot
+- bug fix: (maybe, anyway) MUSHclient.exe's internal libraries for luacom, PCRE, sqlite3, zlib, and libpng have been updated. It's also being built now with VS2017 and platform toolset 141_xp instead of VS2015 and platform toolset 140_xp.
+- misc change: The application plugins dialog will no longer select entries automatically when opened. This should make it a bit harder to accidentally remove plugins you didn't mean to remove.
+
 r2222 snapshot
 - misg change: The GMCP mapper will make less noise during recon if noportal/norecall flags aren't going to change.
 - bug fix: MUSHclient.exe has been updated so that ColourTell and ColourNote will accept nil for background color in Lua. This fixes a recently uncovered bug in Bast's plugins that use his TextToColourTell function.
