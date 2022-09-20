@@ -653,13 +653,18 @@ mapper.gotoNextResult(Trim("%1"))
 </alias>
 </aliases>
 
+<variables>
+  <variable name="echo_prefix"></variable>
+</variables>
+
 <triggers>
 
 <trigger
    enabled="y"
-   match="{begin running}"
+   match="@echo_prefix{begin running}"
    send_to="12"
    omit_from_output="y"
+   expand_variables="y"
 >
 <send>
 if not sent_busy then
@@ -672,9 +677,10 @@ StopEvaluatingTriggers(true)
 
 <trigger
    enabled="y"
-   match="{end running}"
+   match="@echo_prefix{end running}"
    send_to="12"
    omit_from_output="y"
+   expand_variables="y"
 >
 <send>
 if sent_busy then
@@ -1703,7 +1709,12 @@ end
 
 function ExecuteWithWaits(cexit_command)
    wait.make (function()
-      SendNoEcho("echo {begin running}")
+      if mylevel < 202 then
+         echo_command = "echo"
+      else
+         echo_command = "echo self"
+      end
+      SendNoEcho(echo_command.." {begin running}")
       local partial_cexit_command = cexit_command
       local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
       while strbegin do
@@ -1713,8 +1724,8 @@ function ExecuteWithWaits(cexit_command)
          end
          if strend then
             local wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d*.?%d+)%)"))
-            SendNoEcho("echo {mapper_wait}wait("..wait_time..")")
-            line, wildcards = wait.regexp("^\\{mapper_wait\\}wait\\(([0-9]*\\.?[0-9]+)\\)",nil,trigger_flag.OmitFromOutput)
+            SendNoEcho(echo_command.." {mapper_wait}wait("..wait_time..")")
+            line, wildcards = wait.regexp("^"..GetVariable("echo_prefix").."\\{mapper_wait\\}wait\\(([0-9]*\\.?[0-9]+)\\)",nil,trigger_flag.OmitFromOutput)
             Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
             CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
             wait.time(wait_time)
@@ -1722,7 +1733,7 @@ function ExecuteWithWaits(cexit_command)
          end
       end
       Execute(partial_cexit_command)
-      SendNoEcho("echo {end running}")
+      SendNoEcho(echo_command.." {end running}")
    end)
 end
 
@@ -3973,6 +3984,11 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          mytier = tonumber(gmcpdata.tier)
+         if tonumber(gmcpdata.level) < 202 then
+            SetVariable("echo_prefix", "")
+         else
+            SetVariable("echo_prefix", gmcpdata.name.." echo> ")
+         end
       end
 
       if (text == "char.status") then
