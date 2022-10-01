@@ -1429,7 +1429,7 @@ function sptog(name, line, wc)
          end
       end
    end
-   logerr("Invalid event. Type \"sptog\" to see a list of events.")
+   logerr("Invalid event. Type \"spset\" to see a list of events.")
 end
 
 function spallow(name, line, wc)
