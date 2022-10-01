@@ -1089,17 +1089,23 @@ local soundEvents = {
       panning = "0",
       description = "Comm Chan: Debate"
    },
-   ["gametalk"] = {
-      defaultwav = "gametalk.wav",
+   ["epics"] = {
+      defaultwav = "epic.wav",
       volume = "100",
       panning = "0",
-      description = "Comm Chan: Gametalk"
+      description = "Comm Chan: Epics"
    },
    ["ftalk"] = {
       defaultwav = "ftalk.wav",
       volume = "100",
       panning = "0",
       description = "Comm Chan: Ftalk"
+   },
+   ["gametalk"] = {
+      defaultwav = "gametalk.wav",
+      volume = "100",
+      panning = "0",
+      description = "Comm Chan: Gametalk"
    },
    ["gclan"] = {
       defaultwav = "gclan.wav",
