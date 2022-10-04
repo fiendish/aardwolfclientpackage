@@ -306,6 +306,45 @@ function drawGauge(label, txt, base, max, x, y, bar_width, bar_height, color1, c
    return y + bar_height + 1
 end
 
+function limit_n(num) -- this truncates numbers over 100,000 in the group window to prevent overreaching the subwindow boundaries
+   n=tonumber(num) --Try to coerce into numeric
+
+   if n == nil then --we have a non numeric value
+      --print(string.format('"%s" was not converted to a number', tostring(num)))
+      return string.sub(tostring(num), 1, 5) -- so just return the first 5 characters of the string
+   else --numeric
+      usn=math.abs(n)    --So get absolute value for scale testing
+      --print(string.format("abs(%.2f)=%.2f"),n,usn)
+   end
+   --Now test the absolute value for scale
+   if usn < 10^4 then
+      return tostring(n)
+   elseif usn < 10^5 then
+      return tostring(n) --return string.format("%.0fk", n / 10^3)
+   elseif usn < 10^6 then
+      return string.format("%.0fk", n / 10^3)
+   elseif usn < 10^9 then
+      return string.format("%.0fm", n / 10^6)
+   elseif usn < 10^12 then
+      return string.format("%.0fb", n / 10^9)
+   end
+     end
+
+     function trim(str)
+      if str then
+         return (str:gsub("^%s*(.-)%s*$", "%1"))
+      else
+         return ""
+      end
+        end
+
+     function truncate(str) -- this truncates names over 12 characters, like in the case of mobs
+      if #str <= 12 then
+         return str
+      end
+      return trim(string.sub(str, 1, 12))-- ..".."
+        end
+
 -- build and draw the group display
 function DisplayGroupPage()
    WindowRectOp(win, 2, 2, 2,-2,-2, Theme.PRIMARY_BODY) -- blank
@@ -346,7 +385,7 @@ function DisplayGroupPage()
          v.qtstring = ""
          v.namestring = v.name
          if (show_quest == 1) or (show_tnl == 1) then
-            v.namestring = string.rpad(v.name, 12, ' ')
+            v.namestring = truncate(string.rpad(v.name, 12, ' '))
             local txt = ""
             if show_quest == 1 then
                if v.info.qs == "1" then
@@ -368,11 +407,11 @@ function DisplayGroupPage()
             local base = v.info[s]
             local max = v.info["m"..s]
             if number_style == 1 then -- STANDARD
-               v[s.."string"] = string.lpad(base, 5, ' ').."/"..string.rpad(max, 5, ' ')
+               v[s.."string"] = limit_n(string.lpad(base, 5, ' ')).."/"..limit_n(string.rpad(max, 5, ' '))
             elseif number_style == 2 then -- PERCENTAGES
                v[s.."string"] = string.lpad(string.format('%d', 100*base/max).."%", 4, ' ')
             elseif number_style == 3 then -- STANDARD + PERCENTAGES
-               v[s.."string"] = string.lpad(base, 5, ' ').."/"..string.rpad(max, 5, ' ').." ("..string.lpad(string.format('%d',100*base/max).."%", 4, ' ')..")"
+               v[s.."string"] = limit_n(string.lpad(base, 5, ' ')).."/"..limit_n(string.rpad(max, 5, ' ')).." ("..string.lpad(string.format('%d',100*base/max).."%", 4, ' ')..")"
             end
          end
          if gauge_style == 2 then
