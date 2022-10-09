@@ -880,10 +880,12 @@ function OnPluginBroadcast(msg, id, name, text)
          local gmcpcomm = gmcp("comm.channel")
          local msg_text = gmcpcomm.msg or ""
          local chan = gmcpcomm.chan or ""
+         local player = gmcpcomm.player or ""
+         local res, isMuted = CallPlugin("55616ea13339bc68e963e1f8", "checkIfMuted", player)
          if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg_text), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if (not channels_table[chan]) or channels_table[chan]["capture"] then
                msg_text = filter_as_needed(msg_text)
-               if msg_text then
+               if msg_text and not isMuted then
                   storeChannel(ColoursToStyles(msg_text, nil, nil, true), chan)
                end
             end
@@ -1181,6 +1183,51 @@ function extend_rightclick_menu()
             SaveState()
          end
       },
+      {"-", ""},
+      {">Mute List Options", ""},
+      {
+         "Add player to Mute List",
+         function()
+            local name = utils.inputbox("Mute whom?", "Mute player")
+            if not name then
+               return
+            else
+               function number_or_nil(input)
+                  if input == "" then return true end
+                  return tonumber(input)
+               end
+               local minutes = utils.inputbox("For how many minutes? Blank means forever until removed.", "How many minutes?", nil, nil, nil, {["validate"]=number_or_nil})
+               if minutes ~= nil then
+                  CallPlugin("55616ea13339bc68e963e1f8", "muteName", name, true, minutes)
+               end
+            end
+         end
+      },
+      {
+         "Edit Mute List",
+         function()
+            mute_lookup = {}
+            loadstring(GetPluginVariable("55616ea13339bc68e963e1f8", "mute_lookup") or "")()
+            local sorted_mute_lookup = {}
+            for k,_ in pairs(mute_lookup) do
+               table.insert(sorted_mute_lookup, k:sub(1,1):upper()..k:sub(2,-1))
+            end
+            mute_lookup = nil
+            table.sort(sorted_mute_lookup)
+            if #sorted_mute_lookup > 0 then
+               local capture_result = utils.multilistbox("Unmute which of these players?", "Muted Players List", sorted_mute_lookup)
+               if capture_result then
+                  for k,_ in ipairs(capture_result) do
+                     local name = sorted_mute_lookup[k]
+                     CallPlugin("55616ea13339bc68e963e1f8", "muteName", name, false)
+                  end
+               end
+            else
+               Note("\nYou are not currently muting anyone.")
+            end
+         end
+      },
+      {"<", ""},
       {"-", ""},
       {
          "Bring to Front",

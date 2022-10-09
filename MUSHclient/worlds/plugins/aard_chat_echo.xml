@@ -17,16 +17,50 @@
 <!-- sequence must be before 0 to not double trigger world triggers -->
 <!-- sequence must be after channels plugin to capture unechoed info -->
 <description trim="y">
+<![CDATA[
 USAGE:
 
-   chats echo on      : show all channels in main window
-   chats echo off     : do not show any channels in main window
-   chats echo custom  : select a custom list of channels to show in the main window
+ chats echo on              : show all channels in main window
+ chats echo off             : do not show any channels in main window
+ chats echo custom          : select which channels to show in the main window
+ chats mute <who> [minutes] : mutes a player's chat messages (not ignore)
+ chats unmute <who>         : stops muting a player's chat messages
+ chats mute                 : displays the current mute list
+ chats clear mute           : clears the mute list
+]]>
 </description>
 
 </plugin>
 
 <triggers>
+<trigger
+   enabled="y"
+   name="ignoreLimit"
+   match="^You are already ignoring 10 people\.$"
+   regexp="y"
+   script="metIgnoreLimit"
+   omit_from_output="n"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   name="ignoreStart"
+   match="^You are (?:not ignoring anyone\.|ignoring:)$"
+   regexp="y"
+   script="startIgnoreList"
+   sequence="100"
+></trigger>
+
+<trigger
+   enabled="n"
+   name="ignoreEnd"
+   match="^$"
+   regexp="y"
+   script="endIgnoreList"
+   sequence="100"
+></trigger>
+
 <trigger
    enabled="n"
    name="warfare"
@@ -127,12 +161,41 @@ USAGE:
 
 <aliases>
 <alias
+   match="^ig(n|no|nor|nore)?( +\w+)?$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="clientIgnore"
+   echo_alias="y"
+></alias>
+<alias
+   match="^chats (un)?mute( +(\w+)( (\d+))?)?$"
+   enabled="y"
+   regexp="y"
+   sequence="100"
+   ignore_case="y"
+   script="muteNameAlias"
+   echo_alias="y"
+></alias>
+<alias
+   match="^chats mute clear$"
+   enabled="y"
+   regexp="y"
+   sequence="99"
+   ignore_case="y"
+   script="clearIgnoreList"
+   echo_alias="y"
+></alias>
+
+<alias
    script="chat_echo_wrap"
    match="^chats? echo( on| off| channels| nonchannels)?$"
    enabled="y"
    regexp="y"
    sequence="100"
    ignore_case="y"
+   echo_alias="y"
 ></alias>
 </aliases>
 
@@ -143,6 +206,114 @@ USAGE:
 
 require "pairsbykeys"
 require "gmcphelper"
+require "serialize"
+
+mute_lookup = {}
+loadstring(GetVariable("mute_lookup") or "")()
+
+
+function muteNameAlias(name, line, wildcards)
+   muteName(wildcards[3], wildcards[1] ~= "un", wildcards[5])
+end
+
+function muteName(playerName, mute, minutes)
+   Note("")
+   local minutes = tonumber(minutes)
+
+   if playerName ~= "" then
+      local currently_muted = checkIfMuted(playerName)
+      if mute == nil then
+         mute = not currently_muted
+      end
+      if mute then
+         mute_lookup[playerName:lower()] = minutes and os.time()+(minutes*60) or true
+         local duration = " until removed."
+         if minutes then
+            duration = " for "..minutes.." minutes."
+         end
+         Note("Muting "..playerName..duration)
+      else
+         if currently_muted then
+            mute_lookup[playerName:lower()] = nil
+            Note("Removing " .. playerName .. " from your muted list.")
+         else
+            Note(playerName.." is not currently muted.")
+         end
+      end
+      SaveState()
+   end
+
+   displayIgnoreList()
+end
+
+
+function startIgnoreList()
+   EnableTrigger("ignoreStart", false)
+   EnableTrigger("ignoreLimit", false)
+   EnableTrigger("ignoreEnd")
+end
+
+function sortedMuteList()
+   local sorted = {}
+   local cloned_mute_lookup = {}
+   for k,v in pairs(mute_lookup) do
+      cloned_mute_lookup[k] = v
+   end
+   for k,_ in pairs(cloned_mute_lookup) do
+      if checkIfMuted(k) then
+         table.insert(sorted, k:sub(1,1):upper()..k:sub(2,-1))
+      end
+   end
+   table.sort(sorted)
+   return sorted
+end
+
+require "commas"
+function displayIgnoreList()
+   local sorted_mute_list = sortedMuteList()
+   if #sorted_mute_list > 0 then
+      Note("You are muting:")
+      for i,v in ipairs(sorted_mute_list) do
+         local duration = "forever"
+         local until_when = mute_lookup[v:lower()]
+         if type(until_when) == "number" then
+            duration = "about "..convert_time(until_when - os.time())
+         end
+         Note(string.format("%3d) - %s (%s)", i, v, duration))
+      end
+      Note("")
+   else
+      Note("You are not currently muting anyone.")
+   end
+   Note("(Muted players are not ignored in game, only removed from your channel output.)")
+end
+
+function endIgnoreList()
+   EnableTrigger("ignoreEnd", false)
+   Note("")
+   displayIgnoreList()
+end
+
+function metIgnoreLimit()
+   EnableTrigger("ignoreLimit", false)
+   if not checkIfMuted(playerCapture) then
+      Note("Maybe you'd like to just mute channel messages from them instead with `chats mute "..playerCapture.."`?")
+   end
+   playerCapture = nil
+end
+
+function clientIgnore(name, line, wildcards)
+   playerCapture = Trim(wildcards[2])
+   EnableTrigger("ignoreLimit")
+   EnableTrigger("ignoreStart")
+   SendNoEcho(line)
+end
+
+function clearIgnoreList()
+   mute_lookup = {}
+   Note("Mute list cleared.")
+   SaveState()
+end
 
 local init_nonchannel_keys = {"info", "raidinfo", "claninfo", "clan_donations", "global_quest", "warfare", "remort_auction"}
 local init_nonchannel_pairs = {["warfare"]="WARFARE:", ["info"]="INFO:", ["raidinfo"]="RAIDINFO:", ["claninfo"]="CLANINFO:", ["global_quest"]="Global Quest:", ["remort_auction"]="Remort Auction:", ["clan_donations"]="Clan Donations"}
@@ -231,6 +402,18 @@ function OnPluginListChanged ()
    end
 end
 
+function checkIfMuted(player)
+   local should_mute = mute_lookup[player:lower()]
+   if type(should_mute) == "number" then
+      should_mute = should_mute > os.time()
+      if not should_mute then
+         mute_lookup[player:lower()] = nil
+         SaveState()
+      end
+   end
+   return should_mute
+end
+
 msg_buffer = {}
 function OnPluginBroadcast (msg, id, name, text)
    -- Look for GMCP handler.
@@ -239,6 +422,7 @@ function OnPluginBroadcast (msg, id, name, text)
          local gmcp_comm = gmcp("comm.channel")
          local msg = gmcp_comm.msg or ""
          local chan = gmcp_comm.chan or ""
+         local player = gmcp_comm.player or ""
          if msg:find("\a") and (GetOption("enable_beeps") == 1) then
             Sound(GetInfo(50))
          end
@@ -247,7 +431,7 @@ function OnPluginBroadcast (msg, id, name, text)
             if not channels_table[chan] then
                addNewChannel(chan)
             end
-            if never_hide or channels_table[chan]["echo"] then
+            if never_hide or channels_table[chan]["echo"] and not checkIfMuted(player) then
                if gmcp("char.status.state") ~= "5" then
                   echo_msg(msg)
                else
@@ -342,10 +526,14 @@ function chat_echo_wrap (name, line, wildcards)
    chat_echo(Trim(wildcards[1]):lower())
 end -- chat_echo
 
-require "serialize"
 function OnPluginSaveState()
    SetVariable("channels_table", serialize.save("channels_table"))
    SetVariable("nonchannels_table", serialize.save("nonchannels_table"))
+   if #sortedMuteList() > 0 then
+      SetVariable("mute_lookup", serialize.save("mute_lookup"))
+   else
+      DeleteVariable("mute_lookup")
+   end
 end
 
 function OnPluginInstall()
