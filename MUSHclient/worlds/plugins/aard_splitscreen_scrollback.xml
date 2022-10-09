@@ -77,15 +77,22 @@ function OnPluginInstall()
    OnPluginEnable()
 end
 
+function OnPluginTick()
+   if rect_draw_needed then
+      rect:draw()
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      rect_draw_needed = false
+   end
+end
+
 -- when something is added to output
 function OnPluginScreendraw(type, log, line)
    if rect then
-      new_num_lines = GetLinesInBufferCount()
+      local new_num_lines = GetLinesInBufferCount()
       for i=num_lines,new_num_lines do
          rect:addText(GetStyleInfo(i))
       end
-      rect:draw()
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      rect_draw_needed = true
       num_lines = new_num_lines+1
    else
       check_display()
