@@ -1,10 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2232 snapshot
+- bug fix: Prevent an error from the optimized splitscreen scrollback that appears sometimes when scrolling back to the bottom.
+
 r2231 snapshot
 - bug fix: Extend the mute effect to the soundpack and review buffers plugins too.
 
 r2230 snapshot
-- misc change: Performance optimization added to the splitscreen scrollback plugin so that receiving many lines while scrolled back doesn't draw slowly.
+- misc change: Performance optimization added to the splitscreen scrollback plugin so that receiving many lines while scrolled back doesn't draw so slowly.
 - bug fix: The prompt fixer should show a more reasonable message when you try to set a prompt that has a color code on the end after a %c.
 - bug fix: Shorten long names and numbers in the group monitor minwindow to make them fit better.
 - new feature: Crowley contributed a feature for muting players from channels that's kinda like ignore but only channels and lets you set a number of minutes.
