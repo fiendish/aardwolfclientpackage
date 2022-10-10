@@ -79,8 +79,10 @@ end
 
 function OnPluginTick()
    if rect_draw_needed then
-      rect:draw()
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      if rect then
+         rect:draw()
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      end
       rect_draw_needed = false
    end
 end
