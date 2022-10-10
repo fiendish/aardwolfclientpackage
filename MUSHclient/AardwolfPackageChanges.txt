@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2230 snapshot
+- misc change: Performance optimization added to the splitscreen scrollback plugin so that receiving many lines while scrolled back doesn't draw slowly.
+- bug fix: The prompt fixer should show a more reasonable message when you try to set a prompt that has a color code on the end after a %c.
+- bug fix: Shorten long names and numbers in the group monitor minwindow to make them fit better.
+- new feature: Crowley contributed a feature for muting players from channels that's kinda like ignore but only channels and lets you set a number of minutes.
+- new feature: There's now a soundpack sound effect for the epic channel.
+- bug fix: The echos used by the GMCP mapper around runs should now work for immortals.
+
 r2224 snapshot
 - bug fix: (maybe, anyway) MUSHclient.exe's internal libraries for luacom, PCRE, sqlite3, zlib, and libpng have been updated. It's also being built now with VS2017 and platform toolset 141_xp instead of VS2015 and platform toolset 140_xp.
 - misc change: The application plugins dialog will no longer select entries automatically when opened. This should make it a bit harder to accidentally remove plugins you didn't mean to remove.
