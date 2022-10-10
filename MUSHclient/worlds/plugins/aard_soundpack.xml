@@ -1672,6 +1672,12 @@ function OnPluginBroadcast (msg, id, name, text)
          local channel = gmcp("comm.channel.chan")
          local msg = gmcp("comm.channel.msg")
          local player = gmcp("comm.channel.player")
+
+         local rc, isMuted = CallPlugin("55616ea13339bc68e963e1f8", "checkIfMuted", player)
+         if (rc == 0) and isMuted then
+            return
+         end
+
          msg = strip_colours(msg)
 
          j, k = string.find(msg, "!!SOUND%(")

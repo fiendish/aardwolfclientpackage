@@ -1285,6 +1285,13 @@ function OnPluginBroadcast(msg, id, name, text)
    if (id == '3e7dedbe37e44942dd46d264') then              -- GMCP Handler plugin
 
       if (text == "comm.channel") then
+         local player = gmcp("comm.channel.player")
+
+         local rc, isMuted = CallPlugin("55616ea13339bc68e963e1f8", "checkIfMuted", player)
+         if (rc == 0) and isMuted then
+            return
+         end
+
          local channel = gmcp("comm.channel.chan")
          local msg = gmcp("comm.channel.msg")
          local t
