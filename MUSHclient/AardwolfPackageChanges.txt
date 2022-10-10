@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2231 snapshot
+- bug fix: Extend the mute effect to the soundpack and review buffers plugins too.
+
 r2230 snapshot
 - misc change: Performance optimization added to the splitscreen scrollback plugin so that receiving many lines while scrolled back doesn't draw slowly.
 - bug fix: The prompt fixer should show a more reasonable message when you try to set a prompt that has a color code on the end after a %c.
