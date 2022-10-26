@@ -1189,7 +1189,9 @@ function extend_rightclick_menu()
       {"<", ""},
       {
          "Clear Tab",
-         clearTab(current_tab)
+         function()
+            clearTab(current_tab)
+         end
       },
       {"-", ""},
       {">Mute List Options", ""},
