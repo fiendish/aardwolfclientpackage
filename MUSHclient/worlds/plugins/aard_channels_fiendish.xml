@@ -190,6 +190,22 @@ if window_title == "" then
    window_title = nil
 end
 
+function clearTab(tab)
+   if tab == nil then
+      tab = current_tab or 1
+   elseif type(tab) == "string" then
+      tab = findTab(tab)
+   end
+   if tabs_rects[tab] then
+      tabs_rects[tab]:clear(true)
+   else
+      ColourNote("white", "red", "CommLog Error 404: Tab not found.")
+   end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   SaveState()
+end
+
+
 function reduce_diverse_channels()
    channels_table = {}
    for tab,channels in ipairs(tabs_channel_captures) do
@@ -1178,9 +1194,7 @@ function extend_rightclick_menu()
       {
          "Clear Tab",
          function()
-            tabs_rects[current_tab]:clear(true)
-            CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
-            SaveState()
+            clearTab(current_tab)
          end
       },
       {"-", ""},
