@@ -192,11 +192,15 @@ end
 
 function clearTab(tab)
    if tab == nil then
-      tab = current_tab
+      tab = current_tab or 1
    elseif type(tab) == "string" then
       tab = findTab(tab)
    end
-   tabs_rects[tab]:clear(true)
+   if tabs_rects[tab] then
+      tabs_rects[tab]:clear(true)
+   else
+      ColourNote("white", "red", "CommLog Error 404: Tab not found.")
+   end
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    SaveState()
 end
