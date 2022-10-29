@@ -192,7 +192,7 @@ end
 
 function clearTab(tab)
    if tab == nil then
-      tab = 1
+      tab = current_tab
    elseif type(tab) == "string" then
       tab = findTab(tab)
    end
