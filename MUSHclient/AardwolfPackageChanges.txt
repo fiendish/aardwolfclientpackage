@@ -1,7 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2233 snapshot
+- bug fix: Fix an error from the inventory serials plugin when a text-color-change trigger fires on an inventory item line.
+
 r2232 snapshot
-- bug fix: Prevent an error from the optimized splitscreen scrollback that appears sometimes when scrolling back to the bottom.
+- bug fix: Fix an error in the optimized splitscreen scrollback that appears sometimes when scrolling back to the bottom.
 
 r2231 snapshot
 - bug fix: Extend the mute effect to the soundpack and review buffers plugins too.
