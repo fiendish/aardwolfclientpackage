@@ -333,7 +333,18 @@ vaultrex = rex.new("^\\s*(\\d+),(\\w*),(.+),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d
 function insertAllLines(style_lines, re)
    local results, sorted = {}, {}
    for _, line in ipairs(style_lines) do
-      _, _, wildcards = re:match(line[1].text)
+      -- color change triggers insert unexpected styles, so we do a little dance to compensate
+      -- first block out the @s
+      for _,v in ipairs(line) do
+         v.text = v.text:gsub("@", "\0")
+      end
+
+      text = StylesToColours(line):sub(3)
+
+      -- put @s back to finish the unexpected styles dance
+      text = text:gsub("%z", "@")
+
+      _, _, wildcards = re:match(text)
       insertLine(wildcards, results, sorted)
    end
    return sorted
