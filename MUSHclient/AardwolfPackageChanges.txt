@@ -1,7 +1,8 @@
 Aardwolf Client Package Major Changes List
 
-r2233 snapshot
+r2234 snapshot
 - bug fix: Fix an error from the inventory serials plugin when a text-color-change trigger fires on an inventory item line.
+- new feature: Crowley contributed a 'clearTab' function to the channel capture plugin that can be called from outside the plugin.
 
 r2232 snapshot
 - bug fix: Fix an error in the optimized splitscreen scrollback that appears sometimes when scrolling back to the bottom.
