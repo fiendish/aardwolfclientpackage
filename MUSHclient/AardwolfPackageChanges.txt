@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2235 snapshot
+- bug fix: The helpfile miniwindow plugin had no resetaard alias, so it could get lost off screen if changing monitors and the position is being saved.
+
 r2234 snapshot
 - bug fix: Fix an error from the inventory serials plugin when a text-color-change trigger fires on an inventory item line.
 - new feature: Crowley contributed a 'clearTab' function to the channel capture plugin that can be called from outside the plugin.
