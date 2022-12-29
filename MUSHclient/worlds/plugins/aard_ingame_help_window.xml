@@ -57,6 +57,27 @@ if my_window and my_window.id then
 end
 </send>
 </alias>
+
+<alias
+   name="resetaard"
+   match="resetaard"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+><send>
+remember_position = GetVariable("remember_position")
+DeleteVariable("remember_position")
+if my_window and my_window.id then
+   build_window(prev_window_styles, prev_hyperlinks_function)
+end
+SetVariable("remember_position", remember_position)
+if my_window and my_window.id then
+   build_window(prev_window_styles, prev_hyperlinks_function)
+end
+</send>
+</alias>
+
 </aliases>
 
 <script>
@@ -138,8 +159,8 @@ function build_links(line, pattern, after, before, verb)
 end
 
 function get_related_help_hyperlinks(style_lines)
-   related_helps = {}
-   related_categories = {}
+   local related_helps = {}
+   local related_categories = {}
    for i,line in ipairs(style_lines) do
       if (#line >= 1) and line[1].text:starts_with("Related Helps") then
          related_helps[i] = build_links(line, "%w[%w&%- ]*%w", #"Related Helps : ", nil, "help")
@@ -151,7 +172,7 @@ function get_related_help_hyperlinks(style_lines)
 end
 
 function get_search_hyperlinks(style_lines)
-   related_helps = {}
+   local related_helps = {}
    for i,line in ipairs(style_lines) do
       if (#line >= 2) and (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
          related_helps[i] = build_links(line, nil, 0, 20, "help")
@@ -205,10 +226,11 @@ function process_search(window_styles)
 end
 
 function build_window(window_styles, hyperlinks_function)
+   prev_window_styles = window_styles
+   prev_hyperlinks_function = hyperlinks_function
    ColourNote("paleturquoise", "", "Help Captured To Miniwindow")
 
    local related_helps, related_categories = hyperlinks_function(window_styles)
-   prev_hyperlinks_function = hyperlinks_function
 
    -- I create a zero-size window first, because MUSHclient has a limitation
    -- where you can only find the width of some text from inside a miniwindow,
