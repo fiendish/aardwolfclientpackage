@@ -61,6 +61,32 @@ EnableTriggerGroup("recon", true)
 Send("recon")
 </send>
 </alias>
+
+<alias
+   match="mapper database"
+   enabled="y"
+   script="get_database"
+   sequence="100"
+></alias>
+
+<alias
+   match="mapper set database *"
+   enabled="y"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   new_database = Trim("%1")
+   if new_database == "" then
+      get_database()
+   else
+      Note("Are you sure you want to change your mapper database to "..new_database:gsub("%.db$", "", 1)..".db? To confirm type 'mapper set database confirm'.")
+      toConfirm = "set database"
+      EnableAlias("confirm_catch", true)
+   end
+</send>
+</alias>
+
 <alias
    match="mapper showroom *"
    enabled="y"
@@ -530,9 +556,12 @@ mapper.gotoNextResult(Trim("%1"))
       map_cexits_purge()
    elseif "%1" == "mapper purge portals confirm" and toConfirm == "purge portals" then
       map_portal_purge()
+   elseif "%1" == "mapper set database confirm" and toConfirm == "set database" then
+      set_database(new_database)
    else
       Note(string.format("Failed to confirm '%s'. Aborting.", toConfirm))
    end
+   new_database = ""
    toConfirm = ""
    EnableAlias("confirm_catch", false)
 </send>
@@ -941,7 +970,7 @@ function forceOpenDB()
    if not db:isopen() then
       forced_opened = true
       -- print("Forcing open")
-      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. db_name .. ".db"))
    end
 end
 
@@ -2794,9 +2823,9 @@ function rotate_backups (manual)
       local olderer_exists = false
       local older_exists = false
       if t ~= nil then
-         local oldest_string = sanitize_filename(WorldName())..".db.Backup_Automatic_oldest"
-         local olderer_string = sanitize_filename(WorldName())..".db.Backup_Automatic_olderer"
-         local older_string = sanitize_filename(WorldName())..".db.Backup_Automatic_older"
+         local oldest_string = db_name..".db.Backup_Automatic_oldest"
+         local olderer_string = db_name..".db.Backup_Automatic_olderer"
+         local older_string = db_name..".db.Backup_Automatic_older"
          for k,v in pairs(t) do
             if string.find(k,oldest_string) then
                oldest_exists = true
@@ -2923,7 +2952,7 @@ function backup_databases(manual)
       maybe_Note("BACKING UP DATABASE", manual)
       Repaint()
 
-      backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
+      backupPath = GetInfo(66).."db_backups\\"..db_name
       firstBackup = backupPath..".db.Backup"
       local ffi
       if type(jit) == 'table' then
@@ -3179,6 +3208,19 @@ function drop_db_columns(db_table, drop_columns, extra_directives)
    dbCheckExecute(query)
 end
 
+function set_database (new_db_name)
+   if new_db_name ~= "" then
+      new_db_name = new_db_name:gsub("%.db$", "", 1)
+      print("Setting mapper database to "..new_db_name..".db")
+      SetVariable("db_name", new_db_name)
+      OnPluginInstall()
+   end
+end
+
+function get_database ()
+   print("Current mapper database file is "..GetVariable("db_name")..".db")
+end
+
 function OnPluginInstall ()
    SetVariable("backup_timer_enabled", GetVariable("backup_timer_enabled") or "1")
    quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
@@ -3211,8 +3253,9 @@ function OnPluginInstall ()
    }
 
    -- open databases on disk
-   worldPath = GetInfo(66)..sanitize_filename(WorldName())
-
+   db_name = GetVariable("db_name") or sanitize_filename(WorldName())
+   SetVariable("db_name", db_name)
+   worldPath = GetInfo(66)..db_name
    db = assert (sqlite3.open(worldPath..".db"))
    db:busy_timeout(100)
 
@@ -3241,7 +3284,6 @@ end
 
 function update_db_schema(db_user_version)
    print("\nThe GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.\n")
-   utils.msgbox ("The GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.", "", "ok", "i")
 
    -- Only go through the structure creation if we haven't done it already
    -- to save time at startup.
@@ -3382,9 +3424,9 @@ function after_update_check()
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
    if b_b ~= nil then
       io.close(b_b)
-      ColourNote("white", "blue", "Found obsolete bookmarks file "..sanitize_filename(WorldName()).."_bookmarks.db.")
+      ColourNote("white", "blue", "Found obsolete bookmarks file "..db_name.."_bookmarks.db.")
       ColourNote("white", "blue", "Merging into the main database file.")
-      ColourNote("white", "blue", sanitize_filename(WorldName()).."_bookmarks.db --> "..sanitize_filename(WorldName())..".db")
+      ColourNote("white", "blue", db_name.."_bookmarks.db --> "..db_name..".db")
       db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
 
       local bm_found = false
@@ -3566,7 +3608,7 @@ function OnPluginSaveState ()
    -- close and reopen database
    if db:isopen() then
       db:close()
-      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. db_name .. ".db"))
    end
 end -- OnPluginSaveState
 
@@ -4682,7 +4724,7 @@ end
 function OnPluginConnect ()
    if not db:isopen() then
       maybe_Note("GMCP Mapper: Reconnected; opening map database.")
-      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. db_name .. ".db"))
    end
    if GetVariable("backup_timer_enabled") == "1" then
       if (os.time()-last_auto_backup) < 86401 then
@@ -4759,7 +4801,9 @@ function OnHelp (name, line, wildcards)
 [[mapper hide                    --> Hide map]],
 [[mapper show                    --> Show map]],
 [[mapper updown                  --> Toggle up/down exit drawing]],
-[[mapper underlines              --> Toggle underlining of clickable links]]
+[[mapper underlines              --> Toggle underlining of clickable links]],
+[[mapper database                --> Print the name of the mapper database.]],
+[[mapper set database [new_name] --> Change the mapper database.]]
 },
 
    ['utils'] = {
