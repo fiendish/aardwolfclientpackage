@@ -1,5 +1,13 @@
 Aardwolf Client Package Major Changes List
 
+r2242 snapshot
+- new feature: If you look at a helpfile right after doing help search, the helpfile capture miniwindow will now highlight the searched phrase.
+- new feature: The soundpack configuration for levels and powerups are now separate (level_up and sh_powerup respectively). The sound for reaching SH has been renamed to reach_sh.
+- new feature: The stylesToANSI color function now does background colors too.
+- new feature: It's now possible to combine URL hyperlinks and manually-passed-in hyperlinks in the same text_rect message. This probably only matters to me.
+- bug fix: The TruncateStyles color function had a bug in part of its length calculation.
+- bug fix: The text_rect module had a typoed variable name in the configure function.
+
 r2236 snapshot
 - new feature: The GMCP mapper plugin's database file is now configurable separate from the world name. Commands are 'mapper database' and 'mapper set database <new_name>'.
 
