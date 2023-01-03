@@ -80,7 +80,7 @@ Send("recon")
    if new_database == "" then
       get_database()
    else
-      Note("Are you sure you want to change your mapper database to "..new_database:gsub("%.db$", "", 1)..".db? To confirm type 'mapper set database confirm'.")
+      Note("Are you sure you want to change your map database to "..new_database:gsub("%.db$", "", 1)..".db? To confirm type 'mapper set database confirm'.")
       toConfirm = "set database"
       EnableAlias("confirm_catch", true)
    end
@@ -4802,8 +4802,8 @@ function OnHelp (name, line, wildcards)
 [[mapper show                    --> Show map]],
 [[mapper updown                  --> Toggle up/down exit drawing]],
 [[mapper underlines              --> Toggle underlining of clickable links]],
-[[mapper database                --> Print the name of the mapper database.]],
-[[mapper set database [new_name] --> Change the mapper database.]]
+[[mapper database                --> Print the name of the map database file.]],
+[[mapper set database <new_name> --> Change the map database file.]]
 },
 
    ['utils'] = {

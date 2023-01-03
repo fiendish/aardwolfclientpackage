@@ -1,7 +1,7 @@
 Aardwolf Client Package Major Changes List
 
 r2236 snapshot
-- new feature: The GMCP mapper plugin's database file is now configurable separate from the world name.
+- new feature: The GMCP mapper plugin's database file is now configurable separate from the world name. Commands are 'mapper database' and 'mapper set database <new_name>'.
 
 r2235 snapshot
 - bug fix: The helpfile miniwindow plugin had no resetaard alias, so it could get lost off screen if changing monitors and the position is being saved.
