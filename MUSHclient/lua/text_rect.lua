@@ -87,7 +87,7 @@ function TextRect:configure(
    self.unselectable = unselectable
    self.uncopyable = uncopyable
    self.no_url_hyperlinks = no_url_hyperlinks
-   self:set_bgcolor(bgcolor)
+   self:set_bgcolor(background_color)
    self:loadFont(self.font_name, self.font_size)
    self:setRect(left, top, right, bottom)
 end
