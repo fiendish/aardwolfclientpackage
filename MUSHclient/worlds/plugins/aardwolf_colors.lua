@@ -317,7 +317,7 @@ function TruncateStyles (styles, startcol, endcol)
             local marker = startcol - (col_counter - v.length)
             found_first = true
             new_style.text = new_style.text:sub(marker)
-            new_style.length = new_style.length - marker
+            new_style.length = new_style.length - marker + 1
          end
          table.insert(new_styles, new_style)
       end
