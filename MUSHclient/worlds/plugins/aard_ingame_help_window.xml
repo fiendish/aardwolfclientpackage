@@ -25,6 +25,7 @@
    ignore_case="y"
    send_to="12"
 ><send>
+search_query = "%2"
 search_msg = ColoursToStyles("@Yhelp search '%2'")
 Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, false, process_response)
 </send>
@@ -114,6 +115,33 @@ function sanitize_search(style_lines)
    return style_lines
 end
 
+function highlight_in_styles(styles, match)
+   local new_styles = {}
+   local text = strip_colours_from_styles(styles)
+   local split_text = text:lower():split(match:lower(), true)
+   local prev = 0
+
+   for i,v in ipairs(split_text) do
+      local len_v = #v
+      if len_v > 0 then
+         for _,w in ipairs(TruncateStyles(styles, prev + 1, prev + len_v)) do
+            if i % 2 == 0 then
+               w.backcolour = 65535
+               w.textcolour = 0
+               w.bold = false
+            end
+            table.insert(new_styles, w)
+         end
+         prev = prev + len_v
+      end
+   end
+
+   if #new_styles == 0 then
+      new_styles = styles
+   end
+   return new_styles
+end
+
 function sanitize_help(style_lines)
    local new_lines = {}
    for _,line in ipairs(style_lines) do
@@ -122,9 +150,14 @@ function sanitize_help(style_lines)
             line[1].text = ""
             line[1].length = 0
          end
+         if search_query then
+            line = highlight_in_styles(line, search_query)
+         end
          table.insert(new_lines, line)
       end
    end
+
+   search_query = nil
    return new_lines
 end
 
@@ -146,7 +179,7 @@ string.find_indices = function(self, pattern, after, before)
 end
 
 function build_links(line, pattern, after, before, verb)
-   local links = strip_colours_from_styles(line):find_indices(pattern, after, before)
+   local links = line:find_indices(pattern, after, before)
    for _,v in ipairs(links) do
       local text = v.text
       v.label = verb.." "..text
@@ -162,10 +195,11 @@ function get_related_help_hyperlinks(style_lines)
    local related_helps = {}
    local related_categories = {}
    for i,line in ipairs(style_lines) do
-      if (#line >= 1) and line[1].text:starts_with("Related Helps") then
-         related_helps[i] = build_links(line, "%w[%w&%- ]*%w", #"Related Helps : ", nil, "help")
-      -- elseif line[1].text:starts_with("Help Category") then
-      --    related_categories[i] = build_links(line, "[%w-]+[%w- ]*", #"Help Category", nil, "contents")
+      local text = strip_colours_from_styles(line)
+      if text:starts_with("Related Helps") then
+         related_helps[i] = build_links(text, "%w[%w&%- ]*%w", #"Related Helps : ", nil, "help")
+      -- elseif text:starts_with("Help Category") then
+      --    related_categories[i] = build_links(text, "[%w-]+[%w- ]*", #"Help Category", nil, "contents")
       end
    end
    return related_helps, related_categories
@@ -174,8 +208,10 @@ end
 function get_search_hyperlinks(style_lines)
    local related_helps = {}
    for i,line in ipairs(style_lines) do
-      if (#line >= 2) and (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
-         related_helps[i] = build_links(line, nil, 0, 20, "help")
+      local text = strip_colours_from_styles(line)
+      local parts = text:split(":", false, 1)
+      if (#parts == 2) and (#(parts[1]) == 20) then
+         related_helps[i] = build_links(text, nil, 0, 20, "help")
       end
    end
    return related_helps, {}
