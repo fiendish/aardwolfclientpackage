@@ -596,7 +596,7 @@ function strip_colours_from_styles (styles)
    local line_texts = {}
    for _,line in ipairs(style_lines) do
       local line_parts = {}
-      for i,v in ipairs(line) do
+      for _,v in ipairs(line) do
          table.insert(line_parts, v.text)
       end
       table.insert(line_texts, table.concat(line_parts))
@@ -611,10 +611,12 @@ end
 function stylesToANSI (styles, dollarC_resets)
    local line = {}
    local lastcode = ""
+   local needs_reset = false
    init_basic_colors()
    for _,v in ipairs(styles) do
       local code = ""
       local textcolor = v.textcolour
+      local backcolor = v.backcolour
       if textcolor then
          local isbold = (v.bold or (v.style and ((v.style % 2) == 1)))
          if v.fromx then
@@ -627,6 +629,13 @@ function stylesToANSI (styles, dollarC_resets)
             code = ANSI(0, code_to_ansi_digit[a])
          elseif client_color_to_xterm_number[textcolor] then
             code = ANSI(isbold and 1 or 0, 38, 5, client_color_to_xterm_number[textcolor])
+         end
+         if backcolor then
+            code = code .. ANSI(48, 5, client_color_to_xterm_number[backcolor])
+            needs_reset = true
+         elseif needs_reset then
+            code = ANSI(0) .. code
+            needs_reset = false
          end
       end
       if code ~= "" then
