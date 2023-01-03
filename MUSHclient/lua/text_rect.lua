@@ -134,11 +134,14 @@ end
 function TextRect:addText(message, hyperlinks)
    for _, message in ipairs(ToMultilineStyles(message, Theme.BODY_TEXT, nil, true)) do
       -- extract URLs so we can add our movespots later
-      local urls
+      local links = {}
       if hyperlinks then
-         urls = copytable.deep(hyperlinks)
-      else
-         urls = self:findURLs(strip_colours_from_styles(message))
+         links = copytable.deep(hyperlinks)
+      end
+      if not self.no_url_hyperlinks then
+         for _,v in ipairs(self:findURLs(strip_colours_from_styles(message))) do
+            table.insert(links, v)
+         end
       end
 
       -- pop the oldest line from our buffer if we're at capacity
@@ -148,11 +151,11 @@ function TextRect:addText(message, hyperlinks)
       end
 
       -- add to raw lines table
-      table.insert(self.raw_lines, {[1]=message, [2]=urls})
+      table.insert(self.raw_lines, {[1]=message, [2]=links})
       self.num_raw_lines = self.num_raw_lines + 1
 
       -- add to wrapped lines table for display
-      self:wrapLine(message, urls, self.num_raw_lines)
+      self:wrapLine(message, links, self.num_raw_lines)
    end
 end
 
@@ -450,12 +453,12 @@ function TextRect:draw(cleanup_first, inside_callback)
          ax = nil
          zx = nil
          line_styles = self.wrapped_lines[count][1]
-         if (self.keepscrolling == "") and not self.no_url_hyperlinks then
-            -- create clickable links for urls
+         if self.keepscrolling == "" then
+            -- create clickable links
             for _,url_part in ipairs(self.wrapped_lines[count][3]) do
-               -- bold widths in urls. replacement for: local left = self.padded_left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, url_part.start-1))
+               -- bold widths in links. replacement for: local left = self.padded_left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, 1, url_part.start-1))
                local left = self.padded_left + self:styles_width(TruncateStyles(line_styles, 0, url_part.start-1), show_bold)
-               -- bold widths in urls. replacement for: local right = left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, url_part.start-1, url_part.stop-1))
+               -- bold widths in links. replacement for: local right = left + WindowTextWidth(self.window, self.font, string.sub(line_no_colors, url_part.start-1, url_part.stop-1))
                local right = left + self:styles_width(TruncateStyles(line_styles, url_part.start, url_part.stop), show_bold)
                local top = self.padded_top + ((count - self.display_start_line) * self.line_height)-1
                local bottom = top + self.line_height
@@ -602,7 +605,7 @@ end
 function TextRect:initArea()
    --highlight, right click, scrolling
    self.area_hotspot = self:generateHotspotID("textarea")
-   if (not self.unselectable) or self.scrollable or self.external_scroll_handler or (not self.no_url_hyperlinks) then
+   if (not self.unselectable) or self.scrollable or self.external_scroll_handler then
       if self.unselectable then
          WindowAddHotspot(self.window, self.area_hotspot, self.left, self.top, self.right, self.top + self.height, "", "", "", "", "TextRect.mouseUp", "", nil, 0)
       else
