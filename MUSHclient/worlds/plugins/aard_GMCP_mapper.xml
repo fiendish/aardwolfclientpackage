@@ -682,10 +682,6 @@ mapper.gotoNextResult(Trim("%1"))
 </alias>
 </aliases>
 
-<variables>
-  <variable name="echo_prefix"></variable>
-</variables>
-
 <triggers>
 
 <trigger
@@ -925,6 +921,8 @@ environmentcount = 0
 
 directions = {}
 current_room = nil
+
+SetVariable("echo_prefix", GetVariable("echo_prefix") or "")
 
 function recon(name, line, wildcards)
    EnableTriggerGroup("recon", false)
