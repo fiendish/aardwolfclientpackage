@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2243 snapshot
+- bug fix: Avoid a warning message about replacing the echo prefix variable when reloading the GMCP mapper plugin (happens e.g. when changing themes or layouts).
+
 r2242 snapshot
 - new feature: If you look at a helpfile right after doing help search, the helpfile capture miniwindow will now highlight the searched phrase.
 - new feature: The soundpack configuration for levels and powerups are now separate (level_up and sh_powerup respectively). The sound for reaching SH has been renamed to reach_sh.
