@@ -4836,7 +4836,7 @@ function OnHelp (name, line, wildcards)
 [[mapper purge cexits            --> Remove all custom exits in database]],
 [[mapper cexit_wait <seconds>    --> Wait this number of seconds instead of
                                  > the standard 2 when constructing the next
-                                 > cexit (between 2 and 30)]],
+                                 > cexit (between 2 and 40)]],
 [[mapper lockexit                --> Bring up the exit level-locking dialog
                                  > for the current room.]],
 [[]],
