@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2244 snapshot
+- bug fix: Notify plugins that they're about to reload when switching miniwindow layouts. This way the communication log window won't lose its contents.
+
 r2243 snapshot
 - bug fix: Avoid a warning message about replacing the echo prefix variable when reloading the GMCP mapper plugin (happens e.g. when changing themes or layouts).
 
