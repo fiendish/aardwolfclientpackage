@@ -225,6 +225,7 @@ function LayoutRestore(key)
                      Repaint() -- hack because WindowPosition doesn't immediately update coordinates
                      WindowShow(mwid, show)
                      CallPlugin(pid, "SaveState")
+                     CallPlugin(pid, "Theme.just_reloading")
                      DoAfterSpecial(0.1, "ReloadPlugin('"..pid.."')", sendto.script)
                   end
                end
