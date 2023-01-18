@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2245 snapshot
+- new feature: wrapped_captures.lua now has an interface for automatic manual tagging around commands that don't have their own output tags. The new functions are `tagged_output` and `untagged_output`. Hopefully the names are parameters make enough sense.
+- misc change: The plugin for capturing command output to MUSHclient's built-in notepad has been updated to use that new feature internally. Outward behavior should be the same as before, but you never know.
+
 r2244 snapshot
 - bug fix: Notify plugins that they're about to reload when switching miniwindow layouts. This way the communication log window won't lose its contents.
 
