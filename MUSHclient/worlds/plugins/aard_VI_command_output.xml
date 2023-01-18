@@ -21,7 +21,7 @@
 </plugin>
 <aliases>
 <alias
-   script="capture_activate"
+   script="capture_command_response"
    match="^mc command (.+)$"
    enabled="y"
    regexp="y"
@@ -31,71 +31,13 @@
 </alias>
 </aliases>
 
-<triggers>
-<trigger
-   enabled="y"
-   name="begin_capture"
-   match="^\{Begin MC Capture:(.*)\}$"
-   regexp="y"
-   script="begin_capture"
-   sequence="100"
-   omit_from_output="y"
-></trigger>
-
-<trigger
-   enabled="n"
-   name="capture_body"
-   match="^.*$"
-   regexp="y"
-   sequence="101"
-   omit_from_output="y"
-   send_to="12"
-><send>
-   -- code must go here and not in script body, because the script body happens after this
-   -- trigger's omit gets set in GetInfo(124)
-   if not GetInfo(124) then
-      local date_string = nil
-      line = "%0"
-      line = line:gsub("^%[?(%d%d %u%l%l %d%d:%d%d:%d%d)%]? ?-? (.*)", function(a,b) date_string = a; return b end)
-      table.insert(temp_buffer, {msg=line, date=date_string})
-   end
-</send>
-</trigger>
-
-<trigger
-   enabled="y"
-   name="end_capture"
-   match="^\{End MC Capture:(.*)\}$"
-   regexp="y"
-   script="end_capture"
-   sequence="100"
-   omit_from_output="y"
->
-</trigger>
-
-<trigger
-   enabled="n"
-   name="blank_line"
-   match="^$"
-   regexp="y"
-   sequence="100"
-   omit_from_output="y"
-   send_to="14"
->
-<send>
-   EnableTrigger("blank_line", false)
-</send>
-</trigger>
-
-</triggers>
-
 <script>
 <![CDATA[
 dofile(GetInfo(60).."telnet_options.lua")
+require "wrapped_captures"
+require "aardwolf_colors"
 
 command_capture = "command output"
-last_command = ""
-in_command = ""
 use_notepad = GetVariable("use_notepad")
 if use_notepad == nil then
    use_notepad = true
@@ -103,44 +45,18 @@ else
    use_notepad = (use_notepad == "1")
 end
 
-function OnPluginDisconnect()
-   EnableTrigger("capture_body", false)
-   EnableTrigger("blank_line", false)
-   last_command = ""
-   in_command = ""
-   temp_buffer = {}
-end
 
 require "checkplugin"
 function OnPluginListChanged()
    -- do_plugin_check_now("dd10517422bc35b5131a3aa0", "VI_captures")
 end
 
-function capture_activate(name, line, wildcards, styles)
+function capture_command_response(name, line, wildcards, styles)
    last_command = Trim(wildcards[1])
-   TelnetOptionOff(TELOPT_PAGING)
-   SendNoEcho("echo {Begin MC Capture:"..last_command.."}")
-
-   -- execute without echo
-   local original_echo_setting = GetOption("display_my_input")
-   SetOption ("display_my_input", 0)
-   Execute (last_command)
-   SetOption ("display_my_input", original_echo_setting)
-
-   SendNoEcho("echo {End MC Capture:"..last_command.."}")
-   TelnetOptionOn(TELOPT_PAGING)
+   Capture.untagged_output(last_command, true, true, true, write_to_notepad, true)
 end
 
-temp_buffer = {}
 
-
-function begin_capture(name, line, wildcards, styles)
-   in_command = Trim(wildcards[1])
-   if last_command == in_command then
-      temp_buffer = {}
-      EnableTrigger("capture_body", true)
-   end
-end
 
 DATE_MONTHS = {Jan=1,Feb=2,Mar=3,Apr=4,May=5,Jun=6,Jul=7,Aug=8,Sep=9,Oct=10,Nov=11,Dec=12}
 DATE_PATTERN = "(%d+) (%a+) (%d+):(%d+):(%d+)"
@@ -158,51 +74,52 @@ function aardwolf_channel_datestring_to_timestamp(date_string)
    return(os.time({year = found_year, month = found_month, day = found_day, hour = found_hour, min = found_minute, sec = found_seconds}))
 end
 
-function end_capture(name, line, wildcards, styles)
-   EnableTrigger("blank_line", true)
-   EnableTrigger("capture_body", false)
-   if (last_command ~= "") and (last_command == in_command) then
-
-      -- remove leading and trailing blank lines
-      while #temp_buffer>0 and Trim(temp_buffer[1].msg) == "" do
-         table.remove(temp_buffer, 1)
-      end
-      while #temp_buffer>0 and Trim(temp_buffer[#temp_buffer].msg) == "" do
-         table.remove(temp_buffer, #temp_buffer)
-      end
-
-      if #temp_buffer == 0 then
-         table.insert(temp_buffer, {msg="Failed to capture any MUD output. Are you sure this command goes to the MUD?", date=nil})
-      end
-
-      -- if use_notepad then
-         local full_capture_string = ""
-         for i,v in ipairs(temp_buffer) do
-            full_capture_string = full_capture_string..v.msg.."\r\n"
-         end
-         ReplaceNotepad(command_capture,  "Captured output for command ["..last_command.."].\r\n"..full_capture_string.."End of capture.")
-
-         NotepadSaveMethod(command_capture, 2)
-         NotepadReadOnly(command_capture, true)
-         ActivateNotepad(command_capture)
-      -- else
-      --    CallPlugin("dd10517422bc35b5131a3aa0", "remove_capture_internal", command_capture, true)
-      --    CallPlugin("dd10517422bc35b5131a3aa0", "add_capture_if_new", command_capture, false, true, nil, false)
-      --    CallPlugin("dd10517422bc35b5131a3aa0", "switch_to_capture", command_capture, true)
-      --    CallPlugin("dd10517422bc35b5131a3aa0", "clear_capture", true)
-      --    CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, "Captured output for command ["..last_command.."].")
-
-      --    for i,v in ipairs(temp_buffer) do
-      --       CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, v.msg, v.date and aardwolf_channel_datestring_to_timestamp(v.date) or nil)
-      --    end
-
-      --    CallPlugin("dd10517422bc35b5131a3aa0", "show", "Captured output from command ["..last_command.."] to ["..command_capture.."] capture.")
-      --    CallPlugin("dd10517422bc35b5131a3aa0", "switch_to_capture", command_capture)
-      -- end
-
-      temp_buffer = {}
-      last_command = ""
+function write_to_notepad(style_lines)
+   -- convert style lines to plain text and separate timestamps
+   local messages = {}
+   for _,styles in ipairs(style_lines) do
+      local date_string = nil
+      local line = strip_colours_from_styles(styles)
+      line = line:gsub("^%[?(%d%d %u%l%l %d%d:%d%d:%d%d)%]? ?-? (.*)", function(a,b) date_string = a; return b end)
+      table.insert(messages, {msg=line, date=date_string})
    end
+
+   -- remove leading and trailing blank lines
+   while #messages>0 and Trim(messages[1].msg) == "" do
+      table.remove(messages, 1)
+   end
+   while #messages>0 and Trim(messages[#messages].msg) == "" do
+      table.remove(messages, #messages)
+   end
+
+   if #messages == 0 then
+      table.insert(messages, {msg="Failed to capture any MUD output. Are you sure this command goes to the MUD?", date=nil})
+   end
+
+   -- if use_notepad then
+      local full_capture_string = ""
+      for _,v in ipairs(messages) do
+         full_capture_string = full_capture_string..v.msg.."\r\n"
+      end
+      ReplaceNotepad(command_capture,  "Captured output for command ["..last_command.."].\r\n"..full_capture_string.."End of capture.")
+
+      NotepadSaveMethod(command_capture, 2)
+      NotepadReadOnly(command_capture, true)
+      ActivateNotepad(command_capture)
+   -- else
+   --    CallPlugin("dd10517422bc35b5131a3aa0", "remove_capture_internal", command_capture, true)
+   --    CallPlugin("dd10517422bc35b5131a3aa0", "add_capture_if_new", command_capture, false, true, nil, false)
+   --    CallPlugin("dd10517422bc35b5131a3aa0", "switch_to_capture", command_capture, true)
+   --    CallPlugin("dd10517422bc35b5131a3aa0", "clear_capture", true)
+   --    CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, "Captured output for command ["..last_command.."].")
+
+   --    for i,v in ipairs(messages) do
+   --       CallPlugin("dd10517422bc35b5131a3aa0", "stamp_and_store", command_capture, v.msg, v.date and aardwolf_channel_datestring_to_timestamp(v.date) or nil)
+   --    end
+
+   --    CallPlugin("dd10517422bc35b5131a3aa0", "show", "Captured output from command ["..last_command.."] to ["..command_capture.."] capture.")
+   --    CallPlugin("dd10517422bc35b5131a3aa0", "switch_to_capture", command_capture)
+   -- end
 end
 
 ]]>
