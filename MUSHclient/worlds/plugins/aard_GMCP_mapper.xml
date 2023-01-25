@@ -4601,6 +4601,7 @@ function findpath(src, dst, noportals, norecalls)
 --      end
       table.insert(path, {dir=ftd.dir, uid=ftd.touid})
    end -- while
+   BroadcastPlugin(502, "found_paths = "..string.gsub(serialize.save_simple(path),"%s+"," "))
    return path, found_depth
 end -- function findpath
 
