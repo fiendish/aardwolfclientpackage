@@ -2401,6 +2401,31 @@ function room_find_notes (uid)
    end
 end
 
+function room_cexits (uid)
+   if uid == nil then
+      if current_room ~= nil then
+         uid = current_room
+      else
+         return nil
+      end
+   end
+
+   local room = rooms[uid]
+   if room == nil then
+      room = load_room_from_database(uid)
+   end
+
+   if room then
+      local custom_exits = {}
+      for k,v in pairs(room.exits) do
+         if #k > 1 then
+            custom_exits[k] = v
+         end
+      end
+      return serialize.save_simple(custom_exits)
+   end
+end
+
 function room_edit_note (room, uid, newnotes)
 
    if uid == nil and current_room ~= nil then
@@ -3836,7 +3861,7 @@ function got_gmcp_room()
    if not compact_mode then check_compact = "\n" end
 
    if shownotes and room and room.notes and room.notes ~= "" then
-      AnsiNote(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w"..check_compact))
+      Simulate(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w"..check_compact))
    end
 
    -- re-save if we got information that is different than before
