@@ -3858,10 +3858,10 @@ function got_gmcp_room()
    end -- not in cache
 
    local check_compact = ""
-   if not compact_mode then check_compact = "\n" end
+   if not compact_mode then check_compact = "\r\n" end
 
    if shownotes and room and room.notes and room.notes ~= "" then
-      Simulate(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w"..check_compact))
+      Simulate(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w\r\n"..check_compact))
    end
 
    -- re-save if we got information that is different than before
