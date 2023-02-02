@@ -51,6 +51,44 @@ details captured through GMCP.
    omit_from_output="y"
    script="HideIt"
 ></alias>
+
+<alias
+match="grouproom"
+enabled="y"
+sequence="100"
+omit_from_output="y"
+script="toggleInRoom"
+></alias>
+
+<alias
+match="groupsetroom"
+enabled="y"
+sequence="100"
+omit_from_output="y"
+script="setToRoom"
+></alias>
+
+<alias
+script="showPlayer"
+match="^showp\s(.*)$"
+keep_evaluating="y"
+enabled="y"
+regexp="y"
+send_to="12"
+sequence="100"
+>
+</alias>
+
+<alias
+script="hidePlayer"
+match="^hidep\s(.*)$"
+keep_evaluating="y"
+enabled="y"
+regexp="y"
+send_to="12"
+sequence="100"
+>
+</alias>
 </aliases>
 
 <triggers>
@@ -151,6 +189,7 @@ default_width = 269
 height = tonumber(GetVariable("height")) or default_height
 width = tonumber(GetVariable("width")) or default_width
 show_self = tonumber(GetVariable("show_self")) or 1
+in_room = tonumber(GetVariable("in_room")) or 0
 show_hp = tonumber(GetVariable("show_hp")) or 1
 show_mn = tonumber(GetVariable("show_mn")) or 1
 show_mv = tonumber(GetVariable("show_mv")) or 1
@@ -247,7 +286,11 @@ function RemoveMembersFromGroupDisplay()
    group_members = {}
    if (full_group_data ~= nil) then
       for i,v in ipairs(full_group_data.members) do
-         if not (hidden_members[v.name] or ((show_self == 0) and (char_data ~= nil) and (v.name == char_data.name))) then
+         if not (
+            hidden_members[v.name]
+            or ((show_self == 0) and (char_data ~= nil) and (v.name == char_data.name))
+            or ((in_room == 1) and (v.info.here == '0'))
+         ) then
             table.insert(group_members, v)
          end
       end
@@ -569,7 +612,7 @@ end
 
 function right_click_menu ()
 
-   menustring ="!Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|All Others|No Others|-|"
+   menustring ="!Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|"..((in_room==1 and "+") or "").."Same Room|All Others|No Others|-|Others In The Room Right Now|-|"
    local member_count = 0
    local member_names = {}
    if full_group_data and full_group_data.members and char_data and char_data.name then
@@ -625,18 +668,23 @@ function right_click_menu ()
             ColourNote("yellow", "", "You will now see your own status in the group monitor.")
          end
       elseif numResult == 3 then
+         toggleInRoom()
+      elseif numResult == 4 then
          -- remove all from the hidden list
          hidden_members = {}
-      elseif numResult == 4 then
+      elseif numResult == 5 then
          -- add all to the hidden list
          hideAllMembers()
-      elseif numResult >= 5 and numResult <= member_count+4 then
+      elseif numResult == 6 then
+         -- add players outside the room to the hidden list
+         setToRoom()
+      elseif numResult >= 7 and numResult <= member_count+6 then
          -- add/remove members in the hidden list
-         local adjustedNumResult = numResult - 4
+         local adjustedNumResult = numResult - 6
          hidden_members[member_names[adjustedNumResult]] = (((hidden_members[member_names[adjustedNumResult]]== nil) and true) or nil)
-      elseif numResult >= member_count+5 and numResult <= member_count+12 then
+      elseif numResult >= member_count+7 and numResult <= member_count+14 then
          -- change color settings
-         local adjustedNumResult = numResult-member_count-4
+         local adjustedNumResult = numResult-member_count-6
          local colourIndex = 2
          if (adjustedNumResult % 2 == 1) then
             colourIndex = 1
@@ -645,7 +693,7 @@ function right_click_menu ()
          if newcolour ~= -1 then
             colorVals[barIndex[math.ceil(adjustedNumResult/2)]][colourIndex] = newcolour
          end
-      elseif numResult == member_count+13 then
+      elseif numResult == member_count+15 then
          -- show/hide HP info
          show_hp = (((show_hp == 0) and 1) or 0)
          if (show_hp == 0) then
@@ -653,7 +701,7 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see HP info in the group monitor.")
          end
-      elseif numResult == member_count+14   then
+      elseif numResult == member_count+16   then
          -- show/hide MANA info
          show_mn = (((show_mn == 0) and 1) or 0)
          if (show_mn == 0) then
@@ -661,7 +709,7 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see MN info in the group monitor.")
          end
-      elseif numResult == member_count+15 then
+      elseif numResult == member_count+17 then
          -- show/hide MOVES info
          show_mv = (((show_mv == 0) and 1) or 0)
          if (show_mv == 0) then
@@ -669,7 +717,7 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see MV info in the group monitor.")
          end
-      elseif numResult == member_count+16 then
+      elseif numResult == member_count+18 then
          -- show/hide MOVES info
          show_quest = (((show_quest == 0) and 1) or 0)
          if (show_quest == 0) then
@@ -677,7 +725,7 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see Quest Time info in the group monitor.")
          end
-      elseif numResult == member_count+17 then
+      elseif numResult == member_count+19 then
          -- show/hide MOVES info
          show_tnl = (((show_tnl == 0) and 1) or 0)
          if (show_tnl == 0) then
@@ -685,29 +733,29 @@ function right_click_menu ()
          else
             ColourNote("yellow", "", "You will now see TNL info in the group monitor.")
          end
-      elseif numResult == member_count+18 then
+      elseif numResult == member_count+20 then
          -- no gauges
          gauge_style = 2
-      elseif numResult == member_count+19 then
+      elseif numResult == member_count+21 then
          -- flat gauges
          gauge_style = 1
-      elseif numResult == member_count+20 then
+      elseif numResult == member_count+22 then
          -- shaded gauges
          gauge_style = 0
-      elseif numResult == member_count+21 then
+      elseif numResult == member_count+23 then
          overlay_numbers = (((overlay_numbers == 0) and 1) or 0)
-      elseif numResult == member_count+22 then
+      elseif numResult == member_count+24 then
          -- standard
          number_style = 1
-      elseif numResult == member_count+23 then
+      elseif numResult == member_count+25 then
          -- percentages
          number_style = 2
-      elseif numResult == member_count+24 then
+      elseif numResult == member_count+26 then
          -- standard+percentages
          number_style = 3
-      elseif numResult == member_count+25 then
+      elseif numResult == member_count+27 then
          thresh1active = (((thresh1active == 0) and 1) or 0)
-      elseif numResult == member_count+26 then
+      elseif numResult == member_count+28 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -715,14 +763,14 @@ function right_click_menu ()
             end
             thresh1percent = tonumber(perc)
          end
-      elseif numResult == member_count+27 then
+      elseif numResult == member_count+29 then
          local newColor = PickColour (thresh1color)
          if newcolor ~= -1 then
             thresh1color = newColor
          end
-      elseif numResult == member_count+28 then
+      elseif numResult == member_count+30 then
          thresh2active = (((thresh2active == 0) and 1) or 0)
-      elseif numResult == member_count+29 then
+      elseif numResult == member_count+31 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -730,39 +778,39 @@ function right_click_menu ()
             end
             thresh2percent = tonumber(perc)
          end
-      elseif numResult == member_count+30 then
+      elseif numResult == member_count+32 then
          local newColor = PickColour (thresh2color)
          if newcolor ~= -1 then
             thresh2color = newColor
          end
-      elseif numResult == member_count+31 then
+      elseif numResult == member_count+33 then
          -- sort by % damage
          if sort_hp_which == "percent" then -- current sort so disable
             sort_hp_which = ""
          else
             sort_hp_which = "percent"
          end
-      elseif numResult == member_count+32 then
+      elseif numResult == member_count+34 then
          -- sort by total damage
          if sort_hp_which == "total" then -- current sort so disable
             sort_hp_which = ""
          else
             sort_hp_which = "total"
          end
-      elseif numResult == member_count+33 then
+      elseif numResult == member_count+35 then
          -- Players On Quests Go Last
          if sort_quests == 1 then
             sort_quests = 0
          else
             sort_quests = 1
          end
-      elseif numResult == member_count+34 then
+      elseif numResult == member_count+36 then
          -- bring to front
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == member_count+35 then
+      elseif numResult == member_count+37 then
          -- send to back
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-      elseif numResult == member_count+36 then
+      elseif numResult == member_count+38 then
          -- reset
          font_name        = default_font_name
          font_size        = default_font_size
@@ -789,6 +837,52 @@ function group_cancel(name, line, wildcards, styles)
    invitations[wildcards[1]] = nil
    DisplayGroupPage()
 end
+
+---------- taken from Gofer
+
+function showPlayer( name, line, wildcards )
+   hidden_members[ wildcards[1] ] = nil
+   SaveState()
+   RemoveMembersFromGroupDisplay()
+   DisplayGroupPage()
+end
+
+function hidePlayer( name, line, wildcards )
+   hidden_members[ wildcards[1] ] = true
+   SaveState()
+   RemoveMembersFromGroupDisplay()
+   DisplayGroupPage()
+end
+
+function toggleInRoom()
+   in_room = (((in_room == 0) and 1) or 0)
+   if (in_room == 0) then
+      ColourNote("yellow", "", "You will now track group members everywhere.")
+   else
+      ColourNote("yellow", "", "You will now track group members in the same room as you.")
+   end
+   SaveState()
+   RemoveMembersFromGroupDisplay()
+   DisplayGroupPage()
+end
+
+function setToRoom()
+   ColourNote("yellow", "", "Tracking group members who are in the room right now.")
+   in_room = 0
+   if (full_group_data ~= nil) then
+      for i,v in ipairs(full_group_data.members) do
+         if v.info.here == "0" then
+            hidden_members[v.name] = true
+         end
+      end
+   end
+   SaveState()
+   RemoveMembersFromGroupDisplay()
+   DisplayGroupPage()
+end
+
+---------- end from Gofer
+
 
 --=================================================================================
 -- Called when plugin receives telnet data - main entry point for actually running
@@ -930,6 +1024,7 @@ function OnPluginSaveState()
    SetVariable("font_name", font_name)
    SetVariable("font_size", font_size)
    SetVariable("show_self", show_self)
+   SetVariable("in_room", in_room)
    SetVariable("show_hp", show_hp)
    SetVariable("show_mn", show_mn)
    SetVariable("show_mv", show_mv)
