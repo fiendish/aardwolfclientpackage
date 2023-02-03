@@ -91,6 +91,9 @@ end
 function OnPluginScreendraw(type, log, line)
    if rect then
       local new_num_lines = GetLinesInBufferCount()
+      if new_num_lines < num_lines then -- the output buffer filled up
+         num_lines = new_num_lines
+      end
       for i=num_lines,new_num_lines do
          rect:addText(GetStyleInfo(i))
       end
