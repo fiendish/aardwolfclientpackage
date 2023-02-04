@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2249 snapshot
+- new feature: The group monitor plugin now has some new right-click options and aliases for tracking only groupmembers in the same room. I'm kind of annoyed that people are customizing the group monitor plugin privately for this instead of sending changes to me or asking for updates.
+- new feature: gag_next_blank_line.lua for gagging the next line from output if it's blank. I use this in a few places, so figure it's worth spinning out into a module.
+- misc change: GMCP mapper notes now display with Simulate instead of Note.
+- bug fix: A bit of line math was wrong in the splitscreen scrollback overlay right when the output buffer hit its size limit and dumped some of the oldest lines to make room causing a line to get missed once in a while.
+
 r2245 snapshot
 - new feature: wrapped_captures.lua now has an interface for automatic manual tagging around commands that don't have their own output tags. The new functions are `tagged_output` and `untagged_output`. Hopefully the names are parameters make enough sense.
 - misc change: The plugin for capturing command output to MUSHclient's built-in notepad has been updated to use that new feature internally. Outward behavior should be the same as before, but you never know.
