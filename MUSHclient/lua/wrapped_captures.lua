@@ -1,4 +1,5 @@
 require "gmcphelper"
+require "gag_next_blank_line"
 dofile(GetInfo(60).."telnet_options.lua")
 
 module ("Capture", package.seeall)
@@ -47,29 +48,11 @@ function ___create_capture(i, start_line)
    )
 end
 
-function ___add_squelch_triggers(i)
-   AddTriggerEx(
-      "tag_captures_module___squelch"..i,
-      "^$",
-      "DeleteTrigger('tag_captures_module___nosquelch"..i.."');StopEvaluatingTriggers(true)",
-      trigger_flag.RegularExpression + trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Temporary + trigger_flag.Enabled + trigger_flag.OneShot,
-      -1, 0, "", "", sendto.script, ___storage[i]["sequence_high"]
-   )
-   AddTriggerEx(
-      "tag_captures_module___nosquelch"..i,
-      ".+",
-      "DeleteTrigger('tag_captures_module___squelch"..i.."')",
-      trigger_flag.KeepEvaluating + trigger_flag.RegularExpression + trigger_flag.Temporary + trigger_flag.Enabled + trigger_flag.OneShot,
-      -1, 0, "", "", sendto.script, 0
-   )
-end
-
 function ___terminate(i)
    DeleteTrigger("tag_captures_module___start_"..i)
    DeleteTrigger("tag_captures_module___body_"..i)
    DeleteTrigger("tag_captures_module___end_"..i)
-   DeleteTrigger("tag_captures_module___squelch"..i)
-   DeleteTrigger("tag_captures_module___nosquelch"..i)
+   UngagBlankLine(i)
    ___storage[i] = nil
 
    -- if storage is empty, reset the sequence numbers
@@ -126,7 +109,7 @@ function command(
 
    TelnetOptionOff(TELOPT_PAGING)
    if compact_mode == "NO" then
-      ___add_squelch_triggers(i)
+      GagBlankLine(i, ___storage[i]["sequence_high"])
       Send_GMCP_Packet("config compact YES")
    end
    if prompt_mode == "YES" then
