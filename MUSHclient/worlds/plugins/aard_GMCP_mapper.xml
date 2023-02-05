@@ -9,7 +9,6 @@
    <!ENTITY show_completed "true" >
    <!ENTITY show_database_mods "false" >
    <!ENTITY show_other_areas "false" >
-   <!ENTITY show_up_down "false" >
    <!ENTITY speedwalk_prefix "run" >
 ]>
 
@@ -663,8 +662,10 @@ mapper.gotoNextResult(Trim("%1"))
    send_to="12"
 >
 <send>
-   mapper.show_up_down = not mapper.show_up_down
-   mapper.draw (current_room)
+   show_up_down = not show_up_down
+   mapper.show_up_down = show_up_down
+   SetVariable("show_up_down", show_up_down and "1" or "0")
+   mapper.draw(current_room)
 </send>
 </alias>
 
@@ -869,7 +870,6 @@ local show_timing = &show_timing;
 local show_completed = &show_completed;
 local show_database_mods = &show_database_mods;
 local show_other_areas = &show_other_areas;
-local show_up_down = &show_up_down;
 local speedwalk_prefix = "&speedwalk_prefix;"
 
 <![CDATA[
@@ -890,6 +890,7 @@ toConfirm = ""
 blinded = false
 mylevel = 0
 mytier = 0
+show_up_down = ((GetVariable("show_up_down") or "0") == "1")  -- default false
 NoUnderline_hyperlinks = GetVariable("NoUnderline_hyperlinks") ~= "0" -- default true
 window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
