@@ -21,6 +21,7 @@ end
 
 function ___capture_end(name, line, wildcards, styles)
    local i = name:sub(27)
+   ___storage[i]["timeout_callback"] = nil
    ___storage[i]["callback"](
       ___storage[i]["captured_lines"], ___storage[i]["start_line"], line
    )
@@ -53,6 +54,9 @@ function ___terminate(i)
    DeleteTrigger("tag_captures_module___body_"..i)
    DeleteTrigger("tag_captures_module___end_"..i)
    UngagBlankLine(i)
+   if ___storage[i] and ___storage[i]["timeout_callback"] then
+      ___storage[i]["timeout_callback"]()
+   end
    ___storage[i] = nil
 
    -- if storage is empty, reset the sequence numbers
@@ -64,7 +68,7 @@ end
 
 ___sequence = 1
 
-function ___contents(start_tag, end_tag, tags_are_regexp, omit_response_from_output, callback_function, one_shot)
+function ___contents(start_tag, end_tag, tags_are_regexp, omit_response_from_output, callback_function, one_shot, timeout_callback)
    local i = tostring(___sequence)
    ___storage[i] = {
       ["i"] = i,
@@ -73,7 +77,8 @@ function ___contents(start_tag, end_tag, tags_are_regexp, omit_response_from_out
       ["omit_response_from_output"] = omit_response_from_output,
       ["callback"] = callback_function,
       ["end_tag"] = end_tag,
-      ["tags_are_regexp"] = tags_are_regexp
+      ["tags_are_regexp"] = tags_are_regexp,
+      ["timeout_callback"] = timeout_callback
    }
 
    local flags = trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Temporary + trigger_flag.Enabled
@@ -98,13 +103,14 @@ function command(
    no_prompt_after,
    callback_function,
    send_via_execute,
-   manual_tags
+   manual_tags,
+   timeout_callback
 )
    local compact_mode = gmcp("config.compact")
    local prompt_mode = gmcp("config.prompt")
 
    local i = ___contents(
-      capture_start_tag, capture_end_tag, tags_are_regexp, omit_response_from_output, callback_function, true
+      capture_start_tag, capture_end_tag, tags_are_regexp, omit_response_from_output, callback_function, true, timeout_callback
    )
 
    TelnetOptionOff(TELOPT_PAGING)
@@ -150,7 +156,7 @@ function command(
    end
 
    TelnetOptionOn(TELOPT_PAGING)
-   DoAfterSpecial(20, "Capture.___terminate("..i..")", sendto.script)
+   DoAfterSpecial(20, "Capture.___terminate('"..i.."')", sendto.script)
 end
 
 
@@ -162,7 +168,8 @@ function untagged_output(
    omit_response_from_output,
    no_prompt_after,
    callback_function,
-   send_via_execute
+   send_via_execute,
+   timeout_callback
 )
    local sequence = tostring(___sequence)
    local capture_start_tag = "{Begin Capture "..sequence.."}"
@@ -180,7 +187,8 @@ function untagged_output(
       no_prompt_after,
       callback_function,
       send_via_execute,
-      manual_tags
+      manual_tags,
+      timeout_callback
    )
 end
 
@@ -193,8 +201,11 @@ function tagged_output(
    omit_response_from_output,
    no_prompt_after,
    callback_function,
-   send_via_execute
+   send_via_execute,
+   timeout_callback
 )
+   local manual_tags = false
+
    command(
       command_to_send,
       capture_start_tag,
@@ -204,7 +215,9 @@ function tagged_output(
       omit_response_from_output,
       no_prompt_after,
       callback_function,
-      send_via_execute
+      send_via_execute,
+      manual_tags,
+      timeout_callback
    )
 end
 
