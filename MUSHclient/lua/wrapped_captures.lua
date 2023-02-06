@@ -53,6 +53,8 @@ function ___terminate(i)
    DeleteTrigger("tag_captures_module___start_"..i)
    DeleteTrigger("tag_captures_module___body_"..i)
    DeleteTrigger("tag_captures_module___end_"..i)
+   DeleteTrigger("tag_captures_module___immortal_start_"..i)
+   DeleteTrigger("tag_captures_module___immortal_end_"..i)
    UngagBlankLine(i)
    if ___storage[i] and ___storage[i]["timeout_callback"] then
       ___storage[i]["timeout_callback"]()
@@ -68,31 +70,6 @@ end
 
 ___sequence = 1
 
-function ___contents(start_tag, end_tag, tags_are_regexp, omit_response_from_output, callback_function, one_shot, timeout_callback)
-   local i = tostring(___sequence)
-   ___storage[i] = {
-      ["i"] = i,
-      ["sequence_low"] = ___sequence,
-      ["sequence_high"] = ___sequence + 5000,
-      ["omit_response_from_output"] = omit_response_from_output,
-      ["callback"] = callback_function,
-      ["end_tag"] = end_tag,
-      ["tags_are_regexp"] = tags_are_regexp,
-      ["timeout_callback"] = timeout_callback
-   }
-
-   local flags = trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Temporary + trigger_flag.Enabled
-   AddTriggerEx(
-      "tag_captures_module___start_"..i,
-      start_tag,
-      "Capture.___create_capture('"..i.."', '%0');StopEvaluatingTriggers(true)",
-      flags + (one_shot and trigger_flag.OneShot or 0) + (tags_are_regexp and trigger_flag.RegularExpression or 0),
-      -1, 0, "", "", sendto.script, ___storage[i]["sequence_low"]
-   )
-   ___sequence = (___sequence + 1) % 5000
-   return i
-end
-
 function command(
    command_to_send,
    capture_start_tag,
@@ -106,13 +83,59 @@ function command(
    manual_tags,
    timeout_callback
 )
+   local i = tostring(___sequence)
+
    local compact_mode = gmcp("config.compact")
    local prompt_mode = gmcp("config.prompt")
 
-   local i = ___contents(
-      capture_start_tag, capture_end_tag, tags_are_regexp, omit_response_from_output, callback_function, true, timeout_callback
+   -- immortal echo works a little differently than normal player echo
+   local my_level = tonumber(gmcp("char.base.level")) or 0
+   local echo_command = "echo "
+   local echo_prefix = ""
+   if manual_tags and my_level >= 202 then
+      local my_name = gmcp("char.base.name")
+      echo_command = "echo self "
+      echo_prefix = my_name.." echo> "
+      AddTriggerEx(
+         "tag_captures_module___immortal_start_"..i,
+         "You echo "..capture_start_tag.." to "..my_name..".",
+         "StopEvaluatingTriggers(true)",
+         trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Temporary + trigger_flag.Enabled + trigger_flag.OneShot,
+         -1, 0, "", "", sendto.script, ___sequence
+      )
+      AddTriggerEx(
+         "tag_captures_module___immortal_end_"..i,
+         "You echo "..capture_end_tag.." to "..my_name..".",
+         "StopEvaluatingTriggers(true)",
+         trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Temporary + trigger_flag.Enabled + trigger_flag.OneShot,
+         -1, 0, "", "", sendto.script, ___sequence
+      )
+   end
+
+   -- store the details
+   ___storage[i] = {
+      ["i"] = i,
+      ["sequence_low"] = ___sequence,
+      ["sequence_high"] = ___sequence + 5000,
+      ["omit_response_from_output"] = omit_response_from_output,
+      ["callback"] = callback_function,
+      ["end_tag"] = echo_prefix..capture_end_tag,
+      ["tags_are_regexp"] = tags_are_regexp,
+      ["timeout_callback"] = timeout_callback
+   }
+
+   -- start trigger
+   AddTriggerEx(
+      "tag_captures_module___start_"..i,
+      echo_prefix..capture_start_tag,
+      "Capture.___create_capture('"..i.."', '%0');StopEvaluatingTriggers(true)",
+      trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Temporary + trigger_flag.Enabled + trigger_flag.OneShot + (tags_are_regexp and trigger_flag.RegularExpression or 0),
+      -1, 0, "", "", sendto.script, ___storage[i]["sequence_low"]
    )
 
+   ___sequence = (___sequence + 1) % 5000
+
+   -- toggle flags and send the commands
    TelnetOptionOff(TELOPT_PAGING)
    if compact_mode == "NO" then
       GagBlankLine(i, ___storage[i]["sequence_high"])
@@ -123,7 +146,7 @@ function command(
    end
 
    if manual_tags then
-      SendNoEcho("echo "..capture_start_tag)
+      SendNoEcho(echo_command..capture_start_tag)
    end
 
    if no_command_echo then
@@ -141,7 +164,7 @@ function command(
    end
 
    if manual_tags then
-      SendNoEcho("echo "..capture_end_tag)
+      SendNoEcho(echo_command..capture_end_tag)
    end
 
    if compact_mode == "NO" then
