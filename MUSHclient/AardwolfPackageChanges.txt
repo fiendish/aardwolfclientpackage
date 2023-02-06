@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2252 snapshot
+- new feature: The wrapped_captures module should now handle the different way that the echo command works for immortals.
+- new feature: The wrapped_captures module now supports a separate callback function for timeouts.
+- bug fix: The GMCP mapper's updown setting will now save across sessions.
+
 r2249 snapshot
 - new feature: The group monitor plugin now has some new right-click options and aliases for tracking only groupmembers in the same room. I'm kind of annoyed that people are customizing the group monitor plugin privately for this instead of sending changes to me or asking for updates.
 - new feature: gag_next_blank_line.lua for gagging the next line from output if it's blank. I use this in a few places, so figure it's worth spinning out into a module.
