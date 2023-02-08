@@ -69,6 +69,22 @@ script="setToRoom"
 ></alias>
 
 <alias
+match="groupsetall"
+enabled="y"
+sequence="100"
+omit_from_output="y"
+script="showAllMembers"
+></alias>
+
+<alias
+match="groupsetnone"
+enabled="y"
+sequence="100"
+omit_from_output="y"
+script="hideAllMembers"
+></alias>
+
+<alias
 match="groupcompact"
 enabled="y"
 sequence="100"
@@ -307,8 +323,19 @@ function RemoveMembersFromGroupDisplay()
    end
 end
 
+function showAllMembers()
+   ColourNote("yellow", "", "All members will be shown in the group monitor window.")
+   hidden_members = {}
+   -- save and reload
+   SaveState()
+   RemoveMembersFromGroupDisplay()
+   OnPluginInstall()
+end
+
 -- put all current group members into the hidden_members list
 function hideAllMembers()
+   ColourNote("yellow", "", "All members will be hidden from the group monitor window.")
+
    hidden_members = {}
    if full_group_data and full_group_data.members and char_data and char_data.name then
       for i,v in ipairs(full_group_data.members) do
@@ -317,7 +344,10 @@ function hideAllMembers()
          end
       end
    end
+   -- save and reload
+   SaveState()
    RemoveMembersFromGroupDisplay()
+   OnPluginInstall()
 end
 
 function byTotalDamage(a, b)
@@ -835,7 +865,7 @@ function ultracompact_right_click_menu (menustring, member_count, member_names)
          toggleInRoom()
       elseif numResult == 4 then
          -- remove all from the hidden list
-         hidden_members = {}
+         showAllMembers()
       elseif numResult == 5 then
          -- add all to the hidden list
          hideAllMembers()
@@ -949,6 +979,7 @@ function ultracompact_right_click_menu (menustring, member_count, member_names)
          height           = default_height
          width            = default_width
          show_coords      = 0
+         WindowResize(win, width, height, Theme.PRIMARY_BODY)
       end -- if
 
       -- save and reload
@@ -1016,7 +1047,7 @@ function full_right_click_menu (menustring, member_count, member_names)
          toggleInRoom()
       elseif numResult == 4 then
          -- remove all from the hidden list
-         hidden_members = {}
+         showAllMembers()
       elseif numResult == 5 then
          -- add all to the hidden list
          hideAllMembers()
@@ -1162,6 +1193,7 @@ function full_right_click_menu (menustring, member_count, member_names)
          height           = default_height
          width            = default_width
          show_coords      = 0
+         WindowResize(win, width, height, Theme.PRIMARY_BODY)
       end -- if
 
       -- save and reload
@@ -1186,17 +1218,21 @@ end
 ---------- taken from Gofer
 
 function showPlayer( name, line, wildcards )
+   ColourNote("yellow", "", "Player "..wildcards[1].." will be shown in the group monitor window.")
    hidden_members[ wildcards[1] ] = nil
+   -- save and reload
    SaveState()
    RemoveMembersFromGroupDisplay()
-   DisplayGroupPage()
+   OnPluginInstall()
 end
 
 function hidePlayer( name, line, wildcards )
+   ColourNote("yellow", "", "Player "..wildcards[1].." will be hidden from the group monitor window.")
    hidden_members[ wildcards[1] ] = true
+   -- save and reload
    SaveState()
    RemoveMembersFromGroupDisplay()
-   DisplayGroupPage()
+   OnPluginInstall()
 end
 
 function toggleInRoom()
@@ -1206,9 +1242,10 @@ function toggleInRoom()
    else
       ColourNote("yellow", "", "You will now track group members in the same room as you.")
    end
+   -- save and reload
    SaveState()
    RemoveMembersFromGroupDisplay()
-   DisplayGroupPage()
+   OnPluginInstall()
 end
 
 function setToRoom()
@@ -1221,9 +1258,10 @@ function setToRoom()
          end
       end
    end
+   -- save and reload
    SaveState()
    RemoveMembersFromGroupDisplay()
-   DisplayGroupPage()
+   OnPluginInstall()
 end
 
 ---------- end from Gofer
