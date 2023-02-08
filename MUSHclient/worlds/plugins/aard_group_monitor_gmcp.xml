@@ -758,7 +758,7 @@ function validate_percent(input)
 end
 
 function right_click_menu ()
-   local menustring ="!"..(ultracompact and "+" or "").."Ultracompact Mode|-|Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|"..((in_room==1 and "+") or "").."Same Room|All Others|No Others|-|Others In The Room Right Now|-|"
+   local menustring ="!"..(ultracompact and "+" or "").."Ultracompact Mode|-|Change Font|>Show Players|"..((show_self==1 and "+") or "").."Include Self|"..((in_room==1 and "+") or "").."Same Room|-|All Others|No Others|Others In The Room Right Now|-|"
    local member_count = 0
    local member_names = {}
    if full_group_data and full_group_data.members and char_data and char_data.name then
@@ -895,14 +895,14 @@ function ultracompact_right_click_menu (menustring, member_count, member_names)
             end
             thresh1percent = tonumber(perc)
          end
-      elseif numResult == member_count+29 then
+      elseif numResult == member_count+19 then
          local newColor = PickColour (thresh1color)
          if newcolor ~= -1 then
             thresh1color = newColor
          end
-      elseif numResult == member_count+19 then
-         thresh2active = (((thresh2active == 0) and 1) or 0)
       elseif numResult == member_count+20 then
+         thresh2active = (((thresh2active == 0) and 1) or 0)
+      elseif numResult == member_count+21 then
          local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
          if perc then
             if string.sub(perc, -1) == "%" then
@@ -910,39 +910,39 @@ function ultracompact_right_click_menu (menustring, member_count, member_names)
             end
             thresh2percent = tonumber(perc)
          end
-      elseif numResult == member_count+21 then
+      elseif numResult == member_count+22 then
          local newColor = PickColour (thresh2color)
          if newcolor ~= -1 then
             thresh2color = newColor
          end
-      elseif numResult == member_count+22 then
+      elseif numResult == member_count+23 then
          -- sort by % damage
          if sort_hp_which == "percent" then -- current sort so disable
             sort_hp_which = ""
          else
             sort_hp_which = "percent"
          end
-      elseif numResult == member_count+23 then
+      elseif numResult == member_count+24 then
          -- sort by total damage
          if sort_hp_which == "total" then -- current sort so disable
             sort_hp_which = ""
          else
             sort_hp_which = "total"
          end
-      elseif numResult == member_count+24 then
+      elseif numResult == member_count+25 then
          -- Players On Quests Go Last
          if sort_quests == 1 then
             sort_quests = 0
          else
             sort_quests = 1
          end
-      elseif numResult == member_count+25 then
+      elseif numResult == member_count+26 then
          -- bring to front
          CallPlugin("462b665ecb569efbf261422f","boostMe", win)
-      elseif numResult == member_count+26 then
+      elseif numResult == member_count+27 then
          -- send to back
          CallPlugin("462b665ecb569efbf261422f","dropMe", win)
-      elseif numResult == member_count+27 then
+      elseif numResult == member_count+28 then
          -- reset
          font_name        = default_font_name
          font_size        = default_font_size
