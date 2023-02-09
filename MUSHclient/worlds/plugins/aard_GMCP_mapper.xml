@@ -2759,13 +2759,13 @@ function room_click (uid, flags)
 
    table.insert(handlers, { name = ">Change Exit Destination", })
    for ex, to in pairs(room.exits) do
-      table.insert(handlers, { name = ex.." -> "..to, func = room_change_exit, param = ex})
+      table.insert(handlers, { name = ex:gsub("|", "/").." -> "..to, func = room_change_exit, param = ex})
    end
    table.insert(handlers, { name = "<", })
 
    table.insert(handlers, {name = ">Change Exit Level Lock", })
    for ex, lock in pairs(room.exit_locks) do
-      table.insert(handlers, { name = ex.."  [ "..lock.." ]", func = room_lock_exit, param = ex})
+      table.insert(handlers, { name = ex:gsub("|", "/").."  [ "..lock.." ]", func = room_lock_exit, param = ex})
    end
    table.insert(handlers, { name = "<", })
 
@@ -2780,7 +2780,7 @@ function room_click (uid, flags)
       table.insert(handlers, { name = ">Change Custom Exit Command", })
       for ex, to in pairs(room.exits) do
          if not string.find("n s e w u d", ex) then
-            table.insert(handlers, { name = ex.." -> "..to, func = room_change_cexit_command, param = ex})
+            table.insert(handlers, { name = ex:gsub("|", "/").." -> "..to, func = room_change_cexit_command, param = ex})
          end
       end
       table.insert(handlers, { name = "<", })
@@ -2789,7 +2789,7 @@ function room_click (uid, flags)
    table.insert(handlers, { name = (room.ignore_exits_mismatch and "+" or "").."Ignore Exits Mismatch Here", func = ignore_mismatch_toggle, param = room.ignore_exits_mismatch})
    table.insert(handlers, { name = ">Delete Exit", })
    for ex, to in pairs(room.exits) do
-      table.insert(handlers, { name = ex.." -> "..to, func = room_delete_exit, param = ex})
+      table.insert(handlers, { name = ex:gsub("|", "/").." -> "..to, func = room_delete_exit, param = ex})
    end
    table.insert(handlers, { name = "<", })
 
