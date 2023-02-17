@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2254 snapshot
+- bug fix: Prevent pipes in cexits (*eyeroll*) from breaking the right-click menu display.
+- new feature: The group monitor plugin now has an ultra-compact display mode. I plan to improve this more soon, but I don't want to stop people from having access to it just because I'm slow.
+
 r2252 snapshot
 - new feature: The wrapped_captures module should now handle the different way that the echo command works for immortals.
 - new feature: The wrapped_captures module now supports a separate callback function for timeouts.
