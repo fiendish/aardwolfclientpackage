@@ -72,7 +72,7 @@ DeleteVariable("remember_position")
 if my_window and my_window.id then
    build_window(prev_window_styles, prev_hyperlinks_function)
 end
-SetVariable("remember_position", remember_position)
+SetVariable("remember_position", remember_position or "0")
 if my_window and my_window.id then
    build_window(prev_window_styles, prev_hyperlinks_function)
 end
