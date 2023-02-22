@@ -83,6 +83,7 @@ end
 
 <script>
 <![CDATA[
+require "aardwolf_colors"
 require "themed_miniwindows"
 require "wrapped_captures"
 require "gmcphelper"
