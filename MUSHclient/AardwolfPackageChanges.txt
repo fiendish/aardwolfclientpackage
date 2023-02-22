@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2257 snapshot
+- bug fix: (BOY I SURE HOPE) Durel spotted some issues with the ColoursToStyles function in aardwolf_colors.lua, so I've rewritten it to be easier to verify. Hopefully I didn't introduce any new problems in the process.
+- bug fix: I think I also fixed a bug in the partition_boundaries color function.
+
 r2255 snapshot
 - bug fix: The the helpfile miniwindow plugin's resetaard alias that was added in 2235 had a bug in it that would cause an error if there was no value for the "remember position" setting. Fixed now. Lol.
 
