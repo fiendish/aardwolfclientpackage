@@ -8,7 +8,7 @@
 <muclient>
 <plugin
    name="Aardwolf_Health_Bars"
-   author="Fiendish and Lasher"
+   author="Fiendish"
    id="ef4a86dbc9cd4dd6f4c69385"
    language="Lua"
    purpose="GMCP Version of health bars"
@@ -38,6 +38,8 @@ Aardwolf GCMP based health bars
 
 <script>
 <![CDATA[
+-- Lasher wrote or helped write the very first version of this plugin. People should bug me about it and not him, so I'm putting his name here instead of in the author field.
+
 require "aard_register_z_on_create"
 
 require "mw_theme_base"

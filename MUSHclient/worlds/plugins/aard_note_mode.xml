@@ -6,7 +6,7 @@
 <muclient>
 <plugin
    name="Aardwolf_Note_Mode"
-   author="Fiendish and Cizra"
+   author="Fiendish"
    id="f2194205952c5eefa4f380b8"
    language="Lua"
    purpose="Disables aliases/triggers/timers for the duration of note writing"
@@ -25,6 +25,7 @@ Turns off all aliases, triggers and timers while in note writing mode.
 
 <script>
 <![CDATA[
+-- Cizra helped write this plugin, but people should bug me about it not him. So I'm putting the note here instead of in the author field.
 
 dofile (GetPluginInfo (GetPluginID(), 20) .. "telnet_options.lua")
 require "gmcphelper"
