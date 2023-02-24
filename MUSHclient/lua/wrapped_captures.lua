@@ -4,6 +4,78 @@ dofile(GetInfo(60).."telnet_options.lua")
 
 module ("Capture", package.seeall)
 
+-- The Capture module provides functions for capturing arbitrary command output from the game.
+-- The tagged_output function is used to capture text that is reliably enclosed by recognizeable text.
+-- The untagged_output function is used to capture text that is not reliably enclosed by recognizeable text.
+
+function tagged_output(
+   command_to_send,            -- The command to send to the game.
+   capture_start_tag,          -- The opening tag that marks the start of the text to be captured.
+   capture_end_tag,            -- The closing tag that marks the end of the text to be captured.
+   tags_are_regexp,            -- A boolean indicating whether the tags are regular expressions (default is false).
+   no_command_echo,            -- A boolean indicating whether the command should be echoed to the screen (true means omit, false/nil means show).
+   omit_response_from_output,  -- A boolean indicating whether the response to the command should be shown in the output window (true means omit, false/nil means show).
+   no_prompt_after,            -- A boolean indicating whether the prompt should be displayed after the command is done (true means no prompt, false/nil means yes prompt).
+   callback_function,          -- A function to be called when the captured text has been obtained which should take three arguments: captured_styles, start_line, and end_line.
+                               --    captured_styles are the output style lines that were captured
+                               --    start_line is the text of the line with the start tag
+                               --    end_line is the text of the line with the end tag
+   send_via_execute,           -- A boolean indicating whether the command should be sent via Execute instead of Send (true means use Execute, false/nil means use Send).
+   timeout_callback            -- A function to be called if the capture times out.
+)
+   local manual_tags = false
+
+   command(
+      command_to_send,
+      capture_start_tag,
+      capture_end_tag,
+      tags_are_regexp,
+      no_command_echo,
+      omit_response_from_output,
+      no_prompt_after,
+      callback_function,
+      send_via_execute,
+      manual_tags,
+      timeout_callback
+   )
+end
+
+function untagged_output(
+   command_to_send,            -- The command to send to the game.
+   no_command_echo,            -- A boolean indicating whether the command should be echoed to the screen (true means omit, false/nil means show).
+   omit_response_from_output,  -- A boolean indicating whether the response to the command should be shown in the output window (true means omit, false/nil means show).
+   no_prompt_after,            -- A boolean indicating whether the prompt should be displayed after the command is done (true means no prompt, false/nil means yes prompt).
+   callback_function,          -- A function to be called when the captured text has been obtained which should take three arguments: captured_styles, start_line, and end_line.
+                               --    captured_styles are the output style lines that were captured
+                               --    start_line is the text of the line with the start tag
+                               --    end_line is the text of the line with the end tag
+   send_via_execute,           -- A boolean indicating whether the command should be sent via Execute instead of Send (true means use Execute, false/nil means use Send).
+   timeout_callback            -- A function to be called if the capture times out.
+)
+   local sequence = tostring(___sequence)
+   local capture_start_tag = "{Begin Capture "..sequence.."}"
+   local capture_end_tag = "{End Capture "..sequence.."}"
+   local tags_are_regexp = false
+   local manual_tags = true
+
+   command(
+      command_to_send,
+      capture_start_tag,
+      capture_end_tag,
+      tags_are_regexp,
+      no_command_echo,
+      omit_response_from_output,
+      no_prompt_after,
+      callback_function,
+      send_via_execute,
+      manual_tags,
+      timeout_callback
+   )
+end
+
+
+--- Ignore everything below here
+
 
 function ExecuteNoEcho(command)
    local original_echo_setting = GetOption("display_my_input")
@@ -181,66 +253,3 @@ function command(
    TelnetOptionOn(TELOPT_PAGING)
    DoAfterSpecial(20, "Capture.___terminate('"..i.."')", sendto.script)
 end
-
-
--- Public interfaces
-
-function untagged_output(
-   command_to_send,
-   no_command_echo,
-   omit_response_from_output,
-   no_prompt_after,
-   callback_function,
-   send_via_execute,
-   timeout_callback
-)
-   local sequence = tostring(___sequence)
-   local capture_start_tag = "{Begin Capture "..sequence.."}"
-   local capture_end_tag = "{End Capture "..sequence.."}"
-   local tags_are_regexp = false
-   local manual_tags = true
-
-   command(
-      command_to_send,
-      capture_start_tag,
-      capture_end_tag,
-      tags_are_regexp,
-      no_command_echo,
-      omit_response_from_output,
-      no_prompt_after,
-      callback_function,
-      send_via_execute,
-      manual_tags,
-      timeout_callback
-   )
-end
-
-function tagged_output(
-   command_to_send,
-   capture_start_tag,
-   capture_end_tag,
-   tags_are_regexp,
-   no_command_echo,
-   omit_response_from_output,
-   no_prompt_after,
-   callback_function,
-   send_via_execute,
-   timeout_callback
-)
-   local manual_tags = false
-
-   command(
-      command_to_send,
-      capture_start_tag,
-      capture_end_tag,
-      tags_are_regexp,
-      no_command_echo,
-      omit_response_from_output,
-      no_prompt_after,
-      callback_function,
-      send_via_execute,
-      manual_tags,
-      timeout_callback
-   )
-end
-
