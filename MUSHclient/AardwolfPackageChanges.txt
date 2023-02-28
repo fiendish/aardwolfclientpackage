@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2258 snapshot
+- bug fix: The layout switching code will no longer reload Easy DIY miniwindow plugins during the switch and will instead invoke their draw functions the same way that theme changes do. This should fix errors when changing layouts with the helpfile capture window up.
+
 r2257 snapshot
 - bug fix: (BOY I SURE HOPE) Durel spotted some issues with the ColoursToStyles function in aardwolf_colors.lua, so I've rewritten it to be easier to verify. Hopefully I didn't introduce any new problems in the process.
 - bug fix: I think I also fixed a bug in the partition_boundaries color function.
