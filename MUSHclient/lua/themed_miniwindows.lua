@@ -220,27 +220,27 @@ function ThemedWindowClass:right_click_menu(hotspot_id)
 end
 
 
-function ThemedWindowClass.RightClickMenuCallback(flags, hotspot_id, win)
+function ThemedWindowClass.RightClickMenuCallback(flags, hotspot_id, win_id)
    if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-      local window = ThemedWindowClass.hotspot_map[hotspot_id] or ThemedWindowClass.window_map[win]
+      local window = ThemedWindowClass.hotspot_map[hotspot_id] or ThemedWindowClass.window_map[win_id]
       window:right_click_menu(hotspot_id)
       return true
    end
    return false
 end
 
-function ThemedWindowClass.LeftButtonOnlyCallback(flags, hotspot_id, win)
+function ThemedWindowClass.LeftButtonOnlyCallback(flags, hotspot_id, win_id)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       return true
    end
    return false
 end
 
-function ThemedWindowClass.SavePositionAfterDrag(flags, hotspot_id, win)
+function ThemedWindowClass.SavePositionAfterDrag(flags, hotspot_id, win_id)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       return true
    end
-   movewindow.save_state(win)
+   movewindow.save_state(win_id)
    return false
 end
 
@@ -614,6 +614,7 @@ local function NewOnPluginThemeChange()
          end
       end
       for _, win in pairs(ThemedWindowClass.window_map) do
+         movewindow.save_state(win.id) -- Here because I'm using this during layout change too
          if win.do_after_resizing then
             win:do_after_resizing()
          end

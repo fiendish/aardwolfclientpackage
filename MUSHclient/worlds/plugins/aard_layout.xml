@@ -212,26 +212,34 @@ function LayoutRestore(key)
       textrect_bottom = trect["trbottom"]
       SaveLayout()
       check_geometry()
+      CallPlugin("abc1a0944ae4af7586ce88dc", "pause") -- repaint buffer plugin
+      local plugins_to_reload = {}
       for mwid,rect in pairs(layout) do
          if mwid ~= "aard_layout_trect" then
-            bg = WindowInfo(mwid, 9)
+            local bg = WindowInfo(mwid, 9) -- I don't remember what this is for, lol, oh well.
             if bg then
-               pid = WindowInfo(mwid, 23)
+               local pid = WindowInfo(mwid, 23)
                if pid ~= GetPluginID() then
-                  show = WindowInfo(mwid, 5)
                   if rect["left"] ~= WindowInfo(mwid, 10) or rect["top"] ~= WindowInfo(mwid, 11) or rect["width"] ~= WindowInfo(mwid, 3) or rect["height"] ~= WindowInfo(mwid, 4) then
-                     WindowPosition(mwid, rect["left"], rect["top"], 0, 18)
                      WindowResize(mwid, rect["width"], rect["height"], 0)
-                     Repaint() -- hack because WindowPosition doesn't immediately update coordinates
-                     WindowShow(mwid, show)
-                     CallPlugin(pid, "SaveState")
-                     CallPlugin(pid, "Theme.just_reloading")
-                     DoAfterSpecial(0.1, "ReloadPlugin('"..pid.."')", sendto.script)
+                     WindowPosition(mwid, rect["left"], rect["top"], 0, 18)
+                     plugins_to_reload[pid] = true
                   end
                end
             end
          end
       end
+      Repaint() -- hack because WindowPosition doesn't immediately update coordinates
+      for pid,_ in pairs(plugins_to_reload) do
+         CallPlugin(pid, "SaveState")
+         local a, b = CallPlugin(pid, "OnPluginThemeChange")
+         CallPlugin(pid, "SaveState")
+         if not ((a == error_code.eOK) and b) then
+            CallPlugin(pid, "Theme.just_reloading")
+            ReloadPlugin(pid)
+         end
+      end
+      CallPlugin("abc1a0944ae4af7586ce88dc", "resume") -- repaint buffer plugin
       print("Layout for key '"..key.."' has been restored.")
    else
       print("No layout found for key '"..key.."'.")
