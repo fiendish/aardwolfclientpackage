@@ -507,11 +507,15 @@ function check_geometry()
       SetCommandWindowHeight((GetOption("auto_resize_minimum_lines") * GetInfo(214)) + 4)
    end
 
+   local windowbottom, windowright = GetInfo(280), GetInfo(281)
    textrect_top = math.max(0, tonumber(GetVariable("trtop")) or default_top)
-   textrect_bottom = math.min(GetInfo(280), tonumber(GetVariable("trbottom")) or default_bottom)
+   textrect_bottom = math.min(windowbottom, tonumber(GetVariable("trbottom")) or default_bottom)
    textrect_left = math.max(0, tonumber(GetVariable("trleft")) or default_left)
-   textrect_right = math.min(GetInfo(281), tonumber(GetVariable("trright")) or default_right)
-   draw_main_window()
+   textrect_right = math.min(windowright, tonumber(GetVariable("trright")) or default_right)
+   if prevwindowbottom ~= windowbottom or prevwindowright ~= windowright then
+      draw_main_window()
+      prevwindowbottom, prevwindowright = windowbottom, windowright
+   end
 end
 
 function scrollMain(step)
@@ -602,7 +606,8 @@ function add_title_dragger()
 end
 
 function OnPluginWorldOutputResized()
-   AddTimer("resizeCheckTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
+   AddTimer("resizeCheckTimer1", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
+   AddTimer("resizeCheckTimer2", 0, 0, 1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
 end
 
 function draw_main_window()
