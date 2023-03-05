@@ -137,11 +137,6 @@ dofile (GetInfo(60) .. "aardwolf_colors.lua")
 local gap = 1
 MAX_LINES = 10000 -- how many lines to store in scrollback
 
--- date_format = "[%d %b %H:%M:%S] "   -- [30 Aug 13:29:49]   date and time 24 hour
--- date_format = "[%d %b %I:%M:%S%p] " -- [30 Aug 01:20:12PM] date and time 12 hour
--- date_format = "[%H:%M:%S] "         -- [13:29:08]          time 24 hour
--- date_format = "[%X] "               -- [1:22:06 PM]        time 12 hour
-
 default_width = 657 + Theme.RESIZER_SIZE + 2
 default_height = 132
 default_x = 0
@@ -964,6 +959,22 @@ function extend_rightclick_menu()
          end
       },
       {
+         ((date_format == "[%Y-%m-%d %H:%M:%S] ") and "+" or "").."2023-08-30 13:20:12",
+         function()
+            date_format = "[%Y-%m-%d %H:%M:%S] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '2023-08-30 13:20:12'.")
+            SaveState()
+         end
+      },
+      {
+         ((date_format == "[%Y-%m-%d %I:%M:%S %p] ") and "+" or "").."2023-08-30 01:20:12 PM",
+         function()
+            date_format = "[%Y-%m-%d %I:%M:%S %p] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '2023-08-30 01:20:12 PM'.")
+            SaveState()
+         end
+      },
+      {
          ((date_format == "[%d %b %H:%M:%S] ") and "+" or "").."30 Aug 13:29:49",
          function()
             date_format = "[%d %b %H:%M:%S] "
@@ -972,10 +983,10 @@ function extend_rightclick_menu()
          end
       },
       {
-         ((date_format == "[%d %b %I:%M:%S%p] ") and "+" or "").."30 Aug 01:20:12PM",
+         ((date_format == "[%d %b %I:%M:%S %p] ") and "+" or "").."30 Aug 01:20:12 PM",
          function()
-            date_format = "[%d %b %I:%M:%S%p] "
-            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
+            date_format = "[%d %b %I:%M:%S %p] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12 PM'.")
             SaveState()
          end
       },
@@ -988,10 +999,10 @@ function extend_rightclick_menu()
          end
       },
       {
-         ((date_format == "[%I:%M:%S%p] ") and "+" or "").."1:22:06 PM",
+         ((date_format == "[%I:%M:%S %p] ") and "+" or "").."01:22:06 PM",
          function()
-            date_format = "[%I:%M:%S%p] "
-            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
+            date_format = "[%I:%M:%S %p] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '01:22:06 PM'.")
             SaveState()
          end
       },
