@@ -44,6 +44,8 @@ Makes inventory command slightly more useful by displaying item serial numbers
       end
       SendNoEcho("%0")
    else
+      keysorted = nil
+      EnableTrigger("asleep", true)
       Capture.command("keyring data", "{keyring}", "{/keyring}", false, true, true, true, parseKeyringNoDisplay)
       Capture.command("invdata", "{invdata}", "{/invdata}", false, true, true, false, parseInvdata)
    end
@@ -118,6 +120,25 @@ Makes inventory command slightly more useful by displaying item serial numbers
    script="serials_command"
 ></alias>
 </aliases>
+
+<triggers>
+  <trigger
+   ignore_case="y"
+   keep_evaluating="y"
+   match="^You dream about (being able to keyring|checking your vault)\.$"
+   regexp="y"
+   sequence="100"
+   name="asleep"
+   omit_from_output="y"
+   send_to="12"
+   enabled="n"
+  >
+  <send>
+  EnableTrigger("asleep", false)
+  </send>
+  </trigger>
+</triggers>
+
 <script>
 <![CDATA[
 require "gmcphelper"
@@ -362,6 +383,7 @@ end
 function parseInvdata(style_lines)
    invsorted = insertAllLines(style_lines, invrex)
    displayInventory()
+   EnableTrigger("asleep", false)
 end
 
 function parseVault(style_lines)
@@ -391,11 +413,15 @@ function displayInventory()
    Simulate(ColoursToANSI("@wYou are carrying:\r\n"))
    showSortedItems(invsorted)
 
-   local num_keys = 0
-   for k,v in ipairs(keysorted) do
-      num_keys = num_keys + #v[1]
+   if keysorted then
+      local num_keys = 0
+      for k,v in ipairs(keysorted) do
+         num_keys = num_keys + #v[1]
+      end
+      Simulate(ColoursToANSI(string.format("@C(%2d) @W** Items on Keyring (%d unique) **@w\r\n", num_keys, #keysorted)))
+   else
+      Simulate(ColoursToANSI("@WBe awake to include keyring counts.@w\r\n"))
    end
-   Simulate(ColoursToANSI(string.format("@C(%2d) @W** Items on Keyring (%d unique) **@w\r\n", num_keys, #keysorted)))
    invsorted = {}
    keysorted = {}
 end
