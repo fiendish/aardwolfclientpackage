@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2261 snapshot
+- bug fix: Added a warning to the inventory serials plugin about keyring data not currently being available while sleeping instead of showing 0 items. Hopefully this gets fixed in-game.
+- new feature: Added some more timestamp format options to the communication log plugin.
+- misc change: Use of the abbreviation "vi" in the review buffers plugin has been replaced with "buffer". Some screen readers read "vi" as the roman numeral six.
+
 r2258 snapshot
 - bug fix: The layout switching code will no longer reload Easy DIY miniwindow plugins during the switch and will instead invoke their draw functions the same way that theme changes do. This should fix errors when changing layouts with the helpfile capture window up.
 
