@@ -15,7 +15,7 @@ local timeouts = {}
 -- Use HEAD to retrieve just file header information.
 
 -- result_callback_function gets arguments (retval, page, status, headers, full_status, requested_url, request_body)
--- You can set result_callback_function to nil if you just want to print everything that comes back to the screen.
+-- You can set result_callback_function to nil (or the print function) if you just want to print everything that comes back to the screen.
 -- callback_on_timeout function gets arguments (requested_url, timeout_after, request_body)
 -- request_protocol is HTTP or HTTPS (if not provided, it will be inferred from the request_url)
 -- timeout_after is in seconds
@@ -31,6 +31,8 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
    if timeout_after == nil then
       timeout_after = 30
    end
+
+   result_callback_function = result_callback_function or print
 
    thread_id = tostring(GetUniqueNumber())
 
