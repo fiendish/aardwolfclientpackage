@@ -7,7 +7,7 @@
 
 <muclient>
 <plugin
- name="Aardwolf_VI_Review_Buffers"
+ name="Aardwolf_Screenreader_Review_Buffers"
  author="Pwar"
  id="6000a4c6f0e71d31fecf523d"
  language="Lua"
@@ -50,19 +50,19 @@ Commands:
 rev or review [any command]
            - This will put the output from any command you send into your Review category
 
-vi add    - allows you to add lines/categories yourself
-             vi add All=Text line to add
+buffer add    - allows you to add lines/categories yourself
+             buffer add All=Text line to add
 
 Settings:
 
-vi int    - this toggles between using TTS interrupts and regular messages
+buffer int    - this toggles between using TTS interrupts and regular messages
              when reviewing, category changes will still be TTS messages
 
 Custom categories:
 You can easily add lines to existing categories, or make your own.
 
 Simply make a trigger "Send To" Execute
-   vi add All=Text line to add
+   buffer add All=Text line to add
 
 This example would add the line "Text line to add" to the existing All
 category. You could also create your own category.
@@ -163,8 +163,45 @@ category. You could also create your own category.
   </alias>
 
   <alias
-   script="vi"
+   script="buffer"
    match="^vi (.+)"
+   enabled="y"
+   keep_evaluating="y"
+   regexp="y"
+   omit_from_output="y"
+   sequence="100"
+  >
+  </alias>
+
+  <alias
+   script="review_add"
+   match="^buffer add (\w+)=(.*)"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   keep_evaluating="n"
+   regexp="y"
+   omit_from_output="y"
+   sequence="99"
+  >
+  </alias>
+
+  <alias
+   script="review_add"
+   match="^buffer add.?"
+   enabled="y"
+   omit_from_command_history="y"
+   omit_from_log="y"
+   keep_evaluating="n"
+   regexp="y"
+   omit_from_output="y"
+   sequence="99"
+  >
+  </alias>
+
+  <alias
+   script="buffer"
+   match="^buffer (.+)"
    enabled="y"
    keep_evaluating="y"
    regexp="y"
@@ -875,7 +912,7 @@ function review_add(name, line, wc)
    local cat, msg = wc[1], wc[2]
 
    if wc[1] == nil or wc[2] == nil then
-      printmsg("Usage is\nvi add All=Text line to add")
+      printmsg("Usage is\nbuffer add All=Text line to add")
       return
    end
    if messages[cat] == nil then
@@ -1196,10 +1233,10 @@ function review_msgcopy(name, line, wc)
    speak("copied")
 end
 
-function vi_help(AliasName, AliasLine, wildcards)
+function buffer_help(AliasName, AliasLine, wildcards)
    print("")
    NoteStyle(2)
-   print("Aardwolf VI Review Buffers Plugin v" .. internal_ver)
+   print("Aardwolf Screenreader Review Buffers Plugin v" .. internal_ver)
    NoteStyle(0)
    print("")
    ColourNote("SteelBlue", "", GetPluginInfo (GetPluginID (), 3))
@@ -1209,7 +1246,7 @@ end
 
 function OnPluginInstall()
    print("")
-   Note("Loaded Aardwolf VI Review Buffers plugin, type \"vi help\" for shortcuts and commands")
+   Note("Loaded Aardwolf Screenreader Review Buffers plugin, type \"buffer help\" for shortcuts and commands")
    print("")
    if GetVariable("tts_interrupt") == nil then
       SetVariable("tts_interupt", "1")
@@ -1224,7 +1261,7 @@ function init()
    end
    AppendToNotepad("output", "Capturing all output\r\n")
    NotepadSaveMethod("output", 2) -- this suppresses the save dialog when closing mush
-   -- this seems to automove cursor to last line every time the notepad changes rendering it useless for vi review :(
+   -- this seems to automove cursor to last line every time the notepad changes rendering it useless for buffer review :(
    NotepadReadOnly("output", true) -- Make it read only so we don't overwrite the text accidentally
 end
 
@@ -1816,32 +1853,32 @@ function logmsg(msg)
    end
 end
 
-function vi(alias, line, wc)
+function buffer(alias, line, wc)
    local togName
    if string.lower(wc[1]) == "debug" then
       togName = "debug"
    elseif string.lower(wc[1]) == "int" then
       togName = "tts_interrupt"
    elseif string.lower(wc[1]) == "help" then
-      vi_help()
+      buffer_help()
       return
    else
       ColourNote("steelblue", "", "Valid options are:")
-      ColourNote("steelblue", "", "vi int                    > enables/disables tts interrupt for message review (not categories)")
-      ColourNote("steelblue", "", "vi add Category=Message   > adds a line to and creates category")
-      ColourNote("steelblue", "", "vi help                   > display help file")
-      ColourNote("steelblue", "", "vi debug                  > enables/disables debug for testing only")
+      ColourNote("steelblue", "", "buffer int                    > enables/disables tts interrupt for message review (not categories)")
+      ColourNote("steelblue", "", "buffer add Category=Message   > adds a line to and creates category")
+      ColourNote("steelblue", "", "buffer help                   > display help file")
+      ColourNote("steelblue", "", "buffer debug                  > enables/disables debug for testing only")
       return
    end
    if (GetVariable(togName) == "1") then
       SetVariable(togName, "0")
       print("")
-      printmsg("vi review buffers: " .. togName .. " has been disabled.")
+      printmsg("screenreader review buffers: " .. togName .. " has been disabled.")
       print("")
    else
       SetVariable(togName, "1")
       print("")
-      printmsg("vi review buffers: " .. togName .. " has been enabled.")
+      printmsg("screenreader review buffers: " .. togName .. " has been enabled.")
       print("")
    end
 end
