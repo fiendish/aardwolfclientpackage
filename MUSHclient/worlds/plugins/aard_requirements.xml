@@ -204,11 +204,19 @@ function fix_settings()
       end
       return exec_lines
    end
+
    local exec_lines = relative_paths()
 
    -- Edit the preferences db to stop opening the activity window at startup
    if tonumber(GetGlobalOption("OpenActivityWindow")) ~= 0 then
       table.insert(exec_lines, 'UPDATE prefs SET value = 0 WHERE name = "OpenActivityWindow"')
+   end
+   -- and disable smooth/smoother scrolling because they are horribly slow
+   if tonumber(GetGlobalOption("SmoothScrolling")) ~= 0 then
+      table.insert(exec_lines, 'UPDATE prefs SET value = 0 WHERE name = "SmoothScrolling"')
+   end
+   if tonumber(GetGlobalOption("SmootherScrolling")) ~= 0 then
+      table.insert(exec_lines, 'UPDATE prefs SET value = 0 WHERE name = "SmootherScrolling"')
    end
 
    update_prefs(exec_lines)
