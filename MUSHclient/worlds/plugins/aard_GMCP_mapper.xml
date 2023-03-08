@@ -295,7 +295,8 @@ Send("recon")
 ></alias>
 
 <alias
-   match="mapper where *"
+   match="^mapper where( .*)?$"
+   regexp="y"
    enabled="y"
    sequence="100"
    script="map_where"
@@ -4393,7 +4394,10 @@ function map_where (name, line, wildcards)
       return
    end -- if
 
-   local dest = tonumber(wildcards [1])
+   local dest = tonumber(Trim(wildcards[1]))
+   if not dest then
+      dest = tonumber(mapper.last_hyperlink_uid or mapper.last_speedwalk_uid)
+   end
    if not dest then
       mapper.mapprint ("The mapper where command expects a room id number as input.")
       return
