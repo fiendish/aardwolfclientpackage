@@ -632,17 +632,11 @@ function stylesToANSI (styles, dollarC_resets)
          local isbold = (v.bold or (v.style and ((v.style % 2) == 1)))
          if v.fromx then
             code = ANSI(isbold and 1 or 0, 38, 5, v.fromx:sub(3))
-         elseif isbold and client_color_to_bold_code[textcolor] then
-            local a = client_color_to_bold_code[textcolor]
-            code = ANSI(1, code_to_ansi_digit[a])
-         elseif client_color_to_dim_code[textcolor] then
-            local a = client_color_to_dim_code[textcolor]
-            code = ANSI(0, code_to_ansi_digit[a])
-         elseif client_color_to_xterm_number[textcolor] then
-            code = ANSI(isbold and 1 or 0, 38, 5, client_color_to_xterm_number[textcolor])
+         else
+            code = colorNumberToAnsi(textcolor, isbold, false)
          end
          if backcolor then
-            code = code .. ANSI(48, 5, client_color_to_xterm_number[backcolor])
+            code = code .. colorNumberToAnsi(backcolor, false, true)
             needs_reset = true
          elseif needs_reset then
             code = ANSI(0) .. code
@@ -658,6 +652,25 @@ function stylesToANSI (styles, dollarC_resets)
       table.insert(line, code..v.text)
    end
    return table.concat(line)
+end
+
+-- For mushclient numbers, like 10040166 or ColourNameToRGB("rebeccapurple")
+function colorNumberToAnsi(color_number, is_bold_foreground, is_background)
+   if is_background then
+      code = ANSI(48, 5, client_color_to_xterm_number[color_number])
+   else
+      local boldcode = client_color_to_bold_code[color_number]
+      local dimcode = client_color_to_dim_code[color_number]
+      local xcode = client_color_to_xterm_number[color_number]
+      if is_bold_foreground and boldcode then
+         code = ANSI(1, code_to_ansi_digit[boldcode])
+      elseif dimcode then
+         code = ANSI(0, code_to_ansi_digit[dimcode])
+      elseif xcode then
+         code = ANSI(isbold and 1 or 0, 38, 5, xcode)
+      end
+   end
+   return code
 end
 
 
