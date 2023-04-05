@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r2266 snapshot
+- new feature: The "mapper where" command will now default to the last goto location if no id is given.
+- misc change: Someone needed a function to convert color numbers to ANSI, so I've split that part of the aardwolf_colors.lua stylesToANSI function into its own separate function called colorNumberToAnsi.
+- misc change: A new check has been added during startup that will disable MUSHclient's smooth/smoother scrolling settings, because they are terrible broken client features that destroy display performance.
+- bug fix: async.lua's doAsyncRemoteRequest claimed that setting the result callback to nil would print the response, but that was not the case. It is now.
+- bug fix: The main layout should redraw itself properly after a layout switch that changes its dimensions.
+
 r2261 snapshot
 - bug fix: Added a warning to the inventory serials plugin about keyring data not currently being available while sleeping instead of showing 0 items. Hopefully this gets fixed in-game.
 - new feature: Added some more timestamp format options to the communication log plugin.
