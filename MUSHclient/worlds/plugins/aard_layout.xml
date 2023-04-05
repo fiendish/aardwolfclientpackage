@@ -205,6 +205,7 @@ function LayoutRestore(key)
    all_layouts = FetchLayouts()
    layout = all_layouts[key]
    if layout then
+      -- do the main output rect
       trect = layout["aard_layout_trect"]
       textrect_left = trect["trleft"]
       textrect_right = trect["trright"]
@@ -212,6 +213,8 @@ function LayoutRestore(key)
       textrect_bottom = trect["trbottom"]
       SaveLayout()
       check_geometry()
+      draw_main_window()
+      -- do the other plugins
       CallPlugin("abc1a0944ae4af7586ce88dc", "pause") -- repaint buffer plugin
       local plugins_to_reload = {}
       for mwid,rect in pairs(layout) do
@@ -391,6 +394,7 @@ function reset_main()
    textrect_bottom = default_bottom
    SaveLayout()
    check_geometry()
+   draw_main_window()
 end
 
 function OnPluginClose()
