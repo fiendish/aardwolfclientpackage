@@ -4501,7 +4501,9 @@ function findpath(src, dst, noportals, norecalls)
       end
    end
    if walk_one ~= nil then
-      return {{dir=walk_one, uid=touid}}, 1
+      local path = {{dir=walk_one, uid=touid}}
+      BroadcastPlugin(502, "found_paths = "..string.gsub(serialize.save_simple(path),"%s+"," "))
+      return path, 1
    end
    local depth = 0
    local max_depth = mapper.config.SCAN.depth
