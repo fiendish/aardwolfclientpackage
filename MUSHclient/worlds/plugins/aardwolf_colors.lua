@@ -709,9 +709,8 @@ function bgr_number_to_nearest_x256(bgr_number)
    end
 
    local function nearest_232_255(r, g, b)
-      local gray = (3 * r + 10 * g + b) / 14
-      local index = min(23, max(0, floor((gray - 3) / 10)))
-      gray = 8 + index * 10
+      local index = min(23, max(0, floor((((3 * r + 10 * g + b) / 14) - 3) / 10)))
+      local gray = 8 + index * 10
       return 232 + index, gray, gray, gray
    end
 
