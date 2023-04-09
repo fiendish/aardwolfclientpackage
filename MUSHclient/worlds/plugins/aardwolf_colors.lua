@@ -655,22 +655,75 @@ function stylesToANSI (styles, dollarC_resets)
 end
 
 -- For mushclient numbers, like 10040166 or ColourNameToRGB("rebeccapurple")
-function colorNumberToAnsi(color_number, is_bold_foreground, is_background)
+function colorNumberToAnsi(color_number, foreground_is_bold, is_background)
    if is_background then
-      code = ANSI(48, 5, client_color_to_xterm_number[color_number])
+      return ANSI(48, 5, bgr_number_to_nearest_x256(color_number))
    else
-      local boldcode = client_color_to_bold_code[color_number]
-      local dimcode = client_color_to_dim_code[color_number]
-      local xcode = client_color_to_xterm_number[color_number]
-      if is_bold_foreground and boldcode then
-         code = ANSI(1, code_to_ansi_digit[boldcode])
-      elseif dimcode then
-         code = ANSI(0, code_to_ansi_digit[dimcode])
-      elseif xcode then
-         code = ANSI(isbold and 1 or 0, 38, 5, xcode)
+      if foreground_is_bold then
+         local boldcode = client_color_to_bold_code[color_number]
+         if boldcode then
+            local code = ANSI(1, code_to_ansi_digit[boldcode])
+            if code then
+               return code
+            end
+         end
+      else
+         local dimcode = client_color_to_dim_code[color_number]
+         if dimcode then
+            local code = ANSI(0, code_to_ansi_digit[dimcode])
+            if code then
+               return code
+            end
+         end
       end
+      return ANSI(foreground_is_bold and 1 or 0, 38, 5, bgr_number_to_nearest_x256(color_number))
    end
-   return code
+end
+
+function bgr_number_to_nearest_x256(bgr_number)
+   -- https://stackoverflow.com/a/38055734
+   local index = client_color_to_xterm_number[color_number]
+   if index then return index end
+
+   local abs, min, max, floor = math.abs, math.min, math.max, math.floor
+
+   local function color_split_rgb(bgr_number)
+      local band, rshift = bit.band, bit.rshift
+      local b = band(rshift(bgr_number, 16), 0xFF)
+      local g = band(rshift(bgr_number, 8), 0xFF)
+      local r = band(bgr_number, 0xFF)
+      return r, g, b
+   end
+
+   local r, g, b = color_split_rgb(bgr_number)
+
+   local levels = {[0] = 0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff}
+   
+   local function index_0_5(value)
+      return floor(max((value - 35) / 40, value / 58))
+   end
+
+   local function nearest_16_231(r, g, b)
+      r, g, b = index_0_5(r), index_0_5(g), index_0_5(b)
+      return 16 + 36 * r + 6 * g + b, levels[r], levels[g], levels[b]
+   end
+
+   local function nearest_232_255(r, g, b)
+      local gray = (3 * r + 10 * g + b) / 14
+      local index = min(23, max(0, floor((gray - 3) / 10)))
+      gray = 8 + index * 10
+      return 232 + index, gray, gray, gray
+   end
+
+   local function color_distance(r1, g1, b1, r2, g2, b2)
+      return abs(r1 - r2) + abs(g1 - g2) + abs(b1 - b2)
+   end
+
+   local idx1, r1, g1, b1 = nearest_16_231(r, g, b)
+   local idx2, r2, g2, b2 = nearest_232_255(r, g, b)
+   local dist1 = color_distance(r, g, b, r1, g1, b1)
+   local dist2 = color_distance(r, g, b, r2, g2, b2)
+   return (dist1 < dist2) and idx1 or idx2
 end
 
 
