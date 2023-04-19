@@ -372,11 +372,9 @@ function TextRect:reWrapLines()
    self.display_end_line = self.end_line
 end
 
-function TextRect:drawLine(line, styles, selection_start, selection_end)
+function TextRect:drawLine(line, styles, selection_start, selection_end, utf8, show_bold)
    local left = self.padded_left
    local top = self.padded_top + (line * self.line_height) + 1
-   local utf8 = (GetOption("utf_8") == 1)
-   local show_bold = (GetOption("show_bold")== 1)
 
    -- selection backfill
    if (selection_start ~= nil) and (selection_end ~= nil) then
@@ -449,6 +447,7 @@ function TextRect:draw(cleanup_first, inside_callback)
    self.display_start_line, self.display_end_line = self:snapToBottom()
    if self.num_wrapped_lines >= 1 then
       local show_bold = (GetOption("show_bold")== 1)
+      local utf8 = (GetOption("utf_8") == 1)
       for count = self.display_start_line, self.display_end_line do
          ax = nil
          zx = nil
@@ -501,7 +500,7 @@ function TextRect:draw(cleanup_first, inside_callback)
             ax = nil
             zx = nil
          end
-         self:drawLine(count - self.display_start_line, self.wrapped_lines[count][1], ax, zx )
+         self:drawLine(count - self.display_start_line, self.wrapped_lines[count][1], ax, zx, utf8, show_bold)
       end
    end
 
