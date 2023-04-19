@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2268 snapshot
+- misc change: The xterm portion of aardwolf_colors.lua's colorNumberToAnsi function will now return the closest match if there isn't an exact one.
+- new feature: The helpfile capture miniwindow now supports the new help updated command output.
+
 r2266 snapshot
 - new feature: The "mapper where" command will now default to the last goto location if no id is given.
 - misc change: Someone needed a function to convert color numbers to ANSI, so I've split that part of the aardwolf_colors.lua stylesToANSI function into its own separate function called colorNumberToAnsi.
