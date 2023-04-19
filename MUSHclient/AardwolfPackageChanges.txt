@@ -1,7 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2269 snapshot
+- new feature: aardwolf_colors.lua's StylesToColours will also return the closest x256 color code match if there isn't an exact one.
+
 r2268 snapshot
-- misc change: The xterm portion of aardwolf_colors.lua's colorNumberToAnsi function will now return the closest match if there isn't an exact one.
+- new feature: The xterm portion of aardwolf_colors.lua's stylesToANSI will now return the closest match if there isn't an exact one.
 - new feature: The helpfile capture miniwindow now supports the new help updated command output.
 
 r2266 snapshot
