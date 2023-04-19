@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2270 snapshot
+- bug fix: Hopefully get better client startup/connect initialization of GMCP variables by deferring initial requests until first arrival.
+
 r2269 snapshot
 - new feature: aardwolf_colors.lua's StylesToColours will also return the closest x256 color code match if there isn't an exact one.
 

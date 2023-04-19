@@ -99,6 +99,8 @@ require "json"
 require "serialize"
 require "gmcphelper"
 
+initialized = false
+
 luacom = require "luacom"
 if luacom then
    wshell = luacom.CreateObject("WScript.Shell")
@@ -159,6 +161,11 @@ end
 
 function OnPluginTelnetSubnegotiation (msg_type, data)
    if msg_type ~= GMCP then
+      return
+   end
+
+   if not initialized then
+      fetch_all()
       return
    end
 
@@ -260,8 +267,8 @@ end
 function OnPluginInstall()
    BroadcastPlugin(1, "reload") -- reload basically tells other plugins "clear all your gmcp data"
    if IsConnected() then
-      -- pretend like we just logged in
-      OnPluginConnect()
+      -- pretend like we just connected
+      fetch_all()
    end
 end
 
@@ -269,7 +276,7 @@ function OnPluginSaveState()
    SetVariable("GMCPDebug", GMCPDebug)
 end
 
-function OnPluginConnect()
+function fetch_all()
    Send_GMCP_Packet("config compact")
    Send_GMCP_Packet("config prompt")
    Send_GMCP_Packet("config xterm yes")
@@ -279,6 +286,7 @@ function OnPluginConnect()
    Send_GMCP_Packet("request area")
    Send_GMCP_Packet("request quest")
    Send_GMCP_Packet("request group")
+   initialized = true
 end
 
 function OnPluginTelnetRequest (msg_type, data)
