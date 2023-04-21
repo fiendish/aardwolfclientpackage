@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2271 snapshot
+- bug fix: The change in r2269 was done wrong and caused an error, oops.
+
 r2270 snapshot
 - bug fix: Hopefully get better client startup/connect initialization of GMCP variables by deferring initial requests until first arrival.
 

@@ -253,7 +253,7 @@ function StylesToColours (styles, dollarC_resets)
                      or bold and client_color_to_bold_code[textcolor]
                      or client_color_to_dim_code[textcolor]
                      or client_color_to_xterm_code[textcolor]
-                     or string.format(X3DIGIT_FORMAT,bgr_number_to_nearest_x256[textcolor])
+                     or string.format(X3DIGIT_FORMAT,bgr_number_to_nearest_x256(textcolor))
 
          if code and (lastcode ~= code) then
             table.insert(line_parts, code)
