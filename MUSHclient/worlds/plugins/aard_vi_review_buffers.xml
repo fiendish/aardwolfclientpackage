@@ -7,7 +7,7 @@
 
 <muclient>
 <plugin
- name="Aardwolf_Screenreader_Review_Buffers"
+ name="Aardwolf_Review_Buffers"
  author="Pwar"
  id="6000a4c6f0e71d31fecf523d"
  language="Lua"
