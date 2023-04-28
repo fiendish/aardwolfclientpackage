@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2273 snapshot
+- bug fix: The review buffers plugin had a bad trigger pattern for remote socials that was matching on unrelated other output.
+
 r2272 snapshot
 - bug fix: I shortened the name of the review buffers plugin because the new name in r2261 was causing a string length error. Mea culpa. I should have tested loading the plugin afterward.
 
