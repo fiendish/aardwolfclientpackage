@@ -311,7 +311,7 @@ category. You could also create your own category.
   <trigger
    enabled="y"
    group="Alert"
-   match="^\*(?!\*)(.*)$"
+   match="^\*(?!\*)(.*)[^*\]]$"
    name="GlobalEmoteTrigger"
    regexp="y"
    send_to="12"
