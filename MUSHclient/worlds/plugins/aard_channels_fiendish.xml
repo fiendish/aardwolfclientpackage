@@ -85,7 +85,7 @@ USAGE:
 
 <trigger
    enabled="y"
-   match="^\*\S.+[^*]$"
+   match="^\*(?!.*[\]\*] *$).+$"
    regexp="y"
    script="rsocial"
    name="remote_socials"
@@ -817,7 +817,12 @@ end
 function rsocial (name, line, wildcards, styles)
    -- Remote socials will always start with a dark cyan or bright magenta *
    -- Checking color cuts down on non-socials ending up in the chat log...
-   if (styles[1].textcolour == GetNormalColour(7) or styles[1].textcolour == GetBoldColour(6)) then
+   if (
+      -- no colors, so plain white line
+      ((#styles == 1) and (styles[1].textcolour == GetNormalColour(8)))
+      -- colors, so asterisk is either dark cyan or bright magenta
+      or ((styles[1].textcolour == GetNormalColour(7)) or (styles[1].textcolour == GetBoldColour(6)))
+   ) then
       local multiline_styles = ToMultilineStyles(styles, nil, nil, true)
       storeNonChannel(multiline_styles, "remote_socials")
    end

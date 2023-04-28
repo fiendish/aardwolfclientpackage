@@ -311,15 +311,22 @@ category. You could also create your own category.
   <trigger
    enabled="y"
    group="Alert"
-   match="^\*(?!\*)(.*)[^*\]]$"
+   match="^\*(?!.*[\]\*] *$).+$"
    name="GlobalEmoteTrigger"
    regexp="y"
-   send_to="12"
+   send_to="14"
    sequence="100"
   >
   <send>
-   review_addline("All", "%0")
-   review_addline("Say", "%0")
+   if (
+      -- no colors, so plain white line
+      ((#TriggerStyleRuns == 1) and (TriggerStyleRuns[1].textcolour == GetNormalColour(8)))
+      -- colors, so asterisk is either dark cyan or bright magenta
+      or ((TriggerStyleRuns[1].textcolour == GetNormalColour(7)) or (TriggerStyleRuns[1].textcolour == GetBoldColour(6)))
+   ) then
+      review_addline("All", "%0")
+      review_addline("Say", "%0")
+   end
   </send>
   </trigger>
 
