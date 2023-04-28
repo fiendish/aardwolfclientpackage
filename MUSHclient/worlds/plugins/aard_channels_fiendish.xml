@@ -85,7 +85,7 @@ USAGE:
 
 <trigger
    enabled="y"
-   match="^\*(?!.*[\]\*] *$).+$"
+   match="^\*\S(?!.*[\]\*] *$).+$"
    regexp="y"
    script="rsocial"
    name="remote_socials"
