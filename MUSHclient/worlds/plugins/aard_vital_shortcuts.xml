@@ -139,7 +139,6 @@ end
 
 
 function their_stats(who, stat)
-   local what = who.." "..stat:lower()
    local group_members = gmcp("group.members")
    if group_members == "" then
       return
@@ -154,6 +153,7 @@ function their_stats(who, stat)
    if member == nil then
       return
    end
+   local what = member.name .. " " .. stat:lower()
    local current, max = member_stats(member, stat)
    return what, current, max
 end
