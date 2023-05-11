@@ -95,6 +95,17 @@ function help()
 end
 
 
+-- Determine whether the string `str` starts with `prefix`. Set
+-- the third argument to `true` to do a case-sensitive match.
+function starts_with(str, prefix, caseSensitive)
+   if not caseSensitive then
+      str = str:lower()
+      prefix = prefix:lower()
+   end
+   return str:sub(1, #prefix) == prefix
+end
+
+
 function percent_format(current, max)
    local pct = math.floor(current * 100 / max)
    local color = "lightgreen"
@@ -128,14 +139,13 @@ end
 
 
 function their_stats(who, stat)
-   local what = who.." "..stat:lower()
    local group_members = gmcp("group.members")
    if group_members == "" then
       return
    end
    member = nil
    for _,m in ipairs(group_members) do
-      if m["name"]:lower() == who:lower() then
+      if starts_with(m.name, who) then
          member = m
          break
       end
@@ -143,6 +153,7 @@ function their_stats(who, stat)
    if member == nil then
       return
    end
+   local what = member.name .. " " .. stat:lower()
    local current, max = member_stats(member, stat)
    return what, current, max
 end
