@@ -65,6 +65,9 @@ local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Man
 showBar = defaultShowBar
 local barIndex = {"Health", "Mana", "Moves", "TNL", "Enemy", "Align"}
 
+local defaultOrderOfBars = { 1,2,3,4,5,6 }
+orderOfBars = defaultOrderOfBars
+
 thresh1active = tonumber (GetVariable("thresh1active")) or 0
 thresh2active = tonumber (GetVariable("thresh2active")) or 0
 thresh1percent = tonumber (GetVariable("thresh1percent")) or 40
@@ -117,6 +120,49 @@ function validate_percent(input)
    end
    return true
 end
+
+function validate_orderOfBars(input)
+    expectedSum = 0
+    enteredSum = 0
+    orderNums = utils.split(input, ",")
+    if #orderNums ~= 6 then
+        ColourNote("white","red","'"..input.."' needs to have exactly 6 elements separated with comma. Try again (or enter default: 1,2,3,4,5,6).")
+        return false
+    end
+
+    for i = 1,6 do
+        tryToNum = tonumber( orderNums[i] )
+        if tryToNum == nil then
+            ColourNote("white","red","'"..input.."' contains non numeric value: '" .. orderNums[i] .. "'. Try again (or enter default: 1,2,3,4,5,6).")
+            return false
+        end
+
+        if tryToNum > 6 or tryToNum < 1 then
+            ColourNote("white","red","'"..input.."' contains incorrect value: '" .. orderNums[i] .. "'. Only 1-6 values are allowed.")
+            return false
+        end
+
+        expectedSum = expectedSum + i
+        enteredSum = enteredSum + tryToNum
+    end -- for
+
+    if expectedSum ~= enteredSum then
+        ColourNote("white","red","'"..input.."' needs to containe 6 different elements. Try again (or enter default: 1,2,3,4,5,6).")
+        return false
+    end
+
+    return true
+end
+
+function convertStrToOrderOfBars(orderStr) 
+    if orderStr == nil then
+        return  
+    end
+    orderNums = utils.split(orderStr, ",")
+    for i = 1,6 do
+        orderOfBars[i] = tonumber( orderNums[i] )
+    end
+end -- convertStrToOrderOfBars
 
 function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
    txt = ""
@@ -183,6 +229,106 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
    end
 end
 
+function DoSpecialBar_TNL ()
+      local tnl = gmcp_char.status.tnl
+      local perlevel = gmcp_char.base.perlevel
+      -- switch from "to next level" to "current level experience"
+      if (reverseTNL == 0) then
+         DoNextSimpleBar("TNL", tnl, perlevel)
+      else
+         DoNextSimpleBar("TNL", tnl, perlevel, true, "Exp   :", "Exp:")
+      end
+end -- DoSpecialBar_TNL
+
+function DoSpecialBar_Enemy () 
+      bar = "Enemy"
+      if (showBar[bar][2] == true) then
+         fighting = gmcp_char.status.enemy
+         if fighting ~= "" then
+            enemypct = gmcp_char.status.enemypct
+            if enemypct ~= "" then
+               if showLabels == 1 then
+                  if stacked == 1 then
+                     WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+                  else
+                     xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+                  end
+               end
+            end
+            if graphicalMode == 1 then
+               gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1,movewin_hotspot)
+               if overlay_numbers ~= 0 then
+                  txt = string.lpad(enemypct.."%", 4, ' ')
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+               end
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+            end
+         else
+            if showLabels == 1 then
+               if stacked == 1 then
+                  WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, false)
+               else
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, false)
+               end
+            end
+            if graphicalMode == 1 then
+               gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1,movewin_hotspot)
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
+            end
+         end
+         if stacked == 1 then
+            ypos = ypos + line_height + 1
+         else
+            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+         end
+      end
+end -- DoSpecialBarEnemy
+
+function DoSpecialBar_Align ()
+      bar = "Align"
+      if (showBar[bar][2] == true) then
+         alignment = tonumber(gmcp_char.status.align)
+         if alignment ~= nil then
+            zeroed_alignment = alignment+2500
+            bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
+            if bar_colour ~= prev_bar_colour then
+               local bch = string.format("%06X", bar_colour)
+               local reverse = "#"..bch:sub(5,6)..bch:sub(3,4)..bch:sub(1,2)
+               local c = colors.new(reverse):hue_offset(-15):lighten_by(0.60):to_rgb()
+               dark_bar_colour = ColourNameToRGB(c)
+            end
+            prev_bar_colour = bar_colour
+            if showLabels == 1 then
+               if stacked == 1 then
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
+               else
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, false)
+               end
+            end
+            if graphicalMode == 1 then
+               WindowLine (win, xpos+label_width+math.max(0,line_height/2), math.ceil(ypos+line_height/2), xpos+label_width+math.max(0,bar_width-line_height/2), math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
+               WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, dark_bar_colour, 0, 2, bar_colour, 0)
+
+               -- add ticks at alignment change boundaries
+               local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width)
+               local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width)
+               WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
+               WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, 0, 0, bar_colour, false)
+            end
+            if stacked == 1 then
+               ypos = ypos + line_height + 1
+            else
+               xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+            end
+         end
+      end
+end -- DoSpecialBar_Align
+
 function DisplayStatsPage()
 
    WindowRectOp(win, 2, 0, 0, 0, 0, Theme.PRIMARY_BODY) -- blank
@@ -232,104 +378,18 @@ function DisplayStatsPage()
          end
       end
 
-      DoNextSimpleBar("Health", gmcp_char.vitals.hp, gmcp_char.maxstats.maxhp)
-      DoNextSimpleBar("Mana", gmcp_char.vitals.mana, gmcp_char.maxstats.maxmana)
-      DoNextSimpleBar("Moves", gmcp_char.vitals.moves, gmcp_char.maxstats.maxmoves)
 
-      local tnl = gmcp_char.status.tnl
-      local perlevel = gmcp_char.base.perlevel
-      -- switch from "to next level" to "current level experience"
-      if (reverseTNL == 0) then
-         DoNextSimpleBar("TNL", tnl, perlevel)
-      else
-         DoNextSimpleBar("TNL", tnl, perlevel, true, "Exp   :", "Exp:")
+      for i,v in pairs(orderOfBars) do
+          if tonumber(v) == 1 then DoNextSimpleBar("Health", gmcp_char.vitals.hp, gmcp_char.maxstats.maxhp) end
+          if tonumber(v) == 2 then DoNextSimpleBar("Mana", gmcp_char.vitals.mana, gmcp_char.maxstats.maxmana) end
+          if tonumber(v) == 3 then DoNextSimpleBar("Moves", gmcp_char.vitals.moves, gmcp_char.maxstats.maxmoves) end
+
+          if tonumber(v) == 4 then DoSpecialBar_TNL () end
+          if tonumber(v) == 5 then DoSpecialBar_Enemy () end
+          if tonumber(v) == 6 then DoSpecialBar_Align () end
       end
 
-      bar = "Enemy"
-      if (showBar[bar][2] == true) then
-         fighting = gmcp_char.status.enemy
-         if fighting ~= "" then
-            enemypct = gmcp_char.status.enemypct
-            if enemypct ~= "" then
-               if showLabels == 1 then
-                  if stacked == 1 then
-                     WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
-                  else
-                     xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
-                  end
-               end
-            end
-            if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],tonumber(enemypct),100,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,num_ticks,0x000000,showBar[bar][5],nil,flat_gauges==1,movewin_hotspot)
-               if overlay_numbers ~= 0 then
-                  txt = string.lpad(enemypct.."%", 4, ' ')
-                  txtlen = WindowTextWidth(win,font_id,txt)
-                  outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
-               end
-            else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemypct).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
-            end
-         else
-            if showLabels == 1 then
-               if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, false)
-               else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, false)
-               end
-            end
-            if graphicalMode == 1 then
-               gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,num_ticks,0x000000,0x222222,nil,flat_gauges==1,movewin_hotspot)
-            else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
-            end
-         end
-         if stacked == 1 then
-            ypos = ypos + line_height + 1
-         else
-            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-         end
-      end
-
-      bar = "Align"
-      if (showBar[bar][2] == true) then
-         alignment = tonumber(gmcp_char.status.align)
-         if alignment ~= nil then
-            zeroed_alignment = alignment+2500
-            bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
-            if bar_colour ~= prev_bar_colour then
-               local bch = string.format("%06X", bar_colour)
-               local reverse = "#"..bch:sub(5,6)..bch:sub(3,4)..bch:sub(1,2)
-               local c = colors.new(reverse):hue_offset(-15):lighten_by(0.60):to_rgb()
-               dark_bar_colour = ColourNameToRGB(c)
-            end
-            prev_bar_colour = bar_colour
-            if showLabels == 1 then
-               if stacked == 1 then
-                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
-               else
-                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, false)
-               end
-            end
-            if graphicalMode == 1 then
-               WindowLine (win, xpos+label_width+math.max(0,line_height/2), math.ceil(ypos+line_height/2), xpos+label_width+math.max(0,bar_width-line_height/2), math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
-               WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, dark_bar_colour, 0, 2, bar_colour, 0)
-
-               -- add ticks at alignment change boundaries
-               local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width)
-               local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width)
-               WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
-               WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
-            else
-               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, 0, 0, bar_colour, false)
-            end
-            if stacked == 1 then
-               ypos = ypos + line_height + 1
-            else
-               xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
-            end
-         end
-      end
-   end
+   end -- Only draw bars if we have data.
 
    Theme.DressWindow(win, nil, nil)
    Theme.AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
@@ -361,7 +421,7 @@ function right_click_menu ()
    menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
    menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"
    menustring = menustring .. ">HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|"
-   menustring = menustring .. ((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|>Overlay Numbers|"..((overlay_numbers==0 and "+") or "").."None"..(((graphicalMode==0) and " (Same as \"Standard\" in Text Mode)") or "").."|"..((overlay_numbers==1 and "+") or "").."Standard|"..((overlay_numbers==2 and "+") or "").."Percentages|"..((overlay_numbers==3 and "+") or "").."Standard+Percentages|<|-|Bring To Front|Send To Back|-|>(In case of emergency)|Reduce Size|<|"
+   menustring = menustring .. ((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|>Overlay Numbers|"..((overlay_numbers==0 and "+") or "").."None"..(((graphicalMode==0) and " (Same as \"Standard\" in Text Mode)") or "").."|"..((overlay_numbers==1 and "+") or "").."Standard|"..((overlay_numbers==2 and "+") or "").."Percentages|"..((overlay_numbers==3 and "+") or "").."Standard+Percentages|<|-|Bring To Front|Send To Back|-|>(In case of emergency)|Reduce Size|<|Order of bars"
 
    result = WindowMenu (win,
       WindowInfo (win, 14),  -- x position
@@ -458,6 +518,19 @@ function right_click_menu ()
          font_name = default_font_name
          font_size = default_font_size
          width = MIN_WIDTH
+      elseif numResult == 38 then
+         -- order of bars
+
+         local strOrder = ""
+         for i,v in pairs(orderOfBars) do
+             if i > 1 then strOrder = strOrder .. "," end
+             strOrder = strOrder .. v
+         end
+         local order = utils.inputbox( "Insert order of bars as a list of separated fields (like 1,2,3,6,5,4)\n1 - Health\n2 - Mana\n3 - Moves\n4 - TNL\n5 - Enemy\n6 - Align", "Order of bars", strOrder, nil, nil, {validate=validate_orderOfBars})
+           
+         if order then
+            convertStrToOrderOfBars(order)
+         end
       end -- if
 
       SaveState()
@@ -595,6 +668,7 @@ function OnPluginSaveState ()
    SetVariable("thresh2percent", thresh2percent)
    SetVariable("thresh1color", thresh1color)
    SetVariable("thresh2color", thresh2color)
+   SetVariable("orderOfBars", serialize.save("orderOfBars"))
 end -- OnPluginSaveState
 
 function OnPluginClose()
@@ -633,6 +707,9 @@ function OnPluginInstall()
    overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 1
    showBar = defaultShowBar
    assert (loadstring (GetVariable ("showBar") or "")) ()
+
+   orderOfBars = defaultOrderOfBars   
+   assert (loadstring (GetVariable ("orderOfBars") or "")) ()
 
    barTexts = ""
    numBars = 0
