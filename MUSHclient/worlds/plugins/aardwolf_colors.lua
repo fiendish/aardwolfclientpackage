@@ -249,11 +249,15 @@ function StylesToColours (styles, dollarC_resets)
          local bold = style.bold or (style.style and ((style.style % 2) == 1))
          local text = string.gsub(style.text, CODE_PREFIX, PREFIX_ESCAPE)
          local textcolor = style.textcolour
-         local code = style.fromx
-                     or bold and client_color_to_bold_code[textcolor]
-                     or client_color_to_dim_code[textcolor]
-                     or client_color_to_xterm_code[textcolor]
-                     or string.format(X3DIGIT_FORMAT,bgr_number_to_nearest_x256(textcolor))
+         local code = (
+            style.fromx
+            or textcolor and (
+               bold and client_color_to_bold_code[textcolor]
+               or client_color_to_dim_code[textcolor]
+               or client_color_to_xterm_code[textcolor]
+               or string.format(X3DIGIT_FORMAT, bgr_number_to_nearest_x256(textcolor))
+            )
+         )
 
          if code and (lastcode ~= code) then
             table.insert(line_parts, code)
