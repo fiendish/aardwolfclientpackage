@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2275 snapshot
+- new feature: The Aardwolf_Vital_Shortcuts plugin now lets you abbreviate group member names. (Thanks Areia!)
+- bug fix: The color matching feature in 2269 did not properly check first whether a color value actually existed leading to an error about "rshift" from the chat capture window.
+
 r2273 snapshot
 - bug fix: The review buffers plugin had a bad trigger pattern for remote socials that was matching on unrelated other output.
 
