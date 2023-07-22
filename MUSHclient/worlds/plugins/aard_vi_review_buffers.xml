@@ -477,15 +477,16 @@ category. You could also create your own category.
   <trigger
    enabled="y"
    group="Alert"
-   match="^Congratulations, hero. You have increased your powers!$"
+   match="^Congratulations, \w+\. You have increased your powerups to (\d+)\.$"
    name="PupTrigger"
    regexp="y"
    send_to="12"
    sequence="100"
   >
   <send>
-   review_addline("All", "%0")
-   review_addline("Kill Summary", "%0")
+   local msg = "Powerup #%1"
+   review_addline("All", msg)
+   review_addline("Kill Summary", msg)
   </send>
   </trigger>
 
