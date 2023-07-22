@@ -469,7 +469,7 @@
   <trigger
    enabled="n"
    group="Alert"
-   match="^Congratulations, hero\. You have increased your powers\!$"
+   match="^Congratulations, \w+\. You have increased your powerups to \d+\.$"
    name="PowerUp"
    regexp="y"
    send_to="12"
