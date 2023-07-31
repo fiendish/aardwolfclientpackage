@@ -2,7 +2,7 @@ Aardwolf Client Package Major Changes List
 
 r2277 snapshot
 - bug fix: Addresses (maybe?) a complaint about sense anger losing an expected blank line because of how the ASCII map plugin requests a new overhead map update.
-- bug fix: The July 15 reboot changed the format of powerup notifications, so the soundpack and review buffers plugins have been updated. (Thanks Areia!)
+- bug fix: The July 15 2023 reboot changed the format of powerup notifications, so the soundpack and review buffers plugins have been updated. (Thanks Areia!)
 
 r2275 snapshot
 - new feature: The Aardwolf_Vital_Shortcuts plugin now lets you abbreviate group member names. (Thanks Areia!)
