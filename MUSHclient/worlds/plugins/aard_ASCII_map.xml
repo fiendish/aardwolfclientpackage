@@ -261,6 +261,11 @@ function request_new_map()
       requested_since_empty = true
 
       prompt_mode = gmcp("config.prompt")
+      compact_mode = gmcp("config.compact")
+
+      if compact_mode == "NO" then
+         Send_GMCP_Packet("config compact YES")
+      end
       if prompt_mode ~= "" then
          Send_GMCP_Packet("config prompt OFF")
       end
@@ -268,8 +273,9 @@ function request_new_map()
       if prompt_mode ~= "" then
          Send_GMCP_Packet("config prompt "..prompt_mode)
       end
-
-      EnableTriggerGroup("end_gag", true)
+      if compact_mode == "NO" then
+         Send_GMCP_Packet("config compact NO")
+      end
    end
 end
 
