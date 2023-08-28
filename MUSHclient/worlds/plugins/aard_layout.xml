@@ -219,15 +219,12 @@ function LayoutRestore(key)
       local plugins_to_reload = {}
       for mwid,rect in pairs(layout) do
          if mwid ~= "aard_layout_trect" then
-            local bg = WindowInfo(mwid, 9) -- I don't remember what this is for, lol, oh well.
-            if bg then
-               local pid = WindowInfo(mwid, 23)
-               if pid ~= GetPluginID() then
-                  if rect["left"] ~= WindowInfo(mwid, 10) or rect["top"] ~= WindowInfo(mwid, 11) or rect["width"] ~= WindowInfo(mwid, 3) or rect["height"] ~= WindowInfo(mwid, 4) then
-                     WindowResize(mwid, rect["width"], rect["height"], 0)
-                     WindowPosition(mwid, rect["left"], rect["top"], 0, 18)
-                     plugins_to_reload[pid] = true
-                  end
+            local pid = WindowInfo(mwid, 23)
+            if pid and (pid ~= GetPluginID()) then
+               if rect["left"] ~= WindowInfo(mwid, 10) or rect["top"] ~= WindowInfo(mwid, 11) or rect["width"] ~= WindowInfo(mwid, 3) or rect["height"] ~= WindowInfo(mwid, 4) then
+                  WindowResize(mwid, rect["width"], rect["height"], WindowInfo(mwid, 9))
+                  WindowPosition(mwid, rect["left"], rect["top"], WindowInfo(mwid, 7), WindowInfo(mwid, 8))
+                  plugins_to_reload[pid] = true
                end
             end
          end
