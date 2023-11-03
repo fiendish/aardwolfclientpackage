@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2279 snapshot
+- new feature: The miniwindow health bars are now re-orderable.
+- bug fix: (maybe?) Moves some code that causes a crash during start sometimes to a place where it seems less likely to cause a crash. Not sure what's up, but the library call appears to be a bit fragile.
+
 r2277 snapshot
 - bug fix: Addresses (maybe?) a complaint about sense anger losing an expected blank line because of how the ASCII map plugin requests a new overhead map update.
 - bug fix: The July 15 2023 reboot changed the format of powerup notifications, so the soundpack and review buffers plugins have been updated. (Thanks Areia!)
