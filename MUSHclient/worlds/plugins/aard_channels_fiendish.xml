@@ -120,6 +120,14 @@ USAGE:
    ignore_case="y"
 ></alias>
 
+<alias
+   script="chat_scroll_to_end"
+   match="chats scroll"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
+
 </aliases>
 
 <script>
@@ -380,6 +388,14 @@ function clearTabHotspots()
    for i=1,num_tabs do
       WindowDeleteHotspot(win, "tab"..tostring(i))
    end
+end
+
+function chat_scroll_to_end()
+   tabs_rects[current_tab]:setScroll(
+      tabs_rects[current_tab].num_wrapped_lines - tabs_rects[current_tab].rect_lines + 1
+   )
+   tabs_rects[current_tab]:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function removeTab()
