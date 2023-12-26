@@ -675,7 +675,6 @@ local messages = {}
 local indices = {}
 local currentList = {}
 local max_buffer_size = 838860
-local initialized = false
 currentList["cp"] = {}
 currentList["gq"] = {}
 local currentIndex = 1
@@ -720,10 +719,6 @@ function gmcp_quest_info(name, line, w)
    Send("quest info") -- send the server side command also
 end
 
-function scheck(name, line, wc)
-   check_silent("cp")
-end
-
 function review(name, line, w)
    logmsg("review cmd used on: " .. w.command)
    SendNoEcho("echo {START_REVIEW}")
@@ -745,9 +740,6 @@ end
 
 function OnPluginGetFocus()
    if(#notepadbuffer>0) then
-      if not initialized then
-         return
-      end
       for i, buffered in ipairs(notepadbuffer) do
          appendQueue(buffered)
       end
@@ -765,11 +757,8 @@ function appendQueue(line)
 
    appendBuffer = appendBuffer .. line .. "\r\n"
 
-   if not initialized then
-      return
-   end
-
    if appendBuffer ~= nil and ((lastAppend == nil) or (lastAppend < os.time())) then
+      InitNotepad()
       AppendToNotepad("output", appendBuffer)
       appendBuffer = ""
       lastAppend = os.time()
@@ -786,6 +775,7 @@ function emptyQueue()
       ReplaceNotepad("output", string.sub(oldbuffer, max_buffer_size / 2))
    end
    if appendBuffer ~= "" then
+      InitNotepad()
       AppendToNotepad("output", appendBuffer)
       appendBuffer = ""
       lastAppend = os.time()
@@ -1261,16 +1251,37 @@ function OnPluginInstall()
    end
 end
 
+function InitNotepad()
+   if not IsConnected() then
+      return
+   end
+   local output_notepad_found = false
+   for i, v in pairs(GetNotepadList() or {}) do
+      if v == "output" then
+         output_notepad_found = true
+      end
+   end
 
-function init()
-   logmsg("Initializing output notepad..")
+   if not output_notepad_found then
+      logmsg("Initializing output notepad..")
+      AppendToNotepad("output", "Capturing all output\r\n")
+   end
+
+   NotepadSaveMethod("output", 2) -- this suppresses the save dialog when closing mush
+   NotepadReadOnly("output", true) -- Make it read only so we don't overwrite the text accidentally
+end
+
+local first_cp = false
+
+function init_cp()
+   if first_cp then
+      return
+   end
+   first_cp = true
+
    if listIndexing then
       check_silent("cp")
    end
-   AppendToNotepad("output", "Capturing all output\r\n")
-   NotepadSaveMethod("output", 2) -- this suppresses the save dialog when closing mush
-   -- this seems to automove cursor to last line every time the notepad changes rendering it useless for buffer review :(
-   NotepadReadOnly("output", true) -- Make it read only so we don't overwrite the text accidentally
 end
 
 function parse_list(list, mode)
@@ -1391,15 +1402,9 @@ function OnPluginBroadcast(msg, id, name, text)
          local area = gmcp("comm.repop.zone")
          review_addline("All", "Zone \"" .. area .. "\" has repopped.")
       elseif (text == "room.info") then
-         if not initialized then
-            initialized = true
-            init()
-         end
+         init_cp()
       elseif (text == "char.vitals") then
-         if not initialized then
-            initialized = true
-            init()
-         end
+         init_cp()
       elseif (text == "comm.quest") then
          local action = gmcp("comm.quest.action")
          local quest = gmcp("comm.quest")
