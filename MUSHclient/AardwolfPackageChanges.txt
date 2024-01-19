@@ -2,6 +2,7 @@ Aardwolf Client Package Major Changes List
 
 r2281 snapshot
 - new feature: The GMCP mapper plugin has two new commands "mapper delete exits from <room>" and "mapper delete exits to <room>" for deleting exits between the given room ID and the current room or vice versa.
+- misc change: The review buffers plugin should now initialize immediately instead of waiting until after login to enable reviewing the login screen too.
 
 r2280 snapshot
 - new feature: The communication log miniwindow plugin has a new alias "chats scroll" for scrolling the current tab to the end without using the mouse.
