@@ -498,7 +498,7 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
-   match="^mapper delete exit to (.+)$"
+   match="^mapper delete exits to (.+)$"
    enabled="y"
    sequence="100"
    script="map_exit_delete_to"
@@ -506,7 +506,7 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
-   match="^mapper delete exit from (.+)$"
+   match="^mapper delete exits from (.+)$"
    enabled="y"
    sequence="100"
    script="map_exit_delete_from"
@@ -4933,9 +4933,9 @@ function OnHelp (name, line, wildcards)
                                  > To stack commands use ;; as separator
                                  > to get around the line break parser
                                  > (ex: 'mapper cexit open south;;south')]],
-[[mapper delete exit from <room> --> Delete exits from the given room ID to
+[[mapper delete exits from <room> --> Delete exits from the given room ID to
                                      the current room.]],
-[[mapper delete exit to <room>   --> Delete exits to the given room ID from
+[[mapper delete exits to <room>   --> Delete exits to the given room ID from
                                      the current room.]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits in database]],
