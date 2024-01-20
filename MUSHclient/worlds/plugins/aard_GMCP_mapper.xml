@@ -4912,10 +4912,10 @@ function OnHelp (name, line, wildcards)
                                  > preserving a few prior backups]],
 [[mapper addnote                 --> Add a new note to the current room]],
 [[mapper addnote <note>          --> Ditto, but skips the dialog]],
-[[mapper delete note             --> Deletes the note in the current room
+[[mapper delete note             --> Delete the note in the current room
                                  > without using the addnote dialog]],
-[[mapper purgezone <area>        --> Remove an area from the map database]],
-[[mapper purgeroom               --> Purge the current room from the database]],
+[[mapper purgezone <area>        --> Delete an area from the map database]],
+[[mapper purgeroom               --> Delete the current room from the database]],
 [[mapper ignore mismatch <true/false> --> Don't change the room in the database
                                       > if only the exits are "wrong"]]
 },
