@@ -714,7 +714,7 @@ if not sent_busy then
    sent_busy = true
    BroadcastPlugin(999, "kinda_busy")
 end
-StopEvaluatingTriggers(true)
+StopEvaluatingTriggers()
 </send>
 </trigger>
 
@@ -730,7 +730,7 @@ if sent_busy then
    sent_busy = false
    BroadcastPlugin(999, "ok_you_can_go_now")
 end
-StopEvaluatingTriggers(true)
+StopEvaluatingTriggers()
 </send>
 </trigger>
 
