@@ -1303,11 +1303,11 @@ end
 
 function map_cexits_purge (name, line, wildcards)
    local query, pString = "", "Purged all custom exits."
-   if wildcards[1] then
+   if not wildcards then
+      query = "delete from exits where dir not in ('n', 's', 'e', 'w', 'd', 'u');"
+   else
       query = "delete from exits where fromuid in (select e.fromuid from exits e join rooms r on e.fromuid = r.uid where r.area = '" .. wildcards[1] .. "' and e.dir not in ('n', 'e', 's', 'w', 'u', 'd'));"
       pString = "Purged all area custom exits."
-   else
-      query = "delete from exits where dir not in ('n', 's', 'e', 'w', 'd', 'u');"
    end
 
    dbCheckExecute(query)
