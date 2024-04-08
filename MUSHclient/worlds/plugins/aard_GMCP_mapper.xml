@@ -9,7 +9,6 @@
    <!ENTITY show_completed "true" >
    <!ENTITY show_database_mods "false" >
    <!ENTITY show_other_areas "false" >
-   <!ENTITY show_up_down "false" >
    <!ENTITY speedwalk_prefix "run" >
 ]>
 
@@ -61,6 +60,32 @@ EnableTriggerGroup("recon", true)
 Send("recon")
 </send>
 </alias>
+
+<alias
+   match="mapper database"
+   enabled="y"
+   script="get_database"
+   sequence="100"
+></alias>
+
+<alias
+   match="mapper set database *"
+   enabled="y"
+   sequence="100"
+   send_to="12"
+>
+<send>
+   new_database = Trim("%1")
+   if new_database == "" then
+      get_database()
+   else
+      Note("Are you sure you want to change your map database to "..new_database:gsub("%.db$", "", 1)..".db? To confirm type 'mapper set database confirm'.")
+      toConfirm = "set database"
+      EnableAlias("confirm_catch", true)
+   end
+</send>
+</alias>
+
 <alias
    match="mapper showroom *"
    enabled="y"
@@ -270,7 +295,8 @@ Send("recon")
 ></alias>
 
 <alias
-   match="mapper where *"
+   match="^mapper where( .*)?$"
+   regexp="y"
    enabled="y"
    sequence="100"
    script="map_where"
@@ -517,6 +543,20 @@ mapper.gotoNextResult(Trim("%1"))
 </alias>
 
 <alias
+   match="^mapper purge cexits area$"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+   send_to="12"
+>
+<send>
+   Note("Are you sure you want to purge all custom mapper exits in this area? To confirm type 'mapper purge cexits area confirm'.")
+   toConfirm = "purge cexits area"
+   EnableAlias("confirm_catch", true)
+</send>
+</alias>
+
+<alias
    match="^(.*)$"
    enabled="n"
    name="confirm_catch"
@@ -528,11 +568,16 @@ mapper.gotoNextResult(Trim("%1"))
 <send>
    if "%1" == "mapper purge cexits confirm" and toConfirm == "purge cexits" then
       map_cexits_purge()
+   elseif "%1" == "mapper purge cexits area confirm" and toConfirm == "purge cexits area" then
+      map_cexits_purge("", "", {gmcp("room.info.zone")})
    elseif "%1" == "mapper purge portals confirm" and toConfirm == "purge portals" then
       map_portal_purge()
+   elseif "%1" == "mapper set database confirm" and toConfirm == "set database" then
+      set_database(new_database)
    else
       Note(string.format("Failed to confirm '%s'. Aborting.", toConfirm))
    end
+   new_database = ""
    toConfirm = ""
    EnableAlias("confirm_catch", false)
 </send>
@@ -634,8 +679,10 @@ mapper.gotoNextResult(Trim("%1"))
    send_to="12"
 >
 <send>
-   mapper.show_up_down = not mapper.show_up_down
-   mapper.draw (current_room)
+   show_up_down = not show_up_down
+   mapper.show_up_down = show_up_down
+   SetVariable("show_up_down", show_up_down and "1" or "0")
+   mapper.draw(current_room)
 </send>
 </alias>
 
@@ -657,9 +704,10 @@ mapper.gotoNextResult(Trim("%1"))
 
 <trigger
    enabled="y"
-   match="{begin running}"
+   match="@echo_prefix{begin running}"
    send_to="12"
    omit_from_output="y"
+   expand_variables="y"
 >
 <send>
 if not sent_busy then
@@ -672,9 +720,10 @@ StopEvaluatingTriggers(true)
 
 <trigger
    enabled="y"
-   match="{end running}"
+   match="@echo_prefix{end running}"
    send_to="12"
    omit_from_output="y"
+   expand_variables="y"
 >
 <send>
 if sent_busy then
@@ -838,7 +887,6 @@ local show_timing = &show_timing;
 local show_completed = &show_completed;
 local show_database_mods = &show_database_mods;
 local show_other_areas = &show_other_areas;
-local show_up_down = &show_up_down;
 local speedwalk_prefix = "&speedwalk_prefix;"
 
 <![CDATA[
@@ -859,6 +907,7 @@ toConfirm = ""
 blinded = false
 mylevel = 0
 mytier = 0
+show_up_down = ((GetVariable("show_up_down") or "0") == "1")  -- default false
 NoUnderline_hyperlinks = GetVariable("NoUnderline_hyperlinks") ~= "0" -- default true
 window_hidden =  ((GetVariable("window_hidden") or "0") == "1") -- default false
 use_compression = tonumber(GetVariable("use_compression") or 0)
@@ -890,6 +939,8 @@ environmentcount = 0
 
 directions = {}
 current_room = nil
+
+SetVariable("echo_prefix", GetVariable("echo_prefix") or "")
 
 function recon(name, line, wildcards)
    EnableTriggerGroup("recon", false)
@@ -935,7 +986,7 @@ function forceOpenDB()
    if not db:isopen() then
       forced_opened = true
       -- print("Forcing open")
-      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. db_name .. ".db"))
    end
 end
 
@@ -1251,18 +1302,25 @@ function map_cexits_delete (name, line, wildcards)
 end
 
 function map_cexits_purge (name, line, wildcards)
-   local query = "delete from exits where dir not in ('n','s','e','w','d','u');"
+   local query, pString = "", "Purged all custom exits."
+   if wildcards[1] then
+      query = "delete from exits where fromuid in (select e.fromuid from exits e join rooms r on e.fromuid = r.uid where r.area = '" .. wildcards[1] .. "' and e.dir not in ('n', 'e', 's', 'w', 'u', 'd'));"
+      pString = "Purged all area custom exits."
+   else
+      query = "delete from exits where dir not in ('n', 's', 'e', 'w', 'd', 'u');"
+   end
+
    dbCheckExecute(query)
    for k,v in pairs(rooms) do
       for l,w in pairs(v.exits) do
-         if not directions[l] then
-            v.exits[l] = nil
-            v.exit_locks[l] = nil
+         if not directions[1] then
+            v.exits[1] = nil
+            v.exit_locks[1] = nil
          end
       end
    end
    mapper.draw (current_room)
-   print("Purged all custom exits.")
+   print(pString)
 end
 
 function custom_exit_list (name, line, wildcards)
@@ -1703,7 +1761,12 @@ end
 
 function ExecuteWithWaits(cexit_command)
    wait.make (function()
-      SendNoEcho("echo {begin running}")
+      if mylevel < 202 then
+         echo_command = "echo"
+      else
+         echo_command = "echo self"
+      end
+      SendNoEcho(echo_command.." {begin running}")
       local partial_cexit_command = cexit_command
       local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
       while strbegin do
@@ -1713,8 +1776,8 @@ function ExecuteWithWaits(cexit_command)
          end
          if strend then
             local wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d*.?%d+)%)"))
-            SendNoEcho("echo {mapper_wait}wait("..wait_time..")")
-            line, wildcards = wait.regexp("^\\{mapper_wait\\}wait\\(([0-9]*\\.?[0-9]+)\\)",nil,trigger_flag.OmitFromOutput)
+            SendNoEcho(echo_command.." {mapper_wait}wait("..wait_time..")")
+            line, wildcards = wait.regexp("^"..GetVariable("echo_prefix").."\\{mapper_wait\\}wait\\(([0-9]*\\.?[0-9]+)\\)",nil,trigger_flag.OmitFromOutput)
             Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
             CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
             wait.time(wait_time)
@@ -1722,7 +1785,7 @@ function ExecuteWithWaits(cexit_command)
          end
       end
       Execute(partial_cexit_command)
-      SendNoEcho("echo {end running}")
+      SendNoEcho(echo_command.." {end running}")
    end)
 end
 
@@ -2363,6 +2426,31 @@ function room_find_notes (uid)
    end
 end
 
+function room_cexits (uid)
+   if uid == nil then
+      if current_room ~= nil then
+         uid = current_room
+      else
+         return nil
+      end
+   end
+
+   local room = rooms[uid]
+   if room == nil then
+      room = load_room_from_database(uid)
+   end
+
+   if room then
+      local custom_exits = {}
+      for k,v in pairs(room.exits) do
+         if #k > 1 then
+            custom_exits[k] = v
+         end
+      end
+      return serialize.save_simple(custom_exits)
+   end
+end
+
 function room_edit_note (room, uid, newnotes)
 
    if uid == nil and current_room ~= nil then
@@ -2695,13 +2783,13 @@ function room_click (uid, flags)
 
    table.insert(handlers, { name = ">Change Exit Destination", })
    for ex, to in pairs(room.exits) do
-      table.insert(handlers, { name = ex.." -> "..to, func = room_change_exit, param = ex})
+      table.insert(handlers, { name = ex:gsub("|", "/").." -> "..to, func = room_change_exit, param = ex})
    end
    table.insert(handlers, { name = "<", })
 
    table.insert(handlers, {name = ">Change Exit Level Lock", })
    for ex, lock in pairs(room.exit_locks) do
-      table.insert(handlers, { name = ex.."  [ "..lock.." ]", func = room_lock_exit, param = ex})
+      table.insert(handlers, { name = ex:gsub("|", "/").."  [ "..lock.." ]", func = room_lock_exit, param = ex})
    end
    table.insert(handlers, { name = "<", })
 
@@ -2716,7 +2804,7 @@ function room_click (uid, flags)
       table.insert(handlers, { name = ">Change Custom Exit Command", })
       for ex, to in pairs(room.exits) do
          if not string.find("n s e w u d", ex) then
-            table.insert(handlers, { name = ex.." -> "..to, func = room_change_cexit_command, param = ex})
+            table.insert(handlers, { name = ex:gsub("|", "/").." -> "..to, func = room_change_cexit_command, param = ex})
          end
       end
       table.insert(handlers, { name = "<", })
@@ -2725,7 +2813,7 @@ function room_click (uid, flags)
    table.insert(handlers, { name = (room.ignore_exits_mismatch and "+" or "").."Ignore Exits Mismatch Here", func = ignore_mismatch_toggle, param = room.ignore_exits_mismatch})
    table.insert(handlers, { name = ">Delete Exit", })
    for ex, to in pairs(room.exits) do
-      table.insert(handlers, { name = ex.." -> "..to, func = room_delete_exit, param = ex})
+      table.insert(handlers, { name = ex:gsub("|", "/").." -> "..to, func = room_delete_exit, param = ex})
    end
    table.insert(handlers, { name = "<", })
 
@@ -2783,9 +2871,9 @@ function rotate_backups (manual)
       local olderer_exists = false
       local older_exists = false
       if t ~= nil then
-         local oldest_string = sanitize_filename(WorldName())..".db.Backup_Automatic_oldest"
-         local olderer_string = sanitize_filename(WorldName())..".db.Backup_Automatic_olderer"
-         local older_string = sanitize_filename(WorldName())..".db.Backup_Automatic_older"
+         local oldest_string = db_name..".db.Backup_Automatic_oldest"
+         local olderer_string = db_name..".db.Backup_Automatic_olderer"
+         local older_string = db_name..".db.Backup_Automatic_older"
          for k,v in pairs(t) do
             if string.find(k,oldest_string) then
                oldest_exists = true
@@ -2912,7 +3000,7 @@ function backup_databases(manual)
       maybe_Note("BACKING UP DATABASE", manual)
       Repaint()
 
-      backupPath = GetInfo(66).."db_backups\\"..sanitize_filename(WorldName())
+      backupPath = GetInfo(66).."db_backups\\"..db_name
       firstBackup = backupPath..".db.Backup"
       local ffi
       if type(jit) == 'table' then
@@ -3168,6 +3256,19 @@ function drop_db_columns(db_table, drop_columns, extra_directives)
    dbCheckExecute(query)
 end
 
+function set_database (new_db_name)
+   if new_db_name ~= "" then
+      new_db_name = new_db_name:gsub("%.db$", "", 1)
+      print("Setting mapper database to "..new_db_name..".db")
+      SetVariable("db_name", new_db_name)
+      OnPluginInstall()
+   end
+end
+
+function get_database ()
+   print("Current mapper database file is "..GetVariable("db_name")..".db")
+end
+
 function OnPluginInstall ()
    SetVariable("backup_timer_enabled", GetVariable("backup_timer_enabled") or "1")
    quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
@@ -3200,8 +3301,9 @@ function OnPluginInstall ()
    }
 
    -- open databases on disk
-   worldPath = GetInfo(66)..sanitize_filename(WorldName())
-
+   db_name = GetVariable("db_name") or sanitize_filename(WorldName())
+   SetVariable("db_name", db_name)
+   worldPath = GetInfo(66)..db_name
    db = assert (sqlite3.open(worldPath..".db"))
    db:busy_timeout(100)
 
@@ -3230,7 +3332,6 @@ end
 
 function update_db_schema(db_user_version)
    print("\nThe GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.\n")
-   utils.msgbox ("The GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.", "", "ok", "i")
 
    -- Only go through the structure creation if we haven't done it already
    -- to save time at startup.
@@ -3371,9 +3472,9 @@ function after_update_check()
    b_b, err, erm = io.open(worldPath.."_bookmarks.db", "r")
    if b_b ~= nil then
       io.close(b_b)
-      ColourNote("white", "blue", "Found obsolete bookmarks file "..sanitize_filename(WorldName()).."_bookmarks.db.")
+      ColourNote("white", "blue", "Found obsolete bookmarks file "..db_name.."_bookmarks.db.")
       ColourNote("white", "blue", "Merging into the main database file.")
-      ColourNote("white", "blue", sanitize_filename(WorldName()).."_bookmarks.db --> "..sanitize_filename(WorldName())..".db")
+      ColourNote("white", "blue", db_name.."_bookmarks.db --> "..db_name..".db")
       db_bm = assert (sqlite3.open(worldPath.."_bookmarks.db"))
 
       local bm_found = false
@@ -3555,7 +3656,7 @@ function OnPluginSaveState ()
    -- close and reopen database
    if db:isopen() then
       db:close()
-      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. db_name .. ".db"))
    end
 end -- OnPluginSaveState
 
@@ -3782,10 +3883,10 @@ function got_gmcp_room()
    end -- not in cache
 
    local check_compact = ""
-   if not compact_mode then check_compact = "\n" end
+   if not compact_mode then check_compact = "\r\n" end
 
    if shownotes and room and room.notes and room.notes ~= "" then
-      AnsiNote(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w"..check_compact))
+      Simulate(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w\r\n"..check_compact))
    end
 
    -- re-save if we got information that is different than before
@@ -3973,6 +4074,11 @@ function OnPluginBroadcast (msg, id, name, text)
          luastmt = "gmcpdata = " .. gmcparg
          assert (loadstring (luastmt or "")) ()
          mytier = tonumber(gmcpdata.tier)
+         if tonumber(gmcpdata.level) < 202 then
+            SetVariable("echo_prefix", "")
+         else
+            SetVariable("echo_prefix", gmcpdata.name.." echo> ")
+         end
       end
 
       if (text == "char.status") then
@@ -4311,7 +4417,10 @@ function map_where (name, line, wildcards)
       return
    end -- if
 
-   local dest = tonumber(wildcards [1])
+   local dest = tonumber(Trim(wildcards[1]))
+   if not dest then
+      dest = tonumber(mapper.last_hyperlink_uid or mapper.last_speedwalk_uid)
+   end
    if not dest then
       mapper.mapprint ("The mapper where command expects a room id number as input.")
       return
@@ -4415,7 +4524,9 @@ function findpath(src, dst, noportals, norecalls)
       end
    end
    if walk_one ~= nil then
-      return {{dir=walk_one, uid=touid}}, 1
+      local path = {{dir=walk_one, uid=touid}}
+      BroadcastPlugin(502, "found_paths = "..string.gsub(serialize.save_simple(path),"%s+"," "))
+      return path, 1
    end
    local depth = 0
    local max_depth = mapper.config.SCAN.depth
@@ -4545,6 +4656,7 @@ function findpath(src, dst, noportals, norecalls)
 --      end
       table.insert(path, {dir=ftd.dir, uid=ftd.touid})
    end -- while
+   BroadcastPlugin(502, "found_paths = "..string.gsub(serialize.save_simple(path),"%s+"," "))
    return path, found_depth
 end -- function findpath
 
@@ -4666,7 +4778,7 @@ end
 function OnPluginConnect ()
    if not db:isopen() then
       maybe_Note("GMCP Mapper: Reconnected; opening map database.")
-      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+      db = assert (sqlite3.open(GetInfo (66) .. db_name .. ".db"))
    end
    if GetVariable("backup_timer_enabled") == "1" then
       if (os.time()-last_auto_backup) < 86401 then
@@ -4743,7 +4855,9 @@ function OnHelp (name, line, wildcards)
 [[mapper hide                    --> Hide map]],
 [[mapper show                    --> Show map]],
 [[mapper updown                  --> Toggle up/down exit drawing]],
-[[mapper underlines              --> Toggle underlining of clickable links]]
+[[mapper underlines              --> Toggle underlining of clickable links]],
+[[mapper database                --> Print the name of the map database file.]],
+[[mapper set database <new_name> --> Change the map database file.]]
 },
 
    ['utils'] = {
@@ -4776,9 +4890,10 @@ function OnHelp (name, line, wildcards)
                                  > (ex: 'mapper cexit open south;;south')]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits in database]],
+[[mapper purge cexits area       --> Remove all custom exits in the area]],
 [[mapper cexit_wait <seconds>    --> Wait this number of seconds instead of
                                  > the standard 2 when constructing the next
-                                 > cexit (between 2 and 30)]],
+                                 > cexit (between 2 and 40)]],
 [[mapper lockexit                --> Bring up the exit level-locking dialog
                                  > for the current room.]],
 [[]],
