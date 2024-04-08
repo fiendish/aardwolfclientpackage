@@ -25,6 +25,7 @@
    ignore_case="y"
    send_to="12"
 ><send>
+search_query = "%2"
 search_msg = ColoursToStyles("@Yhelp search '%2'")
 Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, false, process_response)
 </send>
@@ -39,8 +40,17 @@ Capture.command("%0", "^{helpsearch}$", "^{/helpsearch}$", true, false, true, fa
    send_to="12"
 ><send>
 search_msg = nil
-notfound_message = build_notfound_message("%2")
-Capture.command("%0", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, process_response)
+local subject = Trim("%2")
+if subject == "updated" then
+   SendNoEcho("%0")
+else
+   if (string.sub(subject, 1, 7) == "updated") then
+      notfound_message = nil
+   else
+      notfound_message = build_notfound_message(subject)
+   end
+   Capture.command("%0", "^{help(search)?}$", "^{/help(search)?}$", true, false, true, false, process_response)
+end
 </send>
 </alias>
 
@@ -57,10 +67,32 @@ if my_window and my_window.id then
 end
 </send>
 </alias>
+
+<alias
+   name="resetaard"
+   match="resetaard"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+><send>
+remember_position = GetVariable("remember_position")
+DeleteVariable("remember_position")
+if my_window and my_window.id then
+   build_window(prev_window_styles, prev_hyperlinks_function)
+end
+SetVariable("remember_position", remember_position or "0")
+if my_window and my_window.id then
+   build_window(prev_window_styles, prev_hyperlinks_function)
+end
+</send>
+</alias>
+
 </aliases>
 
 <script>
 <![CDATA[
+require "aardwolf_colors"
 require "themed_miniwindows"
 require "wrapped_captures"
 require "gmcphelper"
@@ -86,11 +118,38 @@ function sanitize_search(style_lines)
    if search_msg then
       table.insert(style_lines, 1, search_msg)
    else
-      style_lines[1] = notfound_message
+      style_lines[1] = notfound_message or style_lines[1]
       table.insert(style_lines, 2, ColoursToStyles(""))
    end
 
    return style_lines
+end
+
+function highlight_in_styles(styles, match)
+   local new_styles = {}
+   local text = strip_colours_from_styles(styles)
+   local split_text = text:lower():split(match:lower(), true)
+   local prev = 0
+
+   for i,v in ipairs(split_text) do
+      local len_v = #v
+      if len_v > 0 then
+         for _,w in ipairs(TruncateStyles(styles, prev + 1, prev + len_v)) do
+            if i % 2 == 0 then
+               w.backcolour = 65535
+               w.textcolour = 0
+               w.bold = false
+            end
+            table.insert(new_styles, w)
+         end
+         prev = prev + len_v
+      end
+   end
+
+   if #new_styles == 0 then
+      new_styles = styles
+   end
+   return new_styles
 end
 
 function sanitize_help(style_lines)
@@ -101,9 +160,14 @@ function sanitize_help(style_lines)
             line[1].text = ""
             line[1].length = 0
          end
+         if search_query then
+            line = highlight_in_styles(line, search_query)
+         end
          table.insert(new_lines, line)
       end
    end
+
+   search_query = nil
    return new_lines
 end
 
@@ -124,37 +188,46 @@ string.find_indices = function(self, pattern, after, before)
    return indices
 end
 
-function build_links(line, pattern, after, before, verb)
-   local links = strip_colours_from_styles(line):find_indices(pattern, after, before)
+function build_links(links, verb)
    for _,v in ipairs(links) do
       local text = v.text
       v.label = verb.." "..text
       v.text = 'Capture.command("'..verb.." "..text..'", "^{help}$", "^{/help}$", true, false, true, false, process_response)'
       if verb == "help" then
-         v.text = 'search_msg = nil;notfound_message = build_notfound_message("'..text..'");'..v.text
+         v.text = 'search_msg = nil;notfound_message = build_notfound_message("'..Trim(text)..'");'..v.text
       end
    end
    return links
 end
 
 function get_related_help_hyperlinks(style_lines)
-   related_helps = {}
-   related_categories = {}
+   local related_helps = {}
+   local related_categories = {}
    for i,line in ipairs(style_lines) do
-      if (#line >= 1) and line[1].text:starts_with("Related Helps") then
-         related_helps[i] = build_links(line, "%w[%w&%- ]*%w", #"Related Helps : ", nil, "help")
-      -- elseif line[1].text:starts_with("Help Category") then
-      --    related_categories[i] = build_links(line, "[%w-]+[%w- ]*", #"Help Category", nil, "contents")
+      local text = strip_colours_from_styles(line)
+      if text:starts_with("Related Helps") then
+         related_helps[i] = text:find_indices("%w[%w&%- ]*%w", #"Related Helps : ", nil)
+         related_helps[i] = build_links(related_helps[i], "help")
+      -- elseif text:starts_with("Help Category") then
+         -- related_categories[i] = text:find_indices("[%w-]+[%w- ]*", #"Help Category", nil)
+         -- related_categories[i] = build_links(related_categories[i], "contents")
       end
    end
    return related_helps, related_categories
 end
 
 function get_search_hyperlinks(style_lines)
-   related_helps = {}
+   local related_helps = {}
    for i,line in ipairs(style_lines) do
-      if (#line >= 2) and (line[1].length == 20) and (line[2].text:sub(1,1) == ":") then
-         related_helps[i] = build_links(line, nil, 0, 20, "help")
+      if
+         (#line >= 2)
+         and (line[1].textcolour == GetNormalColour(7))
+         and (line[2].textcolour == GetNormalColour(8))
+      then
+         local text = Trim(line[1].text)
+         if text then
+            related_helps[i] = build_links({{text=text, start=1, stop=#text}}, "help")
+         end
       end
    end
    return related_helps, {}
@@ -205,10 +278,11 @@ function process_search(window_styles)
 end
 
 function build_window(window_styles, hyperlinks_function)
+   prev_window_styles = window_styles
+   prev_hyperlinks_function = hyperlinks_function
    ColourNote("paleturquoise", "", "Help Captured To Miniwindow")
 
    local related_helps, related_categories = hyperlinks_function(window_styles)
-   prev_hyperlinks_function = hyperlinks_function
 
    -- I create a zero-size window first, because MUSHclient has a limitation
    -- where you can only find the width of some text from inside a miniwindow,
@@ -234,7 +308,7 @@ function build_window(window_styles, hyperlinks_function)
       nil,  -- title_font_size
       GetAlphaOption("output_font_name"), -- text_font_name
       GetOption("output_font_height"),  -- text_font_size
-      nil,  -- text_max_lines
+      5000,  -- text_max_lines
       nil,  -- text_padding
       true  -- defer_showing
    )
@@ -287,12 +361,7 @@ function build_window(window_styles, hyperlinks_function)
 
    -- Now that the window is populated, set the size and position if new.
    if not remember_position then
-      -- Use window font metrics to set the right width and height, but give 
-      -- reasonable maxima so it doesn't go entirely off the screen.
-      -- (Width first, then height, to account for new line wrap.)
-      my_window:fit_size(my_window:text_width("@W"..string.rep(" ", 77)), nil, GetInfo(281)-20, nil)
-      my_window:fit_size(nil, my_window.textrect.num_wrapped_lines, nil, GetInfo(280)-80)
-
+      my_window:fit_contents(GetInfo(281)-20, GetInfo(280)-80)
       -- Use fixed position instead of the auto-centering mode because of a
       -- subtle position retrieval conflict during theme changes between
       -- movewindow and WindowPosition.

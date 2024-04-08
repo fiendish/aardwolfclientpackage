@@ -498,6 +498,22 @@ mapper.gotoNextResult(Trim("%1"))
 ></alias>
 
 <alias
+   match="^mapper delete exits to (.+)$"
+   enabled="y"
+   sequence="100"
+   script="map_exit_delete_to"
+   regexp="y"
+></alias>
+
+<alias
+   match="^mapper delete exits from (.+)$"
+   enabled="y"
+   sequence="100"
+   script="map_exit_delete_from"
+   regexp="y"
+></alias>
+
+<alias
    match="^mapper delete note$"
    enabled="y"
    sequence="100"
@@ -714,7 +730,7 @@ if not sent_busy then
    sent_busy = true
    BroadcastPlugin(999, "kinda_busy")
 end
-StopEvaluatingTriggers(true)
+StopEvaluatingTriggers()
 </send>
 </trigger>
 
@@ -730,7 +746,7 @@ if sent_busy then
    sent_busy = false
    BroadcastPlugin(999, "ok_you_can_go_now")
 end
-StopEvaluatingTriggers(true)
+StopEvaluatingTriggers()
 </send>
 </trigger>
 
@@ -1301,6 +1317,58 @@ function map_cexits_delete (name, line, wildcards)
    print("Removed custom exits from the current room.")
 end
 
+function map_exit_delete_to (name, line, wildcards)
+   if not current_room then
+      Note("EXIT DELETE ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
+      return
+   end
+   local query = string.format("delete from exits where fromuid=%s and touid=%s;", fixsql(current_room), fixsql(wildcards[1]))
+   dbCheckExecute(query)
+   local found = false
+   for k,v in pairs(rooms[current_room].exits) do
+      if v == wildcards[1] then
+         print("Deleted exit \""..k.."\" to room "..v)
+         rooms[current_room].exits[k] = nil
+         rooms[current_room].exit_locks[k] = nil
+         found = true
+      end
+   end
+   if not found then
+      print("No exits between here and "..wildcards[1].." were found.")
+   else
+      mapper.draw (current_room)
+   end
+end
+
+function map_exit_delete_from (name, line, wildcards)
+   if not current_room then
+      Note("EXIT DELETE ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
+      return
+   end
+   local query = string.format("delete from exits where fromuid=%s and touid=%s;", fixsql(wildcards[1]), fixsql(current_room))
+   dbCheckExecute(query)
+   if not rooms[wildcards[1]] then
+      load_room_from_database(wildcards[1])
+   end
+   local found = false
+   if rooms[wildcards[1]] then
+      for k,v in pairs(rooms[wildcards[1]].exits) do
+         if v == current_room then
+            print("Deleted exit \""..k.."\" from room "..wildcards[1])
+            rooms[wildcards[1]].exits[k] = nil
+            rooms[wildcards[1]].exit_locks[k] = nil
+            found = true
+         end
+      end
+   end
+   if not found then
+      print("No exits between "..wildcards[1].." and here were found.")
+   else
+      mapper.draw (current_room)
+   end
+end
+
+
 function map_cexits_purge (name, line, wildcards)
    local query, pString = "", "Purged all custom exits."
    if not wildcards then
@@ -1385,7 +1453,7 @@ function show_this_room (name, line, wildcards)
    local room = rooms[current_room]
    local room_uid = current_room
    if room_uid:sub(1,5) == "nomap" then
-      room_uid = "None (this room isn't mappable)"
+      room_uid = room_uid.." (this room isn't mappable)"
    end
    if room ~= nil then
       Note("Details about this room:")
@@ -4867,10 +4935,10 @@ function OnHelp (name, line, wildcards)
                                  > preserving a few prior backups]],
 [[mapper addnote                 --> Add a new note to the current room]],
 [[mapper addnote <note>          --> Ditto, but skips the dialog]],
-[[mapper delete note             --> Deletes the note in the current room
+[[mapper delete note             --> Delete the note in the current room
                                  > without using the addnote dialog]],
-[[mapper purgezone <area>        --> Remove an area from the map database]],
-[[mapper purgeroom               --> Purge the current room from the database]],
+[[mapper purgezone <area>        --> Delete an area from the map database]],
+[[mapper purgeroom               --> Delete the current room from the database]],
 [[mapper ignore mismatch <true/false> --> Don't change the room in the database
                                       > if only the exits are "wrong"]]
 },
@@ -4888,6 +4956,10 @@ function OnHelp (name, line, wildcards)
                                  > To stack commands use ;; as separator
                                  > to get around the line break parser
                                  > (ex: 'mapper cexit open south;;south')]],
+[[mapper delete exits from <room> --> Delete exits from the given room ID to
+                                     the current room.]],
+[[mapper delete exits to <room>   --> Delete exits to the given room ID from
+                                     the current room.]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits in database]],
 [[mapper purge cexits area       --> Remove all custom exits in the area]],

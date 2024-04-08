@@ -6,7 +6,7 @@
 <muclient>
 <plugin
    name="Aardwolf_Client_Help"
-   author="Kobus and Fiendish"
+   author="Fiendish"
    id="60ad15b3cb2a5757d2611c28"
    language="Lua"
    purpose="Help for Aardwolf MUSHclient Package's more elusive plugin commands"
@@ -36,6 +36,8 @@ Empty.
 
 <script>
 <![CDATA[
+-- Kobus wrote the original version of this for me, but people should bug me about it and not him, so I'm noting it here instead of in the author field.
+
 plugin_list = {}
 
 name_to_id = {
@@ -116,6 +118,7 @@ function aard_help()
    end
    if is_active("channels") then
       help("chats show / chats hide", "Show/hide the communication log")
+      help("chats mute [who [minutes]]", "Mutes a player (unmute without minutes unmutes)")
    end
    if is_active("echo") then
       help("chats echo", "List which channels are sent to the main output")

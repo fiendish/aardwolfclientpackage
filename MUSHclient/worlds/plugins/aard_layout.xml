@@ -205,6 +205,7 @@ function LayoutRestore(key)
    all_layouts = FetchLayouts()
    layout = all_layouts[key]
    if layout then
+      -- do the main output rect
       trect = layout["aard_layout_trect"]
       textrect_left = trect["trleft"]
       textrect_right = trect["trright"]
@@ -212,25 +213,33 @@ function LayoutRestore(key)
       textrect_bottom = trect["trbottom"]
       SaveLayout()
       check_geometry()
+      draw_main_window()
+      -- do the other plugins
+      CallPlugin("abc1a0944ae4af7586ce88dc", "pause") -- repaint buffer plugin
+      local plugins_to_reload = {}
       for mwid,rect in pairs(layout) do
          if mwid ~= "aard_layout_trect" then
-            bg = WindowInfo(mwid, 9)
-            if bg then
-               pid = WindowInfo(mwid, 23)
-               if pid ~= GetPluginID() then
-                  show = WindowInfo(mwid, 5)
-                  if rect["left"] ~= WindowInfo(mwid, 10) or rect["top"] ~= WindowInfo(mwid, 11) or rect["width"] ~= WindowInfo(mwid, 3) or rect["height"] ~= WindowInfo(mwid, 4) then
-                     WindowPosition(mwid, rect["left"], rect["top"], 0, 18)
-                     WindowResize(mwid, rect["width"], rect["height"], 0)
-                     Repaint() -- hack because WindowPosition doesn't immediately update coordinates
-                     WindowShow(mwid, show)
-                     CallPlugin(pid, "SaveState")
-                     DoAfterSpecial(0.1, "ReloadPlugin('"..pid.."')", sendto.script)
-                  end
+            local pid = WindowInfo(mwid, 23)
+            if pid and (pid ~= GetPluginID()) then
+               if rect["left"] ~= WindowInfo(mwid, 10) or rect["top"] ~= WindowInfo(mwid, 11) or rect["width"] ~= WindowInfo(mwid, 3) or rect["height"] ~= WindowInfo(mwid, 4) then
+                  WindowResize(mwid, rect["width"], rect["height"], WindowInfo(mwid, 9))
+                  WindowPosition(mwid, rect["left"], rect["top"], WindowInfo(mwid, 7), WindowInfo(mwid, 8))
+                  plugins_to_reload[pid] = true
                end
             end
          end
       end
+      Repaint() -- hack because WindowPosition doesn't immediately update coordinates
+      for pid,_ in pairs(plugins_to_reload) do
+         CallPlugin(pid, "SaveState")
+         local a, b = CallPlugin(pid, "OnPluginThemeChange")
+         CallPlugin(pid, "SaveState")
+         if not ((a == error_code.eOK) and b) then
+            CallPlugin(pid, "Theme.just_reloading")
+            ReloadPlugin(pid)
+         end
+      end
+      CallPlugin("abc1a0944ae4af7586ce88dc", "resume") -- repaint buffer plugin
       print("Layout for key '"..key.."' has been restored.")
    else
       print("No layout found for key '"..key.."'.")
@@ -382,6 +391,7 @@ function reset_main()
    textrect_bottom = default_bottom
    SaveLayout()
    check_geometry()
+   draw_main_window()
 end
 
 function OnPluginClose()
@@ -498,11 +508,15 @@ function check_geometry()
       SetCommandWindowHeight((GetOption("auto_resize_minimum_lines") * GetInfo(214)) + 4)
    end
 
+   local windowbottom, windowright = GetInfo(280), GetInfo(281)
    textrect_top = math.max(0, tonumber(GetVariable("trtop")) or default_top)
-   textrect_bottom = math.min(GetInfo(280), tonumber(GetVariable("trbottom")) or default_bottom)
+   textrect_bottom = math.min(windowbottom, tonumber(GetVariable("trbottom")) or default_bottom)
    textrect_left = math.max(0, tonumber(GetVariable("trleft")) or default_left)
-   textrect_right = math.min(GetInfo(281), tonumber(GetVariable("trright")) or default_right)
-   draw_main_window()
+   textrect_right = math.min(windowright, tonumber(GetVariable("trright")) or default_right)
+   if prevwindowbottom ~= windowbottom or prevwindowright ~= windowright then
+      draw_main_window()
+      prevwindowbottom, prevwindowright = windowbottom, windowright
+   end
 end
 
 function scrollMain(step)
@@ -593,7 +607,8 @@ function add_title_dragger()
 end
 
 function OnPluginWorldOutputResized()
-   AddTimer("resizeCheckTimer", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
+   AddTimer("resizeCheckTimer1", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
+   AddTimer("resizeCheckTimer2", 0, 0, 1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
 end
 
 function draw_main_window()

@@ -383,7 +383,6 @@ function movewindow.save_state (win)
   local mwi = _G ["mw_" .. win .. "_movewindow_info"]
 
   if not mwi then
-    ColourNote ("white", "red", "Error in movewindow.save_state: no window movement info for: " .. win)
     return
   end -- no such window
 

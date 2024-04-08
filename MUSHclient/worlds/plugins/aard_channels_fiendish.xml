@@ -85,7 +85,7 @@ USAGE:
 
 <trigger
    enabled="y"
-   match="^\*\S.+[^*]$"
+   match="^\*\S(?!.*[\]\*] *$).+$"
    regexp="y"
    script="rsocial"
    name="remote_socials"
@@ -120,6 +120,14 @@ USAGE:
    ignore_case="y"
 ></alias>
 
+<alias
+   script="chat_scroll_to_end"
+   match="chats scroll"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
+
 </aliases>
 
 <script>
@@ -136,11 +144,6 @@ dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
 local gap = 1
 MAX_LINES = 10000 -- how many lines to store in scrollback
-
--- date_format = "[%d %b %H:%M:%S] "   -- [30 Aug 13:29:49]   date and time 24 hour
--- date_format = "[%d %b %I:%M:%S%p] " -- [30 Aug 01:20:12PM] date and time 12 hour
--- date_format = "[%H:%M:%S] "         -- [13:29:08]          time 24 hour
--- date_format = "[%X] "               -- [1:22:06 PM]        time 12 hour
 
 default_width = 657 + Theme.RESIZER_SIZE + 2
 default_height = 132
@@ -189,6 +192,22 @@ window_title = GetVariable("window_title") or "Communication Log"
 if window_title == "" then
    window_title = nil
 end
+
+function clearTab(tab)
+   if tab == nil then
+      tab = current_tab or 1
+   elseif type(tab) == "string" then
+      tab = findTab(tab)
+   end
+   if tabs_rects[tab] then
+      tabs_rects[tab]:clear(true)
+   else
+      ColourNote("white", "red", "CommLog Error 404: Tab not found.")
+   end
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   SaveState()
+end
+
 
 function reduce_diverse_channels()
    channels_table = {}
@@ -369,6 +388,14 @@ function clearTabHotspots()
    for i=1,num_tabs do
       WindowDeleteHotspot(win, "tab"..tostring(i))
    end
+end
+
+function chat_scroll_to_end()
+   tabs_rects[current_tab]:setScroll(
+      tabs_rects[current_tab].num_wrapped_lines - tabs_rects[current_tab].rect_lines + 1
+   )
+   tabs_rects[current_tab]:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
 function removeTab()
@@ -806,7 +833,12 @@ end
 function rsocial (name, line, wildcards, styles)
    -- Remote socials will always start with a dark cyan or bright magenta *
    -- Checking color cuts down on non-socials ending up in the chat log...
-   if (styles[1].textcolour == GetNormalColour(7) or styles[1].textcolour == GetBoldColour(6)) then
+   if (
+      -- no colors, so plain white line
+      ((#styles == 1) and (styles[1].textcolour == GetNormalColour(8)))
+      -- colors, so asterisk is either dark cyan or bright magenta
+      or ((styles[1].textcolour == GetNormalColour(7)) or (styles[1].textcolour == GetBoldColour(6)))
+   ) then
       local multiline_styles = ToMultilineStyles(styles, nil, nil, true)
       storeNonChannel(multiline_styles, "remote_socials")
    end
@@ -880,10 +912,12 @@ function OnPluginBroadcast(msg, id, name, text)
          local gmcpcomm = gmcp("comm.channel")
          local msg_text = gmcpcomm.msg or ""
          local chan = gmcpcomm.chan or ""
+         local player = gmcpcomm.player or ""
+         local res, isMuted = CallPlugin("55616ea13339bc68e963e1f8", "checkIfMuted", player)
          if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg_text), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
             if (not channels_table[chan]) or channels_table[chan]["capture"] then
                msg_text = filter_as_needed(msg_text)
-               if msg_text then
+               if msg_text and not isMuted then
                   storeChannel(ColoursToStyles(msg_text, nil, nil, true), chan)
                end
             end
@@ -946,6 +980,22 @@ function extend_rightclick_menu()
          end
       },
       {
+         ((date_format == "[%Y-%m-%d %H:%M:%S] ") and "+" or "").."2023-08-30 13:20:12",
+         function()
+            date_format = "[%Y-%m-%d %H:%M:%S] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '2023-08-30 13:20:12'.")
+            SaveState()
+         end
+      },
+      {
+         ((date_format == "[%Y-%m-%d %I:%M:%S %p] ") and "+" or "").."2023-08-30 01:20:12 PM",
+         function()
+            date_format = "[%Y-%m-%d %I:%M:%S %p] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '2023-08-30 01:20:12 PM'.")
+            SaveState()
+         end
+      },
+      {
          ((date_format == "[%d %b %H:%M:%S] ") and "+" or "").."30 Aug 13:29:49",
          function()
             date_format = "[%d %b %H:%M:%S] "
@@ -954,10 +1004,10 @@ function extend_rightclick_menu()
          end
       },
       {
-         ((date_format == "[%d %b %I:%M:%S%p] ") and "+" or "").."30 Aug 01:20:12PM",
+         ((date_format == "[%d %b %I:%M:%S %p] ") and "+" or "").."30 Aug 01:20:12 PM",
          function()
-            date_format = "[%d %b %I:%M:%S%p] "
-            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12PM'.")
+            date_format = "[%d %b %I:%M:%S %p] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '30 Aug 01:20:12 PM'.")
             SaveState()
          end
       },
@@ -970,10 +1020,10 @@ function extend_rightclick_menu()
          end
       },
       {
-         ((date_format == "[%I:%M:%S%p] ") and "+" or "").."1:22:06 PM",
+         ((date_format == "[%I:%M:%S %p] ") and "+" or "").."01:22:06 PM",
          function()
-            date_format = "[%I:%M:%S%p] "
-            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '1:22:06 PM'.")
+            date_format = "[%I:%M:%S %p] "
+            ColourNote("yellow", "", "Timestamps in communication window ENABLED using format like '01:22:06 PM'.")
             SaveState()
          end
       },
@@ -1176,11 +1226,54 @@ function extend_rightclick_menu()
       {
          "Clear Tab",
          function()
-            tabs_rects[current_tab]:clear(true)
-            CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
-            SaveState()
+            clearTab(current_tab)
          end
       },
+      {"-", ""},
+      {">Mute List Options", ""},
+      {
+         "Add player to Mute List",
+         function()
+            local name = utils.inputbox("Mute whom?", "Mute player")
+            if not name then
+               return
+            else
+               function number_or_nil(input)
+                  if input == "" then return true end
+                  return tonumber(input)
+               end
+               local minutes = utils.inputbox("For how many minutes? Blank means forever until removed.", "How many minutes?", nil, nil, nil, {["validate"]=number_or_nil})
+               if minutes ~= nil then
+                  CallPlugin("55616ea13339bc68e963e1f8", "muteName", name, true, minutes)
+               end
+            end
+         end
+      },
+      {
+         "Edit Mute List",
+         function()
+            mute_lookup = {}
+            loadstring(GetPluginVariable("55616ea13339bc68e963e1f8", "mute_lookup") or "")()
+            local sorted_mute_lookup = {}
+            for k,_ in pairs(mute_lookup) do
+               table.insert(sorted_mute_lookup, k:sub(1,1):upper()..k:sub(2,-1))
+            end
+            mute_lookup = nil
+            table.sort(sorted_mute_lookup)
+            if #sorted_mute_lookup > 0 then
+               local capture_result = utils.multilistbox("Unmute which of these players?", "Muted Players List", sorted_mute_lookup)
+               if capture_result then
+                  for k,_ in ipairs(capture_result) do
+                     local name = sorted_mute_lookup[k]
+                     CallPlugin("55616ea13339bc68e963e1f8", "muteName", name, false)
+                  end
+               end
+            else
+               Note("\nYou are not currently muting anyone.")
+            end
+         end
+      },
+      {"<", ""},
       {"-", ""},
       {
          "Bring to Front",

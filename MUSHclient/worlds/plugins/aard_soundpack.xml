@@ -469,14 +469,14 @@
   <trigger
    enabled="n"
    group="Alert"
-   match="^Congratulations, hero\. You have increased your powers\!$"
+   match="^Congratulations, \w+\. You have increased your powerups to \d+\.$"
    name="PowerUp"
    regexp="y"
    send_to="12"
    sequence="100"
   >
   <send>
-	TriggerEvent("level_up")
+	TriggerEvent("sh_powerup")
   </send>
   </trigger>
   <trigger
@@ -502,7 +502,7 @@
    sequence="100"
   >
   <send>
-   TriggerEvent("level_up_sh")
+   TriggerEvent("reach_sh")
   </send>
   </trigger>
   
@@ -1089,17 +1089,23 @@ local soundEvents = {
       panning = "0",
       description = "Comm Chan: Debate"
    },
-   ["gametalk"] = {
-      defaultwav = "gametalk.wav",
+   ["epics"] = {
+      defaultwav = "epic.wav",
       volume = "100",
       panning = "0",
-      description = "Comm Chan: Gametalk"
+      description = "Comm Chan: Epics"
    },
    ["ftalk"] = {
       defaultwav = "ftalk.wav",
       volume = "100",
       panning = "0",
       description = "Comm Chan: Ftalk"
+   },
+   ["gametalk"] = {
+      defaultwav = "gametalk.wav",
+      volume = "100",
+      panning = "0",
+      description = "Comm Chan: Gametalk"
    },
    ["gclan"] = {
       defaultwav = "gclan.wav",
@@ -1155,11 +1161,17 @@ local soundEvents = {
       panning = "0",
       description = "Level up"
    },
-   ["level_up_sh"] = {
+   ["sh_powerup"] = {
+      defaultwav = "level_up.wav",
+      volume = "100",
+      panning = "0",
+      description = "Superhero powerup"
+   },
+   ["reach_sh"] = {
       defaultwav = "level_up_sh.wav",
       volume = "100",
       panning = "0",
-      description = "Level up - Superhero"
+      description = "Reach Superhero"
    },
    ["ltalk"] = {
       defaultwav = "ltalk.wav",
@@ -1423,7 +1435,7 @@ function sptog(name, line, wc)
          end
       end
    end
-   logerr("Invalid event. Type \"sptog\" to see a list of events.")
+   logerr("Invalid event. Type \"spset\" to see a list of events.")
 end
 
 function spallow(name, line, wc)
@@ -1666,6 +1678,12 @@ function OnPluginBroadcast (msg, id, name, text)
          local channel = gmcp("comm.channel.chan")
          local msg = gmcp("comm.channel.msg")
          local player = gmcp("comm.channel.player")
+
+         local rc, isMuted = CallPlugin("55616ea13339bc68e963e1f8", "checkIfMuted", player)
+         if (rc == 0) and isMuted then
+            return
+         end
+
          msg = strip_colours(msg)
 
          j, k = string.find(msg, "!!SOUND%(")

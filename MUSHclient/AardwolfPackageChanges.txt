@@ -1,5 +1,133 @@
 Aardwolf Client Package Major Changes List
 
+r2282 snapshot
+- new feature: Updated the #alias and #trigger simple helper aliases to optionally take a third {argument} for assigning to a group. You won't get the new versions by updating, only in a new install, because of reasons, but you can get them from https://github.com/fiendish/aardwolfclientpackage/wiki/Command-Line-Aliases-and-Triggers
+
+r2281 snapshot
+- new feature: The GMCP mapper plugin has two new commands "mapper delete exits from <room>" and "mapper delete exits to <room>" for deleting exits between the given room ID and the current room or vice versa.
+- misc change: The review buffers plugin should now initialize immediately instead of waiting until after login to enable reviewing the login screen too.
+
+r2280 snapshot
+- new feature: The communication log miniwindow plugin has a new alias "chats scroll" for scrolling the current tab to the end without using the mouse.
+
+r2279 snapshot
+- new feature: The miniwindow health bars are now re-orderable.
+- bug fix: (maybe?) Moves some code that causes a crash during start sometimes to a place where it seems less likely to cause a crash. Not sure what's up, but the library call appears to be a bit fragile.
+
+r2277 snapshot
+- bug fix: Addresses (maybe?) a complaint about sense anger losing an expected blank line because of how the ASCII map plugin requests a new overhead map update.
+- bug fix: The July 15 2023 reboot changed the format of powerup notifications, so the soundpack and review buffers plugins have been updated. (Thanks Areia!)
+
+r2275 snapshot
+- new feature: The Aardwolf_Vital_Shortcuts plugin now lets you abbreviate group member names. (Thanks Areia!)
+- bug fix: The color matching feature in 2269 did not properly check first whether a color value actually existed leading to an error about "rshift" from the chat capture window.
+
+r2273 snapshot
+- bug fix: The review buffers plugin had a bad trigger pattern for remote socials that was matching on unrelated other output.
+
+r2272 snapshot
+- bug fix: I shortened the name of the review buffers plugin because the new name in r2261 was causing a string length error. Mea culpa. I should have tested loading the plugin afterward.
+
+r2271 snapshot
+- bug fix: The change in r2269 was done wrong and caused an error, oops.
+
+r2270 snapshot
+- bug fix: Hopefully get better client startup/connect initialization of GMCP variables by deferring initial requests until first arrival.
+
+r2269 snapshot
+- new feature: aardwolf_colors.lua's StylesToColours will also return the closest x256 color code match if there isn't an exact one.
+
+r2268 snapshot
+- new feature: The xterm portion of aardwolf_colors.lua's stylesToANSI will now return the closest match if there isn't an exact one.
+- new feature: The helpfile capture miniwindow now supports the new help updated command output.
+
+r2266 snapshot
+- new feature: The "mapper where" command will now default to the last goto location if no id is given.
+- misc change: Someone needed a function to convert color numbers to ANSI, so I've split that part of the aardwolf_colors.lua stylesToANSI function into its own separate function called colorNumberToAnsi.
+- misc change: A new check has been added during startup that will disable MUSHclient's smooth/smoother scrolling settings, because they are terrible broken client features that destroy display performance.
+- bug fix: async.lua's doAsyncRemoteRequest claimed that setting the result callback to nil would print the response, but that was not the case. It is now.
+- bug fix: The main output area should redraw itself properly after a layout switch that changes its dimensions.
+
+r2261 snapshot
+- bug fix: Added a warning to the inventory serials plugin about keyring data not currently being available while sleeping instead of showing 0 items. Hopefully this gets fixed in-game.
+- new feature: Added some more timestamp format options to the communication log plugin.
+- misc change: Use of the abbreviation "vi" in the review buffers plugin has been replaced with "buffer". Some screen readers read "vi" as the roman numeral six.
+
+r2258 snapshot
+- bug fix: The layout switching code will no longer reload Easy DIY miniwindow plugins during the switch and will instead invoke their draw functions the same way that theme changes do. This should fix errors when changing layouts with the helpfile capture window up.
+
+r2257 snapshot
+- bug fix: (BOY I SURE HOPE) Durel spotted some issues with the ColoursToStyles function in aardwolf_colors.lua, so I've rewritten it to be easier to verify. Hopefully I didn't introduce any new problems in the process.
+- bug fix: I think I also fixed a bug in the partition_boundaries color function.
+
+r2255 snapshot
+- bug fix: The the helpfile miniwindow plugin's resetaard alias that was added in 2235 had a bug in it that would cause an error if there was no value for the "remember position" setting. Fixed now. Lol.
+
+r2254 snapshot
+- bug fix: Prevent pipes in cexits (*eyeroll*) from breaking the right-click menu display.
+- new feature: The group monitor plugin now has an ultra-compact display mode. I plan to improve this more soon, but I don't want to stop people from having access to it just because I'm slow.
+
+r2252 snapshot
+- new feature: The wrapped_captures module should now handle the different way that the echo command works for immortals.
+- new feature: The wrapped_captures module now supports a separate callback function for timeouts.
+- bug fix: The GMCP mapper's updown setting will now save across sessions.
+
+r2249 snapshot
+- new feature: The group monitor plugin now has some new right-click options and aliases for tracking only groupmembers in the same room. I'm kind of annoyed that people are customizing the group monitor plugin privately for this instead of sending changes to me or asking for updates.
+- new feature: gag_next_blank_line.lua for gagging the next line from output if it's blank. I use this in a few places, so figure it's worth spinning out into a module.
+- misc change: GMCP mapper notes now display with Simulate instead of Note.
+- bug fix: A bit of line math was wrong in the splitscreen scrollback overlay right when the output buffer hit its size limit and dumped some of the oldest lines to make room causing a line to get missed once in a while.
+
+r2245 snapshot
+- new feature: wrapped_captures.lua now has an interface for automatic manual tagging around commands that don't have their own output tags. The new functions are `tagged_output` and `untagged_output`. Hopefully the names are parameters make enough sense.
+- misc change: The plugin for capturing command output to MUSHclient's built-in notepad has been updated to use that new feature internally. Outward behavior should be the same as before, but you never know.
+
+r2244 snapshot
+- bug fix: Notify plugins that they're about to reload when switching miniwindow layouts. This way the communication log window won't lose its contents.
+
+r2243 snapshot
+- bug fix: Avoid a warning message about replacing the echo prefix variable when reloading the GMCP mapper plugin (happens e.g. when changing themes or layouts).
+
+r2242 snapshot
+- new feature: If you look at a helpfile right after doing help search, the helpfile capture miniwindow will now highlight the searched phrase.
+- new feature: The soundpack configuration for levels and powerups are now separate (level_up and sh_powerup respectively). The sound for reaching SH has been renamed to reach_sh.
+- new feature: The stylesToANSI color function now does background colors too.
+- new feature: It's now possible to combine URL hyperlinks and manually-passed-in hyperlinks in the same text_rect message. This probably only matters to me.
+- bug fix: The TruncateStyles color function had a bug in part of its length calculation.
+- bug fix: The text_rect module had a typoed variable name in the configure function.
+
+r2236 snapshot
+- new feature: The GMCP mapper plugin's database file is now configurable separate from the world name. Commands are 'mapper database' and 'mapper set database <new_name>'.
+
+r2235 snapshot
+- bug fix: The helpfile miniwindow plugin had no resetaard alias, so it could get lost off screen if changing monitors and the position is being saved.
+
+r2234 snapshot
+- bug fix: Fix an error from the inventory serials plugin when a text-color-change trigger fires on an inventory item line.
+- new feature: Crowley contributed a 'clearTab' function to the channel capture plugin that can be called from outside the plugin.
+
+r2232 snapshot
+- bug fix: Fix an error in the optimized splitscreen scrollback that appears sometimes when scrolling back to the bottom.
+
+r2231 snapshot
+- bug fix: Extend the mute effect to the soundpack and review buffers plugins too.
+
+r2230 snapshot
+- misc change: Performance optimization added to the splitscreen scrollback plugin so that receiving many lines while scrolled back doesn't draw so slowly.
+- bug fix: The prompt fixer should show a more reasonable message when you try to set a prompt that has a color code on the end after a %c.
+- bug fix: Shorten long names and numbers in the group monitor minwindow to make them fit better.
+- new feature: Crowley contributed a feature for muting players from channels that's kinda like ignore but only channels and lets you set a number of minutes.
+- new feature: There's now a soundpack sound effect for the epic channel.
+- bug fix: The echos used by the GMCP mapper around runs should now work for immortals.
+
+r2224 snapshot
+- bug fix: (maybe, anyway) MUSHclient.exe's internal libraries for luacom, PCRE, sqlite3, zlib, and libpng have been updated. It's also being built now with VS2017 and platform toolset 141_xp instead of VS2015 and platform toolset 140_xp.
+- misc change: The application plugins dialog will no longer select entries automatically when opened. This should make it a bit harder to accidentally remove plugins you didn't mean to remove.
+
+r2222 snapshot
+- misg change: The GMCP mapper will make less noise during recon if noportal/norecall flags aren't going to change.
+- bug fix: MUSHclient.exe has been updated so that ColourTell and ColourNote will accept nil for background color in Lua. This fixes a recently uncovered bug in Bast's plugins that use his TextToColourTell function.
+
 r2220 snapshot
 - bug fix: Moving from a PK room into a continent room while the bigmap plugin display is merged into the GMCP mapper window will now clear the title blinking.
 

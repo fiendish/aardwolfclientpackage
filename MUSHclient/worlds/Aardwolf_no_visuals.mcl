@@ -115,61 +115,58 @@
 
 <!-- aliases -->
 
-<aliases
-   muclient_version="5.05"
-   world_file_version="15"
-  >
-  <alias
-   match="#alias {*} {*}"
-   enabled="y"
-   group="special_convenience_aliases"
-   send_to="12"
-   ignore_case="y"
-   sequence="100"
-  >
-  <send>require "addxml"  -- addxml extension
-
--- add the alias
+<aliases>
+<alias
+  match="^#alias +{(.*?)} +{(.*?)}( +{(.*?)})?$"
+  enabled="y"
+  group="special_convenience_aliases"
+  regexp="y"
+  send_to="12"
+  ignore_case="y"
+  sequence="100"
+>
+<send>require "addxml"
 
 addxml.alias {
-  name = "command_line_alias_" .. string.gsub(Base64Encode("%1"), "=", ""), 
+  name = "command_line_alias_"..string.gsub(Base64Encode("%1"), "=", ""),
   match = "%1",
   send = "%2",
   sequence = 100,
   enabled = true,
   send_to = 10,
-  group = "command_line_aliases"
-             }
+  group = "%4"
+}
 
-ColourNote ("white", "green", "Added alias to match on '%1', sending '%2'")
-  </send>
-  </alias>
-  <alias
-   match="#trigger {*} {*}"
-   enabled="y"
-   group="special_convenience_aliases"
-   send_to="12"
-   ignore_case="y"
-   sequence="100"
-  >
-  <send>require "addxml"  -- addxml extension
+ColourNote("white", "green", "Added alias "..(("%4" ~= "") and "to group '%4' " or "").."to match on '%1' and send '%2'")
+</send>
+</alias>
 
--- add the trigger 
+<alias
+  match="^#trigger +{(.*?)} +{(.*?)}( +{(.*?)})?$"
+  enabled="y"
+  group="special_convenience_aliases"
+  regexp="y"
+  send_to="12"
+  ignore_case="y"
+  sequence="100"
+>
+<send>require "addxml"
 
 addxml.trigger {
-  name = "command_line_trigger_" .. string.gsub(Base64Encode("%1"), "=", ""), 
+  name = "command_line_trigger_"..string.gsub(Base64Encode("%1"), "=", ""),
   match = "%1", 
   send = "%2",
   sequence = 100,
   enabled = true,
   send_to = 10,
-  group = "command_line_triggers"
-               }
+  group = "%4"
+}
 
-ColourNote ("white", "green", "Added trigger to match on '%1', sending '%2'")
-  </send>
-  </alias>
+ColourNote("white", "green", "Added trigger "..(("%4" ~= "") and "to group '%4' " or "").."to match on '%1' and send '%2'")
+</send>
+</alias>
 </aliases>
+
 
 <!-- timers -->
 

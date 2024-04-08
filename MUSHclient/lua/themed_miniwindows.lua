@@ -81,8 +81,8 @@ function ThemedWindowClass.ResizeMoveCallback(flags, hotspot_id)
    local posx, posy = WindowInfo(window.id, 17), WindowInfo(window.id, 18)
    window.width = window.width + posx - window.resize_startx
    window.resize_startx = posx
-   if (window.width < window.min_width) then
-      window.width = window.min_width
+   if (window.width < window.min_drag_width) then
+      window.width = window.min_drag_width
       window.resize_startx = window.windowinfo.window_left+window.width
    elseif (window.windowinfo.window_left+window.width > GetInfo(281)) then
       window.width = GetInfo(281)-window.windowinfo.window_left
@@ -91,8 +91,8 @@ function ThemedWindowClass.ResizeMoveCallback(flags, hotspot_id)
 
    window.height = window.height + posy - window.resize_starty
    window.resize_starty = posy
-   if (window.height < window.min_height) then
-      window.height = window.min_height
+   if (window.height < window.min_drag_height) then
+      window.height = window.min_drag_height
       window.resize_starty = window.windowinfo.window_top+window.height
    elseif (window.windowinfo.window_top+window.height > GetInfo(280)) then
       window.height = GetInfo(280)-window.windowinfo.window_top
@@ -116,9 +116,17 @@ function ThemedWindowClass.ResizeReleaseCallback(flags, hotspot_id)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
-function ThemedWindowClass:resize(width, height, still_dragging)
+function ThemedWindowClass:resize(width, height, still_dragging, min_width, min_height)
    self.width = width or self.width
    self.height = height or self.height
+
+   if min_width then
+      self.width = math.max(self.width, min_width)
+   end
+   if min_height then
+      self.height = math.max(self.height, min_height)
+   end
+
    CallPlugin("abc1a0944ae4af7586ce88dc", "pause")
    WindowResize(self.id, self.width, self.height, Theme.PRIMARY_BODY)
    self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.BodyMetrics(self.id, self.title_font, WindowFontInfo(self.id, self.title_font, 1), self.title and #self.title or 0)
@@ -212,27 +220,27 @@ function ThemedWindowClass:right_click_menu(hotspot_id)
 end
 
 
-function ThemedWindowClass.RightClickMenuCallback(flags, hotspot_id, win)
+function ThemedWindowClass.RightClickMenuCallback(flags, hotspot_id, win_id)
    if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-      local window = ThemedWindowClass.hotspot_map[hotspot_id] or ThemedWindowClass.window_map[win]
+      local window = ThemedWindowClass.hotspot_map[hotspot_id] or ThemedWindowClass.window_map[win_id]
       window:right_click_menu(hotspot_id)
       return true
    end
    return false
 end
 
-function ThemedWindowClass.LeftButtonOnlyCallback(flags, hotspot_id, win)
+function ThemedWindowClass.LeftButtonOnlyCallback(flags, hotspot_id, win_id)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       return true
    end
    return false
 end
 
-function ThemedWindowClass.SavePositionAfterDrag(flags, hotspot_id, win)
+function ThemedWindowClass.SavePositionAfterDrag(flags, hotspot_id, win_id)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       return true
    end
-   movewindow.save_state(win)
+   movewindow.save_state(win_id)
    return false
 end
 
@@ -273,8 +281,8 @@ function ThemedBasicWindow(
       title_font_name = title_font_name or "Dina",
       title_font_size = title_font_size or 10,
       raw_title = title,
-      min_width = 100,
-      min_height = 50,
+      min_drag_width = 100,
+      min_drag_height = 50,
       default_left_position = default_left_position,
       default_top_position = default_top_position,
       default_width = default_width,
@@ -415,7 +423,11 @@ function ThemedTextWindowClass:fit_size(content_width, num_content_lines, max_wi
    if height and max_height then
       height = math.min(max_height, height)
    end
-   self:resize(width, height)
+
+   local min_width = WindowTextWidth(self.id, self.title_font, "W") + (self.textrect.padding * 2) + (self.bodyleft * 2) + 2
+   local min_height = self.textrect.line_height + (self.textrect.padding*2) + self.bodytop + 2
+
+   self:resize(width, height, false, min_width, min_height)
 end
 
 function ThemedTextWindowClass:fit_contents(max_width, max_height)
@@ -498,6 +510,7 @@ function ThemedTextWindow(
 
    local tr_right = self.bodyright
    if text_scrollable then
+      self.min_drag_height = 100
       tr_right = tr_right - Theme.RESIZER_SIZE + 1
    end
    local scrollbar_bottom = self.bodybottom
@@ -511,7 +524,6 @@ function ThemedTextWindow(
    )
    self.textrect:setExternalMenuFunction(function() return self:get_menu_items() end)
    if text_scrollable then
-      self.min_height = 100   
       self.scrollbar = ScrollBar.new(self.id, "scrollbar", tr_right, self.bodytop, self.bodyright, scrollbar_bottom)
       self.textrect:addUpdateCallback(self.scrollbar, self.scrollbar.setScroll)
       self.scrollbar:addUpdateCallback(self.textrect, self.textrect.setScroll)
@@ -602,6 +614,7 @@ local function NewOnPluginThemeChange()
          end
       end
       for _, win in pairs(ThemedWindowClass.window_map) do
+         movewindow.save_state(win.id) -- Here because I'm using this during layout change too
          if win.do_after_resizing then
             win:do_after_resizing()
          end
