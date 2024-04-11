@@ -559,6 +559,20 @@ mapper.gotoNextResult(Trim("%1"))
 </alias>
 
 <alias
+   match="^mapper purge cexits area$"
+   enabled="y"
+   sequence="100"
+   regexp="y"
+   send_to="12"
+>
+<send>
+   Note("Are you sure you want to purge all custom mapper exits in this area? To confirm type 'mapper purge cexits area confirm'.")
+   toConfirm = "purge cexits area"
+   EnableAlias("confirm_catch", true)
+</send>
+</alias>
+
+<alias
    match="^(.*)$"
    enabled="n"
    name="confirm_catch"
@@ -570,6 +584,8 @@ mapper.gotoNextResult(Trim("%1"))
 <send>
    if "%1" == "mapper purge cexits confirm" and toConfirm == "purge cexits" then
       map_cexits_purge()
+   elseif "%1" == "mapper purge cexits area confirm" and toConfirm == "purge cexits area" then
+      map_cexits_purge("", "", {gmcp("room.info.zone")})
    elseif "%1" == "mapper purge portals confirm" and toConfirm == "purge portals" then
       map_portal_purge()
    elseif "%1" == "mapper set database confirm" and toConfirm == "set database" then
@@ -1354,7 +1370,15 @@ end
 
 
 function map_cexits_purge (name, line, wildcards)
-   local query = "delete from exits where dir not in ('n','s','e','w','d','u');"
+--   local query = "delete from exits where dir not in ('n','s','e','w','d','u');"
+   local query, pString = "", "Purged all custom exits."
+   if not wildcards then
+      query = "delete from exits where dir not in ('n','s','e','w','d','u');"
+   else
+      query = "delete from exits where fromuid in (select e.fromuid from exits e join rooms r on e.fromuid = r.uid where r.area = '" .. wildcards[1] .. "' and e.dir not in ('n','s','e','w','d','u'));"
+      pString = "Purged all area custom exits."
+   end
+
    dbCheckExecute(query)
    for k,v in pairs(rooms) do
       for l,w in pairs(v.exits) do
@@ -1365,7 +1389,7 @@ function map_cexits_purge (name, line, wildcards)
       end
    end
    mapper.draw (current_room)
-   print("Purged all custom exits.")
+   print(pString)
 end
 
 function custom_exit_list (name, line, wildcards)
@@ -4939,6 +4963,7 @@ function OnHelp (name, line, wildcards)
                                      the current room.]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits in database]],
+[[mapper purge cexits area       --> Remove all custom exits in the area]],
 [[mapper cexit_wait <seconds>    --> Wait this number of seconds instead of
                                  > the standard 2 when constructing the next
                                  > cexit (between 2 and 40)]],
