@@ -730,7 +730,7 @@ if not sent_busy then
    sent_busy = true
    BroadcastPlugin(999, "kinda_busy")
 end
-StopEvaluatingTriggers(true)
+StopEvaluatingTriggers()
 </send>
 </trigger>
 
@@ -746,7 +746,7 @@ if sent_busy then
    sent_busy = false
    BroadcastPlugin(999, "ok_you_can_go_now")
 end
-StopEvaluatingTriggers(true)
+StopEvaluatingTriggers()
 </send>
 </trigger>
 
@@ -1370,20 +1370,21 @@ end
 
 
 function map_cexits_purge (name, line, wildcards)
+--   local query = "delete from exits where dir not in ('n','s','e','w','d','u');"
    local query, pString = "", "Purged all custom exits."
    if not wildcards then
-      query = "delete from exits where dir not in ('n', 's', 'e', 'w', 'd', 'u');"
+      query = "delete from exits where dir not in ('n','s','e','w','d','u');"
    else
-      query = "delete from exits where fromuid in (select e.fromuid from exits e join rooms r on e.fromuid = r.uid where r.area = '" .. wildcards[1] .. "' and e.dir not in ('n', 'e', 's', 'w', 'u', 'd'));"
+      query = "delete from exits where fromuid in (select e.fromuid from exits e join rooms r on e.fromuid = r.uid where r.area = '" .. wildcards[1] .. "' and e.dir not in ('n','s','e','w','d','u'));"
       pString = "Purged all area custom exits."
    end
 
    dbCheckExecute(query)
    for k,v in pairs(rooms) do
       for l,w in pairs(v.exits) do
-         if not directions[1] then
-            v.exits[1] = nil
-            v.exit_locks[1] = nil
+         if not directions[l] then
+            v.exits[l] = nil
+            v.exit_locks[l] = nil
          end
       end
    end
@@ -4962,7 +4963,6 @@ function OnHelp (name, line, wildcards)
                                      the current room.]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits in database]],
-[[mapper purge cexits area       --> Remove all custom exits in the area]],
 [[mapper cexit_wait <seconds>    --> Wait this number of seconds instead of
                                  > the standard 2 when constructing the next
                                  > cexit (between 2 and 40)]],
