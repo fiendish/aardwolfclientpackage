@@ -4963,6 +4963,7 @@ function OnHelp (name, line, wildcards)
                                      the current room.]],
 [[mapper delete cexits           --> Remove the custom exits from this room]],
 [[mapper purge cexits            --> Remove all custom exits in database]],
+[[mapper purge cexits area       --> Remove all custom exits in the area]],
 [[mapper cexit_wait <seconds>    --> Wait this number of seconds instead of
                                  > the standard 2 when constructing the next
                                  > cexit (between 2 and 40)]],
