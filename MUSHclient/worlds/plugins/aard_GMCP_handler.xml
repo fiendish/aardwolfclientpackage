@@ -142,8 +142,19 @@ function GMCP_Alias (name, line, wildcards)
    Send_GMCP_Packet(wildcards[1])
 end
 
+function unprintable_to_hex(input_str)
+   local function char_to_hex(c)
+       return string.format("\\x%02X", string.byte(c))
+   end
+   local modified_str = input_str:gsub("[^%g ]", char_to_hex):gsub(";", ";;")
+   return modified_str
+end
+
 function OnPluginTelnetSubnegotiation (msg_type, data)
    if msg_type ~= GMCP then
+      if (GMCPDebug > 0) and (msg_type == 102) then
+         ColourNote ("#FFAF00", "", "TELOPT: " .. string.byte(data, 1) .. "," .. string.byte(data, 2))
+      end
       return
    end
 
@@ -230,13 +241,17 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       else
          BroadcastPlugin(1, message)
       end
-  else
+   else
       ColourNote("white", "red", "GMCP DECODE ERROR: "..t)
-      ColourNote("white", "red", "Received invalid GMCP message: "..utils.utf8convert(data))
-      ColourNote("white", "red", "Fiendish still doesn't know what causes this. Please disconnect and reconnect to Aardwolf or restart MUSHclient and then send that invalid message to him for analysis.")
-  end  -- if
+      ColourNote("white", "red", "Received invalid GMCP message in packet: "..unprintable_to_hex(last_packet))
+      ColourNote("white", "red", string.rep("-", 80))
+      ColourNote("white", "red", "Fiendish still doesn't know what causes this. Please send this entire message to him for analysis and then disconnect and reconnect to Aardwolf or restart MUSHclient.")
+  end
+end
 
-end -- function OnPluginTelnetSubnegotiation
+function OnPluginPacketReceived(sText)
+   last_packet = sText
+end
 
 function gmcpdata_at_level(what)
    local node = gmcpdata
