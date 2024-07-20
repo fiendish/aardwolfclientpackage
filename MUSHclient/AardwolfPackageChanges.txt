@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2283 snapshot
+- new feature: The GMCP mapper now allows multiline room notes. Add "\n" in your note text to start a new line.
+
 r2282 snapshot
 - new feature: Updated the #alias and #trigger simple helper aliases to optionally take a third {argument} for assigning to a group. You won't get the new versions by updating, only in a new install, because of reasons, but you can get them from https://github.com/fiendish/aardwolfclientpackage/wiki/Command-Line-Aliases-and-Triggers
 
