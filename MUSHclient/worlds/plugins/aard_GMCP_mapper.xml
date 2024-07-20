@@ -3955,7 +3955,14 @@ function got_gmcp_room()
    if not compact_mode then check_compact = "\r\n" end
 
    if shownotes and room and room.notes and room.notes ~= "" then
-      Simulate(ColoursToANSI("@x033*** MAPPER NOTE *** -> "..room.notes.."@w\r\n"..check_compact))
+      Simulate(ColoursToANSI("@x033*** MAPPER NOTE *** : "))
+      if string.find(room.notes, "\\n") then
+         Simulate("\r\n")
+      end
+      for line in string.gmatch(room.notes.."\\n", "(.-)\\n") do
+         Simulate(ColoursToANSI(line .. "\r\n"))
+      end
+      Simulate(ColoursToANSI("@w"..check_compact))
    end
 
    -- re-save if we got information that is different than before
