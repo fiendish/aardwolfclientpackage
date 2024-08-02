@@ -47,6 +47,7 @@
 <script>
 <![CDATA[
 require "checkplugin"
+require "string_split"
 
 
 required_plugins = {
@@ -136,6 +137,12 @@ function extend(orig, new)
    end
 end
 
+function do_plugin_check_now_redirect(text)
+   parts = text:split(",", false, 1)
+   do_plugin_check_now(parts[1], parts[2])
+   plugin_check_alias()
+end
+
 function plugin_check_alias(name, line, wildcards, styles)
    local messages = {}
 
@@ -153,6 +160,13 @@ function plugin_check_alias(name, line, wildcards, styles)
       ColourNote("paleturquoise", "", "The following optional plugins aren't currently active...")
       for _,m in ipairs(messages) do
          ColourNote(unpack(m))
+         if not aard_req_novisuals_mode then
+            plugin_name = m[6]:sub(1,-5)
+            plugin_id = m[12]
+            verb = "[ Click here to "..(IsPluginInstalled(plugin_id) and "enable " or "load ")
+            Hyperlink("!!"..GetPluginID()..":do_plugin_check_now_redirect("..plugin_id..","..plugin_name..")", verb..plugin_name.." ]", verb..plugin_name, "khaki", 0, false)
+            Simulate("\r")
+         end
       end
    else
       ColourNote("paleturquoise", "", "No new plugins found.")
