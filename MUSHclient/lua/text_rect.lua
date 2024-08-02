@@ -218,6 +218,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
    local sub = string.sub
    local find = string.find
    local show_bold = (GetOption("show_bold")==1)
+   local utf = (GetOption("utf_8") == 1)
 
    -- Keep pulling out styles and trying to fit them on the current line
    while #styles > 0 do
@@ -228,11 +229,13 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
       if style.bold and show_bold then
          font = self.font_bold
       end
-      local t_width = WindowTextWidth(self.window, font, style.text)
+      local t = style.text
+      local t_width = WindowTextWidth(self.window, font, t, utf and utils.utf8valid(t))
 
       -- if it fits, copy whole style in
       -- also if literally no room for anything, just wedge the whole style in because that's silly
-      if self.no_autowrap or (t_width <= available) or ((length == 0) and (WindowTextWidth(self.window, font, sub(style.text, 1, 1)) > available)) then
+      t = sub(style.text, 1, 1)
+      if self.no_autowrap or (t_width <= available) or ((length == 0) and (WindowTextWidth(self.window, font, t, utf and utils.utf8valid(t)) > available)) then
          if style.length > 0 then
             insert(line_styles, style)
          end
@@ -244,7 +247,8 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          local fit_col = nil
          while col < style.length do
             if sub(style.text, col, col) == " " then
-               t_width = WindowTextWidth(self.window, font, sub(style.text, 1, col-1))
+               t = sub(style.text, 1, col-1)
+               t_width = WindowTextWidth(self.window, font, t, utf and utils.utf8valid(t))
                if t_width > available then
                   break
                else
@@ -257,7 +261,8 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
             if available == self.padded_width then -- starts at the beginning of the line
                -- step backward from the last measured col
                while col > 1 do
-                  t_width = WindowTextWidth(self.window, font, sub(style.text, 1, col))
+                  t = sub(style.text, 1, col)
+                  t_width = WindowTextWidth(self.window, font, t, utf and utils.utf8valid(t))
                   if t_width <= available then
                      fit_col = col
                      break
@@ -661,6 +666,7 @@ function TextRect:get_target_bounds(separator_pattern, line_number, target_x, pa
    local section_end = self.padded_left
    local start_pos = 0
    local end_pos = 0
+   local utf = (GetOption("utf_8") == 1)
    for _,section in ipairs(self.last_partitioned_line_sections[partition_cache_key]) do
       local section_size = 0
       local section_length = 0
@@ -669,8 +675,10 @@ function TextRect:get_target_bounds(separator_pattern, line_number, target_x, pa
          if show_bold and style.bold then
             font = self.font_bold
          end
-         section_size = section_size + WindowTextWidth(self.window, font, style.text)
+         local t = style.text
+         section_size = section_size + WindowTextWidth(self.window, font, t, utf and utils.utf8valid(t))
          section_length = section_length + style.length
+         SetStatus(style.length, style.text)
       end
       section_end = section_start + section_size
       end_pos = start_pos + section_length
