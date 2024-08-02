@@ -678,7 +678,6 @@ function TextRect:get_target_bounds(separator_pattern, line_number, target_x, pa
          local t = style.text
          section_size = section_size + WindowTextWidth(self.window, font, t, utf and utils.utf8valid(t))
          section_length = section_length + style.length
-         SetStatus(style.length, style.text)
       end
       section_end = section_start + section_size
       end_pos = start_pos + section_length
