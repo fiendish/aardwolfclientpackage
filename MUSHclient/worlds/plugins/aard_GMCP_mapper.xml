@@ -4480,12 +4480,19 @@ function printpath(src, dest)
 
    speedwalk = table.concat(split_speedwalk, " ; ")
 
+   -- count directions + cexits
+   local inputCount = 0
+   for _, dir in ipairs (foundpath) do
+      inputCount = inputCount + 1
+   end
+
    -- display it
    if current_room ~= src then
-      mapper.mapprint (string.format ("Path from %s to %s is:\n%s\n", src, dest, speedwalk))
+      mapper.mapprint (string.format ("Path from %s to %s is:\n%s", src, dest, speedwalk))
    else
-      mapper.mapprint (string.format ("Path to %s is:\n%s\n", dest, speedwalk))
+      mapper.mapprint (string.format ("Path to %s is:\n%s", dest, speedwalk))
    end
+   mapper.mapprint (string.format( "Distance: %s\n", inputCount))
 end
 
 function map_where (name, line, wildcards)
