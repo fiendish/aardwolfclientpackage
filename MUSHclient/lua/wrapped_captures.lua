@@ -21,7 +21,8 @@ function tagged_output(
                                --    start_line is the text of the line with the start tag
                                --    end_line is the text of the line with the end tag
    send_via_execute,           -- A boolean indicating whether the command should be sent via Execute instead of Send (true means use Execute, false/nil means use Send).
-   timeout_callback            -- A function to be called if the capture times out.
+   timeout_callback,            -- A function to be called if the capture times out.
+   timeout_duration            -- The number of seconds to wait before timing out. Default 20 seconds.
 )
    local manual_tags = false
 
@@ -36,7 +37,8 @@ function tagged_output(
       callback_function,
       send_via_execute,
       manual_tags,
-      timeout_callback
+      timeout_callback,
+      timeout_duration
    )
 end
 
@@ -50,7 +52,8 @@ function untagged_output(
                                --    start_line is the text of the line with the start tag
                                --    end_line is the text of the line with the end tag
    send_via_execute,           -- A boolean indicating whether the command should be sent via Execute instead of Send (true means use Execute, false/nil means use Send).
-   timeout_callback            -- A function to be called if the capture times out.
+   timeout_callback,            -- A function to be called if the capture times out.
+   timeout_duration            -- The number of seconds to wait before timing out. Default 20 seconds.
 )
    local sequence = tostring(___sequence)
    local capture_start_tag = "{Begin Capture "..sequence.."}"
@@ -69,7 +72,8 @@ function untagged_output(
       callback_function,
       send_via_execute,
       manual_tags,
-      timeout_callback
+      timeout_callback,
+      timeout_duration
    )
 end
 
@@ -153,8 +157,11 @@ function command(
    callback_function,
    send_via_execute,
    manual_tags,
-   timeout_callback
+   timeout_callback,
+   timeout_duration
 )
+
+
    local i = tostring(___sequence)
 
    local compact_mode = gmcp("config.compact")
@@ -251,5 +258,5 @@ function command(
    end
 
    TelnetOptionOn(TELOPT_PAGING)
-   DoAfterSpecial(20, "Capture.___terminate('"..i.."')", sendto.script)
+   DoAfterSpecial((type(timeout_duration) == "number" and timeout_duration or 20), "Capture.___terminate('"..i.."')", sendto.script)
 end
