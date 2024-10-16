@@ -1,5 +1,12 @@
 Aardwolf Client Package Major Changes List
 
+r2289 snapshot
+- new feature: The plugin checker ("aard plugins check") now shows clickable hyperlinks to simplify the process of loading missing plugins for those who like to click on things.
+- new feature: The GMCP mapper findpath command now shows an approximate number of moves. It's not 100% accurate, but it should be pretty reasonable. I don't know your player name, jwebbdev, but thanks!
+- new feature: The tagged and untagged wrapped_captures now take an optional timeout_duration parameter. Thanks, Crowley!
+- bug fix: Fix wrapped_captures to handle apostrophes in start tag. Thanks, Areia!
+- bug fix: Textrect widgets should handle utf8 text a bit better in a few places.
+
 r2284 snapshot
 - new feature: The GMCP mapper now allows multiline room notes. Add "\n" in your note text to start a new line.
 - new feature: The GMCP mapper has a new "mapper purge cexits area" function to remove all custom exits from an entire area courtesy of Crowley.
