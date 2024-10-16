@@ -204,10 +204,14 @@ function command(
    }
 
    -- start trigger
+   local trigger_response = [===[
+      Capture.___create_capture("%d", "%%0")
+      StopEvaluatingTriggers(true)
+   ]===]
    AddTriggerEx(
       "tag_captures_module___start_"..i,
       echo_prefix..capture_start_tag,
-      "Capture.___create_capture('"..i.."', '%0');StopEvaluatingTriggers(true)",
+      trigger_response:format(i),
       trigger_flag.OmitFromLog + trigger_flag.OmitFromOutput + trigger_flag.Temporary + trigger_flag.Enabled + trigger_flag.OneShot + (tags_are_regexp and trigger_flag.RegularExpression or 0),
       -1, 0, "", "", sendto.script, ___storage[i]["sequence_low"]
    )
