@@ -212,7 +212,7 @@ function DoNextSimpleBar(bar, val, maxval, flip, stacked_label, unstacked_label)
                end
             end
          end
-         gauge(win,showBar[bar][3],num_val,num_maxval,xpos+label_width,ypos,bar_width,line_height,color1,0x000000,num_ticks,0x000000,color2,nil,flat_gauges==1,movewin_hotspot)
+         gauge(win,unstacked_label or showBar[bar][3],num_val,num_maxval,xpos+label_width,ypos,bar_width,line_height,color1,0x000000,num_ticks,0x000000,color2,nil,flat_gauges==1,movewin_hotspot)
          if overlay_numbers ~= 0 then
             txtlen = WindowTextWidth(win,font_id,txt)
             outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
