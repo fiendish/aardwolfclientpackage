@@ -60,6 +60,7 @@ required_plugins = {
    ["9f796334ab9ed476ef44f1dc"] = "aard_new_connection",
    ["462b665ecb569efbf261422f"] = "aard_miniwindow_z_order_monitor",
    ["b9315e040989d3f81f4328d6"] = "aard_Theme_Controller"
+   ["bb6a05ed7534b5db1ed40511"] = "Automatic_Backup"
 }
 
 optional_visual_plugins = {
