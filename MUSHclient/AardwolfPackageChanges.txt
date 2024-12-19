@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2291 snapshot
+- bug fix: The label of the experience gauge in the health bars plugin was showing the wrong text in reverse TNL mode.
+- new feature: The world file backup plugin has been updated and is now always loaded automatically.
+- new feature: Some time ago Orphean generated a language server declaration file for MUSHclient's Lua API. I always intended to include it, but kept forgetting. It's in the lua folder now.
+
 r2289 snapshot
 - new feature: The plugin checker ("aard plugins check") now shows clickable hyperlinks to simplify the process of loading missing plugins for those who like to click on things.
 - new feature: The GMCP mapper findpath command now shows an approximate number of moves. It's not 100% accurate, but it should be pretty reasonable. I don't know your player name, jwebbdev, but thanks!
@@ -1002,7 +1007,7 @@ r1738 snapshot
 
 r1723 snapshot
 (December 2012 release)
-- one last change before release, renamed aard_inventory_additions plugin to aard_inventory_serials
+- misc change: one last change before release, renamed aard_inventory_additions plugin to aard_inventory_serials
 
 r1720 snapshot
 - misc change: LuaJIT updated to 2.0 (see luajit.org for details)
