@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2294 snapshot
+- bug fix: The new backup plugin from 2291 requires an update to the lua ffi module to add a ListFiles function that I forgot to include.
+- new feature: The text_rect module's addText method allows per-line control over the hyperlinks argument instead of applying them to all lines of a multi-line message. Descriptions on https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows have been updated.
+- new feature: The communication log miniwindow plugin's storeFromOutside function has a new serialized_links parameter for sending hyperlink metadata with the message. See https://github.com/fiendish/aardwolfclientpackage/wiki/Communication-log-window#send-your-own-custom-lines-to-the-log-window
+
 r2291 snapshot
 - bug fix: The label of the experience gauge in the health bars plugin was showing the wrong text in reverse TNL mode.
 - new feature: The world file backup plugin has been updated and is now always loaded automatically.
