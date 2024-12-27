@@ -784,10 +784,12 @@ function stampAndLog(multiline_styles, timestamp, omit_log)
 end
 
 -- storeFromOutside takes four arguments:
--- 1. the message you want to store in Aardwolf color code format
+-- 1. the message you want to store in Aardwolf color code format or serialized styles table format (use serialize.save_simple(styles_table) to generate)
 -- 2. (optional) the tab name or number to store it in
 -- 3. (optional) true/false for controlling whether to timestamp the line (defaults to true if nil)
 -- 4. (optional) true/false for whether to omit the line from the log file (defaults to false if nil)
+-- 5. (optional) serialized links table for adding clickable links to the lines (use serialize.save_simple(links_table) to generate)
+--    See https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows for how to structure the links table (it's the same)
 -- (for add_timestamp, false means don't add a timestamp, and nil or true means obey the internal timestamping configuration)
 -- (for omit_log, true means don't add the line to the log file, and nil or false means go ahead and log it)
 -- Use via CallPlugin(), http://mushclient.com/scripts/doc.php?function=CallPlugin
@@ -797,7 +799,7 @@ end
 --
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", "Q/A", false)
 --   This example will use Tab Q/A, Not add a timestamp, and Log it
-function storeFromOutside(text, tab, add_timestamp, omit_log)
+function storeFromOutside(text, tab, add_timestamp, omit_log, serialized_links)
    if add_timestamp == nil then
       add_timestamp = true
    end
@@ -820,7 +822,11 @@ function storeFromOutside(text, tab, add_timestamp, omit_log)
       end
       multiline_styles = stampAndLog(multiline_styles, add_timestamp and os.date(date_format) or "", omit_log)
       added_to_current = false
-      res = addToTab(multiline_styles, tab)
+      local links = {}
+      if serialized_links then
+         links = loadstring("return "..serialized_links)()
+      end
+      res = addToTab(multiline_styles, tab, links)
       if res == 1 then
          drawTabs()
       end
@@ -856,9 +862,9 @@ function filter_as_needed(text)
    return text
 end
 
-function addToTab(multiline_styles, tab)
+function addToTab(multiline_styles, tab, links)
    if (tab >= 1) and (tab <= num_tabs) then
-      tabs_rects[tab]:addText(multiline_styles, nil, nil, true)
+      tabs_rects[tab]:addText(multiline_styles, links)
       if tab == current_tab then
          added_to_current = true
          tabs_rects[tab]:draw()
@@ -880,7 +886,7 @@ function storeMessage(multiline_styles, label, captures)
    added_to_current = false
    for tab, whats_inside_the_tab in ipairs(captures) do
       if whats_inside_the_tab[label]["capture"] then
-         if addToTab(multiline_styles, tab) == 1 then
+         if addToTab(multiline_styles, tab, nil) == 1 then
             will_draw = true
          end
       end
