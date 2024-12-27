@@ -141,6 +141,19 @@ BOOL PathCanonicalizeA(LPTSTR lpszDst, LPCTSTR lpszSrc);
 
 DWORD __stdcall GetLastError(void);
 DWORD __stdcall FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPTSTR lpBuffer, DWORD nSize, va_list *Arguments);
+
+intptr_t _findfirst32(const char *filespec, struct _finddata32_t *fileinfo);
+int _findnext32(intptr_t handle, struct _finddata32_t *fileinfo);
+int _findclose(intptr_t handle);
+
+struct _finddata32_t {
+   unsigned    attrib;
+   unsigned long      time_create;
+   unsigned long      time_access;
+   unsigned long      time_write;
+   unsigned long size;
+   char        name[260];
+};
 ]])
 
 --
@@ -303,6 +316,28 @@ local function MoveFile(src, dest, acceptable_errors)
    end
 end
 
+-- Lists files in a directory matching a pattern
+-- @param directory The directory to search in
+-- @param pattern The pattern to match file names against (e.g., "*.txt" for all text files)
+-- @return A table containing the names of the matching files
+local function ListFiles(directory, pattern)
+   local files = {}
+   local search_path = directory .. "\\" .. pattern
+   local fileinfo = ffi.new("struct _finddata32_t")
+   local handle = ffi.C._findfirst32(search_path, fileinfo)
+
+   if handle == -1 then
+      return files
+   end
+
+   repeat
+      table.insert(files, ffi.string(fileinfo.name))
+   until ffi.C._findnext64(handle, fileinfo) == -1
+
+   ffi.C._findclose(handle)
+   return files
+end
+
 --
 -- export public functions
 --
@@ -311,6 +346,7 @@ aard_lua_ffi = {
    MoveFile = MoveFile, -- (source, destination, acceptable_errors)
    CreateDirectory = CreateDirectory, -- (path_to_create, recursive, acceptable_errors)
    DeleteFile = DeleteFile, -- (path_name, recursive, acceptable_errors)
-   RestrictPathScope = RestrictPathScope
+   RestrictPathScope = RestrictPathScope,
+   ListFiles = ListFiles -- (directory, pattern)
 }
 
