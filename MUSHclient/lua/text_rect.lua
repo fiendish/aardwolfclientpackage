@@ -132,11 +132,15 @@ function TextRect:textWidth(styles_or_color_coded_text)
 end
 
 function TextRect:addText(message, hyperlinks)
-   for _, message in ipairs(ToMultilineStyles(message, Theme.BODY_TEXT, nil, true)) do
+   for i, message in ipairs(ToMultilineStyles(message, Theme.BODY_TEXT, nil, true)) do
       -- extract URLs so we can add our movespots later
       local links = {}
       if hyperlinks then
-         links = copytable.deep(hyperlinks)
+         if (hyperlinks[i] == nil) or ((type(hyperlinks[i]) == "table") and ((next(hyperlinks[i]) == nil) or (#hyperlinks[i] > 1))) then
+            links = copytable.deep(hyperlinks[i] or {})
+         else
+            links = copytable.deep(hyperlinks)
+         end
       end
       if not self.no_url_hyperlinks then
          for _,v in ipairs(self:findURLs(strip_colours_from_styles(message))) do
@@ -159,12 +163,12 @@ function TextRect:addText(message, hyperlinks)
    end
 end
 
-function TextRect:addColorLine(line)
-   self:addText(line)
+function TextRect:addColorLine(line, hyperlinks)
+   self:addText(line, hyperlinks)
 end
 
-function TextRect:addStyles(styles)
-   self:addText(styles)
+function TextRect:addStyles(styles, hyperlinks)
+   self:addText(styles, hyperlinks)
 end
 
 function TextRect:doUpdateCallbacks()
