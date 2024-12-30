@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2295 snapshot
+- bug fix: The lua ffi module update from r2294 caused errors for some people. That's hopefully fixed now.
+- misc change: I've removed the printed message about backing up the world file, because it could get quite spammy.
+
 r2294 snapshot
 - bug fix: The new backup plugin from 2291 requires an update to the lua ffi module to add a ListFiles function that I forgot to include.
 - new feature: The text_rect module's addText method allows per-line control over the hyperlinks argument instead of applying them to all lines of a multi-line message. Descriptions on https://github.com/fiendish/aardwolfclientpackage/wiki/Easy-DIY-Miniwindows have been updated.
