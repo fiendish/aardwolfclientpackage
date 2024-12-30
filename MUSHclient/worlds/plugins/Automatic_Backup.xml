@@ -40,9 +40,7 @@ function do_backup ()
   aard_lua_ffi.CreateDirectory(backup_dir, true)
 
   local world_file_with_date = backup_dir .. world_file_name:gsub("%.[Mm][Cc][Ll]$", "") .. os.date (".mcl.backup-%d-%b-%Y")
-  if Save(world_file_with_date, true) == false then
-    ColourNote ("orange","", "World file backed up as " .. world_file_with_date)
-  else
+  if Save(world_file_with_date, true) == true then
     return
   end
 
