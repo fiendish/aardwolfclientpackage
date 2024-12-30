@@ -109,7 +109,8 @@ typedef bool BOOL;
 typedef unsigned long DWORD, *PDWORD, *LPDWORD;
 typedef void *PVOID, *LPVOID;
 typedef const void *LPCVOID;
-typedef PVOID HWND;
+typedef PVOID HANDLE;
+typedef HANDLE HWND;
 typedef char *LPTSTR;
 typedef const char *LPCSTR, *LPCTSTR, *PCTSTR, *PCZZTSTR;
 
@@ -137,23 +138,32 @@ int __stdcall SHFileOperationA(LPSHFILEOPSTRUCTA lpFileOp);
 int __stdcall SHCreateDirectoryExA(HWND hwnd, LPCTSTR pszPath, const SECURITY_ATTRIBUTES* lpSecurityAttributes); // deprecated api?
 BOOL __stdcall CreateDirectoryA(LPCTSTR lpPathName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 BOOL __stdcall MoveFileA(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName);
-BOOL PathCanonicalizeA(LPTSTR lpszDst, LPCTSTR lpszSrc);
+BOOL __stdcall PathCanonicalizeA(LPTSTR lpszDst, LPCTSTR lpszSrc);
 
 DWORD __stdcall GetLastError(void);
 DWORD __stdcall FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPTSTR lpBuffer, DWORD nSize, va_list *Arguments);
 
-intptr_t _findfirst32(const char *filespec, struct _finddata32_t *fileinfo);
-int _findnext32(intptr_t handle, struct _finddata32_t *fileinfo);
-int _findclose(intptr_t handle);
+typedef struct _FILETIME {
+  DWORD dwLowDateTime;
+  DWORD dwHighDateTime;
+} FILETIME, *PFILETIME, *LPFILETIME;
 
-struct _finddata32_t {
-   unsigned    attrib;
-   unsigned long      time_create;
-   unsigned long      time_access;
-   unsigned long      time_write;
-   unsigned long size;
-   char        name[260];
-};
+typedef struct _WIN32_FIND_DATAA {
+    DWORD dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD nFileSizeHigh;
+    DWORD nFileSizeLow;
+    DWORD dwReserved0;
+    DWORD dwReserved1;
+    char cFileName[260];
+    char cAlternateFileName[14];
+} WIN32_FIND_DATAA, *LPWIN32_FIND_DATAA;
+
+HANDLE __stdcall FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData);
+BOOL __stdcall FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData);
+BOOL __stdcall FindClose(HANDLE hFindFile);
 ]])
 
 --
@@ -318,24 +328,33 @@ end
 
 -- Lists files in a directory matching a pattern
 -- @param directory The directory to search in
--- @param pattern The pattern to match file names against (e.g., "*.txt" for all text files)
+-- @param lua_pattern The Lua pattern to match file names against (e.g., "%.txt$" for text files)
 -- @return A table containing the names of the matching files
-local function ListFiles(directory, pattern)
-   local files = {}
-   local search_path = directory .. "\\" .. pattern
-   local fileinfo = ffi.new("struct _finddata32_t")
-   local handle = ffi.C._findfirst32(search_path, fileinfo)
+local function ListFiles(directory, lua_pattern)
+   local matched_files = {}
 
-   if handle == -1 then
-      return files
-   end
+    -- Append wildcard to directory for searching
+    local search_path = directory .. "\\*"
 
-   repeat
-      table.insert(files, ffi.string(fileinfo.name))
-   until ffi.C._findnext64(handle, fileinfo) == -1
+    -- Prepare the FindFileData structure
+    local find_data = ffi.new("WIN32_FIND_DATAA")
+    local handle = ffi.C.FindFirstFileA(search_path, find_data)
 
-   ffi.C._findclose(handle)
-   return files
+    if handle == ffi.cast("HANDLE", -1) then
+        return nil, "Failed to open directory: " .. directory
+    end
+
+    -- Iterate through the files
+    repeat
+        local file_name = ffi.string(find_data.cFileName)
+        -- Check if the file name matches the Lua pattern
+        if file_name:match(lua_pattern) then
+            table.insert(matched_files, file_name)
+        end
+    until not ffi.C.FindNextFileA(handle, find_data)
+
+    ffi.C.FindClose(handle)
+    return matched_files
 end
 
 --
