@@ -640,18 +640,8 @@ end
 
 -- Updated function to convert to plain line but retain original msg_t table
 -- This allows for #gags across color boundaries. Did not apply same logic to subs, but can be used there.
-function do_gags_against_coded_colors_table(msg_t)
-   local plain_line = ""
-   local spans = {}  -- tracks {start_pos, end_pos, color}
 
-   for i = 1, #msg_t, 2 do
-      local text = msg_t[i]
-      local color = msg_t[i + 1] or ""
-      local start_pos = #plain_line + 1
-      plain_line = plain_line .. text
-      spans[#spans + 1] = { start_pos = start_pos, end_pos = #plain_line, color = color }
-   end
-
+function do_gags_against_plain_text(plain_line)
    for _, v in ipairs(rex_gags) do
       local s, e = gag_rexes[v.match_str]:exec(plain_line)
       if s then
@@ -662,30 +652,9 @@ function do_gags_against_coded_colors_table(msg_t)
          end
       end
    end
-
    return false
 end
--- End update
 
-
-
-function do_subs_against_coded_colors_table(msg_t)
-   for i = 1,#msg_t,2 do
-      local color_bit = msg_t[i]
-      for _,v in ipairs(rex_subs) do
-         local prev_color = msg_t[i-1] or "@x007"
-         local replacement = v.use_function and proxy_sub(v.tostr, prev_color) or v.tostr:gsub("%$C", prev_color)
-         local ok,ret = pcall(rex.gsub, color_bit, sub_rexes[v.match_str], replacement)
-         if not ok then
-            AnsiNote(ColoursToANSI("@YError in sub ["..format_sub(v).."]: "..ret))
-         else
-            color_bit = ret
-         end
-      end
-      msg_t[i] = color_bit
-   end
-   return table.concat(msg_t)
-end
 
 
 cur_line = ""
@@ -697,7 +666,7 @@ end
 function filter_trigger(name, line, wildcards, styles)
    local old_line = StylesToColours(styles)
    local new_line = filter_string(old_line)
-   if new_line and newline ~= "" then
+   if new_line and new_line ~= "" then
       EnableTriggerGroup("all", false)
       Simulate(ColoursToANSI(new_line).."\r\n")
       EnableTriggerGroup("all", true)
@@ -710,14 +679,13 @@ end
 -- returns nil if gagged, otherwise returns the modified message
 -- input: string with Aardwolf color codes
 function filter_string(msg)
-require 'tprint'
    cur_line = strip_colours(msg)
 
    -- Matching #alone patterns at color and line boundaries is easier if
    -- we split at the color codes first.
    local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
 
-   local gagged = do_gags_against_coded_colors_table(msg_t)
+  local gagged = do_gags_against_plain_text(cur_line)
    if not gagged then
       return do_subs_against_coded_colors_table(msg_t)
    else
