@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2296 snapshot
+- new feature: The gag/sub plugin should now work across color boundaries. Sorry if this creates a problem for anyone, but the behavior makes more sense this way.
+
 r2295 snapshot
 - bug fix: The lua ffi module update from r2294 caused errors for some people. That's hopefully fixed now.
 - misc change: I've removed the printed message about backing up the world file, because it could get quite spammy.
