@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2298 snapshot
+- bug fix: The chat capture plugin now has an exception list to avoid falsely capturing things as remote socials. The list needs to be manually curated, so let me know.
+- new feature: wrapped_captures command to send may now be nil to avoid sending a command.
+
+
 r2296 snapshot
 - new feature: The gag/sub plugin should now work across color boundaries. Sorry if this creates a problem for anyone, but the behavior makes more sense this way.
 

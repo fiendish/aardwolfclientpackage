@@ -142,6 +142,13 @@ require "scrollbar"
 
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
+
+not_rsocials = {
+   rex.new("^\\*Crash\\*, the .* smashes open\\.$"),
+   rex.new("^\\*CRACK\\* of a whip\\. Giant slabs of unidentified rocks are being hewn from the ?$"),
+   rex.new("^\\*Purchase using 'buy <keywords without spaces>'$")
+}
+
 local gap = 1
 MAX_LINES = 10000 -- how many lines to store in scrollback
 
@@ -835,7 +842,7 @@ function storeFromOutside(text, tab, add_timestamp, omit_log, serialized_links)
    return res and (res >= 0) or false
 end
 
--- stolen from Mendaloth
+-- stolen (partly) from Mendaloth
 function rsocial (name, line, wildcards, styles)
    -- Remote socials will always start with a dark cyan or bright magenta *
    -- Checking color cuts down on non-socials ending up in the chat log...
@@ -845,6 +852,15 @@ function rsocial (name, line, wildcards, styles)
       -- colors, so asterisk is either dark cyan or bright magenta
       or ((styles[1].textcolour == GetNormalColour(7)) or (styles[1].textcolour == GetBoldColour(6)))
    ) then
+      -- check against not_rsocials regular expressions
+      for _,re in ipairs(not_rsocials) do
+         s, e, t = re:exec (line)
+         if s then
+            -- this is not a remote social
+            return
+         end
+      end
+
       local multiline_styles = ToMultilineStyles(styles, nil, nil, true)
       storeNonChannel(multiline_styles, "remote_socials")
    end
