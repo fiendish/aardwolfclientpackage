@@ -672,9 +672,7 @@ function do_subs_against_coded_colors_table(plain_text, msg_t)
    --       * Run the replacement on the section containing the start location, using the preceding
    --         color code for $C in the replacement.
    --       * After each replacement, update the indexes of the matches and the sections.
-   -- For each regex:
    for _,v in ipairs(rex_subs) do
-      -- Find all the matches in plain_text and sort them by start position then end position.
       local locations = {}
       local r = sub_rexes[v.match_str]
       local s, e, _ = r:exec(plain_text)
