@@ -17,10 +17,7 @@
 <description trim="y">
 This plugin substitutes text with something else.
 
-It does not cross color code boundaries.
-'#sub {potato} {pants}' will make @Mpotato@Cpants@Rairplane@w become @Mpants@Cpants@Rairplane@w
-but will not do anything to @Mpot@Yato@Cpants@Rairplane@w because, in this one, the word
-potato has a color break inside it.
+'#sub {potato} {pants}' will make @Mpot@Yato@Cpants@Rairplane@w become @Mpants@Cpants@Rairplane@w.
 
 Type "#sub help" or make a syntax mistake for usage details.
 </description>
@@ -292,7 +289,7 @@ function usagesub(line, embedded)
    "\n@w Add @C#regex@w to the end of the command to treat the match pattern as a regular expression,"..
    "\n@w   otherwise it will be used literally. Regex matches also allow you to use captures which can"..
    "\n@w   be referenced with % and the number."..
-   "\n@w Add @C#alone@w to the end of the command to only match at word or color boundaries."..
+   "\n@w Add @C#alone@w to the end of the command to only match at word boundaries."..
    "\n@w Add @C#nocase@w to the end of the command to do case-insensitive matching."..
    "\n@w Add @C#function@w to the end of a sub command to pass matching components to a plugin function"..
    "\n@w   instead of doing a direct replacement."
@@ -414,7 +411,7 @@ function listall()
    ColourNote("yellow","","")
    ColourNote("yellow","","#regex    : Treat the pattern as a regular expression, otherwise literal.")
    ColourNote("yellow","","#nocase   : Ignore letter case when matching.")
-   ColourNote("yellow","","#alone    : Only match at word or color boundaries.")
+   ColourNote("yellow","","#alone    : Only match at word boundaries.")
    ColourNote("yellow","","#function : Call a plugin function to decide what to do.")
    ColourNote("yellow","","")
    ColourNote("yellow",""," Current #subs:")
@@ -638,39 +635,107 @@ function proxy_gag(plugin_func_str)
    end
 end
 
-
-function do_gags_against_coded_colors_table(msg_t)
-   for i = 1,#msg_t,2 do
-      local color_bit = msg_t[i]
-      for _,v in ipairs(rex_gags) do
-         s, e, _ = gag_rexes[v.match_str]:exec(color_bit)
-         if s ~= nil then
-            if not v.use_function then
-               return true
-            else
-               return proxy_gag(v.use_function)()
-            end
+function do_gags_against_plain_text(plain_text)
+   for _,v in ipairs(rex_gags) do
+      s, e, _ = gag_rexes[v.match_str]:exec(plain_text)
+      if s ~= nil then
+         if not v.use_function then
+            return true
+         else
+            return proxy_gag(v.use_function)()
          end
       end
    end
    return false
 end
 
+function do_subs_against_coded_colors_table(plain_text, msg_t)
+   -- Find the locations for each sub in the plain_text, then replace those locations in the table msg_t.
+   -- msg_t looks like this, alternating between color codes and text, with first and last elements empty:
+   --    { "", "color code", "text", "color code", "text", "color code", "text", "color code", "" }
+   -- The regexes are stored in the table sub_rexes, and the substitutions are in the table rex_subs.
+   -- sub_rexes looks like this:
+   --    { "hm"=pcre_regex (01547F98) }
+   -- rex_subs looks like this:
+   --    {{ match_str="hm", tostr="hello", original="hm", nocase=false, alone=false, is_regex=false, use_function=false }}
+   -- rex_subs is ordered, sub_rexes is not.
 
-function do_subs_against_coded_colors_table(msg_t)
-   for i = 1,#msg_t,2 do
-      local color_bit = msg_t[i]
-      for _,v in ipairs(rex_subs) do
-         local prev_color = msg_t[i-1] or "@x007"
+   -- For each regex:
+   --    Find all the matches in plain_text.
+   --    For each match start and end location:
+   --       * Find the section in msg_t that contains the start location of the match
+   --         and the section in msg_t that contains the end location of the match by
+   --         accumulating the lengths of the text bits.
+   --       * If the match is across multiple sections, truncate the first and last sections to 
+   --         the start and end locations of the match and delete any sections in between and
+   --         then insert the matched plaintext at the end of the section containing the start location.
+   --       * Run the replacement on the section containing the start location, using the preceding
+   --         color code for $C in the replacement.
+   --       * After each replacement, update the indexes of the matches and the sections.
+   -- For each regex:
+   for _,v in ipairs(rex_subs) do
+      -- Find all the matches in plain_text and sort them by start position then end position.
+      local locations = {}
+      local r = sub_rexes[v.match_str]
+      local s, e, _ = r:exec(plain_text)
+      while s ~= nil do
+         table.insert(locations, {s, e})
+         s, e, _ = r:exec(plain_text, e)
+      end
+      local shift_amount = 0 -- The amount to shift the start and end positions of the matches by as we do text replacements.
+      for _,loc in ipairs(locations) do
+         local start_pos = loc[1] + shift_amount
+         local end_pos = loc[2] + shift_amount
+         local start_section = 1
+         local end_section = 1
+         local start_offset = 0
+         local end_offset = 0
+         local start_found = false
+         local end_found = false
+         local start_length = 0
+         for i=1,#msg_t,2 do
+            local text_bit_length = #(msg_t[i])
+            start_length = start_length + text_bit_length
+            if not start_found and start_length >= start_pos then
+               start_section = i
+               start_offset = text_bit_length - (start_length - start_pos)
+               start_found = true
+            end
+            if not end_found and start_length >= end_pos then
+               end_section = i
+               end_offset = text_bit_length - (start_length - end_pos)
+               end_found = true
+               break
+            end
+         end
+
+         if end_section > start_section then
+            while start_section + 2 < end_section do
+               table.remove(msg_t, start_section + 1)
+               end_section = end_section - 1
+            end
+            msg_t[start_section] = msg_t[start_section]:sub(1, start_offset - 1)..plain_text:sub(start_pos, end_pos)
+            msg_t[end_section] = msg_t[end_section]:sub(end_offset + 1)
+         end
+
+         local old_text = msg_t[start_section]
+         local prev_color = msg_t[start_section-1] or "@x007"
          local replacement = v.use_function and proxy_sub(v.tostr, prev_color) or v.tostr:gsub("%$C", prev_color)
-         local ok,ret = pcall(rex.gsub, color_bit, sub_rexes[v.match_str], replacement)
+         local ok, new_text = pcall(rex.gsub, msg_t[start_section], sub_rexes[v.match_str], replacement)
          if not ok then
             AnsiNote(ColoursToANSI("@YError in sub ["..format_sub(v).."]: "..ret))
          else
-            color_bit = ret
+            msg_t[start_section] = new_text
          end
+
+         shift_amount = shift_amount - #old_text + #new_text
+
+         local pt = {}
+         for i=1,#msg_t,2 do
+            table.insert(pt, msg_t[i])
+         end
+         plain_text = table.concat(pt)
       end
-      msg_t[i] = color_bit
    end
    return table.concat(msg_t)
 end
@@ -700,13 +765,11 @@ end
 function filter_string(msg)
    cur_line = msg
 
-   -- Matching #alone patterns at color and line boundaries is easier if
-   -- we split at the color codes first.
-   local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
-
-   local gagged = do_gags_against_coded_colors_table(msg_t)
+   local plain_text = strip_colours(msg)
+   local gagged = do_gags_against_plain_text(plain_text)
    if not gagged then
-      return do_subs_against_coded_colors_table(msg_t)
+      local msg_t = canonicalize_colours(msg):split("%f[@]@x%d%d%d", true)
+      return do_subs_against_coded_colors_table(plain_text, msg_t)
    else
       return nil
    end
