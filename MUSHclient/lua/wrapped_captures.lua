@@ -9,7 +9,7 @@ module ("Capture", package.seeall)
 -- The untagged_output function is used to capture text that is not reliably enclosed by recognizeable text.
 
 function tagged_output(
-   command_to_send,            -- The command to send to the game.
+   command_to_send,            -- The command to send to the game. May be nil.
    capture_start_tag,          -- The opening tag that marks the start of the text to be captured.
    capture_end_tag,            -- The closing tag that marks the end of the text to be captured.
    tags_are_regexp,            -- A boolean indicating whether the tags are regular expressions (default is false).
@@ -232,17 +232,19 @@ function command(
       SendNoEcho(echo_command..capture_start_tag)
    end
 
-   if no_command_echo then
-      if send_via_execute then
-         ExecuteNoEcho(command_to_send)
+   if command_to_send then
+      if no_command_echo then
+         if send_via_execute then
+            ExecuteNoEcho(command_to_send)
+         else
+            SendNoEcho(command_to_send)
+         end
       else
-         SendNoEcho(command_to_send)
-      end
-   else
-      if send_via_execute then
-         Execute(command_to_send)
-      else
-         Send(command_to_send)
+         if send_via_execute then
+            Execute(command_to_send)
+         else
+            Send(command_to_send)
+         end
       end
    end
 
