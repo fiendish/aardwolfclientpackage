@@ -218,7 +218,9 @@ default_config = {
 
    SHOW_ROOM_ID = false,
 
-   SHOW_AREA_EXITS = false
+   SHOW_AREA_EXITS = false,
+
+   BLINK_PK_TITLE = true
 }
 
 local expand_direction = {
@@ -325,7 +327,7 @@ end -- get_number_from_user
 
 local function draw_configuration ()
 
-   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", "Area Textures", "Room size"}
+   local config_entries = {"Map Configuration", "Show Room ID", "Show Area Exits", "Font", "Depth", "Area Textures", "Room size", "Blink Name in PK Rooms"}
    local width =  max_text_width (config_win, CONFIG_FONT_ID, config_entries , true)
    local GAP = 5
 
@@ -494,6 +496,21 @@ local function draw_configuration ()
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.zoom_in",  -- mouseup
       "Click to zoom in",
+      miniwin.cursor_hand, 0)  -- hand cursor
+   y = y + font_height
+
+   -- blink PK rooms
+   WindowText(config_win, CONFIG_FONT_ID, "Blink Name in PK Rooms", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID_UL, ((config.BLINK_PK_TITLE and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.BLINK_PK_TITLE and "On") or "Off"))/2, y, 0, 0, 0x808080)
+   -- blink PK rooms hotspot
+   WindowAddHotspot(config_win,
+      "$<blink_pk_rooms>",
+      x + GAP,
+      y,
+      x + frame_width,
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.mouseup_change_blink_pk_title",
+      "Click to toggle title blinking in PK rooms",
       miniwin.cursor_hand, 0)  -- hand cursor
    y = y + font_height
 
@@ -773,10 +790,17 @@ blink_cycle = {
    "@W"
 }
 function blink_title()
-   next_blink_color = (next_blink_color % (#blink_cycle)) + 1
-   title_color = blink_cycle[next_blink_color]
-   dress_window(truncated_room_name, current_room, current_area)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   prev_title_color = title_color
+   if not config.BLINK_PK_TITLE then
+      title_color = "@R"
+   else
+      next_blink_color = (next_blink_color % (#blink_cycle)) + 1
+      title_color = blink_cycle[next_blink_color]
+   end
+   if prev_title_color ~= title_color then
+      dress_window(truncated_room_name, current_room, current_area)
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   end
 end
 
 function dress_window(room_name, room_uid, area_name)
@@ -1044,7 +1068,9 @@ function init (t)
 
    -- force some config defaults if not supplied
    for k, v in pairs (default_config) do
-      config[k] = config[k] or v
+      if config[k] == nil then
+         config[k] = v
+      end
    end -- for
 
    win = GetPluginID () .. "_mapper"
@@ -1690,6 +1716,15 @@ function mouseup_change_show_area_exits (flags, hotspot_id)
    end
    draw (current_room)
 end -- mouseup_change_area_textures
+
+function mouseup_change_blink_pk_title (flags, hotspot_id)
+   if config.BLINK_PK_TITLE == true then
+      config.BLINK_PK_TITLE = false
+   else
+      config.BLINK_PK_TITLE = true
+   end
+   draw (current_room)
+end
 
 function zoom_map (flags, hotspot_id)
    if bit.band (flags, 0x100) ~= 0 then

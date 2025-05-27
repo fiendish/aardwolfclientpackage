@@ -372,11 +372,18 @@ blink_cycle = {
    0xFFFFFF
 }
 function blink_title()
-   if (show_title == 1) and (want_blinks == 1) then
-      next_blink_color = (next_blink_color % (#blink_cycle)) + 1
-      title_color = blink_cycle[next_blink_color]
-      draw_title()
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   if (show_title == 1) then
+      prev_title_color = title_color
+      if (want_blinks == 0) then
+         title_color = blink_cycle[1]
+      else
+         next_blink_color = (next_blink_color % (#blink_cycle)) + 1
+         title_color = blink_cycle[next_blink_color]
+      end
+      if title_color ~= prev_title_color then
+         draw_title()
+         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      end
    end
 end
 
