@@ -1395,11 +1395,10 @@ end
 function custom_exit_list (name, line, wildcards)
    local line = ""
    local count = 0
-   local query
    local display_limit = 30
 
-   area = Trim(wildcards [1] or "")
-   query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by area, uid", fixsql("%" .. area .. "%"))
+   local area = Trim(wildcards [1] or "")
+   local query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by area, uid", fixsql("%" .. area .. "%"))
 
    if area == "" then
       intro = "The following rooms have custom exits:"
@@ -1427,11 +1426,23 @@ function custom_exit_list (name, line, wildcards)
       end
    end
 
-   hr = "| area       | room name            | rm uid  | dir            | to uid  |"
-   hl = "+------------+----------------------+---------+----------------+---------+"
+   -- make the output wider if we have room
+   local dir_expand = GetOption("wrap_column") - 80
+   local name_expand = 0
+   if dir_expand > 20 then
+      name_expand = 10
+      dir_expand = dir_expand - 10
+   end
+   local dir_expand_str = tostring(dir_expand + 20)
+   local dir_fmt = dir_expand_str .. "." .. dir_expand_str
+   local name_expand_str = tostring(name_expand + 26)
+   local name_fmt = name_expand_str .. "." .. name_expand_str
+
+   local hr = "| area       | room name           " .. string.rep(" ", name_expand) .. " | rm uid  | dir                 " .. string.rep(" ", dir_expand) .. " | to uid  |"
+   local hl = "+------------+---------------------" .. string.rep("-", name_expand) .. "-+---------+---------------------" .. string.rep("-", dir_expand) .. "-+---------+"
 
    -- area - room name - room uid - direction - destination uid
-   fmt = "| %10.10s | %-20.20s | %7.7s | %-14.14s | %7.7s |"
+   fmt = "| %10.10s | %-" .. name_fmt .. "s | %7.7s | %-" .. dir_fmt .. "s | %7.7s |"
    -- print ("Query: " .. query)
    world.Note ("\n"..intro)
    world.Note (hl)
@@ -1783,9 +1794,22 @@ function map_portal_list (name, line, wildcards)
       pattern = "%"..pattern.."%"
    end
 
-   -- show portals stored in the exits table
-   local hl = "+-----+------------+----------------------+-------+----------------------+-----+"
-   local hr = "|   # | area       | room name            |  vnum | portal commands      | lvl |"
+   -- show portals stored in the exits table 
+
+   -- make the output wider if we have room
+   local cmd_expand = GetOption("wrap_column") - 80
+   local name_expand = 0
+   if cmd_expand > 20 then
+      name_expand = 10
+      cmd_expand = cmd_expand - 10
+   end
+   local cmd_expand_str = tostring(cmd_expand + 20)
+   local cmd_fmt = cmd_expand_str .. "." .. cmd_expand_str
+   local name_expand_str = tostring(name_expand + 20)
+   local name_fmt = name_expand_str .. "." .. name_expand_str
+
+   local hl = "+-----+------------+---------------------" .. string.rep("-", name_expand) .. "-+-------+---------------------" .. string.rep("-", cmd_expand) .. "-+-----+"
+   local hr = "|   # | area       | room name           " .. string.rep(" ", name_expand) .. " |  vnum | portal commands     " .. string.rep(" ", cmd_expand) .. " | lvl |"
 
    Note ()
    Note (title)
@@ -1800,7 +1824,7 @@ function map_portal_list (name, line, wildcards)
       all_portals[row.dir] = count
    end
    for row in dbnrowsWRAPPER(PORTALS_QUERY(pattern)) do
-      line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-20.20s | %+5.5s | %-20.20s | %+3.3s |", all_portals[row.dir], row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
+      line = string.format("|"..((((bounce_portal and (row.dir==bounce_portal.dir)) or (bounce_recall and (row.dir==bounce_recall.dir))) and "*") or " ").."%+3.3s | %-10.10s | %-"..name_fmt.."s | %+5.5s | %-"..cmd_fmt.."s | %+3.3s |", all_portals[row.dir], row.area or "N/A", row.name or "N/A", row.touid, row.dir, row.level)
       if row.level <= mylevel+(mytier*10) then
          -- make the whole line clickable
          cmd = "mapper goto " .. row.touid
