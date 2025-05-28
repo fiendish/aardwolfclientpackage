@@ -1435,14 +1435,14 @@ function custom_exit_list (name, line, wildcards)
    end
    local dir_expand_str = tostring(dir_expand + 20)
    local dir_fmt = dir_expand_str .. "." .. dir_expand_str
-   local name_expand_str = tostring(name_expand + 26)
+   local name_expand_str = tostring(name_expand + 20)
    local name_fmt = name_expand_str .. "." .. name_expand_str
 
-   local hr = "| area       | room name           " .. string.rep(" ", name_expand) .. " | rm uid  | dir                 " .. string.rep(" ", dir_expand) .. " | to uid  |"
+   local hr = "| area       | room name           " .. string.rep(" ", name_expand) .. " |  rm uid | dir                 " .. string.rep(" ", dir_expand) .. " |  to uid |"
    local hl = "+------------+---------------------" .. string.rep("-", name_expand) .. "-+---------+---------------------" .. string.rep("-", dir_expand) .. "-+---------+"
 
    -- area - room name - room uid - direction - destination uid
-   fmt = "| %10.10s | %-" .. name_fmt .. "s | %7.7s | %-" .. dir_fmt .. "s | %7.7s |"
+   fmt = "| %-10.10s | %-" .. name_fmt .. "s | %7.7s | %-" .. dir_fmt .. "s | %7.7s |"
    -- print ("Query: " .. query)
    world.Note ("\n"..intro)
    world.Note (hl)
