@@ -1300,6 +1300,10 @@ function map_delete_exits_for_many_rooms (...)
 end
 
 function map_cexits_delete (name, line, wildcards)
+   if not current_room then
+      Note("EXIT DELETE ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
+      return
+   end
    local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", fixsql(current_room))
    dbCheckExecute(query)
    for k,v in pairs(rooms[current_room].exits) do
