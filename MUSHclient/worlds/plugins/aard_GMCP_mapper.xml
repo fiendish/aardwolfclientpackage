@@ -1464,10 +1464,10 @@ end -- custom_exits_list
 function show_this_room (name, line, wildcards)
    local room = rooms[current_room]
    local room_uid = current_room
-   if room_uid:sub(1,5) == "nomap" then
-      room_uid = room_uid.." (this room isn't mappable)"
-   end
    if room ~= nil then
+      if room_uid:sub(1,5) == "nomap" then
+         room_uid = room_uid.." (this room isn't mappable)"
+      end
       Note("Details about this room:")
       Note("+---------------------------+")
       Note("Name: "..(room.name or ""))
