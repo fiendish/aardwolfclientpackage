@@ -1710,7 +1710,7 @@ function map_portal (name, line, wildcards)
       return
    end
 
-   local quiet = Trim(wildcards[4]) == "quiet"
+   local quiet = Trim(wildcards[4] or "") == "quiet"
 
    create_portal(wildcards[1], destination, level, quiet)
 

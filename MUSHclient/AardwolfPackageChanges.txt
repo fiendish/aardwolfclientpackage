@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2304 snapshot
+- bug fix: Oops. r2303 broke mapper portal. Fixed now.
+
 r2303 snapshot
 - new feature: The GMCP mapper's fullportal and fullcexit commands now have optional "quiet" options for suppressing feedback.
 - misc change: The GMCP mapper's output tables for portals and cexits should expand to be wider than 80 characters if the main output is wide enough.
