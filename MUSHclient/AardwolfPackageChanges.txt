@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2305 snapshot
+- bug fix: The GMCP mapper cexits and portals output width expansion feature added in r2303 was broken for very large sizes because apparently Lua doesn't let you set arbitrarily large string format widths.
+
 r2304 snapshot
 - bug fix: Oops. r2303 broke mapper portal. Fixed now.
 
