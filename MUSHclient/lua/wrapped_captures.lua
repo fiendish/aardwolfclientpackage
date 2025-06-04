@@ -43,7 +43,7 @@ function tagged_output(
 end
 
 function untagged_output(
-   command_to_send,            -- The command to send to the game.
+   command_to_send,            -- The command to send to the game. May be nil.
    no_command_echo,            -- A boolean indicating whether the command should be echoed to the screen (true means omit, false/nil means show).
    omit_response_from_output,  -- A boolean indicating whether the response to the command should be shown in the output window (true means omit, false/nil means show).
    no_prompt_after,            -- A boolean indicating whether the prompt should be displayed after the command is done (true means no prompt, false/nil means yes prompt).
