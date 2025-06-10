@@ -19,7 +19,9 @@ local timeouts = {}
 -- callback_on_timeout function gets arguments (requested_url, timeout_after, request_body)
 -- request_protocol is HTTP or HTTPS (if not provided, it will be inferred from the request_url)
 -- timeout_after is in seconds
--- request_body is either nil, a string (which will switch the HTTP method to POST instead of the default GET), or a table of HTTP request parameters such as source/sink/method/headers. See http://w3.impa.br/~diego/software/luasocket/http.html for more details
+-- request_body is either nil, a string (which will switch the HTTP method to POST instead of the default GET), or a table of HTTP request parameters such as source/method/headers.
+-- See http://w3.impa.br/~diego/software/luasocket/http.html for more details on the request_body table, but with the caveat that body.source needs to be a string of data and body.sink needs to be a string (writes to file) or nothing (returns the body).
+-- This is because any data sent to the background thread needs to be serializable, and the ltn12.sink objects are not.
 function doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
    if request_protocol == nil then
       if starts_with(request_url:lower(), "https:") then
@@ -104,14 +106,17 @@ local network_thread_code = string.dump(function(arg)
 
    local body = args["body"]
    local page, status, headers, full_status
+   local result_table = {}
 
    if type(body) == "table" then
       _ltn12 = require "ltn12"
 
       body.url = args.url
 
-      if type(body.sink) == "string" then  -- write to file
+      if type(body.sink) == "string" then  -- write to file named as the string
          body.sink = _ltn12.sink.file(io.open(body.sink, "wb"))
+      else
+         body.sink = _ltn12.sink.table(result_table)
       end
 
       if type(body.source) == "string" then
@@ -127,7 +132,7 @@ local network_thread_code = string.dump(function(arg)
       page, status, headers, full_status = _socketeer.request(args.url, body)
    end
 
-   return page, status, headers, full_status
+   return next(result_table) and table.concat(result_table) or page, status, headers, full_status
 end)
 
 -- makes an asynchronous HTTP or HTTPS request to a URL
