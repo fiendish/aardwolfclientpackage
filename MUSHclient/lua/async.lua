@@ -21,7 +21,7 @@ local timeouts = {}
 -- timeout_after is in seconds
 -- request_body is either nil, a string (which will switch the HTTP method to POST instead of the default GET), or a table of HTTP request parameters such as source/method/headers.
 -- See http://w3.impa.br/~diego/software/luasocket/http.html for more details on the request_body table, but with the caveat that body.source needs to be a string of data and body.sink needs to be a string (writes to file) or nothing (returns the body).
--- This is because any data sent to the background thread needs to be serializable, and the ltn12.sink objects are not.
+-- This is because any data sent to the background thread needs to be serializable, and the ltn12.source and ltn12.sink objects are not.
 function doAsyncRemoteRequest(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout, request_body)
    if request_protocol == nil then
       if starts_with(request_url:lower(), "https:") then
