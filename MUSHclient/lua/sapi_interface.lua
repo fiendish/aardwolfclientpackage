@@ -112,6 +112,11 @@ local function get_filtering_level ()
 end
 
 
+local function get_volume()
+    return engine.Volume
+end
+
+
 local function print_spoken ()
    print_spoken_lines = not print_spoken_lines
 end
@@ -193,6 +198,12 @@ end
 
 local function say_current_filtering_level ()
    say("Filtering level is "..tostring(filtering_level)..". "..filter_descs[filtering_level])
+end
+
+
+local function say_current_volume ()
+   local volume = get_volume()
+   say("Speech volume is " .. volume .. ".")
 end
 
 
@@ -286,6 +297,43 @@ local function set_rate (rate, quietly)
 end
 
 
+local function set_volume (volume, quietly)
+   local current_volume = get_volume()
+   local volume = tonumber(volume)
+   if volume == nil then
+      if not quietly then
+         say("SAPI volume must be a number.")
+      end
+      return current_volume
+   end
+   if volume < 0 or volume > 100 then
+      if not quietly then
+         say("SAPI volume must be from 0 to 100.")
+      end
+      return current_volume
+   end
+   engine.Volume = volume
+   if not quietly then
+      say_current_volume()
+   end
+   return volume
+end
+
+
+local function louder (quietly)
+   local current_volume = get_volume()
+   local new_volume = math.min(current_volume + 5, 100)
+   return set_volume(new_volume, quietly)
+end
+
+
+local function quieter (quietly)
+   local current_volume = get_volume()
+   local new_volume = math.max(current_volume - 5, 0)
+   return set_volume(new_volume, quietly)
+end
+
+
 local function set_voice_by_id (voice_id, quietly)
    local enumerate_voices = luacom.GetEnumerator(engine:GetVoices())
    local voice = enumerate_voices:Next()
@@ -346,12 +394,17 @@ return {
    slower = slower,
    faster = faster,
    set_filtering_level = set_filtering_level,
+   set_volume = set_volume,
+   quieter = quieter,
+   louder = louder,
    get_voice_id = get_voice_id,
    get_rate = get_rate,
    get_filtering_level = get_filtering_level,
+   get_volume = get_volume,
    say_current_voice = say_current_voice,
    say_current_rate = say_current_rate,
    say_current_filtering_level = say_current_filtering_level,
+   say_current_volume = say_current_volume,
    list_voices = list_voices,
    list_filtering_levels = list_filtering_levels,
    mute = mute,
