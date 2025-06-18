@@ -34,6 +34,10 @@ end
 
 local NUM_SAPI_VOICES = engine:GetVoices().Count
 
+if NUM_SAPI_VOICES == nil then
+   return -1  -- Probably in Wine without SAPI support installed
+end
+
 if NUM_SAPI_VOICES == 0 then
    return -2
 end
