@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2309 snapshot
+- bug fix: async.lua should now return response bodies from POST requests. I also slightly updated the internal comment on doAsyncRemoteRequest to explain some of the limitations.
+- bug fix: Get a more helpful error message from the SAPI plugin when running in Wine.
+- misc change: New versions of openssl, lua-openssl, luasocket, and llthreads2 DLLs. Now built on GitHub.
+- misc change: New MUSHclient build with a couple minor bugs fixed and updated sqlite3 and zlib libraries. Now built on GitHub.
+
 r2305 snapshot
 - bug fix: The GMCP mapper cexits and portals output width expansion feature added in r2303 was broken for very large sizes because apparently Lua doesn't let you set arbitrarily large string format widths.
 
