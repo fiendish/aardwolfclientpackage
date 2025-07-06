@@ -2,6 +2,7 @@ version: 1.0.{build}
 branches:
   only:
   - MUSHclient
+  - development
 skip_tags: true
 skip_branch_with_pr: true
 image: Visual Studio 2015
@@ -14,6 +15,7 @@ install:
 - ps: Start-FileDownload 'https://github.com/fiendish/LuaJIT-build/releases/download/latest/lua51.dll'
 - ps: Start-FileDownload 'https://github.com/fiendish/lua-llthreads2-build/releases/download/latest/llthreads2.dll'
 - ps: Start-FileDownload 'https://github.com/fiendish/lua-openssl-build/releases/download/latest/openssl.dll'
+- ps: Start-FileDownload 'https://github.com/fiendish/luasocket-build/releases/download/latest/luasocket-win32-static.zip'
 - ps: Start-FileDownload 'https://github.com/nickgammon/mushclient/releases/download/latest_commit/MUSHclient.exe'
 - ps: pushd C:\projects\aardwolfclientpackage
 - ps: |
@@ -21,7 +23,13 @@ install:
       Move-Item C:\llthreads2.dll MUSHclient -force
       Move-Item C:\openssl.dll MUSHclient -force
       Move-Item C:\MUSHclient.exe MUSHclient -force
-      $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
+      Expand-Archive C:\luasocket-win32-static.zip -DestinationPath MUSHclient -Force
+      $env:BASE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
+      if ($env:APPVEYOR_REPO_BRANCH -eq "development") {
+        $env:PACKAGE_VERSION="$($env:BASE_VERSION)-beta-$env:APPVEYOR_BUILD_NUMBER"
+      } else {
+        $env:PACKAGE_VERSION=$env:BASE_VERSION
+      }
       7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/get_version.nsi'
@@ -42,7 +50,13 @@ install:
 build: off
 before_deploy:
 - ps: >-
-    $env:PACKAGE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
+    $env:BASE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
+
+    if ($env:APPVEYOR_REPO_BRANCH -eq "development") {
+      $env:PACKAGE_VERSION="$($env:BASE_VERSION)-beta-$env:APPVEYOR_BUILD_NUMBER"
+    } else {
+      $env:PACKAGE_VERSION=$env:BASE_VERSION
+    }
 
     git config --global credential.helper store
 
@@ -76,7 +90,17 @@ deploy:
     secure: sc2iImdfbB8Q0GWI90ElJqiWh9kCN/siFoVoJx1+XgAyG67GE2pzGQ+uzPQHU1Bt
   artifact: /Aardwolf_MUSHclient_r.*\.(exe|zip)/
   force_update: true
+  prerelease: false
   on:
     branch: MUSHclient
+- provider: GitHub
+  tag: $(PACKAGE_VERSION)
+  auth_token:
+    secure: sc2iImdfbB8Q0GWI90ElJqiWh9kCN/siFoVoJx1+XgAyG67GE2pzGQ+uzPQHU1Bt
+  artifact: /Aardwolf_MUSHclient_r.*\.(exe|zip)/
+  force_update: true
+  prerelease: true
+  on:
+    branch: development
 after_deploy:
 - cmd:
