@@ -15,8 +15,7 @@ end
 
 
 function M.newcontext(params)
-    local protocol = params.protocol and string.upper(string.sub(params.protocol,1,3))
-        ..string.sub(params.protocol,4,-1) or 'TLSv1_2'
+    local protocol = params.protocol or 'TLS'
     local ctx = ssl.ctx_new(protocol,params.ciphers)
     local xkey = nil
 
@@ -106,7 +105,7 @@ S.__index = {
 
         if ret then
             self._bbf = assert(openssl.bio.filter('buffer'))
-            self._sbf = assert(openssl.bio.filter('ssl',self.ssl,'noclose'))
+            self._sbf = assert(openssl.bio.filter('ssl',self.ssl,0))
 
             self.bio = assert(self._bbf:push(self._sbf))
         else
