@@ -11,6 +11,13 @@ environment:
   auth_token:
     secure: sc2iImdfbB8Q0GWI90ElJqiWh9kCN/siFoVoJx1+XgAyG67GE2pzGQ+uzPQHU1Bt
 install:
+- ps: |
+    $env:BASE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
+    if ($env:APPVEYOR_REPO_BRANCH -eq "development") {
+      $env:PACKAGE_VERSION="next-beta"
+    } else {
+      $env:PACKAGE_VERSION=$env:BASE_VERSION
+    }
 - ps: pushd C:\
 - ps: Start-FileDownload 'https://github.com/fiendish/LuaJIT-build/releases/download/latest/lua51.dll'
 - ps: Start-FileDownload 'https://github.com/fiendish/lua-llthreads2-build/releases/download/latest/llthreads2.dll'
@@ -24,71 +31,30 @@ install:
       Move-Item C:\openssl.dll MUSHclient -force
       Move-Item C:\MUSHclient.exe MUSHclient -force
       Expand-Archive C:\luasocket-win32-static.zip -DestinationPath MUSHclient -Force
-      $env:BASE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
-      if ($env:APPVEYOR_REPO_BRANCH -eq "development") {
-        $env:PACKAGE_VERSION="next-beta"
-      } else {
-        $env:PACKAGE_VERSION=$env:BASE_VERSION
-      }
       7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/get_version.nsi'
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/hello.rtf'
+      (Get-Content aardmush_installer.nsi) | ForEach-Object { $_ -replace "OutFile.+", "OutFile `"Aardwolf_MUSHclient_$($env:PACKAGE_VERSION).exe`"" } | Set-Content aardmush_installer.nsi
 - cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi'
 - ps: |
       function Insert-Content { param ( [String]$Path ); process { $( ,$_; Get-Content $Path -ea SilentlyContinue) | Out-File -encoding ASCII $Path } }
       "aard_req_novisuals_mode = true  -- this line added by the no-visuals installer`r`n" | Insert-Content .\MUSHclient\lua\aard_requirements.lua
       Move-Item .\MUSHclient\worlds\Aardwolf_no_visuals.mcl .\MUSHclient\worlds\Aardwolf.mcl -force
-      $env:VIAPPOUT = 'OutFile "Aardwolf_MUSHclient_${PackageVersion}_no_visuals.exe"'
-      (Get-Content aardmush_installer.nsi) | ForEach-Object { $_ -replace "OutFile.+" , "$env:VIAPPOUT" } | Set-Content aardmush_installer.nsi
+      (Get-Content aardmush_installer.nsi) | ForEach-Object { $_ -replace "OutFile.+", "OutFile `"Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals.exe`"" } | Set-Content aardmush_installer.nsi
 - cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi'
 - ps: |
       7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip .\MUSHclient
-      Get-ChildItem .\Aardwolf_MUSHclient_r*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-      Get-ChildItem .\Aardwolf_MUSHclient_r*.zip -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+      Get-ChildItem .\Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+      Get-ChildItem .\Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)*.zip -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
       git checkout -- .
 build: off
-before_deploy:
-- ps: >-
-    $env:BASE_VERSION=(Get-Content MUSHclient\AardwolfPackageChanges.txt)[2].split()[0]
-
-    if ($env:APPVEYOR_REPO_BRANCH -eq "development") {
-      $env:PACKAGE_VERSION="next-beta"
-    } else {
-      $env:PACKAGE_VERSION=$env:BASE_VERSION
-    }
-
-    git config --global credential.helper store
-
-    Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:auth_token):x-oauth-basic@github.com`n"
-
-    git config --global user.name "fiendish"
-
-    git config --global user.email "patcherton.fixesthings@gmail.com"
-
-    git remote set-branches --add origin 'gh-pages' 2>&1 | write-host
-
-    git fetch --depth 1 origin gh-pages 2>&1 | write-host
-
-    git checkout gh-pages 2>&1 | write-host
-
-    (Get-Content index.template).replace("%%REV%%", "$env:PACKAGE_VERSION") | Set-Content index.html
-
-    (Get-Content unzip_upgrading.template).replace("%%REV%%", "$env:PACKAGE_VERSION") | Set-Content unzip_upgrading.html
-
-    git add index.html 2>&1 | write-host
-
-    git add unzip_upgrading.html 2>&1 | write-host
-
-    git commit -q -m "automatic rev update $env:PACKAGE_VERSION"
-
-    git push -q origin gh-pages
 deploy:
 - provider: GitHub
   tag: $(PACKAGE_VERSION)
   auth_token:
     secure: sc2iImdfbB8Q0GWI90ElJqiWh9kCN/siFoVoJx1+XgAyG67GE2pzGQ+uzPQHU1Bt
-  artifact: /Aardwolf_MUSHclient_r.*\.(exe|zip)/
+  artifact: /Aardwolf_MUSHclient_.*\.(exe|zip)/
   force_update: true
   prerelease: false
   on:
@@ -97,10 +63,25 @@ deploy:
   tag: $(PACKAGE_VERSION)
   auth_token:
     secure: sc2iImdfbB8Q0GWI90ElJqiWh9kCN/siFoVoJx1+XgAyG67GE2pzGQ+uzPQHU1Bt
-  artifact: /Aardwolf_MUSHclient_r.*\.(exe|zip)/
+  artifact: /Aardwolf_MUSHclient_.*\.(exe|zip)/
   force_update: true
   prerelease: true
   on:
     branch: development
 after_deploy:
-- cmd:
+- ps: >-
+    if ($env:APPVEYOR_REPO_BRANCH -eq "MUSHclient") {
+      git config --global credential.helper store
+      Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:auth_token):x-oauth-basic@github.com`n"
+      git config --global user.name "fiendish"
+      git config --global user.email "patcherton.fixesthings@gmail.com"
+      git remote set-branches --add origin 'gh-pages' 2>&1 | write-host
+      git fetch --depth 1 origin gh-pages 2>&1 | write-host
+      git checkout gh-pages 2>&1 | write-host
+      (Get-Content index.template).replace("%%REV%%", "$env:PACKAGE_VERSION") | Set-Content index.html
+      (Get-Content unzip_upgrading.template).replace("%%REV%%", "$env:PACKAGE_VERSION") | Set-Content unzip_upgrading.html
+      git add index.html 2>&1 | write-host
+      git add unzip_upgrading.html 2>&1 | write-host
+      git commit -q -m "automatic rev update $env:PACKAGE_VERSION"
+      git push -q origin gh-pages
+    }
