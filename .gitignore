@@ -1,0 +1,11 @@
+.DS_Store
+*.dll
+*.exe
+
+MUSHclient/worlds/world_backups/
+MUSHclient/worlds/plugins/state/
+MUSHclient/db_backups/
+MUSHclient/logs/
+MUSHclient/lua/socket.lua
+MUSHclient/lua/ltn12.lua
+MUSHclient/socket/
