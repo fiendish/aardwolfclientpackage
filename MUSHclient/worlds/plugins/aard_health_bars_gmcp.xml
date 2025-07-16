@@ -651,10 +651,6 @@ function OnPluginSaveState ()
    SetVariable("showLabels", showLabels)
    SetVariable("reverseTNL", reverseTNL)
    SetVariable("enabled", tostring(GetPluginInfo(GetPluginID(), 17)))
-   if WindowInfo(win, 3) and WindowInfo(win, 4) then
-      width = WindowInfo(win, 3)
-      height = WindowInfo(win, 4)
-   end
    SetVariable("width", width)
    SetVariable("font_name", font_name)
    SetVariable("font_size", font_size)
@@ -693,8 +689,8 @@ function OnPluginListChanged()
 end
 
 function OnPluginWorldOutputResized()
-   if (installed == true) and (((GetInfo(281)-windowinfo.window_left) > effectiveWidth) or ((GetInfo(281)-windowinfo.window_left) < width)) then
-      resize_window()
+   if installed == true then
+      AddTimer("healthbars_resize_delay", 0, 0, 0.1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.Replace + timer_flag.Temporary + timer_flag.ActiveWhenClosed, "resize_window")
    end
 end
 
