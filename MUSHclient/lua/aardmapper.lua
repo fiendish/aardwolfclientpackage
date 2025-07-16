@@ -1094,6 +1094,11 @@ function init (t)
    -- calculate box sizes, arrows, connecting lines etc.
    build_room_info ()
 
+   -- ensure config has proper defaults if not set
+   if not config.WINDOW then config.WINDOW = {} end
+   config.WINDOW.width = config.WINDOW.width or default_width
+   config.WINDOW.height = config.WINDOW.height or default_height
+
    WindowCreate (win,
       windowinfo.window_left,
       windowinfo.window_top,
