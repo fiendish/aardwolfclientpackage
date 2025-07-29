@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2310 snapshot
+- bug fix: FTS3 indexes should get automatically rebuilt as well when the GMCP mapper database integrity check fails.
+
 r2309 snapshot
 - bug fix: async.lua should now return response bodies from POST requests. I also slightly updated the internal comment on doAsyncRemoteRequest to explain some of the limitations.
 - bug fix: Get a more helpful error message from the SAPI plugin when running in Wine.
