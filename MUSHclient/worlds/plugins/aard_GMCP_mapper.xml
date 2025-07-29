@@ -3071,7 +3071,10 @@ function checkDatabaseIntegrity(full_check, second_run)
    if integrityCheck == false and second_run ~= true then
       ColourNote("yellow", "red", "MAPPER DATABASE INTEGRITY CHECK FAILED. THIS IS A SIGN OF DATABASE CORRUPTION. REBUILDING INDEXES AND TRYING AGAIN.")
       CorruptionAlert()
+      -- normal rebuild of indexes
       dbCheckExecute("REINDEX")
+      -- fts3 index is rebuilt differently
+      dbCheckExecute("INSERT INTO rooms_lookup(rooms_lookup) VALUES('rebuild')")
       return checkDatabaseIntegrity(true, true)
    end
    if not integrityCheck then
