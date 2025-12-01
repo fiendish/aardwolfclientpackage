@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2311 snapshot
+- bug fix: The vital shortcuts plugin will no longer interfere with notes. The alias regexes are also more strict now.
+
 r2310 snapshot
 - bug fix: FTS3 indexes should get automatically rebuilt as well when the GMCP mapper database integrity check fails.
 
