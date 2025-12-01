@@ -27,7 +27,7 @@ Type 'vitals help' to display this message in-game.
 </plugin>
 <aliases>
    <alias
-      match="^(?<stat>hp|hit|mn|mana|mv|moves)( (?<player>.*))?$"
+      match="^(?<stat>hp|hit|mn|mana|mv|moves)( (?<player>[a-zA-Z]+))?$"
       enabled="y"
       script="show_stat"
       regexp="y"
@@ -36,7 +36,7 @@ Type 'vitals help' to display this message in-game.
    >
    </alias>
    <alias
-      match="^(?<stat>hp|hit|mn|mana|mv|moves) below (?<percent>\d+)"
+      match="^(?<stat>hp|hit|mn|mana|mv|moves) below (?<percent>\d+)$"
       enabled="y"
       script="show_stat_below"
       regexp="y"
@@ -45,7 +45,7 @@ Type 'vitals help' to display this message in-game.
    >
    </alias>
    <alias
-      match="^vitals( (?<player>.*))?$"
+      match="^vitals( (?<player>[a-zA-Z]+))?$"
       enabled="y"
       script="show_all"
       regexp="y"
@@ -54,7 +54,7 @@ Type 'vitals help' to display this message in-game.
    >
    </alias>
    <alias
-      match="^vitals below (?<percent>\d+)"
+      match="^vitals below (?<percent>\d+)$"
       enabled="y"
       script="show_all_below"
       regexp="y"
@@ -82,6 +82,10 @@ group_vitals = {["hitpoints"] = "hp", ["mana"] = "mn", ["moves"] = "mv"}
 
 
 function help()
+   if gmcp("char.status.state") == "5" then
+      Send(line)
+      return
+   end
    Note()
    ColourNote("plum", "", "Aardwolf Vital Shortcuts help")
    ColourNote("paleturquoise", "", "None of the following commands are case sensitive.")
@@ -160,6 +164,10 @@ end
 
 
 function show_all(name, line, wildcards)
+   if gmcp("char.status.state") == "5" then
+      Send(line)
+      return
+   end
    for _,stat in ipairs({"hp", "mn", "mv"}) do
       wildcards.stat = stat
       show_stat(name, line, wildcards)
@@ -168,6 +176,10 @@ end
 
 
 function show_all_below(name, line, wildcards)
+   if gmcp("char.status.state") == "5" then
+      Send(line)
+      return
+   end
    for _,stat in ipairs({"hp", "mn", "mv"}) do
       wildcards.stat = stat
       show_stat_below(name, line, wildcards)
@@ -176,6 +188,10 @@ end
 
 
 function show_stat(name, line, wildcards)
+   if gmcp("char.status.state") == "5" then
+      Send(line)
+      return
+   end
    wildcards.player = Trim(wildcards.player)
    local stat = stat_labels[wildcards.stat:lower()]
    local what, current, max
@@ -199,6 +215,10 @@ end
 
 
 function show_stat_below(name, line, wildcards)
+   if gmcp("char.status.state") == "5" then
+      Send(line)
+      return
+   end
    local stat = stat_labels[wildcards.stat:lower()]
    local percent = tonumber(wildcards.percent)
    local group_members = gmcp("group.members")
