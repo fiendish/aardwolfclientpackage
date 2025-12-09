@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2312 snapshot
+- new feature: When GMCP debugging is active, telopt and gmcp messages being sent to the server will also be displayed now as long as they use the standard Send_GMCP_Packet and TelnetOptionOn/TelnetOptionOff helper functions.
+
 r2311 snapshot
 - bug fix: The vital shortcuts plugin will no longer interfere with notes. The alias regexes are also more strict now.
 
