@@ -153,7 +153,7 @@ end
 function OnPluginTelnetSubnegotiation (msg_type, data)
    if msg_type ~= GMCP then
       if (GMCPDebug > 0) and (msg_type == 102) then
-         ColourNote ("#FFAF00", "", "TELOPT: " .. string.byte(data, 1) .. "," .. string.byte(data, 2))
+         ColourNote ("#FFAF00", "", "Received TELOPT: " .. string.byte(data, 1) .. "," .. string.byte(data, 2))
       end
       return
    end
@@ -163,7 +163,7 @@ function OnPluginTelnetSubnegotiation (msg_type, data)
       return
    end
 
-   if GMCPDebug > 0 then ColourNote ("#FFAF00", "", utils.utf8convert(data)) end
+   if GMCPDebug > 0 then ColourNote ("#FFAF00", "", "Received GMCP: " .. utils.utf8convert(data)) end
 
    local message, params = string.match (data, "([%a.]+)%s+(.*)")
 

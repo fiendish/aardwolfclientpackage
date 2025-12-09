@@ -44,13 +44,17 @@ local function TelnetOption (which, on)
   local TELOPT_ON, TELOPT_OFF = 1, 2  -- turn on or off
   
 
-
+  local what = TELOPT_OFF
   if on then
-    SendPkt (string.char (IAC, SB, AARDWOLF_TELOPT, which, TELOPT_ON, IAC, SE)) 
-  else
-    SendPkt (string.char (IAC, SB, AARDWOLF_TELOPT, which, TELOPT_OFF, IAC, SE)) 
+    what = TELOPT_ON
   end -- if
-  
+
+  SendPkt(string.char(IAC, SB, AARDWOLF_TELOPT, which, what, IAC, SE))
+
+  debugging = GetPluginVariable("3e7dedbe37e44942dd46d264", "GMCPDebug")
+  if debugging ~= nil and tonumber(debugging) > 0 then
+    ColourNote("#FFAF00", "", "Sent TELOPT: " .. which .. "," .. what)
+  end
 end -- TelnetOption
 
 

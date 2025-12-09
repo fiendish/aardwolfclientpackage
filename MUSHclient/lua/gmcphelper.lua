@@ -16,9 +16,14 @@ end
 function Send_GMCP_Packet (what)
    assert(what ~= nil, "Send_GMCP_Packet was asked to send a nil message.")
 
-   SendPkt (string.char (IAC, SB, GMCP) ..
+   SendPkt(string.char (IAC, SB, GMCP) ..
            (string.gsub (what, "\255", "\255\255")) ..  -- IAC becomes IAC IAC
             string.char (IAC, SE))
+
+   local debugging = GetPluginVariable("3e7dedbe37e44942dd46d264", "GMCPDebug")
+   if debugging ~= nil and tonumber(debugging) > 0 then
+      ColourNote("#FFAF00", "", "Sent GMCP: " .. what)
+   end
 end
 
 
