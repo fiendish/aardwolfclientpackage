@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2314 snapshot
+- new feature: The splitscreen scrollback plugin now respects the main output's line spacing setting.
+- bug fix: The automatic world backup plugin was running away with its backups instead of limiting to only keeping a few copies around. That should be fixed now.
+
 r2312 snapshot
 - new feature: When GMCP debugging is active, telopt and gmcp messages being sent to the server will also be displayed now as long as they use the standard Send_GMCP_Packet and TelnetOptionOn/TelnetOptionOff helper functions.
 
