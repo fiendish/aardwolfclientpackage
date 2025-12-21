@@ -45,20 +45,20 @@ TextRect_defaults = {
 TextRect_mt = { __index = TextRect }
 
 function TextRect.new(
-   window, name, left, top, right, bottom, max_lines, scrollable, background_color, 
-   padding, font_name, font_size, external_scroll_handler, call_on_select, 
+   window, name, left, top, right, bottom, max_lines, scrollable, background_color,
+   padding, font_name, font_size, external_scroll_handler, call_on_select,
    unselectable, uncopyable, no_url_hyperlinks, no_autowrap,
-   menu_generator_function
+   menu_generator_function, line_spacing
 )
    new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..name
    new_tr.window = window
    new_tr.name = name
    new_tr:configure(
-      left, top, right, bottom, max_lines, scrollable, background_color, 
-      padding, font_name, font_size, external_scroll_handler, call_on_select, 
-      unselectable, uncopyable, no_url_hyperlinks, no_autowrap, 
-      menu_generator_function)
+      left, top, right, bottom, max_lines, scrollable, background_color,
+      padding, font_name, font_size, external_scroll_handler, call_on_select,
+      unselectable, uncopyable, no_url_hyperlinks, no_autowrap,
+      menu_generator_function, line_spacing)
    return new_tr
 end
 
@@ -69,11 +69,25 @@ function TextRect:set_bgcolor(bgcolor)
    end
 end
 
+function TextRect:setLineSpacing(line_spacing)
+   self.line_spacing = line_spacing
+   -- Calculate line_height: use line_spacing if configured, otherwise font's natural height
+   -- line_spacing of 0 or nil means use font's natural height
+   if self.line_spacing and self.line_spacing > 0 then
+      self.line_height = self.line_spacing
+   else
+      self.line_height = self.font_height
+   end
+   if self.padded_height then
+      self.rect_lines = math.floor(self.padded_height / self.line_height)
+   end
+end
+
 function TextRect:configure(
    left, top, right, bottom, max_lines, scrollable, background_color,
    padding, font_name, font_size, external_scroll_handler, call_on_select,
    unselectable, uncopyable, no_url_hyperlinks, no_autowrap,
-   menu_generator_function
+   menu_generator_function, line_spacing
 )
    self:setExternalMenuFunction(menu_generator_function)
    self.scrollable = scrollable
@@ -83,6 +97,7 @@ function TextRect:configure(
    self.max_lines = max_lines or self.max_lines
    self.font_name = font_name or self.font_name
    self.font_size = font_size or self.font_size
+   self.line_spacing = line_spacing  -- nil means use font metrics only
    self.no_autowrap = no_autowrap
    self.unselectable = unselectable
    self.uncopyable = uncopyable
@@ -101,11 +116,9 @@ function TextRect:loadFont(name, size)
 
       WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
       WindowFont(self.window, self.font_bold, self.font_name, self.font_size, true, false, false, false, 0)
-      self.line_height = WindowFontInfo(self.window, self.font, 1)
+      self.font_height = WindowFontInfo(self.window, self.font, 1)
    end
-   if self.padded_height then
-      self.rect_lines = math.floor(self.padded_height / self.line_height)
-   end
+   self:setLineSpacing(self.line_spacing)
 end
 
 -- Returns an array {start, end, text}

@@ -404,6 +404,10 @@ function ThemedTextWindowClass:set_scroll(pos)
    end
 end
 
+function ThemedTextWindowClass:set_line_spacing(line_spacing)
+   self.textrect:setLineSpacing(line_spacing)
+end
+
 function ThemedTextWindowClass:fit_size(content_width, num_content_lines, max_width, max_height)
    local height = nil
    local width = nil
@@ -476,11 +480,11 @@ function ThemedTextWindowClass:clear(draw_after)
 end
 
 function ThemedTextWindow(
-   id, default_left_position, default_top_position, default_width, default_height, title, title_alignment, 
+   id, default_left_position, default_top_position, default_width, default_height, title, title_alignment,
    is_temporary, resizeable, text_scrollable, text_selectable, text_copyable, url_hyperlinks,
    autowrap,
    title_font_name, title_font_size, text_font_name, text_font_size, text_max_lines, text_padding,
-   defer_showing, body_is_transparent
+   defer_showing, body_is_transparent, line_spacing
 )
    assert(id, "ThemedTextWindow Error: argument 1, id is required")
    assert(default_left_position, "ThemedTextWindow Error: argument 2, default_left_position is required")
@@ -518,9 +522,11 @@ function ThemedTextWindow(
       scrollbar_bottom = scrollbar_bottom-Theme.RESIZER_SIZE
    end
    self.textrect = TextRect.new(
-      self.id, "textrect", self.bodyleft, self.bodytop, tr_right, self.bodybottom-1, text_max_lines, 
+      self.id, "textrect", self.bodyleft, self.bodytop, tr_right, self.bodybottom-1, text_max_lines,
       text_scrollable, Theme.PRIMARY_BODY, text_padding, text_font_name, text_font_size, nil, nil, not text_selectable,
-      not text_copyable, not url_hyperlinks, not autowrap
+      not text_copyable, not url_hyperlinks, not autowrap,
+      nil,  -- menu_generator_function (set below)
+      line_spacing
    )
    self.textrect:setExternalMenuFunction(function() return self:get_menu_items() end)
    if text_scrollable then
