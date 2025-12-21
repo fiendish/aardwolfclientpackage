@@ -232,7 +232,10 @@ function check_display()
                desired_lines, false, Theme.PRIMARY_BODY, 0,
                output_font, output_font_size,
                'ScrollMain',
-               select_in_main
+               select_in_main,
+               nil, nil, nil, nil,  -- unselectable, uncopyable, no_url_hyperlinks, no_autowrap
+               nil,                 -- menu_generator_function
+               GetOption("line_spacing")
             )
             for i=math.min(num_lines-1, rect.rect_lines),1,-1 do
                rect:addText(GetStyleInfo(num_lines - i))
