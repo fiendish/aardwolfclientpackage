@@ -21,10 +21,9 @@ Saves a backup of your world file.
 <![CDATA[
 require "aard_lua_ffi"
 
-
 function do_backup ()
   local world_file_path = GetInfo(54)
-  local max_backups = 7  -- Maximum number of backups to keep
+  local max_backups = 30  -- Maximum number of backups to keep
 
   if saving or (not world_file_path) or (world_file_path == "") then
     return
@@ -39,8 +38,9 @@ function do_backup ()
   local backup_dir = GetInfo(67) .. "world_backups\\" .. world_file_name:gsub("%.[Mm][Cc][Ll]$", "\\")
   aard_lua_ffi.CreateDirectory(backup_dir, true)
 
-  local world_file_with_date = backup_dir .. world_file_name:gsub("%.[Mm][Cc][Ll]$", "") .. os.date (".mcl.backup-%d-%b-%Y")
+  local world_file_with_date = backup_dir .. world_file_name:gsub("%.[Mm][Cc][Ll]$", "") .. os.date (".mcl.backup-%Y-%m-%d")
   if Save(world_file_with_date, true) == true then
+    saving = false
     return
   end
 
@@ -48,15 +48,45 @@ function do_backup ()
   local backup_files = aard_lua_ffi.ListFiles(backup_dir, world_file_name:gsub("%.[Mm][Cc][Ll]$", "%.mcl%.backup-.*"))
 
   -- Remove oldest backups if there are more than max_backups
+  -- Sort descending so oldest files are at the end
+  table.sort(backup_files, function(a, b) return a > b end)
   while #backup_files > max_backups do
-    os.remove(backup_files[#backup_files])
+    os.remove(backup_dir .. backup_files[#backup_files])
     table.remove(backup_files)
   end
 
   saving = false
 end
 
+
+function migrate_old_backups ()
+  -- Migrate old backup files from format .mcl.backup-DD-MMM-YYYY to .mcl.backup-YYYY-MM-DD
+  local world_file_path = GetInfo(54)
+  if (not world_file_path) or (world_file_path == "") then
+    return
+  end
+
+  local world_file_name = string.match(world_file_path, "([^/\\]+)$")
+  local backup_dir = GetInfo(67) .. "world_backups\\" .. world_file_name:gsub("%.[Mm][Cc][Ll]$", "\\")
+
+  local month_to_num = {
+    Jan = "01", Feb = "02", Mar = "03", Apr = "04", May = "05", Jun = "06",
+    Jul = "07", Aug = "08", Sep = "09", Oct = "10", Nov = "11", Dec = "12"
+  }
+  local old_format_files = aard_lua_ffi.ListFiles(backup_dir, "%.mcl%.backup%-%d%d%-%a%a%a%-%d%d%d%d$")
+  for _, old_name in ipairs(old_format_files) do
+    local day, mon, year = old_name:match("%.mcl%.backup%-(%d%d)%-(%a%a%a)%-(%d%d%d%d)$")
+    if day and mon and year and month_to_num[mon] then
+      local new_name = old_name:gsub("%.mcl%.backup%-%d%d%-%a%a%a%-%d%d%d%d$",
+        ".mcl.backup-" .. year .. "-" .. month_to_num[mon] .. "-" .. day)
+      os.rename(backup_dir .. old_name, backup_dir .. new_name)
+    end
+  end
+end
+
+
 function OnPluginInstall ()
+  migrate_old_backups()
   do_backup ()
 end
 
