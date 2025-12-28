@@ -68,6 +68,38 @@ end
 </send>
 </alias>
 
+<!-- aliases to scroll the window up and down-->
+<alias
+   name="scrollhelpup"
+   match="scrollhelpup"
+   enabled="y"
+   sequence="100"
+   ignore_case="n"
+   send_to="12"
+><send>
+if my_window and my_window.scrollbar then
+   my_window.scrollbar:scrollUp()
+   my_window.scrollbar:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end
+</send>
+</alias>
+<alias
+   name="scrollhelpdown"
+   match="scrollhelpdown"
+   enabled="y"
+   sequence="100"
+   ignore_case="n"
+   send_to="12"
+><send>
+if my_window and my_window.scrollbar then
+   my_window.scrollbar:scrollDown()
+   my_window.scrollbar:draw()
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end
+</send>
+</alias>
+
 <alias
    name="resetaard"
    match="resetaard"
