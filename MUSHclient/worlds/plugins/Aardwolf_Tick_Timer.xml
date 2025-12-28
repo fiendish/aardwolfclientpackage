@@ -17,6 +17,14 @@
 <aliases>
 
 <alias
+   match="resetaard"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+   script="reset_aard"
+></alias>
+
+<alias
    match="^aard tick( help| miniwin| status)?$"
    regexp="y"
    enabled="y"
@@ -71,9 +79,28 @@ require "aard_register_z_on_create"
 
 require "mw_theme_base"
 
+default_font_name = "Dina"
+default_font_size = "10"
 tick_prefix = "Next tick: "
 tick_length = 30
 win = GetPluginID()
+default_x, default_y = 0, 577
+
+
+function reset_aard()
+   if aard_req_novisuals_mode then
+      use_miniwin = false
+   else
+      use_miniwin = true
+   end
+   font_name = default_font_name
+   font_size = default_font_size
+   WindowPosition(win, default_x, default_y, 0, 18)
+   Repaint() -- hack because WindowPosition doesn't immediately update coordinates
+   SaveState()
+   OnPluginInstall()
+end
+
 
 function switch_to_status()
    if aard_req_novisuals_mode then
@@ -134,9 +161,6 @@ function get_metrics()
    return width, height
 end
 
-default_font_name = "Dina"
-default_font_size = "10"
-
 function init()
    last_tick = nil
    lt = tonumber(GetVariable("last_tick"))
@@ -153,7 +177,7 @@ function init()
    font_size = tonumber(GetVariable("font_size")) or default_font_size
 
    if use_miniwin then
-      windowinfo = movewindow.install(win, miniwin.pos_bottom_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp})
+      windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp},{x=default_x, y=default_y})
       WindowCreate(win, windowinfo.window_left, windowinfo.window_top, 0, 0, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
       WindowFont(win, "font", font_name, font_size, false, false, false, false, 0)
       width, height = get_metrics()
