@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2316 snapshot
+- new feature: The helpfile popup miniwindow has two new aliases scrollhelpup and scrollhelpdown for scrolling up and down respectively from the keyboard.
+- bug fix: The tick timer miniwindow should now reset its position on the screen when using aard layout reset.
+
 r2314 snapshot
 - new feature: The splitscreen scrollback plugin now respects the main output's line spacing setting.
 - bug fix: The automatic world backup plugin was running away with its backups instead of limiting to only keeping a few copies around. That should be fixed now.
