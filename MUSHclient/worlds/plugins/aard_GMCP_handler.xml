@@ -128,6 +128,8 @@ function gmcpdebug(name, line, wildcards)
       return
    end
    GMCPDebug = newval
+   SetVariable("GMCPDebug", GMCPDebug)
+
    local msg = "off"
    if GMCPDebug == 1 then
       msg = "simple"
@@ -268,10 +270,6 @@ function OnPluginInstall()
       -- pretend like we just connected
       fetch_all()
    end
-end
-
-function OnPluginSaveState()
-   SetVariable("GMCPDebug", GMCPDebug)
 end
 
 function fetch_all()
