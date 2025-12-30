@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2318 snapshot
+- bug fix: Ughhhhhh, I forgot to commit part of r2316 for the help window scrolling aliases.
+
 r2317 snapshot
 - bug fix: Fix the r2312 change not activating or deactivating until after the next save.
 
