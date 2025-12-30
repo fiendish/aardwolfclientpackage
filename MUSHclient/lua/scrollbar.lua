@@ -244,18 +244,26 @@ function ScrollBar:generateHotspotID(id)
    return hotspot_id
 end
 
+function ScrollBar:scrollDown()
+   if (self.step + self.visible_steps) <= self.total_steps then
+      self.step = self.step + 1
+   end
+end
+
+function ScrollBar:scrollUp()
+   if self.step > 1 then
+      self.step = self.step - 1
+   end
+end
+
 -- Scroll through the contents step by step. Used when pressing the up/down arrow buttons.
 function ScrollBar:scroll()
    wait.make(function ()
       while self.keepscrolling == "up" or self.keepscrolling == "down" do
          if self.keepscrolling == "up" then
-            if (self.step > 1) then
-               self.step = self.step - 1
-            end
+            self:scrollUp()
          elseif self.keepscrolling == "down" then
-            if ((self.step + self.visible_steps) <= self.total_steps) then
-               self.step = self.step + 1
-            end
+            self:scrollDown()
          end
          self:draw()
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
