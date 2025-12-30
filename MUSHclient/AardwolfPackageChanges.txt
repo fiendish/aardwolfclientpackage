@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2317 snapshot
+- bug fix: Fix the r2312 change not activating or deactivating until after the next save.
+
 r2316 snapshot
 - new feature: The helpfile popup miniwindow has two new aliases scrollhelpup and scrollhelpdown for scrolling up and down respectively from the keyboard.
 - bug fix: The tick timer miniwindow should now reset its position on the screen when using aard layout reset.
