@@ -60,7 +60,8 @@ TILDE_PATTERN = CODE_PREFIX.."%-"
 X_NONNUMERIC_PATTERN = XTERM_CODE.."([^%d])"
 X_THREEHUNDRED_PATTERN = XTERM_CODE.."[3-9]%d%d"
 X_TWOSIXTY_PATTERN = XTERM_CODE.."2[6-9]%d"
-X_TWOFIFTYSIX_PATTERN = XTERM_CODE.."25[6-9]"
+X_TWOFIFTYSEVEN_PATTERN = XTERM_CODE.."25[7-9]"
+X_RANDOM_PATTERN = XTERM_CODE.."256"
 X_DIGITS_CAPTURE_PATTERN = XTERM_CODE.."(%d%d?%d?)"
 X_ANY_DIGITS_PATTERN = XTERM_CODE.."%d?%d?%d?"
 
@@ -231,6 +232,20 @@ end
 
 init_xterm_colors()
 init_basic_colors()
+
+-- Generate a random xterm color code (replaces @x256 with a random color)
+-- Uses x_not_too_dark to remap very dark colors to brighter values
+-- Excludes colors 17, 18, 19 from selection
+local random_color_pool = {}
+for i = 0, 255 do
+   if i < 17 or i > 19 then
+      table.insert(random_color_pool, i)
+   end
+end
+local function random_xterm_color()
+   local num = random_color_pool[math.random(#random_color_pool)]
+   return string.format(X3DIGIT_FORMAT, x_not_too_dark[num])
+end
 
 function StylesToColours (styles, dollarC_resets)
    init_basic_colors()
@@ -475,10 +490,11 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
    if section:find(CODE_PREFIX, nil, true) then
       section = section:gsub(PREFIX_ESCAPE, "\0") -- change @@ to 0x00
       section = section:gsub(TILDE_PATTERN, "~") -- fix tildes (historical)
+      section = section:gsub(X_RANDOM_PATTERN, random_xterm_color) -- @x256 becomes random color
       section = section:gsub(X_NONNUMERIC_PATTERN,"%1") -- strip invalid xterm codes (non-number)
       section = section:gsub(X_THREEHUNDRED_PATTERN,"") -- strip invalid xterm codes (300+)
       section = section:gsub(X_TWOSIXTY_PATTERN,"") -- strip invalid xterm codes (260+)
-      section = section:gsub(X_TWOFIFTYSIX_PATTERN,"") -- strip invalid xterm codes (256+)
+      section = section:gsub(X_TWOFIFTYSEVEN_PATTERN,"") -- strip invalid xterm codes (257-259)
       section = section:gsub(HIDDEN_GARBAGE_PATTERN, "")  -- strip hidden garbage
 
       local tokens = section:split(ALL_CODES_PATTERN, true)
@@ -582,7 +598,7 @@ function canonicalize_colours (s, keep_original)
    if s:find(CODE_PREFIX, nil, true) then
       s = s:gsub(X_DIGITS_CAPTURE_PATTERN, function(a)
          local b = tonumber(a)
-         if b and b <= 255 and b >= 0 then
+         if b and b <= 256 and b >= 0 then
             if keep_original and b <= 15 then
                return first_15_to_code[b]
             end
@@ -788,10 +804,11 @@ function ColoursToANSI (text)
    if text:find(CODE_PREFIX, nil, true) then
       text = text:gsub(PREFIX_ESCAPE, "\0") -- change @@ to 0x00
       text = text:gsub(TILDE_PATTERN, "~") -- fix tildes (historical)
+      text = text:gsub(X_RANDOM_PATTERN, random_xterm_color) -- @x256 becomes random color
       text = text:gsub(X_NONNUMERIC_PATTERN,"%1") -- strip invalid xterm codes (non-number)
       text = text:gsub(X_THREEHUNDRED_PATTERN,"") -- strip invalid xterm codes (300+)
       text = text:gsub(X_TWOSIXTY_PATTERN,"") -- strip invalid xterm codes (260+)
-      text = text:gsub(X_TWOFIFTYSIX_PATTERN,"") -- strip invalid xterm codes (256+)
+      text = text:gsub(X_TWOFIFTYSEVEN_PATTERN,"") -- strip invalid xterm codes (257-259)
       text = text:gsub(HIDDEN_GARBAGE_PATTERN, "")  -- strip hidden garbage
 
       text = text:gsub(X_DIGITS_CAPTURE_PATTERN, function(a)
