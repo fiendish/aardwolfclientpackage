@@ -291,22 +291,63 @@ function OnPluginTelnetRequest (msg_type, data)
    end -- if
 
    if msg_type == GMCP and data == "SENT_DO" then
-      luacom = require "luacom"
-      if luacom then
-         wshell = luacom.CreateObject("WScript.Shell")
-      end
-      if wshell then
-         rr = wshell.RegRead
-         rw = wshell.RegWrite
-      end
-      if rr and rw then
-         ident_ok, ident = pcall(rr, wshell, "HKCU\\Software\\AardwolfMUSHclient\\Ident")
-         if not ident_ok then
-            pcall(rw, wshell, "HKCU\\Software\\AardwolfMUSHclient\\Ident", CreateGUID(), "REG_SZ")
-            ident_ok, ident = pcall(rr, wshell, "HKCU\\Software\\AardwolfMUSHclient\\Ident")
+      local ident = nil
+      local mushclient_dir = GetInfo(66)
+      local ident_file = mushclient_dir .. ".aard_ident"
+      local skip_marker = mushclient_dir .. ".skip_luacom"
+      local rw = nil
+      local wshell = nil
+      local marker_file = io.open(skip_marker, "r")
+      if marker_file then
+         marker_file:close()
+      else
+         local marker = io.open(skip_marker, "w")
+         if marker then
+            marker:flush()
+            marker:close()
+            local luacom_ok, luacom = pcall(require, "luacom")
+            local rr
+            if luacom_ok and luacom then
+               local wshell_ok
+               wshell_ok, wshell = pcall(luacom.CreateObject, "WScript.Shell")
+               if wshell_ok and wshell then
+                  rr = wshell.RegRead
+                  rw = wshell.RegWrite
+               end
+            end
+            os.remove(skip_marker)
+            if rr and rw then
+               local reg_ok, reg_ident = pcall(rr, wshell, "HKCU\\Software\\AardwolfMUSHclient\\Ident")
+               if reg_ok and reg_ident then
+                  ident = reg_ident
+               end
+            end
          end
       end
-      ident = ident_ok and ident or "{ident failed}"
+      if not ident then
+         local f = io.open(ident_file, "r")
+         if f then
+            ident = f:read("*l")
+            f:close()
+         end
+      end
+      if not ident then
+         local new_ident = CreateGUID()
+         local saved = false
+         if rw then
+            saved = pcall(rw, wshell, "HKCU\\Software\\AardwolfMUSHclient\\Ident", new_ident, "REG_SZ")
+         end
+         local f = io.open(ident_file, "w")
+         if f then
+            f:write(new_ident)
+            f:close()
+            saved = true
+         end
+         if saved then
+            ident = new_ident
+         end
+      end
+      ident = ident or "{ident failed}"
       -- This hard-coded block may need to be made into a config table as we add more message types.
       Send_GMCP_Packet (
          string.format ('Core.Hello { "client": "MUSHclient", "version": "%s", "ident": "%s" }',
