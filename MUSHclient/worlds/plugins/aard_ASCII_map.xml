@@ -408,6 +408,14 @@ function DisplayMapPage()
       else
          title_lines = {"", ""}
       end
+
+      if map_lines[3] and #map_lines[3] == 1 and map_lines[3][1].textcolour ~= 12632256 then
+         -- Truncate the title if there's a third title line
+         table.remove(map_lines, 3)
+         title_lines[2] = title_lines[2] .. "..."
+         n = n - 1
+      end
+
       title_color = Theme.THREE_D_SURFACE_DETAIL
       draw_title()
       if is_pk then
