@@ -1647,15 +1647,14 @@ end
 
 function map_portal_recall (name, line, wildcards)
    -- flag a portal as using "recall"
-   local query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('**', '___HERE___', '___EVERYWHERE___')"
-   dbCheckExecute(query)
-
    local pnum = tonumber(wildcards[1])
-
    if pnum==nil then
       world.Note("\nPORTALRECALL FAILED: The required parameter for mapper portalrecall is <portal_index>. Current portal indexes can be found in the 'mapper portals' output.\n")
       return
    end
+
+   local query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('**', '___HERE___', '___EVERYWHERE___')"
+   dbCheckExecute(query)
 
    local count = 1
    local found = false
@@ -1725,24 +1724,35 @@ function map_portal (name, line, wildcards)
 end -- map_portal
 
 function create_portal(keyword, destination, level, quiet)
-   local hhp_room_exists = 0
    local query = ""
    keyword = Trim(keyword)
-   -- first check to see if our special 'from anywhere' room exists...
-   for row in dbnrowsWRAPPER("select * from rooms where uid='*'") do
-      hhp_room_exists = hhp_room_exists + 1
-   end
-   if hhp_room_exists == 0 then
-      query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('*', '___HERE___', '___EVERYWHERE___')"
+
+   -- Check if keyword suggests this is a recall portal (home, hom, or recall)
+   local keyword_lower = string.lower(keyword)
+   local is_recall_portal = (keyword_lower == "home" or keyword_lower == "hom" or keyword_lower == "recall")
+   local fromuid = is_recall_portal and "**" or "*"
+
+   -- first make sure our special 'from anywhere' room exists...
+   query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('*', '___HERE___', '___EVERYWHERE___')"
+   dbCheckExecute(query)
+
+   -- If this is a recall portal, ensure the '**' room exists too
+   if is_recall_portal then
+      query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('**', '___HERE___', '___EVERYWHERE___')"
       dbCheckExecute(query)
+      Note("")
+      ColourNote("yellow", "", string.format("PORTAL AUTO-DETECT: '%s' was automatically recognized as a recall portal.", keyword))
+      ColourNote("yellow", "", "If this is incorrect, you can change it using 'mapper portalrecall <index>' (find the index with 'mapper portals').")
+      Note("")
    end
+
    if not quiet then
       print (string.format("Storing '%s' as a portal to room %s.", keyword, destination))
       print (string.format("\nPortal given minimum level lock of %s.\n", level))
    end
    query = string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid, level) VALUES (%s, %s, %s, %s);",
       fixsql  (keyword),
-      fixsql  ("*"),           -- from anywhere
+      fixsql  (fromuid),       -- '*' for regular portals, '**' for recall portals
       fixsql  (destination),
       fixsql(level) -- minimum level of the portal
    )
