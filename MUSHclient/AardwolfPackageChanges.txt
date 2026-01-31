@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2321 snapshot
+- new feature: The GMCP mapper now automatically recognizes "home", "hom", and "recall" as recall portals when creating portals.
+
 r2320 snapshot
 - bug fix: Fix ascii map display of rooms with too long names that would span more than two lines.
 
