@@ -48,11 +48,13 @@ function do_backup ()
   local backup_files = aard_lua_ffi.ListFiles(backup_dir, world_file_name:gsub("%.[Mm][Cc][Ll]$", "%.mcl%.backup-.*"))
 
   -- Remove oldest backups if there are more than max_backups
-  -- Sort descending so oldest files are at the end
-  table.sort(backup_files, function(a, b) return a > b end)
-  while #backup_files > max_backups do
-    os.remove(backup_dir .. backup_files[#backup_files])
-    table.remove(backup_files)
+  if backup_files then
+    -- Sort descending so oldest files are at the end
+    table.sort(backup_files, function(a, b) return a > b end)
+    while #backup_files > max_backups do
+      os.remove(backup_dir .. backup_files[#backup_files])
+      table.remove(backup_files)
+    end
   end
 
   saving = false
@@ -74,6 +76,9 @@ function migrate_old_backups ()
     Jul = "07", Aug = "08", Sep = "09", Oct = "10", Nov = "11", Dec = "12"
   }
   local old_format_files = aard_lua_ffi.ListFiles(backup_dir, "%.mcl%.backup%-%d%d%-%a%a%a%-%d%d%d%d$")
+  if not old_format_files then
+    return
+  end
   for _, old_name in ipairs(old_format_files) do
     local day, mon, year = old_name:match("%.mcl%.backup%-(%d%d)%-(%a%a%a)%-(%d%d%d%d)$")
     if day and mon and year and month_to_num[mon] then
