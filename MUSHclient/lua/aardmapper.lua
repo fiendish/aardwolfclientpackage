@@ -104,6 +104,21 @@ local walk_to_room_name
 local total_times_drawn = 0
 local total_time_taken = 0
 
+-- cached tiled background texture
+local cached_bg_image = nil
+local cached_bg_width = 0
+local cached_bg_height = 0
+local cached_bg_texture = nil
+
+-- pan offset for dragging the map view
+local pan_offset_x = 0
+local pan_offset_y = 0
+local pan_last_mouse_x = 0
+local pan_last_mouse_y = 0
+local pan_dragging = false  -- true while dragging (skip hotspot updates)
+local pan_animating = false
+local last_area_for_pan = nil
+
 default_width = 269
 default_height = 335
 default_x = 868 + Theme.RESIZER_SIZE + 2
@@ -702,17 +717,21 @@ local function draw_room (uid, path, x, y)
       end
    end -- if
 
-   WindowAddHotspot(win, uid,
-      left, top, right, bottom,   -- rectangle
-      "",  -- mouseover
-      "",  -- cancelmouseover
-      "",  -- mousedown
-      "",  -- cancelmousedown
-      "mapper.mouseup_room",  -- mouseup
-      room.hovermessage,
-      miniwin.cursor_hand, 0)  -- hand cursor
+   -- skip hotspot creation during drag (preserves active drag callback)
+   if not pan_dragging then
+      WindowAddHotspot(win, uid,
+         left, top, right, bottom,   -- rectangle
+         "",  -- mouseover
+         "",  -- cancelmouseover
+         "mapper.pan_mousedown",  -- mousedown (for dragging)
+         "",  -- cancelmousedown
+         "mapper.mouseup_room",  -- mouseup
+         room.hovermessage,
+         miniwin.cursor_hand, 0)  -- hand cursor
 
-   WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
+      WindowDragHandler(win, uid, "mapper.pan_dragmove", "mapper.pan_dragrelease", 0)
+      WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
+   end
 end -- draw_room
 
 local function changed_room (uid)
@@ -839,16 +858,18 @@ function dress_window(room_name, room_uid, area_name)
       )
       local box_width = box_right - (x-1)
 
-      WindowAddHotspot(win, "<help>",
-         x-3, y-4, x+box_width+3, y + font_height,   -- rectangle
-         "",  -- mouseover
-         "",  -- cancelmouseover
-         "",  -- mousedown
-         "",  -- cancelmousedown
-         "mapper.show_help",  -- mouseup
-         "Click for help",
-         miniwin.cursor_help, 0
-      )
+      if not pan_dragging then
+         WindowAddHotspot(win, "<help>",
+            x-3, y-4, x+box_width+3, y + font_height,   -- rectangle
+            "",  -- mouseover
+            "",  -- cancelmouseover
+            "",  -- mousedown
+            "",  -- cancelmousedown
+            "mapper.show_help",  -- mouseup
+            "Click for help",
+            miniwin.cursor_help, 0
+         )
+      end
    end -- if
 
    -- configuration
@@ -865,15 +886,17 @@ function dress_window(room_name, room_uid, area_name)
          y-2,   -- top
          "*", false, false)
 
-      WindowAddHotspot(win, "<configure>",
-         x-2, y-4, x+text_width, y + font_height,   -- rectangle
-         "",  -- mouseover
-         "",  -- cancelmouseover
-         "",  -- mousedown
-         "",  -- cancelmousedown
-         "mapper.mouseup_configure",  -- mouseup
-         "Click to configure map",
-         miniwin.cursor_plus, 0)
+      if not pan_dragging then
+         WindowAddHotspot(win, "<configure>",
+            x-2, y-4, x+text_width, y + font_height,   -- rectangle
+            "",  -- mouseover
+            "",  -- cancelmouseover
+            "",  -- mousedown
+            "",  -- cancelmousedown
+            "mapper.mouseup_configure",  -- mouseup
+            "Click to configure map",
+            miniwin.cursor_plus, 0)
+      end
    end
 end
 
@@ -908,54 +931,106 @@ function draw (uid)
 
    current_area = room.area
 
+   -- check for area change and start smooth pan reset
+   if last_area_for_pan ~= nil and last_area_for_pan ~= current_area then
+      if not pan_animating and (pan_offset_x ~= 0 or pan_offset_y ~= 0) then
+         start_pan_animation()
+      end
+   end
+   last_area_for_pan = current_area
+
    -- update dimensions and position here because the bigmap might have changed them
    windowinfo.window_left = WindowInfo(win, 1) or windowinfo.window_left
    windowinfo.window_top = WindowInfo(win, 2) or windowinfo.window_top
    config.WINDOW.width = WindowInfo(win, 3) or config.WINDOW.width
    config.WINDOW.height = WindowInfo(win, 4) or config.WINDOW.height
 
-   WindowCreate (win,
-      windowinfo.window_left,
-      windowinfo.window_top,
-      config.WINDOW.width,
-      config.WINDOW.height,
-      windowinfo.window_mode,   -- top right
-      windowinfo.window_flags,
-      Theme.PRIMARY_BODY)
-
-   -- Handle background texture.
-   if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
-      local iwidth = WindowImageInfo(win,room.textimage,2)
-      local iheight= WindowImageInfo(win,room.textimage,3)
-      local x = 0
-      local y = 0
-
-      while y < config.WINDOW.height do
-         x = 0
-         while x < config.WINDOW.width do
-            WindowDrawImage (win, room.textimage, x, y, 0, 0, 1)  -- straight copy
-            x = x + iwidth
+   -- check if window already exists (preserves zzz_zoom hotspot for drag operations)
+   local window_exists = WindowInfo(win, 1) ~= nil
+   
+   if window_exists then
+      -- during drag, skip hotspot updates (just redraw graphics)
+      if not pan_dragging then
+         -- delete all hotspots except zzz_zoom
+         local hotspots = WindowHotspotList(win) or {}
+         for _, hs in ipairs(hotspots) do
+            if hs ~= "zzz_zoom" then
+               WindowDeleteHotspot(win, hs)
+            end
          end
-         y = y + iheight
+      end
+      -- clear the window contents (skip if background texture will cover it)
+      if room.textimage == nil or config.USE_TEXTURES.enabled ~= true then
+         WindowRectOp(win, 2, 0, 0, config.WINDOW.width, config.WINDOW.height, Theme.PRIMARY_BODY)
+      end
+   else
+      -- create new window
+      WindowCreate (win,
+         windowinfo.window_left,
+         windowinfo.window_top,
+         config.WINDOW.width,
+         config.WINDOW.height,
+         windowinfo.window_mode,   -- top right
+         windowinfo.window_flags,
+         Theme.PRIMARY_BODY)
+   end
+
+   -- Handle background texture (cached for performance)
+   if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
+      -- check if we need to regenerate the cached background
+      local need_regen = cached_bg_image == nil 
+         or cached_bg_width ~= config.WINDOW.width 
+         or cached_bg_height ~= config.WINDOW.height
+         or cached_bg_texture ~= room.textimage
+      
+      if need_regen then
+         -- tile the texture directly into win first
+         local iwidth = WindowImageInfo(win, room.textimage, 2)
+         local iheight = WindowImageInfo(win, room.textimage, 3)
+         local x, y = 0, 0
+         while y < config.WINDOW.height do
+            x = 0
+            while x < config.WINDOW.width do
+               WindowDrawImage(win, room.textimage, x, y, 0, 0, 1)
+               x = x + iwidth
+            end
+            y = y + iheight
+         end
+         
+         -- capture the tiled result as a cached image
+         cached_bg_image = "cached_bg"
+         WindowImageFromWindow(win, cached_bg_image, win)
+         
+         cached_bg_width = config.WINDOW.width
+         cached_bg_height = config.WINDOW.height
+         cached_bg_texture = room.textimage
+      else
+         -- single blit of cached background
+         WindowDrawImage(win, cached_bg_image, 0, 0, 0, 0, 1)
       end
    end
 
-   -- for zooming
-   WindowAddHotspot(win,
-      "zzz_zoom",
-      0, 0, 0, 0,
-      "", "", "", "", "mapper.MouseUp",
-      "",  -- hint
-      miniwin.cursor_arrow, 0)
+   -- for zooming and panning (only create if hotspot doesn't already exist)
+   if WindowHotspotInfo(win, "zzz_zoom", 1) == nil then
+      WindowAddHotspot(win,
+         "zzz_zoom",
+         0, 0, config.WINDOW.width, config.WINDOW.height,
+         "", "", "mapper.pan_mousedown", "", "mapper.MouseUp",
+         "Drag to pan map",
+         miniwin.cursor_hand, 0)
 
-   WindowScrollwheelHandler (win, "zzz_zoom", "mapper.zoom_map")
+      WindowDragHandler(win, "zzz_zoom", "mapper.pan_dragmove", "mapper.pan_dragrelease", 0)
+      WindowScrollwheelHandler (win, "zzz_zoom", "mapper.zoom_map")
+   end
 
    -- set up for initial room, in middle
    drawn, drawn_coords, rooms_to_be_drawn, plan_to_draw, area_exits = {}, {}, {}, {}, {}
    depth = 0
 
-   -- insert initial room
-   table.insert (rooms_to_be_drawn, add_another_room (uid, {}, config.WINDOW.width / 2, config.WINDOW.height / 2))
+   -- insert initial room (with pan offset applied)
+   local center_x = config.WINDOW.width / 2 + pan_offset_x
+   local center_y = config.WINDOW.height / 2 + pan_offset_y
+   table.insert (rooms_to_be_drawn, add_another_room (uid, {}, center_x, center_y))
 
    while #rooms_to_be_drawn > 0 and depth < config.SCAN.depth do
       local old_generation = rooms_to_be_drawn
@@ -1034,6 +1109,8 @@ function draw (uid)
          total_times_drawn,
          total_time_taken / total_times_drawn))
    end -- if
+
+   -- use direct Repaint during animation for higher frame rate, otherwise BufferedRepaint
 
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- draw
@@ -1145,6 +1222,11 @@ end
 function right_click_menu()
    menustring = "Bring To Front|Send To Back"
 
+   -- add center map option if panned
+   if pan_offset_x ~= 0 or pan_offset_y ~= 0 then
+      menustring = menustring.."|-|Center Map"
+   end
+
    rc, a, b, c = CallPlugin("60840c9013c7cc57777ae0ac", "getCurrentState")
    if rc == 0 and a == true then
       if b == 1 then
@@ -1162,6 +1244,8 @@ function right_click_menu()
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == "Send To Back" then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+   elseif result == "Center Map" then
+      reset_pan()
    elseif result == "Show Continent Bigmap" then
       Execute("bigmap on")
    elseif result == "Merge Continent Bigmap Into GMCP Mapper" then
@@ -1623,6 +1707,139 @@ function mouseup_room (flags, hotspot_id)
       true        -- just walk there
    )
 end -- mouseup_room
+
+-- ------------------------------------------------------------------
+-- pan handlers for dragging the map view
+-- ------------------------------------------------------------------
+
+function pan_mousedown (flags, hotspot_id)
+   -- cancel any running animation
+   if pan_animating then
+      DeleteTimer("pan_animate")
+      pan_animating = false
+   end
+   -- mark as dragging (draw() will skip hotspot updates)
+   pan_dragging = true
+   -- record starting mouse position for incremental tracking
+   pan_last_mouse_x = WindowInfo(win, 17)
+   pan_last_mouse_y = WindowInfo(win, 18)
+end -- pan_mousedown
+
+function pan_dragmove (flags, hotspot_id)
+   -- don't pan if we don't have a room to draw
+   if not current_room then
+      return
+   end
+   
+   -- get current mouse position
+   local mouse_x = WindowInfo(win, 17)
+   local mouse_y = WindowInfo(win, 18)
+   
+   -- calculate incremental delta since last move
+   local delta_x = mouse_x - pan_last_mouse_x
+   local delta_y = mouse_y - pan_last_mouse_y
+   
+   -- update last position for next increment
+   pan_last_mouse_x = mouse_x
+   pan_last_mouse_y = mouse_y
+   
+   -- accumulate into pan offset
+   pan_offset_x = pan_offset_x + delta_x
+   pan_offset_y = pan_offset_y + delta_y
+   
+   -- clamp offset so player's room stays in view
+   -- room is at (width/2 + offset_x, height/2 + offset_y)
+   local max_offset_x = config.WINDOW.width / 2 - ROOM_SIZE
+   local max_offset_y_bottom = config.WINDOW.height / 2 - ROOM_SIZE
+   -- account for title bar at top (bodytop is set by dress_window)
+   local title_height = bodytop or (font_height * 2)
+   local max_offset_y_top = config.WINDOW.height / 2 - title_height - ROOM_SIZE
+   pan_offset_x = math.max(-max_offset_x, math.min(max_offset_x, pan_offset_x))
+   pan_offset_y = math.max(-max_offset_y_top, math.min(max_offset_y_bottom, pan_offset_y))
+   
+   -- redraw with new offset (window_exists check in draw() preserves our hotspot)
+   draw(current_room)
+end -- pan_dragmove
+
+function pan_dragrelease (flags, hotspot_id)
+   -- no longer dragging - full redraw will recreate hotspots
+   pan_dragging = false
+   -- redraw with the new pan offset
+   if current_room then
+      draw(current_room)
+   end
+end -- pan_dragrelease
+
+function reset_pan()
+   pan_offset_x = 0
+   pan_offset_y = 0
+   if current_room then
+      draw(current_room)
+   end
+end -- reset_pan
+
+function start_pan_animation()
+   pan_animating = true
+   AddTimer("pan_animate", 0, 0, 0.05, "", 
+      timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace, 
+      "mapper.pan_animate_step")
+end -- start_pan_animation
+
+function pan_animate_step()
+   -- guard against running if animation was cancelled
+   if not pan_animating then
+      DeleteTimer("pan_animate")
+      return
+   end
+   
+   -- move toward zero: max speed until close, then ease down
+   local min_move = 2.5
+   local max_move = 20
+   local ease_threshold = 200  -- start easing when within this distance
+   
+   local function calc_move(offset)
+      if offset == 0 then return 0 end
+      local abs_offset = math.abs(offset)
+      local sign = offset > 0 and 1 or -1
+      local move
+      if abs_offset > ease_threshold then
+         -- far from center: move at max speed
+         move = max_move
+      else
+         -- close to center: ease proportionally
+         move = min_move + (max_move - min_move) * (abs_offset / ease_threshold)
+      end
+      -- clamp to remaining distance to avoid overshoot
+      move = math.min(move, abs_offset)
+      return move * sign
+   end
+   
+   local move_x = calc_move(pan_offset_x)
+   local move_y = calc_move(pan_offset_y)
+   pan_offset_x = pan_offset_x - move_x
+   pan_offset_y = pan_offset_y - move_y
+   
+   -- snap to zero when close enough
+   if math.abs(pan_offset_x) < min_move and math.abs(pan_offset_y) < min_move then
+      pan_offset_x = 0
+      pan_offset_y = 0
+      pan_animating = false
+      DeleteTimer("pan_animate")
+      -- final draw at center position
+      if current_room then
+         draw(current_room)
+      end
+   else
+      -- draw current frame
+      if current_room then
+         draw(current_room)
+      end
+      -- schedule next frame
+      AddTimer("pan_animate", 0, 0, 0.05, "", 
+         timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace,
+         "mapper.pan_animate_step")
+   end
+end -- pan_animate_step
 
 function mouseup_configure (flags, hotspot_id)
    draw_configure_box = true
