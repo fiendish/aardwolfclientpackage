@@ -20,9 +20,9 @@
 <script>
 <![CDATA[
 
-repaint_on_tick = false
-last_repaint_time = utils.timer()
-paused = false
+local repaint_on_tick = false
+local last_repaint_time = utils.timer()
+local paused = false
 
 function pause()
    paused = true
@@ -32,9 +32,9 @@ function resume()
    paused = false
 end
 
-function BufferedRepaint()
+function BufferedRepaint(min_interval)
    repaint_on_tick = true
-   if (paused == false) and (utils.timer() - last_repaint_time > .1) then
+   if (paused == false) and (utils.timer() - last_repaint_time > (min_interval or .1)) then
       repaint_on_tick = false
       Repaint()
       last_repaint_time = utils.timer()

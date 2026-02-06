@@ -84,7 +84,8 @@ local DISTANCE_TO_NEXT_ROOM = tonumber(GetVariable("DISTANCE_TO_NEXT_ROOM")) or 
 -- supplied in init
 local supplied_get_room
 local room_click
-local timing            -- true to show timing and other info
+local timing            -- true to show frame timing summary
+local detailed_timing   -- true to show detailed sub-phase breakdown
 local show_completed    -- true to show "Speedwalk completed."
 
 -- current room number
@@ -95,14 +96,39 @@ local rooms = {}
 local last_visited = {}
 local textures = {}
 local last_result_list = {}
+local prev_draw_room = nil   -- uid of previous current room (for cache invalidation)
+local prev_draw_area = nil   -- area of previous current room (for area-change detection)
+local room_cache_hits = 0    -- timing: cache hit counter
+local room_cache_misses = 0  -- timing: cache miss counter
+local draw_now = 0           -- os.time() cached once per frame
 
 -- other locals
 local HALF_ROOM, connectors, half_connectors, arrows
 local plan_to_draw, drawn, drawn_coords
+local rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y
 local last_drawn, depth, font_height
 local walk_to_room_name
 local total_times_drawn = 0
 local total_time_taken = 0
+
+-- room drawing timing metrics
+local room_draw_times = {}
+local rooms_drawn_count = 0
+-- draw_room sub-phases
+local total_exit_planning_time = 0
+local total_exit_drawing_time = 0
+local total_room_cache_time = 0     -- get_room calls inside exit loop
+local total_room_db_time = 0        -- supplied_get_room (DB lookup)
+local total_room_defaults_time = 0  -- strip_colours, field defaults
+local total_room_texture_time = 0   -- texture cache/load
+local total_graphics_time = 0
+local total_hotspot_time = 0
+-- draw() outer phases
+local total_window_setup_time = 0   -- window create/clear, hotspot cleanup
+local total_bg_texture_time = 0     -- background texture tiling/blit
+local total_room_loop_time = 0      -- the fan-out while loop
+local total_zone_exit_time = 0      -- draw_zone_exit calls
+local total_dress_window_time = 0   -- dress_window, theme, PK
 
 -- cached tiled background texture
 local cached_bg_image = nil
@@ -248,10 +274,15 @@ local expand_direction = {
 }  -- end of expand_direction
 
 local function get_room (uid)
+   local db_t0 = detailed_timing and utils.timer()
    local room = supplied_get_room (uid)
    room = room or { unknown = true }
+   if db_t0 then
+      total_room_db_time = total_room_db_time + (utils.timer() - db_t0)
+   end
 
    -- defaults in case they didn't supply them ...
+   local def_t0 = detailed_timing and utils.timer()
    room.name = room.name or string.format ("Room %s", uid)
    room.name = strip_colours (room.name)  -- no colour codes for now
    room.exits = room.exits or {}
@@ -263,9 +294,13 @@ local function get_room (uid)
    room.fillcolour = room.fillcolour or 0x000000
    room.fillbrush = room.fillbrush or 1 -- no fill
    room.texture = room.texture or nil -- no texture
+   if def_t0 then
+      total_room_defaults_time = total_room_defaults_time + (utils.timer() - def_t0)
+   end
 
    room.textimage = nil
 
+   local tex_t0 = detailed_timing and utils.timer()
    if room.texture == nil or room.texture == "" then room.texture = "test5.png" end
    if textures[room.texture] then
       room.textimage = textures[room.texture] -- assign image
@@ -280,6 +315,9 @@ local function get_room (uid)
             room.textimage = room.texture
          end
       end
+   end
+   if tex_t0 then
+      total_room_texture_time = total_room_texture_time + (utils.timer() - tex_t0)
    end
 
    return room
@@ -546,14 +584,13 @@ local inverse_direction = {
    nw = "se"
 }  -- end of inverse_direction
 
-local function add_another_room (uid, path, x, y)
-   local path = path or {}
-   return {uid=uid, path=path, x = x, y = y}
-end  -- add_another_room
+local function draw_room (uid, x, y)
+   local room_start_time = nil
+   if detailed_timing then
+      room_start_time = utils.timer()
+   end
 
-local function draw_room (uid, path, x, y)
-
-   local coords = string.format ("%i,%i", math.floor (x), math.floor (y))
+   local coords = math.floor (x) * 100000 + math.floor (y)
 
    -- need this for the *current* room !!!
    drawn_coords [coords] = uid
@@ -565,7 +602,7 @@ local function draw_room (uid, path, x, y)
    end -- done this one
 
    -- don't draw the same room more than once
-   drawn [uid] = { coords = coords, path = path }
+   drawn [uid] = coords
 
    local room = rooms [uid]
 
@@ -573,6 +610,9 @@ local function draw_room (uid, path, x, y)
    if not room then
       room = get_room (uid)
       rooms [uid] = room
+      if detailed_timing then room_cache_misses = room_cache_misses + 1 end
+   else
+      if detailed_timing then room_cache_hits = room_cache_hits + 1 end
    end -- not in cache
 
 
@@ -585,11 +625,13 @@ local function draw_room (uid, path, x, y)
    end -- if
 
    -- exits
-
-   local texits = {}
+   local exit_start_time = nil
+   local exit_draw_accum = 0
+   if detailed_timing then
+      exit_start_time = utils.timer()
+   end
 
    for dir, exit_uid in pairs (room.exits) do
-      table.insert (texits, dir)
       local exit_info = connectors [dir]
       local stub_exit_info = half_connectors [dir]
       local locked_exit = not (room.exit_locks == nil or room.exit_locks[dir] == nil or room.exit_locks[dir] == "0")
@@ -609,7 +651,14 @@ local function draw_room (uid, path, x, y)
 
          -- try to cache room
          if not rooms [exit_uid] then
+            local cache_t0 = detailed_timing and utils.timer()
             rooms [exit_uid] = get_room (exit_uid)
+            if cache_t0 then
+               total_room_cache_time = total_room_cache_time + (utils.timer() - cache_t0)
+               room_cache_misses = room_cache_misses + 1
+            end
+         else
+            if detailed_timing then room_cache_hits = room_cache_hits + 1 end
          end -- if
 
          if rooms [exit_uid].unknown then
@@ -619,7 +668,7 @@ local function draw_room (uid, path, x, y)
          local next_x = x + exit_info.at [1] * (ROOM_SIZE + DISTANCE_TO_NEXT_ROOM)
          local next_y = y + exit_info.at [2] * (ROOM_SIZE + DISTANCE_TO_NEXT_ROOM)
 
-         local next_coords = string.format ("%i,%i", math.floor (next_x), math.floor (next_y))
+         local next_coords = math.floor (next_x) * 100000 + math.floor (next_y)
 
          -- remember if a zone exit (first one only)
          if config.SHOW_AREA_EXITS and room.area ~= rooms [exit_uid].area and not rooms[exit_uid].unknown then
@@ -646,9 +695,10 @@ local function draw_room (uid, path, x, y)
                   linetype = miniwin.pen_dash -- dash
                else
                   -- remember to draw room next iteration
-                  local new_path = copytable.deep (path)
-                  table.insert (new_path, { dir = dir, uid = exit_uid })
-                  table.insert (rooms_to_be_drawn, add_another_room (exit_uid, new_path, next_x, next_y))
+                  local n = #rooms_to_be_drawn_uid + 1
+                  rooms_to_be_drawn_uid[n] = exit_uid
+                  rooms_to_be_drawn_x[n] = next_x
+                  rooms_to_be_drawn_y[n] = next_y
                   drawn_coords [next_coords] = exit_uid
                   plan_to_draw [exit_uid] = next_coords
 
@@ -656,9 +706,8 @@ local function draw_room (uid, path, x, y)
                   if not rooms [exit_uid].unknown then
                      local exit_time = last_visited [exit_uid] or 0
                      local this_time = last_visited [uid] or 0
-                     local now = os.time ()
-                     if exit_time > (now - LAST_VISIT_TIME) and
-                        this_time > (now - LAST_VISIT_TIME) then
+                     if exit_time > (draw_now - LAST_VISIT_TIME) and
+                        this_time > (draw_now - LAST_VISIT_TIME) then
                         linewidth = 2
                      end -- if
                   end -- if
@@ -666,6 +715,7 @@ local function draw_room (uid, path, x, y)
             end -- if
          end -- if drawn on this spot
 
+         local draw_t0 = detailed_timing and utils.timer()
          WindowLine (win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
 
          -- one-way exit?
@@ -690,9 +740,23 @@ local function draw_room (uid, path, x, y)
                   true, true)
             end -- one way
          end -- if we know of the room where it does
+         if draw_t0 then
+            exit_draw_accum = exit_draw_accum + (utils.timer() - draw_t0)
+         end
       end -- if we know what to do with this direction
    end -- for each exit
 
+   if detailed_timing and exit_start_time then
+      local exit_total = utils.timer() - exit_start_time
+      total_exit_drawing_time = total_exit_drawing_time + exit_draw_accum
+      total_exit_planning_time = total_exit_planning_time + (exit_total - exit_draw_accum)
+   end
+
+   -- graphics operations
+   local graphics_start_time = nil
+   if detailed_timing then
+      graphics_start_time = utils.timer()
+   end
 
    if room.unknown then
       WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
@@ -717,7 +781,16 @@ local function draw_room (uid, path, x, y)
       end
    end -- if
 
+   if detailed_timing and graphics_start_time then
+      total_graphics_time = total_graphics_time + (utils.timer() - graphics_start_time)
+   end
+
    -- skip hotspot creation during drag (preserves active drag callback)
+   local hotspot_start_time = nil
+   if detailed_timing then
+      hotspot_start_time = utils.timer()
+   end
+
    if not pan_dragging then
       WindowAddHotspot(win, uid,
          left, top, right, bottom,   -- rectangle
@@ -731,6 +804,17 @@ local function draw_room (uid, path, x, y)
 
       WindowDragHandler(win, uid, "mapper.pan_dragmove", "mapper.pan_dragrelease", 0)
       WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
+   end
+
+   if detailed_timing and hotspot_start_time then
+      total_hotspot_time = total_hotspot_time + (utils.timer() - hotspot_start_time)
+   end
+
+   -- track total time for this room
+   if detailed_timing and room_start_time then
+      local room_time = utils.timer() - room_start_time
+      table.insert(room_draw_times, room_time)
+      rooms_drawn_count = rooms_drawn_count + 1
    end
 end -- draw_room
 
@@ -801,6 +885,17 @@ end -- check_we_can_find
 dont_draw = false
 function halt_drawing(halt)
    dont_draw = halt
+end
+
+-- invalidate cached room data (call when GMCP updates a room, notes change, etc.)
+function invalidate_room(uid)
+   if uid then
+      rooms[uid] = nil
+   else
+      rooms = {}
+      prev_draw_room = nil
+      prev_draw_area = nil
+   end
 end
 
 blink_cycle = {
@@ -920,8 +1015,44 @@ function draw (uid)
    -- timing
    local start_time = utils.timer ()
 
-   -- start with initial room
-   rooms = { [uid] = get_room (uid) }
+   -- reset room drawing metrics for this frame
+   if detailed_timing then
+      room_draw_times = {}
+      rooms_drawn_count = 0
+      total_exit_planning_time = 0
+      total_exit_drawing_time = 0
+      total_room_cache_time = 0
+      total_room_db_time = 0
+      total_room_defaults_time = 0
+      total_room_texture_time = 0
+      total_graphics_time = 0
+      total_hotspot_time = 0
+      total_window_setup_time = 0
+      total_bg_texture_time = 0
+      total_room_loop_time = 0
+      total_zone_exit_time = 0
+      total_dress_window_time = 0
+      room_cache_hits = 0
+      room_cache_misses = 0
+   end
+
+   draw_now = os.time ()
+
+   -- selective cache invalidation: fetch current room fresh (needs OUR_ROOM_COLOUR)
+   local fresh_current = get_room (uid)
+   local new_area = fresh_current and fresh_current.area
+
+   if prev_draw_area ~= nil and prev_draw_area ~= new_area then
+      -- area changed: all border decisions depend on current_area, clear everything
+      rooms = {}
+   elseif prev_draw_room and prev_draw_room ~= uid then
+      -- same area, different room: invalidate old current room (had OUR_ROOM_COLOUR)
+      rooms[prev_draw_room] = nil
+   end
+
+   rooms[uid] = fresh_current
+   prev_draw_room = uid
+   prev_draw_area = new_area
 
    -- lookup current room
    local room = rooms [uid]
@@ -940,6 +1071,7 @@ function draw (uid)
    last_area_for_pan = current_area
 
    -- update dimensions and position here because the bigmap might have changed them
+   local setup_t0 = detailed_timing and utils.timer()
    windowinfo.window_left = WindowInfo(win, 1) or windowinfo.window_left
    windowinfo.window_top = WindowInfo(win, 2) or windowinfo.window_top
    config.WINDOW.width = WindowInfo(win, 3) or config.WINDOW.width
@@ -975,14 +1107,20 @@ function draw (uid)
          Theme.PRIMARY_BODY)
    end
 
+   if setup_t0 then
+      total_window_setup_time = utils.timer() - setup_t0
+   end
+
    -- Handle background texture (cached for performance)
+   local bg_t0 = detailed_timing and utils.timer()
    if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
       -- check if we need to regenerate the cached background
-      local need_regen = cached_bg_image == nil 
-         or cached_bg_width ~= config.WINDOW.width 
+      local need_regen = (
+         cached_bg_image == nil
+         or cached_bg_width ~= config.WINDOW.width
          or cached_bg_height ~= config.WINDOW.height
          or cached_bg_texture ~= room.textimage
-      
+      )
       if need_regen then
          -- tile the texture directly into win first
          local iwidth = WindowImageInfo(win, room.textimage, 2)
@@ -1010,6 +1148,10 @@ function draw (uid)
       end
    end
 
+   if bg_t0 then
+      total_bg_texture_time = utils.timer() - bg_t0
+   end
+
    -- for zooming and panning (only create if hotspot doesn't already exist)
    if WindowHotspotInfo(win, "zzz_zoom", 1) == nil then
       WindowAddHotspot(win,
@@ -1024,27 +1166,39 @@ function draw (uid)
    end
 
    -- set up for initial room, in middle
-   drawn, drawn_coords, rooms_to_be_drawn, plan_to_draw, area_exits = {}, {}, {}, {}, {}
+   drawn, drawn_coords, plan_to_draw, area_exits = {}, {}, {}, {}
+   rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y = {}, {}, {}
    depth = 0
 
    -- insert initial room (with pan offset applied)
    local center_x = config.WINDOW.width / 2 + pan_offset_x
    local center_y = config.WINDOW.height / 2 + pan_offset_y
-   table.insert (rooms_to_be_drawn, add_another_room (uid, {}, center_x, center_y))
+   rooms_to_be_drawn_uid[1] = uid
+   rooms_to_be_drawn_x[1] = center_x
+   rooms_to_be_drawn_y[1] = center_y
 
-   while #rooms_to_be_drawn > 0 and depth < config.SCAN.depth do
-      local old_generation = rooms_to_be_drawn
-      rooms_to_be_drawn = {}  -- new generation
-      for i, part in ipairs (old_generation) do
-         draw_room (part.uid, part.path, part.x, part.y)
+   local loop_t0 = detailed_timing and utils.timer()
+   while #rooms_to_be_drawn_uid > 0 and depth < config.SCAN.depth do
+      local old_uid, old_x, old_y = rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y
+      rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y = {}, {}, {}
+      for i = 1, #old_uid do
+         draw_room (old_uid[i], old_x[i], old_y[i])
       end -- for each existing room
       depth = depth + 1
-   end -- while all rooms_to_be_drawn
+   end -- while rooms to be drawn
+   if loop_t0 then
+      total_room_loop_time = utils.timer() - loop_t0
+   end
 
+   local zone_t0 = detailed_timing and utils.timer()
    for area, zone_exit in pairs (area_exits) do
       draw_zone_exit (zone_exit)
    end -- for
+   if zone_t0 then
+      total_zone_exit_time = utils.timer() - zone_t0
+   end
 
+   local dress_t0 = detailed_timing and utils.timer()
    truncated_room_name = room.name
    local name_width = WindowTextWidth (win, FONT_ID, truncated_room_name)
    local add_dots = false
@@ -1089,30 +1243,92 @@ function draw (uid)
 
    -- make sure window visible
    WindowShow (win, not window_hidden)
+   if dress_t0 then
+      total_dress_window_time = utils.timer() - dress_t0
+   end
 
    last_drawn = uid  -- last room number we drew (for zooming)
 
    local end_time = utils.timer ()
+   local frame_time = end_time - start_time
 
-   -- timing stuff
-   if timing then
-      local count= 0
+   -- frame total + running average
+   if timing or detailed_timing then
+      total_times_drawn = total_times_drawn + 1
+      total_time_taken = total_time_taken + frame_time
+      print (string.format ("=== Mapper frame: depth %i, %0.1f ms (avg %0.1f ms over %i frames) ===",
+         depth, frame_time * 1000, total_time_taken / total_times_drawn * 1000, total_times_drawn))
+   end
+
+   -- detailed timing breakdown
+   if detailed_timing then
+      local count = 0
       for k in pairs (drawn) do
          count = count + 1
       end
-      print (string.format ("Time to draw %i rooms = %0.3f seconds, search depth = %i", count, end_time - start_time, depth))
 
-      total_times_drawn = total_times_drawn + 1
-      total_time_taken = total_time_taken + end_time - start_time
+      -- helper for consistent formatting
+      local function pct(t) return (frame_time > 0) and (t / frame_time * 100) or 0 end
+      local function ms(t) return t * 1000 end
 
-      print (string.format ("Total times map drawn = %i, average time to draw = %0.3f seconds",
-         total_times_drawn,
-         total_time_taken / total_times_drawn))
-   end -- if
+      print (string.format ("  (%i rooms drawn)", count))
 
-   -- use direct Repaint during animation for higher frame rate, otherwise BufferedRepaint
+      -- outer draw() phases
+      print (string.format ("  Window setup:      %6.2f ms  (%4.1f%%)", ms(total_window_setup_time), pct(total_window_setup_time)))
+      print (string.format ("  Background tex:    %6.2f ms  (%4.1f%%)", ms(total_bg_texture_time), pct(total_bg_texture_time)))
+      print (string.format ("  Room loop:         %6.2f ms  (%4.1f%%)", ms(total_room_loop_time), pct(total_room_loop_time)))
+      print (string.format ("  Zone exits:        %6.2f ms  (%4.1f%%)", ms(total_zone_exit_time), pct(total_zone_exit_time)))
+      print (string.format ("  Dress window:      %6.2f ms  (%4.1f%%)", ms(total_dress_window_time), pct(total_dress_window_time)))
 
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      -- room loop breakdown
+      if rooms_drawn_count > 0 then
+         local sum_room_time = 0
+         local min_room_time = 999999
+         local max_room_time = 0
+         for _, t in ipairs(room_draw_times) do
+            sum_room_time = sum_room_time + t
+            if t < min_room_time then min_room_time = t end
+            if t > max_room_time then max_room_time = t end
+         end
+         local avg_room_time = sum_room_time / rooms_drawn_count
+         local loop_overhead = total_room_loop_time - sum_room_time
+
+         print (string.format ("  --- Room loop breakdown (%i rooms) ---", rooms_drawn_count))
+         print (string.format ("    Per-room:  avg %0.4f ms, min %0.4f ms, max %0.4f ms",
+            ms(avg_room_time), ms(min_room_time), ms(max_room_time)))
+         local total_lookups = room_cache_hits + room_cache_misses
+         print (string.format ("    Cache: %i hits, %i misses (%0.1f%% hit rate)",
+            room_cache_hits, room_cache_misses,
+            (total_lookups > 0) and (room_cache_hits / total_lookups * 100) or 0))
+         print (string.format ("    Exit planning:   %6.2f ms  (%4.1f%%)", ms(total_exit_planning_time), pct(total_exit_planning_time)))
+         print (string.format ("      get_room:      %6.2f ms  (%4.1f%%)", ms(total_room_cache_time), pct(total_room_cache_time)))
+         print (string.format ("        DB lookup:   %6.2f ms  (%4.1f%%)", ms(total_room_db_time), pct(total_room_db_time)))
+         print (string.format ("        defaults:    %6.2f ms  (%4.1f%%)", ms(total_room_defaults_time), pct(total_room_defaults_time)))
+         print (string.format ("        texture:     %6.2f ms  (%4.1f%%)", ms(total_room_texture_time), pct(total_room_texture_time)))
+         local gr_other = total_room_cache_time - total_room_db_time - total_room_defaults_time - total_room_texture_time
+         if ms(gr_other) >= 0.01 then
+            print (string.format ("        other:       %6.2f ms  (%4.1f%%)", ms(gr_other), pct(gr_other)))
+         end
+         local plan_other = total_exit_planning_time - total_room_cache_time
+         print (string.format ("      other logic:   %6.2f ms  (%4.1f%%)", ms(plan_other), pct(plan_other)))
+         print (string.format ("    Exit drawing:    %6.2f ms  (%4.1f%%)", ms(total_exit_drawing_time), pct(total_exit_drawing_time)))
+         print (string.format ("    Room graphics:   %6.2f ms  (%4.1f%%)", ms(total_graphics_time), pct(total_graphics_time)))
+         print (string.format ("    Hotspot setup:   %6.2f ms  (%4.1f%%)", ms(total_hotspot_time), pct(total_hotspot_time)))
+         print (string.format ("    Loop overhead:   %6.2f ms  (%4.1f%%)", ms(loop_overhead), pct(loop_overhead)))
+      end
+
+      -- unaccounted time
+      local accounted = total_window_setup_time + total_bg_texture_time + total_room_loop_time
+                      + total_zone_exit_time + total_dress_window_time
+      local unaccounted = frame_time - accounted
+      print (string.format ("  Unaccounted:       %6.2f ms  (%4.1f%%)", ms(unaccounted), pct(unaccounted)))
+   end -- if detailed_timing
+
+   if pan_animating then
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint", 0.04)
+   else
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   end
 end -- draw
 
 local credits = {
@@ -1137,7 +1353,8 @@ function init (t)
 
    show_help = t.show_help     -- "help" function
    room_click = t.room_click   -- RH mouse-click function
-   timing = t.timing           -- true for timing info
+   timing = t.timing                   -- true for frame timing summary
+   detailed_timing = t.detailed_timing  -- true for detailed sub-phase breakdown
    show_completed = t.show_completed  -- true to show "Speedwalk completed." message
    show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
@@ -1793,34 +2010,13 @@ function pan_animate_step()
    end
    
    -- move toward zero: max speed until close, then ease down
-   local min_move = 2.5
-   local max_move = 20
+   local min_move = 4
+   local max_move = 30
    local ease_threshold = 200  -- start easing when within this distance
    
-   local function calc_move(offset)
-      if offset == 0 then return 0 end
-      local abs_offset = math.abs(offset)
-      local sign = offset > 0 and 1 or -1
-      local move
-      if abs_offset > ease_threshold then
-         -- far from center: move at max speed
-         move = max_move
-      else
-         -- close to center: ease proportionally
-         move = min_move + (max_move - min_move) * (abs_offset / ease_threshold)
-      end
-      -- clamp to remaining distance to avoid overshoot
-      move = math.min(move, abs_offset)
-      return move * sign
-   end
-   
-   local move_x = calc_move(pan_offset_x)
-   local move_y = calc_move(pan_offset_y)
-   pan_offset_x = pan_offset_x - move_x
-   pan_offset_y = pan_offset_y - move_y
-   
-   -- snap to zero when close enough
-   if math.abs(pan_offset_x) < min_move and math.abs(pan_offset_y) < min_move then
+   local dist = math.sqrt(pan_offset_x * pan_offset_x + pan_offset_y * pan_offset_y)
+
+   if dist < min_move then
       pan_offset_x = 0
       pan_offset_y = 0
       pan_animating = false
@@ -1830,6 +2026,18 @@ function pan_animate_step()
          draw(current_room)
       end
    else
+      -- move along direction vector with easing
+      local move
+      if dist > ease_threshold then
+         move = max_move
+      else
+         move = min_move + (max_move - min_move) * (dist / ease_threshold)
+      end
+      move = math.min(move, dist)
+      local scale = move / dist
+      pan_offset_x = pan_offset_x - pan_offset_x * scale
+      pan_offset_y = pan_offset_y - pan_offset_y * scale
+
       -- draw current frame
       if current_room then
          draw(current_room)
