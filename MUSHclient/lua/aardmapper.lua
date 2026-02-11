@@ -108,8 +108,9 @@ local plan_to_draw, drawn, drawn_coords
 local rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y
 local last_drawn, depth, font_height
 local walk_to_room_name
-local total_times_drawn = 0
-local total_time_taken = 0
+local recent_frame_times = {}
+local recent_frame_index = 0
+local RECENT_FRAME_COUNT = 30
 
 -- room drawing timing metrics
 local room_draw_times = {}
@@ -1291,12 +1292,17 @@ function draw (uid)
    local end_time = utils.timer ()
    local frame_time = end_time - start_time
 
-   -- frame total + running average
+   -- frame total + rolling average (last 30 frames)
    if timing or detailed_timing then
-      total_times_drawn = total_times_drawn + 1
-      total_time_taken = total_time_taken + frame_time
+      recent_frame_index = (recent_frame_index % RECENT_FRAME_COUNT) + 1
+      recent_frame_times[recent_frame_index] = frame_time
+      local n = #recent_frame_times
+      local sum = 0
+      for i = 1, n do
+         sum = sum + recent_frame_times[i]
+      end
       print (string.format ("=== Mapper frame: depth %i, %0.1f ms (avg %0.1f ms over %i frames) ===",
-         depth, frame_time * 1000, total_time_taken / total_times_drawn * 1000, total_times_drawn))
+         depth, frame_time * 1000, sum / n * 1000, n))
    end
 
    -- detailed timing breakdown
