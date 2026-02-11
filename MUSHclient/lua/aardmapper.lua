@@ -1033,6 +1033,15 @@ function draw (uid)
 
    if dont_draw then
       DeleteTimer("blink_title")
+      -- reset pan so the map is centered when drawing resumes
+      if pan_offset_x ~= 0 or pan_offset_y ~= 0 then
+         pan_offset_x = 0
+         pan_offset_y = 0
+         if pan_animating then
+            DeleteTimer("pan_animate")
+            pan_animating = false
+         end
+      end
       return
    end
 
@@ -1213,6 +1222,11 @@ function draw (uid)
    end -- while rooms to be drawn
    if loop_t0 then
       total_room_loop_time = utils.timer() - loop_t0
+   end
+
+   -- if all rooms are off-screen (e.g. teleported within area while panned), reset pan
+   if drawn_min_x == nil and (pan_offset_x ~= 0 or pan_offset_y ~= 0) and not pan_animating then
+      start_pan_animation()
    end
 
    local zone_t0 = detailed_timing and utils.timer()
