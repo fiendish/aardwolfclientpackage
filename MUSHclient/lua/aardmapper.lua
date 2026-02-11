@@ -144,6 +144,8 @@ local pan_last_mouse_y = 0
 local pan_dragging = false  -- true while dragging (skip hotspot updates)
 local pan_animating = false
 local last_area_for_pan = nil
+-- bounding box of drawn rooms in window coords (updated each draw, used for pan clamping)
+local drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y
 
 default_width = 269
 default_height = 335
@@ -618,11 +620,21 @@ local function draw_room (uid, x, y)
 
    local left, top, right, bottom = x - HALF_ROOM, y - HALF_ROOM, x + HALF_ROOM, y + HALF_ROOM
 
-   -- forget it if off screen
-   if (x < HALF_ROOM) or (y < (title_bottom or font_height)+HALF_ROOM) or
-      (x > config.WINDOW.width - HALF_ROOM) or (y > config.WINDOW.height - HALF_ROOM) then
-      return
-   end -- if
+   -- check if room is off screen (still traverse exits so panned-into-view rooms draw)
+   local on_screen = not ((x < HALF_ROOM) or (y < (title_bottom or font_height)+HALF_ROOM) or
+      (x > config.WINDOW.width - HALF_ROOM) or (y > config.WINDOW.height - HALF_ROOM))
+
+   -- track bounding box of visible rooms for pan clamping
+   if on_screen then
+      if drawn_min_x == nil then
+         drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y = x, y, x, y
+      else
+         if x < drawn_min_x then drawn_min_x = x end
+         if x > drawn_max_x then drawn_max_x = x end
+         if y < drawn_min_y then drawn_min_y = y end
+         if y > drawn_max_y then drawn_max_y = y end
+      end
+   end
 
    -- exits
    local exit_start_time = nil
@@ -715,34 +727,36 @@ local function draw_room (uid, x, y)
             end -- if
          end -- if drawn on this spot
 
-         local draw_t0 = detailed_timing and utils.timer()
-         WindowLine (win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
+         if on_screen then
+            local draw_t0 = detailed_timing and utils.timer()
+            WindowLine (win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
 
-         -- one-way exit?
+            -- one-way exit?
 
-         if not rooms [exit_uid].unknown then
-            local dest = rooms [exit_uid]
-            -- if inverse direction doesn't point back to us, this is one-way
-            if dest.exits [inverse_direction [dir]] ~= uid then
-               -- turn points into string, relative to where the room is
-               local points = string.format ("%i,%i,%i,%i,%i,%i",
-                  x + arrow [1],
-                  y + arrow [2],
-                  x + arrow [3],
-                  y + arrow [4],
-                  x + arrow [5],
-                  y + arrow [6])
+            if not rooms [exit_uid].unknown then
+               local dest = rooms [exit_uid]
+               -- if inverse direction doesn't point back to us, this is one-way
+               if dest.exits [inverse_direction [dir]] ~= uid then
+                  -- turn points into string, relative to where the room is
+                  local points = string.format ("%i,%i,%i,%i,%i,%i",
+                     x + arrow [1],
+                     y + arrow [2],
+                     x + arrow [3],
+                     y + arrow [4],
+                     x + arrow [5],
+                     y + arrow [6])
 
-               -- draw arrow
-               WindowPolygon(win, points,
-                  exit_line_colour, miniwin.pen_solid, 1,
-                  exit_line_colour, miniwin.brush_solid,
-                  true, true)
-            end -- one way
-         end -- if we know of the room where it does
-         if draw_t0 then
-            exit_draw_accum = exit_draw_accum + (utils.timer() - draw_t0)
-         end
+                  -- draw arrow
+                  WindowPolygon(win, points,
+                     exit_line_colour, miniwin.pen_solid, 1,
+                     exit_line_colour, miniwin.brush_solid,
+                     true, true)
+               end -- one way
+            end -- if we know of the room where it does
+            if draw_t0 then
+               exit_draw_accum = exit_draw_accum + (utils.timer() - draw_t0)
+            end
+         end -- if on_screen (exit drawing)
       end -- if we know what to do with this direction
    end -- for each exit
 
@@ -750,6 +764,11 @@ local function draw_room (uid, x, y)
       local exit_total = utils.timer() - exit_start_time
       total_exit_drawing_time = total_exit_drawing_time + exit_draw_accum
       total_exit_planning_time = total_exit_planning_time + (exit_total - exit_draw_accum)
+   end
+
+   -- off-screen rooms only needed exit traversal above
+   if not on_screen then
+      return
    end
 
    -- graphics operations
@@ -885,6 +904,11 @@ end -- check_we_can_find
 dont_draw = false
 function halt_drawing(halt)
    dont_draw = halt
+   if halt then
+      -- bigmap overlay will destroy all hotspots on this window,
+      -- killing any active drag without firing pan_dragrelease
+      pan_dragging = false
+   end
 end
 
 -- invalidate cached room data (call when GMCP updates a room, notes change, etc.)
@@ -1168,6 +1192,7 @@ function draw (uid)
    -- set up for initial room, in middle
    drawn, drawn_coords, plan_to_draw, area_exits = {}, {}, {}, {}
    rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y = {}, {}, {}
+   drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y = nil, nil, nil, nil
    depth = 0
 
    -- insert initial room (with pan offset applied)
@@ -1964,15 +1989,27 @@ function pan_dragmove (flags, hotspot_id)
    pan_offset_x = pan_offset_x + delta_x
    pan_offset_y = pan_offset_y + delta_y
    
-   -- clamp offset so player's room stays in view
-   -- room is at (width/2 + offset_x, height/2 + offset_y)
-   local max_offset_x = config.WINDOW.width / 2 - ROOM_SIZE
-   local max_offset_y_bottom = config.WINDOW.height / 2 - ROOM_SIZE
-   -- account for title bar at top (bodytop is set by dress_window)
-   local title_height = bodytop or (font_height * 2)
-   local max_offset_y_top = config.WINDOW.height / 2 - title_height - ROOM_SIZE
-   pan_offset_x = math.max(-max_offset_x, math.min(max_offset_x, pan_offset_x))
-   pan_offset_y = math.max(-max_offset_y_top, math.min(max_offset_y_bottom, pan_offset_y))
+   -- clamp so at least one room remains visible in the viewport
+   if drawn_max_x then
+      -- bounding box is from the last draw() using the previous offset;
+      -- delta shifts all room positions, so new bbox = old bbox + delta
+      local new_min_x = drawn_min_x + delta_x
+      local new_max_x = drawn_max_x + delta_x
+      local new_min_y = drawn_min_y + delta_y
+      local new_max_y = drawn_max_y + delta_y
+      local title_height = bodytop or (font_height * 2)
+      -- pull back so the whole last room stays in the viewport
+      if new_max_x - HALF_ROOM < 0 then
+         pan_offset_x = pan_offset_x - (new_max_x - HALF_ROOM)
+      elseif new_min_x + HALF_ROOM > config.WINDOW.width then
+         pan_offset_x = pan_offset_x - (new_min_x + HALF_ROOM - config.WINDOW.width)
+      end
+      if new_max_y - HALF_ROOM < title_height then
+         pan_offset_y = pan_offset_y - (new_max_y - HALF_ROOM - title_height)
+      elseif new_min_y + HALF_ROOM > config.WINDOW.height then
+         pan_offset_y = pan_offset_y - (new_min_y + HALF_ROOM - config.WINDOW.height)
+      end
+   end
    
    -- redraw with new offset (window_exists check in draw() preserves our hotspot)
    draw(current_room)

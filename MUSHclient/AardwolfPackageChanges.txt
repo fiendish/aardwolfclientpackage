@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2325 snapshot
+- new feature: You can drag the GMCP map display around to see other parts of the area.
+
 r2324 snapshot
 - misc change: The group monitor miniwindow plugin now rate-limits display updates to reduce drawing with large groups.
 
