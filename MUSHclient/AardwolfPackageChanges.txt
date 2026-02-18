@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2326 snapshot
+- new feature: A new "aard logo" command will toggle the main output background logo off/on.
+
 r2325 snapshot
 - new feature: You can drag the GMCP map display around to see other parts of the area.
 
