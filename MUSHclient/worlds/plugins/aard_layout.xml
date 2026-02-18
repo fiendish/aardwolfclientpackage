@@ -47,6 +47,15 @@
    sequence="100"
    ignore_case="y"
 ></alias>
+
+<alias
+   script="ToggleLogo"
+   match="^aard logo$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
 </aliases>
 
 <!--  Script  -->
@@ -637,7 +646,7 @@ function draw_main_window()
       12  , 3, Theme.PRIMARY_BODY)
    WindowShow(bgwin, true)
 
-   if image_ratio ~= nil then
+   if image_ratio ~= nil and GetVariable("nologo") ~= "1" then
       local rect_ratio = trwidth/trheight
       if rect_ratio > image_ratio then
          image_height = trheight
@@ -652,6 +661,18 @@ function draw_main_window()
 
    add_title_dragger()
    add_main_resizer()
+end
+
+function ToggleLogo()
+   if GetVariable("nologo") == "1" then
+      SetVariable("nologo", "0")
+      ColourNote("lime", "", "Background logo enabled.")
+   else
+      SetVariable("nologo", "1")
+      ColourNote("yellow", "", "Background logo disabled.")
+   end
+   SaveState()
+   draw_main_window()
 end
 
 function getmemoryusage()

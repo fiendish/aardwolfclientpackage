@@ -132,6 +132,9 @@ function aard_help()
    if is_active("gmcp") then
       help("gmcpdebug <0-2>", "Set GMCP debugging verbosity")
    end
+   if is_active("layout") then
+      help("aard logo", "Toggle the background logo on/off")
+   end
    help("aard plugins check", "Look for package plugins that aren't loaded")
    help("aard sounds in background", "Play sounds while client is backgrounded?")
 
