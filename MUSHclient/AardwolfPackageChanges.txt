@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2331 snapshot
+- new feature: Easy miniwindows now take a parameter for customizing the close button tooltip.
+- new feature: The helpfile capture miniwindow has a copyhelp command (and right-click menu option) for copying the contents of the help file.
+
 r2329 snapshot
 - bug fix: Don't accidentally lose the ignore_exits_mismatch room flag if room info like the PK flag changes.
 - bug fix: Don't teleport the GMCP mapper pan display when dragging with the left mouse button after dragging with the right mouse button.
