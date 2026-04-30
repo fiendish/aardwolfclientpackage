@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2329 snapshot
+- bug fix: Don't accidentally lose the ignore_exits_mismatch room flag if room info like the PK flag changes.
+- bug fix: Don't teleport the GMCP mapper pan display when dragging with the left mouse button after dragging with the right mouse button.
+- misc change: GMCP mapper panning is no longer possible with the right mouse button. That felt weird anyway.
+
 r2326 snapshot
 - new feature: A new "aard logo" command will toggle the main output background logo off/on.
 
