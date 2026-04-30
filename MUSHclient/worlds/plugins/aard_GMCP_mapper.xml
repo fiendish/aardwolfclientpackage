@@ -4049,6 +4049,7 @@ function got_gmcp_room()
          gmcproom.notes = nilToStr(room.notes)
          gmcproom.noportal = (room.noportal or 0)
          gmcproom.norecall = (room.norecall or 0)
+         gmcproom.ignore_exits_mismatch = room.ignore_exits_mismatch
       elseif room and nilToStr(room.area) ~= "" and areas[nilToStr(room.area)] then
          -- replacement area
 --         print("different area")
