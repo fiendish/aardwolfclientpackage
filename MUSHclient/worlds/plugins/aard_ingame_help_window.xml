@@ -68,6 +68,19 @@ end
 </send>
 </alias>
 
+<alias
+   name="copyhelp"
+   match="copyhelp"
+   enabled="y"
+   regexp="n"
+   sequence="100"
+   ignore_case="y"
+   send_to="12"
+><send>
+copy_helpfile_to_clipboard()
+</send>
+</alias>
+
 <!-- aliases to scroll the window up and down-->
 <alias
    name="scrollhelpup"
@@ -309,6 +322,19 @@ function process_search(window_styles)
    build_window(window_styles, get_search_hyperlinks)
 end
 
+function copy_helpfile_to_clipboard()
+   if not my_window or not my_window.id then
+      ColourNote("salmon", "", "There is no help miniwindow open to copy.")
+      return
+   end
+   local plain_lines = {}
+   for _, line in ipairs(my_window:get_styles()) do
+      table.insert(plain_lines, strip_colours_from_styles(line))
+   end
+   SetClipboard(table.concat(plain_lines, "\r\n"))
+   ColourNote("paleturquoise", "", "Helpfile copied to clipboard.")
+end
+
 function build_window(window_styles, hyperlinks_function)
    prev_window_styles = window_styles
    prev_hyperlinks_function = hyperlinks_function
@@ -352,6 +378,7 @@ function build_window(window_styles, hyperlinks_function)
    local remember_position = GetVariable("remember_position") == "1"
    table.insert(my_window.menu_table, "-")
    table.insert(my_window.menu_table, "Print Current Help To Main Output")
+   table.insert(my_window.menu_table, "Copy Helpfile To Clipboard (copyhelp)")
    table.insert(my_window.menu_table, (remember_position and "+" or "").."Remember Position")
    table.insert(
       my_window.menu_handlers,
@@ -362,6 +389,12 @@ function build_window(window_styles, hyperlinks_function)
          for _,line in ipairs(my_window:get_styles()) do
             AnsiNote(stylesToANSI(line))
          end
+      end
+   )
+   table.insert(
+      my_window.menu_handlers,
+      function()
+         copy_helpfile_to_clipboard()
       end
    )
    table.insert(
