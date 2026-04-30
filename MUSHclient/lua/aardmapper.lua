@@ -144,6 +144,7 @@ local pan_last_mouse_x = 0
 local pan_last_mouse_y = 0
 local pan_dragging = false  -- true while dragging (skip hotspot updates)
 local pan_rebaseline_on_drag = false
+local pan_tooltip_text = "Drag to pan map"
 local pan_animating = false
 local last_area_for_pan = nil
 -- bounding box of drawn rooms in window coords (updated each draw, used for pan clamping)
@@ -1194,7 +1195,7 @@ function draw (uid)
          "zzz_zoom",
          0, 0, config.WINDOW.width, config.WINDOW.height,
          "", "", "mapper.pan_mousedown", "", "mapper.MouseUp",
-         "Drag to pan map",
+         pan_tooltip_text,
          miniwin.cursor_hand, 0)
 
       WindowDragHandler(win, "zzz_zoom", "mapper.pan_dragmove", "mapper.pan_dragrelease", 0)
@@ -1485,6 +1486,24 @@ function LeftClickOnly(flags, hotspot_id, win)
    return false
 end
 
+local function set_pan_tooltip(text)
+   if WindowHotspotInfo(win, "zzz_zoom", 1) ~= nil then
+      WindowHotspotTooltip(win, "zzz_zoom", text)
+   end
+end
+
+local function with_pan_tooltip_hidden(callback, ...)
+   set_pan_tooltip("")
+   local result = {pcall(callback, ...)}
+   set_pan_tooltip(pan_tooltip_text)
+
+   if not result[1] then
+      error(result[2], 0)
+   end
+
+   return unpack(result, 2)
+end
+
 function right_click_menu()
    menustring = "Bring To Front|Send To Back"
 
@@ -1502,7 +1521,8 @@ function right_click_menu()
       end
    end
 
-   result = WindowMenu (win,
+   result = with_pan_tooltip_hidden(WindowMenu,
+      win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
       menustring) -- content
@@ -1953,7 +1973,7 @@ function mouseup_room (flags, hotspot_id)
       pan_dragging = false
       pan_rebaseline_on_drag = true
       if type (room_click) == "function" then
-         room_click (uid, flags)
+         with_pan_tooltip_hidden(room_click, uid, flags)
       end
       return
    end -- if RH click
