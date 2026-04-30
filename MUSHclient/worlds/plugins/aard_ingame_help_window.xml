@@ -342,7 +342,10 @@ function build_window(window_styles, hyperlinks_function)
       GetOption("output_font_height"),  -- text_font_size
       5000,  -- text_max_lines
       nil,  -- text_padding
-      true  -- defer_showing
+      true,  -- defer_showing
+      nil,  -- body_is_transparent
+      nil,  -- line_spacing
+      "Remove Window (closehelp)"  -- close button tooltip
    )
 
    -- TODO: move this into themed_miniwindows.lua
