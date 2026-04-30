@@ -143,6 +143,7 @@ local pan_offset_y = 0
 local pan_last_mouse_x = 0
 local pan_last_mouse_y = 0
 local pan_dragging = false  -- true while dragging (skip hotspot updates)
+local pan_rebaseline_on_drag = false
 local pan_animating = false
 local last_area_for_pan = nil
 -- bounding box of drawn rooms in window coords (updated each draw, used for pan clamping)
@@ -909,6 +910,7 @@ function halt_drawing(halt)
       -- bigmap overlay will destroy all hotspots on this window,
       -- killing any active drag without firing pan_dragrelease
       pan_dragging = false
+      pan_rebaseline_on_drag = false
    end
 end
 
@@ -1469,6 +1471,8 @@ end -- init
 
 function MouseUp(flags, hotspot_id, win)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      pan_dragging = false
+      pan_rebaseline_on_drag = true
       right_click_menu()
    end
    return true
@@ -1946,6 +1950,8 @@ function mouseup_room (flags, hotspot_id)
 
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       -- RH click
+      pan_dragging = false
+      pan_rebaseline_on_drag = true
       if type (room_click) == "function" then
          room_click (uid, flags)
       end
@@ -1974,7 +1980,21 @@ end -- mouseup_room
 -- pan handlers for dragging the map view
 -- ------------------------------------------------------------------
 
-function pan_mousedown (flags, hotspot_id)
+local function pan_got_left_only(flags)
+   return bit.band(flags, miniwin.hotspot_got_lh_mouse) ~= 0 and
+      bit.band(flags, miniwin.hotspot_got_rh_mouse) == 0
+end
+
+local function pan_set_drag_baseline(x, y)
+   pan_last_mouse_x = x
+   pan_last_mouse_y = y
+end
+
+local function pan_set_drag_baseline_from_current()
+   pan_set_drag_baseline(WindowInfo(win, 17), WindowInfo(win, 18))
+end
+
+local function pan_begin_drag()
    -- cancel any running animation
    if pan_animating then
       DeleteTimer("pan_animate")
@@ -1983,11 +2003,28 @@ function pan_mousedown (flags, hotspot_id)
    -- mark as dragging (draw() will skip hotspot updates)
    pan_dragging = true
    -- record starting mouse position for incremental tracking
-   pan_last_mouse_x = WindowInfo(win, 17)
-   pan_last_mouse_y = WindowInfo(win, 18)
+   pan_set_drag_baseline_from_current()
+end
+
+function pan_mousedown (flags, hotspot_id)
+   if not pan_got_left_only(flags) then
+      return  -- ignore non-left mouse buttons
+   end
+
+   pan_begin_drag()
 end -- pan_mousedown
 
 function pan_dragmove (flags, hotspot_id)
+   if not pan_got_left_only(flags) then
+      return  -- ignore non-left drags without updating stored drag position
+   end
+
+   if not pan_dragging or pan_rebaseline_on_drag then
+      pan_begin_drag()
+      pan_rebaseline_on_drag = false
+      return
+   end
+
    -- don't pan if we don't have a room to draw
    if not current_room then
       return
@@ -2036,8 +2073,13 @@ function pan_dragmove (flags, hotspot_id)
 end -- pan_dragmove
 
 function pan_dragrelease (flags, hotspot_id)
+   if not pan_dragging then
+      return
+   end
+
    -- no longer dragging - full redraw will recreate hotspots
    pan_dragging = false
+   pan_rebaseline_on_drag = false
    -- redraw with the new pan offset
    if current_room then
       draw(current_room)
