@@ -1381,7 +1381,11 @@ function map_cexits_purge (name, line, wildcards)
    if not wildcards then
       query = "delete from exits where dir not in ('n','s','e','w','d','u');"
    else
-      query = "delete from exits where fromuid in (select e.fromuid from exits e join rooms r on e.fromuid = r.uid where r.area = '" .. wildcards[1] .. "' and e.dir not in ('n','s','e','w','d','u'));"
+      -- The dir filter must constrain the DELETE itself. Constraining only the
+      -- sub-select identifies every room that *contains* a custom exit, and the
+      -- outer DELETE then removes ALL exits from those rooms -- including their
+      -- standard n/s/e/w/u/d exits, silently corrupting the speedwalk graph.
+      query = "delete from exits where dir not in ('n','s','e','w','d','u') and fromuid in (select uid from rooms where area = '" .. wildcards[1] .. "');"
       pString = "Purged all area custom exits."
    end
 
