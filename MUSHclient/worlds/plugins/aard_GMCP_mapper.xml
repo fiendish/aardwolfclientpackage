@@ -1387,10 +1387,17 @@ function map_cexits_purge (name, line, wildcards)
 
    dbCheckExecute(query)
    for k,v in pairs(rooms) do
-      for l,w in pairs(v.exits) do
-         if not directions[l] then
-            v.exits[l] = nil
-            v.exit_locks[l] = nil
+      -- Match the cache invalidation to what the query actually deleted. For an
+      -- area purge, only touch rooms in that area; otherwise an area-scoped
+      -- purge would also drop custom exits from the in-memory cache of every
+      -- OTHER area (the DB rows survive, so the cache disagrees with the DB
+      -- until the next plugin reload).
+      if (not wildcards) or v.area == wildcards[1] then
+         for l,w in pairs(v.exits) do
+            if not directions[l] then
+               v.exits[l] = nil
+               v.exit_locks[l] = nil
+            end
          end
       end
    end
