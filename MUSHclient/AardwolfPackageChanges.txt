@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2332 snapshot
+- bug fix: `mapper purge cexits area` was deleting too many exits, not just the cexits.
+
 r2331 snapshot
 - new feature: Easy miniwindows now take a parameter for customizing the close button tooltip.
 - new feature: The helpfile capture miniwindow has a copyhelp command (and right-click menu option) for copying the contents of the help file.
