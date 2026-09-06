@@ -417,7 +417,7 @@ function TextHeight(win, font)
 end
 
 -- title_alignment can be "left", "right", or "center" (the default)
-function DressWindow(win, font, title, title_alignment, title_leftpadding)
+function DressWindow(win, font, title, title_alignment, title_leftpadding, drag_cursor, drag_tooltip)
    local l, t, r, b = DrawBorder(win)
 
    local handler_bottom = 0
@@ -427,7 +427,7 @@ function DressWindow(win, font, title, title_alignment, title_leftpadding)
    end
 
    if WindowMoveHotspot(win, "zz_mw_" .. win .. "_movewindow_hotspot", 0, 0, 0, handler_bottom) ~= 0 then
-      movewindow.add_drag_handler(win, 0, 0, 0, handler_bottom)
+      movewindow.add_drag_handler(win, 0, 0, 0, handler_bottom, drag_cursor, drag_tooltip)
    end
 
    return l, t, r, b

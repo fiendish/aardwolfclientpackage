@@ -170,7 +170,14 @@ function ThemedWindowClass:dress_window(new_title)
    if self.is_temporary then
       boxwidth = WindowTextWidth(self.id, self.title_font, "!") + (3*Theme.TITLE_PADDING) + 5
    end
-   self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.DressWindow(self.id, self.title_font, self.title, self.title_alignment, boxwidth)
+   self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.DressWindow(
+      self.id,
+      self.title_font,
+      self.title,
+      self.title_alignment,
+      boxwidth,
+      self.drag_cursor,
+      self.drag_tooltip)
 
    if WindowMoveHotspot(self.id, "zzzzzzzzzz"..self.id.."_body", self.bodyleft, self.bodytop, self.bodyright, self.bodybottom) ~= 0 then
       local cursor = 0
@@ -265,7 +272,7 @@ end
 function ThemedBasicWindow(
    id, default_left_position, default_top_position, default_width, default_height, title, title_alignment, is_temporary, 
    resizer_type, do_while_resizing, do_after_resizing, do_on_delete, title_font_name, title_font_size, defer_showing,
-   body_is_transparent, close_button_tooltip
+   body_is_transparent, close_button_tooltip, window_options
 )
    assert(id and type(id) == "string" and id ~= "", "ThemedBasicWindow Error: argument 1, id is required (must be a non-empty string)")
    assert(default_left_position, "ThemedBasicWindow Error: argument 2, default_left_position is required")
@@ -277,6 +284,7 @@ function ThemedBasicWindow(
       ThemedWindowClass.window_map[id]:delete()
    end
 
+   window_options = window_options or {}
    local self = {
       id = id,
       title_font_name = title_font_name or "Dina",
@@ -298,6 +306,8 @@ function ThemedBasicWindow(
       height = (resizer_type ~= nil) and tonumber(GetVariable("themed_miniwindow_height"..id)) or default_height,
       create_flags = body_is_transparent and 4 or 0,
       close_button_tooltip = close_button_tooltip,
+      drag_cursor = window_options.drag_cursor,
+      drag_tooltip = window_options.drag_tooltip,
    }
    setmetatable(self, ThemedWindowClass)
 
@@ -312,7 +322,23 @@ function ThemedBasicWindow(
 
    self.window_map[self.id] = self
 
-   self.windowinfo = movewindow.install(self.id, miniwin.pos_top_right, miniwin.create_absolute_location + self.create_flags, false, nil, {mouseup=self.RightClickMenuCallback, mousedown=self.LeftButtonOnlyCallback, dragmove=self.LeftButtonOnlyCallback, dragrelease=self.SavePositionAfterDrag},{x=default_left_position, y=default_top_position})
+   local preprocess = {
+      mouseup=self.RightClickMenuCallback,
+      mousedown=self.LeftButtonOnlyCallback,
+      dragmove=self.LeftButtonOnlyCallback,
+      dragrelease=self.SavePositionAfterDrag
+   }
+   for name, handler in pairs(window_options.preprocess or {}) do
+      preprocess[name] = handler
+   end
+   self.windowinfo = movewindow.install(
+      self.id,
+      miniwin.pos_top_right,
+      miniwin.create_absolute_location + self.create_flags,
+      false,
+      nil,
+      preprocess,
+      {x=default_left_position, y=default_top_position})
    WindowCreate(self.id, self.windowinfo.window_left, self.windowinfo.window_top, self.width, self.height, self.windowinfo.window_mode, self.windowinfo.window_flags, Theme.PRIMARY_BODY)
    WindowFont(self.id, self.title_font, self.title_font_name, self.title_font_size, false, false, false, false, 0)
    self:dress_window(self.raw_title)
@@ -481,13 +507,45 @@ function ThemedTextWindowClass:clear(draw_after)
    end
 end
 
+-- The table form gives specialized windows named options while the positional
+-- form remains available for existing callers.
 function ThemedTextWindow(
    id, default_left_position, default_top_position, default_width, default_height, title, title_alignment,
    is_temporary, resizeable, text_scrollable, text_selectable, text_copyable, url_hyperlinks,
    autowrap,
    title_font_name, title_font_size, text_font_name, text_font_size, text_max_lines, text_padding,
-   defer_showing, body_is_transparent, line_spacing, close_button_tooltip
+   defer_showing, body_is_transparent, line_spacing, close_button_tooltip, window_options
 )
+   if type(id) == "table" then
+      local options = id
+      return ThemedTextWindow(
+         options.id,
+         options.default_left_position,
+         options.default_top_position,
+         options.default_width,
+         options.default_height,
+         options.title,
+         options.title_alignment,
+         options.is_temporary,
+         options.resizeable,
+         options.text_scrollable,
+         options.text_selectable,
+         options.text_copyable,
+         options.url_hyperlinks,
+         options.autowrap,
+         options.title_font_name,
+         options.title_font_size,
+         options.text_font_name,
+         options.text_font_size,
+         options.text_max_lines,
+         options.text_padding,
+         options.defer_showing,
+         options.body_is_transparent,
+         options.line_spacing,
+         options.close_button_tooltip,
+         options)
+   end
+
    assert(id, "ThemedTextWindow Error: argument 1, id is required")
    assert(default_left_position, "ThemedTextWindow Error: argument 2, default_left_position is required")
    assert(default_top_position, "ThemedTextWindow Error: argument 3, default_top_position is required")
@@ -510,7 +568,8 @@ function ThemedTextWindow(
    local self = ThemedBasicWindow(
       id, default_left_position, default_top_position, default_width, default_height, title, title_alignment, is_temporary, 
       resizer_type, ThemedTextWindowClass.do_while_resizing, ThemedTextWindowClass.do_after_resizing, 
-      ThemedTextWindowClass.OnDelete, title_font_name, title_font_size, defer_showing, body_is_transparent, close_button_tooltip
+      ThemedTextWindowClass.OnDelete, title_font_name, title_font_size, defer_showing, body_is_transparent, close_button_tooltip,
+      window_options
    )
    setmetatable(self, ThemedTextWindowClass)
 
@@ -531,6 +590,13 @@ function ThemedTextWindow(
       line_spacing
    )
    self.textrect:setExternalMenuFunction(function() return self:get_menu_items() end)
+   if window_options then
+      self.textrect.show_scrollback_marker = window_options.show_scrollback_marker ~= false
+      self.textrect:set_selection_callback(window_options.text_selection_callback)
+      if window_options.column_guide then
+         self.textrect:set_column_guide(window_options.column_guide)
+      end
+   end
    if text_scrollable then
       self.scrollbar = ScrollBar.new(self.id, "scrollbar", tr_right, self.bodytop, self.bodyright, scrollbar_bottom)
       self.textrect:addUpdateCallback(self.scrollbar, self.scrollbar.setScroll)

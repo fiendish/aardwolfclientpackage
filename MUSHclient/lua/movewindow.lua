@@ -43,7 +43,7 @@ It implements the following:
 
   windowinfo = movewindow.install (win, default_position, default_flags, nocheck, friends, preprocess)
   
-  movewindow.add_drag_handler (win, left, top, right, bottom, cursor)   -- add a drag handler for the nominated rectangle
+  movewindow.add_drag_handler (win, left, top, right, bottom, cursor, tooltip)   -- add a drag handler for the nominated rectangle
   
   movewindow.save_state (win)  -- saves the miniwindow location to the appropriate variables
   
@@ -346,7 +346,7 @@ end -- movewindow.install
 -- call movewindow.add_drag_handler after creating the window, and after deleting hotspots where applicable
 --   to add a drag hotspot
 
-function movewindow.add_drag_handler (win, left, top, right, bottom, cursor)
+function movewindow.add_drag_handler (win, left, top, right, bottom, cursor, tooltip)
 
   win = win or GetPluginID ()  -- default to current plugin ID
 
@@ -366,7 +366,7 @@ function movewindow.add_drag_handler (win, left, top, right, bottom, cursor)
                    "mw_" .. win .. "_movewindow_info.mousedown",        -- MouseDown
                    "mw_" .. win .. "_movewindow_info.cancelmousedown",  -- CancelMouseDown
                    "mw_" .. win .. "_movewindow_info.mouseup",          -- MouseUp
-                   "Drag to move window",  -- tooltip text
+                   tooltip or "Drag to move window",  -- tooltip text
                    cursor or miniwin.cursor_hand, -- cursor
                    0)  -- flags
                    
