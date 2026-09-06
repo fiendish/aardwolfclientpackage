@@ -41,7 +41,8 @@ TextRect_defaults = {
    keepscrolling = "",
    padding = 5,
    background_color = 0x000000,
-   highlight_color = getHighlightColor(0x000000)
+   highlight_color = getHighlightColor(0x000000),
+   show_scrollback_marker = true
 }
 TextRect_mt = { __index = TextRect }
 
@@ -80,7 +81,8 @@ function TextRect:setLineSpacing(line_spacing)
       self.line_height = self.font_height
    end
    if self.padded_height then
-      self.rect_lines = math.floor(self.padded_height / self.line_height)
+      -- Keep this calculation consistent with setRect.
+      self.rect_lines = math.floor((self.padded_height + (self.line_height / 3)) / self.line_height)
    end
 end
 
@@ -219,7 +221,7 @@ function TextRect:addText(message, hyperlinks)
       end
 
       -- pop the oldest line from our buffer if we're at capacity
-      if self.num_raw_lines >= self.max_lines then
+      if self.max_lines > 0 and self.num_raw_lines >= self.max_lines then
          table.remove(self.raw_lines, 1)
          self.num_raw_lines = self.num_raw_lines - 1
       end
@@ -252,7 +254,7 @@ function TextRect:doUpdateCallbacks()
 end
 
 function TextRect:cap_messages()
-   if self.num_wrapped_lines >= self.max_lines then
+   if self.max_lines > 0 and self.num_wrapped_lines >= self.max_lines then
       -- if the history buffer is full then remove the oldest line
       table.remove(self.wrapped_lines, 1)
       self.num_wrapped_lines = self.num_wrapped_lines - 1
@@ -284,6 +286,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
    local line_styles = {}
    local beginning = true
    local length = 0
+   local raw_offset = 0
    local styles = copytable.deep(stylerun)
    local urls = copytable.deep(rawURLs)
 
@@ -395,7 +398,15 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          -- add new wrapped line component
          self.num_wrapped_lines = self.num_wrapped_lines + 1
          local raw_index_delta = self.num_wrapped_lines - raw_index
-         table.insert(self.wrapped_lines, {[1]=line_styles, [2]=beginning, [3]=line_urls, [4]=raw_index_delta} )
+         table.insert(self.wrapped_lines, {
+            [1]=line_styles,
+            [2]=beginning,
+            [3]=line_urls,
+            [4]=raw_index_delta,
+            raw_offset=raw_offset,
+            text_length=length
+         })
+         raw_offset = raw_offset + length
 
          -- prep for next line
          available = self.padded_width
@@ -404,6 +415,10 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
          beginning = false
       end -- line full
    end -- while we still have styles left
+end
+
+local function current_raw_line(line_number, line)
+   return line_number - line[4]
 end
 
 function TextRect:clear(draw_after)
@@ -433,7 +448,7 @@ function TextRect:reWrapLines()
       if self.wrapped_lines[start_line] == nil then
          self:debug("reWrapLines")
       end
-      raw_index = start_line - self.wrapped_lines[start_line][4]
+      raw_index = current_raw_line(start_line, self.wrapped_lines[start_line])
    end
 
    self.wrapped_lines = {}
@@ -510,6 +525,80 @@ function TextRect:styles_width(styles, show_bold)
    return StylesWidth(self.window, self.font, self.font_bold, styles, show_bold)
 end
 
+function TextRect:set_cursor(line_number, offset, visible, show_bold)
+   self.cursor = {
+      line = line_number,
+      offset = offset,
+      visible = visible == true,
+      show_bold = show_bold
+   }
+end
+
+function TextRect:set_column_guide(column)
+   self.column_guide = {
+      column = column
+   }
+end
+
+function TextRect:draw_column_guide()
+   if not self.column_guide then
+      return
+   end
+
+   local character_width = WindowFontInfo(self.window, self.font, 6)
+   local x = self.padded_left + (self.column_guide.column * character_width)
+   if x > self.padded_left and x < self.padded_right then
+      WindowLine(
+         self.window,
+         x,
+         self.padded_top,
+         x,
+         self.padded_bottom - 1,
+         Theme.THREE_D_HIGHLIGHT,
+         miniwin.pen_dot,
+         1)
+   end
+end
+
+function TextRect:draw_cursor()
+   local cursor = self.cursor
+   if not cursor or not cursor.visible then
+      return
+   end
+   if cursor.line < self.display_start_line or cursor.line > self.display_end_line then
+      return
+   end
+
+   local line = self.wrapped_lines[cursor.line]
+   if not line then
+      return
+   end
+   local offset = math.max(0, math.min(cursor.offset or 0, self:line_length(cursor.line)))
+   local before_cursor = TruncateStyles(line[1], 0, offset)
+   local show_bold = cursor.show_bold
+   if show_bold == nil then
+      show_bold = (GetOption("show_bold") == 1)
+   end
+   local utf8 = (GetOption("utf_8") == 1)
+   local x = self.padded_left + StylesWidth(
+      self.window,
+      self.font,
+      self.font_bold,
+      before_cursor,
+      show_bold,
+      utf8)
+   local top = self.padded_top + ((cursor.line - self.display_start_line) * self.line_height) + 1
+   WindowLine(
+      self.window,
+      x,
+      top,
+      x,
+      math.min(self.padded_bottom, top + self.line_height - 1),
+      Theme.BODY_TEXT,
+      miniwin.pen_solid,
+      1)
+end
+
 function TextRect:draw(cleanup_first, inside_callback)
    if cleanup_first ~= false then -- default true
       self:_deleteHyperlinks()
@@ -583,13 +672,18 @@ function TextRect:draw(cleanup_first, inside_callback)
       end
    end
 
+   self:draw_column_guide()
+   self:draw_cursor()
+
    if not inside_callback then
       self:doUpdateCallbacks()
    end
    
    self:underline_hyperlinks()
 
-   self:draw_scrollback_marker()
+   if self.show_scrollback_marker ~= false then
+      self:draw_scrollback_marker()
+   end
 end
 
 function TextRect:draw_scrollback_marker()
@@ -634,6 +728,83 @@ function TextRect:setRect(left, top, right, bottom)
       -- add a third of a line before subdividing to make resizing a bit more comfortable
       self.rect_lines = math.floor((self.padded_height+(self.line_height/3)) / self.line_height)
    end
+end
+
+function TextRect:line_length(line_number)
+   local line = self.wrapped_lines[line_number]
+   if not line then
+      return 0
+   end
+   return line.text_length
+end
+
+function TextRect:wrapped_to_raw(line_number, offset)
+   local line = self.wrapped_lines[line_number]
+   if not line then
+      return
+   end
+
+   local raw_line = current_raw_line(line_number, line)
+   offset = math.max(0, math.min(tonumber(offset) or 0, self:line_length(line_number)))
+   return raw_line, line.raw_offset + offset
+end
+
+function TextRect:raw_to_wrapped(raw_line, offset)
+   raw_line = tonumber(raw_line)
+   if not raw_line then
+      return
+   end
+
+   offset = math.max(0, tonumber(offset) or 0)
+   local last_line
+
+   for line_number, line in ipairs(self.wrapped_lines) do
+      local line_raw = current_raw_line(line_number, line)
+      if line_raw == raw_line then
+         last_line = line_number
+         local line_offset = line.raw_offset
+         local line_length = self:line_length(line_number)
+         local line_end = line_offset + line_length
+
+         if offset < line_end then
+            return line_number, math.max(0, offset - line_offset)
+         end
+         if offset == line_end then
+            local next_line = self.wrapped_lines[line_number + 1]
+            local next_raw = next_line and current_raw_line(line_number + 1, next_line)
+            if next_raw == raw_line then
+               return line_number + 1, 0
+            end
+            return line_number, line_length
+         end
+      elseif last_line and line_raw > raw_line then
+         break
+      end
+   end
+
+   if last_line then
+      return last_line, self:line_length(last_line)
+   end
+end
+
+function TextRect:ensure_visible(line_number)
+   if self.num_wrapped_lines == 0 then
+      return
+   end
+
+   line_number = math.max(1, math.min(tonumber(line_number) or 1, self.num_wrapped_lines))
+   local visible_lines = math.max(1, self.rect_lines or 1)
+   local start_line = self.start_line or 1
+   if line_number < start_line then
+      start_line = line_number
+   elseif line_number >= start_line + visible_lines then
+      start_line = line_number - visible_lines + 1
+   end
+
+   self.start_line = start_line
+   self.start_line, self.end_line = self:snapToBottom()
+   self.display_start_line = self.start_line
+   self.display_end_line = self.end_line
 end
 
 function TextRect:getScroll()
@@ -720,6 +891,9 @@ function TextRect:unInit()
 end
 
 function TextRect:get_target_bounds(separator_pattern, line_number, target_x, partition_cache_key)
+   self.last_partitioned_styles = self.last_partitioned_styles or {}
+   self.last_partitioned_line_sections = self.last_partitioned_line_sections or {}
+   partition_cache_key = partition_cache_key or "default"
    target_x = math.min(math.max(target_x, self.padded_left), self.padded_right)
    local line = self.wrapped_lines[line_number]
    if not line then
@@ -727,7 +901,6 @@ function TextRect:get_target_bounds(separator_pattern, line_number, target_x, pa
    end
    local line_styles = line[1]
    local show_bold = (GetOption("show_bold")== 1)
-   local line_sections
    if separator_pattern then
       if line_styles ~= self.last_partitioned_styles[partition_cache_key] then
          self.last_partitioned_styles[partition_cache_key] = line_styles
@@ -764,36 +937,338 @@ function TextRect:get_target_bounds(separator_pattern, line_number, target_x, pa
    return start_pos, end_pos, section_start, section_end
 end
 
+local function get_offset_bounds(styles, separator_pattern, target_offset)
+   local start_pos = 0
+   local end_pos = 0
+   local last_start = 0
+   local last_end = 0
+   local sections = partition_boundaries(styles, separator_pattern)
+   for _, section in ipairs(sections) do
+      local section_length = 0
+      for _, style in ipairs(section) do
+         section_length = section_length + style.length
+      end
+      end_pos = start_pos + section_length
+      last_start = start_pos
+      last_end = end_pos
+      if target_offset < end_pos then
+         return start_pos, end_pos
+      end
+      start_pos = end_pos
+   end
+   return last_start, last_end
+end
+
+-- Convert miniwindow coordinates to a wrapped line and text offset.
+-- Character hits use the nearest insertion boundary. Word hits use the raw
+-- logical line, so their returned bounds can cross wrapped display lines.
+function TextRect:hit_test(x, y, options)
+   if self.num_wrapped_lines == 0 then
+      return
+   end
+
+   options = options or {}
+   local relative_line = math.floor((y - self.padded_top) / self.line_height)
+   local display_start_line = math.max(1, self.display_start_line or 1)
+   local first_line = 1
+   local last_line = self.num_wrapped_lines
+   if not options.allow_offscreen then
+      first_line = display_start_line
+      last_line = math.min(
+         self.num_wrapped_lines,
+         self.display_end_line or self.num_wrapped_lines)
+   end
+   local line_number = display_start_line + relative_line
+   line_number = math.max(first_line, math.min(line_number, last_line))
+   local unit = options.unit or "character"
+
+   if unit == "line" then
+      return {
+         line = line_number,
+         offset = 0,
+         first_line = line_number,
+         first_offset = 0,
+         last_line = line_number,
+         last_offset = self:line_length(line_number)
+      }
+   end
+
+   if unit == "word" then
+      local first =
+         self:get_target_bounds(".", line_number, x, options.cache_key or "hit_test_character")
+      if first == nil then
+         return
+      end
+
+      local wrapped_offset = first
+      local raw_line, raw_offset = self:wrapped_to_raw(line_number, wrapped_offset)
+      local raw = raw_line and self.raw_lines[raw_line]
+      if not raw then
+         return
+      end
+
+      local raw_first, raw_last = get_offset_bounds(
+         raw[1],
+         options.separator_pattern or "[^%w%-]+",
+         raw_offset)
+      local first_line, first_offset = self:raw_to_wrapped(raw_line, raw_first)
+      local last_line, last_offset = self:raw_to_wrapped(raw_line, raw_last)
+      if not first_line or not last_line then
+         return
+      end
+
+      return {
+         line = line_number,
+         offset = wrapped_offset,
+         first_line = first_line,
+         first_offset = first_offset,
+         last_line = last_line,
+         last_offset = last_offset
+      }
+   end
+
+   local cache_key = options.cache_key or ("hit_test_" .. unit)
+   local first, last, first_x, last_x =
+      self:get_target_bounds(".", line_number, x, cache_key)
+   if first == nil then
+      return
+   end
+
+   local offset = first
+   if unit == "character" and x >= first_x + ((last_x - first_x) / 2) then
+      offset = last
+   end
+
+   return {
+      line = line_number,
+      offset = offset,
+      first_line = line_number,
+      first_offset = first,
+      last_line = line_number,
+      last_offset = last
+   }
+end
+
+function TextRect:get_editor_selection()
+   if not self.editor_selection_anchor or not self.editor_selection_active then
+      return
+   end
+
+   local anchor_line = self.editor_selection_anchor.line
+   local anchor_offset = self.editor_selection_anchor.offset
+   local active_line = self.editor_selection_active.line
+   local active_offset = self.editor_selection_active.offset
+   local first_line, first_offset = anchor_line, anchor_offset
+   local last_line, last_offset = active_line, active_offset
+   if first_line > last_line or
+      (first_line == last_line and first_offset > last_offset) then
+      first_line, last_line = last_line, first_line
+      first_offset, last_offset = last_offset, first_offset
+   end
+
+   return {
+      anchor = {line=anchor_line, offset=anchor_offset},
+      active = {line=active_line, offset=active_offset},
+      first = {line=first_line, offset=first_offset},
+      last = {line=last_line, offset=last_offset},
+      collapsed = first_line == last_line and first_offset == last_offset
+   }
+end
+
+function TextRect:set_editor_selection(anchor_line, anchor_offset, active_line, active_offset)
+   if self.num_wrapped_lines == 0 or
+      not (anchor_line and anchor_offset and active_line and active_offset) then
+      self.editor_selection_anchor = nil
+      self.editor_selection_active = nil
+      self:set_selection(nil, nil, nil, nil)
+      return
+   end
+
+   anchor_line = math.max(1, math.min(anchor_line, self.num_wrapped_lines))
+   active_line = math.max(1, math.min(active_line, self.num_wrapped_lines))
+   anchor_offset = math.max(0, math.min(anchor_offset, self:line_length(anchor_line)))
+   active_offset = math.max(0, math.min(active_offset, self:line_length(active_line)))
+   self.editor_selection_anchor = {line=anchor_line, offset=anchor_offset}
+   self.editor_selection_active = {line=active_line, offset=active_offset}
+
+   local state = self:get_editor_selection()
+   if state.collapsed then
+      self:set_selection(nil, nil, nil, nil)
+   else
+      self:set_selection(
+         state.first.line,
+         state.last.line,
+         state.first.offset,
+         state.last.offset)
+   end
+   return state
+end
+
+function TextRect:set_selection_callback(callback)
+   assert(callback == nil or type(callback) == "function", "TextRect selection callback must be a function or nil")
+   self.selection_callback = callback
+end
+
+function TextRect:begin_selection(flags, x, y, options)
+   options = options or {}
+   self.pointer_selecting = true
+   self.last_partitioned_styles = {}
+   self.last_partitioned_line_sections = {}
+
+   local now = socket.gettime()
+   local clicks = 1
+   if bit.band(flags, miniwin.hotspot_got_dbl_click) ~= 0 then
+      clicks = 2
+   elseif self.editor_last_click_time and now - self.editor_last_click_time < 0.4 then
+      clicks = (self.editor_click_count or 1) + 1
+      if clicks > 3 then
+         clicks = 1
+      end
+   end
+   self.editor_last_click_time = now
+   self.editor_click_count = clicks
+
+   local hit
+   local kind = "cursor"
+   if clicks == 2 then
+      kind = "word"
+      hit = self:hit_test(x, y, {
+         unit="word",
+         separator_pattern=options.word_separator_pattern,
+         cache_key="editor_word"
+      })
+   elseif clicks == 3 then
+      kind = "line"
+      hit = self:hit_test(x, y, {unit="line"})
+   else
+      hit = self:hit_test(x, y, {unit="character", cache_key="editor_character"})
+   end
+   if not hit then
+      self.pointer_selecting = false
+      return
+   end
+
+   self.pointer_selection_unit = kind
+   self.pointer_selection_origin = {
+      first_line=hit.first_line,
+      first_offset=hit.first_offset,
+      last_line=hit.last_line,
+      last_offset=hit.last_offset
+   }
+   self.pointer_word_separator_pattern = options.word_separator_pattern
+
+   local anchor_line = hit.line
+   local anchor_offset = hit.offset
+   local active_line = hit.line
+   local active_offset = hit.offset
+   if kind == "word" or kind == "line" then
+      anchor_line = hit.first_line
+      anchor_offset = hit.first_offset
+      active_line = hit.last_line
+      active_offset = hit.last_offset
+   elseif bit.band(flags, miniwin.hotspot_got_shift) ~= 0 and self.editor_selection_anchor then
+      anchor_line = self.editor_selection_anchor.line
+      anchor_offset = self.editor_selection_anchor.offset
+   end
+
+   local state = self:set_editor_selection(anchor_line, anchor_offset, active_line, active_offset)
+   if self.selection_callback and state then
+      self.selection_callback(self, state)
+   end
+   return state
+end
+
+function TextRect:update_selection(x, y)
+   if not self.pointer_selecting or not self.editor_selection_anchor then
+      return
+   end
+
+   local unit = self.pointer_selection_unit or "cursor"
+   local hit_options = {
+      unit="character",
+      cache_key="editor_character",
+      allow_offscreen=true
+   }
+   if unit == "word" then
+      hit_options.unit = "word"
+      hit_options.cache_key = "editor_word"
+      hit_options.separator_pattern = self.pointer_word_separator_pattern
+   elseif unit == "line" then
+      hit_options.unit = "line"
+   end
+
+   local hit = self:hit_test(x, y, hit_options)
+   if not hit then
+      return
+   end
+
+   local anchor_line = self.editor_selection_anchor.line
+   local anchor_offset = self.editor_selection_anchor.offset
+   local active_line = hit.line
+   local active_offset = hit.offset
+   if unit == "word" or unit == "line" then
+      local origin = self.pointer_selection_origin
+      local before_origin = hit.first_line < origin.first_line or
+         (hit.first_line == origin.first_line and hit.first_offset < origin.first_offset)
+      if before_origin then
+         anchor_line = origin.last_line
+         anchor_offset = origin.last_offset
+         active_line = hit.first_line
+         active_offset = hit.first_offset
+      else
+         anchor_line = origin.first_line
+         anchor_offset = origin.first_offset
+         active_line = hit.last_line
+         active_offset = hit.last_offset
+      end
+   end
+
+   if self.editor_selection_anchor.line == anchor_line and
+      self.editor_selection_anchor.offset == anchor_offset and
+      self.editor_selection_active and
+      self.editor_selection_active.line == active_line and
+      self.editor_selection_active.offset == active_offset then
+      return self:get_editor_selection(), false
+   end
+
+   local state = self:set_editor_selection(
+      anchor_line,
+      anchor_offset,
+      active_line,
+      active_offset)
+   if self.selection_callback and state then
+      self.selection_callback(self, state)
+   end
+   return state, true
+end
+
+function TextRect:finish_selection(x, y)
+   local state, changed = self:update_selection(x, y)
+   state = state or self:get_editor_selection()
+   self.pointer_selecting = false
+   self.pointer_selection_unit = nil
+   self.pointer_selection_origin = nil
+   self.pointer_word_separator_pattern = nil
+   return state, changed
+end
+
+function TextRect:cancel_selection()
+   self.pointer_selecting = false
+   self.pointer_selection_unit = nil
+   self.pointer_selection_origin = nil
+   self.pointer_word_separator_pattern = nil
+end
+
 function TextRect.mouseDown(flags, hotspot_id)
    if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
       return  -- ignore non-left mouse button
    end
    local tr = TextRect.hotspot_map[hotspot_id]
-   tr.temp_start_copying_x = WindowInfo(tr.window, 14)
-   tr.copy_start_windowline = math.floor((WindowInfo(tr.window, 15) - tr.top) / tr.line_height)
-   tr.temp_start_line = tr.copy_start_windowline + tr.start_line
-   local now = socket.gettime()
-   tr.num_clicks = tr.num_clicks or 1
-
-   tr.last_partitioned_styles = {}
-   tr.last_partitioned_line_sections = {}
-
-   if tr.last_click_time and ((now - tr.last_click_time) < 0.4) then
-      tr.num_clicks = tr.num_clicks + 1
-      tr.separator_pattern = "[^%w%-]+" -- whole words
-      if tr.num_clicks ~= 2 then
-         tr.separator_pattern = nil -- whole lines
-         tr.num_clicks = 1
-      end
-      local start_pos, end_pos, _, _ = tr:get_target_bounds(tr.separator_pattern, tr.temp_start_line, tr.temp_start_copying_x, "start")
-      tr:set_selection(tr.temp_start_line, tr.temp_start_line, start_pos, end_pos)
-   else
-      tr.separator_pattern = "."
-      tr.num_clicks = 1
-      tr:set_selection(nil, nil, nil, nil)
-   end
-
-   tr.last_click_time = now
+   tr:begin_selection(
+      flags,
+      WindowInfo(tr.window, 14),
+      WindowInfo(tr.window, 15),
+      {word_separator_pattern="[^%w%-]+"})
    tr:draw(false)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
@@ -837,6 +1312,9 @@ end
 
 function TextRect.dragRelease(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
+   tr:finish_selection(
+      WindowInfo(tr.window, 17) - WindowInfo(tr.window, 10),
+      WindowInfo(tr.window, 18) - WindowInfo(tr.window, 11))
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
    end
@@ -857,6 +1335,7 @@ end
 function TextRect.cancelMouseDown(flags, hotspot_id)
    local tr = TextRect.hotspot_map[hotspot_id]
    tr.keepscrolling = ""
+   tr:cancel_selection()
    tr:draw()
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
@@ -897,53 +1376,14 @@ function TextRect:set_selection(start_line, end_line, start_pos, end_pos)
 end
 
 function TextRect:updateSelect()
-   self.copy_start_line = self.temp_start_line
-
    self.end_copying_y = WindowInfo(self.window, 18) - WindowInfo(self.window, 11)
-   self.copy_end_windowline = math.floor((self.end_copying_y - self.top) / self.line_height)
-   self.copy_end_line = self.copy_end_windowline + self.start_line
-
    local cursor_x = WindowInfo(self.window, 17) - WindowInfo(self.window, 10)
-   self.start_copying_x = self.temp_start_copying_x
-   self.end_copying_x = math.max(self.left, math.min(self.right, cursor_x))
-
-   -- the user is selecting backwards, so reverse the start/end orders
-   if self.copy_end_line < self.copy_start_line then
-      self.copy_start_line, self.copy_end_line = self.copy_end_line, self.copy_start_line
-      self.start_copying_x, self.end_copying_x = self.end_copying_x, self.start_copying_x
-   elseif (self.copy_end_line == self.copy_start_line) and (self.end_copying_x < self.start_copying_x) then
-      self.start_copying_x, self.end_copying_x = self.end_copying_x, self.start_copying_x
-   end
-
-   -- get the entire line if we drag off the top/bottom
-   if self.copy_end_line > self.num_wrapped_lines then
-      self.end_copying_x = self.right
-   end
-   if self.copy_start_line < 1 then
-      self.start_copying_x = self.padded_left
-   end
-
-   self.copy_start_line = math.max(1, math.min(self.num_wrapped_lines, self.copy_start_line))
-   self.copy_end_line = math.max(1, math.min(self.num_wrapped_lines, self.copy_end_line)) 
-
-   local show_bold = (GetOption("show_bold")== 1)
-
-   -- Clamp to boundaries instead of selecting arbitrary pixel positions...
-   local start_pos, _, start_x, _ = self:get_target_bounds(self.separator_pattern, self.copy_start_line, self.start_copying_x, "start")
-   self.start_copying_pos = start_pos
-   self.start_copying_x = start_x
-   local _, end_pos, _, end_x = self:get_target_bounds(self.separator_pattern, self.copy_end_line, self.end_copying_x, "end")
-   self.end_copying_pos = end_pos
-   self.end_copying_x = end_x
-
-   if (self.copy_start_line == self.copy_end_line) and (self.start_copying_pos == self.end_copying_pos) then
-      self:set_selection(nil, nil, nil, nil)
-   end
-
+   local state = self:update_selection(cursor_x, self.end_copying_y)
    self:draw(false)
    if self.call_on_select then
       self.call_on_select(self.copy_start_line, self.copy_end_line, self.start_copying_pos, self.end_copying_pos, self.start_copying_x, self.end_copying_x)
    end
+   return state
 end
 
 function TextRect.wheelMove(flags, hotspot_id)
@@ -1222,4 +1662,3 @@ function TextRect:generateHotspotID(id)
    TextRect.hotspot_map[hotspot_id] = self
    return hotspot_id
 end
-

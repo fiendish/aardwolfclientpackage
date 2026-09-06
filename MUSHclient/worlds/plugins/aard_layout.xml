@@ -56,6 +56,15 @@
    sequence="100"
    ignore_case="y"
 ></alias>
+
+<alias
+   script="ToggleInputBar"
+   match="^aard input$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
 </aliases>
 
 <!--  Script  -->
@@ -64,6 +73,7 @@
 <![CDATA[
 require "mw_theme_base"
 require "scrollbar"
+require "themed_miniwindows"
 
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
@@ -82,6 +92,28 @@ posy             = ""
 hotspot_id       = ""
 orig_height      = 400  -- saves old height when we collapse window.
 
+inputbar_marker_characters = 80
+inputbar_poll_interval = 0.1
+inputbar_fast_poll_duration = 0.1
+inputbar_last_poll_time = 0
+inputbar_fast_poll_until = 0
+inputbar_active = false
+inputbar_attached = true
+inputbar_content_signature = nil
+inputbar_presentation_signature = nil
+inputbar_hidden_overhead = nil
+inputbar_native_height = nil
+inputbar_window = nil
+inputbar_rect = nil
+inputbar_logical_line_starts = {}
+inputbar_moving = false
+inputbar_auto_resize_suppressed = false
+inputbar_output_height = nil
+inputbar_output_width = nil
+inputbar_cursor_position = nil
+inputbar_selection_start = nil
+inputbar_selection_end = nil
+
 require "serialize"
 
 function LayoutHelp()
@@ -96,6 +128,7 @@ function LayoutHelp()
    print("aard layout list               :  list all stored layout keywords")
    print("aard layout help               :  show this command help")
    print("aard layout reset              :  like resetaard, but better")
+   print("aard input                     :  toggle the movable synthetic input bar")
    print("")
    LockStatus()
    print("")
@@ -142,6 +175,713 @@ function LayoutCommand(name, line, wildcards)
       EnableAlias("resetaard", true)
    elseif wildcards[1] == "" or wildcards[1] == " help" then
       LayoutHelp()
+   end
+end
+
+function InputBarFrameDifference()
+   return math.max(0, (tonumber(GetInfo(263)) or 0) - (tonumber(GetInfo(280)) or 0))
+end
+
+function InputBarNativeHeight()
+   return math.max(
+      (tonumber(GetInfo(214)) or 1) + 4,
+      tonumber(inputbar_native_height) or tonumber(GetVariable("inputbar_native_height")) or 0
+   )
+end
+
+function InputBarCurrentHeight()
+   local native_height = InputBarNativeHeight()
+   if not inputbar_rect or not WindowInfo(inputBar, 1) then
+      return native_height
+   end
+
+   local native_font_height = tonumber(GetInfo(214)) or 1
+   local lines = math.max(1, math.floor((native_height - 4) / native_font_height))
+   local text_height = lines * inputbar_rect.line_height
+   local current_height = WindowInfo(inputBar, 4)
+   local text_area_height = inputbar_rect.padded_bottom - inputbar_rect.padded_top - 1
+   local frame_height = current_height - text_area_height
+   return math.max(native_height, text_height + frame_height)
+end
+
+function InputBarDesiredAutoResizeHeight()
+   if not inputbar_auto_resize_suppressed or
+      GetOption("auto_resize_command_window") ~= 1 then
+      return
+   end
+
+   local height = tonumber(GetCommandWindowDesiredHeight(InputBarNativeHeight())) or 0
+   if height > 0 then
+      return height
+   end
+end
+
+function InputBarSetAutoResizeSuppressed(suppressed)
+   check(SetCommandWindowAutoResizeSuppressed(suppressed))
+   inputbar_auto_resize_suppressed = suppressed
+end
+
+function InputBarHasRequiredAPIs()
+   local required = {
+      "GetCommandCursorPosition",
+      "GetCommandWindowDesiredHeight",
+      "SetCommandWindowAutoResizeSuppressed"
+   }
+   local missing = {}
+   for _, name in ipairs(required) do
+      if type(_G[name]) ~= "function" then
+         table.insert(missing, name)
+      end
+   end
+   if #missing == 0 then
+      return true
+   end
+
+   ColourNote(
+      "white",
+      "red",
+      "Synthetic input bar unavailable. This MUSHclient build is missing: " ..
+         table.concat(missing, ", "))
+   return false
+end
+
+function InputBarOutputGeometryChanged()
+   local height = tonumber(GetInfo(280)) or 0
+   local width = tonumber(GetInfo(281)) or 0
+   local changed = inputbar_output_height ~= nil and
+      (height ~= inputbar_output_height or width ~= inputbar_output_width)
+   inputbar_output_height = height
+   inputbar_output_width = width
+   return changed
+end
+
+function MainOutputBottomLimit()
+   local limit = (tonumber(GetInfo(280)) or 7) - 7
+   if inputbar_active and inputbar_attached and inputbar_window and WindowInfo(inputBar, 5) then
+      limit = limit - InputBarCurrentHeight()
+   end
+   return math.max(0, limit)
+end
+
+function InputBarLoadFont()
+   if not inputbar_rect or not WindowInfo(inputBar, 1) then
+      return false
+   end
+
+   local font_name = GetInfo(23)
+   local font_size = tonumber(GetOption("input_font_height")) or 10
+   local font_weight = tonumber(GetOption("input_font_weight")) or 400
+   local font_italic = GetOption("input_font_italic") == 1
+   local font_charset = tonumber(GetOption("input_font_charset")) or 0
+   local changed = inputbar_rect:loadFont(
+      font_name,
+      font_size,
+      {
+         bold=font_weight >= 600,
+         italic=font_italic,
+         charset=font_charset,
+         pitch_and_family=miniwin.font_pitch_default,
+         reload_token=table.concat({GetInfo(214), GetInfo(215)}, ":")
+      })
+   if changed then
+      inputbar_content_signature = nil
+      inputbar_presentation_signature = nil
+   end
+   return changed
+end
+
+function InputBarUpdateWindowInfo(left, top)
+   if not inputbar_window or not inputbar_window.windowinfo then
+      return
+   end
+   inputbar_window.windowinfo.window_left = left
+   inputbar_window.windowinfo.window_top = top
+   inputbar_window.windowinfo.window_mode = 0
+end
+
+function InputBarSaveSettings()
+   SetVariable("inputbar_attached", inputbar_attached and "1" or "0")
+   if inputbar_native_height then
+      SetVariable("inputbar_native_height", tostring(inputbar_native_height))
+   end
+end
+
+function InputBarAttachedRectangle()
+   local border_offset = tonumber(GetInfo(276)) or 0
+   local left = math.max(0, (tonumber(GetInfo(290)) or textrect_left) - border_offset)
+   local right = math.min(
+      tonumber(GetInfo(281)) or textrect_right,
+      (tonumber(GetInfo(292)) or textrect_right) + border_offset
+   )
+   local height = InputBarCurrentHeight()
+   local top = (tonumber(GetInfo(293)) or textrect_bottom) + border_offset + 1
+   top = math.max(0, math.min(top, (tonumber(GetInfo(280)) or top + height) - height))
+   return left, top, math.max(1, right - left), height
+end
+
+function InputBarEnsureWindow()
+   if inputbar_window and WindowInfo(inputBar, 1) then
+      return
+   end
+
+   local left, top, width, height = InputBarAttachedRectangle()
+   inputbar_window = ThemedTextWindow({
+      id=inputBar,
+      default_left_position=left,
+      default_top_position=top,
+      default_width=width,
+      default_height=height,
+      is_temporary=false,
+      resizeable=false,
+      text_scrollable=false,
+      text_selectable=false,
+      text_copyable=false,
+      url_hyperlinks=false,
+      autowrap=true,
+      text_font_name=GetInfo(23),
+      text_font_size=tonumber(GetOption("input_font_height")) or 10,
+      text_max_lines=0,
+      text_padding=0,
+      defer_showing=true,
+      body_is_transparent=false,
+      preprocess={
+         mousedown=InputBarMouseDown,
+         mouseup=InputBarMouseUp,
+         cancelmousedown=InputBarCancelMouseDown,
+         dragmove=InputBarDragMove,
+         dragrelease=InputBarDragRelease
+      },
+      drag_cursor=miniwin.cursor_ibeam,
+      drag_tooltip="Hold Alt and drag to move the input bar",
+      show_scrollback_marker=false,
+      text_selection_callback=InputBarSelectionChanged,
+      column_guide=inputbar_marker_characters
+   })
+   inputbar_rect = inputbar_window.textrect
+
+   inputbar_window.menu_table = {"Reset input bar"}
+   inputbar_window.menu_handlers = {InputBarReset}
+
+   InputBarLoadFont()
+   inputbar_window:hide()
+end
+
+function InputBarCaptureAndHideNative()
+   local before = InputBarFrameDifference()
+   InputBarSetAutoResizeSuppressed(true)
+   check(SetCommandWindowHeight(0))
+   local after = InputBarFrameDifference()
+   local measured_height = before - after
+
+   inputbar_hidden_overhead = after
+   if measured_height >= (tonumber(GetInfo(214)) or 1) then
+      inputbar_native_height = measured_height
+   else
+      inputbar_native_height = tonumber(GetVariable("inputbar_native_height")) or
+         (tonumber(GetInfo(214)) or 1) + 4
+   end
+   SetVariable("inputbar_native_height", tostring(inputbar_native_height))
+end
+
+function InputBarMeasureAndHideNative()
+   if not inputbar_active then
+      return
+   end
+   if inputbar_hidden_overhead == nil then
+      InputBarCaptureAndHideNative()
+      return
+   end
+
+   if inputbar_auto_resize_suppressed then
+      local desired_height = InputBarDesiredAutoResizeHeight()
+      if desired_height and desired_height ~= inputbar_native_height then
+         inputbar_native_height = desired_height
+         SetVariable("inputbar_native_height", tostring(inputbar_native_height))
+      end
+      return
+   end
+
+   local current_difference = InputBarFrameDifference()
+   local measured_height = current_difference - inputbar_hidden_overhead
+   if measured_height > 0 then
+      if measured_height >= (tonumber(GetInfo(214)) or 1) then
+         inputbar_native_height = measured_height
+         SetVariable("inputbar_native_height", tostring(inputbar_native_height))
+      end
+      check(SetCommandWindowHeight(0))
+      inputbar_hidden_overhead = InputBarFrameDifference()
+   elseif measured_height < 0 then
+      inputbar_hidden_overhead = current_difference
+   end
+end
+
+function InputBarRestoreNative()
+   -- Output text can remain after the world windows are destroyed.
+   if GetInfo(235) > 0 then
+      check(SetCommandWindowHeight(InputBarNativeHeight()))
+   end
+   InputBarSetAutoResizeSuppressed(false)
+   inputbar_hidden_overhead = nil
+end
+
+function InputBarPositionAttached()
+   if not inputbar_window or not WindowInfo(inputBar, 1) then
+      return false
+   end
+
+   local left, top, width, height = InputBarAttachedRectangle()
+   local changed =
+      WindowInfo(inputBar, 10) ~= left or
+      WindowInfo(inputBar, 11) ~= top or
+      WindowInfo(inputBar, 3) ~= width or
+      WindowInfo(inputBar, 4) ~= height
+
+   if WindowInfo(inputBar, 3) ~= width or WindowInfo(inputBar, 4) ~= height then
+      inputbar_window:resize(width, height)
+   end
+   if WindowInfo(inputBar, 10) ~= left or WindowInfo(inputBar, 11) ~= top then
+      check(WindowPosition(inputBar, left, top, 0, miniwin.create_absolute_location))
+   end
+
+   inputbar_window.default_left_position = left
+   inputbar_window.default_top_position = top
+   inputbar_window.default_width = width
+   inputbar_window.default_height = height
+   return changed
+end
+
+function InputBarPositionDetached()
+   if not inputbar_window or not WindowInfo(inputBar, 1) then
+      return false
+   end
+
+   local width = math.max(1, WindowInfo(inputBar, 3))
+   local height = InputBarCurrentHeight()
+   -- Keep the user-selected position in movewindow state. WindowInfo 10 and 11
+   -- can contain a temporary clamp while the available output area is smaller.
+   local left = inputbar_window.windowinfo.window_left
+   local top = inputbar_window.windowinfo.window_top
+   left = math.max(0, math.min(left, math.max(0, GetInfo(281) - width)))
+   top = math.max(0, math.min(top, math.max(0, GetInfo(280) - height)))
+
+   local changed =
+      WindowInfo(inputBar, 10) ~= left or
+      WindowInfo(inputBar, 11) ~= top or
+      WindowInfo(inputBar, 4) ~= height
+
+   if WindowInfo(inputBar, 4) ~= height then
+      inputbar_window:resize(width, height)
+   end
+   if WindowInfo(inputBar, 10) ~= left or WindowInfo(inputBar, 11) ~= top then
+      check(WindowPosition(inputBar, left, top, 0, miniwin.create_absolute_location))
+   end
+   return changed
+end
+
+function InputBarRenderText(command)
+   local rendered = command
+   inputbar_logical_line_starts = {}
+
+   local line_start = 1
+   local position = 1
+   while position <= #command do
+      local byte = command:byte(position)
+      if byte == 10 or byte == 13 then
+         table.insert(inputbar_logical_line_starts, line_start - 1)
+         if byte == 13 and command:byte(position + 1) == 10 then
+            position = position + 2
+         else
+            position = position + 1
+         end
+         line_start = position
+      else
+         position = position + 1
+      end
+   end
+
+   table.insert(inputbar_logical_line_starts, line_start - 1)
+   rendered = rendered:gsub("@", "@@")
+   rendered = rendered:gsub("\r\n", "\n")
+   rendered = rendered:gsub("\r", "\n")
+   return rendered
+end
+
+function InputBarSourceToWrapped(position)
+   position = math.max(0, tonumber(position) or 0)
+   local raw_line = 1
+   for index, line_start in ipairs(inputbar_logical_line_starts) do
+      if position < line_start then
+         break
+      end
+      raw_line = index
+   end
+
+   local raw_offset = position - (inputbar_logical_line_starts[raw_line] or 0)
+   local line, offset = inputbar_rect:raw_to_wrapped(raw_line, raw_offset)
+   if line then
+      return line, offset
+   end
+
+   local last_line = math.max(1, inputbar_rect.num_wrapped_lines)
+   return last_line, inputbar_rect:line_length(last_line)
+end
+
+function InputBarWrappedToSource(line, offset)
+   local raw_line, raw_offset = inputbar_rect:wrapped_to_raw(line, offset)
+   if not raw_line then
+      return 0
+   end
+   return (inputbar_logical_line_starts[raw_line] or 0) + raw_offset
+end
+
+function InputBarDraw(force)
+   if not inputbar_active or not inputbar_window or not WindowInfo(inputBar, 1) then
+      return false
+   end
+
+   local command = GetCommand() or ""
+   local selection_start = math.max(0, (tonumber(GetInfo(236)) or 1) - 1)
+   local selection_end = tonumber(GetInfo(237)) or 0
+   local cursor_position
+   local reported_position = (tonumber(GetCommandCursorPosition()) or 0) - 1
+   if reported_position >= 0 and reported_position <= #command and
+      (selection_end == 0 or
+       reported_position == selection_start or reported_position == selection_end) then
+      cursor_position = reported_position
+   end
+
+   if cursor_position == nil and selection_end == 0 then
+      cursor_position = selection_start
+   elseif cursor_position == nil and
+      inputbar_selection_start == selection_start and
+      inputbar_selection_end == selection_end and
+      (inputbar_cursor_position == selection_start or inputbar_cursor_position == selection_end) then
+      cursor_position = inputbar_cursor_position
+   elseif cursor_position == nil then
+      cursor_position = selection_end
+   end
+   inputbar_cursor_position = cursor_position
+   inputbar_selection_start = selection_start
+   inputbar_selection_end = selection_end
+
+   local content_signature = table.concat({
+      command,
+      WindowInfo(inputBar, 3),
+      Theme.PRIMARY_BODY,
+      Theme.BODY_TEXT
+   }, "\30")
+   local content_changed = content_signature ~= inputbar_content_signature
+   local presentation_signature = table.concat({
+      selection_start,
+      selection_end,
+      cursor_position,
+      WindowInfo(inputBar, 4)
+   }, "\30")
+   if not force and not content_changed and
+      presentation_signature == inputbar_presentation_signature then
+      return false
+   end
+   inputbar_content_signature = content_signature
+   inputbar_presentation_signature = presentation_signature
+
+   if content_changed then
+      inputbar_window:clear(false)
+      inputbar_window:add_text(InputBarRenderText(command), false)
+   end
+   local cursor_line, cursor_line_position = InputBarSourceToWrapped(cursor_position)
+
+   if selection_end > selection_start then
+      local anchor_position = selection_start
+      if cursor_position == selection_start then
+         anchor_position = selection_end
+      end
+      local anchor_line, anchor_offset = InputBarSourceToWrapped(anchor_position)
+      inputbar_rect:set_editor_selection(
+         anchor_line,
+         anchor_offset,
+         cursor_line,
+         cursor_line_position)
+   else
+      inputbar_rect:set_editor_selection(
+         cursor_line,
+         cursor_line_position,
+         cursor_line,
+         cursor_line_position)
+   end
+
+   inputbar_rect:ensure_visible(cursor_line)
+   inputbar_rect:set_cursor(
+      cursor_line,
+      cursor_line_position,
+      selection_end == 0,
+      false)
+   inputbar_window:draw()
+   InputBarStartFastPolling()
+   return true
+end
+
+function InputBarSelectionChanged(rect, state)
+   if not inputbar_active then
+      return
+   end
+
+   local anchor = InputBarWrappedToSource(state.anchor.line, state.anchor.offset)
+   local active = InputBarWrappedToSource(state.active.line, state.active.offset)
+   check(SetCommandSelection(anchor + 1, active))
+   inputbar_cursor_position = active
+   inputbar_selection_start = math.min(anchor, active)
+   if anchor == active then
+      inputbar_selection_end = 0
+   else
+      inputbar_selection_end = math.max(anchor, active)
+   end
+   inputbar_presentation_signature = table.concat({
+      inputbar_selection_start,
+      inputbar_selection_end,
+      inputbar_cursor_position,
+      WindowInfo(inputBar, 4)
+   }, "\30")
+   rect:ensure_visible(state.active.line)
+   rect:set_cursor(
+      state.active.line,
+      state.active.offset,
+      state.collapsed,
+      false)
+   inputbar_window:draw()
+   InputBarStartFastPolling()
+end
+
+function InputBarStartFastPolling()
+   local now = utils.timer()
+   inputbar_fast_poll_until = math.max(
+      inputbar_fast_poll_until,
+      now + inputbar_fast_poll_duration)
+end
+
+function InputBarRefresh(force)
+   if not inputbar_active then
+      return
+   end
+   inputbar_last_poll_time = utils.timer()
+   local old_height = InputBarCurrentHeight()
+   InputBarMeasureAndHideNative()
+   local height_changed = old_height ~= InputBarCurrentHeight()
+   local output_changed = InputBarOutputGeometryChanged()
+   local changed = InputBarLoadFont()
+   local inputbar_drawn = false
+   if inputbar_attached and (height_changed or output_changed) then
+      if output_changed then
+         inputbar_drawn = check_geometry() == true
+      else
+         inputbar_drawn = draw_main_window() == true
+      end
+      changed = true
+   end
+   if inputbar_attached then
+      changed = InputBarPositionAttached() or changed
+   else
+      changed = InputBarPositionDetached() or changed
+   end
+   if not inputbar_drawn then
+      InputBarDraw(force or changed)
+   end
+end
+
+function InputBarActivate(show_status)
+   if inputbar_active then
+      return
+   end
+   if not InputBarHasRequiredAPIs() then
+      return false
+   end
+
+   inputbar_attached = GetVariable("inputbar_attached") ~= "0"
+   InputBarEnsureWindow()
+   inputbar_active = true
+   SetVariable("inputbar_enabled", "1")
+   InputBarCaptureAndHideNative()
+   InputBarOutputGeometryChanged()
+   inputbar_window:show()
+   if inputbar_attached then
+      draw_main_window()
+   else
+      InputBarPositionDetached()
+   end
+   InputBarRefresh(false)
+   if show_status then
+      ColourNote("lime", "", "Synthetic input bar enabled.")
+   end
+   return true
+end
+
+function InputBarDeactivate(persist_disabled, show_status)
+   if not inputbar_active then
+      if persist_disabled then
+         SetVariable("inputbar_enabled", "0")
+      end
+      return
+   end
+
+   InputBarSaveSettings()
+   inputbar_window:hide()
+   InputBarRestoreNative()
+   inputbar_output_height = nil
+   inputbar_output_width = nil
+   if GetInfo(235) > 0 then
+      check_geometry()
+   end
+   inputbar_active = false
+   if persist_disabled then
+      SetVariable("inputbar_enabled", "0")
+   end
+   if show_status then
+      ColourNote("yellow", "", "Synthetic input bar disabled.")
+   end
+end
+
+function ToggleInputBar()
+   if inputbar_active then
+      InputBarDeactivate(true, true)
+   else
+      InputBarActivate(true)
+   end
+   SaveState()
+end
+
+function InputBarReset()
+   inputbar_attached = true
+   SetVariable("inputbar_attached", "1")
+   draw_main_window()
+   local left, top, width, height = InputBarAttachedRectangle()
+   inputbar_window.default_left_position = left
+   inputbar_window.default_top_position = top
+   inputbar_window.default_width = width
+   inputbar_window.default_height = height
+   inputbar_window:reset()
+   InputBarUpdateWindowInfo(left, top)
+   InputBarSaveSettings()
+   InputBarDraw(false)
+   SaveState()
+   InputBarFocusNative()
+end
+
+function InputBarFocusNative()
+   check(DoCommand("ActivateInputArea"))
+end
+
+function InputBarMouseDown(flags, hotspot_id)
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
+      return true
+   end
+
+   if bit.band(flags, miniwin.hotspot_got_alt) ~= 0 then
+      if GetVariable("lock_down_miniwindows") == "1" then
+         return true
+      end
+      inputbar_rect:cancel_selection()
+      InputBarUpdateWindowInfo(
+         WindowInfo(inputBar, 10),
+         WindowInfo(inputBar, 11))
+      inputbar_moving = true
+      return false
+   end
+
+   inputbar_moving = false
+   InputBarFocusNative()
+   InputBarDraw(false)
+   inputbar_rect:begin_selection(
+      flags,
+      WindowInfo(inputBar, 14),
+      WindowInfo(inputBar, 15),
+      {word_separator_pattern="[^%w_]+"})
+   return true
+end
+
+function InputBarDragMove(flags, hotspot_id)
+   if bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
+      return true
+   end
+
+   if inputbar_moving then
+      if inputbar_attached then
+         inputbar_attached = false
+         SetVariable("inputbar_attached", "0")
+         draw_main_window()
+      end
+      return false
+   end
+
+   inputbar_rect:update_selection(
+      WindowInfo(inputBar, 14),
+      WindowInfo(inputBar, 15))
+   return true
+end
+
+function InputBarDragRelease(flags, hotspot_id)
+   local was_moving = inputbar_moving
+   if inputbar_moving then
+      inputbar_attached = false
+      SetVariable("inputbar_attached", "0")
+      InputBarPositionDetached()
+      movewindow.save_state(inputBar)
+      InputBarSaveSettings()
+      SaveState()
+      inputbar_rect:cancel_selection()
+   elseif inputbar_rect then
+      inputbar_rect:finish_selection(
+         WindowInfo(inputBar, 14),
+         WindowInfo(inputBar, 15))
+   end
+   inputbar_moving = false
+   InputBarFocusNative()
+   return not was_moving
+end
+
+function InputBarCancelMouseDown(flags, hotspot_id)
+   inputbar_moving = false
+   if inputbar_rect then
+      inputbar_rect:cancel_selection()
+   end
+   return true
+end
+
+function InputBarMouseUp(flags, hotspot_id)
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      inputbar_window:right_click_menu(hotspot_id)
+      InputBarFocusNative()
+      return true
+   end
+   InputBarFocusNative()
+   return false
+end
+
+function OnPluginCommandChanged()
+   InputBarRefresh(true)
+end
+
+function OnPluginTick()
+   if not inputbar_active then
+      return
+   end
+
+   local now = utils.timer()
+   local poll_interval = inputbar_poll_interval
+   if now < inputbar_fast_poll_until then
+      poll_interval = 0
+   end
+   if now - inputbar_last_poll_time >= poll_interval then
+      InputBarRefresh(false)
+   end
+end
+
+function OnPluginThemeChange()
+   inputbar_content_signature = nil
+   inputbar_presentation_signature = nil
+   if inputbar_active then
+      InputBarRefresh(true)
    end
 end
 
@@ -277,11 +1017,12 @@ function ResizeMainCallback(flags)
 
    textrect_bottom = textrect_bottom + posy - starty
    starty = posy
+   local bottom_limit = MainOutputBottomLimit()
    if ( textrect_bottom-textrect_top < MIN_SIZE) then
-      textrect_bottom = textrect_top+MIN_SIZE
+      textrect_bottom = math.min(textrect_top+MIN_SIZE, bottom_limit)
       starty = textrect_bottom
-   elseif (textrect_bottom > GetInfo(280)-7) then
-      textrect_bottom = GetInfo(280)-7
+   elseif (textrect_bottom > bottom_limit) then
+      textrect_bottom = bottom_limit
       starty = textrect_bottom
    end
 
@@ -316,12 +1057,13 @@ function DragMainCallback()
    textrect_top = textrect_top + posy - starty
    textrect_bottom = textrect_top+height
    starty = posy
+   local bottom_limit = MainOutputBottomLimit()
    if (textrect_top < 7) then
       textrect_top = 7
       starty = textrect_top
       textrect_bottom = textrect_top+height
-   elseif (textrect_bottom > GetInfo(280)-7) then
-      textrect_bottom = GetInfo(280)-7
+   elseif (textrect_bottom > bottom_limit) then
+      textrect_bottom = bottom_limit
       textrect_top = textrect_bottom-height
       starty = textrect_top
    end
@@ -404,6 +1146,9 @@ function reset_main()
 end
 
 function OnPluginClose()
+   if inputbar_active then
+      InputBarDeactivate(false, false)
+   end
    TextRectangle(0,0,0,0,
       5,  -- BorderOffset,
       ColourNameToRGB ("darkgray"),    -- BorderColour,
@@ -426,6 +1171,10 @@ function OnPluginEnable ()
    OnPluginInstall()
 end -- OnPluginEnable
 
+function OnPluginSaveState()
+   InputBarSaveSettings()
+end
+
 
 --=================================================================================
 -- Called when plugin is first installed, including when Mush first starts.
@@ -438,8 +1187,26 @@ function OnPluginInstall()
    textResizer = win.."txtresize"
    bgwin = win.."text_background"
    bgoffscreen = win.."text_background_offscreen"
+   inputBar = GetPluginID().."_inputbar"
    image_ratio, prev_l, prev_t, prev_b, sb = nil, nil, nil, nil, nil
    prevwindowbottom, prevwindowright = nil, nil  -- force draw_main_window on re-enable
+   inputbar_active = false
+   inputbar_last_poll_time = 0
+   inputbar_fast_poll_until = 0
+   inputbar_content_signature = nil
+   inputbar_presentation_signature = nil
+   inputbar_hidden_overhead = nil
+   inputbar_native_height = tonumber(GetVariable("inputbar_native_height"))
+   inputbar_window = nil
+   inputbar_rect = nil
+   inputbar_logical_line_starts = {}
+   inputbar_moving = false
+   inputbar_auto_resize_suppressed = false
+   inputbar_output_height = nil
+   inputbar_output_width = nil
+   inputbar_cursor_position = nil
+   inputbar_selection_start = nil
+   inputbar_selection_end = nil
 
    local dir = GetInfo(66)
    local imgpath = "-"
@@ -506,6 +1273,9 @@ function OnPluginInstall()
    end
 
    SetScroll(-2, GetVariable("hide_main_scroll") ~= "true")
+   if GetVariable("inputbar_enabled") == "1" then
+      InputBarActivate(false)
+   end
    SaveState()
 end
 
@@ -514,7 +1284,7 @@ function end_startup_check()
 end
 
 function check_geometry()
-   if (GetOption("auto_resize_command_window") == 1) and (GetCommand() == "") then
+   if not inputbar_active and (GetOption("auto_resize_command_window") == 1) and (GetCommand() == "") then
       SetCommandWindowHeight((GetOption("auto_resize_minimum_lines") * GetInfo(214)) + 4)
    end
 
@@ -523,10 +1293,12 @@ function check_geometry()
    textrect_bottom = math.min(windowbottom, tonumber(GetVariable("trbottom")) or default_bottom)
    textrect_left = math.max(0, tonumber(GetVariable("trleft")) or default_left)
    textrect_right = math.min(windowright, tonumber(GetVariable("trright")) or default_right)
+   local inputbar_drawn = false
    if prevwindowbottom ~= windowbottom or prevwindowright ~= windowright then
-      draw_main_window()
+      inputbar_drawn = draw_main_window() == true
       prevwindowbottom, prevwindowright = windowbottom, windowright
    end
+   return inputbar_drawn
 end
 
 function scrollMain(step)
@@ -617,6 +1389,9 @@ function add_title_dragger()
 end
 
 function OnPluginWorldOutputResized()
+   if inputbar_active then
+      return
+   end
    AddTimer("resizeCheckTimer1", 0, 0, .1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
    AddTimer("resizeCheckTimer2", 0, 0, 1, "", timer_flag.Enabled + timer_flag.OneShot + timer_flag.ActiveWhenClosed + timer_flag.Replace + timer_flag.Temporary, "check_geometry")
 end
@@ -624,7 +1399,7 @@ end
 function draw_main_window()
    -- addresses a problem where new users are trying to play without the window maximized
    local t_right = math.min(textrect_right, GetInfo(281)-7-Theme.RESIZER_SIZE-4)
-   local t_bottom = math.min(textrect_bottom, GetInfo(280)-7)
+   local t_bottom = math.min(textrect_bottom, MainOutputBottomLimit())
 
    TextRectangle(textrect_left, textrect_top, t_right, t_bottom,
       5,  -- BorderOffset,
@@ -661,6 +1436,15 @@ function draw_main_window()
 
    add_title_dragger()
    add_main_resizer()
+   local inputbar_drawn = false
+   if inputbar_active and inputbar_attached and
+      WindowInfo(inputBar, 1) and WindowInfo(inputBar, 5) then
+      if InputBarPositionAttached() then
+         InputBarDraw(true)
+         inputbar_drawn = true
+      end
+   end
+   return inputbar_drawn
 end
 
 function ToggleLogo()
