@@ -1,10 +1,11 @@
--- Bits of this code and ideas were borrowed and remixed from the MUSHclient community. https://www.mushclient.com/forum/?id=9385 and others.
+-- Small bits of this code and ideas were borrowed and remixed from the MUSHclient community. https://www.mushclient.com/forum/?id=9385 and others.
 
 require "wait"
 require "copytable"
 require "colors"
 require "mw_theme_base"
 local socket = require "socket"
+local window_font_fallback = require "window_font_fallback"
 
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
@@ -107,18 +108,74 @@ function TextRect:configure(
    self:setRect(left, top, right, bottom)
 end
 
-function TextRect:loadFont(name, size)
-   if (not self.font) or (name ~= self.font_name) or (size ~= self.font_size) then
-      self.font = self.id.."_font"
-      self.font_bold = self.id.."_font_bold"
-      self.font_name = name or self.font_name
-      self.font_size = size or self.font_size
+-- Load the normal and bold fonts used by this TextRect. Optional input styles
+-- let callers match another MUSHclient font without loading it themselves.
+function TextRect:loadFont(name, size, options)
+   options = options or {}
+   name = name or self.font_name or TextRect_defaults.font_name
+   size = tonumber(size or self.font_size) or TextRect_defaults.font_size
+   local bold = options.bold == true
+   local italic = options.italic == true
+   local charset = tonumber(options.charset) or 0
+   local pitch_and_family = tonumber(options.pitch_and_family) or miniwin.font_pitch_default
+   local reload_token = options.reload_token
+   local changed =
+      not self.font or
+      name ~= self.font_name or
+      size ~= self.font_size or
+      bold ~= self.font_is_bold or
+      italic ~= self.font_is_italic or
+      charset ~= self.font_charset or
+      pitch_and_family ~= self.font_pitch_and_family or
+      reload_token ~= self.font_reload_token
 
-      WindowFont(self.window, self.font, self.font_name, self.font_size, false, false, false, false, 0)
-      WindowFont(self.window, self.font_bold, self.font_name, self.font_size, true, false, false, false, 0)
-      self.font_height = WindowFontInfo(self.window, self.font, 1)
+   if not changed then
+      return false
    end
+
+   self.font = self.id.."_font"
+   self.font_bold = self.id.."_font_bold"
+   local fallback_name = self.loaded_font_name or TextRect_defaults.font_name
+   local fallback_size = self.loaded_font_size or TextRect_defaults.font_size
+   local loaded_name, loaded_size = window_font_fallback.ensure_font(
+      self.window,
+      self.font,
+      name,
+      size,
+      fallback_name,
+      fallback_size,
+      bold,
+      italic,
+      false,
+      false,
+      charset,
+      pitch_and_family)
+   window_font_fallback.ensure_font(
+      self.window,
+      self.font_bold,
+      loaded_name,
+      loaded_size,
+      fallback_name,
+      fallback_size,
+      true,
+      italic,
+      false,
+      false,
+      charset,
+      pitch_and_family)
+
+   self.font_name = name
+   self.font_size = size
+   self.font_is_bold = bold
+   self.font_is_italic = italic
+   self.font_charset = charset
+   self.font_pitch_and_family = pitch_and_family
+   self.font_reload_token = reload_token
+   self.loaded_font_name = loaded_name
+   self.loaded_font_size = loaded_size
+   self.font_height = WindowFontInfo(self.window, self.font, 1)
    self:setLineSpacing(self.line_spacing)
+   return true
 end
 
 -- Returns an array {start, end, text}
