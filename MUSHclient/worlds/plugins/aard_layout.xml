@@ -924,6 +924,7 @@ end
 
 function LayoutStore(key)
    all_layouts = FetchLayouts()
+   Repaint() -- update rendered miniwindow positions before saving
    miniwindows = WindowList()
    if miniwindows then
       current_layout = {
@@ -963,6 +964,7 @@ function LayoutRestore(key)
       SaveLayout()
       check_geometry()
       draw_main_window()
+      Repaint() -- update rendered miniwindow positions before comparing
       -- do the other plugins
       CallPlugin("abc1a0944ae4af7586ce88dc", "pause") -- repaint buffer plugin
       local plugins_to_reload = {}
