@@ -41,6 +41,7 @@ function just_reloading()
 end
 
 local default_theme = {
+   bg_texture_function = false, -- clear the previous theme's optional texture
    LOGO_OPACITY = 0.02,
 
    PRIMARY_BODY = 0x0c0c0c,

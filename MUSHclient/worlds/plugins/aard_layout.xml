@@ -878,6 +878,10 @@ function OnPluginTick()
 end
 
 function OnPluginThemeChange()
+   load_main_window_theme()
+   -- Redraw the resize border even when its geometry has not changed.
+   prev_l, prev_t, prev_b = nil, nil, nil
+   draw_main_window()
    inputbar_content_signature = nil
    inputbar_presentation_signature = nil
    if inputbar_active then
@@ -1178,38 +1182,8 @@ function OnPluginSaveState()
 end
 
 
---=================================================================================
--- Called when plugin is first installed, including when Mush first starts.
--- This is the place to initialize stuff you need in the main plugin.
---=================================================================================
-function OnPluginInstall()
-   --- Get a unique name for main window and resizer window.
-   win = "      "..GetPluginID()  -- get a unique name
-   textDragger = win.."txtdragger"
-   textResizer = win.."txtresize"
-   bgwin = win.."text_background"
-   bgoffscreen = win.."text_background_offscreen"
-   inputBar = GetPluginID().."_inputbar"
-   image_ratio, prev_l, prev_t, prev_b, sb = nil, nil, nil, nil, nil
-   prevwindowbottom, prevwindowright = nil, nil  -- force draw_main_window on re-enable
-   inputbar_active = false
-   inputbar_last_poll_time = 0
-   inputbar_fast_poll_until = 0
-   inputbar_content_signature = nil
-   inputbar_presentation_signature = nil
-   inputbar_hidden_overhead = nil
-   inputbar_native_height = tonumber(GetVariable("inputbar_native_height"))
-   inputbar_window = nil
-   inputbar_rect = nil
-   inputbar_logical_line_starts = {}
-   inputbar_moving = false
-   inputbar_auto_resize_suppressed = false
-   inputbar_output_height = nil
-   inputbar_output_width = nil
-   inputbar_cursor_position = nil
-   inputbar_selection_start = nil
-   inputbar_selection_end = nil
-
+function load_main_window_theme()
+   image_ratio = nil
    local dir = GetInfo(66)
    local imgpath = "-"
 
@@ -1251,6 +1225,41 @@ function OnPluginInstall()
    end
 
    WindowDelete(bgoffscreen)
+end
+
+--=================================================================================
+-- Called when plugin is first installed, including when Mush first starts.
+-- This is the place to initialize stuff you need in the main plugin.
+--=================================================================================
+function OnPluginInstall()
+   --- Get a unique name for main window and resizer window.
+   win = "      "..GetPluginID()  -- get a unique name
+   textDragger = win.."txtdragger"
+   textResizer = win.."txtresize"
+   bgwin = win.."text_background"
+   bgoffscreen = win.."text_background_offscreen"
+   inputBar = GetPluginID().."_inputbar"
+   image_ratio, prev_l, prev_t, prev_b, sb = nil, nil, nil, nil, nil
+   prevwindowbottom, prevwindowright = nil, nil  -- force draw_main_window on re-enable
+   inputbar_active = false
+   inputbar_last_poll_time = 0
+   inputbar_fast_poll_until = 0
+   inputbar_content_signature = nil
+   inputbar_presentation_signature = nil
+   inputbar_hidden_overhead = nil
+   inputbar_native_height = tonumber(GetVariable("inputbar_native_height"))
+   inputbar_window = nil
+   inputbar_rect = nil
+   inputbar_logical_line_starts = {}
+   inputbar_moving = false
+   inputbar_auto_resize_suppressed = false
+   inputbar_output_height = nil
+   inputbar_output_width = nil
+   inputbar_cursor_position = nil
+   inputbar_selection_start = nil
+   inputbar_selection_end = nil
+
+   load_main_window_theme()
 
    -- if disabled last time, stay disabled
    if GetVariable ("enabled") == "false" then
