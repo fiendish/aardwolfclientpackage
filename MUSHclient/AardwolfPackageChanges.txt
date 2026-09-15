@@ -2,6 +2,7 @@ Aardwolf Client Package Major Changes List
 
 r2333 snapshot
 - new feature: The group monitor can now put members in the same room first without hiding other members.
+- misc change: AppVeyor builds now get MUSHclient.exe from the fiendish/mushclient releases.
 
 r2332 snapshot
 - bug fix: `mapper purge cexits area` was deleting too many exits, not just the cexits.
