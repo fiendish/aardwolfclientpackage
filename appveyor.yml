@@ -23,7 +23,7 @@ install:
 - ps: Start-FileDownload 'https://github.com/fiendish/lua-llthreads2-build/releases/download/latest/llthreads2.dll'
 - ps: Start-FileDownload 'https://github.com/fiendish/lua-openssl-build/releases/download/latest/openssl.dll'
 - ps: Start-FileDownload 'https://github.com/fiendish/luasocket-build/releases/download/latest/luasocket-win32-static.zip'
-- ps: Start-FileDownload 'https://github.com/nickgammon/mushclient/releases/download/latest_commit/MUSHclient.exe'
+- ps: Start-FileDownload 'https://github.com/fiendish/mushclient/releases/download/latest_commit/MUSHclient.exe'
 - ps: pushd C:\projects\aardwolfclientpackage
 - ps: |
       Move-Item C:\lua51.dll MUSHclient -force
