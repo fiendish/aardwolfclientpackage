@@ -1,7 +1,10 @@
 Aardwolf Client Package Major Changes List
 
-r2333 snapshot
+r2336 snapshot
+- new feature: There's now a floating input bar option in the layout plugin that uses a miniwindow and some highbrow chicanery. Activate it by typing "aard input".
 - new feature: The group monitor can now put members in the same room first without hiding other members.
+- bug fix: One potential source of layouts not saving properly should be fixed. So if this affects you, I guess try again now.
+- misc change: New MUSHclient build with a bunch of plausible crash bugs fixed. Probably not all of them. One that I still know about is actually caused by macOS Rosetta2 and non-Crossover Wine builds, not MUSHclient.
 
 r2332 snapshot
 - bug fix: `mapper purge cexits area` was deleting too many exits, not just the cexits.
