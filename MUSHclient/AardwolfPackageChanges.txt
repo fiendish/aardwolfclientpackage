@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2337 snapshot
+- bug fix: Fix accidental partial breakage of color theme changing in the main layout.
+
 r2336 snapshot
 - new feature: There's now a floating input bar option in the layout plugin that uses a miniwindow and some highbrow chicanery. Activate it by typing "aard input".
 - new feature: The group monitor can now put members in the same room first without hiding other members.
