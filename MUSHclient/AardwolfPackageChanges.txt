@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2338 snapshot
+- bug fix: The floating main output scrollbar feels like it should always be in back.
+
 r2337 snapshot
 - bug fix: Fix accidental partial breakage of color theme changing in the main layout.
 
