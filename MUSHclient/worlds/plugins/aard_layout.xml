@@ -79,6 +79,13 @@ function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
 
+function OnPluginBroadcast(msg, id, name, text)
+   if id == "462b665ecb569efbf261422f" and msg == 996 and
+      text == "re-register z" and textResizer and WindowInfo(textResizer, 1) then
+      check(CallPlugin(id, "dropMe", textResizer))
+   end
+end
+
 default_top = 139
 default_bottom = 545
 default_left = 7
@@ -1361,6 +1368,7 @@ function add_main_resizer()
          12, miniwin.create_absolute_location,
          Theme.CLICKABLE
       )
+      check(CallPlugin("462b665ecb569efbf261422f", "dropMe", textResizer))
    end
 
    if (prev_l ~= l) or (prev_t ~= t) or (prev_b ~= b) then
