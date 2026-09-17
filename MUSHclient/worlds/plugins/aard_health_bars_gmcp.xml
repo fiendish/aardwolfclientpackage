@@ -640,6 +640,58 @@ function LeftClickOnly(flags, hotspot_id, win)
    return false
 end
 
+-- Layout snapshots contain display settings for the health bars window.
+function OnPluginLayoutSave(mwid)
+   if mwid ~= win then
+      return ""
+   end
+
+   local visible_bars = {}
+   for name, bar in pairs(showBar) do
+      visible_bars[name] = bar[2]
+   end
+   return serialize.save_simple({
+      stacked = stacked,
+      showLabels = showLabels,
+      font_name = font_name,
+      font_size = font_size,
+      visible_bars = visible_bars,
+      orderOfBars = orderOfBars,
+      graphicalMode = graphicalMode,
+      flat_gauges = flat_gauges,
+      overlay_numbers = overlay_numbers,
+      reverseTNL = reverseTNL
+   })
+end
+
+function OnPluginLayoutRestore(mwid, restored_width, restored_height, state)
+   if mwid ~= win then
+      return false
+   end
+
+   local changed = width ~= restored_width
+   width = restored_width
+   -- Older layouts have geometry but no saved display settings.
+   if state ~= "" and state ~= OnPluginLayoutSave(mwid) then
+      local settings = assert(loadstring("return " .. state))()
+      stacked = settings.stacked
+      showLabels = settings.showLabels
+      font_name = settings.font_name
+      font_size = settings.font_size
+      for name, visible in pairs(settings.visible_bars) do
+         showBar[name][2] = visible
+      end
+      orderOfBars = settings.orderOfBars
+      graphicalMode = settings.graphicalMode
+      flat_gauges = settings.flat_gauges
+      overlay_numbers = settings.overlay_numbers
+      reverseTNL = settings.reverseTNL
+      changed = true
+   end
+   -- Reload derives height from the font, stacked mode, and visible bars.
+   return changed
+end
+
 ---------------------------------------------------------------------------------
 -- Called when plugin is saved - store our variables for next time.
 ---------------------------------------------------------------------------------
@@ -651,6 +703,11 @@ function OnPluginSaveState ()
    SetVariable("showLabels", showLabels)
    SetVariable("reverseTNL", reverseTNL)
    SetVariable("enabled", tostring(GetPluginInfo(GetPluginID(), 17)))
+   -- Keep external resizes, but preserve the preferred width when only clipped.
+   local current_width = WindowInfo(win, 3)
+   if current_width and current_width ~= effectiveWidth then
+      width = current_width
+   end
    SetVariable("width", width)
    SetVariable("font_name", font_name)
    SetVariable("font_size", font_size)

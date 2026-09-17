@@ -953,6 +953,15 @@ function LayoutStore(key)
             ["width"] = WindowInfo(mwid, 3),
             ["height"] = WindowInfo(mwid, 4)
          }
+         -- Plugins can return a string with settings for this miniwindow.
+         local pid = WindowInfo(mwid, 23)
+         if pid and pid ~= GetPluginID() and GetPluginInfo(pid, 17) and PluginSupports(pid, "OnPluginLayoutSave") == error_code.eOK then
+            local result, state = CallPlugin(pid, "OnPluginLayoutSave", mwid)
+            check(result)
+            if state ~= "" then
+               current_layout[mwid]["plugin_state"] = state
+            end
+         end
       end
       all_layouts[key] = current_layout
       SetVariable("all_layouts", serialize.save_simple(all_layouts))
@@ -987,6 +996,17 @@ function LayoutRestore(key)
                   WindowResize(mwid, rect["width"], rect["height"], WindowInfo(mwid, 9))
                   WindowPosition(mwid, rect["left"], rect["top"], WindowInfo(mwid, 7), WindowInfo(mwid, 8))
                   plugins_to_reload[pid] = true
+               end
+               -- Return true to save and refresh the plugin, even if geometry did not change.
+               if GetPluginInfo(pid, 17) and PluginSupports(pid, "OnPluginLayoutRestore") == error_code.eOK then
+                  local result, changed = CallPlugin(pid, "OnPluginLayoutRestore", mwid, rect["width"], rect["height"], rect["plugin_state"] or "")
+                  if result ~= error_code.eOK then
+                     CallPlugin("abc1a0944ae4af7586ce88dc", "resume")
+                     check(result)
+                  end
+                  if changed then
+                     plugins_to_reload[pid] = true
+                  end
                end
             end
          end
