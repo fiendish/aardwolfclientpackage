@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2340 snapshot
+- bug fix: Healthbars miniwindow should resize properly during layout restore.
+- bug fix: Fixed multiple possible causes of the bug where the output doesn't scroll properly for new output.
+
 r2338 snapshot
 - bug fix: The floating main output scrollbar feels like it should always be in back.
 
