@@ -136,8 +136,9 @@ function OnPluginSelectionChanged()
          CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
       end
    else
-      if (new_csl == 0) and (new_cel == 0) and (new_csp == 0) and (new_cep == 0) then
+      if (new_csl == 0) and (new_cel == 0) and (new_csp == 0) and (new_cep == 0) and GetInfo(114) then
          Pause(false)
+         SetScroll(-1, GetInfo(120))
       end
    end
 end
