@@ -158,7 +158,7 @@ local function target_allowed(target, snap)
 end
 
 function window_snap.enabled()
-   return GetPluginVariable("c293f9e7f04dde889f65cb90", "snap_miniwindows") == "1"
+   return (GetPluginVariable("c293f9e7f04dde889f65cb90", "snap_miniwindows") or "1") == "1"
 end
 
 local function snap_setting(name, default, minimum)
