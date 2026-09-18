@@ -76,6 +76,10 @@ require "scrollbar"
 require "themed_miniwindows"
 local window_snap = require "window_snap"
 
+function OnPluginSnapTarget(window_id)
+   return window_id ~= textDragger and window_id ~= bgwin
+end
+
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
@@ -1098,10 +1102,15 @@ function ResizeMainCallback(flags)
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
    if main_resize_snap then
       local border = main_resize_snap.border
-      posx, posy = window_snap.resize_coordinates(
-         main_resize_snap, posx, posy,
-         GetInfo(281) - 7 - Theme.RESIZER_SIZE - 4 + main_resize_snap.right_extent,
-         MainOutputBottomLimit() + border)
+      local right_limit = GetInfo(281) - 7 - Theme.RESIZER_SIZE - 4 + main_resize_snap.right_extent
+      local bottom_limit = MainOutputBottomLimit() + border
+      local max_x = main_resize_snap.mouse_x + right_limit - main_resize_snap.left - main_resize_snap.width
+      local max_y = main_resize_snap.mouse_y + bottom_limit - main_resize_snap.top - main_resize_snap.height
+      local selection
+      posx, posy, selection = window_snap.resize_coordinates(
+         main_resize_snap, math.min(posx, max_x), math.min(posy, max_y),
+         right_limit, bottom_limit)
+      window_snap.show_feedback(selection)
    end
    textrect_right = textrect_right + posx - startx
    startx = posx
@@ -1159,10 +1168,14 @@ function DragMainCallback()
          right = area.right - outer_width,
          bottom = area.bottom - outer_height,
       }
-      local snapped_left, snapped_top = window_snap.snap_bounds({
-         left = left, top = top,
-         right = left + outer_width, bottom = top + outer_height,
+      -- Use the visible position when the mouse moves past a screen edge.
+      local snap_left = math.max(main_drag_snap.limits.left, math.min(left, main_drag_snap.limits.right))
+      local snap_top = math.max(main_drag_snap.limits.top, math.min(top, main_drag_snap.limits.bottom))
+      local snapped_left, snapped_top, selection = window_snap.snap_bounds({
+         left = snap_left, top = snap_top,
+         right = snap_left + outer_width, bottom = snap_top + outer_height,
       }, main_drag_snap)
+      window_snap.show_feedback(selection)
       posx = posx + snapped_left - left
       posy = posy + snapped_top - top
    end
@@ -1203,6 +1216,7 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseMainCallback(flags)
+   if main_resize_snap then window_snap.finish_feedback() end
    main_resize_snap = nil
    if bit.band(flags, 0x20) == 0 then
       SaveLayout()
@@ -1211,6 +1225,7 @@ function ResizeReleaseMainCallback(flags)
 end
 
 function DragReleaseMainCallback()
+   if main_drag_snap then window_snap.finish_feedback() end
    main_drag_snap = nil
    SaveLayout()
 end

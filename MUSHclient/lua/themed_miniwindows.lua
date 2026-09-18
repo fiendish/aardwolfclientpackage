@@ -82,9 +82,11 @@ function ThemedWindowClass.ResizeMoveCallback(flags, hotspot_id)
 
    local posx, posy = WindowInfo(window.id, 17), WindowInfo(window.id, 18)
    if window.resize_snap then
-      posx, posy = window_snap.resize_coordinates(
+      local selection
+      posx, posy, selection = window_snap.resize_coordinates(
          window.resize_snap, posx, posy, nil, nil,
          window.windowinfo and window.windowinfo.window_friends)
+      window_snap.show_feedback(selection)
    end
    window.width = window.width + posx - window.resize_startx
    window.resize_startx = posx
@@ -117,7 +119,10 @@ function ThemedWindowClass.ResizeReleaseCallback(flags, hotspot_id)
       return  -- ignore non-left mouse button
    end
    local window = ThemedWindowClass.hotspot_map[hotspot_id]
-   window.resize_snap = nil
+   if window.resize_snap then
+      window_snap.finish_feedback()
+      window.resize_snap = nil
+   end
    SetVariable("themed_miniwindow_width"..window.id, window.width)
    SetVariable("themed_miniwindow_height"..window.id, window.height)
    window:resize(window.width, window.height, false)

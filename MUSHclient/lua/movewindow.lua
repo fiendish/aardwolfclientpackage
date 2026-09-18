@@ -130,6 +130,7 @@ local function make_mousedown_handler (mwi)
     -- Keep these settings fixed until the next mouse-down.
     mwi.drag_locked = GetPluginVariable ("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1"
     mwi.drag_snap_enabled = false
+    mwi.drag_snap_targets = {}
 
     -- see if other action wanted
     if mwi.preprocess.mousedown then
@@ -177,7 +178,7 @@ local function snap_position (mwi, posx, posy)
   return window_snap.snap_bounds (
     {left = posx, top = posy, right = posx + width, bottom = posy + height},
     {threshold = mwi.drag_snap_threshold, offset = mwi.drag_snap_offset,
-     excluded = excluded,
+     excluded = excluded, targetable_cache = mwi.drag_snap_targets,
      limits = {left = 0, top = 0,
                right = GetInfo (281) - mwi.margin,
                bottom = GetInfo (280) - mwi.margin}})
@@ -222,7 +223,9 @@ local function make_dragmove_handler (mwi)
     end
     
     if mwi.drag_snap_enabled then
-      posx, posy = snap_position (mwi, posx, posy)
+      local selection
+      posx, posy, selection = snap_position (mwi, posx, posy)
+      window_snap.show_feedback (selection)
     end
 
     if bit.test(mwi.window_flags, miniwin.create_absolute_location) == false then
@@ -256,7 +259,11 @@ local function make_dragrelease_handler (mwi)
   return function (flags, hotspot_id)
   
     local win = mwi.win
-  
+
+    if mwi.drag_snap_enabled then
+      window_snap.finish_feedback ()
+    end
+
     -- see if other action wanted
     if mwi.preprocess.dragrelease then
       if mwi.preprocess.dragrelease (flags, hotspot_id, win) then

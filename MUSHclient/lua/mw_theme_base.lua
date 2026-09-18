@@ -390,7 +390,9 @@ local function wrap_resize_callback(path, kind)
          return unpack(results, 1, results.n)
       end
       if kind == "up" then
+         local drag = resize_drags[hotspot_id]
          resize_drags[hotspot_id] = nil
+         if drag then window_snap.finish_feedback() end
          return current(flags, hotspot_id, ...)
       end
 
@@ -399,8 +401,9 @@ local function wrap_resize_callback(path, kind)
       local original_info = _G.WindowInfo
       local raw_x, raw_y = original_info(win, 17), original_info(win, 18)
       local mwi = _G["mw_" .. win .. "_movewindow_info"]
-      local x, y = window_snap.resize_coordinates(drag, raw_x, raw_y, nil, nil,
+      local x, y, selection = window_snap.resize_coordinates(drag, raw_x, raw_y, nil, nil,
          mwi and mwi.window_friends)
+      window_snap.show_feedback(selection)
       if x == raw_x and y == raw_y then return current(flags, hotspot_id, ...) end
 
       -- Existing callbacks derive and save dimensions from WindowInfo 17/18.
