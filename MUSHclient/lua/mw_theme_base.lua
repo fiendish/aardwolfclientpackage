@@ -18,6 +18,7 @@ Steps for use: (also see https://github.com/fiendish/aardwolfclientpackage/wiki/
 --]]
 require "checkplugin"
 require "movewindow"
+local window_snap = require "window_snap"
 dofile(GetInfo(60) .. "aardwolf_colors.lua")
 
 module ("Theme", package.seeall)
@@ -361,11 +362,81 @@ function TextButtonMouseCancel(flags, hotspot_id)
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
 
-function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, dragrelease_callback)
+local resize_windows = {}
+local resize_drags = {}
+local resize_callbacks = {}
+
+local function wrap_resize_callback(path, kind)
+   if not path or path == "" then return end
+   local parent = _G
+   local name
+   for part in path:gmatch("[^%.]+") do
+      assert(part:match("^[%a_][%w_]*$"), "Invalid resize callback: " .. path)
+      if name then parent = assert(parent[name], "Missing resize callback: " .. path) end
+      name = part
+   end
+   local current = assert(parent[name], "Missing resize callback: " .. path)
+   local previous = resize_callbacks[path]
+   if previous and current == previous.wrapper then return end
+   assert(type(current) == "function", "Resize callback is not a function: " .. path)
+
+   local function wrapper(flags, hotspot_id, ...)
+      local win = resize_windows[hotspot_id]
+      if not win then return current(flags, hotspot_id, ...) end
+      if kind == "down" then
+         local function pack(...) return {n = select("#", ...), ...} end
+         local results = pack(current(flags, hotspot_id, ...))
+         resize_drags[hotspot_id] = window_snap.begin_resize(win)
+         return unpack(results, 1, results.n)
+      end
+      if kind == "up" then
+         resize_drags[hotspot_id] = nil
+         return current(flags, hotspot_id, ...)
+      end
+
+      local drag = resize_drags[hotspot_id]
+      if not drag then return current(flags, hotspot_id, ...) end
+      local original_info = _G.WindowInfo
+      local raw_x, raw_y = original_info(win, 17), original_info(win, 18)
+      local mwi = _G["mw_" .. win .. "_movewindow_info"]
+      local x, y = window_snap.resize_coordinates(drag, raw_x, raw_y, nil, nil,
+         mwi and mwi.window_friends)
+      if x == raw_x and y == raw_y then return current(flags, hotspot_id, ...) end
+
+      -- Existing callbacks derive and save dimensions from WindowInfo 17/18.
+      -- Supply adjusted coordinates only while that callback runs.
+      _G.WindowInfo = function(id, info)
+         if id == win then
+            if info == 17 then return x end
+            if info == 18 then return y end
+         end
+         return original_info(id, info)
+      end
+      local args = {n = select("#", ...), ...}
+      local function pack(...) return {n = select("#", ...), ...} end
+      local ok, result = xpcall(function()
+         return pack(current(flags, hotspot_id, unpack(args, 1, args.n)))
+      end, debug.traceback)
+      _G.WindowInfo = original_info
+      if not ok then error(result, 0) end
+      return unpack(result, 1, result.n)
+   end
+   resize_callbacks[path] = {wrapper = wrapper}
+   parent[name] = wrapper
+end
+
+function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, dragrelease_callback, callback_handles_snap)
    local x1, y1 = DrawResizeTag(win, type, x1, y1)
 
    -- Add handler hotspots
    local hs = win.."_resize"
+   -- Callbacks that consume snapped coordinates directly do not need this adapter.
+   if not callback_handles_snap and _G ["mw_" .. win .. "_movewindow_info"] then
+      resize_windows[hs] = win
+      wrap_resize_callback(mousedown_callback, "down")
+      wrap_resize_callback(dragmove_callback, "move")
+      wrap_resize_callback(dragrelease_callback, "up")
+   end
    if WindowMoveHotspot(win, hs, x1, y1, 0, 0) ~= 0 then
       WindowAddHotspot(win, hs, x1, y1, 0, 0, nil, nil, mousedown_callback, nil, nil, "", 6, 0)
       WindowDragHandler(win, hs, dragmove_callback, dragrelease_callback, 0)

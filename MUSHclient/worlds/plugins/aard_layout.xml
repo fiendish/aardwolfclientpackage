@@ -74,6 +74,7 @@
 require "mw_theme_base"
 require "scrollbar"
 require "themed_miniwindows"
+local window_snap = require "window_snap"
 
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
@@ -94,6 +95,8 @@ default_right = 650
 -- Variables not saved.
 startx           = ""
 starty           = ""
+main_drag_snap   = nil
+main_resize_snap = nil
 posx             = ""
 posy             = ""
 hotspot_id       = ""
@@ -156,8 +159,8 @@ end
 
 
 function SnapStatus()
-   local threshold, offset = movewindow.get_snap_settings()
-   local snapping = GetVariable("snap_miniwindows") == "1"
+   local threshold, offset = window_snap.get_settings()
+   local snapping = window_snap.enabled()
    print("Miniwindow snapping status:", snapping and "on" or "off")
    print("Snap threshold pixels:", threshold)
    print("Snap edge offset pixels:", offset)
@@ -369,7 +372,8 @@ end
 
 function InputBarAttachedRectangle()
    local border_offset = tonumber(GetInfo(276)) or 0
-   local left = math.max(0, (tonumber(GetInfo(290)) or textrect_left) - border_offset)
+   local outer_border = border_offset + (tonumber(GetInfo(277)) or 0)
+   local left = math.max(0, (tonumber(GetInfo(290)) or textrect_left) - outer_border)
    local right = math.min(
       tonumber(GetInfo(281)) or textrect_right,
       (tonumber(GetInfo(292)) or textrect_right) + border_offset
@@ -1092,6 +1096,13 @@ function ResizeMainCallback(flags)
    local MIN_SIZE = (12 * font_height) + 1
 
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
+   if main_resize_snap then
+      local border = main_resize_snap.border
+      posx, posy = window_snap.resize_coordinates(
+         main_resize_snap, posx, posy,
+         GetInfo(281) - 7 - Theme.RESIZER_SIZE - 4 + main_resize_snap.right_extent,
+         MainOutputBottomLimit() + border)
+   end
    textrect_right = textrect_right + posx - startx
    startx = posx
    if ( textrect_right-textrect_left < MIN_SIZE) then
@@ -1128,11 +1139,40 @@ function DragMainCallback()
    posx, posy = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
    local height = GetInfo(293) - GetInfo(291)
    local width = GetInfo(292) - GetInfo(290)
+   if main_drag_snap then
+      -- The title dragger extends to the left and the scrollbar extends to the right.
+      local outer_border = main_drag_snap.outer_border
+      local right_extent = main_drag_snap.right_extent
+      local left = textrect_left - outer_border + posx - startx
+      local top = textrect_top - outer_border + posy - starty
+      local outer_width = width + outer_border + right_extent
+      local outer_height = height + 2 * outer_border
+      local area = {
+         left = 0,
+         top = 7 - outer_border,
+         right = GetInfo(281) - 7 + main_drag_snap.border,
+         bottom = MainOutputBottomLimit() + outer_border,
+      }
+      main_drag_snap.area = area
+      main_drag_snap.limits = {
+         left = area.left, top = area.top,
+         right = area.right - outer_width,
+         bottom = area.bottom - outer_height,
+      }
+      local snapped_left, snapped_top = window_snap.snap_bounds({
+         left = left, top = top,
+         right = left + outer_width, bottom = top + outer_height,
+      }, main_drag_snap)
+      posx = posx + snapped_left - left
+      posy = posy + snapped_top - top
+   end
 
    textrect_left = textrect_left + posx - startx
    textrect_right = textrect_left + width
-   if (textrect_left <= 7) then
-      textrect_left = 7
+   -- Let the title dragger's left edge reach the screen edge.
+   local left_limit = GetInfo(277) + GetInfo(276)
+   if (textrect_left <= left_limit) then
+      textrect_left = left_limit
       textrect_right = textrect_left + width
    elseif (textrect_right >= GetInfo(281)-7) then
       textrect_right = GetInfo(281)-7
@@ -1163,6 +1203,7 @@ end
 -- Called after the resize widget is released.
 ---------------------------------------------------------------------------------
 function ResizeReleaseMainCallback(flags)
+   main_resize_snap = nil
    if bit.band(flags, 0x20) == 0 then
       SaveLayout()
    end
@@ -1170,6 +1211,7 @@ function ResizeReleaseMainCallback(flags)
 end
 
 function DragReleaseMainCallback()
+   main_drag_snap = nil
    SaveLayout()
 end
 
@@ -1179,6 +1221,26 @@ end
 function MouseDown(flags, hotspot_id)
    if (hotspot_id == textResizer.."_resize") then
       startx, starty = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
+      main_resize_snap = nil
+      if bit.band(flags, 0x10) ~= 0 then
+         -- Snap the scrollbar's outer right edge while retaining the saved text rectangle edges.
+         local border = tonumber(GetInfo(276)) or 5
+         local right_extent = border + Theme.RESIZER_SIZE + 4
+         local excluded = {textDragger, bgwin}
+         if inputbar_active and inputbar_attached then
+            excluded[#excluded + 1] = inputBar
+         end
+         main_resize_snap = window_snap.begin_resize(textResizer, {
+            left = textrect_left - border,
+            top = textrect_top - border,
+            right = textrect_right + right_extent,
+            bottom = textrect_bottom + border,
+         }, excluded)
+         if main_resize_snap then
+            main_resize_snap.border = border
+            main_resize_snap.right_extent = right_extent
+         end
+      end
       if bit.band(flags, 0x20) ~= 0 then
          local result = WindowMenu(textResizer, WindowInfo(textResizer, 14), WindowInfo(textResizer, 15), "!"..(GetInfo(120) and "+" or "").."Show exterior scrollbar -->")
          if result == "1" then
@@ -1188,6 +1250,22 @@ function MouseDown(flags, hotspot_id)
       end
    elseif (hotspot_id == "dragmain") then
       startx, starty = WindowInfo (textDragger, 17), WindowInfo (textDragger, 18)
+      main_drag_snap = nil
+      if bit.band(flags, 0x10) ~= 0 and GetVariable("lock_down_miniwindows") ~= "1" and
+         window_snap.enabled() then
+         local threshold, offset = window_snap.get_settings()
+         local border = tonumber(GetInfo(276)) or 5
+         local outer_border = border + (tonumber(GetInfo(277)) or 1)
+         local excluded = {[textDragger] = true, [textResizer] = true, [bgwin] = true}
+         if inputbar_active and inputbar_attached then
+            excluded[inputBar] = true
+         end
+         main_drag_snap = {
+            threshold = threshold, offset = offset, excluded = excluded,
+            border = border, outer_border = outer_border,
+            right_extent = border + Theme.RESIZER_SIZE + 4,
+         }
+      end
    end
 end
 
@@ -1334,6 +1412,8 @@ function OnPluginInstall()
    inputbar_logical_line_starts = {}
    inputbar_moving = false
    inputbar_auto_resize_suppressed = false
+   main_drag_snap = nil
+   main_resize_snap = nil
    inputbar_output_height = nil
    inputbar_output_width = nil
    inputbar_cursor_position = nil

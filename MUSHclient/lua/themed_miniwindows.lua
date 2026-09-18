@@ -1,5 +1,6 @@
 require "mw_theme_base"
 require "movewindow"
+local window_snap = require "window_snap"
 
 ThemedWindowClass = {
    title_font = "window_title_font",
@@ -65,6 +66,7 @@ function ThemedWindowClass.ResizeMouseDownCallback(flags, hotspot_id)
    local window = ThemedWindowClass.hotspot_map[hotspot_id]
    window.resize_startx = WindowInfo(window.id, 17)
    window.resize_starty = WindowInfo(window.id, 18)
+   window.resize_snap = window_snap.begin_resize(window.id)
 end
 
 local lastRefresh = 0
@@ -79,6 +81,11 @@ function ThemedWindowClass.ResizeMoveCallback(flags, hotspot_id)
    local window = ThemedWindowClass.hotspot_map[hotspot_id]
 
    local posx, posy = WindowInfo(window.id, 17), WindowInfo(window.id, 18)
+   if window.resize_snap then
+      posx, posy = window_snap.resize_coordinates(
+         window.resize_snap, posx, posy, nil, nil,
+         window.windowinfo and window.windowinfo.window_friends)
+   end
    window.width = window.width + posx - window.resize_startx
    window.resize_startx = posx
    if (window.width < window.min_drag_width) then
@@ -110,6 +117,7 @@ function ThemedWindowClass.ResizeReleaseCallback(flags, hotspot_id)
       return  -- ignore non-left mouse button
    end
    local window = ThemedWindowClass.hotspot_map[hotspot_id]
+   window.resize_snap = nil
    SetVariable("themed_miniwindow_width"..window.id, window.width)
    SetVariable("themed_miniwindow_height"..window.id, window.height)
    window:resize(window.width, window.height, false)
@@ -199,7 +207,7 @@ function ThemedWindowClass:dress_window(new_title)
 
    if self.resizer_type then
       self.hotspot_map[self.id.."_resize"] = self
-      Theme.AddResizeTag(self.id, self.resizer_type, nil, nil, "ThemedWindowClass.ResizeMouseDownCallback", "ThemedWindowClass.ResizeMoveCallback", "ThemedWindowClass.ResizeReleaseCallback")
+      Theme.AddResizeTag(self.id, self.resizer_type, nil, nil, "ThemedWindowClass.ResizeMouseDownCallback", "ThemedWindowClass.ResizeMoveCallback", "ThemedWindowClass.ResizeReleaseCallback", true)
    else
       self.hotspot_map[self.id.."_resize"] = nil
    end
