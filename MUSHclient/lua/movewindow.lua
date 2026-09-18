@@ -125,7 +125,11 @@ local function make_mousedown_handler (mwi)
   return function (flags, hotspot_id)
    
     local win = mwi.win
-       
+
+    -- Keep these settings fixed until the next mouse-down.
+    mwi.drag_locked = GetPluginVariable ("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1"
+    mwi.drag_snap_enabled = false
+
     -- see if other action wanted
     if mwi.preprocess.mousedown then
       if mwi.preprocess.mousedown (flags, hotspot_id, win) then
@@ -133,6 +137,13 @@ local function make_mousedown_handler (mwi)
       end -- if handled already
     end -- if handler
     
+    if not mwi.drag_locked then
+      mwi.drag_snap_enabled = GetPluginVariable ("c293f9e7f04dde889f65cb90", "snap_miniwindows") == "1"
+      if mwi.drag_snap_enabled then
+        mwi.drag_snap_threshold, mwi.drag_snap_offset = movewindow.get_snap_settings ()
+      end
+    end
+
     -- find where mouse is so we can adjust window relative to mouse
     mwi.startx = WindowInfo (win, 14)
     mwi.starty = WindowInfo (win, 15)
@@ -156,6 +167,97 @@ local function make_mousedown_handler (mwi)
 
 end -- make_mousedown_handler
 
+local function snap_setting (name, default, minimum)
+  local value = tonumber (GetPluginVariable ("c293f9e7f04dde889f65cb90", name) or default)
+  assert (value and value > -math.huge and value < math.huge and value % 1 == 0 and
+          (minimum == nil or value >= minimum),
+          "Invalid miniwindow snap setting: " .. name)
+  return value
+end
+
+function movewindow.get_snap_settings ()
+  return snap_setting ("snap_miniwindows_threshold", 7, 0),
+         snap_setting ("snap_miniwindows_offset", 0)
+end
+
+-- Spans must overlap, meet, or leave the configured gap. The threshold allows
+-- both axes to approach a corner before the final positions are checked.
+local function within_snap_span (position, size, low, high, threshold, offset)
+  return (position + size >= low - threshold and position <= high + threshold) or
+         math.abs (position + size - (low - offset)) <= threshold or
+         math.abs (position - (high + offset)) <= threshold
+end
+
+local function add_snap_candidates (candidates, position, size, near, far, low, high, limit, threshold, offset)
+  -- Apply the offset to opposite edges. Matching edges stay aligned.
+  for _, candidate in ipairs {near - size - offset, far + offset, near, far - size} do
+    if math.abs (candidate - position) <= threshold and
+       candidate >= 0 and candidate <= limit then
+      candidates [#candidates + 1] = {position = candidate, low = low, high = high}
+    end
+  end
+end
+
+local function snap_position (mwi, posx, posy)
+  local width, height = WindowInfo (mwi.win, 3), WindowInfo (mwi.win, 4)
+  if width <= 0 or height <= 0 then
+    return posx, posy
+  end
+
+  local threshold, offset = mwi.drag_snap_threshold, mwi.drag_snap_offset
+  local screen_width, screen_height = GetInfo (281), GetInfo (280)
+  local excluded = {[mwi.win] = true}
+  for _, friend in ipairs (mwi.window_friends) do
+    if friend then
+      excluded [friend] = true
+    end
+  end
+
+  -- Keep the unsnapped position as a fallback for each axis.
+  local xs, ys = {{position = posx}}, {{position = posy}}
+  for _, target in ipairs (WindowList () or {}) do
+    if not excluded [target] and WindowInfo (target, 5) and not WindowInfo (target, 6) then
+      -- Use the displayed rectangle, including automatic positioning.
+      local left, top = WindowInfo (target, 10), WindowInfo (target, 11)
+      local right, bottom = WindowInfo (target, 12), WindowInfo (target, 13)
+      if right > left and bottom > top and
+         right > 0 and bottom > 0 and left < screen_width and top < screen_height then
+        if within_snap_span (posy, height, top, bottom, threshold, offset) then
+          add_snap_candidates (xs, posx, width, left, right, top, bottom,
+                               screen_width - mwi.margin, threshold, offset)
+        end
+        if within_snap_span (posx, width, left, right, threshold, offset) then
+          add_snap_candidates (ys, posy, height, top, bottom, left, right,
+                               screen_height - mwi.margin, threshold, offset)
+        end
+      end
+    end
+  end
+
+  local bestx, besty = posx, posy
+  local best_count, best_distance = 0, 0
+  for _, x in ipairs (xs) do
+    for _, y in ipairs (ys) do
+      -- Validate the final pair: one correction can affect the other edge.
+      if (not x.low or within_snap_span (y.position, height, x.low, x.high, 0, offset)) and
+         (not y.low or within_snap_span (x.position, width, y.low, y.high, 0, offset)) then
+        local count = (x.low and 1 or 0) + (y.low and 1 or 0)
+        local distance = (x.position - posx)^2 + (y.position - posy)^2
+        -- Prefer snapping both axes, then the shortest move. Coordinate ties
+        -- make the result independent of WindowList order.
+        if count > best_count or
+           (count == best_count and (distance < best_distance or
+             (distance == best_distance and (x.position < bestx or
+               (x.position == bestx and y.position < besty))))) then
+          bestx, besty = x.position, y.position
+          best_count, best_distance = count, distance
+        end
+      end
+    end
+  end
+  return bestx, besty
+end
+
 -- make a mouse drag-move handler with the movement information as an upvalue
 
 local function make_dragmove_handler (mwi)
@@ -165,7 +267,7 @@ local function make_dragmove_handler (mwi)
     local win = mwi.win
   
     -- see if other action wanted
-    if (GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1")  or (mwi.preprocess.dragmove and mwi.preprocess.dragmove(flags, hotspot_id, win)) then
+    if mwi.drag_locked or (mwi.preprocess.dragmove and mwi.preprocess.dragmove(flags, hotspot_id, win)) then
        return
     end -- if handler
     
@@ -194,6 +296,10 @@ local function make_dragmove_handler (mwi)
         posy = GetInfo(280) - mwi.margin
     end
     
+    if mwi.drag_snap_enabled then
+      posx, posy = snap_position (mwi, posx, posy)
+    end
+
     if bit.test(mwi.window_flags, miniwin.create_absolute_location) == false then
         mwi.window_flags = mwi.window_flags + miniwin.create_absolute_location
     end

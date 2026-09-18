@@ -24,7 +24,7 @@
 
 <alias
    script="LayoutCommand"
-   match="^aard layout( lock| unlock| save| forget| restore| list| help| reset)?( .*)?"
+   match="^aard layout(?:\s+(\S+))?(?:\s+(.*))?$"
    regexp="y"
    enabled="y"
    sequence="100"
@@ -125,62 +125,116 @@ require "serialize"
 
 function LayoutHelp()
    print("")
-   print("Aardwolf MUSHclient Layout Command Help")
+   print("Aardwolf layout commands")
    print("--------------------------------------------------------------------------------")
-   print("aard layout lock               :  prevent dragging miniwindows")
-   print("aard layout unlock             :  allow dragging miniwindows")
-   print("aard layout save <keyword>     :  store the current layout as the given keyword")
-   print("aard layout restore <keyword>  :  restore the layout for the given keyword")
-   print("aard layout forget <keyword>   :  forget the layout for the given keyword")
-   print("aard layout list               :  list all stored layout keywords")
-   print("aard layout help               :  show this command help")
-   print("aard layout reset              :  like resetaard, but better")
-   print("aard input                     :  toggle the movable synthetic input bar")
+   print("aard layout lock                     :  prevent dragging miniwindows")
+   print("aard layout unlock                   :  allow dragging miniwindows")
+   print("aard layout save <keyword>           :  store the current layout as the keyword")
+   print("aard layout restore <keyword>        :  restore the layout for the keyword")
+   print("aard layout forget <keyword>         :  forget the layout for the keyword")
+   print("aard layout list                     :  list all stored layout keywords")
+   print("aard layout reset                    :  like resetaard, but better")
    print("")
+   print("aard layout snap on|off              :  turn miniwindow snapping on or off")
+   print("aard layout snap threshold <pixels>  :  set the snap threshold")
+   print("aard layout snap offset <pixels>     :  set the edge gap or overlap")
+   print("")
+   print("aard input                           :  toggle the movable input bar")
+   print("")
+   print("aard layout help                     :  show this command help")
+   print("")
+   print("Current layout configuration")
+   print("--------------------------------")
    LockStatus()
+   SnapStatus()
    print("")
 end
 
 function LockStatus()
-   print("Current layout lock status:", ((GetVariable("lock_down_miniwindows") == "1") and "LOCKED") or "UNLOCKED")
+   print("Layout lock status:", ((GetVariable("lock_down_miniwindows") == "1") and "locked") or "unlocked")
+end
+
+
+function SnapStatus()
+   local threshold, offset = movewindow.get_snap_settings()
+   local snapping = GetVariable("snap_miniwindows") == "1"
+   print("Miniwindow snapping status:", snapping and "on" or "off")
+   print("Snap threshold pixels:", threshold)
+   print("Snap edge offset pixels:", offset)
+end
+
+function LayoutSnap(option)
+   option = Trim(option):lower()
+   local setting, argument = option:match("^(%a+)%s+(.+)$")
+   if setting == "threshold" or setting == "offset" then
+      local maximum = 100
+      local minimum = setting == "threshold" and 0 or -maximum
+      local value = math.floor(tonumber(argument))
+      if not value
+         or value < minimum
+         or value > maximum
+      then
+         print("Snap " .. setting .. " must be a number from " .. minimum .. " to " .. maximum .. ".")
+         return
+      end
+      check(SetVariable("snap_miniwindows_" .. setting, tostring(value)))
+   elseif option == "on" or option == "off" then
+      local enabled = option == "on"
+      check(SetVariable("snap_miniwindows", enabled and "1" or "0"))
+   else
+      LayoutHelp()
+      return
+   end
+   check(SaveState())
+   print("")
+   SnapStatus()
 end
 
 function LayoutCommand(name, line, wildcards)
-   if wildcards[1] == " lock" then
+   local command = Trim(wildcards[1] or ""):lower()
+   local argument = Trim(wildcards[2] or "")
+   if argument ~= "" and (command == "lock" or command == "unlock" or
+      command == "list" or command == "reset") then
+      LayoutHelp()
+      return
+   end
+
+   if command == "lock" then
       SetVariable("lock_down_miniwindows", "1")
+      print("")
       LockStatus()
-   elseif wildcards[1] == " unlock" then
+   elseif command == "unlock" then
       SetVariable("lock_down_miniwindows", "0")
+      print("")
       LockStatus()
-   elseif wildcards[1] == " save" then
-      key = Trim(wildcards[2])
-      if key ~= "" then
-         LayoutStore(key)
+   elseif command == "snap" then
+      LayoutSnap(argument)
+   elseif command == "save" then
+      if argument ~= "" then
+         LayoutStore(argument)
       else
          LayoutHelp()
       end
-   elseif wildcards[1] == " restore" then
-      key = Trim(wildcards[2])
-      if key ~= "" then
-         LayoutRestore(key)
+   elseif command == "restore" then
+      if argument ~= "" then
+         LayoutRestore(argument)
       else
          LayoutHelp()
       end
-   elseif wildcards[1] == " list" then
+   elseif command == "list" then
       LayoutList()
-   elseif wildcards[1] == " forget" then
-      key = Trim(wildcards[2])
-      if key ~= "" then
-         LayoutForget(key)
+   elseif command == "forget" then
+      if argument ~= "" then
+         LayoutForget(argument)
       else
          LayoutHelp()
       end
-   elseif wildcards[1] == " reset" then
+   elseif command == "reset" then
       reset_main()
       EnableAlias("resetaard", false)
       Execute("resetaard")
       EnableAlias("resetaard", true)
-   elseif wildcards[1] == "" or wildcards[1] == " help" then
+   else
       LayoutHelp()
    end
 end
