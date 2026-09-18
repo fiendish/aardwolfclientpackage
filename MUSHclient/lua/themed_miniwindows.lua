@@ -359,6 +359,8 @@ ThemedTextWindowClass = setmetatable({}, ThemedWindowClass)
 ThemedTextWindowClass.__index = ThemedTextWindowClass
 
 function ThemedTextWindowClass:__set_text_rect(rewrap)
+   -- Clear pixels retained from the old border when the window grows.
+   self:blank()
    local tr_right = self.bodyright
    if self.scrollbar then
       tr_right = tr_right - Theme.RESIZER_SIZE + 1
