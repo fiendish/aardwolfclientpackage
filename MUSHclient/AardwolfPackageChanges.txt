@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2342 snapshot
+- new feature: Included miniwindows now snap to each other's edges by default when dragging and resizing. See 'aard layout help'. If yours don't work right when resizing, try using my themed resizer.
+- misc change: Dragging the floating input bar uses Ctrl now instead of Alt, because Alt activates the menu bar.
+
 r2340 snapshot
 - bug fix: Healthbars miniwindow should resize properly during layout restore.
 - bug fix: Fixed multiple possible causes of the bug where the output doesn't scroll properly for new output.
