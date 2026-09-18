@@ -413,7 +413,7 @@ function InputBarEnsureWindow()
          dragrelease=InputBarDragRelease
       },
       drag_cursor=miniwin.cursor_ibeam,
-      drag_tooltip="Hold Alt and drag to move the input bar",
+      drag_tooltip="Hold Ctrl and drag to move the input bar",
       show_scrollback_marker=false,
       text_selection_callback=InputBarSelectionChanged,
       column_guide=inputbar_marker_characters
@@ -838,7 +838,7 @@ function InputBarMouseDown(flags, hotspot_id)
       return true
    end
 
-   if bit.band(flags, miniwin.hotspot_got_alt) ~= 0 then
+   if bit.band(flags, miniwin.hotspot_got_control) ~= 0 then
       if GetVariable("lock_down_miniwindows") == "1" then
          return true
       end
