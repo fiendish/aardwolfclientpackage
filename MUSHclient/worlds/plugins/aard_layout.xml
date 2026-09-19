@@ -121,6 +121,9 @@ inputbar_window = nil
 inputbar_rect = nil
 inputbar_logical_line_starts = {}
 inputbar_moving = false
+inputbar_detached_width = nil
+inputbar_resize_start_x = nil
+inputbar_resize_start_width = nil
 inputbar_auto_resize_suppressed = false
 inputbar_output_height = nil
 inputbar_output_width = nil
@@ -369,9 +372,90 @@ end
 
 function InputBarSaveSettings()
    SetVariable("inputbar_attached", inputbar_attached and "1" or "0")
+   if inputbar_detached_width then
+      SetVariable("inputbar_detached_width", tostring(inputbar_detached_width))
+   end
    if inputbar_native_height then
       SetVariable("inputbar_native_height", tostring(inputbar_native_height))
    end
+end
+
+function InputBarUpdateResizeGrip()
+   local grip = inputBar .. "_width_resize"
+   local right = inputbar_window.bodyright
+   local left = right - Theme.RESIZER_SIZE
+   local show_grip = not inputbar_attached and left > inputbar_window.bodyleft
+   local text_right = show_grip and left or right
+   local changed =
+      inputbar_rect.left ~= inputbar_window.bodyleft or
+      inputbar_rect.top ~= inputbar_window.bodytop or
+      inputbar_rect.right ~= text_right or
+      inputbar_rect.bottom ~= inputbar_window.bodybottom
+   if changed then
+      inputbar_rect:setRect(
+         inputbar_window.bodyleft, inputbar_window.bodytop,
+         text_right, inputbar_window.bodybottom - 1)
+      inputbar_rect:reWrapLines()
+   end
+
+   if not show_grip then
+      if WindowHotspotInfo(inputBar, grip, 13) then
+         check(WindowDeleteHotspot(inputBar, grip))
+      end
+   elseif WindowHotspotInfo(inputBar, grip, 13) then
+      -- A zero right coordinate extends the hotspot to the miniwindow edge.
+      check(WindowMoveHotspot(
+         inputBar, grip, left, inputbar_window.bodytop,
+         0, inputbar_window.bodybottom))
+   else
+      check(WindowAddHotspot(
+         inputBar, grip, left, inputbar_window.bodytop,
+         0, inputbar_window.bodybottom,
+         nil, nil, "InputBarResizeMouseDown", nil, "InputBarMouseUp",
+         "Drag to change input bar width",
+         miniwin.cursor_ew_arrow or miniwin.cursor_both_arrow, 0))
+      check(WindowDragHandler(
+         inputBar, grip, "InputBarResizeDragMove", "InputBarResizeDragRelease", 0))
+   end
+   return changed
+end
+
+function InputBarDrawResizeGrip()
+   local right = inputbar_window.bodyright
+   local left = right - Theme.RESIZER_SIZE
+   if inputbar_attached or left <= inputbar_window.bodyleft then
+      return
+   end
+   local top = inputbar_window.bodytop
+   local bottom = inputbar_window.bodybottom
+   local center = math.floor((left + right) / 2)
+   local stroke_top = math.max(top + 2, math.floor((top + bottom) / 2) - 4)
+   local stroke_bottom = math.min(bottom - 2, stroke_top + 8)
+   check(WindowRectOp(inputBar, miniwin.rect_fill,
+      left, top, right, bottom, Theme.PRIMARY_BODY))
+   for x = center - 3, center + 3, 3 do
+      check(WindowLine(inputBar, x, stroke_top, x, stroke_bottom,
+         Theme.THREE_D_HARDSHADOW, miniwin.pen_solid, 1))
+      check(WindowLine(inputBar, x + 1, stroke_top, x + 1, stroke_bottom,
+         Theme.THREE_D_HIGHLIGHT, miniwin.pen_solid, 1))
+   end
+end
+
+function InputBarDressWindow(window, ...)
+   ThemedWindowClass.dress_window(window, ...)
+   -- Finish the text and grip before ThemedWindowClass:resize resumes repaint.
+   if inputbar_active then
+      InputBarUpdateResizeGrip()
+      InputBarDraw(true)
+   end
+end
+
+function InputBarGetMenuItems(window)
+   if inputbar_attached then
+      return "^Hold Ctrl and drag to undock the input bar|-|" .. window.menu_table[3],
+         {window.menu_handlers[2]}
+   end
+   return ThemedWindowClass.get_menu_items(window)
 end
 
 function InputBarAttachedRectangle()
@@ -427,9 +511,15 @@ function InputBarEnsureWindow()
       column_guide=inputbar_marker_characters
    })
    inputbar_rect = inputbar_window.textrect
+   inputbar_window.dress_window = InputBarDressWindow
 
-   inputbar_window.menu_table = {"Reset input bar"}
-   inputbar_window.menu_handlers = {InputBarReset}
+   inputbar_window.menu_table = {
+      "Dock input bar to main output",
+      "-",
+      "Use native input bar (aard input)"
+   }
+   inputbar_window.menu_handlers = {InputBarReset, ToggleInputBar}
+   inputbar_window.get_menu_items = InputBarGetMenuItems
 
    InputBarLoadFont()
    inputbar_window:hide()
@@ -512,6 +602,8 @@ function InputBarPositionAttached()
       check(WindowPosition(inputBar, left, top, 0, miniwin.create_absolute_location))
    end
 
+   changed = InputBarUpdateResizeGrip() or changed
+
    inputbar_window.default_left_position = left
    inputbar_window.default_top_position = top
    inputbar_window.default_width = width
@@ -524,7 +616,9 @@ function InputBarPositionDetached()
       return false
    end
 
-   local width = math.max(1, WindowInfo(inputBar, 3))
+   local width = math.max(1, math.min(
+      inputbar_detached_width or WindowInfo(inputBar, 3),
+      tonumber(GetInfo(281)) or WindowInfo(inputBar, 3)))
    local height = InputBarCurrentHeight()
    -- Keep the user-selected position in movewindow state. WindowInfo 10 and 11
    -- can contain a temporary clamp while the available output area is smaller.
@@ -536,14 +630,16 @@ function InputBarPositionDetached()
    local changed =
       WindowInfo(inputBar, 10) ~= left or
       WindowInfo(inputBar, 11) ~= top or
+      WindowInfo(inputBar, 3) ~= width or
       WindowInfo(inputBar, 4) ~= height
 
-   if WindowInfo(inputBar, 4) ~= height then
+   if WindowInfo(inputBar, 3) ~= width or WindowInfo(inputBar, 4) ~= height then
       inputbar_window:resize(width, height)
    end
    if WindowInfo(inputBar, 10) ~= left or WindowInfo(inputBar, 11) ~= top then
       check(WindowPosition(inputBar, left, top, 0, miniwin.create_absolute_location))
    end
+   changed = InputBarUpdateResizeGrip() or changed
    return changed
 end
 
@@ -685,6 +781,10 @@ function InputBarDraw(force)
       selection_end == 0,
       false)
    inputbar_window:draw()
+   InputBarDrawResizeGrip()
+   if not inputbar_attached then
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   end
    InputBarStartFastPolling()
    return true
 end
@@ -765,6 +865,10 @@ function InputBarActivate(show_status)
    end
 
    inputbar_attached = GetVariable("inputbar_attached") ~= "0"
+   inputbar_detached_width = tonumber(GetVariable("inputbar_detached_width"))
+   if inputbar_detached_width and inputbar_detached_width < 1 then
+      inputbar_detached_width = nil
+   end
    InputBarEnsureWindow()
    inputbar_active = true
    SetVariable("inputbar_enabled", "1")
@@ -792,6 +896,8 @@ function InputBarDeactivate(persist_disabled, show_status)
    end
 
    InputBarSaveSettings()
+   inputbar_resize_start_x = nil
+   inputbar_resize_start_width = nil
    inputbar_window:hide()
    InputBarRestoreNative()
    inputbar_output_height = nil
@@ -819,6 +925,8 @@ end
 
 function InputBarReset()
    inputbar_attached = true
+   inputbar_resize_start_x = nil
+   inputbar_resize_start_width = nil
    SetVariable("inputbar_attached", "1")
    draw_main_window()
    local left, top, width, height = InputBarAttachedRectangle()
@@ -876,9 +984,12 @@ function InputBarDragMove(flags, hotspot_id)
 
    if inputbar_moving then
       if inputbar_attached then
+         inputbar_detached_width = WindowInfo(inputBar, 3)
          inputbar_attached = false
          SetVariable("inputbar_attached", "0")
          draw_main_window()
+         InputBarUpdateResizeGrip()
+         InputBarDraw(true)
       end
       return false
    end
@@ -887,6 +998,42 @@ function InputBarDragMove(flags, hotspot_id)
       WindowInfo(inputBar, 14),
       WindowInfo(inputBar, 15))
    return true
+end
+
+function InputBarResizeMouseDown(flags, hotspot_id)
+   if inputbar_attached or GetVariable("lock_down_miniwindows") == "1" or
+      bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
+      return
+   end
+   inputbar_resize_start_x = WindowInfo(inputBar, 17)
+   inputbar_resize_start_width = WindowInfo(inputBar, 3)
+end
+
+function InputBarResizeDragMove(flags, hotspot_id)
+   if not inputbar_resize_start_x or inputbar_attached or
+      GetVariable("lock_down_miniwindows") == "1" then
+      return
+   end
+   local left = WindowInfo(inputBar, 10)
+   local maximum = math.max(1, (tonumber(GetInfo(281)) or 1) - left)
+   local minimum = math.min(inputbar_window.min_drag_width or 100, maximum)
+   local width = math.max(minimum, math.min(maximum,
+      inputbar_resize_start_width + WindowInfo(inputBar, 17) - inputbar_resize_start_x))
+   if width ~= WindowInfo(inputBar, 3) then
+      inputbar_detached_width = width
+      InputBarPositionDetached()
+      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   end
+end
+
+function InputBarResizeDragRelease(flags, hotspot_id)
+   if inputbar_resize_start_x then
+      inputbar_resize_start_x = nil
+      inputbar_resize_start_width = nil
+      InputBarSaveSettings()
+      SaveState()
+      InputBarFocusNative()
+   end
 end
 
 function InputBarDragRelease(flags, hotspot_id)
@@ -1426,6 +1573,9 @@ function OnPluginInstall()
    inputbar_rect = nil
    inputbar_logical_line_starts = {}
    inputbar_moving = false
+   inputbar_detached_width = nil
+   inputbar_resize_start_x = nil
+   inputbar_resize_start_width = nil
    inputbar_auto_resize_suppressed = false
    main_drag_snap = nil
    main_resize_snap = nil
