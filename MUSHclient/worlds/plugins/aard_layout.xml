@@ -1401,6 +1401,7 @@ function MouseDown(flags, hotspot_id)
          if main_resize_snap then
             main_resize_snap.border = border
             main_resize_snap.right_extent = right_extent
+            main_resize_snap.exclude_output = true
          end
       end
       if bit.band(flags, 0x20) ~= 0 then
@@ -1424,6 +1425,7 @@ function MouseDown(flags, hotspot_id)
          end
          main_drag_snap = {
             threshold = threshold, offset = offset, excluded = excluded,
+            exclude_output = true,
             border = border, outer_border = outer_border,
             right_extent = border + Theme.RESIZER_SIZE + 4,
          }

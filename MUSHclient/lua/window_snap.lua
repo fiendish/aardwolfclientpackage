@@ -174,6 +174,18 @@ function window_snap.get_settings()
       snap_setting("snap_miniwindows_offset", 0)
 end
 
+local function main_output_bounds()
+   -- Without a TextRectangle, the output fills the view and its edges are
+   -- already covered by the area bounds.
+   if GetInfo(272) == 0 and GetInfo(273) == 0 and
+      GetInfo(274) == 0 and GetInfo(275) == 0 then return end
+   local left, top = GetInfo(290), GetInfo(291)
+   local right, bottom = GetInfo(292), GetInfo(293)
+   if right <= left or bottom <= top then return end
+   local border = GetInfo(276) + GetInfo(277)
+   return left - border, top - border, right + border, bottom + border
+end
+
 -- Spans must overlap, meet, or leave the configured gap. The threshold allows
 -- both axes to approach a corner before the final positions are checked.
 local function within_snap_span(position, size, low, high, threshold, offset)
@@ -260,6 +272,22 @@ function window_snap.snap_bounds(bounds, snap)
       limits.left, limits.right, threshold, 0, "bounds", "left", "right")
    add_snap_candidates(ys, posy, height, area.top, area.bottom, area.left, area.right,
       limits.top, limits.bottom, threshold, 0, "bounds", "top", "bottom")
+   if not snap.exclude_output then
+      local left, top, right, bottom = main_output_bounds()
+      if left and right > 0 and bottom > 0 and
+         left < screen_width and top < screen_height then
+         if within_snap_span(posy, height, top, bottom, threshold, offset) then
+            add_snap_candidates(xs, posx, width, left, right, top, bottom,
+               limits.left, limits.right, threshold, offset,
+               "main_output", "left", "right")
+         end
+         if within_snap_span(posx, width, left, right, threshold, offset) then
+            add_snap_candidates(ys, posy, height, top, bottom, left, right,
+               limits.top, limits.bottom, threshold, offset,
+               "main_output", "top", "bottom")
+         end
+      end
+   end
    for _, target in ipairs(WindowList() or {}) do
       if not excluded[target] and not window_snap.is_feedback_window(target) and
          WindowInfo(target, 5) and not WindowInfo(target, 6) and
@@ -369,6 +397,25 @@ function window_snap.resize_coordinates(drag, mouse_x, mouse_y, right_limit,
    add_resize_candidates(ys, bottom, bottom_limit, bottom_limit,
       0, screen_width, top, bottom_limit, threshold,
       "bounds", bottom_limit, bottom_limit, "bottom", "bottom")
+
+   if not drag.exclude_output then
+      local target_left, target_top, target_right, target_bottom = main_output_bounds()
+      if target_left and target_right > 0 and target_bottom > 0 and
+         target_left < screen_width and target_top < screen_height then
+         if within_snap_span(top, bottom - top, target_top, target_bottom,
+            threshold, offset) then
+            add_resize_candidates(xs, right, target_left - offset, target_right,
+               target_top, target_bottom, left, right_limit, threshold,
+               "main_output", target_left, target_right, "left", "right")
+         end
+         if within_snap_span(left, right - left, target_left, target_right,
+            threshold, offset) then
+            add_resize_candidates(ys, bottom, target_top - offset, target_bottom,
+               target_left, target_right, top, bottom_limit, threshold,
+               "main_output", target_top, target_bottom, "top", "bottom")
+         end
+      end
+   end
 
    local excluded = {[win] = true}
    for _, other in ipairs(drag.extra_excluded or {}) do
