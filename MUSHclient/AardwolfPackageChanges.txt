@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2344 snapshot
+- bug fix: Fix a load ordering conflict at startup between the main layout and z-ordering plugins.
+
 r2343 snapshot
 - bug fix: Miniwindows should snap to the main output box now too.
 
