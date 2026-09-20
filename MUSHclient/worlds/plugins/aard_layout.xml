@@ -1689,7 +1689,9 @@ function add_main_resizer()
          12, miniwin.create_absolute_location,
          Theme.CLICKABLE
       )
-      check(CallPlugin("462b665ecb569efbf261422f", "dropMe", textResizer))
+      if IsPluginInstalled("462b665ecb569efbf261422f") then
+         check(CallPlugin("462b665ecb569efbf261422f", "dropMe", textResizer))
+      end
    end
 
    if (prev_l ~= l) or (prev_t ~= t) or (prev_b ~= b) then
