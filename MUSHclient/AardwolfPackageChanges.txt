@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2343 snapshot
+- bug fix: Miniwindows should snap to the main output box now too.
+
 r2342 snapshot
 - new feature: Included miniwindows now snap to each other's edges by default when dragging and resizing. See 'aard layout help'. If yours don't work right when resizing, try using my themed resizer.
 - misc change: Dragging the floating input bar uses Ctrl now instead of Alt, because Alt activates the menu bar.
