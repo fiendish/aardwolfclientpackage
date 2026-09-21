@@ -4,12 +4,58 @@ require "socket.http" -- just make sure that this can load so we don't get a sur
 require "ssl.https" -- just make sure that this can load so we don't get a surprise later
 local _ltn12 = require "ltn12"
 
-local thread_pool = {}
 local requests = {}
-local request_times = {}
-local result_callbacks = {}
-local timeout_callbacks = {}
-local timeouts = {}
+local dispatcher_timer = "async_request_dispatcher__"
+local dispatcher_interval = 0.2
+local dispatcher_command = "async.__pollRequests()"
+
+local function timer_error(action, status)
+   local description = error_desc and error_desc[status]
+   error(action.." failed: "..(description or tostring(status)), 3)
+end
+
+local function enable_dispatcher()
+   local status = IsTimer(dispatcher_timer)
+   if status == error_code.eTimerNotFound then
+      status = AddTimer(
+         dispatcher_timer,
+         0,
+         0,
+         dispatcher_interval,
+         dispatcher_command,
+         timer_flag.ActiveWhenClosed,
+         ""
+      )
+   elseif status ~= error_code.eOK then
+      timer_error("Inspecting the async dispatcher timer", status)
+   end
+
+   if status ~= error_code.eOK then
+      timer_error("Creating the async dispatcher timer", status)
+   end
+
+   status = SetTimerOption(dispatcher_timer, "send", dispatcher_command)
+   if status ~= error_code.eOK then
+      timer_error("Configuring the async dispatcher command", status)
+   end
+
+   status = SetTimerOption(dispatcher_timer, "send_to", tostring(sendto.script))
+   if status ~= error_code.eOK then
+      timer_error("Configuring the async dispatcher destination", status)
+   end
+
+   status = EnableTimer(dispatcher_timer, true)
+   if status ~= error_code.eOK then
+      timer_error("Enabling the async dispatcher timer", status)
+   end
+end
+
+local function disable_dispatcher()
+   local status = EnableTimer(dispatcher_timer, false)
+   if status ~= error_code.eOK then
+      timer_error("Disabling the async dispatcher timer", status)
+   end
+end
 
 -- Use doAsyncRemoteRequest to make generic asynchronous requests.
 -- Use HEAD to retrieve just file header information.
@@ -36,7 +82,7 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
 
    result_callback_function = result_callback_function or print
 
-   thread_id = tostring(GetUniqueNumber())
+   local thread_id = tostring(GetUniqueNumber())
 
    assert(type(request_url) == "string")
    assert(request_protocol == "HTTP" or request_protocol == "HTTPS")
@@ -44,24 +90,28 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
    assert(type(result_callback_function) == "function" or type(result_callback_function) == "string")
    assert(type(callback_on_timeout) == "function" or type(callback_on_timeout) == "string" or callback_on_timeout == nil)
 
-   requests[thread_id] = {['url']=request_url, ['body']=request_body}
-   timeouts[thread_id] = timeout_after
-   thread_pool[thread_id] = request(request_url, request_protocol, request_body)
-   request_times[thread_id] = os.time()
-
-   if type(result_callback_function) == "function" then
-      result_callbacks[thread_id] = result_callback_function
-   else
-      result_callbacks[thread_id] = loadstring(result_callback_function)
+   local result_callback = result_callback_function
+   if type(result_callback) == "string" then
+      result_callback = loadstring(result_callback)
    end
 
-   if type(callback_on_timeout) == "function" or callback_on_timeout == nil then
-      timeout_callbacks[thread_id] = callback_on_timeout
-   else
-      timeout_callbacks[thread_id] = loadstring(callback_on_timeout)
+   local timeout_callback = callback_on_timeout
+   if type(timeout_callback) == "string" then
+      timeout_callback = loadstring(timeout_callback)
    end
 
-   __checkCompletionFor(thread_id)
+   enable_dispatcher()
+
+   requests[thread_id] = {
+      url = request_url,
+      body = request_body,
+      timeout = timeout_after,
+      started_at = os.time(),
+      thread = request(request_url, request_protocol, request_body),
+      result_callback = result_callback,
+      timeout_callback = timeout_callback,
+      timed_out = false,
+   }
 end
 
 function HEAD(request_url, result_callback_function, request_protocol, timeout_after, callback_on_timeout)
@@ -142,41 +192,59 @@ function request(url, protocol, body)
    return thread
 end
 
-function __checkCompletionFor(thread_id)
-   if thread_pool[thread_id]:alive() then
-      if os.time() - request_times[thread_id] > timeouts[thread_id] then
-         -- stop trying after timeout_after seconds
-         local timeout_callback = timeout_callbacks[thread_id]
-         local request_data = requests[thread_id]
-         local timeout = timeouts[thread_id]
+-- This named, non-temporary timer is not removed by DeleteTemporaryTimers().
+-- One dispatcher services every request in this plugin or world script state.
+function __pollRequests()
+   local now = os.time()
+   local thread_ids = {}
 
-         thread_pool[thread_id] = nil
-         request_times[thread_id] = nil
-         result_callbacks[thread_id] = nil
-         timeout_callbacks[thread_id] = nil
-         timeouts[thread_id] = nil
-         requests[thread_id] = nil
+   -- Callbacks can start requests, so poll a stable list of IDs.
+   for thread_id in pairs(requests) do
+      thread_ids[#thread_ids + 1] = thread_id
+   end
 
-         if timeout_callback ~= nil then
-            timeout_callback(request_data['url'], timeout, request_data['body'])
-         else
-            default_timeout_callback(request_data['url'], timeout, request_data['body'])
-         end
-      else
-         DoAfterSpecial(0.2, "async.__checkCompletionFor('"..thread_id.."')", sendto.script)
-      end
-   else
-      local retval, page, status, headers, full_status = thread_pool[thread_id]:join()
+   for _, thread_id in ipairs(thread_ids) do
       local request_data = requests[thread_id]
-      local callback_func = result_callbacks[thread_id]
+      if request_data then
+         if request_data.thread:alive() then
+            if not request_data.timed_out and
+               now - request_data.started_at > request_data.timeout then
+               local timeout_callback = request_data.timeout_callback
+               local request_url = request_data.url
+               local timeout = request_data.timeout
+               local request_body = request_data.body
 
-      result_callbacks[thread_id] = nil
-      timeout_callbacks[thread_id] = nil
-      thread_pool[thread_id] = nil
-      request_times[thread_id] = nil
-      timeouts[thread_id] = nil
-      requests[thread_id] = nil
+               request_data.timed_out = true
+               request_data.url = nil
+               request_data.body = nil
+               request_data.result_callback = nil
+               request_data.timeout_callback = nil
 
-      callback_func(retval, page, status, headers, full_status, request_data['url'], request_data['body'])
+               if timeout_callback ~= nil then
+                  timeout_callback(request_url, timeout, request_body)
+               else
+                  default_timeout_callback(request_url, timeout, request_body)
+               end
+            end
+         else
+            local retval, page, status, headers, full_status = request_data.thread:join()
+            local callback_func = request_data.result_callback
+            local request_url = request_data.url
+            local request_body = request_data.body
+            local deliver_result = not request_data.timed_out
+
+            -- Release all library references before calling user code. A callback
+            -- error must not retain a completed request.
+            requests[thread_id] = nil
+
+            if deliver_result then
+               callback_func(retval, page, status, headers, full_status, request_url, request_body)
+            end
+         end
+      end
+   end
+
+   if next(requests) == nil then
+      disable_dispatcher()
    end
 end

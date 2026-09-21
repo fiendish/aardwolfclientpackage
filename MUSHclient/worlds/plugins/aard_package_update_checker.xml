@@ -162,7 +162,6 @@ end
 function manualCheck()
    SetVariable("last_check", 0)
    SetVariable("ignore_before_version", 0)
-   DeleteTemporaryTimers()
    async.doAsyncRemoteRequest(version_url, main, "HTTPS", 120)
 end
 
