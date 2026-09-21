@@ -107,7 +107,7 @@ function doAsyncRemoteRequest(request_url, result_callback_function, request_pro
       body = request_body,
       timeout = timeout_after,
       started_at = os.time(),
-      thread = request(request_url, request_protocol, request_body),
+      thread = request(request_url, request_protocol, request_body, timeout_after),
       result_callback = result_callback,
       timeout_callback = timeout_callback,
       timed_out = false,
@@ -145,11 +145,15 @@ end
 
 local network_thread_code = string.dump(function(arg)
    local args = arg
+   local _http = require("socket.http")
+   -- Bound an inactive socket operation with the request timeout.
+   _http.TIMEOUT = args.timeout or _http.TIMEOUT
+
    local _socketeer = nil
    if args.protocol == "HTTPS" then
       _socketeer = require("ssl.https")
    elseif args.protocol == "HTTP" then
-      _socketeer = require("socket.http")
+      _socketeer = _http
    else
       return false
    end
@@ -186,8 +190,13 @@ local network_thread_code = string.dump(function(arg)
 end)
 
 -- makes an asynchronous HTTP or HTTPS request to a URL
-function request(url, protocol, body)
-   local thread = _llthreads.new(network_thread_code, {url=url, protocol=protocol, body=body})
+function request(url, protocol, body, timeout)
+   local thread = _llthreads.new(network_thread_code, {
+      url = url,
+      protocol = protocol,
+      body = body,
+      timeout = timeout,
+   })
    thread:start()
    return thread
 end
@@ -229,15 +238,26 @@ function __pollRequests()
          else
             local retval, page, status, headers, full_status = request_data.thread:join()
             local callback_func = request_data.result_callback
+            local timeout_callback = request_data.timeout_callback
             local request_url = request_data.url
             local request_body = request_data.body
-            local deliver_result = not request_data.timed_out
+            local timeout = request_data.timeout
+            -- Route the socket inactivity timeout through request timeout handling.
+            local network_timed_out = status == "timeout"
+            local deliver_timeout = not request_data.timed_out and network_timed_out
+            local deliver_result = not request_data.timed_out and not network_timed_out
 
             -- Release all library references before calling user code. A callback
             -- error must not retain a completed request.
             requests[thread_id] = nil
 
-            if deliver_result then
+            if deliver_timeout then
+               if timeout_callback ~= nil then
+                  timeout_callback(request_url, timeout, request_body)
+               else
+                  default_timeout_callback(request_url, timeout, request_body)
+               end
+            elseif deliver_result then
                callback_func(retval, page, status, headers, full_status, request_url, request_body)
             end
          end
