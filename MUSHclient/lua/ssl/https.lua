@@ -125,6 +125,7 @@ local function request(url, body)
   elseif url.create then
     return nil, "create function not permitted"
   end
+  url.timeout = url.timeout or http.TIMEOUT
   -- New 'create' function to establish a secure connection
   url.create = tcp(url)
   local res, code, headers, status = http.request(url)
