@@ -82,8 +82,10 @@ local function tcp(params)
       local conn = {}
       conn.sock = try(socket.tcp())
       local st = getmetatable(conn.sock).__index.settimeout
-      function conn:settimeout(...)
-         return st(self.sock, ...)
+      function conn:settimeout(timeout, mode)
+         local effective_timeout = params.timeout or timeout
+         params.timeout = effective_timeout
+         return st(self.sock, effective_timeout, mode)
       end
       -- Replace TCP's connection function
       function conn:connect(host, port)
@@ -125,6 +127,7 @@ local function request(url, body)
   elseif url.create then
     return nil, "create function not permitted"
   end
+  url.timeout = url.timeout or http.TIMEOUT
   -- New 'create' function to establish a secure connection
   url.create = tcp(url)
   local res, code, headers, status = http.request(url)
@@ -139,5 +142,6 @@ end
 --
 
 _M.request = request
+_M.tcp = tcp
 
 return _M

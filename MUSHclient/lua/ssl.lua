@@ -90,28 +90,31 @@ local S = {}
 
 S.__index = {
     dohandshake = function(self)
-        local ret,msg
+        local ret, msg = self.ssl:handshake()
+        while not ret and (msg == 'want_read' or msg == 'want_write') do
+            local receive_sockets = msg == 'want_read' and {self.ssl} or {}
+            local send_sockets = msg == 'want_write' and {self.ssl} or {}
+            local readable, writable, select_error =
+                socket.select(receive_sockets, send_sockets, self.timeout)
 
-        socket.select({self.ssl}, {self.ssl}, self.timeout)
-
-        ret,msg = self.ssl:handshake()
-        while not ret do
-            if (msg=='want_read' or msg=='want_write') then
-                ret,msg = self.ssl:handshake()
-            else
-                return ret,msg
+            if select_error then
+                return nil, select_error
+            elseif #readable == 0 and #writable == 0 then
+                return nil, 'timeout'
             end
+
+            ret, msg = self.ssl:handshake()
         end
 
-        if ret then
-            self._bbf = assert(openssl.bio.filter('buffer'))
-            self._sbf = assert(openssl.bio.filter('ssl',self.ssl,0))
-
-            self.bio = assert(self._bbf:push(self._sbf))
-        else
-            msg = msg and string.gsub(msg,'_','') or msg
+        if not ret then
+            return ret, msg
         end
-        return ret,msg
+
+        self._bbf = assert(openssl.bio.filter('buffer'))
+        self._sbf = assert(openssl.bio.filter('ssl',self.ssl,0))
+
+        self.bio = assert(self._bbf:push(self._sbf))
+        return ret, msg
     end,
     getpeercertificate = function(self)
         self.peer,self.peerchain = self.ssl:peer()
