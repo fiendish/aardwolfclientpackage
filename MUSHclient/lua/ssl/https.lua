@@ -83,8 +83,9 @@ local function tcp(params)
       conn.sock = try(socket.tcp())
       local st = getmetatable(conn.sock).__index.settimeout
       function conn:settimeout(timeout, mode)
-         params.timeout = timeout
-         return st(self.sock, timeout, mode)
+         local effective_timeout = params.timeout or timeout
+         params.timeout = effective_timeout
+         return st(self.sock, effective_timeout, mode)
       end
       -- Replace TCP's connection function
       function conn:connect(host, port)
