@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2345 snapshot
+- bug fix: If a server stops responding during an async request, the request should now time out and clean up instead of staying stuck in memory.
+
 r2344 snapshot
 - bug fix: Fix a load ordering conflict at startup between the main layout and z-ordering plugins.
 
