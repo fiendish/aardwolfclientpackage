@@ -31,6 +31,21 @@ install:
       Move-Item C:\openssl.dll MUSHclient -force
       Move-Item C:\MUSHclient.exe MUSHclient -force
       Expand-Archive C:\luasocket-win32-static.zip -DestinationPath MUSHclient -Force
+      # Older MUSHclient plugins use the global socket after require "socket".
+      $socketPath = 'MUSHclient\lua\socket.lua'
+      $socketLua = [System.IO.File]::ReadAllText($socketPath)
+      if (-not [regex]::IsMatch($socketLua, '(?m)^(?:_G|base)\.socket = _M\r?$')) {
+        if ($socketLua.EndsWith("return _M`r`n")) {
+          $lineEnding = "`r`n"
+        } elseif ($socketLua.EndsWith("return _M`n")) {
+          $lineEnding = "`n"
+        } else {
+          throw 'Unexpected LuaSocket module ending'
+        }
+        $tail = "return _M$lineEnding"
+        $socketLua = $socketLua.Substring(0, $socketLua.Length - $tail.Length) + "_G.socket = _M$lineEnding" + $tail
+        [System.IO.File]::WriteAllText($socketPath, $socketLua)
+      }
       7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/get_version.nsi'
