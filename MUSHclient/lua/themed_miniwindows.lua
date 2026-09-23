@@ -629,22 +629,13 @@ end
 ThemedWindowClass.proxyStore = {}
 
 local function proxy_G(proxy_function_map)
-   local proxyMetatable = {}
-   function proxyMetatable.__index(t, k)
-      return proxy_function_map[k] or rawget(world, k)
+   local proxy = require "callback_proxy"
+   for name, replacement in pairs(proxy_function_map) do
+      proxy.wrap(name, function(original, ...)
+         ThemedWindowClass.proxyStore[name] = original
+         return replacement(...)
+      end)
    end
-   function proxyMetatable.__newindex(t, k, v)
-      if proxy_function_map[k] then
-         ThemedWindowClass.proxyStore[k] = v
-      else
-         rawset(_G, k, v)
-      end
-   end
-   for k, _ in pairs(proxy_function_map) do
-      ThemedWindowClass.proxyStore[k] = _G[k]
-      _G[k] = nil
-   end
-   setmetatable(_G, proxyMetatable)   
 end
 
 local function __delete_all()

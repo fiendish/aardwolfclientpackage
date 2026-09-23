@@ -19,6 +19,8 @@
 
 -- ----------------------------------------------------------
 
+require "bast_movewindow"
+
 var = {}  -- variables table
 
 setmetatable (var, 
