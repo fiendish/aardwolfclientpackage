@@ -1,5 +1,9 @@
 Aardwolf Client Package Major Changes List
 
+r2347 snapshot
+- bug fix: The miniwindow edge snapping and layout locking behavior should now apply to Bast's miniwindows as well because I now monkeypatch their movement routines.
+- bug fix: A few more invisible MUSHclient application memory leaks fixed.
+
 r2346 snapshot
 - bug fix: Re-add global socket library availability that was revoked in the newer luasocket, because some older plugins rely on it.
 
