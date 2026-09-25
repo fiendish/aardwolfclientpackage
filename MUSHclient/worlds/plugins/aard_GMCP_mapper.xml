@@ -937,6 +937,8 @@ local areas = {}
 local environments = {}
 local user_terrain_colour = {}
 local performing_maintenance = false
+local maintenance_thread
+local maintenance_timer
 compact_mode = ((GetVariable("compact_mode") or "0") == "1") -- default false
 
 room_not_in_database = {}
@@ -3108,10 +3110,66 @@ function maybe_Note(msg, force)
    end
 end
 
-function backup_databases(manual)
-   wait.make(function()
+-- A maintenance coroutine yields a delay, not through pcall (Lua 5.1 cannot
+-- yield across that boundary). Each resume is protected by coroutine.resume.
+local function cancel_mapper_maintenance()
+   maintenance_thread = nil
+   performing_maintenance = false
+   broadcast_queue = {}
+   if maintenance_timer then
+      DeleteTimer(maintenance_timer)
+      maintenance_timer = nil
+   end
+end
 
-      performing_maintenance = true
+function resume_mapper_maintenance(timer_name)
+   if timer_name then
+      if timer_name ~= maintenance_timer then return end
+      maintenance_timer = nil -- the firing one-shot deletes itself
+   end
+   local thread = maintenance_thread
+   if not thread then return end
+   local ok, delay = coroutine.resume(thread)
+   -- A plugin lifecycle callback may have cancelled this operation.
+   if maintenance_thread ~= thread then return end
+   if not ok then
+      cancel_mapper_maintenance()
+      error(delay, 0)
+   end
+   if coroutine.status(thread) == "dead" then
+      maintenance_thread = nil
+      performing_maintenance = false
+      satisfy_broadcast_queue()
+      return
+   end
+   local scheduled, err = pcall(function()
+      assert(GetOption("enable_timers") == 1, "Mapper maintenance requires timers")
+      maintenance_timer = "__mapper_maintenance_" .. GetUniqueNumber()
+      check(AddTimer(maintenance_timer, 0, 0, delay, "",
+         timer_flag.Enabled + timer_flag.OneShot +
+         timer_flag.ActiveWhenClosed,
+         "resume_mapper_maintenance"))
+   end)
+   if not scheduled then
+      cancel_mapper_maintenance()
+      error(err, 0)
+   end
+end
+
+local function run_mapper_maintenance(operation)
+   if performing_maintenance then
+      Note("Mapper database maintenance is already in progress.")
+      return false
+   end
+   maintenance_thread = coroutine.create(operation)
+   performing_maintenance = true
+   resume_mapper_maintenance()
+   return true
+end
+
+function backup_databases(manual)
+   return run_mapper_maintenance(function()
+
       local success = false
       maybe_Note("PERFORMING "..((manual and "MANUAL") or "AUTOMATIC").." DATABASE BACKUP. DON'T TOUCH ANYTHING!", manual)
       if not checkDatabaseIntegrity(true) then
@@ -3119,8 +3177,6 @@ function backup_databases(manual)
          if not compact_mode then Note("") end
          Repaint()
          db = assert (sqlite3.open(worldPath..".db")) -- try to re-open the database anyway
-         performing_maintenance = false
-         satisfy_broadcast_queue()
          return
       end
       maybe_Note("BACKING UP DATABASE", manual)
@@ -3207,7 +3263,7 @@ function backup_databases(manual)
                      -- we have to give up EVENTUALLY
                      break
                   end
-                  wait.time(0.1)
+                  coroutine.yield(0.1)
                end
 
                if zip_error then
@@ -3269,8 +3325,6 @@ function backup_databases(manual)
       if not compact_mode then Note("") end
       db = assert (sqlite3.open(worldPath..".db")) -- re-open database
       Repaint()
-      performing_maintenance = false
-      satisfy_broadcast_queue()
    end)
 end
 
@@ -3450,7 +3504,6 @@ function OnPluginInstall ()
    last_auto_backup = tonumber(GetVariable("last_auto_backup")) or 0
 
    if db_user_version < 11 then
-      performing_maintenance = true
       update_db_schema(db_user_version)
    else
       after_update_check()
@@ -3458,6 +3511,7 @@ function OnPluginInstall ()
 end
 
 function update_db_schema(db_user_version)
+   return run_mapper_maintenance(function()
    print("\nThe GMCP mapper database schema has been changed.\nYour map database will now be updated.\nThis process may take a while.\n")
 
    -- Only go through the structure creation if we haven't done it already
@@ -3591,8 +3645,7 @@ function update_db_schema(db_user_version)
 
    after_update_check()
 
-   performing_maintenance = false
-   satisfy_broadcast_queue()
+   end)
 end
 
 function after_update_check()
@@ -3749,6 +3802,7 @@ end -- OnPluginEnable
 
 -- hide window on removal
 function OnPluginDisable ()
+   cancel_mapper_maintenance()
    SaveState()
    mapper.hide()
    if IsConnected() then
@@ -3757,6 +3811,7 @@ function OnPluginDisable ()
 end -- OnPluginDisable
 
 function OnPluginClose ()
+   cancel_mapper_maintenance()
    -- if enabled
    if GetPluginInfo(GetPluginID(), 17) then
       OnPluginDisable()
@@ -4177,14 +4232,29 @@ end
 
 broadcast_queue = {}
 function queue_broadcast(msg, id, name, text)
+   -- These handlers read the latest GMCP state when replayed. Ignore topics
+   -- the mapper does not handle and retain only the last notification of each
+   -- kind, in arrival order. Even a paused operation now holds at most six.
+   if text ~= "room.info" and text ~= "room.wrongdir" and
+      text ~= "char.base" and text ~= "char.status" and
+      text ~= "room.area" and text ~= "room.sectors" then
+      return
+   end
+   for i = #broadcast_queue, 1, -1 do
+      if broadcast_queue[i].text == text then
+         table.remove(broadcast_queue, i)
+      end
+   end
    table.insert(broadcast_queue, {["msg"]=msg, ["id"]=id, ["name"]=name, ["text"]=text})
 end
 
 function satisfy_broadcast_queue()
-   for i,v in ipairs(broadcast_queue) do
+   -- Detach first: a replay error must not keep old notifications alive.
+   local queued = broadcast_queue
+   broadcast_queue = {}
+   for i,v in ipairs(queued) do
       OnPluginBroadcast(v.msg, v.id, v.name, v.text)
    end
-   broadcast_queue = {}
 end
 
 function OnPluginBroadcast (msg, id, name, text)

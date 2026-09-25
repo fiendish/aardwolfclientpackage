@@ -85,7 +85,7 @@ end -- function convert_seconds
 -- ----------------------------------------------------------
 function time (seconds)
   local id = "wait_timer_" .. GetUniqueNumber ()
-  threads [id] = assert (coroutine.running (), "Must be in coroutine")
+  local thread = assert (coroutine.running (), "Must be in coroutine")
 
   local hours, minutes, seconds = convert_seconds (seconds)
 
@@ -97,6 +97,8 @@ function time (seconds)
                            timer_flag.Replace), 
                    "wait.timer_resume"))
 
+  -- Retain the coroutine only after timer creation succeeds.
+  threads [id] = thread
   return coroutine.yield ()
 end -- function time
 
@@ -105,42 +107,56 @@ end -- function time
 -- ----------------------------------------------------------
 function regexp (regexp, timeout, flags)
   local id = "wait_trigger_" .. GetUniqueNumber ()
-  threads [id] = assert (coroutine.running (), "Must be in coroutine")
-            
-  check (AddTriggerEx (id, regexp, 
-            "-- added by wait.regexp",  
-            bit.bor (flags or 0, -- user-supplied extra flags, like omit from output
-                     trigger_flag.Enabled, 
-                     trigger_flag.RegularExpression,
-                     trigger_flag.Temporary,
-                     trigger_flag.Replace,
-                     trigger_flag.OneShot),
-            custom_colour.NoChange, 
-            0, "",  -- wildcard number, sound file name
-            "wait.trigger_resume", 
-            12, 100))  -- send to script (in case we have to delete the timer)
- 
-  -- if timeout specified, also add a timer
-  if timeout and timeout > 0 then
-    local hours, minutes, seconds = convert_seconds (timeout)
+  local thread = assert (coroutine.running (), "Must be in coroutine")
+  local trigger_added, timer_added = false, false
 
-    -- if timer fires, it deletes this trigger
-    check (AddTimer (id, hours, minutes, seconds, 
-                   "DeleteTrigger ('" .. id .. "')",
-                   bit.bor (timer_flag.Enabled,
-                            timer_flag.OneShot,
-                            timer_flag.Temporary,
-                            timer_flag.ActiveWhenClosed,
-                            timer_flag.Replace), 
-                   "wait.timer_resume"))
+  -- Setup can fail after creating the trigger or its timeout timer.
+  -- Keep it protected, but yield outside pcall for Lua 5.1 compatibility.
+  local ok, err = pcall (function ()
+    check (AddTriggerEx (id, regexp,
+              "-- added by wait.regexp",
+              bit.bor (flags or 0, -- user-supplied extra flags, like omit from output
+                       trigger_flag.Enabled,
+                       trigger_flag.RegularExpression,
+                       trigger_flag.Temporary,
+                       trigger_flag.Replace,
+                       trigger_flag.OneShot),
+              custom_colour.NoChange,
+              0, "",  -- wildcard number, sound file name
+              "wait.trigger_resume",
+              12, 100))  -- send to script (in case we have to delete the timer)
+    trigger_added = true
 
-    check (SetTimerOption (id, "send_to", "12"))  -- send to script
+    -- if timeout specified, also add a timer
+    if timeout and timeout > 0 then
+      local hours, minutes, seconds = convert_seconds (timeout)
 
-    -- if trigger fires, it should delete the timer we just added
-    check (SetTriggerOption (id, "send", "DeleteTimer ('" .. id .. "')"))  
+      -- if timer fires, it deletes this trigger
+      check (AddTimer (id, hours, minutes, seconds,
+                     "DeleteTrigger ('" .. id .. "')",
+                     bit.bor (timer_flag.Enabled,
+                              timer_flag.OneShot,
+                              timer_flag.Temporary,
+                              timer_flag.ActiveWhenClosed,
+                              timer_flag.Replace),
+                     "wait.timer_resume"))
+      timer_added = true
 
-  end -- if having a timeout
+      check (SetTimerOption (id, "send_to", "12"))  -- send to script
 
+      -- if trigger fires, it should delete the timer we just added
+      check (SetTriggerOption (id, "send", "DeleteTimer ('" .. id .. "')"))
+
+    end -- if having a timeout
+  end) -- protected setup
+
+  if not ok then
+    if timer_added then DeleteTimer (id) end
+    if trigger_added then DeleteTrigger (id) end
+    error (err, 0)
+  end
+
+  threads [id] = thread
   return coroutine.yield ()  -- return line, wildcards
 end -- function regexp 
 
