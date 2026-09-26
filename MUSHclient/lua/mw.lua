@@ -225,7 +225,7 @@ function ColoursToStyles (Text)
 
  if Text:match ("@") then
 
-    astyles = {}
+    local astyles = {}
 
     Text = Text:gsub ("@%-", "~")    -- fix tildes
     Text = Text:gsub ("@@", "\0")  -- change @@ to 0x00
