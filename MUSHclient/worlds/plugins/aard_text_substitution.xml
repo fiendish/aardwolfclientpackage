@@ -678,7 +678,15 @@ function do_subs_against_coded_colors_table(plain_text, msg_t)
       local s, e, _ = r:exec(plain_text)
       while s ~= nil do
          table.insert(locations, {s, e})
-         s, e, _ = r:exec(plain_text, e)
+         local empty_match = e < s
+         local startfrom = math.max(e, s + 1)
+         s, e, _ = r:exec(plain_text, startfrom)
+         while s == nil and empty_match and startfrom <= #plain_text do
+            local byte = plain_text:byte(startfrom)
+            if byte < 128 or byte >= 192 then break end
+            startfrom = startfrom + 1
+            s, e, _ = r:exec(plain_text, startfrom)
+         end
       end
       local shift_amount = 0 -- The amount to shift the start and end positions of the matches by as we do text replacements.
       for _,loc in ipairs(locations) do
@@ -690,14 +698,20 @@ function do_subs_against_coded_colors_table(plain_text, msg_t)
          local end_offset = 0
          local start_found = false
          local end_found = false
+         local empty_match = end_pos < start_pos
          local start_length = 0
          for i=1,#msg_t,2 do
             local text_bit_length = #(msg_t[i])
             start_length = start_length + text_bit_length
-            if not start_found and start_length >= start_pos then
+            if not start_found and start_length >= start_pos - (empty_match and 1 or 0) then
                start_section = i
                start_offset = text_bit_length - (start_length - start_pos)
                start_found = true
+            end
+            if empty_match and start_found then
+               end_section = start_section
+               end_offset = start_offset - 1
+               break
             end
             if not end_found and start_length >= end_pos then
                end_section = i

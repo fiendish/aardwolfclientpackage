@@ -2,6 +2,7 @@ rex.gsub = function(str, re, rep)
    local output = ""
    local as_func = (type(rep) == "function")
    local startfrom = 1
+   local copied = 1
    local s, e, t = re:match(str, startfrom)
    while s ~= nil do
       local filled_rep
@@ -19,11 +20,20 @@ rex.gsub = function(str, re, rep)
                return t[i-1] or ""
             end)
          end
-      output = output..str:sub(startfrom, s-1)..filled_rep
-      startfrom = e+1
+      output = output..str:sub(copied, s-1)..filled_rep
+      copied = e+1
+      local empty_match = e < s
+      startfrom = math.max(e+1, s+1)
       s, e, t = re:match(str, startfrom)
+      -- A UTF-8 regex rejects a search starting inside a character.
+      while s == nil and empty_match and startfrom <= #str do
+         local byte = str:byte(startfrom)
+         if byte < 128 or byte >= 192 then break end
+         startfrom = startfrom + 1
+         s, e, t = re:match(str, startfrom)
+      end
    end
-   return output..str:sub(startfrom)
+   return output..str:sub(copied)
 end
 
 function character_classes(m)

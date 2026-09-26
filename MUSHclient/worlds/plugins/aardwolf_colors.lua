@@ -484,7 +484,7 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
       assert(background_color, "Invalid background_color setting. Codes must correspond to one of the available color codes.")
    end
 
-   section = input
+   local section = input
 
    local styles = {}
    if section:find(CODE_PREFIX, nil, true) then

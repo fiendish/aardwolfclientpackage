@@ -92,15 +92,20 @@ ___storage = {}
 
 function ___capture_body(name, line, wildcards, styles)
    local i = name:sub(28)
-   table.insert(___storage[i]["captured_lines"], styles)
+   local capture = ___storage[i]
+   if capture and capture.captured_lines then
+      table.insert(capture.captured_lines, styles)
+   end
 end
 
 function ___capture_end(name, line, wildcards, styles)
    local i = name:sub(27)
-   ___storage[i]["timeout_callback"] = nil
-   ___storage[i]["callback"](
-      ___storage[i]["captured_lines"], ___storage[i]["start_line"], line
-   )
+   local capture = ___storage[i]
+   if not capture or not capture.captured_lines then return end
+   -- Reserve the ID until its scheduled timeout fires, without retaining output.
+   ___storage[i] = {}
+   capture.timeout_callback = nil
+   capture.callback(capture.captured_lines, capture.start_line, line)
 end
 
 function ___create_capture(i, start_line)
@@ -126,22 +131,20 @@ function ___create_capture(i, start_line)
 end
 
 function ___terminate(i)
+   local capture = ___storage[i]
+   ___storage[i] = nil
    DeleteTrigger("tag_captures_module___start_"..i)
    DeleteTrigger("tag_captures_module___body_"..i)
    DeleteTrigger("tag_captures_module___end_"..i)
    DeleteTrigger("tag_captures_module___immortal_start_"..i)
    DeleteTrigger("tag_captures_module___immortal_end_"..i)
    UngagBlankLine(i)
-   if ___storage[i] and ___storage[i]["timeout_callback"] then
-      ___storage[i]["timeout_callback"]()
+   if next(___storage) == nil then
+      ___sequence = 1
    end
-   ___storage[i] = nil
-
-   -- if storage is empty, reset the sequence numbers
-   for k,v in pairs(___storage) do
-      return
+   if capture and capture.timeout_callback then
+      capture.timeout_callback()
    end
-   ___sequence = 1
 end
 
 ___sequence = 1

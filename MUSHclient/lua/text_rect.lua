@@ -52,7 +52,7 @@ function TextRect.new(
    unselectable, uncopyable, no_url_hyperlinks, no_autowrap,
    menu_generator_function, line_spacing
 )
-   new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
+   local new_tr = setmetatable(copytable.deep(TextRect_defaults), TextRect_mt)
    new_tr.id = "TextRect_"..window.."_"..name
    new_tr.window = window
    new_tr.name = name
