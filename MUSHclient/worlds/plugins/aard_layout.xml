@@ -1612,7 +1612,7 @@ function OnPluginInstall()
    end
 
    SetScroll(-2, GetVariable("hide_main_scroll") ~= "true")
-   if GetVariable("inputbar_enabled") == "1" then
+   if GetVariable("inputbar_enabled") ~= "0" then
       InputBarActivate(false)
    end
    SaveState()
