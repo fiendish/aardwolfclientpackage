@@ -54,6 +54,9 @@ install:
         Write-Host "LuaSocket global compatibility present in $socketPath"
       }
       7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
+      if (-not $? -or $LASTEXITCODE -ne 0) { throw "ZIP creation failed" }
+      & C:\Python37\python.exe .\add_zip_timestamps.py Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip
+      if (-not $? -or $LASTEXITCODE -ne 0) { throw "ZIP timestamp update failed" }
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/aardmush_installer.nsi'
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/get_version.nsi'
       Start-FileDownload 'https://raw.githubusercontent.com/fiendish/aardwolfclientpackage-installer/master/hello.rtf'
@@ -67,6 +70,9 @@ install:
 - cmd: '"C:\Program Files (x86)\NSIS\makensis.exe" aardmush_installer.nsi'
 - ps: |
       7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip .\MUSHclient
+      if (-not $? -or $LASTEXITCODE -ne 0) { throw "ZIP creation failed" }
+      & C:\Python37\python.exe .\add_zip_timestamps.py Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_visuals_no_install.zip
+      if (-not $? -or $LASTEXITCODE -ne 0) { throw "ZIP timestamp update failed" }
       Get-ChildItem .\Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)*.exe -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
       Get-ChildItem .\Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)*.zip -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
       git checkout -- .
