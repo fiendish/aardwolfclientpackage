@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2351 snapshot
+- misc change: The floating input bar from r2336 is now active by default for new installs, because it's neat and I don't want it hidden away.
+- bug fix: I'm sick of errors caused by someone launching MUSHclient in a way that leads to having a different active path during startup, so now relative paths are always relative to the MUSHclient executable and not wherever the OS thinks you happen to be at the moment.
+- bug fix: Plugin current path changes are now isolated from each other. Wild, I know.
+- bug fix: This one's a bit experimental, but I've made MUSHclient kick the Lua garbage collector a bit more actively instead of letting it decide for itself when to run.
+
 r2347 snapshot
 - bug fix: The miniwindow edge snapping and layout locking behavior should now apply to Bast's miniwindows as well because I now monkeypatch their movement routines.
 - bug fix: A few more invisible MUSHclient application memory leaks fixed.
