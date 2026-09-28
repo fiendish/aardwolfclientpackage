@@ -128,6 +128,7 @@ inputbar_moving = false
 inputbar_detached_width = nil
 inputbar_resize_start_x = nil
 inputbar_resize_start_width = nil
+inputbar_resize_snap = nil
 inputbar_auto_resize_suppressed = false
 inputbar_output_height = nil
 inputbar_output_width = nil
@@ -907,8 +908,7 @@ function InputBarDeactivate(persist_disabled, show_status)
    end
 
    InputBarSaveSettings()
-   inputbar_resize_start_x = nil
-   inputbar_resize_start_width = nil
+   InputBarEndResize()
    inputbar_window:hide()
    InputBarRestoreNative()
    inputbar_output_height = nil
@@ -945,8 +945,7 @@ function InputBarLayoutRestore(rect)
       inputbar_attached = GetVariable("inputbar_attached") == "1"
    end
    inputbar_detached_width = rect.detached_width or rect.width
-   inputbar_resize_start_x = nil
-   inputbar_resize_start_width = nil
+   InputBarEndResize()
    if not inputbar_active and WindowInfo(inputBar, 1) then
       check(WindowPosition(inputBar, rect.left, rect.top,
          0, miniwin.create_absolute_location))
@@ -977,8 +976,7 @@ end
 
 function InputBarReset()
    inputbar_attached = true
-   inputbar_resize_start_x = nil
-   inputbar_resize_start_width = nil
+   InputBarEndResize()
    SetVariable("inputbar_attached", "1")
    draw_main_window()
    local left, top, width, height = InputBarAttachedRectangle()
@@ -1052,6 +1050,13 @@ function InputBarDragMove(flags, hotspot_id)
    return true
 end
 
+function InputBarEndResize()
+   if inputbar_resize_snap then window_snap.finish_feedback() end
+   inputbar_resize_snap = nil
+   inputbar_resize_start_x = nil
+   inputbar_resize_start_width = nil
+end
+
 function InputBarResizeMouseDown(flags, hotspot_id)
    if inputbar_attached or GetVariable("lock_down_miniwindows") == "1" or
       bit.band(flags, miniwin.hotspot_got_lh_mouse) == 0 then
@@ -1059,6 +1064,8 @@ function InputBarResizeMouseDown(flags, hotspot_id)
    end
    inputbar_resize_start_x = WindowInfo(inputBar, 17)
    inputbar_resize_start_width = WindowInfo(inputBar, 3)
+   inputbar_resize_snap = window_snap.begin_resize(inputBar)
+   if inputbar_resize_snap then inputbar_resize_snap.resize_y = false end
 end
 
 function InputBarResizeDragMove(flags, hotspot_id)
@@ -1071,6 +1078,19 @@ function InputBarResizeDragMove(flags, hotspot_id)
    local minimum = math.min(inputbar_window.min_drag_width or 100, maximum)
    local width = math.max(minimum, math.min(maximum,
       inputbar_resize_start_width + WindowInfo(inputBar, 17) - inputbar_resize_start_x))
+   if inputbar_resize_snap then
+      inputbar_resize_snap.height = WindowInfo(inputBar, 4)
+      local mouse_x = inputbar_resize_start_x + width - inputbar_resize_start_width
+      local snapped_x, _, selection = window_snap.resize_coordinates(
+         inputbar_resize_snap, mouse_x, inputbar_resize_snap.mouse_y, left + maximum)
+      local snapped_width = inputbar_resize_start_width + snapped_x - inputbar_resize_start_x
+      if snapped_width >= minimum and snapped_width <= maximum then
+         width = snapped_width
+      else
+         selection = nil
+      end
+      window_snap.show_feedback(selection)
+   end
    if width ~= WindowInfo(inputBar, 3) then
       inputbar_detached_width = width
       InputBarPositionDetached()
@@ -1080,8 +1100,7 @@ end
 
 function InputBarResizeDragRelease(flags, hotspot_id)
    if inputbar_resize_start_x then
-      inputbar_resize_start_x = nil
-      inputbar_resize_start_width = nil
+      InputBarEndResize()
       InputBarSaveSettings()
       SaveState()
       InputBarFocusNative()
@@ -1316,9 +1335,9 @@ function ResizeMainCallback(flags)
 
    posx, posy = WindowInfo (textResizer, 17), WindowInfo (textResizer, 18)
    if main_resize_snap then
-      local border = main_resize_snap.border
+      local outer_border = main_resize_snap.outer_border
       local right_limit = GetInfo(281) - 7 - Theme.RESIZER_SIZE - 4 + main_resize_snap.right_extent
-      local bottom_limit = MainOutputBottomLimit() + border
+      local bottom_limit = MainOutputBottomLimit() + outer_border
       local max_x = main_resize_snap.mouse_x + right_limit - main_resize_snap.left - main_resize_snap.width
       local max_y = main_resize_snap.mouse_y + bottom_limit - main_resize_snap.top - main_resize_snap.height
       local selection
@@ -1455,19 +1474,20 @@ function MouseDown(flags, hotspot_id)
       if bit.band(flags, 0x10) ~= 0 then
          -- Snap the scrollbar's outer right edge while retaining the saved text rectangle edges.
          local border = tonumber(GetInfo(276)) or 5
+         local outer_border = border + (tonumber(GetInfo(277)) or 1)
          local right_extent = border + Theme.RESIZER_SIZE + 4
          local excluded = {textDragger, bgwin}
          if inputbar_active and inputbar_attached then
             excluded[#excluded + 1] = inputBar
          end
          main_resize_snap = window_snap.begin_resize(textResizer, {
-            left = textrect_left - border,
-            top = textrect_top - border,
+            left = textrect_left - outer_border,
+            top = textrect_top - outer_border,
             right = textrect_right + right_extent,
-            bottom = textrect_bottom + border,
+            bottom = textrect_bottom + outer_border,
          }, excluded)
          if main_resize_snap then
-            main_resize_snap.border = border
+            main_resize_snap.outer_border = outer_border
             main_resize_snap.right_extent = right_extent
             main_resize_snap.exclude_output = true
          end
@@ -1644,8 +1664,7 @@ function OnPluginInstall()
    inputbar_logical_line_starts = {}
    inputbar_moving = false
    inputbar_detached_width = nil
-   inputbar_resize_start_x = nil
-   inputbar_resize_start_width = nil
+   InputBarEndResize()
    inputbar_auto_resize_suppressed = false
    main_drag_snap = nil
    main_resize_snap = nil

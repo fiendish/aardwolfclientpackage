@@ -383,7 +383,9 @@ function window_snap.resize_coordinates(drag, mouse_x, mouse_y, right_limit,
    local left = drag.left or WindowInfo(win, 10)
    local top = drag.top or WindowInfo(win, 11)
    local right = left + drag.width + mouse_x - drag.mouse_x
-   local bottom = top + drag.height + mouse_y - drag.mouse_y
+   local bottom = top + drag.height
+   -- Width-only handles keep the bottom edge fixed.
+   if drag.resize_y ~= false then bottom = bottom + mouse_y - drag.mouse_y end
    local screen_width, screen_height = GetInfo(281), GetInfo(280)
    local threshold, offset = drag.threshold, drag.offset
    right_limit = right_limit or screen_width
@@ -394,9 +396,11 @@ function window_snap.resize_coordinates(drag, mouse_x, mouse_y, right_limit,
    add_resize_candidates(xs, right, right_limit, right_limit,
       0, screen_height, left, right_limit, threshold,
       "bounds", right_limit, right_limit, "right", "right")
-   add_resize_candidates(ys, bottom, bottom_limit, bottom_limit,
-      0, screen_width, top, bottom_limit, threshold,
-      "bounds", bottom_limit, bottom_limit, "bottom", "bottom")
+   if drag.resize_y ~= false then
+      add_resize_candidates(ys, bottom, bottom_limit, bottom_limit,
+         0, screen_width, top, bottom_limit, threshold,
+         "bounds", bottom_limit, bottom_limit, "bottom", "bottom")
+   end
 
    if not drag.exclude_output then
       local target_left, target_top, target_right, target_bottom = main_output_bounds()
@@ -408,8 +412,8 @@ function window_snap.resize_coordinates(drag, mouse_x, mouse_y, right_limit,
                target_top, target_bottom, left, right_limit, threshold,
                "main_output", target_left, target_right, "left", "right")
          end
-         if within_snap_span(left, right - left, target_left, target_right,
-            threshold, offset) then
+         if drag.resize_y ~= false and
+            within_snap_span(left, right - left, target_left, target_right, threshold, offset) then
             add_resize_candidates(ys, bottom, target_top - offset, target_bottom,
                target_left, target_right, top, bottom_limit, threshold,
                "main_output", target_top, target_bottom, "top", "bottom")
@@ -439,8 +443,8 @@ function window_snap.resize_coordinates(drag, mouse_x, mouse_y, right_limit,
                   target_top, target_bottom, left, right_limit, threshold,
                   target, target_left, target_right, "left", "right")
             end
-            if within_snap_span(left, right - left, target_left, target_right,
-               threshold, offset) then
+            if drag.resize_y ~= false and
+               within_snap_span(left, right - left, target_left, target_right, threshold, offset) then
                add_resize_candidates(ys, bottom, target_top - offset, target_bottom,
                   target_left, target_right, top, bottom_limit, threshold,
                   target, target_top, target_bottom, "top", "bottom")
