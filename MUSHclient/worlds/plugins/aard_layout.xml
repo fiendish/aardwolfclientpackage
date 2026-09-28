@@ -91,10 +91,14 @@ function OnPluginBroadcast(msg, id, name, text)
    end
 end
 
-default_top = 139
-default_bottom = 545
-default_left = 7
-default_right = 650
+default_top = 147
+default_bottom = 554
+default_left = 6
+default_right = 649
+
+default_inputbar_x = 0
+default_inputbar_y = 603
+default_inputbar_width = 887
 
 -- Variables not saved.
 startx           = ""
@@ -112,7 +116,7 @@ inputbar_fast_poll_duration = 0.1
 inputbar_last_poll_time = 0
 inputbar_fast_poll_until = 0
 inputbar_active = false
-inputbar_attached = true
+inputbar_attached = GetVariable("inputbar_attached") == "1"
 inputbar_content_signature = nil
 inputbar_presentation_signature = nil
 inputbar_hidden_overhead = nil
@@ -244,6 +248,7 @@ function LayoutCommand(name, line, wildcards)
       EnableAlias("resetaard", false)
       Execute("resetaard")
       EnableAlias("resetaard", true)
+      InputBarLayoutReset()
    else
       LayoutHelp()
    end
@@ -478,6 +483,11 @@ function InputBarEnsureWindow()
    end
 
    local left, top, width, height = InputBarAttachedRectangle()
+   if not inputbar_attached then
+      left = default_inputbar_x
+      top = default_inputbar_y
+      width = inputbar_detached_width or default_inputbar_width
+   end
    inputbar_window = ThemedTextWindow({
       id=inputBar,
       default_left_position=left,
@@ -516,7 +526,7 @@ function InputBarEnsureWindow()
    inputbar_window.menu_table = {
       "Dock input bar to main output",
       "-",
-      "Use native input bar (or type 'aard input')"
+      "Toggle native input bar (or type 'aard input')"
    }
    inputbar_window.menu_handlers = {InputBarReset, ToggleInputBar}
    inputbar_window.get_menu_items = InputBarGetMenuItems
@@ -864,11 +874,12 @@ function InputBarActivate(show_status)
       return false
    end
 
-   inputbar_attached = GetVariable("inputbar_attached") ~= "0"
+   inputbar_attached = GetVariable("inputbar_attached") == "1"
    inputbar_detached_width = tonumber(GetVariable("inputbar_detached_width"))
    if inputbar_detached_width and inputbar_detached_width < 1 then
       inputbar_detached_width = nil
    end
+   inputbar_detached_width = inputbar_detached_width or default_inputbar_width
    InputBarEnsureWindow()
    inputbar_active = true
    SetVariable("inputbar_enabled", "1")
@@ -920,6 +931,47 @@ function ToggleInputBar()
    else
       InputBarActivate(true)
    end
+   SaveState()
+end
+
+function InputBarLayoutRestore(rect)
+   if not rect then
+      return
+   end
+
+   if rect.attached ~= nil then
+      inputbar_attached = rect.attached
+   elseif not inputbar_active then
+      inputbar_attached = GetVariable("inputbar_attached") == "1"
+   end
+   inputbar_detached_width = rect.detached_width or rect.width
+   inputbar_resize_start_x = nil
+   inputbar_resize_start_width = nil
+   if not inputbar_active and WindowInfo(inputBar, 1) then
+      check(WindowPosition(inputBar, rect.left, rect.top,
+         0, miniwin.create_absolute_location))
+   end
+   InputBarUpdateWindowInfo(rect.left, rect.top)
+   -- Keep the saved position when the input bar is disabled or temporarily clipped.
+   check(SetVariable("mw_" .. inputBar .. "_windowx", tostring(rect.left)))
+   check(SetVariable("mw_" .. inputBar .. "_windowy", tostring(rect.top)))
+   InputBarSaveSettings()
+end
+
+function InputBarLayoutReset()
+   if not inputbar_active then
+      return
+   end
+
+   InputBarLayoutRestore({
+      attached = false,
+      left = default_inputbar_x,
+      top = default_inputbar_y,
+      width = default_inputbar_width
+   })
+   draw_main_window()
+   Repaint()
+   InputBarRefresh(true)
    SaveState()
 end
 
@@ -1162,6 +1214,14 @@ function LayoutStore(key)
             ["width"] = WindowInfo(mwid, 3),
             ["height"] = WindowInfo(mwid, 4)
          }
+         if mwid == inputBar then
+            current_layout[mwid].attached = inputbar_attached
+            current_layout[mwid].detached_width = inputbar_detached_width
+            if not inputbar_attached then
+               current_layout[mwid].left = inputbar_window.windowinfo.window_left
+               current_layout[mwid].top = inputbar_window.windowinfo.window_top
+            end
+         end
          -- Plugins can return a string with settings for this miniwindow.
          local pid = WindowInfo(mwid, 23)
          if pid and pid ~= GetPluginID() and GetPluginInfo(pid, 17) and PluginSupports(pid, "OnPluginLayoutSave") == error_code.eOK then
@@ -1191,9 +1251,14 @@ function LayoutRestore(key)
       textrect_top = trect["trtop"]
       textrect_bottom = trect["trbottom"]
       SaveLayout()
+      local inputbar_layout = layout[inputBar]
+      InputBarLayoutRestore(inputbar_layout)
       check_geometry()
       draw_main_window()
       Repaint() -- update rendered miniwindow positions before comparing
+      if inputbar_layout and inputbar_active then
+         InputBarRefresh(true)
+      end
       -- do the other plugins
       CallPlugin("abc1a0944ae4af7586ce88dc", "pause") -- repaint buffer plugin
       local plugins_to_reload = {}
@@ -1231,6 +1296,9 @@ function LayoutRestore(key)
          end
       end
       CallPlugin("abc1a0944ae4af7586ce88dc", "resume") -- repaint buffer plugin
+      if inputbar_layout then
+         SaveState()
+      end
       print("Layout for key '"..key.."' has been restored.")
    else
       print("No layout found for key '"..key.."'.")

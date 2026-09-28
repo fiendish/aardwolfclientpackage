@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
-<!-- MuClient version 5.05 -->
+<!-- MuClient version 5.07-pre -->
 <!-- Written by Nick Gammon -->
 <!-- Home Page: http://www.mushclient.com/ -->
 <muclient>
 <world
-   muclient_version="5.05"
+   muclient_version="5.07-pre"
    world_file_version="15"
 
    auto_say_override_prefix="-"
@@ -29,6 +29,7 @@
 
    arrows_change_history="y"
    auto_pause="y"
+   auto_repeat="y"
    auto_resize_command_window="y"
    auto_resize_minimum_lines="1"
    auto_resize_maximum_lines="20"
@@ -38,6 +39,7 @@
    chat_port="4050"
    confirm_on_paste="y"
    confirm_on_send="y"
+   convert_ga_to_newline="y"
    default_trigger_sequence="100"
    default_alias_sequence="100"
    detect_pueblo="y"
@@ -99,7 +101,7 @@
    utf_8="y"
    warn_if_scripting_inactive="y"
    wrap="y"
-   wrap_column="79"
+   wrap_column="80"
    write_world_name_to_log="y"
    > <!-- end of general world attributes -->
 
@@ -108,7 +110,7 @@
 <!-- triggers -->
 
 <triggers
-   muclient_version="5.05"
+   muclient_version="5.07-pre"
    world_file_version="15"
   >
 </triggers>
@@ -164,14 +166,13 @@ addxml.trigger {
 
 ColourNote("white", "green", "Added trigger "..(("%4" ~= "") and "to group '%4' " or "").."to match on '%1' and send '%2'")
 </send>
-</alias>
+  </alias>
 </aliases>
-
 
 <!-- timers -->
 
 <timers
-   muclient_version="5.05"
+   muclient_version="5.07-pre"
    world_file_version="15"
   >
 </timers>
@@ -179,7 +180,7 @@ ColourNote("white", "green", "Added trigger "..(("%4" ~= "") and "to group '%4' 
 <!-- macros -->
 
 <macros
-   muclient_version="5.05"
+   muclient_version="5.07-pre"
    world_file_version="15"
   >
 
@@ -272,7 +273,7 @@ ColourNote("white", "green", "Added trigger "..(("%4" ~= "") and "to group '%4' 
 <!-- variables -->
 
 <variables
-   muclient_version="5.05"
+   muclient_version="5.07-pre"
    world_file_version="15"
   >
 </variables>
@@ -280,7 +281,7 @@ ColourNote("white", "green", "Added trigger "..(("%4" ~= "") and "to group '%4' 
 <!-- colours -->
 
 <colours
-   muclient_version="5.05"
+   muclient_version="5.07-pre"
    world_file_version="15"
   >
 
@@ -336,7 +337,7 @@ ColourNote("white", "green", "Added trigger "..(("%4" ~= "") and "to group '%4' 
 <!-- keypad -->
 
 <keypad
-   muclient_version="5.05"
+   muclient_version="5.07-pre"
    world_file_version="15"
   >
 
@@ -445,7 +446,7 @@ ColourNote("white", "green", "Added trigger "..(("%4" ~= "") and "to group '%4' 
 <!-- printing -->
 
 <printing
-   muclient_version="5.05"
+   muclient_version="5.07-pre"
    world_file_version="15"
   >
 

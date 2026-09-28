@@ -206,10 +206,10 @@ require "gmcphelper"
 require "copytable"
 require "serialize"
 
-default_x = 868 + Theme.RESIZER_SIZE + 2
-default_y = 336
-default_height = 215
-default_width = 269
+default_x = 884 + Theme.RESIZER_SIZE + 2
+default_y = 343
+default_height = 217
+default_width = 271
 height = tonumber(GetVariable("height")) or default_height
 width = tonumber(GetVariable("width")) or default_width
 show_self = tonumber(GetVariable("show_self")) or 1

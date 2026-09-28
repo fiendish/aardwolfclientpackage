@@ -150,9 +150,9 @@ local last_area_for_pan = nil
 -- bounding box of drawn rooms in window coords (updated each draw, used for pan clamping)
 local drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y
 
-default_width = 269
+default_width = 271
 default_height = 335
-default_x = 868 + Theme.RESIZER_SIZE + 2
+default_x = 884 + Theme.RESIZER_SIZE + 2
 default_y = 0
 
 function reset_pos()

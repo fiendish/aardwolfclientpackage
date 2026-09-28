@@ -84,7 +84,7 @@ default_font_size = "10"
 tick_prefix = "Next tick: "
 tick_length = 30
 win = GetPluginID()
-default_x, default_y = 0, 577
+default_x, default_y = 1058, 601
 
 
 function reset_aard()

@@ -44,9 +44,9 @@ require "gmcphelper"
 require "copytable"
 
 default_width         = 209
-default_height        = 287
-default_x             = 658 + Theme.RESIZER_SIZE + 2
-default_y             = 264
+default_height        = 289
+default_x             = 666 + Theme.RESIZER_SIZE + 2
+default_y             = 272
 RESIZE_TAG_SIZE = 10
 MIN_SIZE        = 100
 LEFT_MARGIN     = 10
