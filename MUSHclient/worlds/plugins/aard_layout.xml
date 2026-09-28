@@ -516,7 +516,7 @@ function InputBarEnsureWindow()
    inputbar_window.menu_table = {
       "Dock input bar to main output",
       "-",
-      "Use native input bar (aard input)"
+      "Use native input bar (or type 'aard input')"
    }
    inputbar_window.menu_handlers = {InputBarReset, ToggleInputBar}
    inputbar_window.get_menu_items = InputBarGetMenuItems
