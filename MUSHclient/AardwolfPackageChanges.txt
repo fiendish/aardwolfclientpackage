@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2356 snapshot
+- bug fix: People have been trying to use Dina as their main output font for years, but it quietly never actually worked because MUSHclient didn't load fonts early enough in the startup process. Until now.
+
 r2355 snapshot
 - misc change: Default miniwindow positions for a brand new install are very slightly different.
 - bug fix: Input bar and main output corner snapping should work a little better.
