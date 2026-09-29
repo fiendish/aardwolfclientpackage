@@ -137,6 +137,21 @@ local cached_bg_width = 0
 local cached_bg_height = 0
 local cached_bg_texture = nil
 
+-- Keep the map without window decorations for resize previews.
+local cached_map
+local resize_dragging = false
+
+local function cache_map(room_name, room_uid, area_name)
+   check(WindowImageFromWindow(win, "cached_map", win))
+   cached_map = {
+      width = config.WINDOW.width,
+      height = config.WINDOW.height,
+      room_name = room_name,
+      room_uid = room_uid,
+      area_name = area_name,
+   }
+end
+
 -- pan offset for dragging the map view
 local pan_offset_x = 0
 local pan_offset_y = 0
@@ -912,6 +927,7 @@ function halt_drawing(halt)
       -- killing any active drag without firing pan_dragrelease
       pan_dragging = false
       pan_rebaseline_on_drag = false
+      resize_dragging = false
    end
 end
 
@@ -943,6 +959,29 @@ function blink_title()
       dress_window(truncated_room_name, current_room, current_area)
       CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
    end
+end
+
+local function fit_room_name(room_name)
+   local truncated_room_name = room_name
+   local name_width = WindowTextWidth (win, FONT_ID, truncated_room_name)
+   local add_dots = false
+
+   -- truncate name if too long
+   local available_width = (config.WINDOW.width - 20 - WindowTextWidth (win, FONT_ID, "*?"))
+   while name_width > available_width do
+      truncated_room_name = truncated_room_name:sub(1, -3)
+      name_width = WindowTextWidth (win, FONT_ID, truncated_room_name .. "...")
+      add_dots = true
+      if truncated_room_name == "" then
+         break
+      end
+   end -- while
+
+   if add_dots then
+      truncated_room_name = truncated_room_name .. "..."
+   end -- if
+
+   return truncated_room_name
 end
 
 function dress_window(room_name, room_uid, area_name)
@@ -1120,10 +1159,10 @@ function draw (uid)
    if window_exists then
       -- during drag, skip hotspot updates (just redraw graphics)
       if not pan_dragging then
-         -- delete all hotspots except zzz_zoom
+         -- Preserve the active pan or resize target.
          local hotspots = WindowHotspotList(win) or {}
          for _, hs in ipairs(hotspots) do
-            if hs ~= "zzz_zoom" then
+            if hs ~= "zzz_zoom" and not (resize_dragging and hs == win.."_resize") then
                WindowDeleteHotspot(win, hs)
             end
          end
@@ -1242,24 +1281,8 @@ function draw (uid)
    end
 
    local dress_t0 = detailed_timing and utils.timer()
-   truncated_room_name = room.name
-   local name_width = WindowTextWidth (win, FONT_ID, truncated_room_name)
-   local add_dots = false
-
-   -- truncate name if too long
-   local available_width = (config.WINDOW.width - 20 - WindowTextWidth (win, FONT_ID, "*?"))
-   while name_width > available_width do
-      truncated_room_name = truncated_room_name:sub(1, -3)
-      name_width = WindowTextWidth (win, FONT_ID, truncated_room_name .. "...")
-      add_dots = true
-      if truncated_room_name == "" then
-         break
-      end
-   end -- while
-
-   if add_dots then
-      truncated_room_name = truncated_room_name .. "..."
-   end -- if
+   cache_map(room.name, uid, room.area)
+   truncated_room_name = fit_room_name(room.name)
 
    is_pk = false
    if room.info then
@@ -1462,6 +1485,8 @@ function init (t)
       top = top + font_height
    end -- for
 
+   resize_dragging = false
+   cache_map()
    Theme.DrawBorder(win)
    Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
@@ -2284,10 +2309,12 @@ function zoom_map (flags, hotspot_id)
 end -- zoom_map
 
 function resize_mouse_down(flags, hotspot_id)
+   resize_dragging = true
    startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
 end
 
 function resize_release_callback()
+   resize_dragging = false
    config.WINDOW.width = WindowInfo(win, 3)
    config.WINDOW.height = WindowInfo(win, 4)
    draw(current_room)
@@ -2319,9 +2346,23 @@ function resize_move_callback()
       starty = GetInfo(280)
    end
 
-   WindowResize(win, width, height, BACKGROUND_COLOUR.colour)
-   Theme.DrawBorder(win)
+   check(WindowResize(win, width, height, BACKGROUND_COLOUR.colour))
+   config.WINDOW.width = width
+   config.WINDOW.height = height
+   check(WindowRectOp(win, 2, 0, 0, 0, 0, Theme.PRIMARY_BODY))
+
+   local x = math.floor(width / 2) - math.floor(cached_map.width / 2)
+   local y = math.floor(height / 2) - math.floor(cached_map.height / 2)
+   check(WindowDrawImage(win, "cached_map", x, y, 0, 0, 1))
+
+   if cached_map.room_uid then
+      truncated_room_name = fit_room_name(cached_map.room_name)
+      dress_window(truncated_room_name, cached_map.room_uid, cached_map.area_name)
+   else
+      Theme.DrawBorder(win)
+   end
    Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    WindowShow(win, true)
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end
