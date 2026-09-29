@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2355 snapshot
+- misc change: Default miniwindow positions for a brand new install are very slightly different.
+- bug fix: Input bar and main output corner snapping should work a little better.
+- bug fix: Resizing the mapper miniwindow is a little less ugly, I guess.
+- bug fix: Patched a file modification timestamp parsing/rejection bug in the older version of the Microsoft Foundation Class library that was tickled by the macOS unarchiver failing to propagate Windows file timestamps which then gets converted to a date before 1970 because of time zones.
+
 r2351 snapshot
 - misc change: The floating input bar from r2336 is now active by default for new installs, because it's neat and I don't want it hidden away.
 - bug fix: I'm sick of errors caused by someone launching MUSHclient in a way that leads to having a different active path during startup, so now relative paths are always relative to the MUSHclient executable and not wherever the OS thinks you happen to be at the moment.
