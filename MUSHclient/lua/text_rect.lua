@@ -845,7 +845,7 @@ function TextRect:scroll(dragging)
          else
             self:draw(false)
          end
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
          wait.time(0.01)
       end
    end)
@@ -1273,7 +1273,7 @@ function TextRect.mouseDown(flags, hotspot_id)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 
@@ -1307,7 +1307,7 @@ function TextRect.dragMove(flags, hotspot_id)
          tr.keepscrolling = ""
       end
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function TextRect.dragRelease(flags, hotspot_id)
@@ -1318,7 +1318,7 @@ function TextRect.dragRelease(flags, hotspot_id)
    if tr.call_on_select then
       tr.call_on_select(tr.copy_start_line, tr.copy_end_line, tr.start_copying_pos, tr.end_copying_pos, tr.start_copying_x, tr.end_copying_x)
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function TextRect.mouseUp(flags, hotspot_id)
@@ -1328,7 +1328,7 @@ function TextRect.mouseUp(flags, hotspot_id)
    if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
       tr:rightClickMenu(hotspot_id)
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
    return true
 end
 
@@ -1337,7 +1337,7 @@ function TextRect.cancelMouseDown(flags, hotspot_id)
    tr.keepscrolling = ""
    tr:cancel_selection()
    tr:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function TextRect:set_selection(start_line, end_line, start_pos, end_pos)
@@ -1399,7 +1399,7 @@ function TextRect.wheelMove(flags, hotspot_id)
          tr.display_start_line = tr.start_line
          tr.display_end_line = tr.end_line
          tr:draw()
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
       end
    else
       -- up
@@ -1409,7 +1409,7 @@ function TextRect.wheelMove(flags, hotspot_id)
          tr.display_start_line = tr.start_line
          tr.display_end_line = tr.end_line
          tr:draw()
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
       end -- if
    end
    tr.wheeling = false
@@ -1438,7 +1438,7 @@ function TextRect.linkHover(flags, hotspot_id)
       return
    end
    tr:underline_hyperlinks()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function TextRect.cancelLinkHover(flags, hotspot_id)
@@ -1447,7 +1447,7 @@ function TextRect.cancelLinkHover(flags, hotspot_id)
 
    if not string.find(WindowInfo(tr.window, 19), url, 1, true) then
       tr:draw(false)
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      BufferedRepaint()
    end
 end
 

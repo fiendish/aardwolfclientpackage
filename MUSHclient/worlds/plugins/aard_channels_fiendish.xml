@@ -211,7 +211,7 @@ function clearTab(tab)
    else
       ColourNote("white", "red", "CommLog Error 404: Tab not found.")
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
    SaveState()
 end
 
@@ -402,7 +402,7 @@ function chat_scroll_to_end()
       tabs_rects[current_tab].num_wrapped_lines - tabs_rects[current_tab].rect_lines + 1
    )
    tabs_rects[current_tab]:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function removeTab()
@@ -572,7 +572,7 @@ function drawTabs ()
    end
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function tabMouseOver (flags, hotspot_id)
@@ -644,7 +644,7 @@ function ResizeReleaseCallback ()
 
    tabs_rects[current_tab]:draw()
    tabs_scrollbars[current_tab]:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 
    WindowMoveHotspot(win, win.."_resize", draw_right-Theme.RESIZER_SIZE, draw_bottom-Theme.RESIZER_SIZE, 0, 0)
 end
@@ -885,7 +885,7 @@ function addToTab(multiline_styles, tab, links)
          added_to_current = true
          tabs_rects[tab]:draw()
          tabs_scrollbars[tab]:draw()
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
       else
          if not tabs_activity[tab] then
             tabs_activity[tab] = true

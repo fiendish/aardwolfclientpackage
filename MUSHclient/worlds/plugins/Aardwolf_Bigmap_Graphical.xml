@@ -393,7 +393,7 @@ function NoMap(messages)
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
       Theme.AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function DrawMap(clearHotspotsFirst)
@@ -480,7 +480,7 @@ function DrawMap(clearHotspotsFirst)
    if (mapwin ~= GetPluginID().."_mapper") or not use_exact_sizes then
       Theme.AddResizeTag(mapwin, 1, nil, nil, "resize_mouse_down", "resize_move_callback", "resize_release_callback")
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end -- DrawMap
 
 function resize_mouse_down(flags, hotspot_id)

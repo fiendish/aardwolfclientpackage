@@ -394,7 +394,7 @@ function DisplayStatsPage()
    Theme.DressWindow(win, nil, nil)
    Theme.AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
 
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end -- DisplayStatsPage
 
 -- right click menu

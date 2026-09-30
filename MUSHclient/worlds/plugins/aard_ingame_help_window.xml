@@ -93,7 +93,7 @@ copy_helpfile_to_clipboard()
 if my_window and my_window.scrollbar then
    my_window.scrollbar:scrollUp()
    my_window.scrollbar:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 </send>
 </alias>
@@ -108,7 +108,7 @@ end
 if my_window and my_window.scrollbar then
    my_window.scrollbar:scrollDown()
    my_window.scrollbar:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 </send>
 </alias>

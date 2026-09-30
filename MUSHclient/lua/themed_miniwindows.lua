@@ -109,7 +109,7 @@ function ThemedWindowClass.ResizeMoveCallback(flags, hotspot_id)
    end
    if (utils.timer() - lastRefresh > 0.0333) then
       window:resize(window.width, window.height, true)
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      BufferedRepaint()
       lastRefresh = utils.timer()
    end
 end
@@ -126,7 +126,7 @@ function ThemedWindowClass.ResizeReleaseCallback(flags, hotspot_id)
    SetVariable("themed_miniwindow_width"..window.id, window.width)
    SetVariable("themed_miniwindow_height"..window.id, window.height)
    window:resize(window.width, window.height, false)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function ThemedWindowClass:resize(width, height, still_dragging, min_width, min_height)
@@ -140,7 +140,7 @@ function ThemedWindowClass:resize(width, height, still_dragging, min_width, min_
       self.height = math.max(self.height, min_height)
    end
 
-   CallPlugin("abc1a0944ae4af7586ce88dc", "pause")
+   SetBufferedRepaintPaused(true)
    WindowResize(self.id, self.width, self.height, Theme.PRIMARY_BODY)
    self.bodyleft, self.bodytop, self.bodyright, self.bodybottom = Theme.BodyMetrics(self.id, self.title_font, WindowFontInfo(self.id, self.title_font, 1), self.title and #self.title or 0)
    if still_dragging then
@@ -157,7 +157,7 @@ function ThemedWindowClass:resize(width, height, still_dragging, min_width, min_
       end
    end
    self:dress_window()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "resume")
+   SetBufferedRepaintPaused(false)
 end
 
 
@@ -496,7 +496,7 @@ function ThemedTextWindowClass:__draw_framing()
          self:dress_window()
       end
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function ThemedTextWindowClass:draw()

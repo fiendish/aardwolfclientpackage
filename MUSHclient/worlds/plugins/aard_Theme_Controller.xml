@@ -46,7 +46,7 @@ function list_themes()
 end
 
 function apply_theme(theme)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "pause") -- repaint buffer plugin
+   SetBufferedRepaintPaused(true)
    for _, pid in ipairs(GetPluginList()) do
       if (pid ~= GetPluginID()) and GetPluginInfo(pid, 17) and (PluginSupports(pid, "Theme.b9315e040989d3f81f4328d6") == error_code.eOK) then
          local _, t = CallPlugin(pid, "Theme.get_theme")
@@ -59,7 +59,7 @@ function apply_theme(theme)
          end
       end
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "resume") -- repaint buffer plugin
+   SetBufferedRepaintPaused(false)
 end
 
 function choose_theme()

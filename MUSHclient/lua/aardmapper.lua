@@ -957,7 +957,7 @@ function blink_title()
    end
    if prev_title_color ~= title_color then
       dress_window(truncated_room_name, current_room, current_area)
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      BufferedRepaint()
    end
 end
 
@@ -1396,9 +1396,9 @@ function draw (uid)
    end -- if detailed_timing
 
    if pan_animating then
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint", 0.04)
+      BufferedRepaint(0.04)
    else
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      BufferedRepaint()
    end
 end -- draw
 
@@ -1635,7 +1635,7 @@ function full_find (dests, show_uid, expected_count, walk, fcb, no_portals)
    local notfound = {}
    for i,v in ipairs(dests) do
       SetStatus (string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      BufferedRepaint()
       local foundpath = findpath(current_room, v.uid, no_portals, no_portals)
       if not rooms [v.uid] then
          rooms [v.uid] = get_room (v.uid)
@@ -1738,7 +1738,7 @@ function full_find (dests, show_uid, expected_count, walk, fcb, no_portals)
 end
 
 function quick_find(dests, show_uid, expected_count, walk, fcb)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
    Note("+------------------------------ START OF SEARCH -------------------------------+")
 
    for i,v in ipairs(dests) do
@@ -1777,7 +1777,7 @@ function quick_find(dests, show_uid, expected_count, walk, fcb)
          fcb (uid)
       end -- if callback
 
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      BufferedRepaint()
    end -- for each room
 
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
@@ -2364,5 +2364,5 @@ function resize_move_callback()
    Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    WindowShow(win, true)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end

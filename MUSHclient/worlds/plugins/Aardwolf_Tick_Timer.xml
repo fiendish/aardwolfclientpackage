@@ -253,7 +253,7 @@ function update_miniwin()
       Theme.BODY_TEXT
    )
    Theme.DrawBorder(win)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 tick_option = string.char(101,1)

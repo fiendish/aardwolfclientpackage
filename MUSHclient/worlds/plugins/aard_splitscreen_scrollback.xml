@@ -81,7 +81,7 @@ function OnPluginTick()
    if rect_draw_needed then
       if rect then
          rect:draw()
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
       end
       rect_draw_needed = false
    end
@@ -129,11 +129,11 @@ function OnPluginSelectionChanged()
             csp-1, cep-1
          )
          rect:draw()
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
       elseif ((csl == 0) and (cel == 0) and (csp == 0) and (cep == 0)) then
          rect:set_selection(nil, nil, nil, nil)
          rect:draw()
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
       end
    else
       if (new_csl == 0) and (new_cel == 0) and (new_csp == 0) and (new_cep == 0) and GetInfo(114) then
@@ -256,7 +256,7 @@ function check_display()
             rect:draw()
             WindowMoveHotspot(win, 'bar', 0, 0, 0, t)
             WindowShow(win, true)
-            CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+            BufferedRepaint()
 
             if not just_cached_original_unpause_on_send then -- we need to not do this twice in a row because we'll lose our original value
                original_unpause_on_send = GetOption("unpause_on_send")
@@ -319,12 +319,6 @@ function ScrollMain(flags, hotspot_id)
       direction = -1  -- wheel scrolled up
    end
    SetScroll(GetInfo(296) + delta*direction, GetInfo(120))
-end
-
-function OnPluginTrace (line)
-   if not line:find("OnPluginScreendraw") then
-      print("TRACE:", line)
-   end
 end
 
 ]]>

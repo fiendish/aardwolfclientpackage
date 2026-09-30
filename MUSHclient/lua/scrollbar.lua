@@ -213,28 +213,28 @@ function ScrollBar.dragMove(flags, hotspot_id)
       sb.step = math.floor(position / space_per_step) + 1
    end
    sb:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function ScrollBar.dragRelease(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
    sb.dragging_scrollbar = false
    sb:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function ScrollBar.cancelMouseDown(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
    sb.keepscrolling = ""
    sb:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function ScrollBar.mouseUp(flags, hotspot_id)
    local sb = ScrollBar.hotspot_map[hotspot_id]
    sb.keepscrolling = ""
    sb:draw()
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
    return true
 end
 
@@ -266,7 +266,7 @@ function ScrollBar:scroll()
             self:scrollDown()
          end
          self:draw()
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
          wait.time(0.01)
       end
    end)

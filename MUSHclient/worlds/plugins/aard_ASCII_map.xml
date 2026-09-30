@@ -382,7 +382,7 @@ function blink_title()
       end
       if title_color ~= prev_title_color then
          draw_title()
-         CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+         BufferedRepaint()
       end
    end
 end
@@ -476,7 +476,7 @@ function DisplayMapPage()
 
    -- show it now (or refresh)
    WindowShow(win, true)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end -- Display_Map
 
 function process_coords ()

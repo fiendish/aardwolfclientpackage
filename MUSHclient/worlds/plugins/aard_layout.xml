@@ -794,7 +794,7 @@ function InputBarDraw(force)
    inputbar_window:draw()
    InputBarDrawResizeGrip()
    if not inputbar_attached then
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      BufferedRepaint()
    end
    InputBarStartFastPolling()
    return true
@@ -1094,7 +1094,7 @@ function InputBarResizeDragMove(flags, hotspot_id)
    if width ~= WindowInfo(inputBar, 3) then
       inputbar_detached_width = width
       InputBarPositionDetached()
-      CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+      BufferedRepaint()
    end
 end
 
@@ -1279,7 +1279,7 @@ function LayoutRestore(key)
          InputBarRefresh(true)
       end
       -- do the other plugins
-      CallPlugin("abc1a0944ae4af7586ce88dc", "pause") -- repaint buffer plugin
+      SetBufferedRepaintPaused(true)
       local plugins_to_reload = {}
       for mwid,rect in pairs(layout) do
          if mwid ~= "aard_layout_trect" then
@@ -1294,7 +1294,7 @@ function LayoutRestore(key)
                if GetPluginInfo(pid, 17) and PluginSupports(pid, "OnPluginLayoutRestore") == error_code.eOK then
                   local result, changed = CallPlugin(pid, "OnPluginLayoutRestore", mwid, rect["width"], rect["height"], rect["plugin_state"] or "")
                   if result ~= error_code.eOK then
-                     CallPlugin("abc1a0944ae4af7586ce88dc", "resume")
+                     SetBufferedRepaintPaused(false)
                      check(result)
                   end
                   if changed then
@@ -1314,7 +1314,7 @@ function LayoutRestore(key)
             ReloadPlugin(pid)
          end
       end
-      CallPlugin("abc1a0944ae4af7586ce88dc", "resume") -- repaint buffer plugin
+      SetBufferedRepaintPaused(false)
       if inputbar_layout then
          SaveState()
       end
@@ -1795,7 +1795,7 @@ function add_main_resizer()
       sb:addUpdateCallback(self, scrollMain)
    end
    sb:setScroll(cur_scroll_line, text_rectangle_lines, total_output_lines)
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 
    WindowShow(textResizer, true)
 end

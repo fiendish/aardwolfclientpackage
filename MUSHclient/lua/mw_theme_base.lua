@@ -325,7 +325,7 @@ function TextButtonMouseDown(flags, hotspot_id)
    else
       DrawTextBox(win, font, left, top, text, utf8, true, CLICKABLE_TEXT, CLICKABLE, x_padding, y_padding, width, height)
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function TextButtonMouseUp(flags, hotspot_id)
@@ -344,7 +344,7 @@ function TextButtonMouseUp(flags, hotspot_id)
    if callbacks.mouseup_callback then
       callbacks.mouseup_callback(flags, hotspot_id)
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 function TextButtonMouseCancel(flags, hotspot_id)
@@ -359,7 +359,7 @@ function TextButtonMouseCancel(flags, hotspot_id)
       end
       DrawTextBox(win, font, left, top, text, utf8, true, bgcolor, textcolor, x_padding, y_padding, width, height)
    end
-   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   BufferedRepaint()
 end
 
 local resize_windows = {}
