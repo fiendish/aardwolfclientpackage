@@ -4008,25 +4008,26 @@ end
 
 lastarea = ""
 function got_gmcp_room()
-   local room_number = gmcpval("num")
+   local coord = gmcpdata.coord or {}
+   local room_number = gmcpdata.num or ""
    if not(room_number) then
       return
    end
 
-   if current_room_is_cont ~= (gmcpval("coord.cont") == "1") then
-      current_room_is_cont = (gmcpval("coord.cont") == "1")
+   if current_room_is_cont ~= (coord.cont == "1") then
+      current_room_is_cont = (coord.cont == "1")
       mapper.halt_drawing(bigmap_override and current_room_is_cont)
    end
 
    gmcproom = {
-      name = strip_colours(gmcpval("name")),
-      area = gmcpval("zone"),
+      name = strip_colours(gmcpdata.name or ""),
+      area = gmcpdata.zone or "",
       building = 0,
-      terrain = gmcpval("terrain"),
-      info = gmcpval("details"),
+      terrain = gmcpdata.terrain or "",
+      info = gmcpdata.details or "",
       notes = "",
-      x = gmcpval("coord.x"),
-      y = gmcpval("coord.y"),
+      x = coord.x or "",
+      y = coord.y or "",
       z = 0,
       exits = {},
       exit_locks = {}
@@ -4154,12 +4155,12 @@ end
 
 function update_gmcp_area()
 
-   local areaid = gmcpval("id")
-   local areaname = gmcpval("name")
-   local texture = gmcpval("texture")
-   local color = gmcpval("col")
-   local x,y,z = gmcpval("x"),gmcpval("y"),gmcpval("z")
-   local flags = gmcpval("flags") or ""
+   local areaid = gmcpdata.id or ""
+   local areaname = gmcpdata.name or ""
+   local texture = gmcpdata.texture or ""
+   local color = gmcpdata.col or ""
+   local x,y,z = gmcpdata.x or "",gmcpdata.y or "",gmcpdata.z or ""
+   local flags = gmcpdata.flags or ""
 
    dbCheckExecute (string.format (
       "REPLACE INTO areas (uid, name, texture, color, flags) VALUES (%s, %s, %s, %s, %s);",
@@ -4266,9 +4267,7 @@ function OnPluginBroadcast (msg, id, name, text)
 
       if (text == "room.info") then
          blinded = false
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
+         gmcpdata = gmcp("room.info")
          got_gmcp_room()
       end -- if room.info
 
@@ -4277,9 +4276,7 @@ function OnPluginBroadcast (msg, id, name, text)
       end -- wrongdir
 
       if (text == "char.base") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base")
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
+         gmcpdata = gmcp("char.base")
          mytier = tonumber(gmcpdata.tier)
          if tonumber(gmcpdata.level) < 202 then
             SetVariable("echo_prefix", "")
@@ -4289,9 +4286,7 @@ function OnPluginBroadcast (msg, id, name, text)
       end
 
       if (text == "char.status") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.status")
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
+         gmcpdata = gmcp("char.status")
          mylevel = tonumber(gmcpdata.level)
          myState = tonumber(gmcpdata.state)
          if running == false and myState == 12 then
@@ -4307,16 +4302,12 @@ function OnPluginBroadcast (msg, id, name, text)
       end -- running
 
       if (text == "room.area") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.area")
-         luastmt = "gmcpdata = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
+         gmcpdata = gmcp("room.area")
          update_gmcp_area()
       end
 
       if (text == "room.sectors") then
-         res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.sectors")
-         luastmt = "gmcp_sectors_list = " .. gmcparg
-         assert (loadstring (luastmt or "")) ()
+         gmcp_sectors_list = gmcp("room.sectors")
          update_gmcp_sectors()
       end
    elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
@@ -4474,10 +4465,8 @@ function map_find_special(which_ones, which_area)
    local rooms = {}
    local count = 0
 
-   res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-   luastmt = "gmcpdata = " .. gmcparg
-   assert(loadstring (luastmt or "")) ()
-   local current_area = gmcpval("zone")
+   gmcpdata = gmcp("room.info")
+   local current_area = gmcpdata.zone or ""
 
    area = Trim(which_area or "")
    if area == "" then
@@ -4688,10 +4677,8 @@ function map_notes (name, line, wildcards)
    else
       if area ~= "" then
          if area == "here" then
-            res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","room.info")
-            luastmt = "gmcpdata = " .. gmcparg
-            assert(loadstring (luastmt or "")) ()
-            area = gmcpval("zone")
+            gmcpdata = gmcp("room.info")
+            area = gmcpdata.zone or ""
             mapper.mapprint("Searching the current area")
          else
             mapper.mapprint("Searching areas that partially match '"..area.."'")

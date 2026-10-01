@@ -109,10 +109,10 @@ local GMCP      = 201
 local GMCPDebug = tonumber(GetVariable("GMCPDebug")) or 0
 
 
--- You can use CallPlugin to access any gmcp data via this function.
--- example:
---   local ret, datastring = CallPlugin("3e7dedbe37e44942dd46d264", "gmcpdata_as_string", "char.status")
---   pcall(loadstring("status_table = "..datastring))
+-- The gmcp() helper uses this function to read GMCP data.
+-- Example:
+--   require "gmcphelper"
+--   local status_table = gmcp("char.status")
 --   for k,v in pairs(status_table) do
 --      print(k,":",v)
 --   end
