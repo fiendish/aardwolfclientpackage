@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2359 snapshot
+- misc change: The new input bar's 80 column indicator will now only show when you're in note mode.
+- new feature: My BufferedRepaint screen redrawing performance optimization is now a native function inside MUSHclient instead of using cross-plugin calls and timers. You can call BufferedRepaint() now instead of CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint").
+- new feature: MUSHclient's call tracing feature is now expanded to be more useful for debugging. See the Trace submenu in the Game menu.
+
 r2356 snapshot
 - bug fix: People have been trying to use Dina as their main output font for years, but it quietly never actually worked because MUSHclient didn't load fonts early enough in the startup process. Until now.
 
