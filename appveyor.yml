@@ -24,6 +24,14 @@ install:
 - ps: Start-FileDownload 'https://github.com/fiendish/lua-openssl-build/releases/download/latest/openssl.dll'
 - ps: Start-FileDownload 'https://github.com/fiendish/luasocket-build/releases/download/latest/luasocket-win32-static.zip'
 - ps: Start-FileDownload 'https://github.com/fiendish/mushclient/releases/download/latest_commit/MUSHclient.exe'
+- ps: |
+    & {
+      $ErrorActionPreference = 'Stop'
+      $localePath = (Resolve-Path -LiteralPath (Join-Path $env:APPVEYOR_BUILD_FOLDER 'MUSHclient\locale')).ProviderPath
+      foreach ($resource in @('en.dll', 'en_small.dll')) {
+        Start-FileDownload "https://github.com/fiendish/mushclient_resources/releases/download/latest_commit/$resource" -FileName (Join-Path $localePath $resource)
+      }
+    }
 - ps: pushd C:\projects\aardwolfclientpackage
 - ps: |
       Move-Item C:\lua51.dll MUSHclient -force
