@@ -74,6 +74,7 @@
 require "mw_theme_base"
 require "scrollbar"
 require "themed_miniwindows"
+require "gmcphelper"
 local window_snap = require "window_snap"
 
 function OnPluginSnapTarget(window_id)
@@ -88,7 +89,14 @@ function OnPluginBroadcast(msg, id, name, text)
    if id == "462b665ecb569efbf261422f" and msg == 996 and
       text == "re-register z" and textResizer and WindowInfo(textResizer, 1) then
       check(CallPlugin(id, "dropMe", textResizer))
+   elseif id == "3e7dedbe37e44942dd46d264" and
+      (text == "char.status" or text == "reload") then
+      InputBarUpdateNoteMode()
    end
+end
+
+function OnPluginDisconnect()
+   InputBarUpdateNoteMode()
 end
 
 default_top = 147
@@ -111,6 +119,7 @@ hotspot_id       = ""
 orig_height      = 400  -- saves old height when we collapse window.
 
 inputbar_marker_characters = 80
+inputbar_note_mode = false
 inputbar_poll_interval = 0.1
 inputbar_fast_poll_duration = 0.1
 inputbar_last_poll_time = 0
@@ -478,6 +487,18 @@ function InputBarAttachedRectangle()
    return left, top, math.max(1, right - left), height
 end
 
+function InputBarUpdateNoteMode()
+   local note_mode = false
+   if IsConnected() and GetPluginInfo("3e7dedbe37e44942dd46d264", 17) then
+      local state = gmcp("char.status.state")
+      note_mode = state == "5" or state == "6"
+   end
+   if note_mode ~= inputbar_note_mode then
+      inputbar_note_mode = note_mode
+      InputBarRefresh(true)
+   end
+end
+
 function InputBarEnsureWindow()
    if inputbar_window and WindowInfo(inputBar, 1) then
       return
@@ -519,7 +540,7 @@ function InputBarEnsureWindow()
       drag_tooltip="Hold Ctrl and drag to move the input bar",
       show_scrollback_marker=false,
       text_selection_callback=InputBarSelectionChanged,
-      column_guide=inputbar_marker_characters
+      column_guide=inputbar_note_mode and inputbar_marker_characters or nil
    })
    inputbar_rect = inputbar_window.textrect
    inputbar_window.dress_window = InputBarDressWindow
@@ -751,7 +772,8 @@ function InputBarDraw(force)
       selection_start,
       selection_end,
       cursor_position,
-      WindowInfo(inputBar, 4)
+      WindowInfo(inputBar, 4),
+      inputbar_note_mode and 1 or 0
    }, "\30")
    if not force and not content_changed and
       presentation_signature == inputbar_presentation_signature then
@@ -791,6 +813,11 @@ function InputBarDraw(force)
       cursor_line_position,
       selection_end == 0,
       false)
+   if inputbar_note_mode then
+      inputbar_rect:set_column_guide(inputbar_marker_characters)
+   else
+      inputbar_rect.column_guide = nil
+   end
    inputbar_window:draw()
    InputBarDrawResizeGrip()
    if not inputbar_attached then
@@ -819,7 +846,8 @@ function InputBarSelectionChanged(rect, state)
       inputbar_selection_start,
       inputbar_selection_end,
       inputbar_cursor_position,
-      WindowInfo(inputBar, 4)
+      WindowInfo(inputBar, 4),
+      inputbar_note_mode and 1 or 0
    }, "\30")
    rect:ensure_visible(state.active.line)
    rect:set_cursor(
@@ -881,6 +909,7 @@ function InputBarActivate(show_status)
       inputbar_detached_width = nil
    end
    inputbar_detached_width = inputbar_detached_width or default_inputbar_width
+   InputBarUpdateNoteMode()
    InputBarEnsureWindow()
    inputbar_active = true
    SetVariable("inputbar_enabled", "1")
