@@ -61,6 +61,7 @@ install:
         }
         Write-Host "LuaSocket global compatibility present in $socketPath"
       }
+      New-Item -ItemType Directory -Path (Join-Path $env:APPVEYOR_BUILD_FOLDER 'MUSHclient\worlds\plugins\state') -Force -ErrorAction Stop | Out-Null
       7z a -tzip -mx=9 -mfb=257 Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip MUSHclient
       if (-not $? -or $LASTEXITCODE -ne 0) { throw "ZIP creation failed" }
       & C:\Python37\python.exe .\add_zip_timestamps.py Aardwolf_MUSHclient_$($env:PACKAGE_VERSION)_no_install.zip
