@@ -51,6 +51,15 @@ AUTOMATIC MAPPER by Fiendish
 
 <aliases>
 <alias
+   match="^mapper timing(?: (on|detailed|off))?$"
+   regexp="y"
+   enabled="y"
+   omit_from_output="y"
+   script="mapper_timing"
+   sequence="100"
+></alias>
+
+<alias
    match="^recon?$"
    regexp="y"
    enabled="y"
@@ -3449,6 +3458,12 @@ function get_database ()
    print("Current mapper database file is "..GetVariable("db_name")..".db")
 end
 
+function mapper_timing(name, line, wildcards)
+   local mode = wildcards[1]
+   if mode and mode ~= "" then mapper.set_timing(mode) end
+   mapper.mapprint("Mapper timing: " .. mapper.get_timing() .. ".")
+end
+
 function OnPluginInstall ()
    SetVariable("backup_timer_enabled", GetVariable("backup_timer_enabled") or "1")
    quiet_backups = (GetVariable("quiet_backups") == "1") -- default false
@@ -5052,6 +5067,9 @@ function OnHelp (name, line, wildcards)
                                  > The default setting is uncompressed (off)]],
 [[mapper help                    --> This help
                                  > (or click the "?" button on the top right)]],
+[[mapper timing [on/detailed/off] --> Show or set refresh timing.
+                                 > Detailed mode shows phases and Window calls.
+                                 > Timing adds overhead. The default is off.]],
 [[mapper zoom out                --> Zoom out]],
 [[mapper zoom in                 --> Zoom in]],
 [[mapper hide                    --> Hide map]],

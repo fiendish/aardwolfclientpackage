@@ -15,6 +15,7 @@ init (t)            -- call once, supply:
    t.show_help   -- function that displays some help
    t.room_click  -- function that handles RH click on room (uid, flags)
    t.timing      -- true to show timing
+   t.detailed_timing -- true to show phase and Window call timing
    t.show_completed  -- true to show "Speedwalk completed."
    t.show_other_areas -- true to show non-current areas
    t.show_up_down    -- follow up/down exits
@@ -28,6 +29,8 @@ hide ()             -- hides map window (eg. if plugin disabled)
 show ()             -- show map window  (eg. if plugin enabled)
 save_state ()       -- call to save plugin state (ie. in OnPluginSaveState)
 draw (uid)          -- draw map - starting at room 'uid'
+set_timing (mode)   -- select off, on, or detailed timing
+get_timing ()       -- return the current timing mode
 start_speedwalk (path)  -- starts speedwalking. path is a table of directions/uids
 build_speedwalk (path)  -- builds a client speedwalk string from path
 cancel_speedwalk ()     -- cancel current speedwalk, if any
@@ -102,10 +105,114 @@ local room_cache_hits = 0    -- timing: cache hit counter
 local room_cache_misses = 0  -- timing: cache miss counter
 local draw_now = 0           -- os.time() cached once per frame
 
+-- Keep hotspot objects and their handlers when their definitions do not change.
+-- Check the native hotspot list each refresh because the bigmap can replace it.
+local hotspot_cache = {}
+local hotspot_present, wanted_hotspots, pending_hotspots
+local hotspot_pointer
+local reset_window_hotspots = false
+local fitted_title
+local map_render_cache
+local map_commands, map_commands_changed
+local map_command_state = {buffers = {{}, {}}, count = 0}
+
+-- Record every map primitive with all its arguments. Reuse the captured map
+-- only when the complete drawing sequence and background are unchanged.
+-- New room and exit drawing must also use map_draw().
+local function map_draw(name, ...)
+   local index = map_command_state.count + 1
+   local command = map_commands[index]
+   if not command then
+      command = {}
+      map_commands[index] = command
+   end
+   local old_count = command.count or 0
+   local count = select("#", ...)
+   -- All current primitives fit in eleven arguments. Assign them directly
+   -- to avoid a select() call for each argument. Keep larger calls supported.
+   command[1], command[2], command[3], command[4], command[5], command[6],
+      command[7], command[8], command[9], command[10], command[11] = ...
+   for i = 12, count do command[i] = select(i, ...) end
+   if old_count > count and old_count > 11 then
+      local first = count + 1
+      if first < 12 then first = 12 end
+      for i = first, old_count do command[i] = nil end
+   end
+   command.name, command.count = name, count
+   -- One difference already requires rebuilding the complete map. Continue
+   -- recording its commands, but stop comparing against the previous frame.
+   if not map_commands_changed then
+      local previous = map_render_cache and map_render_cache.commands[index]
+      local same = previous and previous.name == name and previous.count == count
+      if same then
+         for i = 1, count do
+            if previous[i] ~= command[i] then same = false; break end
+         end
+      end
+      if not same then map_commands_changed = true end
+   end
+   map_command_state.count = index
+end
+
+local function create_map_hotspot(hs)
+   check(WindowAddHotspot(win, hs.id, hs.left, hs.top, hs.right, hs.bottom,
+      "", "", hs.mousedown, "", hs.mouseup, hs.tooltip, hs.cursor, 0))
+   if hs.drag then
+      check(WindowDragHandler(win, hs.id, "mapper.pan_dragmove", "mapper.pan_dragrelease", 0))
+      check(WindowScrollwheelHandler(win, hs.id, "mapper.zoom_map"))
+   end
+   hotspot_cache[hs.id] = hs
+   if hotspot_present then hotspot_present[hs.id] = true end
+end
+
+local function map_hotspot(id, left, top, right, bottom, mousedown, mouseup, tooltip, cursor, drag)
+   id = tostring(id)
+   if wanted_hotspots then wanted_hotspots[id] = true end
+   local cached = hotspot_cache[id]
+   local present
+   if hotspot_present then
+      present = hotspot_present[id]
+   elseif cached then
+      present = WindowHotspotInfo(win, id, 1) ~= nil
+   end
+   local same_definition = cached and present and cached.mousedown == mousedown and cached.mouseup == mouseup
+      and cached.tooltip == tooltip and cached.cursor == cursor and cached.drag == drag
+   if same_definition and cached.left == left and cached.top == top
+      and cached.right == right and cached.bottom == bottom then return end
+   local hs = {id = id, left = left, top = top, right = right, bottom = bottom,
+      mousedown = mousedown, mouseup = mouseup, tooltip = tooltip, cursor = cursor, drag = drag}
+   if pending_hotspots then
+      if same_definition then
+         -- Moving a hotspot retains its drag and scroll handlers. Recreate
+         -- interactive hotspots so native mouse state and hover detection
+         -- still follow the WindowAddHotspot behavior.
+         if not hotspot_pointer then
+            hotspot_pointer = {x = WindowInfo(win, 14), y = WindowInfo(win, 15),
+               over = WindowInfo(win, 19), down = WindowInfo(win, 20)}
+         end
+         local pointer = hotspot_pointer
+         local under_pointer = pointer.x and pointer.y and pointer.x >= left and pointer.x < right
+            and pointer.y >= top and pointer.y < bottom
+         hs.move = id ~= pointer.over and id ~= pointer.down and not under_pointer
+      end
+      pending_hotspots[#pending_hotspots + 1] = hs
+   else
+      create_map_hotspot(hs)
+   end
+end
+
 -- other locals
 local HALF_ROOM, connectors, half_connectors, arrows
 local plan_to_draw, drawn, drawn_coords
 local rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y
+local room_queue_buffers = {{uid = {}, x = {}, y = {}}, {uid = {}, x = {}, y = {}}}
+
+local function reset_room_queue(queue)
+   local uid, x, y = queue.uid, queue.x, queue.y
+   for i = 1, #uid do uid[i], x[i], y[i] = nil, nil, nil end
+   rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y = uid, x, y
+end
+
 local last_drawn, depth, font_height
 local walk_to_room_name
 local recent_frame_times = {}
@@ -115,21 +222,178 @@ local RECENT_FRAME_COUNT = 30
 -- room drawing timing metrics
 local room_draw_times = {}
 local rooms_drawn_count = 0
--- draw_room sub-phases
-local total_exit_planning_time = 0
-local total_exit_drawing_time = 0
-local total_room_cache_time = 0     -- get_room calls inside exit loop
-local total_room_db_time = 0        -- supplied_get_room (DB lookup)
-local total_room_defaults_time = 0  -- strip_colours, field defaults
-local total_room_texture_time = 0   -- texture cache/load
-local total_graphics_time = 0
-local total_hotspot_time = 0
--- draw() outer phases
-local total_window_setup_time = 0   -- window create/clear, hotspot cleanup
-local total_bg_texture_time = 0     -- background texture tiling/blit
-local total_room_loop_time = 0      -- the fan-out while loop
-local total_zone_exit_time = 0      -- draw_zone_exit calls
-local total_dress_window_time = 0   -- dress_window, theme, PK
+-- Phase counters share a table to stay within the Lua 5.1 upvalue limit.
+local frame_metrics = {
+   total_exit_planning_time = 0,
+   total_exit_drawing_time = 0,
+   total_room_cache_time = 0,
+   total_room_db_time = 0,
+   total_room_defaults_time = 0,
+   total_room_texture_time = 0,
+   total_graphics_time = 0,
+   total_hotspot_time = 0,
+   total_window_setup_time = 0,
+   total_bg_texture_time = 0,
+   total_room_loop_time = 0,
+   total_zone_exit_time = 0,
+   total_dress_window_time = 0,
+   total_current_room_time = 0,
+   total_hotspot_cleanup_time = 0,
+   total_map_capture_time = 0,
+   total_map_render_time = 0,
+   map_image_reused = false,
+   total_repaint_request_time = 0,
+   total_get_room_time = 0,
+   room_load_count = 0,
+   visible_room_count = 0,
+}
+
+-- Measure Window calls made by both the mapper and the shared theme. These
+-- wrappers exist only during a detailed refresh. Normal drawing uses the
+-- original functions. Keep all return values, including nil, and restore the
+-- functions before propagating an error.
+local window_call_groups = {
+   Drawing = {"WindowCircleOp", "WindowLine", "WindowPolygon", "WindowBezier",
+      "WindowRectOp", "WindowGradient", "WindowSetPixel", "WindowText"},
+   Images = {"WindowDrawImage", "WindowDrawImageAlpha", "WindowBlendImage",
+      "WindowTransformImage", "WindowFilter", "WindowImageFromWindow", "WindowLoadImage"},
+   Hotspots = {"WindowAddHotspot", "WindowDeleteHotspot", "WindowDeleteAllHotspots",
+      "WindowMoveHotspot", "WindowDragHandler", "WindowScrollwheelHandler",
+      "WindowHotspotTooltip", "WindowHotspotList", "WindowHotspotInfo"},
+   Window = {"WindowCreate", "WindowResize", "WindowPosition", "WindowShow", "WindowSetZOrder"},
+   Queries = {"WindowInfo", "WindowTextWidth", "WindowFontInfo", "WindowFontList", "WindowImageInfo"},
+}
+local window_call_stats
+
+local function begin_hotspot_refresh()
+   local start_time = detailed_timing and utils.timer()
+   hotspot_present, wanted_hotspots, pending_hotspots = {}, {}, {}
+   hotspot_pointer = nil
+   for _, id in ipairs(WindowHotspotList(win) or {}) do
+      hotspot_present[id] = true
+   end
+   -- These buttons are drawn after the rooms. Keep them until their bounds
+   -- and definitions can be checked by dress_window().
+   if type(show_help) == "function" then wanted_hotspots["<help>"] = true end
+   if not draw_configure_box then wanted_hotspots["<configure>"] = true end
+   if start_time then frame_metrics.total_hotspot_cleanup_time = utils.timer() - start_time end
+end
+
+local function finish_room_hotspots()
+   local start_time = detailed_timing and utils.timer()
+   for id in pairs(hotspot_present) do
+      local keep_theme = not reset_window_hotspots
+         and (id == win.."_resize" or id == "zz_mw_"..win.."_movewindow_hotspot")
+      local keep_drag = resize_dragging and id == win.."_resize"
+      local keep_cached = hotspot_cache[id] and wanted_hotspots[id]
+      if id ~= "zzz_zoom" and not keep_theme and not keep_drag and not keep_cached then
+         check(WindowDeleteHotspot(win, id))
+         hotspot_present[id] = nil
+      end
+   end
+   for id in pairs(hotspot_cache) do
+      if not wanted_hotspots[id] then hotspot_cache[id] = nil end
+   end
+   reset_window_hotspots = false
+   if start_time then
+      frame_metrics.total_hotspot_cleanup_time = frame_metrics.total_hotspot_cleanup_time + utils.timer() - start_time
+   end
+   start_time = detailed_timing and utils.timer()
+   -- Move noninteractive hotspots first. Later creations can then detect
+   -- the correct hotspot at the pointer after every room has its new bounds.
+   for _, hs in ipairs(pending_hotspots) do
+      if hs.move then
+         check(WindowMoveHotspot(win, hs.id, hs.left, hs.top, hs.right, hs.bottom))
+         hotspot_cache[hs.id] = hs
+      end
+   end
+   for _, hs in ipairs(pending_hotspots) do
+      if not hs.move then create_map_hotspot(hs) end
+   end
+   pending_hotspots = nil
+   if start_time then
+      frame_metrics.total_hotspot_time = frame_metrics.total_hotspot_time + utils.timer() - start_time
+   end
+end
+
+local function with_window_timing(f, uid, enabled)
+   local originals = {}
+   local previous_stats = window_call_stats
+   if enabled ~= false then window_call_stats = {} end
+   local timer = utils.timer
+   local child_time = 0
+
+   local function finish_call(stat, start_time, children_before, ...)
+      local elapsed = timer() - start_time
+      -- WindowCreate can be a Lua wrapper that makes other Window calls.
+      -- Exclude those child calls so category totals do not count them twice.
+      local own_time = elapsed - (child_time - children_before)
+      child_time = children_before + elapsed
+      stat.calls = stat.calls + 1
+      stat.time = stat.time + own_time
+      stat.max = math.max(stat.max, own_time)
+      return ...
+   end
+
+   if enabled ~= false then
+      for group, names in pairs(window_call_groups) do
+         for _, name in ipairs(names) do
+            local original = _G[name]
+            if type(original) == "function" then
+               originals[name] = {value = rawget(_G, name)}
+               local stat = {name = name, group = group, calls = 0, time = 0, max = 0}
+               window_call_stats[name] = stat
+               _G[name] = function(...)
+                  local children_before = child_time
+                  local start_time = timer()
+                  return finish_call(stat, start_time, children_before, original(...))
+               end
+            end
+         end
+      end
+   end
+
+   local ok, err = xpcall(function() f(uid) end, function(err)
+      if type(err) == "string" then return debug.traceback(err, 2) end
+      return err
+   end)
+   for name, original in pairs(originals) do
+      rawset(_G, name, original.value)
+   end
+   window_call_stats = previous_stats
+   -- Release staging data after success or failure, also when timing is off.
+   -- A later title blink must not append to a failed frame's hotspot queue.
+   hotspot_present, wanted_hotspots, pending_hotspots, hotspot_pointer, map_commands = nil, nil, nil, nil, nil
+   if not ok then error(err, 0) end
+end
+
+local function report_window_timing(frame_time)
+   local groups, calls = {}, {}
+   for _, stat in pairs(window_call_stats) do
+      if stat.calls > 0 then
+         calls[#calls + 1] = stat
+         local group = groups[stat.group] or {calls = 0, time = 0}
+         groups[stat.group] = group
+         group.calls = group.calls + stat.calls
+         group.time = group.time + stat.time
+      end
+   end
+   print("  Window calls: included in phase times; detailed timing adds overhead.")
+   for _, name in ipairs({"Drawing", "Images", "Hotspots", "Window", "Queries"}) do
+      local group = groups[name] or {calls = 0, time = 0}
+      print(string.format("    %-10s %5i calls  %7.3f ms  (%4.1f%%)", name,
+         group.calls, group.time * 1000, frame_time > 0 and group.time / frame_time * 100 or 0))
+   end
+   table.sort(calls, function(a, b)
+      if a.time == b.time then return a.name < b.name end
+      return a.time > b.time
+   end)
+   print("    Call                         Count  Total ms    Avg us    Max us")
+   for _, stat in ipairs(calls) do
+      print(string.format("    %-28s %5i  %8.3f  %8.3f  %8.3f", stat.name,
+         stat.calls, stat.time * 1000, stat.time / stat.calls * 1000000, stat.max * 1000000))
+   end
+end
 
 -- cached tiled background texture
 local cached_bg_image = nil
@@ -298,7 +562,7 @@ local function get_room (uid)
    local room = supplied_get_room (uid)
    room = room or { unknown = true }
    if db_t0 then
-      total_room_db_time = total_room_db_time + (utils.timer() - db_t0)
+      frame_metrics.total_room_db_time = frame_metrics.total_room_db_time + (utils.timer() - db_t0)
    end
 
    -- defaults in case they didn't supply them ...
@@ -315,7 +579,7 @@ local function get_room (uid)
    room.fillbrush = room.fillbrush or 1 -- no fill
    room.texture = room.texture or nil -- no texture
    if def_t0 then
-      total_room_defaults_time = total_room_defaults_time + (utils.timer() - def_t0)
+      frame_metrics.total_room_defaults_time = frame_metrics.total_room_defaults_time + (utils.timer() - def_t0)
    end
 
    room.textimage = nil
@@ -337,9 +601,13 @@ local function get_room (uid)
       end
    end
    if tex_t0 then
-      total_room_texture_time = total_room_texture_time + (utils.timer() - tex_t0)
+      frame_metrics.total_room_texture_time = frame_metrics.total_room_texture_time + (utils.timer() - tex_t0)
    end
 
+   if db_t0 then
+      frame_metrics.total_get_room_time = frame_metrics.total_get_room_time + (utils.timer() - db_t0)
+      frame_metrics.room_load_count = frame_metrics.room_load_count + 1
+   end
    return room
 
 end -- get_room
@@ -684,7 +952,7 @@ local function draw_room (uid, x, y)
             local cache_t0 = detailed_timing and utils.timer()
             rooms [exit_uid] = get_room (exit_uid)
             if cache_t0 then
-               total_room_cache_time = total_room_cache_time + (utils.timer() - cache_t0)
+               frame_metrics.total_room_cache_time = frame_metrics.total_room_cache_time + (utils.timer() - cache_t0)
                room_cache_misses = room_cache_misses + 1
             end
          else
@@ -747,7 +1015,7 @@ local function draw_room (uid, x, y)
 
          if on_screen then
             local draw_t0 = detailed_timing and utils.timer()
-            WindowLine (win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
+            map_draw("WindowLine", win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
 
             -- one-way exit?
 
@@ -765,7 +1033,7 @@ local function draw_room (uid, x, y)
                      y + arrow [6])
 
                   -- draw arrow
-                  WindowPolygon(win, points,
+                  map_draw("WindowPolygon", win, points,
                      exit_line_colour, miniwin.pen_solid, 1,
                      exit_line_colour, miniwin.brush_solid,
                      true, true)
@@ -780,14 +1048,19 @@ local function draw_room (uid, x, y)
 
    if detailed_timing and exit_start_time then
       local exit_total = utils.timer() - exit_start_time
-      total_exit_drawing_time = total_exit_drawing_time + exit_draw_accum
-      total_exit_planning_time = total_exit_planning_time + (exit_total - exit_draw_accum)
+      frame_metrics.total_exit_drawing_time = frame_metrics.total_exit_drawing_time + exit_draw_accum
+      frame_metrics.total_exit_planning_time = frame_metrics.total_exit_planning_time + (exit_total - exit_draw_accum)
    end
 
    -- off-screen rooms only needed exit traversal above
    if not on_screen then
+      if room_start_time then
+         table.insert(room_draw_times, utils.timer() - room_start_time)
+         rooms_drawn_count = rooms_drawn_count + 1
+      end
       return
    end
+   if detailed_timing then frame_metrics.visible_room_count = frame_metrics.visible_room_count + 1 end
 
    -- graphics operations
    local graphics_start_time = nil
@@ -796,30 +1069,36 @@ local function draw_room (uid, x, y)
    end
 
    if room.unknown then
-      WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
+      map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
          UNKNOWN_ROOM_COLOUR.colour, miniwin.pen_dot, 1,  --  dotted single pixel pen
          0, miniwin.brush_hatch_forwards_diagonal)  -- opaque, no brush
    else
-      -- room fill
-      WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
-         0, miniwin.pen_null, 0,  -- no pen
-         room.fillcolour, room.fillbrush)  -- brush
+      -- A solid fill and a one-pixel solid border can share one rectangle.
+      -- Hatch and pattern brushes depend on the fill call's pen colour.
+      local combined_fill = room.fillbrush == miniwin.brush_solid
+         and room.borderpen == miniwin.pen_solid and room.borderpenwidth == 1
+      -- A null pen and null brush cannot change any pixels.
+      if room.fillbrush ~= miniwin.brush_null and not combined_fill then
+         map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
+            0, miniwin.pen_null, 0,  -- no pen
+            room.fillcolour, room.fillbrush)  -- brush
+      end
 
-      -- room border
-      WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
-         room.bordercolour, room.borderpen, room.borderpenwidth,  -- pen
-         -1, miniwin.brush_null)  -- opaque, no brush
+      -- room border, with the fill when both can share the same call
+      map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
+         room.bordercolour, room.borderpen, room.borderpenwidth,
+         combined_fill and room.fillcolour or -1, combined_fill and room.fillbrush or miniwin.brush_null)
 
       -- mark rooms with notes
       if room.notes ~= nil and room.notes ~= "" then
-         WindowCircleOp (win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth,
+         map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth,
             right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,ROOM_NOTE_COLOUR.colour,
             room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
       end
    end -- if
 
    if detailed_timing and graphics_start_time then
-      total_graphics_time = total_graphics_time + (utils.timer() - graphics_start_time)
+      frame_metrics.total_graphics_time = frame_metrics.total_graphics_time + (utils.timer() - graphics_start_time)
    end
 
    -- skip hotspot creation during drag (preserves active drag callback)
@@ -829,22 +1108,12 @@ local function draw_room (uid, x, y)
    end
 
    if not pan_dragging then
-      WindowAddHotspot(win, uid,
-         left, top, right, bottom,   -- rectangle
-         "",  -- mouseover
-         "",  -- cancelmouseover
-         "mapper.pan_mousedown",  -- mousedown (for dragging)
-         "",  -- cancelmousedown
-         "mapper.mouseup_room",  -- mouseup
-         room.hovermessage,
-         miniwin.cursor_hand, 0)  -- hand cursor
-
-      WindowDragHandler(win, uid, "mapper.pan_dragmove", "mapper.pan_dragrelease", 0)
-      WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
+      map_hotspot(uid, left, top, right, bottom,
+         "mapper.pan_mousedown", "mapper.mouseup_room", room.hovermessage, miniwin.cursor_hand, true)
    end
 
    if detailed_timing and hotspot_start_time then
-      total_hotspot_time = total_hotspot_time + (utils.timer() - hotspot_start_time)
+      frame_metrics.total_hotspot_time = frame_metrics.total_hotspot_time + (utils.timer() - hotspot_start_time)
    end
 
    -- track total time for this room
@@ -894,8 +1163,8 @@ local function draw_zone_exit (exit)
    local x, y, def = exit.x, exit.y, exit.def
    local offset = ROOM_SIZE
 
-   WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("yellow"), miniwin.pen_solid + 0x0200, 5)
-   WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("green"), miniwin.pen_solid + 0x0200, 1)
+   map_draw("WindowLine", win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("yellow"), miniwin.pen_solid + 0x0200, 5)
+   map_draw("WindowLine", win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("green"), miniwin.pen_solid + 0x0200, 1)
 end --  draw_zone_exit
 
 
@@ -928,6 +1197,9 @@ function halt_drawing(halt)
       pan_dragging = false
       pan_rebaseline_on_drag = false
       resize_dragging = false
+      hotspot_cache = {}
+      reset_window_hotspots = true
+      map_render_cache = nil
    end
 end
 
@@ -962,6 +1234,11 @@ function blink_title()
 end
 
 local function fit_room_name(room_name)
+   if fitted_title and fitted_title.room_name == room_name
+      and fitted_title.width == config.WINDOW.width
+      and fitted_title.font_name == config.FONT.name and fitted_title.font_size == config.FONT.size then
+      return fitted_title.text
+   end
    local truncated_room_name = room_name
    local name_width = WindowTextWidth (win, FONT_ID, truncated_room_name)
    local add_dots = false
@@ -981,6 +1258,8 @@ local function fit_room_name(room_name)
       truncated_room_name = truncated_room_name .. "..."
    end -- if
 
+   fitted_title = {room_name = room_name, width = config.WINDOW.width,
+      font_name = config.FONT.name, font_size = config.FONT.size, text = truncated_room_name}
    return truncated_room_name
 end
 
@@ -1021,16 +1300,8 @@ function dress_window(room_name, room_uid, area_name)
       local box_width = box_right - (x-1)
 
       if not pan_dragging then
-         WindowAddHotspot(win, "<help>",
-            x-3, y-4, x+box_width+3, y + font_height,   -- rectangle
-            "",  -- mouseover
-            "",  -- cancelmouseover
-            "",  -- mousedown
-            "",  -- cancelmousedown
-            "mapper.show_help",  -- mouseup
-            "Click for help",
-            miniwin.cursor_help, 0
-         )
+         map_hotspot("<help>", x-3, y-4, x+box_width+3, y + font_height,
+            "", "mapper.show_help", "Click for help", miniwin.cursor_help, false)
       end
    end -- if
 
@@ -1049,20 +1320,13 @@ function dress_window(room_name, room_uid, area_name)
          "*", false, false)
 
       if not pan_dragging then
-         WindowAddHotspot(win, "<configure>",
-            x-2, y-4, x+text_width, y + font_height,   -- rectangle
-            "",  -- mouseover
-            "",  -- cancelmouseover
-            "",  -- mousedown
-            "",  -- cancelmousedown
-            "mapper.mouseup_configure",  -- mouseup
-            "Click to configure map",
-            miniwin.cursor_plus, 0)
+         map_hotspot("<configure>", x-2, y-4, x+text_width, y + font_height,
+            "", "mapper.mouseup_configure", "Click to configure map", miniwin.cursor_plus, false)
       end
    end
 end
 
-function draw (uid)
+local function draw_map (uid)
    if not uid then
       maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
       return
@@ -1093,25 +1357,40 @@ function draw (uid)
 
    -- reset room drawing metrics for this frame
    if detailed_timing then
+      -- changed_room() can load rooms before the refresh timer starts.
+      -- Count Window calls only within the measured refresh.
+      for _, stat in pairs(window_call_stats) do
+         stat.calls, stat.time, stat.max = 0, 0, 0
+      end
       room_draw_times = {}
       rooms_drawn_count = 0
-      total_exit_planning_time = 0
-      total_exit_drawing_time = 0
-      total_room_cache_time = 0
-      total_room_db_time = 0
-      total_room_defaults_time = 0
-      total_room_texture_time = 0
-      total_graphics_time = 0
-      total_hotspot_time = 0
-      total_window_setup_time = 0
-      total_bg_texture_time = 0
-      total_room_loop_time = 0
-      total_zone_exit_time = 0
-      total_dress_window_time = 0
+      frame_metrics.total_exit_planning_time = 0
+      frame_metrics.total_exit_drawing_time = 0
+      frame_metrics.total_room_cache_time = 0
+      frame_metrics.total_room_db_time = 0
+      frame_metrics.total_room_defaults_time = 0
+      frame_metrics.total_room_texture_time = 0
+      frame_metrics.total_graphics_time = 0
+      frame_metrics.total_hotspot_time = 0
+      frame_metrics.total_window_setup_time = 0
+      frame_metrics.total_bg_texture_time = 0
+      frame_metrics.total_room_loop_time = 0
+      frame_metrics.total_zone_exit_time = 0
+      frame_metrics.total_dress_window_time = 0
+      frame_metrics.total_current_room_time = 0
+      frame_metrics.total_hotspot_cleanup_time = 0
+      frame_metrics.total_map_capture_time = 0
+      frame_metrics.total_map_render_time = 0
+      frame_metrics.map_image_reused = false
+      frame_metrics.total_repaint_request_time = 0
+      frame_metrics.total_get_room_time = 0
+      frame_metrics.room_load_count = 0
+      frame_metrics.visible_room_count = 0
       room_cache_hits = 0
       room_cache_misses = 0
    end
 
+   local current_t0 = detailed_timing and utils.timer()
    draw_now = os.time ()
 
    -- selective cache invalidation: fetch current room fresh (needs OUR_ROOM_COLOUR)
@@ -1145,34 +1424,23 @@ function draw (uid)
       end
    end
    last_area_for_pan = current_area
+   if current_t0 then frame_metrics.total_current_room_time = utils.timer() - current_t0 end
 
    -- update dimensions and position here because the bigmap might have changed them
    local setup_t0 = detailed_timing and utils.timer()
-   windowinfo.window_left = WindowInfo(win, 1) or windowinfo.window_left
+   local window_left = WindowInfo(win, 1)
+   windowinfo.window_left = window_left or windowinfo.window_left
    windowinfo.window_top = WindowInfo(win, 2) or windowinfo.window_top
    config.WINDOW.width = WindowInfo(win, 3) or config.WINDOW.width
    config.WINDOW.height = WindowInfo(win, 4) or config.WINDOW.height
 
    -- check if window already exists (preserves zzz_zoom hotspot for drag operations)
-   local window_exists = WindowInfo(win, 1) ~= nil
+   local window_exists = window_left ~= nil
    
-   if window_exists then
-      -- during drag, skip hotspot updates (just redraw graphics)
-      if not pan_dragging then
-         -- Preserve the active pan or resize target.
-         local hotspots = WindowHotspotList(win) or {}
-         for _, hs in ipairs(hotspots) do
-            if hs ~= "zzz_zoom" and not (resize_dragging and hs == win.."_resize") then
-               WindowDeleteHotspot(win, hs)
-            end
-         end
-      end
-      -- clear the window contents (skip if background texture will cover it)
-      if room.textimage == nil or config.USE_TEXTURES.enabled ~= true then
-         WindowRectOp(win, 2, 0, 0, config.WINDOW.width, config.WINDOW.height, Theme.PRIMARY_BODY)
-      end
-   else
+   if not window_exists then
       -- create new window
+      hotspot_cache = {}
+      map_render_cache = nil
       WindowCreate (win,
          windowinfo.window_left,
          windowinfo.window_top,
@@ -1183,49 +1451,10 @@ function draw (uid)
          Theme.PRIMARY_BODY)
    end
 
+   if not pan_dragging then begin_hotspot_refresh() end
+
    if setup_t0 then
-      total_window_setup_time = utils.timer() - setup_t0
-   end
-
-   -- Handle background texture (cached for performance)
-   local bg_t0 = detailed_timing and utils.timer()
-   if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
-      -- check if we need to regenerate the cached background
-      local need_regen = (
-         cached_bg_image == nil
-         or cached_bg_width ~= config.WINDOW.width
-         or cached_bg_height ~= config.WINDOW.height
-         or cached_bg_texture ~= room.textimage
-      )
-      if need_regen then
-         -- tile the texture directly into win first
-         local iwidth = WindowImageInfo(win, room.textimage, 2)
-         local iheight = WindowImageInfo(win, room.textimage, 3)
-         local x, y = 0, 0
-         while y < config.WINDOW.height do
-            x = 0
-            while x < config.WINDOW.width do
-               WindowDrawImage(win, room.textimage, x, y, 0, 0, 1)
-               x = x + iwidth
-            end
-            y = y + iheight
-         end
-         
-         -- capture the tiled result as a cached image
-         cached_bg_image = "cached_bg"
-         WindowImageFromWindow(win, cached_bg_image, win)
-         
-         cached_bg_width = config.WINDOW.width
-         cached_bg_height = config.WINDOW.height
-         cached_bg_texture = room.textimage
-      else
-         -- single blit of cached background
-         WindowDrawImage(win, cached_bg_image, 0, 0, 0, 0, 1)
-      end
-   end
-
-   if bg_t0 then
-      total_bg_texture_time = utils.timer() - bg_t0
+      frame_metrics.total_window_setup_time = utils.timer() - setup_t0
    end
 
    -- for zooming and panning (only create if hotspot doesn't already exist)
@@ -1243,7 +1472,7 @@ function draw (uid)
 
    -- set up for initial room, in middle
    drawn, drawn_coords, plan_to_draw, area_exits = {}, {}, {}, {}
-   rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y = {}, {}, {}
+   reset_room_queue(room_queue_buffers[1])
    drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y = nil, nil, nil, nil
    depth = 0
 
@@ -1254,17 +1483,23 @@ function draw (uid)
    rooms_to_be_drawn_x[1] = center_x
    rooms_to_be_drawn_y[1] = center_y
 
+   -- Build into the other buffer. The last successful frame remains
+   -- unchanged until rendering and image capture both succeed.
+   local buffers = map_command_state.buffers
+   map_commands = map_render_cache and map_render_cache.commands == buffers[1] and buffers[2] or buffers[1]
+   map_commands_changed, map_command_state.count = false, 0
    local loop_t0 = detailed_timing and utils.timer()
    while #rooms_to_be_drawn_uid > 0 and depth < config.SCAN.depth do
       local old_uid, old_x, old_y = rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y
-      rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y = {}, {}, {}
+      reset_room_queue(old_uid == room_queue_buffers[1].uid and room_queue_buffers[2] or room_queue_buffers[1])
       for i = 1, #old_uid do
          draw_room (old_uid[i], old_x[i], old_y[i])
       end -- for each existing room
       depth = depth + 1
    end -- while rooms to be drawn
+   if not pan_dragging then finish_room_hotspots() end
    if loop_t0 then
-      total_room_loop_time = utils.timer() - loop_t0
+      frame_metrics.total_room_loop_time = utils.timer() - loop_t0
    end
 
    -- if all rooms are off-screen (e.g. teleported within area while panned), reset pan
@@ -1277,11 +1512,83 @@ function draw (uid)
       draw_zone_exit (zone_exit)
    end -- for
    if zone_t0 then
-      total_zone_exit_time = utils.timer() - zone_t0
+      frame_metrics.total_zone_exit_time = utils.timer() - zone_t0
    end
 
+   local background = config.USE_TEXTURES.enabled == true and room.textimage or false
+   local reuse_map = map_render_cache and not map_commands_changed
+      and map_command_state.count == map_render_cache.count
+      and map_render_cache.width == config.WINDOW.width and map_render_cache.height == config.WINDOW.height
+      and map_render_cache.background == background and map_render_cache.body_colour == Theme.PRIMARY_BODY
+      and WindowImageInfo(win, "cached_map", 1) ~= nil
+   local render_t0 = detailed_timing and utils.timer()
+   if reuse_map then
+      check(WindowDrawImage(win, "cached_map", 0, 0, 0, 0, 1))
+      cached_map.room_name, cached_map.room_uid, cached_map.area_name = room.name, uid, room.area
+      if detailed_timing then frame_metrics.map_image_reused = true end
+   else
+      local bg_t0 = detailed_timing and utils.timer()
+      -- Restore the full background before replaying a changed map.
+      if background == false or background == nil then
+         if window_exists then
+            check(WindowRectOp(win, 2, 0, 0, config.WINDOW.width, config.WINDOW.height, Theme.PRIMARY_BODY))
+         end
+      end
+      -- Handle background texture (cached for performance)
+      if room.textimage ~= nil and config.USE_TEXTURES.enabled == true then
+         -- check if we need to regenerate the cached background
+         local need_regen = (
+            cached_bg_image == nil
+            or cached_bg_width ~= config.WINDOW.width
+            or cached_bg_height ~= config.WINDOW.height
+            or cached_bg_texture ~= room.textimage
+         )
+         if need_regen then
+            -- tile the texture directly into win first
+            local iwidth = WindowImageInfo(win, room.textimage, 2)
+            local iheight = WindowImageInfo(win, room.textimage, 3)
+            local x, y = 0, 0
+            while y < config.WINDOW.height do
+               x = 0
+               while x < config.WINDOW.width do
+                  check(WindowDrawImage(win, room.textimage, x, y, 0, 0, 1))
+                  x = x + iwidth
+               end
+               y = y + iheight
+            end
+
+            -- capture the tiled result as a cached image
+            cached_bg_image = "cached_bg"
+            check(WindowImageFromWindow(win, cached_bg_image, win))
+
+            cached_bg_width = config.WINDOW.width
+            cached_bg_height = config.WINDOW.height
+            cached_bg_texture = room.textimage
+         else
+            -- single blit of cached background
+            check(WindowDrawImage(win, cached_bg_image, 0, 0, 0, 0, 1))
+         end
+      end
+
+      if bg_t0 then
+         frame_metrics.total_bg_texture_time = utils.timer() - bg_t0
+      end
+      local map_t0 = detailed_timing and utils.timer()
+      for i = 1, map_command_state.count do
+         local command = map_commands[i]
+         check(_G[command.name](unpack(command, 1, command.count)))
+      end
+      if map_t0 then frame_metrics.total_map_render_time = utils.timer() - map_t0 end
+      local capture_t0 = detailed_timing and utils.timer()
+      cache_map(room.name, uid, room.area)
+      if capture_t0 then frame_metrics.total_map_capture_time = utils.timer() - capture_t0 end
+      map_render_cache = {commands = map_commands, count = map_command_state.count,
+         width = config.WINDOW.width, height = config.WINDOW.height,
+         background = background, body_colour = Theme.PRIMARY_BODY}
+   end
+   if reuse_map and render_t0 then frame_metrics.total_map_render_time = utils.timer() - render_t0 end
+   map_commands = nil
    local dress_t0 = detailed_timing and utils.timer()
-   cache_map(room.name, uid, room.area)
    truncated_room_name = fit_room_name(room.name)
 
    is_pk = false
@@ -1303,17 +1610,27 @@ function draw (uid)
       AddTimer("blink_title", 0, 0, 0.5, "", timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace, "mapper.blink_title")
    end
 
-   dress_window(truncated_room_name, uid, room.area)
+   -- blink_title() has already drawn the title and buttons in a PK room.
+   if not is_pk then dress_window(truncated_room_name, uid, room.area) end
 
    Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    -- make sure window visible
    WindowShow (win, not window_hidden)
    if dress_t0 then
-      total_dress_window_time = utils.timer() - dress_t0
+      frame_metrics.total_dress_window_time = utils.timer() - dress_t0
    end
 
+   hotspot_present, wanted_hotspots = nil, nil
    last_drawn = uid  -- last room number we drew (for zooming)
+
+   local repaint_t0 = detailed_timing and utils.timer()
+   if pan_animating then
+      BufferedRepaint(0.04)
+   else
+      BufferedRepaint()
+   end
+   if repaint_t0 then frame_metrics.total_repaint_request_time = utils.timer() - repaint_t0 end
 
    local end_time = utils.timer ()
    local frame_time = end_time - start_time
@@ -1333,23 +1650,27 @@ function draw (uid)
 
    -- detailed timing breakdown
    if detailed_timing then
-      local count = 0
-      for k in pairs (drawn) do
-         count = count + 1
-      end
-
       -- helper for consistent formatting
       local function pct(t) return (frame_time > 0) and (t / frame_time * 100) or 0 end
       local function ms(t) return t * 1000 end
 
-      print (string.format ("  (%i rooms drawn)", count))
+      local mode = pan_dragging and "pan drag" or pan_animating and "pan animation"
+                   or resize_dragging and "resize update" or "map update"
+      print(string.format("  Rooms: %i traversed, %i visible; %s", rooms_drawn_count, frame_metrics.visible_room_count, mode))
+      print("  Refresh execution only; excludes report output and deferred screen repaint.")
+      print("  Map image: " .. (frame_metrics.map_image_reused and "reused" or "rebuilt"))
 
       -- outer draw() phases
-      print (string.format ("  Window setup:      %6.2f ms  (%4.1f%%)", ms(total_window_setup_time), pct(total_window_setup_time)))
-      print (string.format ("  Background tex:    %6.2f ms  (%4.1f%%)", ms(total_bg_texture_time), pct(total_bg_texture_time)))
-      print (string.format ("  Room loop:         %6.2f ms  (%4.1f%%)", ms(total_room_loop_time), pct(total_room_loop_time)))
-      print (string.format ("  Zone exits:        %6.2f ms  (%4.1f%%)", ms(total_zone_exit_time), pct(total_zone_exit_time)))
-      print (string.format ("  Dress window:      %6.2f ms  (%4.1f%%)", ms(total_dress_window_time), pct(total_dress_window_time)))
+      print (string.format ("  Current room:      %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_current_room_time), pct(frame_metrics.total_current_room_time)))
+      print (string.format ("  Window setup:      %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_window_setup_time), pct(frame_metrics.total_window_setup_time)))
+      print (string.format ("  Background tex:    %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_bg_texture_time), pct(frame_metrics.total_bg_texture_time)))
+      print (string.format ("  Room loop:         %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_room_loop_time), pct(frame_metrics.total_room_loop_time)))
+      print (string.format ("  Hotspot cleanup:   %6.2f ms  (%4.1f%%, included in setup/room loop)", ms(frame_metrics.total_hotspot_cleanup_time), pct(frame_metrics.total_hotspot_cleanup_time)))
+      print (string.format ("  Zone exits:        %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_zone_exit_time), pct(frame_metrics.total_zone_exit_time)))
+      print (string.format ("  Map drawing:       %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_map_render_time), pct(frame_metrics.total_map_render_time)))
+      print (string.format ("  Map image copy:    %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_map_capture_time), pct(frame_metrics.total_map_capture_time)))
+      print (string.format ("  Dress window:      %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_dress_window_time), pct(frame_metrics.total_dress_window_time)))
+      print (string.format ("  Repaint request:   %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_repaint_request_time), pct(frame_metrics.total_repaint_request_time)))
 
       -- room loop breakdown
       if rooms_drawn_count > 0 then
@@ -1362,45 +1683,55 @@ function draw (uid)
             if t > max_room_time then max_room_time = t end
          end
          local avg_room_time = sum_room_time / rooms_drawn_count
-         local loop_overhead = total_room_loop_time - sum_room_time
+         local loop_overhead = frame_metrics.total_room_loop_time - sum_room_time
 
-         print (string.format ("  --- Room loop breakdown (%i rooms) ---", rooms_drawn_count))
+         print (string.format ("  --- Room loop breakdown (%i rooms traversed) ---", rooms_drawn_count))
          print (string.format ("    Per-room:  avg %0.4f ms, min %0.4f ms, max %0.4f ms",
             ms(avg_room_time), ms(min_room_time), ms(max_room_time)))
          local total_lookups = room_cache_hits + room_cache_misses
          print (string.format ("    Cache: %i hits, %i misses (%0.1f%% hit rate)",
             room_cache_hits, room_cache_misses,
             (total_lookups > 0) and (room_cache_hits / total_lookups * 100) or 0))
-         print (string.format ("    Exit planning:   %6.2f ms  (%4.1f%%)", ms(total_exit_planning_time), pct(total_exit_planning_time)))
-         print (string.format ("      get_room:      %6.2f ms  (%4.1f%%)", ms(total_room_cache_time), pct(total_room_cache_time)))
-         print (string.format ("        DB lookup:   %6.2f ms  (%4.1f%%)", ms(total_room_db_time), pct(total_room_db_time)))
-         print (string.format ("        defaults:    %6.2f ms  (%4.1f%%)", ms(total_room_defaults_time), pct(total_room_defaults_time)))
-         print (string.format ("        texture:     %6.2f ms  (%4.1f%%)", ms(total_room_texture_time), pct(total_room_texture_time)))
-         local gr_other = total_room_cache_time - total_room_db_time - total_room_defaults_time - total_room_texture_time
-         if ms(gr_other) >= 0.01 then
-            print (string.format ("        other:       %6.2f ms  (%4.1f%%)", ms(gr_other), pct(gr_other)))
-         end
-         local plan_other = total_exit_planning_time - total_room_cache_time
+         print (string.format ("    Exit planning:   %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_exit_planning_time), pct(frame_metrics.total_exit_planning_time)))
+         print (string.format ("      get_room:      %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_room_cache_time), pct(frame_metrics.total_room_cache_time)))
+         local plan_other = frame_metrics.total_exit_planning_time - frame_metrics.total_room_cache_time
          print (string.format ("      other logic:   %6.2f ms  (%4.1f%%)", ms(plan_other), pct(plan_other)))
-         print (string.format ("    Exit drawing:    %6.2f ms  (%4.1f%%)", ms(total_exit_drawing_time), pct(total_exit_drawing_time)))
-         print (string.format ("    Room graphics:   %6.2f ms  (%4.1f%%)", ms(total_graphics_time), pct(total_graphics_time)))
-         print (string.format ("    Hotspot setup:   %6.2f ms  (%4.1f%%)", ms(total_hotspot_time), pct(total_hotspot_time)))
-         print (string.format ("    Loop overhead:   %6.2f ms  (%4.1f%%)", ms(loop_overhead), pct(loop_overhead)))
+         print (string.format ("    Exit commands:   %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_exit_drawing_time), pct(frame_metrics.total_exit_drawing_time)))
+         print (string.format ("    Room commands:   %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_graphics_time), pct(frame_metrics.total_graphics_time)))
+         print (string.format ("    Hotspot setup:   %6.2f ms  (%4.1f%%)", ms(frame_metrics.total_hotspot_time), pct(frame_metrics.total_hotspot_time)))
+         print (string.format ("    Loop remainder:  %6.2f ms  (%4.1f%%)", ms(loop_overhead), pct(loop_overhead)))
       end
 
+      -- These room-load totals cover the whole refresh, not just exit planning.
+      print(string.format("  Room loads: %i calls, %6.2f ms (included in phases)", frame_metrics.room_load_count, ms(frame_metrics.total_get_room_time)))
+      print(string.format("    Room callback:   %6.2f ms", ms(frame_metrics.total_room_db_time)))
+      print(string.format("    Defaults:        %6.2f ms", ms(frame_metrics.total_room_defaults_time)))
+      print(string.format("    Texture lookup:  %6.2f ms", ms(frame_metrics.total_room_texture_time)))
+      report_window_timing(frame_time)
+
       -- unaccounted time
-      local accounted = total_window_setup_time + total_bg_texture_time + total_room_loop_time
-                      + total_zone_exit_time + total_dress_window_time
+      local accounted = frame_metrics.total_current_room_time + frame_metrics.total_window_setup_time + frame_metrics.total_bg_texture_time + frame_metrics.total_room_loop_time
+                      + frame_metrics.total_zone_exit_time + frame_metrics.total_map_render_time + frame_metrics.total_map_capture_time + frame_metrics.total_dress_window_time + frame_metrics.total_repaint_request_time
       local unaccounted = frame_time - accounted
       print (string.format ("  Unaccounted:       %6.2f ms  (%4.1f%%)", ms(unaccounted), pct(unaccounted)))
    end -- if detailed_timing
+end -- draw_map
 
-   if pan_animating then
-      BufferedRepaint(0.04)
-   else
-      BufferedRepaint()
-   end
+function draw(uid)
+   with_window_timing(draw_map, uid, detailed_timing and uid ~= nil and not dont_draw or false)
 end -- draw
+
+function set_timing(mode)
+   assert(mode == "off" or mode == "on" or mode == "detailed", "Invalid mapper timing mode")
+   timing = mode == "on" or mode == "detailed"
+   detailed_timing = mode == "detailed"
+   recent_frame_times = {}
+   recent_frame_index = 0
+end
+
+function get_timing()
+   return detailed_timing and "detailed" or timing and "on" or "off"
+end
 
 local credits = {
    "MUSHclient mapper",
@@ -1419,6 +1750,13 @@ function init (t)
    config = t.config
    assert (type (config) == "table", "No 'config' table supplied to mapper.")
 
+   hotspot_cache = {}
+   hotspot_present, wanted_hotspots, pending_hotspots, hotspot_pointer = nil, nil, nil, nil
+   reset_window_hotspots = false
+   fitted_title = nil
+   map_render_cache, map_commands = nil, nil
+   map_command_state = {buffers = {{}, {}}, count = 0}
+   room_queue_buffers = {{uid = {}, x = {}, y = {}}, {uid = {}, x = {}, y = {}}}
    supplied_get_room = t.get_room
    assert (type (supplied_get_room) == "function", "No 'get_room' function supplied to mapper.")
 
@@ -2122,7 +2460,7 @@ function pan_dragrelease (flags, hotspot_id)
       return
    end
 
-   -- no longer dragging - full redraw will recreate hotspots
+   -- Update room hotspots at the final pan position.
    pan_dragging = false
    pan_rebaseline_on_drag = false
    -- redraw with the new pan offset
