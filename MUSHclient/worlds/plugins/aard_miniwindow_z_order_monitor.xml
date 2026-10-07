@@ -40,20 +40,33 @@ end
 -- To use this:
 -- CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", windowID)
 --
--- windowID MUST conform to the rules for variable names for SetVariable for this to work properly
--- with one exception: the name may start with a number rather than a
--- letter (if the name is based on a plugin UID, for example)
+-- Encode window names so spaces and punctuation are valid in saved-state keys.
+-- The old keys remain a fallback for existing saved window positions.
+local function z_variable_name(windowID)
+   return "z_" .. (windowID:gsub(".", function(c)
+      return string.format("%02x", string.byte(c))
+   end))
+end
+
+local function save_z_order(windowID, order)
+   local status = SetVariable(z_variable_name(windowID), order)
+   assert(status == 0, "Cannot save miniwindow stacking order: " .. status)
+end
+
 function registerMiniwindow(callerID)
    if callerID == nil then
       callerID = ""
    end
-   local requestedZNumber = tonumber(GetVariable("a"..callerID))
+   local savedZNumber = tonumber(GetVariable(z_variable_name(callerID)))
+   local requestedZNumber = savedZNumber or tonumber(GetVariable("a"..callerID))
    -- If we were previously using a particular spot and nothing else is
    -- already using it go ahead and assign that one. Otherwise find another
    -- spot for it.
    if requestedZNumber == nil or (usedNumbers[requestedZNumber] ~= callerID and usedNumbers[requestedZNumber] ~= nil) then
       requestedZNumber = (#usedNumbers)+1
-      SetVariable("a"..callerID, requestedZNumber)
+   end
+   if requestedZNumber ~= savedZNumber then
+      save_z_order(callerID, requestedZNumber)
    end
    usedNumbers[requestedZNumber] = callerID
    WindowSetZOrder(callerID, requestedZNumber)
@@ -105,7 +118,7 @@ end
 function arrangeZ()
    for k,v in pairs(usedNumbers) do
       WindowSetZOrder(v, k)
-      SetVariable("a"..v, k)
+      save_z_order(v, k)
    end
    BufferedRepaint()
 end

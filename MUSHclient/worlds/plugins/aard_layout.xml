@@ -1834,7 +1834,17 @@ function add_title_dragger()
    dragsize = 15
    border = GetInfo(277)+GetInfo(276)
 
-   WindowCreate(textDragger, GetInfo(272)-border, GetInfo(273)-border, GetInfo(274)-GetInfo(272)+(2*border), dragsize, 0, 22, GetNormalColour(1))
+   local left, top = GetInfo(272)-border, GetInfo(273)-border
+   local width = GetInfo(274)-GetInfo(272)+(2*border)
+   if WindowInfo(textDragger, 1) then
+      check(WindowPosition(textDragger, left, top, 0, 22))
+      check(WindowResize(textDragger, width, dragsize, GetNormalColour(1)))
+   else
+      check(WindowCreate(textDragger, left, top, width, dragsize, 0, 22, GetNormalColour(1)))
+      if IsPluginInstalled("462b665ecb569efbf261422f") then
+         check(CallPlugin("462b665ecb569efbf261422f", "dropMe", textDragger))
+      end
+   end
 
    if WindowHotspotInfo(textDragger, "dragmain", 13) then
       WindowMoveHotspot(textDragger, "dragmain", 0, 0, 0, 0)
