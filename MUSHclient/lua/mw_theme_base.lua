@@ -430,7 +430,11 @@ end
 
 function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, dragrelease_callback, callback_handles_snap)
    local x1, y1 = DrawResizeTag(win, type, x1, y1)
+   AddResizeHotspot(win, x1, y1, mousedown_callback, dragmove_callback, dragrelease_callback, callback_handles_snap)
+   return x1, y1
+end
 
+function AddResizeHotspot(win, x1, y1, mousedown_callback, dragmove_callback, dragrelease_callback, callback_handles_snap)
    -- Add handler hotspots
    local hs = win.."_resize"
    -- Callbacks that consume snapped coordinates directly do not need this adapter.
@@ -444,8 +448,6 @@ function AddResizeTag(win, type, x1, y1, mousedown_callback, dragmove_callback, 
       WindowAddHotspot(win, hs, x1, y1, 0, 0, nil, nil, mousedown_callback, nil, nil, "", 6, 0)
       WindowDragHandler(win, hs, dragmove_callback, dragrelease_callback, 0)
    end
-
-   return x1, y1
 end
 
 function DrawResizeTag(win, type, x1, y1)
@@ -501,11 +503,14 @@ function DressWindow(win, font, title, title_alignment, title_leftpadding, drag_
       handler_bottom = t
    end
 
+   AddDragHotspot(win, handler_bottom, drag_cursor, drag_tooltip)
+   return l, t, r, b
+end
+
+function AddDragHotspot(win, handler_bottom, drag_cursor, drag_tooltip)
    if WindowMoveHotspot(win, "zz_mw_" .. win .. "_movewindow_hotspot", 0, 0, 0, handler_bottom) ~= 0 then
       movewindow.add_drag_handler(win, 0, 0, 0, handler_bottom, drag_cursor, drag_tooltip)
    end
-
-   return l, t, r, b
 end
 
 function BodyMetrics(win, font, title_line_height, num_title_lines)

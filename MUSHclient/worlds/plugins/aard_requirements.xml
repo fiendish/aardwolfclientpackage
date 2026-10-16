@@ -70,7 +70,6 @@ optional_visual_plugins = {
    ["ef4a86dbc9cd4dd6f4c69386"] = "aard_statmon_gmcp",
    ["f178e68512c685b3be1e9b07"] = "aard_group_monitor_gmcp",
    ["3f498d929793c12cb70fb59e"] = "aard_ASCII_map",
-   ["60840c9013c7cc57777ae0ac"] = "Aardwolf_Bigmap_Graphical",
    ["74524d1272786aaf04e9487d"] = "aard_splitscreen_scrollback",
    ["0cbb10309587f0ee15ba78ce"] = "aard_inventory_serials",
    ["a1965272c8ca966b76f36fa3"] = "aard_ingame_help_window"
@@ -127,6 +126,11 @@ function load_required_plugins()
    if IsPluginInstalled("9f796334ab9ed476ef44f1dd") then
       -- Remove the old version of the new connection plugins.
       UnloadPlugin("9f796334ab9ed476ef44f1dd")
+   end
+
+   -- Remove the retired Bigmap plugin; the GMCP mapper now draws continents.
+   if IsPluginInstalled("60840c9013c7cc57777ae0ac") then
+      check(UnloadPlugin("60840c9013c7cc57777ae0ac"))
    end
 
    load_plugins(required_plugins)

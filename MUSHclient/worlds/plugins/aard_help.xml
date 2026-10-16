@@ -43,7 +43,6 @@ plugin_list = {}
 name_to_id = {
    ["tick"] = "e50b1d08a0cfc0ee9c44947b",
    ["soundpack"] = "23832d1089f727f5f34abad8",
-   ["bigmap"] = "60840c9013c7cc57777ae0ac",
    ["gmcp"] = "3e7dedbe37e44942dd46d264",
    ["layout"] = "c293f9e7f04dde889f65cb90",
    ["channels"] = "b555825a4a5700c35fa80780",
@@ -89,9 +88,6 @@ function aard_help()
    end
    if is_active("mapper") then
       help("mapper help", "GMCP mapper plugin help")
-   end
-   if is_active("bigmap") then
-      help("bigmap help", "Bigmap plugin help")
    end
    if is_active("tick") then
       help("aard tick help", "Tick timer plugin help")
