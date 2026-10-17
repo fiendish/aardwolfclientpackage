@@ -1,5 +1,10 @@
 Aardwolf Client Package Major Changes List
 
+r2362 snapshot
+- misc change: All plugin drawing operations in MUSHclient are now more efficient (faster).
+- misc change: The mapper plugin drawing code hs been almost entirely rewritten so that it can now handle its own full-frame continent drawing instead of relying on the bigmap plugin. Results: the bigmap plugin is obsolete and removed, continents are stitched together by default for a comprehensive world display, and there are some new visual configuration settings (click the asterisk in the upper left corner of the mapper miniwindow).
+- bug fix: Resizing the mapper miniwindow doesn't look janky anymore.
+
 r2359 snapshot
 - misc change: The new input bar's 80 column indicator will now only show when you're in note mode.
 - new feature: My BufferedRepaint screen redrawing performance optimization is now a native function inside MUSHclient instead of using cross-plugin calls and timers. You can call BufferedRepaint() now instead of CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint").
