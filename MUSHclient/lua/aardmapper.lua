@@ -1009,7 +1009,7 @@ local CONFIG_FONT_ID_UL = "cfnu"
 local ROOM_PREFETCH_SCAN_LIMIT = 128
 
 -- size of room box
-local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 12
+local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 18
 
 -- how far away to draw rooms from each other
 local DISTANCE_TO_NEXT_ROOM = math.max(-1,tonumber(GetVariable("DISTANCE_TO_NEXT_ROOM")) or 8)
@@ -1017,12 +1017,12 @@ local DISTANCE_TO_NEXT_ROOM = math.max(-1,tonumber(GetVariable("DISTANCE_TO_NEXT
 local room_layout = {
    area = {size = ROOM_SIZE, spacing = DISTANCE_TO_NEXT_ROOM},
    continent = {
-      size = tonumber(GetVariable("CONTINENT_ROOM_SIZE")) or ROOM_SIZE,
+      size = tonumber(GetVariable("CONTINENT_ROOM_SIZE")) or 9,
       stretch = GetVariable("CONTINENT_STRETCH_TO_FIT") == "1",
    },
 }
 room_layout.vidblain = {
-   size = tonumber(GetVariable("VIDBLAIN_ROOM_SIZE")) or room_layout.continent.size,
+   size = tonumber(GetVariable("VIDBLAIN_ROOM_SIZE")) or 9,
    stretch = GetVariable("VIDBLAIN_STRETCH_TO_FIT") == "1",
 }
 
