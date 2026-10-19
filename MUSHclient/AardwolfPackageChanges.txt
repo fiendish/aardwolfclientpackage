@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2363 snapshot
+- bug fix: Try to handle the server-queue-clearing "stop" command properly.
+
 r2362 snapshot
 - misc change: All plugin drawing operations in MUSHclient are now more efficient (faster).
 - misc change: The mapper plugin drawing code hs been almost entirely rewritten so that it can now handle its own full-frame continent drawing instead of relying on the bigmap plugin. Results: the bigmap plugin is obsolete and removed, continents are stitched together by default for a comprehensive world display, and there are some new visual configuration settings (click the asterisk in the upper left corner of the mapper miniwindow).
