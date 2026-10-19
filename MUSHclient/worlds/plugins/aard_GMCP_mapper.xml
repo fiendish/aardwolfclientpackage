@@ -779,6 +779,7 @@ StopEvaluatingTriggers()
 <trigger
    name="mapper_run_cancelled"
    enabled="y"
+   keep_evaluating="y"
    match="^(-- Input Cancelled --|There are no commands in your queue to cancel\.)$"
    regexp="y"
    send_to="12"
