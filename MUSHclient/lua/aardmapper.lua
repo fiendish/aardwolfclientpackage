@@ -22,7 +22,7 @@ init (t)            -- call once, supply:
    t.show_completed  -- true to show "Speedwalk completed."
    t.show_other_areas -- true to show non-current areas
    t.show_up_down    -- follow up/down exits
-   t.speedwalk_prefix   -- if not nil, speedwalk by prefixing with this
+   t.speedwalk_prefix   -- prefix for composed server runs
    t.running     -- true if a mapper or server run is active at init
 
 zoom_in ()          -- zoom in map view
@@ -1154,7 +1154,6 @@ local function reset_room_queue(queue)
 end
 
 local depth, font_height
-local walk_to_room_name
 local recent_frame_times = {}
 local recent_frame_index = 0
 local RECENT_FRAME_COUNT = 30
@@ -2097,41 +2096,6 @@ local function draw_room (uid, x, y)
    end
 end -- draw_room
 
-local function changed_room (uid)
-   if current_speedwalk then
-      if uid ~= expected_room then
-         local exp = rooms [expected_room]
-         if not exp then
-            exp = get_room (expected_room) or { name = expected_room }
-         end -- if
-         local here = rooms [uid]
-         if not here then
-            here = get_room (uid) or { name = uid }
-         end -- if
-         exp = expected_room
-         here = uid
-         maperror (string.format ("Speedwalk failed! Expected to be in '%s' but ended up in '%s'.", exp, here))
-         cancel_speedwalk ()
-      else
-         if #current_speedwalk > 0 then
-            local dir = table.remove (current_speedwalk, 1)
-            SetStatus ("Walking " .. (expand_direction [dir.dir] or dir.dir) ..
-               " to " .. walk_to_room_name ..
-               ". Speedwalks to go: " .. #current_speedwalk + 1)
-            expected_room = dir.uid
-            Send (dir.dir)
-         else
-            last_hyperlink_uid = nil
-            last_speedwalk_uid = nil
-            if show_completed then
-               mapprint ("Speedwalk completed.")
-            end -- if wanted
-            cancel_speedwalk ()
-         end -- if any left
-      end -- if expected room or not
-   end -- if have a current speedwalk
-end -- changed_room
-
 local function area_exit_room_bounds(exit, room_limit)
    local occupant = drawn_coords[exit.room_coords]
    -- A queued room may be beyond the depth limit. Keep the area-exit marker
@@ -2371,10 +2335,6 @@ end
 
 drawing.commit_map_view = function(continent_view, room_view)
    drawing.continent_view, drawing.room_view = continent_view, room_view
-   local down = drawing.map_region.down
-   if down and not drawing.same_map_target(down.target,drawing.click_target(down.x,down.y,down.travel)) then
-      down.cancelled = true
-   end
 end
 
 drawing.plan_continent = function(view)
@@ -2478,22 +2438,14 @@ function check_we_can_find ()
       check_connected ()
       return false
    end
-   if current_speedwalk then
-      mapprint ("The mapper has detected a speedwalk initiated inside another speedwalk. Aborting.")
-      return false
-   end -- if
    return true
 end -- check_we_can_find
 
--- Suspend destination clicks during runs. Keep the shared map hotspot
--- installed for panning and zoom.
 function set_running(run)
    run = run == true
    if is_running == run then return end
    is_running = run
    if run then
-      local down = drawing.map_region.down
-      if down then down.cancelled = true end
       if not pan_animating and (pan_offset_x ~= 0 or pan_offset_y ~= 0) then
          start_pan_animation()
       end
@@ -2686,7 +2638,6 @@ end
 local function reset_frame_metrics()
    -- reset room drawing metrics for this frame
    if detailed_timing then
-      -- changed_room() can load rooms before the refresh timer starts.
       -- Count Window calls only within the measured refresh.
       for _, stat in pairs(window_call_stats) do
          stat.calls, stat.time, stat.max = 0, 0, 0
@@ -2844,10 +2795,6 @@ local function draw_map (request)
    if not uid then
       maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
       return
-   end -- if
-
-   if not continuing and current_room and current_room ~= uid then
-      changed_room (uid)
    end -- if
 
    current_room = uid -- remember where we are
@@ -3858,7 +3805,10 @@ function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quic
    if quick_list == true then
       quick_find(dests, show_uid, expected_count, walk, fcb)
    else
-      full_find(dests, show_uid, expected_count, walk, fcb, no_portals)
+      assert(wait.make(function()
+         reset_mapper_run()
+         full_find(dests, show_uid, expected_count, walk, fcb, no_portals)
+      end))
    end
 end -- map_find_things
 
@@ -3933,63 +3883,31 @@ function start_speedwalk (path)
       return
    end -- if
 
-   if is_running then
-      mapprint ("You are already running.")
-      return
-   end
-
    if myState == 9 or myState == 11 then
       Send("stand")
    end
 
-   if current_speedwalk and #current_speedwalk > 0 then
-      mapprint ("You are already speedwalking! (Ctrl + LH-click on any room to cancel)")
+   if not path then return end
+   if #path == 0 then
+      SetStatus ("Ready")
       return
-   end -- if
+   end
 
-   current_speedwalk = path
-
-   if current_speedwalk then
-      if #current_speedwalk > 0 then
-         last_speedwalk_uid = current_speedwalk [#current_speedwalk].uid
-
-         -- fast speedwalk: just send # 4s 3e  etc.
-         if type (speedwalk_prefix) == "string" and speedwalk_prefix ~= "" then
-            local s = speedwalk_prefix .. " "
-            local p = build_speedwalk (path)
-            if p:sub(1,1) ~= stack_char then
-               s = s .. p
-            else
-               s = p:sub(2)
-            end
-            current_speedwalk = nil
-            ExecuteWithWaits(s:gsub(";","\r\n"))
-            return
-         end -- if
-
-         local dir = table.remove (current_speedwalk, 1)
-         local room = get_room (dir.uid)
-         walk_to_room_name = room.name
-         SetStatus ("Walking " .. (expand_direction [dir.dir] or dir.dir) ..
-            " to " .. walk_to_room_name ..
-            ". Speedwalks to go: " .. #current_speedwalk + 1)
-         Send (dir.dir)
-         expected_room = dir.uid
-      else
-         cancel_speedwalk ()
-      end -- if any left
-   end -- if
-
+   last_speedwalk_uid = path[#path].uid
+   local s = speedwalk_prefix .. " "
+   local p = build_speedwalk (path)
+   if p:sub(1,1) ~= stack_char then
+      s = s .. p
+   else
+      s = p:sub(2)
+   end
+   ExecuteWithWaits(s:gsub(";","\r\n"))
 end -- start_speedwalk
 
 -- cancel the current speedwalk
 
 function cancel_speedwalk ()
-   if current_speedwalk and #current_speedwalk > 0 then
-      mapprint "Speedwalk cancelled."
-   end -- if
-   current_speedwalk = nil
-   expected_room = nil
+   assert(wait.make(reset_mapper_run))
    SetStatus ("Ready")
 end -- cancel_speedwalk
 
@@ -4034,11 +3952,8 @@ function map_mouseup(flags,hotspot_id)
    local down = region.down
    region.down = nil
    drawing.refresh_map_region()
-   -- Block new destinations during a run. Room menus still use the room target.
-   if is_running and bit.band(flags,miniwin.hotspot_got_rh_mouse) == 0 then return end
    if not down or down.cancelled then return end
    local target = drawing.click_target(WindowInfo(win,14),WindowInfo(win,15),down.travel)
-   if not drawing.same_map_target(down.target,target) then return end
    if target and target.entry_rooms and #target.entry_rooms>1 then
       if bit.band(flags,miniwin.hotspot_got_rh_mouse)==0 and bit.band(flags,miniwin.hotspot_got_control)~=0 then
          cancel_speedwalk()

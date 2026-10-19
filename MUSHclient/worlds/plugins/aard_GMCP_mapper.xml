@@ -777,6 +777,24 @@ StopEvaluatingTriggers()
 
 
 <trigger
+   name="mapper_run_cancelled"
+   enabled="y"
+   match="^(-- Input Cancelled --|There are no commands in your queue to cancel\.)$"
+   regexp="y"
+   send_to="12"
+   sequence="90"
+>
+<send>
+running = false
+mapper.set_running(false)
+if sent_busy then
+   sent_busy = false
+   BroadcastPlugin(999, "ok_you_can_go_now")
+end
+</send>
+</trigger>
+
+<trigger
    enabled="y"
    match="The door is locked."
    script="mapper.cancel_speedwalk"
@@ -1971,14 +1989,16 @@ function change_cexit_delay(name, line, wildcards)
    Note("CEXIT_DELAY: The next mapper custom exit will have ".. (temp_cexit_delay or BASE_CEXIT_DELAY) .." seconds to complete.\n")
 end
 
+function reset_mapper_run()
+   if not (running or mapper.is_running) then return end
+   check(SendNoEcho("stop"))
+   wait.regexp("^(-- Input Cancelled --|There are no commands in your queue to cancel\\.)$")
+   running = false
+   mapper.set_running(false)
+end
+
 function ExecuteWithWaits(cexit_command)
-   if running or mapper.is_running then
-      mapper.mapprint("You are already running.")
-      return
-   end
    local result = {failed = false}
-   running = true
-   mapper.set_running(true)
 
    local function start_phase(work)
       -- Protect each phase before its first yield. The next wait starts in
@@ -2013,6 +2033,9 @@ function ExecuteWithWaits(cexit_command)
    end
 
    start_phase(function()
+      reset_mapper_run()
+      running = true
+      mapper.set_running(true)
       if mylevel < 202 then
          echo_command = "echo"
       else
@@ -2047,12 +2070,9 @@ function custom_exit (name, line, wildcards)
       return
    end
 
-   if running or mapper.is_running then
-      mapper.mapprint("You are already running.")
-      return
-   end
-
    wait.make (function()
+      reset_mapper_run()
+      cexit_start = current_room
       local cexit_delay = temp_cexit_delay or BASE_CEXIT_DELAY
       local added_waits = 0
       for wait_secs in string.gmatch(cexit_command, "wait%((%d*.?%d+)%)") do
@@ -4049,7 +4069,7 @@ colour_lookup = {
    [15] =  ColourNameToRGB  "white",
 } -- end of colour_lookup
 
--- Mapper runs stay active until their server end tag returns.
+-- Mapper runs stay active until their server end tag or a queue reset reply returns.
 running = false
 
 function compareTables(primary, secondary)
@@ -5179,7 +5199,7 @@ function OnPluginConnect ()
       toggleBackups(true, true)
    end
    Send_GMCP_Packet("rawcolor on")
-   mapper.cancel_speedwalk ()
+   SetStatus ("Ready")
 end -- OnPluginConnect
 
 sent_busy = false
@@ -5189,7 +5209,7 @@ function OnPluginDisconnect ()
    mapper.set_running(false)
    mapper.cancel_draw()
    fighting_state = false
-   mapper.cancel_speedwalk()
+   SetStatus ("Ready")
    if sent_busy then
       sent_busy = false
       BroadcastPlugin(999, "ok_you_can_go_now")
