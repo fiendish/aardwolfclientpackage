@@ -7,7 +7,6 @@
    <!ENTITY show_vnums "true" >
    <!ENTITY show_timing "false" >
    <!ENTITY show_detailed_timing "false" >
-   <!ENTITY show_completed "true" >
    <!ENTITY show_database_mods "false" >
    <!ENTITY show_other_areas "false" >
    <!ENTITY speedwalk_prefix "run" >
@@ -945,7 +944,6 @@ end
 local show_vnums = &show_vnums;
 local show_timing = &show_timing;
 local show_detailed_timing = &show_detailed_timing;
-local show_completed = &show_completed;
 local show_database_mods = &show_database_mods;
 local show_other_areas = &show_other_areas;
 local speedwalk_prefix = "&speedwalk_prefix;"
@@ -993,20 +991,9 @@ local maintenance_timer
 compact_mode = ((GetVariable("compact_mode") or "0") == "1") -- default false
 
 room_not_in_database = {}
-room_in_database = {}
 
 bounce_recall = nil
 bounce_portal = nil
-
--- Create Database Variables --
-
-count = 0
-roomcount = 0
-endroomcount = 0
-areacount = 0
-coordcount = 0
-directioncount = 0
-environmentcount = 0
 
 directions = {}
 current_room = nil
@@ -1040,15 +1027,6 @@ function reset_aard()
    OnPluginInstall()
    quiet_backups = prev_quiet_backups
 end
-
-convert_direction = {
-   north = "n",
-   south = "s",
-   east = "e",
-   west = "w",
-   up = "u",
-   down = "d"
-}
 
 forced_opened = false
 force_nests = 0
@@ -1358,7 +1336,6 @@ end
 function map_list (name, line, wildcards)
    -- ok, so if I want to lookup a room in my db, I don't want it only if the mapper can find a sw in a certain # of rooms.
    -- if it is in the db, I want its vnum and area, so that I can figure out how to get there if the mapper does not know.
-   local area = ""
    local count = 0
    Note("+------------------------------ START OF SEARCH -------------------------------+")
    -- find matching rooms using FTS3
@@ -1527,7 +1504,6 @@ end
 function custom_exit_list (name, line, wildcards)
    local line = ""
    local count = 0
-   local display_limit = 30
 
    local area = Trim(wildcards [1] or "")
    local query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) like %s and dir not in ('n','s','e','w','d','u') and fromuid not in ('*','**') order by area, uid", fixsql("%" .. area .. "%"))
@@ -1636,7 +1612,6 @@ function show_known_unmapped_exits (name, line, wildcards)
    local line = ""
    local count = 0
    local query
-   local display_limit = 30
 
    area = Trim(wildcards [1] or "")
 
@@ -2082,7 +2057,6 @@ function custom_exit (name, line, wildcards)
       world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING.\nThis should take about "..cexit_delay+added_waits.." seconds"..(((added_waits ~= 0) and " (includes "..added_waits.." seconds in added waits)") or "")..".")
       BufferedRepaint()
       local result = ExecuteWithWaits(cexit_command)
-      if not result then return end
 
       wait.time(cexit_delay+added_waits)
       temp_cexit_delay = nil
@@ -2363,10 +2337,6 @@ function load_room_from_database (uid)
    end   -- finding room
 
    if room then
-      if not rooms then
-         -- this shouldn't even be possible. what the hell.
-         rooms = {}
-      end
       rooms [u] = room
       for row in dbnrowsWRAPPER(string.format ("SELECT * FROM bookmarks WHERE uid = %s", fixsql (u))) do
          rooms [u].notes = row.notes
@@ -3700,7 +3670,6 @@ function OnPluginInstall ()
       room_click = room_click,    -- called on RH click on room square
       timing = show_timing,       -- want to see frame timing summary
       detailed_timing = show_detailed_timing, -- want to see detailed sub-phase breakdown
-      show_completed = show_completed,  -- want to see "Speedwalk completed." message
       show_other_areas = show_other_areas,  -- want to see areas other than the current one?
       show_up_down = show_up_down,          -- want to follow up/down exits?
       speedwalk_prefix = speedwalk_prefix,  -- how to speedwalk
@@ -4197,9 +4166,6 @@ lastarea = ""
 function got_gmcp_room()
    local coord = gmcpdata.coord or {}
    local room_number = gmcpdata.num or ""
-   if not(room_number) then
-      return
-   end
 
    current_room_is_cont = (coord.cont == "1")
 
@@ -4365,7 +4331,6 @@ function update_gmcp_area()
    local areaname = gmcpdata.name or ""
    local texture = gmcpdata.texture or ""
    local color = gmcpdata.col or ""
-   local x,y,z = gmcpdata.x or "",gmcpdata.y or "",gmcpdata.z or ""
    local flags = gmcpdata.flags or ""
 
    dbCheckExecute (string.format (
@@ -5072,12 +5037,9 @@ end -- function findpath
 function findNearestJumpRoom(src, dst, target_type)
    local depth = 0
    local max_depth = mapper.config.SCAN.depth
-   local room_sets = {}
    local rooms_list = {}
    local found = false
-   local ftd = {}
    local destination = ""
-   local next_room = 0
    local visited = ""
    local path_type = ""
 
@@ -5461,8 +5423,7 @@ which lets you set all portal aspects in one command without being there.]],
       elseif wildcards[2] == "utils" then
          show_help(help_table['utils'])
       elseif wildcards[2]:find("search ") == 1 then
-         local st, en = wildcards[2]:find("search ")
-         local pattern = Trim(wildcards[2]:sub(en+1))
+         local pattern = Trim(wildcards[2]:sub(8))
          ColourTell("cornflower","black","Searching help for: ")
          ColourNote("red","black",pattern)
          if pattern ~= "" then

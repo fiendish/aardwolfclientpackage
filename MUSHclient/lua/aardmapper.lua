@@ -19,7 +19,6 @@ init (t)            -- call once, supply:
    t.room_click  -- function that handles RH click on room (uid, flags)
    t.timing      -- true to show timing
    t.detailed_timing -- true to show phase and Window call timing
-   t.show_completed  -- true to show "Speedwalk completed."
    t.show_other_areas -- true to show non-current areas
    t.show_up_down    -- follow up/down exits
    t.speedwalk_prefix   -- prefix for composed server runs
@@ -543,7 +542,6 @@ do
             end
          end
          -- A saved exit supplies an unexplored room's ID without its metadata.
-         result.unexplored_uid=nil
          local unknown=state.unexplored_entries[zone] and state.unexplored_entries[zone][key]
          if not uid and unknown then
             for dest in pairs(unknown) do
@@ -561,7 +559,6 @@ do
          end
          result.entry_rooms=entry_rooms
          result.entrance=(style and style.entrance) or (entry_counts and next(entry_counts)~=nil) or false
-         result.stale=nil
          return result
       end
 
@@ -874,7 +871,6 @@ do
             offset_x=bounds[1]+((bounds[3]-bounds[1])-width*scale)/2+options.pan_x
             offset_y=bounds[2]+((bounds[4]-bounds[2])-height*scale)/2+options.pan_y
             center_x,center_y=half-first_dx*pitch,half-first_dy*pitch
-            left,top=0,0
             mincol,maxcol,minrow,maxrow=0,surface.width-1,0,surface.height-1
             clip_left,clip_top,clip_right,clip_bottom=unpack(bounds)
          end
@@ -1037,7 +1033,6 @@ local supplied_prefetch_rooms
 local room_click
 local timing            -- true to show frame timing summary
 local detailed_timing   -- true to show detailed sub-phase breakdown
-local show_completed    -- true to show "Speedwalk completed."
 
 -- current room number
 local current_room
@@ -1369,13 +1364,13 @@ local function build_room_info ()
 
    -- how to draw a stub line
    half_connectors = {
-      n =  { x1 = 0,            y1 = - HALF_ROOM, x2 = 0,                        y2 = - HALF_ROOM - THIRD_WAY, at = { 0, -1 } },
-      s =  { x1 = 0,            y1 =   HALF_ROOM, x2 = 0,                        y2 =   HALF_ROOM + THIRD_WAY, at = { 0,  1 } },
-      e =  { x1 =   HALF_ROOM,  y1 = 0,           x2 =   HALF_ROOM + THIRD_WAY,  y2 = 0,                       at = {  1,  0 }},
-      w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - THIRD_WAY,  y2 = 0,                       at = { -1,  0 }},
+      n =  { x1 = 0,            y1 = - HALF_ROOM, x2 = 0,                        y2 = - HALF_ROOM - THIRD_WAY },
+      s =  { x1 = 0,            y1 =   HALF_ROOM, x2 = 0,                        y2 =   HALF_ROOM + THIRD_WAY },
+      e =  { x1 =   HALF_ROOM,  y1 = 0,           x2 =   HALF_ROOM + THIRD_WAY,  y2 = 0},
+      w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - THIRD_WAY,  y2 = 0},
 
-      u = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = { 1, -1 } },
-      d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY, at = {-1,  1 } },
+      u = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY },
+      d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY },
 
    } -- end half_connectors
 
@@ -1770,10 +1765,6 @@ local inverse_direction = {
    w = "e",
    u = "d",
    d = "u",
-   ne = "sw",
-   se = "nw",
-   sw = "ne",
-   nw = "se"
 }  -- end of inverse_direction
 
 -- Look ahead only within the discovered breadth layer. Queued rooms already
@@ -2558,7 +2549,7 @@ function dress_window(room_name, room_uid, area_name, draw_win)
    if type (show_help) == "function" then
       local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
       local y = math.max(2, (bodytop-font_height)/2)
-      local box_right, box_bottom = Theme.DrawTextBox(draw_win, FONT_ID,
+      local box_right = Theme.DrawTextBox(draw_win, FONT_ID,
          x-1,   -- left
          y-2,   -- top
          "?", false, false
@@ -2807,7 +2798,7 @@ local function draw_map (request)
    local job = continuing and request or nil
    local room, window_exists
    if continuing then
-      room, window_exists = job.room, true
+      room = job.room
       map_commands = job.commands
       map_command_state.count = job.body_count
       map_commands_changed = job.commands_changed
@@ -2992,7 +2983,7 @@ local function draw_map (request)
       else
          local bg_t0 = detailed_timing and utils.timer()
          -- Restore the full background before replaying a changed map.
-         if background == false or background == nil then
+         if background == false then
             check(WindowRectOp(render_win, 2, 0, 0, config.WINDOW.width, config.WINDOW.height, Theme.PRIMARY_BODY))
          end
          -- Handle background texture (cached for performance)
@@ -3348,7 +3339,6 @@ function init (t)
    room_click = t.room_click   -- RH mouse-click function
    timing = t.timing                   -- true for frame timing summary
    detailed_timing = t.detailed_timing  -- true for detailed sub-phase breakdown
-   show_completed = t.show_completed  -- true to show "Speedwalk completed." message
    show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
    speedwalk_prefix = t.speedwalk_prefix  -- how to speedwalk (prefix)
@@ -3816,7 +3806,6 @@ end -- map_find_things
 
 function build_speedwalk (path, prefix)
 
-   stack_char = ";"
    if GetOption("enable_command_stack")==1 then
       stack_char = GetAlphaOption("command_stack_character")
    else
