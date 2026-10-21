@@ -5,7 +5,7 @@ require "copytable"
 require "colors"
 require "mw_theme_base"
 local socket = require "socket"
-local window_font_fallback = require "window_font_fallback"
+local window_fonts = require "window_fonts"
 
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
@@ -139,7 +139,7 @@ function TextRect:loadFont(name, size, options)
    self.font_bold = self.id.."_font_bold"
    local fallback_name = self.loaded_font_name or TextRect_defaults.font_name
    local fallback_size = self.loaded_font_size or TextRect_defaults.font_size
-   local loaded_name, loaded_size = window_font_fallback.ensure_font(
+   local loaded_name, loaded_size = window_fonts.ensure_font(
       self.window,
       self.font,
       name,
@@ -152,7 +152,7 @@ function TextRect:loadFont(name, size, options)
       false,
       charset,
       pitch_and_family)
-   window_font_fallback.ensure_font(
+   window_fonts.ensure_font(
       self.window,
       self.font_bold,
       loaded_name,
@@ -282,6 +282,34 @@ function TextRect:lockstep()
 end
 
 function TextRect:wrapLine(stylerun, rawURLs, raw_index)
+   -- The command editor supplies native line starts for the floating input.
+   -- Keep logical lines intact so mouse selection can cross a soft wrap.
+   if self.editor_line_starts then
+      local starts = assert(self.editor_line_starts[raw_index])
+      local total_length = 0
+      for _, style in ipairs(stylerun) do
+         total_length = total_length + style.length
+      end
+      for index, offset in ipairs(starts) do
+         local last = starts[index + 1] or total_length
+         local styles = {}
+         if last > offset then
+            styles = TruncateStyles(stylerun, offset + 1, last)
+         end
+         self:cap_messages()
+         self:lockstep()
+         self.num_wrapped_lines = self.num_wrapped_lines + 1
+         table.insert(self.wrapped_lines, {
+            [1]=styles,
+            [2]=index == 1,
+            [3]={},
+            [4]=self.num_wrapped_lines - raw_index,
+            raw_offset=offset,
+            text_length=last - offset
+         })
+      end
+      return
+   end
    local available = self.padded_width
    local line_styles = {}
    local beginning = true

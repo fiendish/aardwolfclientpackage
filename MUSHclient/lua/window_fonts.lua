@@ -1,4 +1,4 @@
---- Apply WindowFont with a fallback if the first font cannot be loaded.
+-- Font selection and loading for miniwindows.
 local M = {}
 
 function M.ensure_font(win, font_id, font_name, font_size, fallback_font_name, fallback_font_size, ...)
@@ -30,5 +30,24 @@ function M.ensure_font(win, font_id, font_name, font_size, fallback_font_name, f
    end
    return font_name, font_size
 end
+
+-- get font from preferred font list
+function M.get_preferred_font (t)
+  local fonts = utils.getfontfamilies ()
+  
+  -- convert to upper-case
+  local f2 = {}
+  for k in pairs (fonts) do
+    f2 [k:upper ()] = true
+  end -- for
+  
+  for _, s in ipairs (t) do
+    if f2 [s:upper ()] then
+      return s
+    end -- if
+  end -- for each item
+
+  return "Courier"
+end -- get_preferred_font
 
 return M

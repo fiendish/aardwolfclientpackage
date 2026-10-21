@@ -1,91 +1,233 @@
--- mapper.lua
-
 --[[
+Authors: Original by Nick Gammon. Rewritten by Fiendish for Aardwolf.
 
-Authors: Original by Nick Gammon. Modified heavily for Aardwolf by Fiendish.
+Map renderer for aard_GMCP_mapper.xml.
+The plugin owns stored map data, GMCP updates, searches, routes and travel.
+This file owns display records, layout, drawing jobs, images and pointer state.
 
-Generic MUD mapper.
+init(options) receives:
+   config                   -- saved display configuration
+   continent_data           -- continent room, terrain and area callbacks
+   get_room(uid, traversal_only) -- copied room data; true skips display preparation
+   get_continent_room_overlays(room) -- PK and note flags from raw continent data
+   prefetch_rooms(uids)      -- load at most ROOM_PREFETCH_BATCH_SIZE raw records
+   activate_target(flags, target) -- handle travel; return a UID for a context menu
+   room_click(uid, flags)    -- open the returned room's context menu
+   show_help                -- native help callback
+   timing, detailed_timing  -- drawing diagnostics
+   show_up_down             -- follow up/down exits
+   running, hidden          -- initial travel flag and saved visibility
 
-Exposed functions:
-
-init (t)            -- call once, supply:
-   t.findpath    -- function for finding the path between two rooms (src, dest)
-   t.config      -- ie. colours, sizes
-   t.continent_data -- database callbacks for continent rooms, colours, and areas
-   t.get_room    -- info about room (uid, traversal_only); true skips display preparation
-   t.get_continent_room_overlays -- overlay flags from raw continent room data
-   t.prefetch_rooms -- cache raw room data for at most ROOM_PREFETCH_BATCH_SIZE IDs
-   t.show_help   -- function that displays some help
-   t.room_click  -- function that handles RH click on room (uid, flags)
-   t.timing      -- true to show timing
-   t.detailed_timing -- true to show phase and Window call timing
-   t.show_other_areas -- true to show non-current areas
-   t.show_up_down    -- follow up/down exits
-   t.speedwalk_prefix   -- prefix for composed server runs
-   t.running     -- true if a mapper or server run is active at init
-
-zoom_in ()          -- zoom in map view
-zoom_out ()         -- zoom out map view
-mapprint (message)  -- like print, but uses mapper colour
-maperror (message)  -- like print, but prints in red
-hide ()             -- hides map window (eg. if plugin disabled)
-show ()             -- show map window  (eg. if plugin enabled)
-save_state ()       -- call to save plugin state (ie. in OnPluginSaveState)
-draw (uid)          -- draw map - starting at room 'uid'
-cancel_draw ()      -- cancel any pending map continuation
-set_timing (mode)   -- select off, on, or detailed timing
-get_timing ()       -- return the current timing mode
-start_speedwalk (path)  -- starts speedwalking. path is a table of directions/uids
-build_speedwalk (path)  -- builds a client speedwalk string from path
-cancel_speedwalk ()     -- cancel current speedwalk, if any
-check_we_can_find ()    -- returns true if doing a find is OK right now
-find (f, show_uid, count, walk)      -- generic room finder
-
-Exposed variables:
-
-win                 -- the window (in case you want to put up menus)
-is_running          -- true while player travel is active
-VERSION             -- mapper version
-ROOM_PREFETCH_BATCH_SIZE -- maximum room IDs passed to prefetch_rooms
-continent_maps      -- continent definitions and terrain styles
-continents          -- continent cache and room identity index
-last_hyperlink_uid  -- room uid of last hyperlink click (destination)
-last_speedwalk_uid  -- room uid of last speedwalk attempted (destination)
-<various functions> -- functions required to be global by the client (eg. for mouseup)
-
-Room info should include:
-
-   name          (what to show as room name)
-   exits         (table keyed by direction, value is exit uid)
-   area          (area name)
-   area_id       (canonical area ID, used for Vidblain room size)
-   hovermessage  (what to show when you mouse-over the room)
-   bordercolour  (colour of room border)     - RGB colour
-   borderpen     (pen style of room border)  - see WindowCircleOp (values 0 to 6)
-   borderpenwidth(pen width of room border)  - eg. 1 for normal, 2 for current room
-   fillcolour    (colour to fill room)       - RGB colour, nil for default
-   fillbrush     (brush to fill room)        - see WindowCircleOp (values 0 to 12)
-   texture       (background texture file)   - cached in textures
-
+Room display records contain name, exits, area, canonical area_id, continent,
+hovermessage, bordercolour, borderpen, borderpenwidth, fillcolour, fillbrush and
+texture. The plugin retains ownership of the raw records.
 --]]
 
 module (..., package.seeall)
 
-VERSION = 2.5   -- for querying by plugins
-ROOM_PREFETCH_BATCH_SIZE = 32
-is_running = false
 require "aard_register_z_on_create"
 
 require "mw_theme_base"
 require "movewindow"
-require "copytable"
 require "gauge"
-require "pairsbykeys"
+local window_fonts = require "window_fonts"
 dofile (GetInfo(60) .. "aardwolf_colors.lua")
 
+styles = {}
 
--- Fixed continent cells, cached images, and a separate room identity index.
+ROOM_PREFETCH_BATCH_SIZE = 32
 local new_continent_maps
+local FONT_ID     = "fn"  -- internal font identifier
+local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
+local CONFIG_FONT_ID = "cfn"
+local CONFIG_FONT_ID_UL = "cfnu"
+local ROOM_PREFETCH_SCAN_LIMIT = 128
+
+-- Room sizes and spacing are stored separately for ordinary areas and continents.
+local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 18
+
+local DISTANCE_TO_NEXT_ROOM = math.max(-1,tonumber(GetVariable("DISTANCE_TO_NEXT_ROOM")) or 8)
+
+local room_layout = {
+   area = {size = ROOM_SIZE, spacing = DISTANCE_TO_NEXT_ROOM},
+   continent = {
+      size = tonumber(GetVariable("CONTINENT_ROOM_SIZE")) or 9,
+      stretch = GetVariable("CONTINENT_STRETCH_TO_FIT") == "1",
+   },
+}
+room_layout.vidblain = {
+   size = tonumber(GetVariable("VIDBLAIN_ROOM_SIZE")) or 9,
+   stretch = GetVariable("VIDBLAIN_STRETCH_TO_FIT") == "1",
+}
+local timing            -- true to show frame timing summary
+local detailed_timing   -- true to show detailed sub-phase breakdown
+
+local room_cache_hits = 0    -- timing: cache hit counter
+local room_cache_misses = 0  -- timing: cache miss counter
+-- All batches in a frame use the same cutoff for recent-visit exit lines.
+local frame_timestamp = 0
+
+-- Keep the frame being built separate from the published selection views.
+-- Mouse input must use the room positions that match the visible pixels.
+local drawing = {
+   slice_seconds=0.100, room_batch_size=128,
+   map_region={},
+}
+local offscreen_window, completed_frame_cache, frame_commands, frame_commands_changed
+local map_command_state = {buffers={{}, {}}, count=0}
+local control_hotspots = {}
+local HALF_ROOM, connectors, half_connectors, arrows
+
+local queued_room_uids, queued_room_x, queued_room_y
+local room_queue_buffers = {{uid={}, x={}, y={}}, {uid={}, x={}, y={}}}
+local recent_frame_times = {}
+local recent_frame_index = 0
+local RECENT_FRAME_COUNT = 30
+
+local room_draw_times = {}
+local rooms_drawn_count = 0
+local frame_metrics = {
+   total_exit_planning_time = 0,
+   total_exit_drawing_time = 0,
+   total_room_cache_time = 0,
+   total_room_db_time = 0,
+   total_room_prefetch_time = 0,
+   room_prefetch_count = 0,
+   total_room_defaults_time = 0,
+   total_room_texture_time = 0,
+   total_graphics_time = 0,
+   total_hotspot_time = 0,
+   total_window_setup_time = 0,
+   total_bg_texture_time = 0,
+   total_room_loop_time = 0,
+   total_map_overlay_time = 0,
+   total_dress_window_time = 0,
+   total_current_room_time = 0,
+   total_map_capture_time = 0,
+   total_map_render_time = 0,
+   map_image_reused = false,
+   map_image_retained = false,
+   total_repaint_request_time = 0,
+   total_get_room_time = 0,
+   room_load_count = 0,
+   visible_room_count = 0,
+}
+local window_call_groups = {
+   Drawing = {"WindowCircleOp", "WindowLine", "WindowPolygon", "WindowBezier",
+      "WindowRectOp", "WindowGradient", "WindowSetPixel", "WindowText"},
+   Images = {"WindowDrawImage", "WindowDrawImageAlpha", "WindowBlendImage",
+      "WindowTransformImage", "WindowFilter", "WindowImageFromWindow", "WindowLoadImage"},
+   Hotspots = {"WindowAddHotspot", "WindowDeleteHotspot", "WindowDeleteAllHotspots",
+      "WindowMoveHotspot", "WindowDragHandler", "WindowScrollwheelHandler",
+      "WindowHotspotTooltip", "WindowHotspotList", "WindowHotspotInfo"},
+   Window = {"WindowCreate", "WindowResize", "WindowPosition", "WindowShow", "WindowSetZOrder"},
+   Queries = {"WindowInfo", "WindowTextWidth", "WindowFontInfo", "WindowFontList", "WindowImageInfo"},
+}
+local window_call_stats
+
+-- cached tiled background texture
+local cached_bg_image = nil
+local cached_bg_width = 0
+local cached_bg_height = 0
+local cached_bg_texture = nil
+local default_width = 271
+local default_height = 335
+local default_x = 884 + Theme.RESIZER_SIZE + 2
+local default_y = 0
+
+styles.BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#111111"}
+styles.ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
+styles.EXIT_COLOUR           = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
+styles.EXIT_COLOUR_UP_DOWN   = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
+styles.ROOM_NOTE_COLOUR      = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen"}
+styles.OUR_ROOM_COLOUR       = { name = "Our room",         colour =  ColourNameToRGB "#ff1493"}
+styles.UNKNOWN_ROOM_COLOUR   = { name = "Unknown room",     colour =  ColourNameToRGB "#9b0000"}
+styles.DIFFERENT_AREA_COLOUR = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
+styles.AREA_EXIT_FILL_COLOUR = { name = "Area exit room",   colour =  ColourNameToRGB "#b03060"}
+styles.PK_BORDER_COLOUR      = { name = "PK border",        colour =  ColourNameToRGB "red"}
+styles.SHOP_FILL_COLOUR      = { name = "Shop",             colour =  ColourNameToRGB "#ffad2f"}
+styles.HEALER_FILL_COLOUR    = { name = "Healer",           colour =  ColourNameToRGB "#9acd32"}
+styles.TRAINER_FILL_COLOUR   = { name = "Trainer",          colour =  ColourNameToRGB "#9acd32"}
+styles.QUESTOR_FILL_COLOUR   = { name = "Questor",          colour =  ColourNameToRGB "deepskyblue"}
+styles.BANK_FILL_COLOUR      = { name = "Bank",             colour =  ColourNameToRGB "#ffD700"}
+styles.GUILD_FILL_COLOUR     = { name = "Guild",            colour =  ColourNameToRGB "magenta"}
+styles.SAFEROOM_FILL_COLOUR  = { name = "Safe room",        colour =  ColourNameToRGB "lightblue"}
+styles.MAPPER_NOTE_COLOUR    = { name = "Messages",         colour =  ColourNameToRGB "lightgreen"}
+
+styles.ROOM_NAME_TEXT        = { name = "Room name text",   colour = ColourNameToRGB "#BEF3F1"}
+styles.ROOM_NAME_FILL        = { name = "Room name fill",   colour = ColourNameToRGB "#105653"}
+styles.ROOM_NAME_BORDER      = { name = "Room name box",    colour = ColourNameToRGB "black"}
+
+styles.AREA_NAME_TEXT        = { name = "Area name text",   colour = ColourNameToRGB "#BEF3F1"}
+styles.AREA_NAME_FILL        = { name = "Area name fill",   colour = ColourNameToRGB "#105653"}
+styles.AREA_NAME_BORDER      = { name = "Area name box",    colour = ColourNameToRGB "black"}
+
+local RECENT_VISIT_SECONDS = 60 * 3
+
+local default_config = {
+   FONT = { name =  window_fonts.get_preferred_font {"Dina",  "Lucida Console",  "Fixedsys", "Courier",} ,
+            size = 8
+         } ,
+   WINDOW = { width = default_width, height = default_height },
+   SCAN = { depth = 300 },
+   USE_TEXTURES = { enabled = true },
+   SHOW_ROOM_ID = false,
+   SHOW_ROOM_BORDERS = true,
+   BLINK_PK_TITLE = true,
+   MOUSEWHEEL_ZOOM = true
+}
+
+local callbacks = {}
+local map_origin_uid, map_area_name
+-- Display records are copies; drawing changes must not modify stored room data.
+local display_room_cache, room_visit_times, texture_image_cache = {}, {}, {}
+local config_window, windowinfo, font_height
+
+-- The first path to a position wins, so exit order must be stable.
+local exit_order = {"d", "e", "n", "s", "u", "w"}
+
+-- Use the reverse exit to distinguish a shared line from a one-way arrow.
+local inverse_direction = {
+   n = "s",
+   s = "n",
+   e = "w",
+   w = "e",
+   u = "d",
+   d = "u",
+}
+
+-- Reserve positions when exits are queued, including rooms outside the visible window.
+local planned_room_positions, processed_room_positions, occupied_room_positions, area_exits, traversal_depth
+local drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y
+local bodyleft, bodytop, bodyright, bodybottom
+local resize_dragging = false
+local is_running = false
+local pan_offset_x, pan_offset_y = 0, 0
+local pan_last_mouse_x, pan_last_mouse_y = 0, 0
+local pan_dragging, pan_rebaseline_on_drag, pan_animating = false, false, false
+local pan_animation_time = 0
+local last_area_for_pan
+local MAP_DRAG_THRESHOLD = 4  -- ignore small pointer movements during a click
+local pan_tooltip_text = "Drag to pan map"
+local PAN_ANIMATION_INTERVAL = 1 / 30
+local previous_origin_uid, previous_area_name
+local title_color, next_blink_color, truncated_room_name, room_title_cache
+
+local blink_cycle = {
+   "@R",
+   "@Y",
+   "@W"
+}
+local config_panel_open
+local hidden, show_on_redraw
+local credits = {
+   "MUSHclient mapper",
+   "Made for Aardwolf by Fiendish",
+   "Original concept by Nick Gammon",
+   "World: "..WorldName (),
+   GetInfo (3),
+}
+local resize_start_x, resize_start_y
 
 do
    local M = {}
@@ -834,6 +976,19 @@ do
          return scaled
       end
 
+      function state.build_images(continent_size,vidblain_size)
+         if not state.loaded then build_index() end
+         local vidblain=M.definitions[6]
+         for _,surface in ipairs({
+            {key="stitched",width=120,height=95,size=continent_size},
+            {key="inner_sea",width=120,height=95,inner_sea=true,size=continent_size},
+            {key="6",width=vidblain.width,height=vidblain.height,zone=6,size=vidblain_size},
+         }) do
+            update_image(surface.key,surface,surface.size)
+            grid_for(surface.key,surface)
+         end
+      end
+
       function state.view(uid,options)
          if not state.loaded then build_index() end
          local current=state.positions[uid]
@@ -998,77 +1153,8 @@ do
    continent_maps = M
 end
 
-local FONT_ID     = "fn"  -- internal font identifier
-local FONT_ID_UL  = "fnu" -- internal font identifier - underlined
-local CONFIG_FONT_ID = "cfn"
-local CONFIG_FONT_ID_UL = "cfnu"
-local ROOM_PREFETCH_SCAN_LIMIT = 128
-
--- size of room box
-local ROOM_SIZE = tonumber(GetVariable("ROOM_SIZE")) or 18
-
--- how far away to draw rooms from each other
-local DISTANCE_TO_NEXT_ROOM = math.max(-1,tonumber(GetVariable("DISTANCE_TO_NEXT_ROOM")) or 8)
-
-local room_layout = {
-   area = {size = ROOM_SIZE, spacing = DISTANCE_TO_NEXT_ROOM},
-   continent = {
-      size = tonumber(GetVariable("CONTINENT_ROOM_SIZE")) or 9,
-      stretch = GetVariable("CONTINENT_STRETCH_TO_FIT") == "1",
-   },
-}
-room_layout.vidblain = {
-   size = tonumber(GetVariable("VIDBLAIN_ROOM_SIZE")) or 9,
-   stretch = GetVariable("VIDBLAIN_STRETCH_TO_FIT") == "1",
-}
-
-local function continent_room_size(size)
+local function snap_continent_room_size(size)
    return math.max(5, math.min(25, math.floor((size-1)/4+0.5)*4+1))
-end
-
--- supplied in init
-local supplied_get_room
-local supplied_get_continent_room_overlays
-local supplied_prefetch_rooms
-local room_click
-local timing            -- true to show frame timing summary
-local detailed_timing   -- true to show detailed sub-phase breakdown
-
--- current room number
-local current_room
-
--- our copy of rooms info
-local rooms = {}
-local last_visited = {}
-local textures = {}
-local last_result_list = {}
-local prev_draw_room = nil   -- uid of previous current room (for cache invalidation)
-local prev_draw_area = nil   -- area of previous current room (for area-change detection)
-local room_cache_hits = 0    -- timing: cache hit counter
-local room_cache_misses = 0  -- timing: cache miss counter
-local draw_now = 0           -- os.time() cached once per frame
-
-local control_hotspots = {}
-local fitted_title
-local map_render_cache
-local render_win
-local map_commands, map_commands_changed
-local map_command_state = {buffers = {{}, {}}, count = 0}
-
--- Each refresh owns its queue. OnPluginTick resumes only the current job.
-local drawing = {
-   slice_seconds = 0.100, room_batch_size = 128,
-   finish_times = {{index = 1, seconds = 0.010}, {index = 1, seconds = 0.010}},
-   map_region = {},
-}
-
-local function remember_finish_time(continuing, elapsed)
-   local samples = drawing.finish_times[continuing and 2 or 1]
-   samples[samples.index] = elapsed
-   samples.index = samples.index % 8 + 1
-   local peak = 0
-   for i = 1, #samples do peak = math.max(peak, samples[i]) end
-   samples.seconds = peak
 end
 
 function cancel_draw()
@@ -1077,13 +1163,12 @@ end
 
 -- Record every map primitive with all its arguments. Reuse the captured map
 -- only when the complete drawing sequence and background are unchanged.
--- New room and exit drawing must also use map_draw().
-local function map_draw(name, ...)
+local function record_map_command(name, ...)
    local index = map_command_state.count + 1
-   local command = map_commands[index]
+   local command = frame_commands[index]
    if not command then
       command = {}
-      map_commands[index] = command
+      frame_commands[index] = command
    end
    local old_count = command.count or 0
    local count = select("#", ...)
@@ -1100,20 +1185,20 @@ local function map_draw(name, ...)
    command.name, command.count = name, count
    -- One difference already requires rebuilding the complete map. Continue
    -- recording its commands, but stop comparing against the previous frame.
-   if not map_commands_changed then
-      local previous = map_render_cache and map_render_cache.commands[index]
+   if not frame_commands_changed then
+      local previous = completed_frame_cache and completed_frame_cache.commands[index]
       local same = previous and previous.name == name and previous.count == count
       if same then
          for i = 1, count do
             if previous[i] ~= command[i] then same = false; break end
          end
       end
-      if not same then map_commands_changed = true end
+      if not same then frame_commands_changed = true end
    end
    map_command_state.count = index
 end
 
-local function control_hotspot(id, left, top, right, bottom, mouseup, tooltip, cursor)
+local function ensure_control_hotspot(id, left, top, right, bottom, mouseup, tooltip, cursor)
    local cached = control_hotspots[id]
    if cached and WindowHotspotInfo(win, id, 1) ~= nil and cached.left == left and cached.top == top
          and cached.right == right and cached.bottom == bottom and cached.mouseup == mouseup
@@ -1136,72 +1221,18 @@ local function add_room_target(view, id, uid, x, y, tooltip, room_index)
       right=math.floor(x+view.half), bottom=math.floor(y+view.half)}
 end
 
--- other locals
-local HALF_ROOM, connectors, half_connectors, arrows
-local plan_to_draw, drawn, drawn_coords
-local rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y
-local room_queue_buffers = {{uid = {}, x = {}, y = {}}, {uid = {}, x = {}, y = {}}}
-
 local function reset_room_queue(queue)
    local uid, x, y = queue.uid, queue.x, queue.y
    for i = 1, #uid do uid[i], x[i], y[i] = nil, nil, nil end
-   rooms_to_be_drawn_uid, rooms_to_be_drawn_x, rooms_to_be_drawn_y = uid, x, y
+   queued_room_uids, queued_room_x, queued_room_y = uid, x, y
 end
 
-local depth, font_height
-local recent_frame_times = {}
-local recent_frame_index = 0
-local RECENT_FRAME_COUNT = 30
-
--- room drawing timing metrics
-local room_draw_times = {}
-local rooms_drawn_count = 0
--- Phase counters share a table to stay within the Lua 5.1 upvalue limit.
-local frame_metrics = {
-   total_exit_planning_time = 0,
-   total_exit_drawing_time = 0,
-   total_room_cache_time = 0,
-   total_room_db_time = 0,
-   total_room_prefetch_time = 0,
-   room_prefetch_count = 0,
-   total_room_defaults_time = 0,
-   total_room_texture_time = 0,
-   total_graphics_time = 0,
-   total_hotspot_time = 0,
-   total_window_setup_time = 0,
-   total_bg_texture_time = 0,
-   total_room_loop_time = 0,
-   total_map_overlay_time = 0,
-   total_dress_window_time = 0,
-   total_current_room_time = 0,
-   total_map_capture_time = 0,
-   total_map_render_time = 0,
-   map_image_reused = false,
-   map_image_retained = false,
-   total_repaint_request_time = 0,
-   total_get_room_time = 0,
-   room_load_count = 0,
-   visible_room_count = 0,
-}
 
 -- Measure Window calls made by both the mapper and the shared theme. These
 -- wrappers exist only during a detailed refresh. Normal drawing uses the
 -- original functions. Keep all return values, including nil, and restore the
 -- functions before propagating an error.
-local window_call_groups = {
-   Drawing = {"WindowCircleOp", "WindowLine", "WindowPolygon", "WindowBezier",
-      "WindowRectOp", "WindowGradient", "WindowSetPixel", "WindowText"},
-   Images = {"WindowDrawImage", "WindowDrawImageAlpha", "WindowBlendImage",
-      "WindowTransformImage", "WindowFilter", "WindowImageFromWindow", "WindowLoadImage"},
-   Hotspots = {"WindowAddHotspot", "WindowDeleteHotspot", "WindowDeleteAllHotspots",
-      "WindowMoveHotspot", "WindowDragHandler", "WindowScrollwheelHandler",
-      "WindowHotspotTooltip", "WindowHotspotList", "WindowHotspotInfo"},
-   Window = {"WindowCreate", "WindowResize", "WindowPosition", "WindowShow", "WindowSetZOrder"},
-   Queries = {"WindowInfo", "WindowTextWidth", "WindowFontInfo", "WindowFontList", "WindowImageInfo"},
-}
-local window_call_stats
-
-local function with_window_timing(f, uid, enabled, callback_started)
+local function with_window_timing(render_batch, request, enabled, callback_started)
    local originals = {}
    local previous_stats = window_call_stats
    if enabled ~= false then window_call_stats = {} end
@@ -1241,7 +1272,7 @@ local function with_window_timing(f, uid, enabled, callback_started)
       end
    end
 
-   local ok, err = xpcall(function() f(uid) end, function(err)
+   local ok, err = xpcall(function() render_batch(request) end, function(err)
       if type(err) == "string" then return debug.traceback(err, 2) end
       return err
    end)
@@ -1250,7 +1281,7 @@ local function with_window_timing(f, uid, enabled, callback_started)
    end
    window_call_stats = previous_stats
    -- A later title blink must not append commands to a failed frame.
-   map_commands = nil
+   frame_commands = nil
    drawing.callback = previous_callback
    if not ok then
       cancel_draw()
@@ -1295,50 +1326,21 @@ local function report_window_timing(frame_time)
    end
 end
 
--- cached tiled background texture
-local cached_bg_image = nil
-local cached_bg_width = 0
-local cached_bg_height = 0
-local cached_bg_texture = nil
 
--- One completed frame supplies both display and hover restoration.
-local resize_dragging = false
-
-local function cache_frame(source_win)
+local function capture_map_image(source_win)
    check(WindowImageFromWindow(win, "cached_map", source_win))
 end
-
--- pan offset for dragging the map view
-local pan_offset_x = 0
-local pan_offset_y = 0
-local pan_last_mouse_x = 0
-local pan_last_mouse_y = 0
-local pan_dragging = false  -- true while dragging (skip hotspot updates)
-local MAP_DRAG_THRESHOLD = 4  -- ignore small pointer movements during a click
-local pan_rebaseline_on_drag = false
-local pan_tooltip_text = "Drag to pan map"
-local pan_animating = false
-local pan_animation_time = 0
-local PAN_ANIMATION_INTERVAL = 1 / 30
-local last_area_for_pan = nil
--- bounding box of drawn rooms in window coords (updated each draw, used for pan clamping)
-local drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y
-
-default_width = 271
-default_height = 335
-default_x = 884 + Theme.RESIZER_SIZE + 2
-default_y = 0
 
 function reset_pos()
    cancel_draw()
    config.WINDOW.width = default_width
    config.WINDOW.height = default_height
    WindowPosition(win, default_x, default_y, 0, 18)
-   WindowResize(win, default_width, default_height, BACKGROUND_COLOUR.colour)
+   WindowResize(win, default_width, default_height, styles.BACKGROUND_COLOUR.colour)
    Repaint() -- hack because WindowPosition doesn't immediately update coordinates
 end
 
-local function build_room_info ()
+local function update_room_geometry ()
 
    HALF_ROOM   = math.ceil(ROOM_SIZE / 2)
    local THIRD_WAY   = math.ceil(DISTANCE_TO_NEXT_ROOM / 3)
@@ -1352,9 +1354,8 @@ local function build_room_info ()
       w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - HALF_WAY,  y2 = 0,                            at = { -1,  0 }},
 
       u = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + HALF_WAY , y2 = - HALF_ROOM - HALF_WAY, at = { 1, -1 } },
-      d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - HALF_WAY , y2 =   HALF_ROOM + HALF_WAY, at = {-1,  1 } },
-
-   } -- end connectors
+      d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - HALF_WAY , y2 =   HALF_ROOM + HALF_WAY, at = {-1,  1 } }
+   }
 
    -- Connector offsets change only with the room size or spacing.
    local step = ROOM_SIZE + DISTANCE_TO_NEXT_ROOM
@@ -1370,9 +1371,8 @@ local function build_room_info ()
       w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - THIRD_WAY,  y2 = 0},
 
       u = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY },
-      d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY },
-
-   } -- end half_connectors
+      d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY }
+   }
 
    -- how to draw one-way arrows (relative to the center of the room)
    arrows = {
@@ -1382,11 +1382,9 @@ local function build_room_info ()
       w =  { - HALF_ROOM - 2, -2, - HALF_ROOM - 2, 2, - HALF_ROOM - 6, 0 },
 
       u = {   HALF_ROOM + 3,  - HALF_ROOM,  HALF_ROOM + 3, - HALF_ROOM - 3,  HALF_ROOM, - HALF_ROOM - 3 },
-      d = { - HALF_ROOM - 3,    HALF_ROOM,  - HALF_ROOM - 3,   HALF_ROOM + 3,  - HALF_ROOM,   HALF_ROOM + 3},
-
-   } -- end of arrows
-
-end -- build_room_info
+      d = { - HALF_ROOM - 3,    HALF_ROOM,  - HALF_ROOM - 3,   HALF_ROOM + 3,  - HALF_ROOM,   HALF_ROOM + 3}
+   }
+end
 
 -- Stored spacing is relative to ROOM_SIZE. Account for the rounded box
 -- bounds and the unbordered fill edge when room edges meet.
@@ -1407,88 +1405,24 @@ local function select_room_layout(room)
       layout.spacing = math.max(minimum_area_spacing(layout.size), layout.spacing)
    end
    if room_layout.current_is_continent then
-      layout.size = continent_room_size(layout.size)
+      layout.size = snap_continent_room_size(layout.size)
    end
    local spacing = room_layout.current_is_continent and -1 or layout.spacing
    if ROOM_SIZE ~= layout.size or DISTANCE_TO_NEXT_ROOM ~= spacing then
       ROOM_SIZE, DISTANCE_TO_NEXT_ROOM = layout.size, spacing
-      build_room_info()
+      update_room_geometry()
    end
 end
-
--- assorted colours
-BACKGROUND_COLOUR     = { name = "Area Background",  colour =  ColourNameToRGB "#111111"}
-ROOM_COLOUR           = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
-EXIT_COLOUR           = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
-EXIT_COLOUR_UP_DOWN   = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
-ROOM_NOTE_COLOUR      = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen"}
-OUR_ROOM_COLOUR       = { name = "Our room",         colour =  ColourNameToRGB "#ff1493"}
-UNKNOWN_ROOM_COLOUR   = { name = "Unknown room",     colour =  ColourNameToRGB "#9b0000"}
-DIFFERENT_AREA_COLOUR = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
-AREA_EXIT_FILL_COLOUR = { name = "Area exit room",   colour =  ColourNameToRGB "#b03060"}
-PK_BORDER_COLOUR      = { name = "PK border",        colour =  ColourNameToRGB "red"}
-SHOP_FILL_COLOUR      = { name = "Shop",             colour =  ColourNameToRGB "#ffad2f"}
-HEALER_FILL_COLOUR    = { name = "Healer",           colour =  ColourNameToRGB "#9acd32"}
-TRAINER_FILL_COLOUR   = { name = "Trainer",          colour =  ColourNameToRGB "#9acd32"}
-QUESTOR_FILL_COLOUR   = { name = "Questor",          colour =  ColourNameToRGB "deepskyblue"}
-BANK_FILL_COLOUR      = { name = "Bank",             colour =  ColourNameToRGB "#ffD700"}
-GUILD_FILL_COLOUR     = { name = "Guild",            colour =  ColourNameToRGB "magenta"}
-SAFEROOM_FILL_COLOUR  = { name = "Safe room",        colour =  ColourNameToRGB "lightblue"}
-MAPPER_NOTE_COLOUR    = { name = "Messages",         colour =  ColourNameToRGB "lightgreen"}
-
-ROOM_NAME_TEXT        = { name = "Room name text",   colour = ColourNameToRGB "#BEF3F1"}
-ROOM_NAME_FILL        = { name = "Room name fill",   colour = ColourNameToRGB "#105653"}
-ROOM_NAME_BORDER      = { name = "Room name box",    colour = ColourNameToRGB "black"}
-
-AREA_NAME_TEXT        = { name = "Area name text",   colour = ColourNameToRGB "#BEF3F1"}
-AREA_NAME_FILL        = { name = "Area name fill",   colour = ColourNameToRGB "#105653"}
-AREA_NAME_BORDER      = { name = "Area name box",    colour = ColourNameToRGB "black"}
-
--- how many seconds to show "recent visit" lines (default 3 minutes)
-LAST_VISIT_TIME = 60 * 3
-
-default_config = {
-   FONT = { name =  get_preferred_font {"Dina",  "Lucida Console",  "Fixedsys", "Courier",} ,
-            size = 8
-         } ,
-
-   -- size of map window
-   WINDOW = { width = default_width, height = default_height },
-
-   -- how far from where we are standing to draw (rooms)
-   SCAN = { depth = 300 },
-
-   -- show custom tiling background textures
-   USE_TEXTURES = { enabled = true },
-
-   SHOW_ROOM_ID = false,
-
-   SHOW_ROOM_BORDERS = true,
-
-   BLINK_PK_TITLE = true,
-
-   MOUSEWHEEL_ZOOM = true
-}
-
-local expand_direction = {
-   n = "north",
-   s = "south",
-   e = "east",
-   w = "west",
-   u = "up",
-   d = "down",
-}  -- end of expand_direction
 
 local function get_room (uid, traversal_only)
    local prepare_display = not traversal_only
    local db_t0 = detailed_timing and utils.timer()
-   local room = supplied_get_room (uid, traversal_only)
+   local room = callbacks.get_room (uid, traversal_only)
    room = room or { unknown = true }
    if db_t0 then
       frame_metrics.total_room_db_time = frame_metrics.total_room_db_time + (utils.timer() - db_t0)
    end
 
-   -- defaults in case they didn't supply them ...
    local def_t0 = detailed_timing and utils.timer()
    room.name = room.name or string.format ("Room %s", uid)
    room.name = strip_colours (room.name)  -- no colour codes for now
@@ -1496,7 +1430,7 @@ local function get_room (uid, traversal_only)
    room.area = room.area or "<No area>"
    if prepare_display then
       room.hovermessage = room.hovermessage or "<Unexplored room>"
-      room.bordercolour = room.bordercolour or ROOM_COLOUR.colour
+      room.bordercolour = room.bordercolour or styles.ROOM_COLOUR.colour
       room.borderpen = room.borderpen or 0 -- solid
       room.borderpenwidth = room.borderpenwidth or 1
       room.fillcolour = room.fillcolour or 0x000000
@@ -1516,19 +1450,18 @@ local function get_room (uid, traversal_only)
 
       local tex_t0 = detailed_timing and utils.timer()
       if room.texture == nil or room.texture == "" then room.texture = "test5.png" end
-      if textures[room.texture] then
-         room.textimage = textures[room.texture] -- assign image
+      if texture_image_cache[room.texture] then
+         room.textimage = texture_image_cache[room.texture] -- assign image
       else
-         if textures[room.texture] ~= false then
+         if texture_image_cache[room.texture] ~= false then
             local dir = GetInfo(66)
-            imgpath = dir .. "worlds\\plugins\\images\\" ..room.texture
+            local imgpath = dir .. "worlds\\plugins\\images\\" ..room.texture
             if WindowLoadImage(win, room.texture, imgpath) ~= 0 then
-               textures[room.texture] = false  -- just indicates not found
+               texture_image_cache[room.texture] = false  -- just indicates not found
             else
-               -- Keep the same texture in the hidden drawing window. Load it
-               -- while the source file is available, with the visible image.
-               check(WindowLoadImage(render_win, room.texture, imgpath))
-               textures[room.texture] = room.texture -- imagename
+               -- Load both windows together; the file may be unavailable on a later redraw.
+               check(WindowLoadImage(offscreen_window, room.texture, imgpath))
+               texture_image_cache[room.texture] = room.texture -- imagename
                room.textimage = room.texture
             end
          end
@@ -1545,62 +1478,42 @@ local function get_room (uid, traversal_only)
    end
    return room
 
-end -- get_room
+end
 
 local function get_display_room(uid)
-   local room = rooms[uid]
+   local room = display_room_cache[uid]
    if not room or room.mapper_needs_display then
       room = get_room(uid)
-      rooms[uid] = room
+      display_room_cache[uid] = room
    end
    return room
 end
 
-function check_connected ()
-   if not IsConnected() then
-      mapprint ("You are not connected to", WorldName())
-      return false
-   end -- if not connected
-   return true
-end -- check_connected
-
-local function make_number_checker (title, min, max, decimals)
+local function make_number_checker (title, min, max)
    return function (s)
       local n = tonumber (s)
       if not n then
          utils.msgbox (title .. " must be a number", "Incorrect input", "ok", "!", 1)
          return false  -- bad input
-      end -- if
+      end
       if n < min or n > max then
          utils.msgbox (title .. " must be in range " .. min .. " to " .. max, "Incorrect input", "ok", "!", 1)
          return false  -- bad input
-      end -- if
-      if not decimals then
-         if string.match (s, "%.") then
-            utils.msgbox (title .. " cannot have decimal places", "Incorrect input", "ok", "!", 1)
-            return false  -- bad input
-         end -- if
-      end -- no decimals
+      end
+      if string.match (s, "%.") then
+         utils.msgbox (title .. " cannot have decimal places", "Incorrect input", "ok", "!", 1)
+         return false  -- bad input
+      end
       return true  -- good input
-   end -- generated function
-end -- make_number_checker
+   end
+end
 
 
-local function get_number_from_user (msg, title, current, min, max, decimals)
+local function get_number_from_user (msg, title, current, min, max)
    local max_length = math.ceil (math.log10 (max) + 1)
 
-   -- if decimals allowed, allow room for them
-   if decimals then
-      max_length = max_length + 2  -- allow for 0.x
-   end -- if
-
-   -- if can be negative, allow for minus sign
-   if min < 0 then
-      max_length = max_length + 1
-   end -- if can be negative
-
    return tonumber (utils.inputbox (msg, title, current, nil, nil,
-      { validate = make_number_checker (title, min, max, decimals),
+      { validate = make_number_checker (title, min, max),
          prompt_height = 14,
          box_height = 130,
          box_width = 300,
@@ -1608,7 +1521,7 @@ local function get_number_from_user (msg, title, current, min, max, decimals)
          max_length = max_length,
       }  -- end extra stuff
    ))
-end -- get_number_from_user
+end
 
 local function draw_configuration ()
    local GAP = 5
@@ -1654,18 +1567,18 @@ local function draw_configuration ()
       if row.layout and row.layout~="area" and row.property=="size" then
          -- Reserve the widest supported value so zooming does not move the controls.
          for size=5,25,4 do
-            width=math.max(width,WindowTextWidth(config_win,CONFIG_FONT_ID,row.label.." ("..size..")",true))
+            width=math.max(width,WindowTextWidth(config_window,CONFIG_FONT_ID,row.label.." ("..size..")",true))
          end
       end
    end
-   width = math.max(width,max_text_width(config_win, CONFIG_FONT_ID, config_entries, true))
+   width = math.max(width,max_text_width(config_window, CONFIG_FONT_ID, config_entries, true))
    local row_height = font_height + GAP
    local frame_height = row_height * #config_entries + GAP
 
    local x = 0
    local y = 0
    local box_size = font_height - 2
-   local rh_size = math.max (box_size, max_text_width (config_win, CONFIG_FONT_ID,
+   local rh_size = math.max (box_size, max_text_width (config_window, CONFIG_FONT_ID,
       {config.FONT.name .. " " .. config.FONT.size,
       ((config.USE_TEXTURES.enabled and "On") or "Off"),
       "- +",
@@ -1673,34 +1586,31 @@ local function draw_configuration ()
       true))
    local frame_width = GAP + width + GAP + rh_size + GAP  -- gap / text / gap / box / gap
 
-   WindowCreate(config_win, windowinfo.window_left, windowinfo.window_top, frame_width, frame_height, windowinfo.window_mode, windowinfo.window_flags, 0xDCDCDC)
-   WindowSetZOrder(config_win, 99999) -- always on top
+   WindowCreate(config_window, windowinfo.window_left, windowinfo.window_top, frame_width, frame_height, windowinfo.window_mode, windowinfo.window_flags, 0xDCDCDC)
+   WindowSetZOrder(config_window, 99999) -- always on top
 
-   -- frame it
-   draw_3d_box (config_win, 0, 0, frame_width, frame_height)
+   draw_3d_box (config_window, 0, 0, frame_width, frame_height)
 
    y = y + GAP
    x = x + GAP
 
-   -- title
-   WindowText (config_win, CONFIG_FONT_ID, title, ((frame_width-WindowTextWidth(config_win,CONFIG_FONT_ID,title))/2), y, 0, 0, 0x808080)
+   WindowText (config_window, CONFIG_FONT_ID, title, ((frame_width-WindowTextWidth(config_window,CONFIG_FONT_ID,title))/2), y, 0, 0, 0x808080)
 
-   -- close box
-   WindowRectOp (config_win,
+   WindowRectOp (config_window,
       miniwin.rect_frame,
       x,
       y + 1,
       x + box_size,
       y + 1 + box_size,
       0x808080)
-   WindowLine (config_win,
+   WindowLine (config_window,
       x + 3,
       y + 4,
       x + box_size - 3,
       y - 2 + box_size,
       0x808080,
       miniwin.pen_solid, 1)
-   WindowLine (config_win,
+   WindowLine (config_window,
       x + box_size - 4,
       y + 4,
       x + 2,
@@ -1708,8 +1618,7 @@ local function draw_configuration ()
       0x808080,
       miniwin.pen_solid, 1)
 
-   -- close configuration hotspot
-   WindowAddHotspot(config_win, "$<close_configure>",
+   WindowAddHotspot(config_window, "$<close_configure>",
       x,
       y + 1,
       x + box_size,
@@ -1721,69 +1630,58 @@ local function draw_configuration ()
    y = y + row_height
 
    for _, row in ipairs(rows) do
-      WindowText(config_win, CONFIG_FONT_ID, row.text, x, y, 0, 0, row.disabled and 0x808080 or 0x000000)
+      WindowText(config_window, CONFIG_FONT_ID, row.text, x, y, 0, 0, row.disabled and 0x808080 or 0x000000)
       if row.layout then
-         local down_x = width + rh_size / 2 + box_size/2 - WindowTextWidth(config_win, CONFIG_FONT_ID, "-")
+         local down_x = width + rh_size / 2 + box_size/2 - WindowTextWidth(config_window, CONFIG_FONT_ID, "-")
          local up_x = width + rh_size / 2 + box_size + GAP
          local id = "$<" .. row.layout .. "_" .. row.property
          local font = row.disabled and CONFIG_FONT_ID or CONFIG_FONT_ID_UL
          local colour = row.disabled and 0xB0B0B0 or 0x808080
-         WindowText(config_win, font, "-", down_x, y, 0, 0, colour)
-         WindowText(config_win, font, "+", up_x, y, 0, 0, colour)
+         WindowText(config_window, font, "-", down_x, y, 0, 0, colour)
+         WindowText(config_window, font, "+", up_x, y, 0, 0, colour)
          if not row.disabled then
-            WindowAddHotspot(config_win, id .. "_down>",
+            WindowAddHotspot(config_window, id .. "_down>",
                down_x, y, down_x + box_size, y + font_height,
                "", "", "", "", row.decrease, "Decrease " .. row.label, miniwin.cursor_hand, 0)
-            WindowAddHotspot(config_win, id .. "_up>",
-               up_x, y, up_x + WindowTextWidth(config_win, CONFIG_FONT_ID, "+"), y + font_height,
+            WindowAddHotspot(config_window, id .. "_up>",
+               up_x, y, up_x + WindowTextWidth(config_window, CONFIG_FONT_ID, "+"), y + font_height,
                "", "", "", "", row.increase, "Increase " .. row.label, miniwin.cursor_hand, 0)
          else
-            WindowDeleteHotspot(config_win, id .. "_down>")
-            WindowDeleteHotspot(config_win, id .. "_up>")
+            WindowDeleteHotspot(config_window, id .. "_down>")
+            WindowDeleteHotspot(config_window, id .. "_up>")
          end
       else
          local value_x = x + width + GAP
          if not row.left_align then
-            value_x = width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, row.value)/2
+            value_x = width + rh_size / 2 + box_size - WindowTextWidth(config_window, CONFIG_FONT_ID_UL, row.value)/2
          end
-         WindowText(config_win, CONFIG_FONT_ID_UL, tostring(row.value), value_x, y, 0, 0, 0x808080)
-         WindowAddHotspot(config_win, "$<" .. row.id .. ">",
+         WindowText(config_window, CONFIG_FONT_ID_UL, tostring(row.value), value_x, y, 0, 0, 0x808080)
+         WindowAddHotspot(config_window, "$<" .. row.id .. ">",
             x + GAP, y, frame_width + (row.right_padding or 0), y + font_height,
             "", "", "", "", row.callback, row.tooltip, miniwin.cursor_hand, 0)
       end
       y = y + row_height
    end
 
-   WindowShow(config_win, true)
-end -- draw_configuration
-
--- for calculating one-way paths
-local inverse_direction = {
-   n = "s",
-   s = "n",
-   e = "w",
-   w = "e",
-   u = "d",
-   d = "u",
-}  -- end of inverse_direction
+   WindowShow(config_window, true)
+end
 
 -- Look ahead only within the discovered breadth layer. Queued rooms already
 -- have their exits, since drawing their parents loaded them. Do not traverse
 -- another layer here or change the order in which rooms are drawn.
-local function prefetch_room_exits(job)
+local function prefetch_exit_destinations(job)
    local ids, seen = {}, {}
    local level = job.level.uid
-   -- Allow a bounded scan to fill missing IDs without
-   -- scanning a whole layer on mostly cached maps.
+   -- Limit cache inspection as well as database reads. Most queued rooms may be cached.
    for i = job.index, math.min(job.index + ROOM_PREFETCH_SCAN_LIMIT - 1, #level) do
       local uid = level[i]
-      local room = rooms[uid]
-      if room and (i == job.index or not drawn[uid]) and
+      local room = display_room_cache[uid]
+      if room and
             (not room_layout.current_is_continent or
                (job.level.x[i] >= job.boundary_left and job.level.y[i] >= job.boundary_top and
                 job.level.x[i] <= job.boundary_right and job.level.y[i] <= job.boundary_bottom)) then
          for dir, exit_uid in pairs(room.exits) do
-            if connectors[dir] and not rooms[exit_uid]
+            if connectors[dir] and not display_room_cache[exit_uid]
                   and not job.prefetched[exit_uid] and not seen[exit_uid] then
                ids[#ids + 1] = exit_uid
                seen[exit_uid] = true
@@ -1795,7 +1693,7 @@ local function prefetch_room_exits(job)
    end
    if #ids == 0 then return end
    local start = detailed_timing and utils.timer()
-   supplied_prefetch_rooms(ids)
+   callbacks.prefetch_rooms(ids)
    if start then
       frame_metrics.total_room_prefetch_time = frame_metrics.total_room_prefetch_time + utils.timer() - start
       frame_metrics.room_prefetch_count = frame_metrics.room_prefetch_count + 1
@@ -1811,20 +1709,12 @@ local function draw_room (uid, x, y)
 
    local coords = math.floor (x) * 100000 + math.floor (y)
 
-   -- need this for the *current* room !!!
-   drawn_coords [coords] = uid
-
-   -- print ("drawing", uid, "at", coords)
-
-   if drawn [uid] then
-      return
-   end -- done this one
-
-   -- don't draw the same room more than once
-   drawn [uid] = coords
+   -- Reserve the room's position before checking exits that can loop back to it.
+   occupied_room_positions [coords] = uid
+   processed_room_positions [uid] = coords
 
    -- Ordinary areas traverse off-screen paths. Continents stop at the search bounds.
-   local on_screen = not ((x < HALF_ROOM) or (y < (title_bottom or font_height)+HALF_ROOM) or
+   local on_screen = not ((x < HALF_ROOM) or (y < font_height+HALF_ROOM) or
       (x > config.WINDOW.width - HALF_ROOM) or (y > config.WINDOW.height - HALF_ROOM))
    local job = drawing.job
    job.room_indices[uid] = #job.room_ends + 1
@@ -1837,12 +1727,12 @@ local function draw_room (uid, x, y)
       end
       return
    end
-   local room = rooms [uid]
+   local room = display_room_cache [uid]
 
    -- Prepare display data when the room first becomes visible.
    if not room or (on_screen and room.mapper_needs_display) then
       room = get_room (uid, not on_screen)
-      rooms [uid] = room
+      display_room_cache [uid] = room
       if detailed_timing then room_cache_misses = room_cache_misses + 1 end
    else
       if detailed_timing then room_cache_hits = room_cache_hits + 1 end
@@ -1863,7 +1753,6 @@ local function draw_room (uid, x, y)
       end
    end
 
-   -- exits
    local exit_start_time = nil
    local exit_draw_accum = 0
    if detailed_timing then
@@ -1872,44 +1761,45 @@ local function draw_room (uid, x, y)
 
    local draw_exits = on_screen and DISTANCE_TO_NEXT_ROOM >= 4
 
-   for dir, exit_uid in pairs (room.exits) do
+   for _, dir in ipairs(exit_order) do
+      local exit_uid = room.exits[dir]
       local exit_info = connectors [dir]
       local stub_exit_info = half_connectors [dir]
       local locked_exit, exit_line_colour
       -- Exit styles are only used when spacing permits a visible line.
       if draw_exits then
          locked_exit = not (room.exit_locks == nil or room.exit_locks[dir] == nil or room.exit_locks[dir] == "0")
-         exit_line_colour = (locked_exit and 0x0000FF) or EXIT_COLOUR.colour
+         exit_line_colour = (locked_exit and 0x0000FF) or styles.EXIT_COLOUR.colour
          if dir == "u" or dir == "d" then
-            exit_line_colour = (locked_exit and 0x0000FF) or EXIT_COLOUR_UP_DOWN.colour
+            exit_line_colour = (locked_exit and 0x0000FF) or styles.EXIT_COLOUR_UP_DOWN.colour
          end
       end
 
-      if exit_info then
+      if exit_uid ~= nil then
          local linetype = miniwin.pen_solid -- unbroken
          local linewidth = (locked_exit and 2) or 1 -- not recent
 
          -- try to cache room
-         local dest = rooms[exit_uid]
+         local dest = display_room_cache[exit_uid]
          if not dest then
             local job = drawing.job
             if not job.prefetched[exit_uid] then
-               prefetch_room_exits(job)
+               prefetch_exit_destinations(job)
             end
             local cache_t0 = detailed_timing and utils.timer()
             dest = get_room (exit_uid, true)
-            rooms[exit_uid] = dest
+            display_room_cache[exit_uid] = dest
             if cache_t0 then
                frame_metrics.total_room_cache_time = frame_metrics.total_room_cache_time + (utils.timer() - cache_t0)
                room_cache_misses = room_cache_misses + 1
             end
          else
             if detailed_timing then room_cache_hits = room_cache_hits + 1 end
-         end -- if
+         end
 
          if draw_exits and dest.unknown then
             linetype = miniwin.pen_dot -- dots
-         end -- if
+         end
 
          local next_x = x + exit_info.dx
          local next_y = y + exit_info.dy
@@ -1923,37 +1813,37 @@ local function draw_room (uid, x, y)
             area_exits[#area_exits + 1] = {uid = exit_uid,
                room_x = next_x, room_y = next_y, room_coords = next_coords}
             drawing.job.overlay_changed = true
-         end -- if
+         end
 
          -- Preserve placement precedence: occupied cell, self-exit, area limit,
          -- then conflicting first placement.
-         if drawn_coords[next_coords] and drawn_coords[next_coords] ~= exit_uid then
+         if occupied_room_positions[next_coords] and occupied_room_positions[next_coords] ~= exit_uid then
             exit_info = stub_exit_info
          elseif exit_uid == uid then
             exit_info = stub_exit_info
             linetype = miniwin.pen_dash
-         elseif (not show_other_areas and dest.area ~= current_area and not dest.unknown
+         elseif (dest.area ~= map_area_name and not dest.unknown
                and not (room_layout.current_is_continent and dest.continent)) or
                (not show_up_down and (dir == "u" or dir == "d")) then
             exit_info = stub_exit_info
-         elseif plan_to_draw[exit_uid] and plan_to_draw[exit_uid] ~= next_coords then
+         elseif planned_room_positions[exit_uid] and planned_room_positions[exit_uid] ~= next_coords then
             exit_info = stub_exit_info
             linetype = miniwin.pen_dash
          else
-            if not plan_to_draw[exit_uid] and not drawn[exit_uid] then
-               local n = #rooms_to_be_drawn_uid + 1
-               rooms_to_be_drawn_uid[n] = exit_uid
-               rooms_to_be_drawn_x[n] = next_x
-               rooms_to_be_drawn_y[n] = next_y
+            if not planned_room_positions[exit_uid] and not processed_room_positions[exit_uid] then
+               local n = #queued_room_uids + 1
+               queued_room_uids[n] = exit_uid
+               queued_room_x[n] = next_x
+               queued_room_y[n] = next_y
             end
-            drawn_coords[next_coords] = exit_uid
-            plan_to_draw[exit_uid] = next_coords
+            occupied_room_positions[next_coords] = exit_uid
+            planned_room_positions[exit_uid] = next_coords
 
             if draw_exits and not dest.unknown then
-               local exit_time = last_visited[exit_uid] or 0
-               local this_time = last_visited[uid] or 0
-               if exit_time > (draw_now - LAST_VISIT_TIME) and
-                  this_time > (draw_now - LAST_VISIT_TIME) then
+               local exit_time = room_visit_times[exit_uid] or 0
+               local this_time = room_visit_times[uid] or 0
+               if exit_time > (frame_timestamp - RECENT_VISIT_SECONDS) and
+                  this_time > (frame_timestamp - RECENT_VISIT_SECONDS) then
                   linewidth = 2
                end
             end
@@ -1962,7 +1852,7 @@ local function draw_room (uid, x, y)
          -- Dense maps still traverse every exit; there is no space for exit lines or arrows.
          if draw_exits then
             local draw_t0 = detailed_timing and utils.timer()
-            map_draw("WindowLine", win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
+            record_map_command("WindowLine", win, x + exit_info.x1, y + exit_info.y1, x + exit_info.x2, y + exit_info.y2, exit_line_colour, linetype + 0x0200, linewidth)
 
             -- one-way exit?
 
@@ -1980,18 +1870,18 @@ local function draw_room (uid, x, y)
                      y + arrow [6])
 
                   -- draw arrow
-                  map_draw("WindowPolygon", win, points,
+                  record_map_command("WindowPolygon", win, points,
                      exit_line_colour, miniwin.pen_solid, 1,
                      exit_line_colour, miniwin.brush_solid,
                      true, true)
                end -- one way
-            end -- if we know of the room where it does
+            end
             if draw_t0 then
                exit_draw_accum = exit_draw_accum + (utils.timer() - draw_t0)
             end
-         end -- if on_screen (exit drawing)
-      end -- if we know what to do with this direction
-   end -- for each exit
+         end
+      end
+   end
 
    if detailed_timing and exit_start_time then
       local exit_total = utils.timer() - exit_start_time
@@ -2009,13 +1899,12 @@ local function draw_room (uid, x, y)
    end
    if detailed_timing then frame_metrics.visible_room_count = frame_metrics.visible_room_count + 1 end
 
-   -- graphics operations
    local graphics_start_time = nil
    if detailed_timing then
       graphics_start_time = utils.timer()
    end
 
-   local is_current_room = uid == current_room
+   local is_current_room = uid == map_origin_uid
    if is_current_room then
       -- Keep the border separate so later rooms and exit markers cannot cover it.
       map_command_state.border_room = room
@@ -2024,8 +1913,8 @@ local function draw_room (uid, x, y)
    end
 
    if room.unknown then
-      map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
-         UNKNOWN_ROOM_COLOUR.colour, is_current_room and miniwin.pen_null or miniwin.pen_dot,
+      record_map_command("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
+         styles.UNKNOWN_ROOM_COLOUR.colour, is_current_room and miniwin.pen_null or miniwin.pen_dot,
          is_current_room and 0 or 1,
          0, miniwin.brush_hatch_forwards_diagonal)
    else
@@ -2040,9 +1929,9 @@ local function draw_room (uid, x, y)
          if room.fillbrush == miniwin.brush_solid and left < right and top < bottom
                and right >= 2 and bottom >= 2 then
             -- GDI's null-pen rectangle leaves an extra pixel at the right and bottom.
-            map_draw("WindowRectOp", win, 2, left, top, right - 1, bottom - 1, room.fillcolour)
+            record_map_command("WindowRectOp", win, 2, left, top, right - 1, bottom - 1, room.fillcolour)
          else
-            map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
+            record_map_command("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
                0, miniwin.pen_null, 0,  -- no pen
                room.fillcolour, room.fillbrush)  -- brush
          end
@@ -2050,18 +1939,18 @@ local function draw_room (uid, x, y)
 
       -- room border, with the fill when both can share the same call
       if show_border then
-         map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
+         record_map_command("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
             room.bordercolour, room.borderpen, room.borderpenwidth,
             combined_fill and room.fillcolour or -1, combined_fill and room.fillbrush or miniwin.brush_null)
       end
 
       -- mark rooms with notes
       if room.notes ~= nil and room.notes ~= "" then
-         map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth,
-            right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,ROOM_NOTE_COLOUR.colour,
+         record_map_command("WindowCircleOp", win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth,
+            right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,styles.ROOM_NOTE_COLOUR.colour,
             room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
       end
-   end -- if
+   end
 
    if detailed_timing and graphics_start_time then
       frame_metrics.total_graphics_time = frame_metrics.total_graphics_time + (utils.timer() - graphics_start_time)
@@ -2079,27 +1968,26 @@ local function draw_room (uid, x, y)
       frame_metrics.total_hotspot_time = frame_metrics.total_hotspot_time + (utils.timer() - hotspot_start_time)
    end
 
-   -- track total time for this room
    if detailed_timing and room_start_time then
       local room_time = utils.timer() - room_start_time
       table.insert(room_draw_times, room_time)
       rooms_drawn_count = rooms_drawn_count + 1
    end
-end -- draw_room
+end
 
 local function area_exit_room_bounds(exit, room_limit)
-   local occupant = drawn_coords[exit.room_coords]
+   local occupant = occupied_room_positions[exit.room_coords]
    -- A queued room may be beyond the depth limit. Keep the area-exit marker
    -- until a room is drawn here.
-   if occupant and drawn[occupant] == exit.room_coords
+   if occupant and processed_room_positions[occupant] == exit.room_coords
          and drawing.job.room_indices[occupant] <= room_limit then return end
    local x, y = exit.room_x, exit.room_y
-   if x < HALF_ROOM or y < (title_bottom or font_height) + HALF_ROOM
+   if x < HALF_ROOM or y < font_height + HALF_ROOM
          or x > config.WINDOW.width - HALF_ROOM or y > config.WINDOW.height - HALF_ROOM then return end
    return x - HALF_ROOM, y - HALF_ROOM, x + HALF_ROOM, y + HALF_ROOM
 end
 
-local function area_exit_targets(job)
+local function build_area_exit_targets(job)
    local view = {cells={}, origin_x=job.room_view.origin_x, origin_y=job.room_view.origin_y,
       pitch=job.room_view.pitch, half=job.room_view.half}
    for index, exit in ipairs(area_exits) do
@@ -2129,8 +2017,8 @@ drawing.continent_cell_target = function(cell, view)
    if entries and #entries>0 then
       uid=#entries==1 and entries[1] or nil
       id="0:continent_entry:"..cell.zone..":"..cell.x..":"..cell.y..":"..table.concat(entries,",")
-      tooltip=uid and rooms[uid].hovermessage or table.concat(names,"\n")
-      if uid and rooms[uid].unknown then tooltip=rooms[uid].name.."\n"..tooltip end
+      tooltip=uid and display_room_cache[uid].hovermessage or table.concat(names,"\n")
+      if uid and display_room_cache[uid].unknown then tooltip=display_room_cache[uid].name.."\n"..tooltip end
    elseif cell.uid or cell.unexplored_uid then
       local cell_uid=cell.uid or cell.unexplored_uid
       local room=get_display_room(cell_uid)
@@ -2330,7 +2218,7 @@ end
 
 drawing.plan_continent = function(view)
    for _, rectangle in ipairs(view.rectangles) do
-      map_draw("WindowDrawImage", win, "continent_surface", unpack(rectangle))
+      record_map_command("WindowDrawImage", win, "continent_surface", unpack(rectangle))
    end
    if view.bounds then
       drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y = unpack(view.bounds)
@@ -2343,19 +2231,19 @@ drawing.plan_continent = function(view)
       if cell.uid then
          local room=cell.room
          local pk,note,width,pen
-         if room and cell.uid~=current_room then
-            pk,note,width,pen=supplied_get_continent_room_overlays(room)
+         if room and cell.uid~=map_origin_uid then
+            pk,note,width,pen=callbacks.get_continent_room_overlays(room)
          else
             room=get_display_room(cell.uid)
             pk,note,width,pen=room.mapper_pk_warning,room.mapper_note,room.borderpenwidth,room.borderpen
          end
          if pk then
-            map_draw("WindowCircleOp",win,miniwin.circle_rectangle,cell.left,cell.top,cell.left+view.size,cell.top+view.size,
-               PK_BORDER_COLOUR.colour,miniwin.pen_solid,3,0,miniwin.brush_null)
+            record_map_command("WindowCircleOp",win,miniwin.circle_rectangle,cell.left,cell.top,cell.left+view.size,cell.top+view.size,
+               styles.PK_BORDER_COLOUR.colour,miniwin.pen_solid,3,0,miniwin.brush_null)
          end
          if note then
-            map_draw("WindowCircleOp",win,miniwin.circle_rectangle,cell.left-1-width,cell.top-1-width,cell.left+view.size+1+width,cell.top+view.size+1+width,
-               ROOM_NOTE_COLOUR.colour,pen,width,0,miniwin.brush_null)
+            record_map_command("WindowCircleOp",win,miniwin.circle_rectangle,cell.left-1-width,cell.top-1-width,cell.left+view.size+1+width,cell.top+view.size+1+width,
+               styles.ROOM_NOTE_COLOUR.colour,pen,width,0,miniwin.brush_null)
          end
       end
    end
@@ -2368,21 +2256,21 @@ local function draw_map_overlays(room_limit)
       if view.inner_sea_bounds then
          local left,top,right,bottom = unpack(view.inner_sea_bounds)
          local colour = ColourNameToRGB("white")
-         map_draw("WindowLine",win,left,top,right,top,colour,miniwin.pen_solid,1)
-         map_draw("WindowLine",win,right,top,right,bottom,colour,miniwin.pen_solid,1)
-         map_draw("WindowLine",win,right,bottom,left,bottom,colour,miniwin.pen_solid,1)
-         map_draw("WindowLine",win,left,bottom,left,top,colour,miniwin.pen_solid,1)
+         record_map_command("WindowLine",win,left,top,right,top,colour,miniwin.pen_solid,1)
+         record_map_command("WindowLine",win,right,top,right,bottom,colour,miniwin.pen_solid,1)
+         record_map_command("WindowLine",win,right,bottom,left,bottom,colour,miniwin.pen_solid,1)
+         record_map_command("WindowLine",win,left,bottom,left,top,colour,miniwin.pen_solid,1)
       end
       local x,y,size = view.center_x,view.center_y,view.size
       if x+3*size-1>=1 and y+3*size>=1 and x-3*size<config.WINDOW.width and y-3*size-1<config.WINDOW.height then
          for _, pen in ipairs({{ColourNameToRGB("purple"),4},{ColourNameToRGB("magenta"),2}}) do
-            map_draw("WindowCircleOp",win,miniwin.circle_round_rectangle,
+            record_map_command("WindowCircleOp",win,miniwin.circle_round_rectangle,
                x-3*size,y-3*size-1,x+3*size-1,y+3*size,
                pen[1],miniwin.pen_solid,pen[2],0,miniwin.brush_null,25,25)
          end
       end
       if x+size/2-1>=1 and y+size/2-1>=1 and x-size/2<config.WINDOW.width and y-size/2<config.WINDOW.height then
-         map_draw("WindowCircleOp",win,miniwin.circle_rectangle,
+         record_map_command("WindowCircleOp",win,miniwin.circle_rectangle,
             x-size/2,y-size/2,x+size/2-1,y+size/2-1,
             ColourNameToRGB("magenta"),miniwin.pen_solid,2,0,miniwin.brush_null)
       end
@@ -2397,40 +2285,36 @@ local function draw_map_overlays(room_limit)
       end
       if visible then
          if left < right and top < bottom and right >= 2 and bottom >= 2 then
-            map_draw("WindowRectOp", win, 2, left, top, right - 1, bottom - 1, AREA_EXIT_FILL_COLOUR.colour)
+            record_map_command("WindowRectOp", win, 2, left, top, right - 1, bottom - 1, styles.AREA_EXIT_FILL_COLOUR.colour)
          else
-            map_draw("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
-               0, miniwin.pen_null, 0, AREA_EXIT_FILL_COLOUR.colour, miniwin.brush_solid)
+            record_map_command("WindowCircleOp", win, miniwin.circle_rectangle, left, top, right, bottom,
+               0, miniwin.pen_null, 0, styles.AREA_EXIT_FILL_COLOUR.colour, miniwin.brush_solid)
          end
       end
    end
 
    local room = map_command_state.border_room
    if room then
-      map_draw("WindowCircleOp", win, miniwin.circle_rectangle,
+      record_map_command("WindowCircleOp", win, miniwin.circle_rectangle,
          map_command_state.border_left, map_command_state.border_top,
          map_command_state.border_right, map_command_state.border_bottom,
-         room.unknown and UNKNOWN_ROOM_COLOUR.colour or room.bordercolour,
+         room.unknown and styles.UNKNOWN_ROOM_COLOUR.colour or room.bordercolour,
          room.unknown and miniwin.pen_dot or room.borderpen,
          room.unknown and 1 or room.borderpenwidth, -1, miniwin.brush_null)
    end
-end -- draw_map_overlays
+end
 
 
-----------------------------------------------------------------------------------
---  EXPOSED FUNCTIONS
-----------------------------------------------------------------------------------
+-- Display queries and updates used by the plugin.
 
--- can we find another room right now?
+function displayed_room()
+   return map_origin_uid
+end
 
-function check_we_can_find ()
-   if not current_room then
-      mapprint ("I don't know where you are right now - try: LOOK")
-      check_connected ()
-      return false
-   end
-   return true
-end -- check_we_can_find
+function room_info(uid)
+   if not display_room_cache[uid] then display_room_cache[uid] = get_room(uid) end
+   return display_room_cache[uid]
+end
 
 function set_running(run)
    run = run == true
@@ -2448,23 +2332,17 @@ end
 function invalidate_room(uid)
    cancel_draw()
    if uid then
-      rooms[uid] = nil
+      display_room_cache[uid] = nil
    else
-      rooms = {}
-      prev_draw_room = nil
-      prev_draw_area = nil
+      display_room_cache = {}
+      previous_origin_uid = nil
+      previous_area_name = nil
       drawing.prev_continent = false
    end
 end
 
-blink_cycle = {
-   "@R",
-   "@Y",
-   "@W"
-}
-
-function blink_title(drawing_frame, draw_win)
-   prev_title_color = title_color
+function blink_title(during_frame_render, target_window)
+   local prev_title_color = title_color
    if not config.BLINK_PK_TITLE then
       title_color = "@R"
    else
@@ -2472,15 +2350,15 @@ function blink_title(drawing_frame, draw_win)
       title_color = blink_cycle[next_blink_color]
    end
    if prev_title_color ~= title_color then
-      if drawing_frame~=true then
+      if during_frame_render~=true then
          drawing.highlight_target(nil,false)
          drawing.map_region.frame_ready=false
       end
-      dress_window(truncated_room_name, current_room, current_area, draw_win)
-      if drawing_frame~=true then
-         cache_frame(win)
+      draw_window_frame(truncated_room_name, map_origin_uid, map_area_name, target_window)
+      if during_frame_render~=true then
+         capture_map_image(win)
          drawing.map_region.frame_ready=true
-         map_render_cache=nil
+         completed_frame_cache=nil
          drawing.refresh_map_region(false)
          BufferedRepaint()
       end
@@ -2488,10 +2366,10 @@ function blink_title(drawing_frame, draw_win)
 end
 
 local function fit_room_name(room_name)
-   if fitted_title and fitted_title.room_name == room_name
-      and fitted_title.width == config.WINDOW.width
-      and fitted_title.font_name == config.FONT.name and fitted_title.font_size == config.FONT.size then
-      return fitted_title.text
+   if room_title_cache and room_title_cache.room_name == room_name
+      and room_title_cache.width == config.WINDOW.width
+      and room_title_cache.font_name == config.FONT.name and room_title_cache.font_size == config.FONT.size then
+      return room_title_cache.text
    end
    local truncated_room_name = room_name
    local name_width = WindowTextWidth (win, FONT_ID, truncated_room_name)
@@ -2506,96 +2384,88 @@ local function fit_room_name(room_name)
       if truncated_room_name == "" then
          break
       end
-   end -- while
+   end
 
    if add_dots then
       truncated_room_name = truncated_room_name .. "..."
-   end -- if
+   end
 
-   fitted_title = {room_name = room_name, width = config.WINDOW.width,
+   room_title_cache = {room_name = room_name, width = config.WINDOW.width,
       font_name = config.FONT.name, font_size = config.FONT.size, text = truncated_room_name}
    return truncated_room_name
 end
 
-function dress_window(room_name, room_uid, area_name, draw_win)
-   draw_win = draw_win or win
-   bodyleft, bodytop, bodyright, bodybottom = Theme.DrawBorder(draw_win)
-   bodytop = Theme.DrawTitleBar(draw_win, FONT_ID, title_color..room_name, "center")
+function draw_window_frame(room_name, room_uid, area_name, target_window)
+   target_window = target_window or win
+   bodyleft, bodytop, bodyright, bodybottom = Theme.DrawBorder(target_window)
+   bodytop = Theme.DrawTitleBar(target_window, FONT_ID, title_color..room_name, "center")
    Theme.AddDragHotspot(win, bodytop)
 
-   -- room ID number
    if config.SHOW_ROOM_ID then
       if room_uid:sub(1,5) == "nomap" then
          room_uid = "NONE"
       end
 
-      Theme.DrawTextBox(draw_win, FONT_ID,
+      Theme.DrawTextBox(target_window, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "ID: "..room_uid)) / 2,   -- left
          bodytop,    -- top
          "ID: "..room_uid, false, false
       )
    end
 
-   -- area name
-   if area_name then
-      Theme.DrawTextBox(draw_win, FONT_ID,
-         (config.WINDOW.width - WindowTextWidth (win, FONT_ID, area_name)) / 2,   -- left
-         config.WINDOW.height - 4 - font_height,    -- top
-         area_name:gsub("^%l", string.upper), false, false
-      )
+   Theme.DrawTextBox(target_window, FONT_ID,
+      (config.WINDOW.width - WindowTextWidth (win, FONT_ID, area_name)) / 2,   -- left
+      config.WINDOW.height - 4 - font_height,    -- top
+      area_name:gsub("^%l", string.upper), false, false
+   )
+
+   local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
+   local y = math.max(2, (bodytop-font_height)/2)
+   local box_right = Theme.DrawTextBox(target_window, FONT_ID,
+      x-1,   -- left
+      y-2,   -- top
+      "?", false, false
+   )
+   local box_width = box_right - (x-1)
+
+   if not pan_dragging then
+      ensure_control_hotspot("<help>", x-3, y-4, x+box_width+3, y + font_height,
+         "mapper.show_help", "Click for help", miniwin.cursor_help)
    end
 
-   -- help button
-   if type (show_help) == "function" then
-      local x = config.WINDOW.width - WindowTextWidth (win, FONT_ID, "?") - 6
-      local y = math.max(2, (bodytop-font_height)/2)
-      local box_right = Theme.DrawTextBox(draw_win, FONT_ID,
-         x-1,   -- left
-         y-2,   -- top
-         "?", false, false
-      )
-      local box_width = box_right - (x-1)
-
-      if not pan_dragging then
-         control_hotspot("<help>", x-3, y-4, x+box_width+3, y + font_height,
-            "mapper.show_help", "Click for help", miniwin.cursor_help)
-      end
-   end -- if
-
-   -- configuration
-   if draw_configure_box then
+   if config_panel_open then
       WindowDeleteHotspot(win, "<configure>")
       control_hotspots["<configure>"] = nil
       -- dropdown
       draw_configuration ()
    else
       -- button
-      WindowShow(config_win, false)
+      WindowShow(config_window, false)
       local x = 2
       local y = math.max(2, (bodytop-font_height)/2)
-      local text_width = Theme.DrawTextBox(draw_win, FONT_ID,
+      local text_width = Theme.DrawTextBox(target_window, FONT_ID,
          x,   -- left
          y-2,   -- top
          "*", false, false)
 
       if not pan_dragging then
-         control_hotspot("<configure>", x-2, y-4, x+text_width, y + font_height,
+         ensure_control_hotspot("<configure>", x-2, y-4, x+text_width, y + font_height,
             "mapper.mouseup_configure", "Click to configure map", miniwin.cursor_plus)
       end
    end
 end
 
--- Dress each visible batch without restarting the title blink between batches.
-local function dress_map_frame(job, draw_win)
+-- Redraw the frame controls for each batch, but start the PK blink timer only once.
+local function draw_frame_controls(job, target_window)
    local uid, room = job.uid, job.room
    local dress_t0 = detailed_timing and utils.timer()
    if job.dressed then
       -- Keep the current PK blink phase and its timer across batches.
-      dress_window(truncated_room_name, uid, room.area, draw_win)
+      draw_window_frame(truncated_room_name, uid, room.area, target_window)
    else
       truncated_room_name = fit_room_name(room.name)
 
-      is_pk = false
+      local is_pk = false
       if room.info then
          for _,v in ipairs(utils.split(room.info, ",")) do
             if v == "pk" then
@@ -2610,15 +2480,15 @@ local function dress_map_frame(job, draw_win)
       if not is_pk then
          DeleteTimer("blink_title")
       else
-         blink_title(true, draw_win)
+         blink_title(true, target_window)
          AddTimer("blink_title", 0, 0, 0.5, "", timer_flag.Enabled + timer_flag.Temporary + timer_flag.Replace, "mapper.blink_title")
       end
 
       -- blink_title() has already drawn the title and buttons in a PK room.
-      if not is_pk then dress_window(truncated_room_name, uid, room.area, draw_win) end
+      if not is_pk then draw_window_frame(truncated_room_name, uid, room.area, target_window) end
    end
 
-   local resize_x, resize_y = Theme.DrawResizeTag(draw_win, 1)
+   local resize_x, resize_y = Theme.DrawResizeTag(target_window, 1)
    Theme.AddResizeHotspot(win, resize_x, resize_y, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    if dress_t0 then
@@ -2627,7 +2497,6 @@ local function dress_map_frame(job, draw_win)
 end
 
 local function reset_frame_metrics()
-   -- reset room drawing metrics for this frame
    if detailed_timing then
       -- Count Window calls only within the measured refresh.
       for _, stat in pairs(window_call_stats) do
@@ -2681,11 +2550,10 @@ local function report_frame(start_time, continuing, job, more)
          sum = sum + recent_frame_times[i]
       end
       print (string.format ("=== Mapper %s: %s, %0.1f ms (avg %0.1f ms over %i batches) ===",
-         continuing and "continuation" or "frame",job.continent_view and "cached continent" or "depth "..depth,
+         continuing and "continuation" or "frame",job.continent_view and "cached continent" or "depth "..traversal_depth,
          frame_time * 1000, sum / n * 1000, n))
    end
 
-   -- detailed timing breakdown
    if detailed_timing then
 
       -- helper for consistent formatting
@@ -2758,7 +2626,7 @@ local function report_frame(start_time, continuing, job, more)
                       + frame_metrics.total_map_overlay_time + frame_metrics.total_map_render_time + frame_metrics.total_map_capture_time + frame_metrics.total_dress_window_time + frame_metrics.total_repaint_request_time
       local unaccounted = frame_time - accounted
       print (string.format ("  Unaccounted:       %6.2f ms  (%4.1f%%)", ms(unaccounted), pct(unaccounted)))
-   end -- if detailed_timing
+   end
    if not more and (timing or detailed_timing) then
       print(string.format("  Map complete: %0.1f ms elapsed, %0.1f ms executing in %i batches.",
          (end_time - job.started) * 1000, job.active_time * 1000, job.batches))
@@ -2786,11 +2654,10 @@ local function draw_map (request)
    if not uid then
       maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
       return
-   end -- if
+   end
 
-   current_room = uid -- remember where we are
+   map_origin_uid = uid -- remember where we are
 
-   -- timing
    local start_time = utils.timer ()
 
    reset_frame_metrics()
@@ -2799,32 +2666,32 @@ local function draw_map (request)
    local room, window_exists
    if continuing then
       room = job.room
-      map_commands = job.commands
+      frame_commands = job.commands
       map_command_state.count = job.body_count
-      map_commands_changed = job.commands_changed
+      frame_commands_changed = job.commands_changed
    else
       local current_t0 = detailed_timing and utils.timer()
-      draw_now = os.time ()
+      frame_timestamp = os.time ()
 
-      -- selective cache invalidation: fetch current room fresh (needs OUR_ROOM_COLOUR)
+      -- The origin has a distinct border, so reload its display record after movement.
       local fresh_current = get_room (uid)
       local new_area = fresh_current.area
 
-      rooms[uid] = fresh_current
+      display_room_cache[uid] = fresh_current
 
       room = fresh_current
-      last_visited [uid] = os.time ()
+      room_visit_times [uid] = os.time ()
 
-      current_area = room.area
+      map_area_name = room.area
       select_room_layout(room)
 
       -- check for area change and start smooth pan reset
-      if last_area_for_pan ~= nil and last_area_for_pan ~= current_area then
+      if last_area_for_pan ~= nil and last_area_for_pan ~= map_area_name then
          if not pan_animating and (pan_offset_x ~= 0 or pan_offset_y ~= 0) then
             start_pan_animation()
          end
       end
-      last_area_for_pan = current_area
+      last_area_for_pan = map_area_name
       if current_t0 then frame_metrics.total_current_room_time = utils.timer() - current_t0 end
 
       -- Read the current window dimensions and position.
@@ -2841,7 +2708,7 @@ local function draw_map (request)
       if not window_exists then
          -- create new window
          control_hotspots = {}
-         map_render_cache = nil
+         completed_frame_cache = nil
          drawing.map_region = {}
          drawing.continent_view, drawing.room_view = nil, nil
          WindowCreate (win,
@@ -2861,32 +2728,32 @@ local function draw_map (request)
       drawing.refresh_map_region()
 
       -- set up for initial room, in middle
-      drawn, drawn_coords, plan_to_draw, area_exits = {}, {}, {}, {}
+      processed_room_positions, occupied_room_positions, planned_room_positions, area_exits = {}, {}, {}, {}
       reset_room_queue(room_queue_buffers[1])
       drawn_min_x, drawn_min_y, drawn_max_x, drawn_max_y = nil, nil, nil, nil
-      depth = 0
+      traversal_depth = 0
 
       -- insert initial room (with pan offset applied)
       local center_x = config.WINDOW.width / 2 + pan_offset_x
       local center_y = config.WINDOW.height / 2 + pan_offset_y
-      rooms_to_be_drawn_uid[1] = uid
-      rooms_to_be_drawn_x[1] = center_x
-      rooms_to_be_drawn_y[1] = center_y
+      queued_room_uids[1] = uid
+      queued_room_x[1] = center_x
+      queued_room_y[1] = center_y
 
       -- Build into the other buffer. The last successful frame remains
       -- unchanged until rendering and image capture both succeed.
       local buffers = map_command_state.buffers
-      map_commands = map_render_cache and map_render_cache.commands == buffers[1] and buffers[2] or buffers[1]
-      map_commands_changed, map_command_state.count = false, 0
+      frame_commands = completed_frame_cache and completed_frame_cache.commands == buffers[1] and buffers[2] or buffers[1]
+      frame_commands_changed, map_command_state.count = false, 0
       map_command_state.border_room = nil
-      job = {uid = uid, room = room, commands = map_commands, width = config.WINDOW.width, height = config.WINDOW.height,
+      job = {uid = uid, room = room, commands = frame_commands, width = config.WINDOW.width, height = config.WINDOW.height,
          prefetched = {}, started = start_time, body_count = 0, rendered_count = 0,
          room_ends = {}, room_indices = {}, rendered_rooms = 0,
          room_view = {cells={}, origin_x=center_x, origin_y=center_y,
             pitch=ROOM_SIZE+DISTANCE_TO_NEXT_ROOM, half=HALF_ROOM},
          -- Reach the visible window even when panning has moved the current room outside it.
          boundary_left = math.min(HALF_ROOM, center_x),
-         boundary_top = math.min((title_bottom or font_height) + HALF_ROOM, center_y),
+         boundary_top = math.min(font_height + HALF_ROOM, center_y),
          boundary_right = math.max(config.WINDOW.width - HALF_ROOM, center_x),
          boundary_bottom = math.max(config.WINDOW.height - HALF_ROOM, center_y)}
       drawing.job = job
@@ -2896,31 +2763,31 @@ local function draw_map (request)
             size=ROOM_SIZE,width=job.width,height=job.height,
             stretch=room_layout.current.stretch,
             stretch_bounds=room_layout.current.stretch and {Theme.BodyMetrics(win,FONT_ID,font_height,1)} or nil,
-            pan_x=pan_offset_x,pan_y=pan_offset_y,top=title_bottom or font_height,
+            pan_x=pan_offset_x,pan_y=pan_offset_y,top=font_height,
          })
       end
       local cached_continent = job.continent_view ~= nil
-      local area_changed = prev_draw_area ~= nil and prev_draw_area ~= new_area
+      local area_changed = previous_area_name ~= nil and previous_area_name ~= new_area
       if area_changed and not (drawing.prev_continent and cached_continent)
             or drawing.prev_continent and not cached_continent then
-         -- Ordinary room borders depend on current_area, including a fallback from the cached renderer.
-         rooms = {}
-      elseif prev_draw_room and prev_draw_room ~= uid then
+         -- Ordinary room borders depend on map_area_name, including a fallback from the cached renderer.
+         display_room_cache = {}
+      elseif previous_origin_uid and previous_origin_uid ~= uid then
          -- Refresh the old current room, which had OUR_ROOM_COLOUR and a wider border.
-         rooms[prev_draw_room] = nil
+         display_room_cache[previous_origin_uid] = nil
       end
       if area_changed and drawing.prev_continent and cached_continent then
-         -- PK note widths also depend on current_area; terrain and tooltips do not.
-         for room_uid, cached in pairs(rooms) do
+         -- PK note widths also depend on map_area_name; terrain and tooltips do not.
+         for room_uid, cached in pairs(display_room_cache) do
             if cached.notes and cached.notes ~= "" and cached.info and cached.info:match("pk") then
-               rooms[room_uid] = nil
+               display_room_cache[room_uid] = nil
             end
          end
       end
-      rooms[uid] = fresh_current
-      prev_draw_room, prev_draw_area, drawing.prev_continent = uid, new_area, cached_continent
+      display_room_cache[uid] = fresh_current
+      previous_origin_uid, previous_area_name, drawing.prev_continent = uid, new_area, cached_continent
       if cached_continent then
-         rooms_to_be_drawn_uid[1],rooms_to_be_drawn_x[1],rooms_to_be_drawn_y[1]=nil,nil,nil
+         queued_room_uids[1],queued_room_x[1],queued_room_y[1]=nil,nil,nil
          drawing.plan_continent(job.continent_view)
          job.body_count=map_command_state.count
          job.room_ends[1]=job.body_count
@@ -2948,35 +2815,33 @@ local function draw_map (request)
    local background = not job.continent_view and config.USE_TEXTURES.enabled == true
       and not room_layout.current_is_continent
       and room.textimage or false
-   local reference = map_render_cache
+   local reference = completed_frame_cache
    if not reference or reference.width ~= job.width or reference.height ~= job.height
          or reference.background ~= background or reference.body_colour ~= Theme.PRIMARY_BODY
          or reference.uid ~= uid or reference.room_name ~= room.name or reference.area ~= room.area
          or reference.room_info ~= room.info or reference.show_room_id ~= config.SHOW_ROOM_ID
-         or reference.configure_open ~= draw_configure_box
+         or reference.configure_open ~= config_panel_open
          or reference.font_name ~= config.FONT.name or reference.font_size ~= config.FONT.size
          or reference.continent_key ~= (job.continent_view and job.continent_view.key)
           or reference.continent_version ~= (job.continent_view and job.continent_view.image.version)
          or WindowImageInfo(win, "cached_map", 1) == nil then
-      map_commands_changed = true
+      frame_commands_changed = true
    end
-   -- Reserve only the recent measured cost of publishing the batch.
-   local finish_reserve = drawing.finish_times[continuing and 2 or 1].seconds
-   local deadline = start_time + math.max(0, drawing.slice_seconds - finish_reserve)
+   local deadline = start_time + drawing.slice_seconds
    local progressed, canvas_ready, display_changed = false, false, false
 
    local function prepare_body()
       if canvas_ready then return end
       -- Keep the visible bitmap unchanged while commands and hotspots run.
       -- Native callbacks can repaint before the final overlays are ready.
-      map_render_cache = nil
-      if WindowInfo(render_win, 3) ~= job.width or WindowInfo(render_win, 4) ~= job.height then
-         check(WindowCreate(render_win, 0, 0, job.width, job.height, 0, 0, Theme.PRIMARY_BODY))
+      completed_frame_cache = nil
+      if WindowInfo(offscreen_window, 3) ~= job.width or WindowInfo(offscreen_window, 4) ~= job.height then
+         check(WindowCreate(offscreen_window, 0, 0, job.width, job.height, 0, 0, Theme.PRIMARY_BODY))
       end
-      if job.continent_view then continents.install_image(job.continent_view,render_win) end
+      if job.continent_view then continents.install_image(job.continent_view,offscreen_window) end
       if job.render_started then
          local image_t0 = detailed_timing and utils.timer()
-         check(WindowDrawImage(render_win, "continuation_map", 0, 0, 0, 0, 1))
+         check(WindowDrawImage(offscreen_window, "continuation_map", 0, 0, 0, 0, 1))
          if image_t0 then
             frame_metrics.total_map_render_time = frame_metrics.total_map_render_time + utils.timer() - image_t0
          end
@@ -2984,7 +2849,7 @@ local function draw_map (request)
          local bg_t0 = detailed_timing and utils.timer()
          -- Restore the full background before replaying a changed map.
          if background == false then
-            check(WindowRectOp(render_win, 2, 0, 0, config.WINDOW.width, config.WINDOW.height, Theme.PRIMARY_BODY))
+            check(WindowRectOp(offscreen_window, 2, 0, 0, config.WINDOW.width, config.WINDOW.height, Theme.PRIMARY_BODY))
          end
          -- Handle background texture (cached for performance)
          if background then
@@ -2996,14 +2861,13 @@ local function draw_map (request)
                or cached_bg_texture ~= room.textimage
             )
             if need_regen then
-               -- tile the texture in the hidden drawing window
-               local iwidth = WindowImageInfo(render_win, room.textimage, 2)
-               local iheight = WindowImageInfo(render_win, room.textimage, 3)
+               local iwidth = WindowImageInfo(offscreen_window, room.textimage, 2)
+               local iheight = WindowImageInfo(offscreen_window, room.textimage, 3)
                local x, y = 0, 0
                while y < config.WINDOW.height do
                   x = 0
                   while x < config.WINDOW.width do
-                     check(WindowDrawImage(render_win, room.textimage, x, y, 0, 0, 1))
+                     check(WindowDrawImage(offscreen_window, room.textimage, x, y, 0, 0, 1))
                      x = x + iwidth
                   end
                   y = y + iheight
@@ -3011,14 +2875,14 @@ local function draw_map (request)
 
                -- capture the tiled result as a cached image
                cached_bg_image = "cached_bg"
-               check(WindowImageFromWindow(render_win, cached_bg_image, render_win))
+               check(WindowImageFromWindow(offscreen_window, cached_bg_image, offscreen_window))
 
                cached_bg_width = config.WINDOW.width
                cached_bg_height = config.WINDOW.height
                cached_bg_texture = room.textimage
             else
                -- single blit of cached background
-               check(WindowDrawImage(render_win, cached_bg_image, 0, 0, 0, 0, 1))
+               check(WindowDrawImage(offscreen_window, cached_bg_image, 0, 0, 0, 0, 1))
             end
          end
 
@@ -3036,8 +2900,8 @@ local function draw_map (request)
          prepare_body()
          local render_t0 = detailed_timing and utils.timer()
          for i = job.rendered_count + 1, last_command do
-            local command = map_commands[i]
-            check(_G[command.name](render_win, unpack(command, 2, command.count)))
+            local command = frame_commands[i]
+            check(_G[command.name](offscreen_window, unpack(command, 2, command.count)))
             job.rendered_count = i
          end
          if render_t0 then
@@ -3050,16 +2914,16 @@ local function draw_map (request)
    -- Plan and draw in room batches. Read the clock only after
    -- a batch, and retain the queue and image when the callback must yield.
    while true do
-      if map_commands_changed and job.rendered_rooms < #job.room_ends then
+      if frame_commands_changed and job.rendered_rooms < #job.room_ends then
          render_room_batch()
       else
-         if job.continent_view or depth >= config.SCAN.depth then break end
+         if job.continent_view or traversal_depth >= config.SCAN.depth then break end
          local loop_t0 = detailed_timing and utils.timer()
          local rooms_planned = 0
-         while rooms_planned < drawing.room_batch_size and depth < config.SCAN.depth do
+         while rooms_planned < drawing.room_batch_size and traversal_depth < config.SCAN.depth do
             if not job.level then
-               if #rooms_to_be_drawn_uid == 0 then break end
-               job.level = rooms_to_be_drawn_uid == room_queue_buffers[1].uid and room_queue_buffers[1] or room_queue_buffers[2]
+               if #queued_room_uids == 0 then break end
+               job.level = queued_room_uids == room_queue_buffers[1].uid and room_queue_buffers[1] or room_queue_buffers[2]
                job.index = 1
                reset_room_queue(job.level == room_queue_buffers[1] and room_queue_buffers[2] or room_queue_buffers[1])
             end
@@ -3071,39 +2935,38 @@ local function draw_map (request)
             job.index = i + 1
             if job.index > #level.uid then
                job.level = nil
-               depth = depth + 1
+               traversal_depth = traversal_depth + 1
             end
          end
          if loop_t0 then
             frame_metrics.total_room_loop_time = frame_metrics.total_room_loop_time + utils.timer() - loop_t0
          end
          if rooms_planned == 0 then break end
-         if map_commands_changed then
+         if frame_commands_changed then
             render_room_batch()
          end
       end
       progressed = true
       if utils.timer() >= deadline then break end
    end
-   local finish_started = utils.timer()
-   local traversal_more = not job.continent_view and depth < config.SCAN.depth
-      and (job.level ~= nil or #rooms_to_be_drawn_uid > 0)
+   local traversal_more = not job.continent_view and traversal_depth < config.SCAN.depth
+      and (job.level ~= nil or #queued_room_uids > 0)
 
-   -- if all rooms are off-screen (e.g. teleported within area while panned), reset pan
+   -- An area teleport can leave every room outside the panned view. Recenter it.
    if not traversal_more and drawn_min_x == nil and (pan_offset_x ~= 0 or pan_offset_y ~= 0) and not pan_animating then
       start_pan_animation()
    end
 
    local overlay_t0 = detailed_timing and utils.timer()
-   local body_changed = map_commands_changed
+   local body_changed = frame_commands_changed
    -- A map without body commands can compare its overlays immediately. Other
    -- partial maps still occupy slots used by the old complete map's body.
    local compare_overlays = not traversal_more
       or (reference and reference.body_count == 0 and job.body_count == 0)
-   if not compare_overlays then map_commands_changed = true end
+   if not compare_overlays then frame_commands_changed = true end
    local overlay_room_limit = body_changed and job.rendered_rooms or #job.room_ends
    draw_map_overlays(overlay_room_limit)
-   if not compare_overlays then map_commands_changed = body_changed end
+   if not compare_overlays then frame_commands_changed = body_changed end
    if overlay_t0 then
       frame_metrics.total_map_overlay_time = utils.timer() - overlay_t0
    end
@@ -3111,13 +2974,12 @@ local function draw_map (request)
    -- Only the complete command sequence can confirm image reuse. Until a
    -- difference appears, matching commands are already visible in that image.
    if compare_overlays and reference and map_command_state.count ~= reference.count then
-      map_commands_changed = true
+      frame_commands_changed = true
    end
-   local reuse_map = not traversal_more and not map_commands_changed
-   local finish_elapsed = utils.timer() - finish_started
+   local reuse_map = not traversal_more and not frame_commands_changed
    if reuse_map then
       job.rendered_count, job.rendered_rooms = job.body_count, #job.room_ends
-   elseif map_commands_changed then
+   elseif frame_commands_changed then
       -- An overlay difference can require replaying a matching body prefix.
       -- Replay the same room batches, with one clock check after each batch.
       while job.rendered_rooms < #job.room_ends and (not progressed or utils.timer() < deadline) do
@@ -3126,7 +2988,7 @@ local function draw_map (request)
       end
    end
    if job.rendered_count == job.body_count then job.rendered_rooms = #job.room_ends end
-   if map_commands_changed and job.rendered_rooms ~= overlay_room_limit then
+   if frame_commands_changed and job.rendered_rooms ~= overlay_room_limit then
       local overlay_replay_t0 = detailed_timing and utils.timer()
       map_command_state.count = job.body_count
       draw_map_overlays(job.rendered_rooms)
@@ -3136,24 +2998,23 @@ local function draw_map (request)
    end
    -- Empty room batches still need a canvas for the current-room outline
    -- and area markers. Publish them before movement can cancel this map.
-   if map_commands_changed and job.body_count == 0 and not job.render_started then prepare_body() end
-   finish_started = utils.timer()
+   if frame_commands_changed and job.body_count == 0 and not job.render_started then prepare_body() end
    local more = traversal_more or job.rendered_count < job.body_count
-   job.commands_changed = map_commands_changed
+   job.commands_changed = frame_commands_changed
    -- Keep the old complete image until a changed body actually starts.
    -- Planning an area marker must not publish an empty body at the cutoff.
    display_changed = display_changed or reuse_map or (job.overlay_changed and job.render_started)
-      or (not more and not job.render_started and map_commands_changed)
+      or (not more and not job.render_started and frame_commands_changed)
    local room_view
    if display_changed then
       if not job.continent_view then
          local targets_t0 = detailed_timing and utils.timer()
          -- Room records are append-only. The published limit excludes new
          -- records until their drawing batch reaches the visible bitmap.
-         room_view = {cells=job.room_view.cells, exits=area_exit_targets(job),
+         room_view = {cells=job.room_view.cells, exits=build_area_exit_targets(job),
             origin_x=job.room_view.origin_x, origin_y=job.room_view.origin_y,
             pitch=job.room_view.pitch, half=job.room_view.half,
-            room_limit=map_commands_changed and job.rendered_rooms or #job.room_ends}
+            room_limit=frame_commands_changed and job.rendered_rooms or #job.room_ends}
          if targets_t0 then
             frame_metrics.total_hotspot_time = frame_metrics.total_hotspot_time + utils.timer()-targets_t0
          end
@@ -3164,40 +3025,40 @@ local function draw_map (request)
          if more then
             -- Save only executed body commands. The next callback restores
             -- this image, so old overlays cannot remain under new rooms.
-            check(WindowImageFromWindow(render_win, "continuation_map", render_win))
+            check(WindowImageFromWindow(offscreen_window, "continuation_map", offscreen_window))
          end
          for i = job.body_count + 1, map_command_state.count do
-            local command = map_commands[i]
-            check(_G[command.name](render_win, unpack(command, 2, command.count)))
+            local command = frame_commands[i]
+            check(_G[command.name](offscreen_window, unpack(command, 2, command.count)))
          end
          if render_t0 then
             frame_metrics.total_map_render_time = frame_metrics.total_map_render_time + utils.timer() - render_t0
          end
       end
-      dress_map_frame(job, render_win)
+      draw_frame_controls(job, offscreen_window)
       -- Remove the old highlight before replacing its restoration image.
       drawing.highlight_target(nil,false)
       drawing.map_region.frame_ready=false
       if not reuse_map then
          local capture_t0 = detailed_timing and utils.timer()
-         cache_frame(render_win)
+         capture_map_image(offscreen_window)
          if capture_t0 then frame_metrics.total_map_capture_time = utils.timer() - capture_t0 end
       end
       local publish_t0 = detailed_timing and utils.timer()
       check(WindowDrawImage(win, "cached_map", 0, 0, 0, 0, 1))
       drawing.commit_map_view(job.continent_view,room_view)
       drawing.map_region.frame_ready=true
-      WindowShow(win, not window_hidden)
+      WindowShow(win, show_on_redraw)
       if publish_t0 then
          frame_metrics.total_map_render_time = frame_metrics.total_map_render_time + utils.timer() - publish_t0
          if reuse_map then frame_metrics.map_image_reused = true end
       end
-      map_commands = nil
+      frame_commands = nil
       job.overlay_changed, job.dressed = false, true
    elseif detailed_timing then
       frame_metrics.map_image_retained = true
    end
-   map_commands = nil
+   frame_commands = nil
    if display_changed then
       drawing.refresh_map_region(false)
    elseif drawing.room_view and drawing.room_view.cells == job.room_view.cells
@@ -3207,11 +3068,11 @@ local function draw_map (request)
       drawing.refresh_map_region()
    end
    if not more then
-      map_render_cache = {commands = job.commands, count = map_command_state.count, body_count = job.body_count,
+      completed_frame_cache = {commands = job.commands, count = map_command_state.count, body_count = job.body_count,
          width = config.WINDOW.width, height = config.WINDOW.height,
          uid = uid, room_name = room.name, area = room.area, room_info = room.info,
          show_room_id = config.SHOW_ROOM_ID, font_name = config.FONT.name, font_size = config.FONT.size,
-         configure_open = draw_configure_box,
+         configure_open = config_panel_open,
          background = background, body_colour = Theme.PRIMARY_BODY,
          continent_key = job.continent_view and job.continent_view.key,
          continent_version = job.continent_view and job.continent_view.image.version}
@@ -3227,7 +3088,6 @@ local function draw_map (request)
    end
    if repaint_t0 then frame_metrics.total_repaint_request_time = utils.timer() - repaint_t0 end
 
-   remember_finish_time(continuing, finish_elapsed + utils.timer() - finish_started)
    report_frame(start_time, continuing, job, more)
    if callback then
       callback.more = more
@@ -3238,12 +3098,12 @@ local function draw_map (request)
    else
       drawing.job = nil
    end
-end -- draw_map
+end
 
 function draw(uid)
    local callback_started = (timing or detailed_timing) and utils.timer()
    with_window_timing(draw_map, uid, detailed_timing and uid ~= nil or false, callback_started)
-end -- draw
+end
 
 -- The GMCP plugin forwards OnPluginTick to resume unfinished frames and centering.
 function continue_drawing()
@@ -3278,104 +3138,95 @@ function get_timing()
    return detailed_timing and "detailed" or timing and "on" or "off"
 end
 
-local credits = {
-   "MUSHclient mapper",
-   string.format ("Version %0.1f", VERSION),
-   "Made for Aardwolf by Fiendish",
-   "Based on work by Nick Gammon",
-   "World: "..WorldName (),
-   GetInfo (3),
-}
-
 local function draw_credits()
-   check(WindowCreate(render_win, 0, 0, config.WINDOW.width, config.WINDOW.height, 0, 0, Theme.PRIMARY_BODY))
+   check(WindowCreate(offscreen_window, 0, 0, config.WINDOW.width, config.WINDOW.height, 0, 0, Theme.PRIMARY_BODY))
    local top = (config.WINDOW.height - #credits * font_height) /2
 
    for _, v in ipairs (credits) do
-      local width = WindowTextWidth (render_win, FONT_ID, v)
+      local width = WindowTextWidth (offscreen_window, FONT_ID, v)
       local left = (config.WINDOW.width - width) / 2
-      WindowText (render_win, FONT_ID, v, left, top, 0, 0, Theme.BODY_TEXT)
+      WindowText (offscreen_window, FONT_ID, v, left, top, 0, 0, Theme.BODY_TEXT)
       top = top + font_height
-   end -- for
+   end
 
-   Theme.DrawBorder(render_win)
-   local resize_x, resize_y = Theme.DrawResizeTag(render_win, 1)
+   Theme.DrawBorder(offscreen_window)
+   local resize_x, resize_y = Theme.DrawResizeTag(offscreen_window, 1)
    Theme.AddResizeHotspot(win, resize_x, resize_y, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
    drawing.map_region.frame_ready=false
-   cache_frame(render_win)
+   capture_map_image(offscreen_window)
    check(WindowDrawImage(win, "cached_map", 0, 0, 0, 0, 1))
    drawing.map_region.frame_ready=true
-   WindowShow(win, not window_hidden)
-   WindowShow(config_win, false)
+   WindowShow(win, show_on_redraw)
+   WindowShow(config_window, false)
 end
 
--- call once to initialize the mapper
-function init (t)
+function build_continent_maps()
+   continents.build_images(
+      room_layout.continent.stretch and 9 or snap_continent_room_size(room_layout.continent.size),
+      room_layout.vidblain.stretch and 9 or snap_continent_room_size(room_layout.vidblain.size))
+end
+
+-- Recreate window resources on installation or reinitialization.
+function init (options)
    if continents then continents.close() end
-   continents = new_continent_maps(t.continent_data, GetPluginID() .. "_continent")
+   continents = new_continent_maps(options.continent_data, GetPluginID() .. "_continent")
    cancel_draw()
 
-   -- make copy of colours, sizes etc.
-   findpath = t.findpath
-   config = t.config
+   -- Keep the supplied configuration table so the plugin can save option changes.
+   config = options.config
    assert (type (config) == "table", "No 'config' table supplied to mapper.")
    config.SHOW_AREA_EXITS = nil -- Remove the retired setting from saved configurations.
 
    control_hotspots = {}
    drawing.map_region = {}
    drawing.continent_view, drawing.room_view = nil, nil
-   fitted_title = nil
-   map_render_cache, map_commands = nil, nil
+   room_title_cache = nil
+   completed_frame_cache, frame_commands = nil, nil
    map_command_state = {buffers = {{}, {}}, count = 0}
    room_queue_buffers = {{uid = {}, x = {}, y = {}}, {uid = {}, x = {}, y = {}}}
-   is_running = t.running == true
-   supplied_get_room = t.get_room
-   supplied_get_continent_room_overlays = t.get_continent_room_overlays
-   supplied_prefetch_rooms = t.prefetch_rooms
-   assert (type(supplied_prefetch_rooms) == "function", "Invalid 'prefetch_rooms' callback.")
-   assert (type (supplied_get_room) == "function", "No 'get_room' function supplied to mapper.")
+   is_running = options.running == true
+   show_on_redraw = options.hidden ~= true
+   callbacks.activate_target = options.activate_target
+   callbacks.get_room = options.get_room
+   callbacks.get_continent_room_overlays = options.get_continent_room_overlays
+   callbacks.prefetch_rooms = options.prefetch_rooms
+   assert (type(callbacks.prefetch_rooms) == "function", "Invalid 'prefetch_rooms' callback.")
+   assert (type (callbacks.get_room) == "function", "No 'get_room' function supplied to mapper.")
 
-   show_help = t.show_help     -- "help" function
-   room_click = t.room_click   -- RH mouse-click function
-   timing = t.timing                   -- true for frame timing summary
-   detailed_timing = t.detailed_timing  -- true for detailed sub-phase breakdown
-   show_other_areas = t.show_other_areas  -- true to show other areas
-   show_up_down = t.show_up_down        -- true to show up or down
-   speedwalk_prefix = t.speedwalk_prefix  -- how to speedwalk (prefix)
+   show_help = options.show_help     -- "help" function
+   callbacks.room_click = options.room_click   -- RH mouse-click function
+   timing = options.timing                   -- true for frame timing summary
+   detailed_timing = options.detailed_timing  -- true for detailed sub-phase breakdown
+   show_up_down = options.show_up_down        -- true to show up or down
 
-   -- force some config defaults if not supplied
    for k, v in pairs (default_config) do
       if config[k] == nil then
          config[k] = v
       end
-   end -- for
+   end
 
    win = GetPluginID () .. "_mapper"
-   render_win = win .. "_render"
-   config_win = GetPluginID () .. "_z_config_win"
+   offscreen_window = win .. "_render"
+   config_window = GetPluginID () .. "_z_config_win"
 
    WindowCreate (win, 0, 0, 0, 0, 0, 0, 0)
-   WindowCreate(render_win, 0, 0, 0, 0, 0, 0, 0)
-   WindowCreate(config_win, 0, 0, 0, 0, 0, 0, 0)
+   WindowCreate(offscreen_window, 0, 0, 0, 0, 0, 0, 0)
+   WindowCreate(config_window, 0, 0, 0, 0, 0, 0, 0)
 
-   -- add the fonts
    WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
    WindowFont (win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
-   WindowFont (render_win, FONT_ID, config.FONT.name, config.FONT.size)
-   WindowFont (render_win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
-   WindowFont (config_win, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
-   WindowFont (config_win, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
+   WindowFont (offscreen_window, FONT_ID, config.FONT.name, config.FONT.size)
+   WindowFont (offscreen_window, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
+   WindowFont (config_window, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
+   WindowFont (config_window, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
 
-   -- see how high it is
    font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
 
    -- find where window was last time
-   windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , true, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, {x=default_x, y=default_y})
+   windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , true, {config_window}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, {x=default_x, y=default_y})
 
-   -- calculate box sizes, arrows, connecting lines etc.
-   build_room_info ()
+   update_room_geometry ()
 
-   -- ensure config has proper defaults if not set
    if not config.WINDOW then config.WINDOW = {} end
    config.WINDOW.width = config.WINDOW.width or default_width
    config.WINDOW.height = config.WINDOW.height or default_height
@@ -3389,13 +3240,12 @@ function init (t)
       windowinfo.window_flags,
       Theme.PRIMARY_BODY)
 
-   -- let them move it around
    movewindow.add_drag_handler (win, 0, 0, 0, 0)
 
    resize_dragging = false
    draw_credits()
 
-end -- init
+end
 
 function MouseUp(flags, hotspot_id, win)
    if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
@@ -3421,14 +3271,14 @@ local function with_pan_tooltip_hidden(callback, ...)
 end
 
 function right_click_menu()
-   menustring = "Bring To Front|Send To Back"
+   local menustring = "Bring To Front|Send To Back"
 
    -- add center map option if panned
    if pan_offset_x ~= 0 or pan_offset_y ~= 0 then
       menustring = menustring.."|-|Center Map"
    end
 
-   result = with_pan_tooltip_hidden(WindowMenu,
+   local result = with_pan_tooltip_hidden(WindowMenu,
       win,
       WindowInfo (win, 14),  -- x position
       WindowInfo (win, 15),   -- y position
@@ -3451,15 +3301,15 @@ end
 function mouseup_change_stretch(flags, hotspot_id)
    local layout = selected_layout(hotspot_id)
    layout.stretch = not layout.stretch
-   draw(current_room)
+   draw(map_origin_uid)
    SaveState()
 end
 
 local function change_layout(layout, size_change, spacing_change)
-   if not current_room or size_change ~= 0 and layout.stretch then return end
+   if not map_origin_uid or size_change ~= 0 and layout.stretch then return end
    local size = layout.size
    if layout ~= room_layout.area then
-      size = continent_room_size(size + (size_change > 0 and 4 or -4))
+      size = snap_continent_room_size(size + (size_change > 0 and 4 or -4))
       if size == layout.size then return end
       layout.size = size
    else
@@ -3485,7 +3335,7 @@ local function change_layout(layout, size_change, spacing_change)
       if size == layout.size and spacing == layout.spacing then return end
       layout.size, layout.spacing = size, spacing
    end
-   draw(current_room)
+   draw(map_origin_uid)
    SaveState()
 end
 
@@ -3521,29 +3371,32 @@ end
 
 function mapprint (...)
    local old_note_colour = GetNoteColourFore ()
-   SetNoteColourFore(MAPPER_NOTE_COLOUR.colour)
+   SetNoteColourFore(styles.MAPPER_NOTE_COLOUR.colour)
    print (...)
    SetNoteColourFore (old_note_colour)
-end -- mapprint
+end
 
 function maperror (...)
    local old_note_colour = GetNoteColourFore ()
    SetNoteColourFore(ColourNameToRGB "red")
    print (...)
    SetNoteColourFore (old_note_colour)
-end -- maperror
+end
 
 function show()
    WindowShow(win, true)
    hidden = false
-   if current_room then draw(current_room) end
-end -- show
+   show_on_redraw = true
+   if map_origin_uid then draw(map_origin_uid) end
+end
 
-function hide()
+-- Hiding stops pending batches. keep_hidden also hides later redraws.
+function hide(keep_hidden)
+   show_on_redraw = not keep_hidden
    cancel_draw()
    WindowShow(win, false)
    hidden = true
-end -- hide
+end
 
 function save_state ()
    SetVariable("ROOM_SIZE", room_layout.area.size)
@@ -3557,356 +3410,11 @@ function save_state ()
       config.WINDOW.width = WindowInfo(win, 3)
       config.WINDOW.height = WindowInfo(win, 4)
    end
-end -- save_state
-
-function hyperlinkGoto(uid)
-   mapper.goto(uid)
-   for i,v in ipairs(last_result_list) do
-      if uid == v then
-         next_result_index = i
-         break
-      end
-   end
 end
 
-require "serialize"
+-- Map pointer callbacks.
 
-function full_find (dests, show_uid, expected_count, walk, fcb, no_portals)
-   local paths = {}
-   local notfound = {}
-   for i,v in ipairs(dests) do
-      SetStatus (string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #dests))
-      BufferedRepaint()
-      local foundpath = findpath(current_room, v.uid, no_portals, no_portals)
-      if not rooms [v.uid] then
-         rooms [v.uid] = get_room (v.uid)
-      end
-      if foundpath ~= nil then
-         paths[v.uid] = {path=foundpath, reason=v.reason}
-      else
-         table.insert(notfound, {uid=v.uid, reason=v.reason})
-      end
-   end
-   SetStatus ("")
-
-   BroadcastPlugin(500, "found_paths = "..string.gsub(serialize.save_simple(paths),"%s+"," "))
-   BroadcastPlugin(501, "unfound_paths = "..string.gsub(serialize.save_simple(notfound),"%s+"," "))
-
-   local t = {}
-   local found_count = 0
-   for k in pairs (paths) do
-      table.insert (t, k)
-      found_count = found_count + 1
-   end -- for
-
-   -- sort so closest ones are first
-   table.sort (t, function (a, b) return #paths [a].path < #paths [b].path end )
-
-   if walk and t[1] then
-      local uid = t[1]
-      local path = paths[uid].path
-      mapprint ("Going to:", rooms[uid].name)
-      start_speedwalk(path)
-      return
-   end -- if walking wanted
-
-   Note("+------------------------------ START OF SEARCH -------------------------------+")
-   for _, uid in ipairs (t) do
-      local room = rooms [uid] -- ought to exist or wouldn't be in table
-      assert (room, "Room " .. uid .. " is not in rooms table.")
-
-      local distance = #paths [uid].path .. " room"
-      if #paths [uid].path > 1 or #paths[uid].path == 0 then
-         distance = distance .. "s"
-      end -- if
-      distance = distance .. " away"
-
-      local room_name = room.name
-      room_name = room_name .. " (" .. room.area .. ")"
-
-      if show_uid then
-         room_name = room_name .. " (" .. uid .. ")"
-      end -- if
-
-      if current_room ~= uid then
-         table.insert(last_result_list, uid)
-         Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto(" .. uid .. ")",
-            "["..#last_result_list.."] "..room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false, NoUnderline_hyperlinks)
-      else
-         Tell(room_name)
-      end
-      local info = ""
-      if type (paths [uid].reason) == "string" and paths [uid].reason ~= "" then
-         info = " [" .. paths [uid].reason .. "]"
-      end -- if
-      mapprint (" - " .. distance .. info) -- new line
-
-      -- callback to display extra stuff (like find context, room description)
-      if fcb then
-         fcb (uid)
-      end -- if callback
-   end -- for each room
-
-   if expected_count and found_count < expected_count then
-      local diff = expected_count - found_count
-      local were, matches = "were", "matches"
-      if diff == 1 then
-         were, matches = "was", "match"
-      end -- if
-      Note("+------------------------------------------------------------------------------+")
-      mapprint ("There", were, diff, matches,
-         "which I could not find a path to within",
-         config.SCAN.depth, "rooms:")
-   end -- if
-   for i,v in ipairs(notfound) do
-      local nfroom = rooms[v.uid]
-      local nfline = nfroom.name
-      nfline = nfline .. " (" .. nfroom.area .. ")"
-
-      if show_uid then
-         nfline = nfline .. " (" .. v.uid .. ")"
-      end -- if
-      Tell(nfline)
-      if type (v.reason) == "string" and v.reason ~= "" then
-         nfinfo = " - [" .. v.reason .. "]"
-         mapprint (nfinfo) -- new line
-      else
-         Note("")
-      end -- if
-   end
-
-   Note("+-------------------------------- END OF SEARCH -------------------------------+")
-end
-
-function quick_find(dests, show_uid, expected_count, walk, fcb)
-   BufferedRepaint()
-   Note("+------------------------------ START OF SEARCH -------------------------------+")
-
-   for i,v in ipairs(dests) do
-      local uid = v.uid
-      if not rooms[uid] then
-         rooms[uid] = get_room(uid)
-      end -- if
-      local room = rooms[uid] -- ought to exist or wouldn't be in table
-
-      assert (room, "Room " .. v.uid .. " is not in rooms table.")
-
-      local room_name = room.name
-      room_name = room_name .. " (" .. room.area .. ")"
-      if show_uid then
-         room_name = room_name .. " (" .. v.uid .. ")"
-      end
-
-      if current_room ~= v.uid then
-         table.insert(last_result_list, v.uid)
-         Hyperlink ("!!" .. GetPluginID () .. ":mapper.hyperlinkGoto("..v.uid..")",
-            "["..#last_result_list.."] "..room_name, "Click to speedwalk there", "", "", false, NoUnderline_hyperlinks)
-      else
-         ColourTell(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","[you are here] "..room_name)
-      end
-
-      local info = ""
-      if type (v.reason) == "string" and v.reason ~= "" then
-         info = " [" .. v.reason .. "]"
-         mapprint (" - " .. info) -- new line
-      else -- if
-         Note("")
-      end
-
-      -- callback to display extra stuff (like find context, room description)
-      if fcb then
-         fcb (uid)
-      end -- if callback
-
-      BufferedRepaint()
-   end -- for each room
-
-   Note("+-------------------------------- END OF SEARCH -------------------------------+")
-end
-
-function gotoNextResult(which)
-   if tonumber(which) == nil then
-      if next_result_index ~= nil then
-         next_result_index = next_result_index+1
-         if next_result_index <= #last_result_list then
-            mapper.goto(last_result_list[next_result_index])
-            return
-         else
-            next_result_index = nil
-         end
-      end
-      ColourNote(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","NEXT ERROR: No more NEXT results left.")
-   else
-      next_result_index = tonumber(which)
-      if (next_result_index > 0) and (next_result_index <= #last_result_list) then
-         mapper.goto(last_result_list[next_result_index])
-         return
-      else
-         ColourNote(RGBColourToName(MAPPER_NOTE_COLOUR.colour),"","NEXT ERROR: There is no NEXT result #"..next_result_index..".")
-         next_result_index = nil
-      end
-   end
-end
-
-function goto(uid)
-   find (nil,
-      {{uid=uid, reason=true}},
-      0,
-      false,  -- show vnum?
-      1,          -- how many to expect
-      true        -- just walk there
-   )
-end
-
--- generic room finder
--- name is for informational purposes only; it's displayed to the user in the search results
--- dests is a list of room/reason pairs where reason is either true (meaning generic) or a string to find
--- if max_paths <= 0 it's disregarded, otherwise number of dests must be <= max_paths
--- show_uid is true if you want the room uid to be displayed
--- expected_count is the number we expect to find (eg. the number found on a database)
--- if 'walk' is true, we walk to the first match rather than displaying hyperlinks
--- if fcb is a function, it is called back after displaying each line
--- quick_list determines whether we pathfind every destination in advance to be able to sort by distance
-function find (name, dests, max_paths, show_uid, expected_count, walk, fcb, quick_list, no_portals)
-   if not check_we_can_find () then
-      return
-   end -- if
-
-   if fcb then
-      assert (type (fcb) == "function")
-   end -- if
-
-   if max_paths <= 0 then
-      max_paths = #dests
-   end
-   if not walk then
-      mapprint ("Found",#dests,"target"..(((#dests ~= 1) and "s") or "")..(((name ~= nil) and (" matching '"..name.."'")) or "")..".")
-   end
-   if #dests > max_paths then
-      mapprint(string.format("Your search returned more than %s results. Choose a more specific pattern.", max_paths))
-      return
-   end
-
-   if not walk then
-      last_result_list = {}
-      next_result_index = 0
-   end
-
-   if quick_list == true then
-      quick_find(dests, show_uid, expected_count, walk, fcb)
-   else
-      assert(wait.make(function()
-         reset_mapper_run()
-         full_find(dests, show_uid, expected_count, walk, fcb, no_portals)
-      end))
-   end
-end -- map_find_things
-
--- build a speedwalk from a path into a string
-
-function build_speedwalk (path, prefix)
-
-   if GetOption("enable_command_stack")==1 then
-      stack_char = GetAlphaOption("command_stack_character")
-   else
-      stack_char = "\r\n"
-   end
-
-   -- build speedwalk string (collect identical directions)
-   local tspeed = {}
-   for _, dir in ipairs (path) do
-      local n = #tspeed
-      if n == 0 then
-         table.insert (tspeed, { dir = dir.dir, count = 1 })
-      else
-         if expand_direction[dir.dir] ~= nil and tspeed [n].dir == dir.dir then
-            tspeed [n].count = tspeed [n].count + 1
-         else
-            table.insert (tspeed, { dir = dir.dir, count = 1 })
-         end -- if different direction
-      end -- if
-   end -- for
-
-   if #tspeed == 0 then
-      return
-   end -- nowhere to go (current room?)
-
-   -- now build string like: 2n3e4(sw)
-   local s = ""
-
-   local new_command = false
-   for _, dir in ipairs (tspeed) do
-      if expand_direction[dir.dir] ~= nil then
-         if new_command then
-            s = s .. stack_char .. speedwalk_prefix .. " "
-            new_command = false
-         end
-         if dir.count > 1 then
-            s = s .. dir.count
-         end -- if
-         s = s .. dir.dir
-      else
-         s = s .. stack_char .. dir.dir
-         new_command = true
-      end -- if
-   end -- if
-
-   if prefix ~= nil then
-      if s:sub(1, #stack_char) == stack_char then
-         s = s:sub(#stack_char+1)
-      else
-         s = prefix.." "..s
-      end
-   end
-
-   s = string.gsub(s, ";", stack_char)
-
-   return s, stack_char
-end -- build_speedwalk
-
--- start a speedwalk to a path
-
-function start_speedwalk (path)
-
-   if not check_connected () then
-      return
-   end -- if
-
-   if myState == 9 or myState == 11 then
-      Send("stand")
-   end
-
-   if not path then return end
-   if #path == 0 then
-      SetStatus ("Ready")
-      return
-   end
-
-   last_speedwalk_uid = path[#path].uid
-   local s = speedwalk_prefix .. " "
-   local p = build_speedwalk (path)
-   if p:sub(1,1) ~= stack_char then
-      s = s .. p
-   else
-      s = p:sub(2)
-   end
-   ExecuteWithWaits(s:gsub(";","\r\n"))
-end -- start_speedwalk
-
--- cancel the current speedwalk
-
-function cancel_speedwalk ()
-   assert(wait.make(reset_mapper_run))
-   SetStatus ("Ready")
-end -- cancel_speedwalk
-
-
--- ------------------------------------------------------------------
--- mouse-up handlers (need to be exposed)
--- these are for clicking on the map, or the configuration box
--- ------------------------------------------------------------------
-
-local function pan_got_left_only(flags)
+local function is_left_button_only(flags)
    return bit.band(flags, miniwin.hotspot_got_lh_mouse) ~= 0 and
       bit.band(flags, miniwin.hotspot_got_rh_mouse) == 0
 end
@@ -3925,7 +3433,7 @@ end
 function map_mousedown(flags,hotspot_id)
    local region = drawing.map_region
    local x,y = WindowInfo(win,14),WindowInfo(win,15)
-   local travel=pan_got_left_only(flags)
+   local travel=is_left_button_only(flags)
    region.down = {target=drawing.click_target(x,y,travel),x=x,y=y,travel=travel,
       client_x=WindowInfo(win,17),client_y=WindowInfo(win,18)}
    drawing.highlight_target(nil)
@@ -3943,27 +3451,13 @@ function map_mouseup(flags,hotspot_id)
    drawing.refresh_map_region()
    if not down or down.cancelled then return end
    local target = drawing.click_target(WindowInfo(win,14),WindowInfo(win,15),down.travel)
-   if target and target.entry_rooms and #target.entry_rooms>1 then
-      if bit.band(flags,miniwin.hotspot_got_rh_mouse)==0 and bit.band(flags,miniwin.hotspot_got_control)~=0 then
-         cancel_speedwalk()
-         return
+   if target then
+      local uid = callbacks.activate_target(flags, target)
+      if uid then
+         pan_dragging = false
+         pan_rebaseline_on_drag = true
+         with_pan_tooltip_hidden(callbacks.room_click, uid, flags)
       end
-      local dests={}
-      for _,uid in ipairs(target.entry_rooms) do dests[#dests+1]={uid=uid,reason=true} end
-      if bit.band(flags,miniwin.hotspot_got_rh_mouse)~=0 then
-         if not check_we_can_find() then return end
-         local nearest,distance
-         for _,dest in ipairs(dests) do
-            local path=findpath(current_room,dest.uid)
-            if path and (not distance or #path<distance) then nearest,distance=dest.uid,#path end
-         end
-         if nearest then mouseup_room(flags,nearest);return end
-      end
-      -- The existing search walks to the shortest reachable destination and
-      -- reports unreachable entries if none can be reached.
-      find(nil,dests,0,false,#dests,true)
-   elseif target then
-      mouseup_room(flags,target.uid)
    else
       MouseUp(flags,hotspot_id)
    end
@@ -3971,7 +3465,7 @@ end
 
 function map_dragmove(flags,hotspot_id)
    local down = drawing.map_region.down
-   if down and not down.dragging and pan_got_left_only(flags) then
+   if down and not down.dragging and is_left_button_only(flags) then
       local dx = WindowInfo(win,17) - down.client_x
       local dy = WindowInfo(win,18) - down.client_y
       if dx * dx + dy * dy <= MAP_DRAG_THRESHOLD * MAP_DRAG_THRESHOLD then return end
@@ -3984,88 +3478,44 @@ function map_dragmove(flags,hotspot_id)
    pan_dragmove(flags,hotspot_id)
 end
 
-function mouseup_room (flags, hotspot_id)
-   local uid = hotspot_id
+-- Map panning and recentering.
 
-   if bit.band (flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-      -- RH click
-      pan_dragging = false
-      pan_rebaseline_on_drag = true
-      if type (room_click) == "function" then
-         with_pan_tooltip_hidden(room_click, uid, flags)
-      end
-      return
-   end -- if RH click
-
-   -- here for LH click
-
-   -- Control key down?
-   if bit.band (flags, miniwin.hotspot_got_control) ~= 0 then
-      cancel_speedwalk ()
-      return
-   end -- if ctrl-LH click
-
-   -- find desired room
-   find (nil,
-      {{uid=uid, reason=true}},
-      0,
-      false,  -- show vnum?
-      1,          -- how many to expect
-      true        -- just walk there
-   )
-end -- mouseup_room
-
--- ------------------------------------------------------------------
--- pan handlers for dragging the map view
--- ------------------------------------------------------------------
-
-local function pan_begin_drag()
+local function begin_map_pan()
    cancel_draw()
-   -- cancel any running animation
    pan_animating = false
-   -- mark as dragging (draw() will skip hotspot updates)
+   -- Keep control hotspots stable while the pointer remains captured.
    pan_dragging = true
-   -- record starting mouse position for incremental tracking
    pan_last_mouse_x,pan_last_mouse_y = WindowInfo(win,17),WindowInfo(win,18)
 end
 
 function pan_mousedown (flags, hotspot_id)
-   if not pan_got_left_only(flags) then
-      return  -- ignore non-left mouse buttons
-   end
-
-   pan_begin_drag()
-end -- pan_mousedown
+   begin_map_pan()
+end
 
 function pan_dragmove (flags, hotspot_id)
-   if not pan_got_left_only(flags) then
+   if not is_left_button_only(flags) then
       return  -- ignore non-left drags without updating stored drag position
    end
 
    if not pan_dragging or pan_rebaseline_on_drag then
-      pan_begin_drag()
+      begin_map_pan()
       pan_rebaseline_on_drag = false
       return
    end
 
-   -- don't pan if we don't have a room to draw
-   if not current_room then
+   if not map_origin_uid then
       return
    end
    
-   -- get current mouse position
    local mouse_x = WindowInfo(win, 17)
    local mouse_y = WindowInfo(win, 18)
    
-   -- calculate incremental delta since last move
    local delta_x = mouse_x - pan_last_mouse_x
    local delta_y = mouse_y - pan_last_mouse_y
    
-   -- update last position for next increment
    pan_last_mouse_x = mouse_x
    pan_last_mouse_y = mouse_y
    
-   -- accumulate into pan offset
    pan_offset_x = pan_offset_x + delta_x
    pan_offset_y = pan_offset_y + delta_y
    
@@ -4093,9 +3543,9 @@ function pan_dragmove (flags, hotspot_id)
       end
    end
    
-   -- redraw with new offset (window_exists check in draw() preserves our hotspot)
-   draw(current_room)
-end -- pan_dragmove
+   -- Keep the captured hotspot while drawing the new pan position.
+   draw(map_origin_uid)
+end
 
 function pan_dragrelease (flags, hotspot_id)
    if not pan_dragging then
@@ -4105,33 +3555,29 @@ function pan_dragrelease (flags, hotspot_id)
    -- Publish room selection bounds at the final pan position.
    pan_dragging = false
    pan_rebaseline_on_drag = false
-   -- redraw with the new pan offset
-   if current_room then
-      draw(current_room)
+   if map_origin_uid then
+      draw(map_origin_uid)
    end
-end -- pan_dragrelease
+end
 
 function reset_pan()
    pan_offset_x = 0
    pan_offset_y = 0
-   if current_room then
-      draw(current_room)
+   if map_origin_uid then
+      draw(map_origin_uid)
    end
-end -- reset_pan
+end
 
 function start_pan_animation()
    pan_animating = true
    pan_animation_time = utils.timer()
-end -- start_pan_animation
+end
 
 function pan_animate_step()
-   if not pan_animating then return end
-
    local now = utils.timer()
    local elapsed = now - pan_animation_time
-   -- Finish the previous map frame before moving it again, and skip
-   -- ticks that arrive before the animation interval.
-   if drawing.job or elapsed < PAN_ANIMATION_INTERVAL then return end
+   -- Skip ticks that arrive before the animation interval.
+   if elapsed < PAN_ANIMATION_INTERVAL then return end
    pan_animation_time = now
 
    local dist = math.sqrt(pan_offset_x * pan_offset_x + pan_offset_y * pan_offset_y)
@@ -4147,45 +3593,27 @@ function pan_animate_step()
       local scale = remaining / dist
       pan_offset_x, pan_offset_y = pan_offset_x * scale, pan_offset_y * scale
    end
-   if current_room then draw(current_room) end
-end -- pan_animate_step
+   if map_origin_uid then draw(map_origin_uid) end
+end
 
 function mouseup_configure (flags, hotspot_id)
-   draw_configure_box = true
-   draw (current_room)
-end -- mouseup_configure
+   config_panel_open = true
+   draw (map_origin_uid)
+end
 
 function mouseup_close_configure (flags, hotspot_id)
-   draw_configure_box = false
+   config_panel_open = false
    SaveState()
-   draw (current_room)
-end -- mouseup_player
-
-function mouseup_change_colour (flags, hotspot_id)
-
-   local which = string.match (hotspot_id, "^$colour:([%a%d_]+)$")
-   if not which then
-      return  -- strange ...
-   end -- not found
-
-   local newcolour = PickColour (config [which].colour)
-
-   if newcolour == -1 then
-      return
-   end -- if dismissed
-
-   config [which].colour = newcolour
-
-   draw (current_room)
-end -- mouseup_change_colour
+   draw (map_origin_uid)
+end
 
 function mouseup_change_font (flags, hotspot_id)
 
-   local newfont =  utils.fontpicker (config.FONT.name, config.FONT.size, ROOM_NAME_TEXT.colour)
+   local newfont =  utils.fontpicker (config.FONT.name, config.FONT.size, styles.ROOM_NAME_TEXT.colour)
 
    if not newfont then
       return
-   end -- if dismissed
+   end
 
    config.FONT.name = newfont.name
 
@@ -4193,23 +3621,21 @@ function mouseup_change_font (flags, hotspot_id)
       utils.msgbox ("Maximum allowed font size is 12 points.", "Font too large", "ok", "!", 1)
    else
       config.FONT.size = newfont.size
-   end -- if
+   end
 
-   ROOM_NAME_TEXT.colour = newfont.colour
+   styles.ROOM_NAME_TEXT.colour = newfont.colour
 
-   -- reload new font
    WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
    WindowFont (win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
-   WindowFont (render_win, FONT_ID, config.FONT.name, config.FONT.size)
-   WindowFont (render_win, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
-   WindowFont (config_win, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
-   WindowFont (config_win, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
+   WindowFont (offscreen_window, FONT_ID, config.FONT.name, config.FONT.size)
+   WindowFont (offscreen_window, FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
+   WindowFont (config_window, CONFIG_FONT_ID, config.FONT.name, config.FONT.size)
+   WindowFont (config_window, CONFIG_FONT_ID_UL, config.FONT.name, config.FONT.size, false, false, true)
 
-   -- see how high it is
    font_height = WindowFontInfo (win, FONT_ID, 1)  -- height
 
-   draw (current_room)
-end -- mouseup_change_font
+   draw (map_origin_uid)
+end
 
 function mouseup_change_depth (flags, hotspot_id)
 
@@ -4217,36 +3643,36 @@ function mouseup_change_depth (flags, hotspot_id)
 
    if not depth then
       return
-   end -- if dismissed
+   end
 
    config.SCAN.depth = depth
-   draw (current_room)
-end -- mouseup_change_depth
+   draw (map_origin_uid)
+end
 
 function mouseup_change_area_textures (flags, hotspot_id)
    config.USE_TEXTURES.enabled = config.USE_TEXTURES.enabled ~= true
-   draw (current_room)
-end -- mouseup_change_area_textures
+   draw (map_origin_uid)
+end
 
 function mouseup_change_show_id (flags, hotspot_id)
    config.SHOW_ROOM_ID = config.SHOW_ROOM_ID ~= true
-   draw (current_room)
-end -- mouseup_change_show_id
+   draw (map_origin_uid)
+end
 
 function mouseup_change_room_borders(flags, hotspot_id)
    config.SHOW_ROOM_BORDERS = not config.SHOW_ROOM_BORDERS
-   draw(current_room)
+   draw(map_origin_uid)
    SaveState()
 end
 
 function mouseup_change_blink_pk_title (flags, hotspot_id)
    config.BLINK_PK_TITLE = config.BLINK_PK_TITLE ~= true
-   draw (current_room)
+   draw (map_origin_uid)
 end
 
 function mouseup_change_mousewheel_zoom(flags, hotspot_id)
    config.MOUSEWHEEL_ZOOM = not config.MOUSEWHEEL_ZOOM
-   draw(current_room)
+   draw(map_origin_uid)
    SaveState()
 end
 
@@ -4256,22 +3682,22 @@ function zoom_map (flags, hotspot_id)
       zoom_out ()
    else
       zoom_in ()
-   end -- if
-end -- zoom_map
+   end
+end
 
 function resize_mouse_down(flags, hotspot_id)
    cancel_draw()
    drawing.highlight_target(nil)
    drawing.map_region.frame_ready=false
    resize_dragging = true
-   startx, starty = WindowInfo (win, 17), WindowInfo (win, 18)
+   resize_start_x, resize_start_y = WindowInfo (win, 17), WindowInfo (win, 18)
 end
 
 function resize_release_callback()
    resize_dragging = false
    config.WINDOW.width = WindowInfo(win, 3)
    config.WINDOW.height = WindowInfo(win, 4)
-   if current_room then draw(current_room) else draw_credits() end
+   if map_origin_uid then draw(map_origin_uid) else draw_credits() end
 end
 
 function resize_move_callback()
@@ -4280,32 +3706,32 @@ function resize_move_callback()
    end
    local posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
 
-   local width = WindowInfo(win, 3) + posx - startx
-   startx = posx
+   local width = WindowInfo(win, 3) + posx - resize_start_x
+   resize_start_x = posx
    if (50 > width) then
       width = 50
-      startx = windowinfo.window_left + width
+      resize_start_x = windowinfo.window_left + width
    elseif (windowinfo.window_left + width > GetInfo(281)) then
       width = GetInfo(281) - windowinfo.window_left
-      startx = GetInfo(281)
+      resize_start_x = GetInfo(281)
    end
 
-   local height = WindowInfo(win, 4) + posy - starty
-   starty = posy
+   local height = WindowInfo(win, 4) + posy - resize_start_y
+   resize_start_y = posy
    if (50 > height) then
       height = 50
-      starty = windowinfo.window_top + height
+      resize_start_y = windowinfo.window_top + height
    elseif (windowinfo.window_top + height > GetInfo(280)) then
       height = GetInfo(280) - windowinfo.window_top
-      starty = GetInfo(280)
+      resize_start_y = GetInfo(280)
    end
 
    cancel_draw()
-   check(WindowResize(win, width, height, BACKGROUND_COLOUR.colour))
+   check(WindowResize(win, width, height, styles.BACKGROUND_COLOUR.colour))
    config.WINDOW.width = width
    config.WINDOW.height = height
-   if current_room then
-      draw(current_room)
+   if map_origin_uid then
+      draw(map_origin_uid)
    else
       draw_credits()
       BufferedRepaint()

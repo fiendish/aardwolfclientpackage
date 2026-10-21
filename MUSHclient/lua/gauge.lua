@@ -165,24 +165,7 @@ function max_text_width (win, font_id, t, utf8)
   return max
 end -- max_text_width
 
--- get font from preferred font list
-function get_preferred_font (t)
-  local fonts = utils.getfontfamilies ()
-  
-  -- convert to upper-case
-  local f2 = {}
-  for k in pairs (fonts) do
-    f2 [k:upper ()] = true
-  end -- for
-  
-  for _, s in ipairs (t) do
-    if f2 [s:upper ()] then
-      return s
-    end -- if
-  end -- for each item
-
-  return "Courier"
-end -- get_preferred_font
+get_preferred_font = require("window_fonts").get_preferred_font
 
 function capitalize (x)
   return string.upper (string.sub(x, 1, 1)) .. string.lower (string.sub(x, 2))
