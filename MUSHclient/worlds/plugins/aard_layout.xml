@@ -76,6 +76,7 @@ require "scrollbar"
 require "themed_miniwindows"
 require "gmcphelper"
 local window_snap = require "window_snap"
+local HasRequiredAPIs = require "required_apis"
 
 function OnPluginSnapTarget(window_id)
    return window_id ~= textDragger and window_id ~= bgwin
@@ -307,30 +308,6 @@ function InputBarSetAutoResizeSuppressed(suppressed)
    inputbar_auto_resize_suppressed = suppressed
 end
 
-function InputBarHasRequiredAPIs()
-   local required = {
-      "GetCommandCursorPosition",
-      "GetCommandWindowDesiredHeight",
-      "SetCommandWindowAutoResizeSuppressed"
-   }
-   local missing = {}
-   for _, name in ipairs(required) do
-      if type(_G[name]) ~= "function" then
-         table.insert(missing, name)
-      end
-   end
-   if #missing == 0 then
-      return true
-   end
-
-   ColourNote(
-      "white",
-      "red",
-      "Synthetic input bar unavailable. This MUSHclient build is missing: " ..
-         table.concat(missing, ", "))
-   return false
-end
-
 function InputBarOutputGeometryChanged()
    local height = tonumber(GetInfo(280)) or 0
    local width = tonumber(GetInfo(281)) or 0
@@ -411,6 +388,10 @@ function InputBarUpdateResizeGrip()
          inputbar_window.bodyleft, inputbar_window.bodytop,
          text_right, inputbar_window.bodybottom - 1)
       inputbar_rect:reWrapLines()
+   end
+
+   if inputbar_active then
+      check(SetCommandWindowWidth(math.max(1, math.floor(inputbar_rect.padded_width))))
    end
 
    if not show_grip then
@@ -543,6 +524,7 @@ function InputBarEnsureWindow()
       column_guide=inputbar_note_mode and inputbar_marker_characters or nil
    })
    inputbar_rect = inputbar_window.textrect
+   inputbar_rect.utf8 = false
    inputbar_window.dress_window = InputBarDressWindow
 
    inputbar_window.menu_table = {
@@ -609,6 +591,7 @@ end
 function InputBarRestoreNative()
    -- Output text can remain after the world windows are destroyed.
    if GetInfo(235) > 0 then
+      check(SetCommandWindowWidth(0))
       check(SetCommandWindowHeight(InputBarNativeHeight()))
    end
    InputBarSetAutoResizeSuppressed(false)
@@ -675,32 +658,52 @@ function InputBarPositionDetached()
    return changed
 end
 
-function InputBarRenderText(command)
-   local rendered = command
-   inputbar_logical_line_starts = {}
-
-   local line_start = 1
-   local position = 1
-   while position <= #command do
-      local byte = command:byte(position)
-      if byte == 10 or byte == 13 then
-         table.insert(inputbar_logical_line_starts, line_start - 1)
-         if byte == 13 and command:byte(position + 1) == 10 then
-            position = position + 2
-         else
-            position = position + 1
-         end
-         line_start = position
-      else
-         position = position + 1
+function InputBarRenderText(command, starts)
+   inputbar_logical_line_starts = {0}
+   for _, position in ipairs(starts) do
+      if position > 0 and command:byte(position) == 10 then
+         table.insert(inputbar_logical_line_starts, position)
       end
    end
 
-   table.insert(inputbar_logical_line_starts, line_start - 1)
-   rendered = rendered:gsub("@", "@@")
-   rendered = rendered:gsub("\r\n", "\n")
-   rendered = rendered:gsub("\r", "\n")
+   local rendered = {}
+   for index, position in ipairs(inputbar_logical_line_starts) do
+      local next_start = inputbar_logical_line_starts[index + 1]
+      local last = next_start or #command
+      if next_start then
+         last = last - 1
+         if command:byte(last) == 13 then
+            last = last - 1
+         end
+      end
+      rendered[index] = {{text=command:sub(position + 1, last), textcolour=Theme.BODY_TEXT}}
+   end
    return rendered
+end
+
+function InputBarNativeLineStarts()
+   local starts = assert(GetCommandLineStarts(), "Native command layout is unavailable")
+   for index, position in ipairs(starts) do
+      starts[index] = position - 1
+   end
+   return starts
+end
+
+function InputBarSetNativeLines(command, starts)
+   local rendered = InputBarRenderText(command, starts)
+   local breaks = {}
+   local raw_line = 1
+   for _, position in ipairs(starts) do
+      while inputbar_logical_line_starts[raw_line + 1] and
+         inputbar_logical_line_starts[raw_line + 1] <= position do
+         raw_line = raw_line + 1
+      end
+      breaks[raw_line] = breaks[raw_line] or {}
+      table.insert(breaks[raw_line], position - inputbar_logical_line_starts[raw_line])
+   end
+   inputbar_window:clear(false)
+   inputbar_rect.editor_line_starts = breaks
+   inputbar_window:add_text(rendered, false)
 end
 
 function InputBarSourceToWrapped(position)
@@ -761,8 +764,11 @@ function InputBarDraw(force)
    inputbar_selection_start = selection_start
    inputbar_selection_end = selection_end
 
+   local native_starts = InputBarNativeLineStarts()
+   local native_cursor_line = GetCommandCursorLine()
    local content_signature = table.concat({
       command,
+      table.concat(native_starts, ","),
       WindowInfo(inputBar, 3),
       Theme.PRIMARY_BODY,
       Theme.BODY_TEXT
@@ -772,6 +778,7 @@ function InputBarDraw(force)
       selection_start,
       selection_end,
       cursor_position,
+      native_cursor_line,
       WindowInfo(inputBar, 4),
       inputbar_note_mode and 1 or 0
    }, "\30")
@@ -783,10 +790,17 @@ function InputBarDraw(force)
    inputbar_presentation_signature = presentation_signature
 
    if content_changed then
-      inputbar_window:clear(false)
-      inputbar_window:add_text(InputBarRenderText(command), false)
+      InputBarSetNativeLines(command, native_starts)
    end
    local cursor_line, cursor_line_position = InputBarSourceToWrapped(cursor_position)
+   -- A soft-wrap boundary can be either the end of one line or the start of
+   -- the next. Follow the native caret rather than guessing from its offset.
+   if native_cursor_line > 0 and native_starts[native_cursor_line] then
+      local offset = cursor_position - native_starts[native_cursor_line]
+      if offset >= 0 and offset <= inputbar_rect:line_length(native_cursor_line) then
+         cursor_line, cursor_line_position = native_cursor_line, offset
+      end
+   end
 
    if selection_end > selection_start then
       local anchor_position = selection_start
@@ -871,11 +885,16 @@ function InputBarRefresh(force)
       return
    end
    inputbar_last_poll_time = utils.timer()
+   local output_changed = InputBarOutputGeometryChanged()
+   local changed = InputBarLoadFont()
+   if inputbar_attached then
+      changed = InputBarPositionAttached() or changed
+   else
+      changed = InputBarPositionDetached() or changed
+   end
    local old_height = InputBarCurrentHeight()
    InputBarMeasureAndHideNative()
    local height_changed = old_height ~= InputBarCurrentHeight()
-   local output_changed = InputBarOutputGeometryChanged()
-   local changed = InputBarLoadFont()
    local inputbar_drawn = false
    if inputbar_attached and (height_changed or output_changed) then
       if output_changed then
@@ -899,7 +918,14 @@ function InputBarActivate(show_status)
    if inputbar_active then
       return
    end
-   if not InputBarHasRequiredAPIs() then
+   if not HasRequiredAPIs({
+      "GetCommandCursorPosition",
+      "GetCommandCursorLine",
+      "GetCommandLineStarts",
+      "SetCommandWindowWidth",
+      "GetCommandWindowDesiredHeight",
+      "SetCommandWindowAutoResizeSuppressed"
+   }, "Synthetic input bar") then
       return false
    end
 
@@ -1122,7 +1148,7 @@ function InputBarResizeDragMove(flags, hotspot_id)
    end
    if width ~= WindowInfo(inputBar, 3) then
       inputbar_detached_width = width
-      InputBarPositionDetached()
+      InputBarRefresh(true)
       BufferedRepaint()
    end
 end
@@ -1172,6 +1198,10 @@ function InputBarMouseUp(flags, hotspot_id)
    end
    InputBarFocusNative()
    return false
+end
+
+function OnPluginCommandSelectionChanged()
+   InputBarDraw(false)
 end
 
 function OnPluginCommandChanged()

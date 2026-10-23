@@ -323,7 +323,7 @@ function TextRect:wrapLine(stylerun, rawURLs, raw_index)
    local sub = string.sub
    local find = string.find
    local show_bold = (GetOption("show_bold")==1)
-   local utf = (GetOption("utf_8") == 1)
+   local utf = self:usesUTF8()
 
    -- Keep pulling out styles and trying to fit them on the current line
    while #styles > 0 do
@@ -546,6 +546,13 @@ function TextRect:drawLine(line, styles, selection_start, selection_end, utf8, s
    end
 end
 
+function TextRect:usesUTF8()
+   if self.utf8 ~= nil then
+      return self.utf8
+   end
+   return GetOption("utf_8") == 1
+end
+
 function TextRect:styles_width(styles, show_bold)
    if show_bold == nil then
       show_bold = (GetOption("show_bold")== 1)
@@ -607,7 +614,7 @@ function TextRect:draw_cursor()
    if show_bold == nil then
       show_bold = (GetOption("show_bold") == 1)
    end
-   local utf8 = (GetOption("utf_8") == 1)
+   local utf8 = self:usesUTF8()
    local x = self.padded_left + StylesWidth(
       self.window,
       self.font,
@@ -643,7 +650,7 @@ function TextRect:draw(cleanup_first, inside_callback)
    self.display_start_line, self.display_end_line = self:snapToBottom()
    if self.num_wrapped_lines >= 1 then
       local show_bold = (GetOption("show_bold")== 1)
-      local utf8 = (GetOption("utf_8") == 1)
+      local utf8 = self:usesUTF8()
       for count = self.display_start_line, self.display_end_line do
          ax = nil
          zx = nil
@@ -941,7 +948,7 @@ function TextRect:get_target_bounds(separator_pattern, line_number, target_x, pa
    local section_end = self.padded_left
    local start_pos = 0
    local end_pos = 0
-   local utf = (GetOption("utf_8") == 1)
+   local utf = self:usesUTF8()
    for _,section in ipairs(self.last_partitioned_line_sections[partition_cache_key]) do
       local section_size = 0
       local section_length = 0
