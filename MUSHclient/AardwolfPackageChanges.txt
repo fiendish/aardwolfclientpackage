@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2369 snapshot
+- bug fix: Fix a rare buffer overflow when increasing retained lines of output history.
+- bug fix: The mapper where command should now warn if you erroneously use it with something that isn't a room ID.
+- bug fix: Resizing DIY miniwindows that had been relocated by the plugin after creation would screw up near the bottom of the screen.
+- misc change: If an area entrance from continents is projected but surrounding rooms aren't yet explored, the mapper will know that it can almost certainly run you to the area anyway if you click on it.
+
 r2365 snapshot
 - bug fix: Uninstalling or disabling the splitscreen scrollback plugin should no longer cause the PageUp/PageDown keys to temporarily stop working.
 
