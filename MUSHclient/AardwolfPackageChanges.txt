@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2364 snapshot
+- bug fix: Long line wrapping behavior in the floating input bar should be better now.
+
 r2363 snapshot
 - bug fix: Try to handle the server-queue-clearing "stop" command properly.
 
