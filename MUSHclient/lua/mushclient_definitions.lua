@@ -23,6 +23,11 @@ function AcceleratorList() end
 ---@return number
 function AcceleratorTo(Key, Send, SendTo) end
 
+---Restore the built-in key binding
+---@param Key string
+---@return number
+function RestoreAccelerator(Key) end
+
 ---Activates the world window
 ---@return nil
 function Activate() end

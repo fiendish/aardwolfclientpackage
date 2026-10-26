@@ -19,6 +19,9 @@
 <script>
 <![CDATA[
 
+local HasRequiredAPIs = require "required_apis"
+assert(HasRequiredAPIs({"RestoreAccelerator"}, "Split-screen scrollback"))
+
 require "mw_theme_base"
 require "text_rect"
 require "color_copy"
@@ -303,8 +306,8 @@ function OnPluginDisable()
    SetOption("auto_pause", original_auto_pause)
    SetOption("unpause_on_send", original_unpause_on_send)
 
-   Accelerator("PageUp", "")
-   Accelerator("PageDown", "")
+   check(RestoreAccelerator("PageUp"))
+   check(RestoreAccelerator("PageDown"))
    SaveState()
 end
 
