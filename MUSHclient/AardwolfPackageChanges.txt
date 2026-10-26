@@ -1,5 +1,8 @@
 Aardwolf Client Package Major Changes List
 
+r2365 snapshot
+- bug fix: Uninstalling or disabling the splitscreen scrollback plugin should no longer cause the PageUp/PageDown keys to temporarily stop working.
+
 r2364 snapshot
 - bug fix: Long line wrapping behavior in the floating input bar should be better now.
 
