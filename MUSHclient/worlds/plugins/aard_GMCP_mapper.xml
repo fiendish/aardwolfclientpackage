@@ -2342,7 +2342,30 @@ end
 
 
 local function activate_map_target(flags, target)
-   if target.entry_rooms and #target.entry_rooms > 1 then
+   if target.entrance_approaches and bit.band(flags, miniwin.hotspot_got_rh_mouse) == 0
+         and bit.band(flags, miniwin.hotspot_got_control) == 0 then
+      if not can_start_room_search() then return end
+      assert(wait.make(function()
+         stop_run_and_wait()
+         local nearest, direction
+         for _, approach in ipairs(target.entrance_approaches) do
+            local path = findpath(mapper.displayed_room(), approach.uid)
+            if path and (not nearest or #path < #nearest) then
+               nearest, direction = path, approach.dir
+            end
+         end
+         if not nearest then
+            mapper.mapprint("Could not find a path to an adjacent continent room.")
+            return
+         end
+         -- The last step has no known destination ID. Keep it out of stored exits.
+         local path = {}
+         for _, step in ipairs(nearest) do path[#path + 1] = step end
+         path[#path + 1] = {dir=direction}
+         mapper.mapprint("Going to an unexplored area entrance.")
+         start_speedwalk(path)
+      end))
+   elseif target.entry_rooms and #target.entry_rooms > 1 then
       if bit.band(flags, miniwin.hotspot_got_rh_mouse) == 0 and bit.band(flags, miniwin.hotspot_got_control) ~= 0 then
          cancel_speedwalk()
          return

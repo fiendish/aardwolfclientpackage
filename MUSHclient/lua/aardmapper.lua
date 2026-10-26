@@ -292,6 +292,24 @@ do
       return split_axis(origin,start,pixels,first,last,1),origin+position-start,scale,origin-start
    end
 
+   -- Use the published grid, including off-screen neighbors and wrapped seams.
+   local function view_entrance_approaches(view,source)
+      local definition=M.definitions[source.zone]
+      local stitched=view.grid_width==120
+      local x=source.x+(stitched and definition.x or 0)
+      local y=source.y+(stitched and definition.y or 0)
+      local result={}
+      for _,dir in ipairs({"n","e","s","w"}) do
+         local offset=directions[dir]
+         local adjacent=view.grid[(y-offset[2])%view.grid_height+1].cells[(x-offset[1])%view.grid_width+1]
+         if adjacent==view.current_source then adjacent=view.current_cell end
+         if adjacent.uid then
+            result[#result+1]={uid=adjacent.uid,dir=dir}
+         end
+      end
+      return result
+   end
+
    -- Resolve only the cells needed for overlays or mouse input. A view keeps
    -- its own grid rows, so later observations cannot change a published frame.
    local function view_cell(view,column,row)
@@ -299,6 +317,7 @@ do
       if source==view.current_source then source=view.current_cell end
       return {zone=source.zone,x=source.x,y=source.y,uid=source.uid,room=source.room,
          unexplored_uid=source.unexplored_uid,entry_rooms=source.entry_rooms,
+         entrance_approaches=source.unexplored_entrance and view_entrance_approaches(view,source) or nil,
          left=view.raster_x and view.raster_x+math.floor((view.source_x+column)*view.raster_width/view.grid_width)
             or math.floor(view.base_left+column*view.base_pitch),
          top=view.raster_y and view.raster_y+math.floor((view.source_y+row)*view.raster_height/view.grid_height)
@@ -700,6 +719,7 @@ do
             table.sort(entry_rooms,uid_less)
          end
          result.entry_rooms=entry_rooms
+         result.unexplored_entrance=style==styles.areaexit and #entry_rooms==0
          result.entrance=(style and style.entrance) or (entry_counts and next(entry_counts)~=nil) or false
          return result
       end
@@ -2000,8 +2020,8 @@ local function build_area_exit_targets(job)
    return view.cells
 end
 
--- Area boxes select the entry rooms inside the area. Other cells select
--- their continent room.
+-- Area boxes select known entry rooms or approach an unexplored entrance.
+-- Other cells select their continent room.
 drawing.continent_cell_target = function(cell, view)
    local entries,names
    if cell.entry_rooms and #cell.entry_rooms>0 then
@@ -2019,6 +2039,10 @@ drawing.continent_cell_target = function(cell, view)
       id="0:continent_entry:"..cell.zone..":"..cell.x..":"..cell.y..":"..table.concat(entries,",")
       tooltip=uid and display_room_cache[uid].hovermessage or table.concat(names,"\n")
       if uid and display_room_cache[uid].unknown then tooltip=display_room_cache[uid].name.."\n"..tooltip end
+   elseif cell.entrance_approaches then
+      uid=cell.uid
+      id="0:continent_unexplored:"..cell.zone..":"..cell.x..":"..cell.y
+      tooltip="<Unexplored area entrance>"
    elseif cell.uid or cell.unexplored_uid then
       local cell_uid=cell.uid or cell.unexplored_uid
       local room=get_display_room(cell_uid)
@@ -2027,7 +2051,8 @@ drawing.continent_cell_target = function(cell, view)
    end
    if id then
       return {id=id,uid=uid,tooltip=tooltip,left=cell.left,top=cell.top,
-         right=cell.left+view.size,bottom=cell.top+view.size,entry_rooms=entries}
+         right=cell.left+view.size,bottom=cell.top+view.size,entry_rooms=entries,
+         entrance_approaches=cell.entrance_approaches}
    end
 end
 
