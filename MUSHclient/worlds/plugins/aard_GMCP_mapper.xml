@@ -5616,7 +5616,8 @@ function OnHelp (name, line, wildcards)
    ['exits'] = {
 ['header'] = [[===== EXIT ACTIONS ==============>]],
 [[mapper cexits                  --> List known custom exits]],
-[[mapper cexits <here/area>      --> List known custom exits only in this or
+[[mapper cexits thisroom         --> List known custom exits in this room]],
+[[mapper cexits here/<area>      --> List known custom exits in this or
                                  > another area]],
 [[mapper cexit <command>         --> Follow and link a custom exit
                                  > (ex: 'mapper cexit ride bucket')
