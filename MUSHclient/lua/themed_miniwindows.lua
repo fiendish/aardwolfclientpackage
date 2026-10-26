@@ -80,6 +80,7 @@ function ThemedWindowClass.ResizeMoveCallback(flags, hotspot_id)
    end
    local window = ThemedWindowClass.hotspot_map[hotspot_id]
 
+   local left, top = WindowInfo(window.id, 10), WindowInfo(window.id, 11)
    local posx, posy = WindowInfo(window.id, 17), WindowInfo(window.id, 18)
    if window.resize_snap then
       local selection
@@ -92,9 +93,9 @@ function ThemedWindowClass.ResizeMoveCallback(flags, hotspot_id)
    window.resize_startx = posx
    if (window.width < window.min_drag_width) then
       window.width = window.min_drag_width
-      window.resize_startx = window.windowinfo.window_left+window.width
-   elseif (window.windowinfo.window_left+window.width > GetInfo(281)) then
-      window.width = GetInfo(281)-window.windowinfo.window_left
+      window.resize_startx = left+window.width
+   elseif (left+window.width > GetInfo(281)) then
+      window.width = GetInfo(281)-left
       window.resize_startx = GetInfo(281)
    end
 
@@ -102,9 +103,9 @@ function ThemedWindowClass.ResizeMoveCallback(flags, hotspot_id)
    window.resize_starty = posy
    if (window.height < window.min_drag_height) then
       window.height = window.min_drag_height
-      window.resize_starty = window.windowinfo.window_top+window.height
-   elseif (window.windowinfo.window_top+window.height > GetInfo(280)) then
-      window.height = GetInfo(280)-window.windowinfo.window_top
+      window.resize_starty = top+window.height
+   elseif (top+window.height > GetInfo(280)) then
+      window.height = GetInfo(280)-top
       window.resize_starty = GetInfo(280)
    end
    if (utils.timer() - lastRefresh > 0.0333) then
