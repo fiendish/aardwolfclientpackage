@@ -163,6 +163,27 @@ local function init_basic_to_color ()
       [BOLD_CYAN_CODE] = GetBoldColour(CYAN),
       [BOLD_WHITE_CODE] = GetBoldColour(WHITE)
    }
+
+   -- Historical. It should have been marked local to prevent external use, but oh well.
+   colour_conversion = {
+      [BLACK_CHAR] = GetNormalColour(BLACK)   ,
+      [RED_CHAR] = GetNormalColour(RED)     ,
+      [GREEN_CHAR] = GetNormalColour(GREEN)   ,
+      [YELLOW_CHAR] = GetNormalColour(YELLOW)  ,
+      [BLUE_CHAR] = GetNormalColour(BLUE)    ,
+      [MAGENTA_CHAR] = GetNormalColour(MAGENTA) ,
+      [CYAN_CHAR] = GetNormalColour(CYAN)    ,
+      [WHITE_CHAR] = GetNormalColour(WHITE)   ,
+      [BOLD_BLACK_CHAR] = GetBoldColour(BLACK)   ,
+      [BOLD_RED_CHAR] = GetBoldColour(RED)     ,
+      [BOLD_GREEN_CHAR] = GetBoldColour(GREEN)   ,
+      [BOLD_YELLOW_CHAR] = GetBoldColour(YELLOW)  ,
+      [BOLD_BLUE_CHAR] = GetBoldColour(BLUE)    ,
+      [BOLD_MAGENTA_CHAR] = GetBoldColour(MAGENTA) ,
+      [BOLD_CYAN_CHAR] = GetBoldColour(CYAN)    ,
+      [BOLD_WHITE_CHAR] = GetBoldColour(WHITE)   ,
+   }
+   atletter_to_color_value = colour_conversion -- lol. https://github.com/endavis/bastmush/commit/6f8aec07449a55a65ccece05c1ab3a0139d70e54
 end
 
 local function init_color_to_basic ()
@@ -192,6 +213,14 @@ local function init_basic_colors ()
    init_basic_to_color()
    init_color_to_basic()
 end
+
+
+require("callback_proxy").wrap("OnPluginWorldSettingsChanged", function(original, ...)
+   init_basic_colors()
+   if original then
+      return original(...)
+   end
+end)
 
 
 local xterm_number_to_client_color = extended_colours
@@ -248,7 +277,6 @@ local function random_xterm_color()
 end
 
 function StylesToColours (styles, dollarC_resets)
-   init_basic_colors()
    local lastcode = ""
 
    -- convert to multiline if needed
@@ -457,7 +485,6 @@ end
 function ColoursToStyles (input, default_foreground_color, background_color, multiline, dollarC_resets)
    -- This function would be a lot simpler if I weren't trying to preserve whether a color came from an xterm code or
    -- not for round-trip safety. :(
-   init_basic_to_color()
 
    local default_foreground_code = nil
    local default_foreground_bold = false
@@ -644,7 +671,6 @@ function stylesToANSI (styles, dollarC_resets)
    local line = {}
    local lastcode = ""
    local needs_reset = false
-   init_basic_colors()
    for _,v in ipairs(styles) do
       local code = ""
       local textcolor = v.textcolour
@@ -854,27 +880,5 @@ function StylesToColoursOneLine (styles, startcol, endcol)
    else
       return StylesToColours( styles )
    end
-end -- StylesToColoursOneLine
+end
 
-
--- should have been marked local to prevent external use
-colour_conversion = {
-   [BLACK_CHAR] = GetNormalColour(BLACK)   ,   -- 0x000000
-   [RED_CHAR] = GetNormalColour(RED)     ,   -- 0x000080
-   [GREEN_CHAR] = GetNormalColour(GREEN)   ,   -- 0x008000
-   [YELLOW_CHAR] = GetNormalColour(YELLOW)  ,   -- 0x008080
-   [BLUE_CHAR] = GetNormalColour(BLUE)    ,   -- 0x800000
-   [MAGENTA_CHAR] = GetNormalColour(MAGENTA) ,   -- 0x800080
-   [CYAN_CHAR] = GetNormalColour(CYAN)    ,   -- 0x808000
-   [WHITE_CHAR] = GetNormalColour(WHITE)   ,   -- 0xC0C0C0
-   [BOLD_BLACK_CHAR] = GetBoldColour(BLACK)   ,   -- 0x808080
-   [BOLD_RED_CHAR] = GetBoldColour(RED)     ,   -- 0x0000FF
-   [BOLD_GREEN_CHAR] = GetBoldColour(GREEN)   ,   -- 0x00FF00
-   [BOLD_YELLOW_CHAR] = GetBoldColour(YELLOW)  ,   -- 0x00FFFF
-   [BOLD_BLUE_CHAR] = GetBoldColour(BLUE)    ,   -- 0xFF0000
-   [BOLD_MAGENTA_CHAR] = GetBoldColour(MAGENTA) ,   -- 0xFF00FF
-   [BOLD_CYAN_CHAR] = GetBoldColour(CYAN)    ,   -- 0xFFFF00
-   [BOLD_WHITE_CHAR] = GetBoldColour(WHITE)   ,   -- 0xFFFFFF
-}  -- end conversion table
-
-atletter_to_color_value = colour_conversion -- lol. https://github.com/endavis/bastmush/commit/6f8aec07449a55a65ccece05c1ab3a0139d70e54

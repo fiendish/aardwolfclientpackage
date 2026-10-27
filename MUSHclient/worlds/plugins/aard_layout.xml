@@ -1886,6 +1886,10 @@ function add_title_dragger()
    WindowShow(textDragger,true)
 end
 
+function OnPluginWorldSettingsChanged()
+   draw_main_window()
+end
+
 function OnPluginWorldOutputResized()
    if inputbar_active then
       return
