@@ -256,7 +256,7 @@ do
       field={"#",0x008000}, field2={"#",0x008000}, field3={"#",0x008000}, field4={"#",0x008000},
       swamp={"#",0x008000}, forest={"*",0x00ff00}, jungle={"*",0x008000}, plain={"#",0x008080},
       hell1={"#",0x000080}, hell2={"#",0x000080}, hell3={"#",0x000080},
-      ice={"#",0xffffff}, icehills={"#",0xffffff}, icemount={"/",0xffffff}, snow={"#",0xffffff},
+      ice={"#",0xfff3db}, icehills={"#",0xf2f4ec}, icemount={"/",0xf1f0d3}, snow={"#",0xffffff},
       road={"#",0xffffff}, bridge={"=",0xffffff}, castle={"#",0xffffff}, city={"%",0xffffff},
       pillar={"*",0xffffff}, smallroad={"|",0xc0c0c0}, smallroad_ew={"-",0xc0c0c0}, trail_ew={".",0xc0c0c0},
       dark={" ",0}, space1={" ",0}, space4={" ",0}, underground={" ",0}, waternoswim={" ",0}, dungeon={" ",0},
