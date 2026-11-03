@@ -127,6 +127,7 @@ inputbar_last_poll_time = 0
 inputbar_fast_poll_until = 0
 inputbar_active = false
 inputbar_attached = GetVariable("inputbar_attached") == "1"
+inputbar_mask_passwords = GetVariable("inputbar_mask_passwords") ~= "0"
 inputbar_content_signature = nil
 inputbar_presentation_signature = nil
 inputbar_hidden_overhead = nil
@@ -364,6 +365,7 @@ end
 
 function InputBarSaveSettings()
    SetVariable("inputbar_attached", inputbar_attached and "1" or "0")
+   check(SetVariable("inputbar_mask_passwords", inputbar_mask_passwords and "1" or "0"))
    if inputbar_detached_width then
       SetVariable("inputbar_detached_width", tostring(inputbar_detached_width))
    end
@@ -446,12 +448,28 @@ function InputBarDressWindow(window, ...)
    end
 end
 
+function InputBarTogglePasswordMask()
+   inputbar_mask_passwords = not inputbar_mask_passwords
+   InputBarDraw(true)
+   InputBarSaveSettings()
+   check(SaveState())
+end
+
 function InputBarGetMenuItems(window)
+   local menu, handlers
    if inputbar_attached then
-      return "^Hold Ctrl and drag to undock the input bar|-|" .. window.menu_table[3],
-         {window.menu_handlers[2]}
+      menu = "^Hold Ctrl and drag to undock the input bar|-|" .. window.menu_table[3]
+      handlers = {window.menu_handlers[2]}
+   else
+      menu, handlers = ThemedWindowClass.get_menu_items(window)
    end
-   return ThemedWindowClass.get_menu_items(window)
+   local menu_handlers = {}
+   for index, handler in ipairs(handlers) do
+      menu_handlers[index] = handler
+   end
+   table.insert(menu_handlers, InputBarTogglePasswordMask)
+   return menu .. "|-|" .. (inputbar_mask_passwords and "+" or "") ..
+      "Mask passwords with asterisks", menu_handlers
 end
 
 function InputBarAttachedRectangle()
@@ -740,6 +758,8 @@ function InputBarDraw(force)
    end
 
    local command = GetCommand() or ""
+   local mask_password = inputbar_mask_passwords and GetInfo(101)
+   local display_command = mask_password and command:gsub("[^\r\n]", "*") or command
    local selection_start = math.max(0, (tonumber(GetInfo(236)) or 1) - 1)
    local selection_end = tonumber(GetInfo(237)) or 0
    local cursor_position
@@ -767,7 +787,8 @@ function InputBarDraw(force)
    local native_starts = InputBarNativeLineStarts()
    local native_cursor_line = GetCommandCursorLine()
    local content_signature = table.concat({
-      command,
+      display_command,
+      mask_password and 1 or 0,
       table.concat(native_starts, ","),
       WindowInfo(inputBar, 3),
       Theme.PRIMARY_BODY,
@@ -790,7 +811,7 @@ function InputBarDraw(force)
    inputbar_presentation_signature = presentation_signature
 
    if content_changed then
-      InputBarSetNativeLines(command, native_starts)
+      InputBarSetNativeLines(display_command, native_starts)
    end
    local cursor_line, cursor_line_position = InputBarSourceToWrapped(cursor_position)
    -- A soft-wrap boundary can be either the end of one line or the start of
