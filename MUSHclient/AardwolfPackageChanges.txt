@@ -1,5 +1,16 @@
 Aardwolf Client Package Major Changes List
 
+r2378 snapshot
+- new feature: The floating input bar now masks passwords with asterisks by default. You can disable this in its right-click menu if you want.
+- new feature: The GMCP mapper has a "mapper mismatch warnings [on/off]" command to control showing warning messages for ignored exit mismatches.
+- new feature: The GMCP mapper has a new visual "striped PK rooms" config toggle for jazzing up PK rooms to make them easier to notice. Click the asterisk to access it.
+- new feature: The GMCP mapper continents view is fancier now with updated brushes and colors. I'll probably tweak these. Maybe add a toggle later.
+- new feature: There's a new OnPluginWorldSettingsChanged plugin callback function that gets called when the user clicks OK to save and close the world settings dialog.
+- bug fix: Changing world ANSI color and output font preferences now refreshes output line wrapping and shared color conversion tables.
+- bug fix: GMCP mapper in-plane continent area entrances now always draw the area-exit style. Up/down entrances keep their continent terrain tile.
+- bug fix: GMCP mapper up/down exits out of areas should always be visible and clickable.
+- bug fix: Being in a PK room with cycling room name colors should stop disrupting the mouse cursor.
+
 r2369 snapshot
 - bug fix: Fix a rare buffer overflow when increasing retained lines of output history.
 - bug fix: The mapper where command should now warn if you erroneously use it with something that isn't a room ID.
@@ -17,8 +28,8 @@ r2363 snapshot
 
 r2362 snapshot
 - misc change: All plugin drawing operations in MUSHclient are now more efficient (faster).
-- misc change: The mapper plugin drawing code hs been almost entirely rewritten so that it can now handle its own full-frame continent drawing instead of relying on the bigmap plugin. Results: the bigmap plugin is obsolete and removed, continents are stitched together by default for a comprehensive world display, and there are some new visual configuration settings (click the asterisk in the upper left corner of the mapper miniwindow).
-- bug fix: Resizing the mapper miniwindow doesn't look janky anymore.
+- misc change: The GMCP mapper plugin drawing code hs been almost entirely rewritten so that it can now handle its own full-frame continent drawing instead of relying on the bigmap plugin. Results: the bigmap plugin is obsolete and removed, continents are stitched together by default for a comprehensive world display, and there are some new visual configuration settings (click the asterisk in the upper left corner of the mapper miniwindow).
+- bug fix: Resizing the GMCP mapper miniwindow doesn't look janky anymore.
 
 r2359 snapshot
 - misc change: The new input bar's 80 column indicator will now only show when you're in note mode.
@@ -31,7 +42,7 @@ r2356 snapshot
 r2355 snapshot
 - misc change: Default miniwindow positions for a brand new install are very slightly different.
 - bug fix: Input bar and main output corner snapping should work a little better.
-- bug fix: Resizing the mapper miniwindow is a little less ugly, I guess.
+- bug fix: Resizing the GMCP mapper miniwindow is a little less ugly, I guess.
 - bug fix: Patched a file modification timestamp parsing/rejection bug in the older version of the Microsoft Foundation Class library that was tickled by the macOS unarchiver failing to propagate Windows file timestamps which then gets converted to a date before 1970 because of time zones.
 
 r2351 snapshot
