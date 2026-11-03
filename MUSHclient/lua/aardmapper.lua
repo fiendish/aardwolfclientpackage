@@ -431,6 +431,7 @@ local default_config = {
    USE_TEXTURES = {enabled = true},
    SHOW_ROOM_ID = false,
    SHOW_ROOM_BORDERS = true,
+   PK_ROOM_STRIPES = false,
    BLINK_PK_TITLE = true,
    MOUSEWHEEL_ZOOM = true,
 }
@@ -624,6 +625,12 @@ do
          top = view.raster_y and view.raster_y
             + math.floor((view.source_y + row) * view.raster_height / view.grid_height)
             or math.floor(view.base_top + row * view.base_pitch),
+         right = view.raster_x and view.raster_x
+            + math.floor((view.source_x + column + 1) * view.raster_width / view.grid_width)
+            or math.floor(view.base_left + (column + 1) * view.base_pitch),
+         bottom = view.raster_y and view.raster_y
+            + math.floor((view.source_y + row + 1) * view.raster_height / view.grid_height)
+            or math.floor(view.base_top + (row + 1) * view.base_pitch),
       }
    end
 
@@ -2328,6 +2335,12 @@ local function draw_configuration()
          callback = "mapper.mouseup_change_room_borders",
          tooltip = "Toggle ordinary borders; keep current-room and PK borders and special markings",
       }, {
+         label = "Striped PK Rooms",
+         value = on_off(config.PK_ROOM_STRIPES),
+         id = "pk_room_stripes",
+         callback = "mapper.mouseup_change_pk_room_stripes",
+         tooltip = "Use 2-pixel diagonal silver, yellow, and red stripes in PK rooms",
+      }, {
          label = "Blink Name in PK Rooms",
          value = on_off(config.BLINK_PK_TITLE),
          id = "blink_pk_rooms",
@@ -2467,6 +2480,24 @@ local function prefetch_exit_destinations(job)
    for _, uid in ipairs(ids) do
       job.prefetched[uid] = true
    end
+end
+
+-- Full-colour pattern images retain all three stripe colours.
+local function record_pk_room_stripes(left, top, right, bottom)
+   if not drawing.pk_stripes_ready then
+      local pattern_window = win .. "_pk_stripes"
+      local colours = {0xC0C0C0, 0x00FFFF, 0x0000FF} -- silver, yellow, red
+      check(WindowCreate(pattern_window, 0, 0, 6, 6, 0, miniwin.create_ignore_mouse, colours[1]))
+      for y = 0, 5 do
+         for x = 0, 5 do
+            check(WindowSetPixel(pattern_window, x, y, colours[math.floor((x + y) % 6 / 2) + 1]))
+         end
+      end
+      check(WindowImageFromWindow(offscreen_window, "pk_room_stripes", pattern_window))
+      drawing.pk_stripes_ready = true
+   end
+   record_map_command("WindowImageOp", win, miniwin.circle_rectangle, left, top, right, bottom,
+      0, miniwin.pen_null, 0, 0, "pk_room_stripes")
 end
 
 local function draw_room(uid, x, y)
@@ -2694,11 +2725,14 @@ local function draw_room(uid, x, y)
                              and (config.SHOW_ROOM_BORDERS or (room.info and string.match(room.info, "pk")))
       -- A solid fill and a one-pixel solid border can share one rectangle.
       -- Hatch and pattern brushes depend on the fill call's pen colour.
+      local striped_pk = config.PK_ROOM_STRIPES and room.mapper_pk_warning
       local combined_fill =
-         show_border and room.fillbrush == miniwin.brush_solid and room.borderpen == miniwin.pen_solid
+         not striped_pk and show_border and room.fillbrush == miniwin.brush_solid and room.borderpen == miniwin.pen_solid
             and room.borderpenwidth == 1
       -- A null pen and null brush cannot change any pixels.
-      if room.fillbrush ~= miniwin.brush_null and not combined_fill then
+      if striped_pk then
+         record_pk_room_stripes(left, top, right, bottom)
+      elseif room.fillbrush ~= miniwin.brush_null and not combined_fill then
          if room.fillbrush == miniwin.brush_solid and left < right and top < bottom and right >= 2 and bottom >= 2 then
             -- GDI's null-pen rectangle leaves an extra pixel at the right and bottom.
             record_map_command("WindowRectOp", win, 2, left, top, right - 1, bottom - 1, room.fillcolour)
@@ -2721,6 +2755,51 @@ local function draw_room(uid, x, y)
          record_map_command("WindowCircleOp", win, miniwin.circle_rectangle, left - 1 - room.borderpenwidth,
             top - 1 - room.borderpenwidth, right + 1 + room.borderpenwidth, bottom + 1 + room.borderpenwidth,
             styles.ROOM_NOTE_COLOUR.colour, room.borderpen, room.borderpenwidth, -1, miniwin.brush_null)
+      end
+   end
+
+   -- Draw each wall after both rooms, so a later fill cannot cover it.
+   if not room_layout.current_is_continent
+      and DISTANCE_TO_NEXT_ROOM - minimum_area_spacing(ROOM_SIZE) < 4 then
+      for _, dir in ipairs({"n", "s", "e", "w"}) do
+         local connector = connectors[dir]
+         local next_x, next_y = x + connector.dx, y + connector.dy
+         local next_coords = math.floor(next_x) * 100000 + math.floor(next_y)
+         local next_uid = occupied_room_positions[next_coords]
+         if next_uid and processed_room_positions[next_uid] == next_coords
+            and next_x >= HALF_ROOM and next_y >= font_height + HALF_ROOM
+            and next_x <= config.WINDOW.width - HALF_ROOM and next_y <= config.WINDOW.height - HALF_ROOM then
+            local adjacent = display_room_cache[next_uid]
+            local connected = false
+            -- A one-way exit still connects the rooms. Check all six directions.
+            for _, exit_dir in ipairs(exit_order) do
+               if room.exits[exit_dir] == next_uid or adjacent.exits[exit_dir] == uid then
+                  connected = true
+                  break
+               end
+            end
+            if not connected then
+               -- GDI excludes the right/bottom edge. Borderless fills leave one more pixel there.
+               local inset = config.SHOW_ROOM_BORDERS and 1 or 2
+               local pixel_left, pixel_top = math.floor(left), math.floor(top)
+               local pixel_right, pixel_bottom = math.floor(right) - inset, math.floor(bottom) - inset
+               -- Reach the adjacent cell boundaries so consecutive walls share their end pixels.
+               local pitch = ROOM_SIZE + DISTANCE_TO_NEXT_ROOM
+               if connector.dx ~= 0 then
+                  local wall_x = math.floor((pixel_left + pixel_right + connector.dx) / 2)
+                  local wall_top = math.floor((pixel_top + pixel_bottom - pitch) / 2)
+                  local wall_bottom = math.floor((pixel_top + pixel_bottom + pitch) / 2)
+                  record_map_command("WindowLine", win, wall_x, wall_top, wall_x, wall_bottom + 1,
+                     styles.ROOM_COLOUR.colour, miniwin.pen_solid, 1)
+               else
+                  local wall_y = math.floor((pixel_top + pixel_bottom + connector.dy) / 2)
+                  local wall_left = math.floor((pixel_left + pixel_right - pitch) / 2)
+                  local wall_right = math.floor((pixel_left + pixel_right + pitch) / 2)
+                  record_map_command("WindowLine", win, wall_left, wall_y, wall_right + 1, wall_y,
+                     styles.ROOM_COLOUR.colour, miniwin.pen_solid, 1)
+               end
+            end
+         end
       end
    end
 
@@ -3109,6 +3188,14 @@ drawing.plan_continent = function(view)
             pk, note, width, pen = room.mapper_pk_warning, room.mapper_note, room.borderpenwidth, room.borderpen
          end
          if pk then
+            if config.PK_ROOM_STRIPES then
+               local right = cell.right or cell.left + (view.pitch_x or view.pitch)
+               local bottom = cell.bottom or cell.top + (view.pitch_y or view.pitch)
+               if right > cell.left and bottom > cell.top then
+                  -- Null-pen rectangles leave the final row and column unpainted.
+                  record_pk_room_stripes(cell.left, cell.top, right + 1, bottom + 1)
+               end
+            end
             record_map_command("WindowCircleOp", win, miniwin.circle_rectangle, cell.left, cell.top,
                cell.left + view.size, cell.top + view.size, styles.PK_BORDER_COLOUR.colour, miniwin.pen_solid, 3, 0,
                miniwin.brush_null)
@@ -3232,12 +3319,13 @@ function blink_title(during_frame_render, target_window)
          drawing.highlight_target(nil, false)
          drawing.map_region.frame_ready = false
       end
-      draw_window_frame(truncated_room_name, map_origin_uid, map_area_name, target_window)
+      draw_window_frame(truncated_room_name, map_origin_uid, map_area_name, target_window, during_frame_render ~= true)
       if during_frame_render ~= true then
          capture_map_image(win)
          drawing.map_region.frame_ready = true
          completed_frame_cache = nil
-         drawing.refresh_map_region(false)
+         -- A title blink does not change room selection or native hover ownership.
+         drawing.highlight_target(drawing.map_region.target, false)
          BufferedRepaint()
       end
    end
@@ -3277,11 +3365,13 @@ local function fit_room_name(room_name)
    return truncated_room_name
 end
 
-function draw_window_frame(room_name, room_uid, area_name, target_window)
+function draw_window_frame(room_name, room_uid, area_name, target_window, paint_only)
    target_window = target_window or win
    bodyleft, bodytop, bodyright, bodybottom = Theme.DrawBorder(target_window)
    bodytop = Theme.DrawTitleBar(target_window, FONT_ID, title_color .. room_name, "center")
-   Theme.AddDragHotspot(win, bodytop)
+   if not paint_only then
+      Theme.AddDragHotspot(win, bodytop)
+   end
 
    if config.SHOW_ROOM_ID then
       if room_uid:sub(1, 5) == "nomap" then
@@ -3305,26 +3395,29 @@ function draw_window_frame(room_name, room_uid, area_name, target_window)
    "?", false, false)
    local box_width = box_right - (x - 1)
 
-   if not pan_dragging then
+   if not pan_dragging and not paint_only then
       ensure_control_hotspot("<help>", x - 3, y - 4, x + box_width + 3, y + font_height, "mapper.show_help",
          "Click for help", miniwin.cursor_help)
    end
 
    if config_panel_open then
-      WindowDeleteHotspot(win, "<configure>")
-      control_hotspots["<configure>"] = nil
-      -- dropdown
-      draw_configuration()
+      if not paint_only then
+         WindowDeleteHotspot(win, "<configure>")
+         control_hotspots["<configure>"] = nil
+         draw_configuration()
+      end
    else
       -- button
-      WindowShow(config_window, false)
+      if not paint_only then
+         WindowShow(config_window, false)
+      end
       local x = 2
       local y = math.max(2, (bodytop - font_height) / 2)
       local text_width = Theme.DrawTextBox(target_window, FONT_ID, x, -- left
       y - 2, -- top
       "*", false, false)
 
-      if not pan_dragging then
+      if not pan_dragging and not paint_only then
          ensure_control_hotspot("<configure>", x - 2, y - 4, x + text_width, y + font_height,
             "mapper.mouseup_configure", "Click to configure map", miniwin.cursor_plus)
       end
@@ -4157,6 +4250,7 @@ function init(options)
    control_hotspots = {}
    drawing.map_region = {}
    drawing.continent_view, drawing.room_view = nil, nil
+   drawing.pk_stripes_ready = false
    room_title_cache = nil
    completed_frame_cache, frame_commands = nil, nil
    map_command_state = {buffers = {{}, {}}, count = 0}
@@ -4671,6 +4765,12 @@ end
 
 function mouseup_change_room_borders(flags, hotspot_id)
    config.SHOW_ROOM_BORDERS = not config.SHOW_ROOM_BORDERS
+   draw(map_origin_uid)
+   SaveState()
+end
+
+function mouseup_change_pk_room_stripes(flags, hotspot_id)
+   config.PK_ROOM_STRIPES = not config.PK_ROOM_STRIPES
    draw(map_origin_uid)
    SaveState()
 end
