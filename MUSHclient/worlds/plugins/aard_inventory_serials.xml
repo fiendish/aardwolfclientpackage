@@ -347,9 +347,9 @@ function insertLine(wildcards, results, sorted)
    table.insert(results[hash][1], wildcards[1]) -- id
 end
 
-keyrex = rex.new("^\\s*(\\d+),(\\w*),(.+),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
-invrex = rex.new("^(\\d+),(\\w*),(.+),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
-vaultrex = rex.new("^\\s*(\\d+),(\\w*),(.+),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
+keyrex = rex.new("^\\s*(\\d+),(\\w*),(.*),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
+invrex = rex.new("^(\\d+),(\\w*),(.*),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
+vaultrex = rex.new("^\\s*(\\d+),(\\w*),(.*),(\\d+),(\\d+),([01]),(-?\\d+),(-?\\d+)")
 
 function insertAllLines(style_lines, re)
    local results, sorted = {}, {}
