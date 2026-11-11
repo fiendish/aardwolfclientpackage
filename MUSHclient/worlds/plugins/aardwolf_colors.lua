@@ -278,6 +278,7 @@ end
 
 function StylesToColours (styles, dollarC_resets)
    local lastcode = ""
+   local last_random_run
 
    -- convert to multiline if needed
    local style_lines = styles
@@ -292,8 +293,10 @@ function StylesToColours (styles, dollarC_resets)
          local bold = style.bold or (style.style and ((style.style % 2) == 1))
          local text = string.gsub(style.text, CODE_PREFIX, PREFIX_ESCAPE)
          local textcolor = style.textcolour
+         local random_run = style.random_colour and (style.random_source or style)
          local code = (
-            style.fromx
+            random_run and X_RANDOM_PATTERN
+            or style.fromx
             or textcolor and (
                bold and client_color_to_bold_code[textcolor]
                or client_color_to_dim_code[textcolor]
@@ -302,9 +305,10 @@ function StylesToColours (styles, dollarC_resets)
             )
          )
 
-         if code and (lastcode ~= code) then
+         if code and (lastcode ~= code or (random_run and random_run ~= last_random_run)) then
             table.insert(line_parts, code)
             lastcode = code
+            last_random_run = random_run
          end
          if dollarC_resets then
             text = text:gsub("%$C", lastcode)
@@ -434,6 +438,8 @@ function partition_boundaries (styles, separator_pattern)
    local last_text = nil
    local cur_partition = {}
    for _,style in ipairs(styles) do
+      -- Pieces of one random style share a selector when converted back to color codes.
+      local random_source = style.random_colour and (style.random_source or style)
       local style_tokens = style.text:split(separator_pattern, true)
       for _,text in ipairs(style_tokens) do
          if last_text then
@@ -452,7 +458,10 @@ function partition_boundaries (styles, separator_pattern)
          end
          local length = #text
          if length > 0 then
-            table.insert(cur_partition, {text=text, length=length, bold=style.bold, backcolour=style.backcolour, textcolour=style.textcolour})
+            table.insert(cur_partition, {
+               text=text, length=length, bold=style.bold, backcolour=style.backcolour, textcolour=style.textcolour,
+               random_colour=style.random_colour, random_source=random_source
+            })
          end
          last_text = text
       end
@@ -517,7 +526,6 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
    if section:find(CODE_PREFIX, nil, true) then
       section = section:gsub(PREFIX_ESCAPE, "\0") -- change @@ to 0x00
       section = section:gsub(TILDE_PATTERN, "~") -- fix tildes (historical)
-      section = section:gsub(X_RANDOM_PATTERN, random_xterm_color) -- @x256 becomes random color
       section = section:gsub(X_NONNUMERIC_PATTERN,"%1") -- strip invalid xterm codes (non-number)
       section = section:gsub(X_THREEHUNDRED_PATTERN,"") -- strip invalid xterm codes (300+)
       section = section:gsub(X_TWOSIXTY_PATTERN,"") -- strip invalid xterm codes (260+)
@@ -547,10 +555,17 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
          code = tokens[i] or code
          local text = tokens[i+1]:gsub("%z", CODE_PREFIX) -- put any @ characters back
          local from_x = nil
+         local random_colour
          if code == XTERM_CODE then -- xterm 256 colors
             local num = nil
             num, text = text:match("(%d%d?%d?)(.*)")
-            code = code..num
+            if num == "256" then
+               random_colour = true
+               code = random_xterm_color()
+               num = code:sub(3)
+            else
+               code = code..num
+            end
             from_x = code
 
             -- Aardwolf treats x1...x15 as normal ANSI colors.
@@ -570,6 +585,7 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
             table.insert(styles,
             {
                fromx = from_x,
+               random_colour = random_colour,
                text = text,
                bold = is_bold or false,
                length = #text,
@@ -584,6 +600,10 @@ function ColoursToStyles (input, default_foreground_color, background_color, mul
                if i > 1 then
                   color = default_foreground_color
                   is_bold = default_foreground_bold
+                  if random_colour then
+                     random_colour = nil
+                     from_x = nil
+                  end
                end
                add_token(styles, v, from_x, is_bold, color, background_color)
             end
