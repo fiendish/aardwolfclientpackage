@@ -771,6 +771,7 @@ StopEvaluatingTriggers()
 
 <trigger
    name="mapper_run_cancelled"
+   script="resume_stopped_run"
    enabled="y"
    keep_evaluating="y"
    match="^(-- Input Cancelled --|There are no commands in your queue to cancel\.)$"
@@ -935,12 +936,22 @@ if jit then
    jit.flush()
 end
 
+local plugin_directory = GetPluginInfo(GetPluginID(), 20)
+
 -- functions for handling Aardwolf color codes
-dofile (GetPluginInfo (GetPluginID(), 20) .. "aardwolf_colors.lua")
+dofile (plugin_directory .. "aardwolf_colors.lua")
 
 require "aard_lua_extras"
 require "copytable"
 require "serialize"
+
+-- Load these modules from the directory beside this plugin.
+local mapper_directory = plugin_directory .. "aard_GMCP_mapper/"
+for _, name in ipairs {
+   "aardmapper", "mapper_bitmap", "mapper_continents", "mapper_image_cache",
+} do
+   package.preload[name] = assert(loadfile(mapper_directory .. name .. ".lua"))
+end
 mapper = require "aardmapper"
 require "gmcphelper"
 require "tprint"
@@ -1194,7 +1205,7 @@ function dbnrowsWRAPPER(query, scalar_rows)
    return itwrap,vm,i
 end
 
-function dbCheckExecute(query,incremental_continent_update)
+function dbCheckExecute(query,continent_update_handled)
    forceOpenDB()
    local code = db:exec(query)
    local count = 0
@@ -1212,7 +1223,7 @@ function dbCheckExecute(query,incremental_continent_update)
    end
 
    closeDBifForcedOpen()
-   if mapper.continents and not incremental_continent_update then
+   if mapper.continents and not continent_update_handled then
       local sql=query:lower()
       -- Invalidate the continent room index after manual database edits.
       for _,name in ipairs({"rooms","exits","bookmarks","environments"}) do
@@ -1409,6 +1420,23 @@ function map_list (name, line, wildcards)
    Note("+-------------------------------- END OF SEARCH -------------------------------+")
 end
 
+
+local function copy_room_with_exits(room, exits, exit_areas)
+   local result = copytable.shallow(room)
+   result.exits = copytable.shallow(exits or room.exits)
+   result.exit_locks = copytable.shallow(room.exit_locks)
+   result.exit_areas = exit_areas
+   return result
+end
+
+local function refresh_continent_room(uid)
+   local continents = mapper.continents
+   local position = continents and continents.positions[uid]
+   if not position then return end
+   local room = assert(room_cache[uid])
+   continents.observe(uid, copy_room_with_exits(room), {cont="1", id=position.zone, x=position.x, y=position.y})
+end
+
 -- accessible only through CallPlugin
 function map_delete_exits_for_many_rooms (...)
    local rooms_to_delete_exits_from = {...}
@@ -1423,19 +1451,23 @@ function map_delete_exits_for_many_rooms (...)
 
    local rooms_string = table.concat(rooms_to_delete_exits_from, ",")
    local query = string.format("delete from exits where touid in (%s) or fromuid in (%s)", rooms_string, rooms_string)
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
 
    for k,v in pairs(room_cache) do
+      local changed = false
       for j,u in pairs(v.exits) do
          if lookup[u] then
+            changed = true
             v.exits[j] = nil
             v.exit_locks[j] = nil
          end
       end
       if lookup[k] then
+         changed = changed or next(v.exits) ~= nil
          v.exits = {}
          v.exit_locks = {}
       end
+      if changed then refresh_continent_room(k) end
    end
 
    mapper.draw (current_room_uid)
@@ -1448,9 +1480,11 @@ function map_cexits_delete (name, line, wildcards)
       return
    end
    local query = string.format("delete from exits where fromuid=%s and dir not in ('n','s','e','w','d','u');", fixsql(current_room_uid))
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
+   local changed = false
    for k,v in pairs(room_cache[current_room_uid].exits) do
       if not directions[k] then
+         changed = true
          local dest = room_cache[current_room_uid].exits[k]
          if not room_cache[dest] then
             load_room_from_database(dest)
@@ -1460,6 +1494,7 @@ function map_cexits_delete (name, line, wildcards)
          room_cache[current_room_uid].exit_locks[k] = nil
       end
    end
+   if changed then refresh_continent_room(current_room_uid) end
    mapper.draw (current_room_uid)
    print("Removed custom exits from the current room.")
 end
@@ -1470,7 +1505,7 @@ function map_exit_delete_to (name, line, wildcards)
       return
    end
    local query = string.format("delete from exits where fromuid=%s and touid=%s;", fixsql(current_room_uid), fixsql(wildcards[1]))
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
    local found = false
    for k,v in pairs(room_cache[current_room_uid].exits) do
       if v == wildcards[1] then
@@ -1483,6 +1518,7 @@ function map_exit_delete_to (name, line, wildcards)
    if not found then
       print("No exits between here and "..wildcards[1].." were found.")
    else
+      refresh_continent_room(current_room_uid)
       mapper.draw (current_room_uid)
    end
 end
@@ -1493,7 +1529,7 @@ function map_exit_delete_from (name, line, wildcards)
       return
    end
    local query = string.format("delete from exits where fromuid=%s and touid=%s;", fixsql(wildcards[1]), fixsql(current_room_uid))
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
    if not room_cache[wildcards[1]] then
       load_room_from_database(wildcards[1])
    end
@@ -1511,6 +1547,7 @@ function map_exit_delete_from (name, line, wildcards)
    if not found then
       print("No exits between "..wildcards[1].." and here were found.")
    else
+      refresh_continent_room(wildcards[1])
       mapper.draw (current_room_uid)
    end
 end
@@ -1526,15 +1563,18 @@ function map_cexits_purge (name, line, wildcards)
       pString = "Purged all area custom exits."
    end
 
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
    for k,v in pairs(room_cache) do
       if (not wildcards) or v.area == wildcards[1] then
+         local changed = false
          for l,w in pairs(v.exits) do
             if not directions[l] then
+               changed = true
                v.exits[l] = nil
                v.exit_locks[l] = nil
             end
          end
+         if changed then refresh_continent_room(k) end
       end
    end
    mapper.draw (current_room_uid)
@@ -1752,13 +1792,13 @@ function map_portal_edit (name, line, wildcards)
    else
       query = string.format("UPDATE exits SET dir = %s WHERE fromuid in ('*', '**') AND dir = %s;", fixsql(new_command), fixsql(keywords))
    end
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
    check_bounce_consistency()
 end
 
 function map_portal_purge(name, line, wildcards)
    query = "DELETE FROM exits WHERE fromuid in ('*','**');"
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
    print ("Purged all mapper portals.")
    map_bouncerecall(nil, nil, {"clear"})
    map_bounceportal(nil, nil, {"clear"})
@@ -1791,7 +1831,7 @@ function map_portal_recall (name, line, wildcards)
    end
 
    local query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('**', '___HERE___', '___EVERYWHERE___')"
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
 
    local count = 1
    local found = false
@@ -1808,7 +1848,7 @@ function map_portal_recall (name, line, wildcards)
             fixsql(row.touid),    -- destination room
             fixsql(row.level)
          )
-         dbCheckExecute(query)
+         dbCheckExecute(query,true)
 
          -- remove the old pre-toggle entry
          query = string.format ([[
@@ -1819,7 +1859,7 @@ function map_portal_recall (name, line, wildcards)
             fixsql(row.touid),    -- destination room
             fixsql(row.level)
          )
-         dbCheckExecute(query)
+         dbCheckExecute(query,true)
 
          world.Note(string.format("\nPORTALRECALL: Recall flag %s portal '%s' to '%s'.\n",((row.fromuid == "*") and "added to") or "removed from",row.dir,(row.name or "N/A")))
          found = true
@@ -1871,12 +1911,12 @@ function create_portal(keyword, destination, level, quiet)
 
    -- first make sure our special 'from anywhere' room exists...
    query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('*', '___HERE___', '___EVERYWHERE___')"
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
 
    -- If this is a recall portal, ensure the '**' room exists too
    if is_recall_portal then
       query = "INSERT OR REPLACE INTO rooms (uid, name, area) VALUES ('**', '___HERE___', '___EVERYWHERE___')"
-      dbCheckExecute(query)
+      dbCheckExecute(query,true)
       Note("")
       ColourNote("yellow", "", string.format("PORTAL AUTO-DETECT: '%s' was automatically recognized as a recall portal.", keyword))
       ColourNote("yellow", "", "If this is incorrect, you can change it using 'mapper portalrecall <index>' (find the index with 'mapper portals').")
@@ -1893,7 +1933,7 @@ function create_portal(keyword, destination, level, quiet)
       fixsql  (destination),
       fixsql(level) -- minimum level of the portal
    )
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
 end
 
 function map_portal_level (name, line, wildcards)
@@ -1925,7 +1965,7 @@ function map_portal_level (name, line, wildcards)
             fixsql(row.touid),    -- destination room
             fixsql(level)
          )
-         dbCheckExecute(query)
+         dbCheckExecute(query,true)
          if not quiet then
             world.Note(string.format("\nPortal '%s' to '%s' given minimum level lock of %s.\n",row.dir,row.name,level))
          end
@@ -2042,7 +2082,7 @@ local function find_and_rank_routes (destinations, show_uid, expected_count, wal
    for i,v in ipairs(destinations) do
       SetStatus (string.format ("Pathfinding: searching for route to %i/%i discovered destinations", i, #destinations))
       BufferedRepaint()
-      local foundpath = findpath(mapper.displayed_room(), v.uid, no_portals, no_portals)
+      local foundpath = findpath(mapper.displayed_room(), v.uid, no_portals, no_portals, v.continent_entry)
       mapper.room_info(v.uid)
       if foundpath ~= nil then
          paths[v.uid] = {path=foundpath, reason=v.reason}
@@ -2374,21 +2414,23 @@ local function activate_map_target(flags, target)
          mapper.mapprint("Going to an unexplored area entrance.")
          start_speedwalk(path)
       end))
-   elseif target.entry_rooms and #target.entry_rooms > 1 then
-      if bit.band(flags, miniwin.hotspot_got_rh_mouse) == 0 and bit.band(flags, miniwin.hotspot_got_control) ~= 0 then
+   elseif target.entry_rooms and #target.entry_rooms > 0 then
+      if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+         if #target.entry_rooms == 1 then return target.entry_rooms[1] end
+         if not can_start_room_search() then return end
+         local nearest, distance
+         for _, uid in ipairs(target.entry_rooms) do
+            local path = findpath(mapper.displayed_room(), uid, nil, nil, true)
+            if path and (not distance or #path < distance) then nearest, distance = uid, #path end
+         end
+         if nearest then return nearest end
+      elseif bit.band(flags, miniwin.hotspot_got_control) ~= 0 then
          cancel_speedwalk()
          return
       end
       local destinations = {}
-      for _, uid in ipairs(target.entry_rooms) do destinations[#destinations + 1] = {uid=uid, reason=true} end
-      if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
-         if not can_start_room_search() then return end
-         local nearest, distance
-         for _, dest in ipairs(destinations) do
-            local path = findpath(mapper.displayed_room(), dest.uid)
-            if path and (not distance or #path < distance) then nearest, distance = dest.uid, #path end
-         end
-         if nearest then return nearest end
+      for _, uid in ipairs(target.entry_rooms) do
+         destinations[#destinations + 1] = {uid=uid, reason=true, continent_entry=true}
       end
       find_rooms(nil, destinations, 0, false, #destinations, true)
    elseif bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
@@ -2405,13 +2447,25 @@ function set_mapper_running(run)
    mapper.set_running(travel.active)
 end
 
--- Wait for the stop reply before finding a route from the resulting room.
+-- Keep one stop in flight. Each new request replaces the waiting action.
 function stop_run_and_wait()
-   if not (travel.running or travel.active) then return end
-   check(SendNoEcho("stop"))
-   wait.regexp("^(-- Input Cancelled --|There are no commands in your queue to cancel\\.)$")
-   travel.running = false
-   set_mapper_running(false)
+   if not (travel.stop_waiter or travel.running or travel.active) then return end
+   local thread = assert(coroutine.running(), "Must be in coroutine")
+   if not travel.stop_waiter then
+      check(SendNoEcho("stop"))
+   end
+   travel.stop_waiter = thread
+   coroutine.yield()
+end
+
+-- The trigger callback runs after its send script clears the old run state.
+function resume_stopped_run()
+   local thread = travel.stop_waiter
+   travel.stop_waiter = nil
+   if thread then
+      local ok, err = coroutine.resume(thread)
+      if not ok then error(err, 0) end
+   end
 end
 
 function ExecuteWithWaits(cexit_command)
@@ -2512,9 +2566,10 @@ function custom_exit (name, line, wildcards)
                fixsql  (cexit_command),  -- direction (eg. "n")
                fixsql  (cexit_start),  -- from current room
                fixsql  (cexit_dest) -- destination room
-            ))
+            ),true)
             room_cache[cexit_start].exits[cexit_command] = cexit_dest
             room_cache[cexit_start].exit_locks[cexit_command] = "0"
+            refresh_continent_room(cexit_start)
             mapper.draw (current_room_uid)
          else
             world.Note (string.format("CEXIT FAILED: Custom Exit %s leads back here!", cexit_command))
@@ -2572,9 +2627,10 @@ function custom_fullexit (name, line, wildcards)
          fixsql(cexit_start),
          fixsql(cexit_dest),
          fixsql(cexit_level)
-      ))
+      ),true)
       room_cache[cexit_start].exits[cexit_command] = cexit_dest
       room_cache[cexit_start].exit_locks[cexit_command] = cexit_level
+      refresh_continent_room(cexit_start)
       mapper.draw (current_room_uid)
    else
       print(string.format("CEXIT FAILED: Start room and destination room should be different."))
@@ -2934,8 +2990,15 @@ function map_notes (name, line, wildcards)
    )
 end
 
+-- A click can enter an area through a compass exit from a continent room.
+-- Other steps on the route can use the usual shortcuts.
+local function is_continent_entry(fromuid, dir)
+   return (dir == "n" or dir == "s" or dir == "e" or dir == "w")
+      and mapper.continents.rooms[tostring(fromuid)] ~= nil
+end
+
 -- original findpath function idea contributed by Spartacus
-function findpath(src, dst, noportals, norecalls)
+function findpath(src, dst, noportals, norecalls, continent_entry)
    if not room_cache[src] then
       room_cache[src] = load_room_from_database(src)
    end
@@ -2945,7 +3008,9 @@ function findpath(src, dst, noportals, norecalls)
 
    local walk_one = nil
    for dir,touid in pairs(room_cache[src].exits) do
-      if tostring(touid) == tostring(dst) and tonumber(room_cache[src].exit_locks[dir]) <= player_level and ((walk_one == nil) or (#dir > #walk_one)) then
+      if tostring(touid) == tostring(dst) and tonumber(room_cache[src].exit_locks[dir]) <= player_level
+            and (not continent_entry or is_continent_entry(src, dir))
+            and (walk_one == nil or #dir > #walk_one) then
          walk_one = dir -- if one room away, walk there (don't portal), but prefer a cexit
       end
    end
@@ -3010,18 +3075,19 @@ function findpath(src, dst, noportals, norecalls)
       local q = string.format ("select fromuid, touid, dir from exits where touid in (%s) and fromuid not in (%s) and ((fromuid not in ('*','**') and level <= %s) or (fromuid in ('*','**') and level <= %s)) order by length(dir) asc",table.concat(rooms_list,","), visited,player_level,player_level+(player_tier*10))
       local dcount = 0
       room_sets[depth] = {}
+      local entering = continent_entry and depth == 1
       for row in dbnrowsWRAPPER(q) do
-         dcount = dcount + 1
-         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get
-         -- used preferentially to normal ones (1 char)
-         room_sets[depth][row.fromuid] = {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
-         if row.fromuid == "*" or (row.fromuid == "**" and f ~= "*" and f ~= src) or row.fromuid == src then
-            f = row.fromuid
-            found = true
-            found_depth = depth
+         if not entering or is_continent_entry(row.fromuid, row.dir) then
+            dcount = dcount + 1
+            -- The last exit in length order wins when a room has several routes.
+            room_sets[depth][row.fromuid] = {fromuid=row.fromuid, touid=row.touid, dir=row.dir}
+            if row.fromuid == "*" or (row.fromuid == "**" and f ~= "*" and f ~= src) or row.fromuid == src then
+               f = row.fromuid
+               found = true
+               found_depth = depth
+            end
          end
       end
-
       if dcount == 0 then
          found = false
          break -- there is no path from here to there
@@ -3040,29 +3106,32 @@ function findpath(src, dst, noportals, norecalls)
    ftd = room_sets[found_depth][f]
 
    if (f == "*" and room_cache[src].noportal == 1) or (f == "**" and room_cache[src].norecall == 1) then
-      if room_cache[src].norecall ~= 1 and bounce_recall ~= nil then
+      if room_cache[src].norecall ~= 1 and bounce_recall ~= nil
+            and (not continent_entry or bounce_recall.uid ~= dst) then
          table.insert(path, bounce_recall)
          if dst == bounce_recall.uid then
             return path, found_depth
          end
-      elseif room_cache[src].noportal ~= 1 and bounce_portal ~= nil then
+      elseif room_cache[src].noportal ~= 1 and bounce_portal ~= nil
+            and (not continent_entry or bounce_portal.uid ~= dst) then
          table.insert(path, bounce_portal)
          if dst == bounce_portal.uid then
             return path, found_depth
          end
       else
-         local jump_room, path_type = findNearestJumpRoom(src, dst, f)
+         local jump_room, path_type = findNearestJumpRoom(src, dst, f, continent_entry)
          if not jump_room then
             return
          end
-         local path, first_depth = findpath(src,jump_room, true, true) -- this could be optimized away by building the path in findNearestJumpRoom, but the gain would be negligible
+         local path, first_depth = findpath(src, jump_room, true, true, continent_entry and jump_room == dst)
          if path_bits.band(path_type, 1) ~= 0 then
             -- path_type 1 means just walk to the destination
             return path, first_depth
          else
-            local second_path, second_depth = findpath(jump_room, dst)
+            local second_path, second_depth = findpath(jump_room, dst, nil, nil, continent_entry)
+            if not path or not second_path then return end
             for i,v in ipairs(second_path) do
-               table.insert(path, v) -- bug on this line if path is nil?
+               table.insert(path, v)
             end
             return path, first_depth+second_depth
          end
@@ -3088,7 +3157,7 @@ end
 
 -- Very similar to findpath, but looks forwards instead of backwards (so only walks)
 -- and stops at the nearest portalable or recallable room
-function findNearestJumpRoom(src, dst, target_type)
+function findNearestJumpRoom(src, dst, target_type, continent_entry)
    local depth = 0
    local max_depth = mapper.config.SCAN.depth
    local rooms_list = {}
@@ -3116,22 +3185,23 @@ function findNearestJumpRoom(src, dst, target_type)
                   table.concat(rooms_list,","), visited, player_level)
       local dcount = 0
       for row in dbnrowsWRAPPER(q) do
-         dcount = dcount + 1
-         table.insert(rooms_list, fixsql(row.touid))
-         -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get
-         -- used preferentially to normal ones (1 char)
-         if ((bounce_portal ~= nil or target_type == "*") and row.noportal ~= 1) or ((bounce_recall ~= nil or target_type == "**") and row.norecall ~= 1) or row.touid == dst then
-            path_type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
-            -- path_type 1 means walking to the destination is closer than bouncing
-            -- path_type 2 means the bounce room allows recalling but not portalling
-            -- path_type 4 means the bounce room allows portalling but not recalling
-            -- path_type 0 means the bounce room allows both portalling and recalling
-            destination = row.touid
-            found = true
-            found_depth = depth
+         if not continent_entry or row.touid ~= dst or is_continent_entry(row.fromuid, row.dir) then
+            dcount = dcount + 1
+            table.insert(rooms_list, fixsql(row.touid))
+            -- ordering by length(dir) ensures that custom exits (always longer than 1 char) get
+            -- used preferentially to normal ones (1 char)
+            if ((bounce_portal ~= nil or target_type == "*") and row.noportal ~= 1) or ((bounce_recall ~= nil or target_type == "**") and row.norecall ~= 1) or row.touid == dst then
+               path_type = ((row.touid == dst) and 1) or ( (((row.noportal == 1) and 2) or 0) + (((row.norecall == 1) and 4) or 0) )
+               -- path_type 1 means walking to the destination is closer than bouncing
+               -- path_type 2 means the bounce room allows recalling but not portalling
+               -- path_type 4 means the bounce room allows portalling but not recalling
+               -- path_type 0 means the bounce room allows both portalling and recalling
+               destination = row.touid
+               found = true
+               found_depth = depth
+            end
          end
       end
-
       if dcount == 0 then
          found = false
          break -- there is no path to a portalable or recallable room
@@ -3149,7 +3219,7 @@ local function sql_coordinate(value)
    return string.format("%i",value)
 end
 
-function save_room_to_database (uid,room,observed_continent_room)
+function save_room_to_database (uid,room)
 
    assert (uid, "No UID supplied to save_room_to_database")
    local area_exists = false
@@ -3174,7 +3244,7 @@ function save_room_to_database (uid,room,observed_continent_room)
             room.noportal or 0,
             room.norecall or 0,
             room.ignore_exits_mismatch and 1 or 0
-         ),observed_continent_room)
+         ),true)
 
    -- Legacy lookup tables allow duplicate UIDs. Replace them with one current row.
    dbCheckExecute(string.format ("DELETE FROM rooms_lookup WHERE uid = %s",fixsql(uid)))
@@ -3196,12 +3266,13 @@ function fix_up_exit ()
         fixsql  (current_room_uid),     -- destination room
         fixsql  (exit_source_uid),       -- from previous room
         fixsql  (last_sent_direction)  -- direction (eg. "n")
-   ))
+   ),true)
 
       mapper.mapprint ("Fixed exit", last_sent_direction, "from room", exit_source_uid, "to be to", current_room_uid)
 
    room.exits [last_sent_direction] = current_room_uid
 
+   refresh_continent_room(exit_source_uid)
    last_sent_direction = nil
    exit_source_uid = nil
 end
@@ -3221,7 +3292,10 @@ function purgezone(zoneuid)
    query = query..string.format ("delete from rooms where area = %s;", fixsql(zoneuid))
    query = query..string.format ("delete from areas where uid = %s;", fixsql(zoneuid))
    query = query.."COMMIT;"
-   dbCheckExecute(query)
+   dbCheckExecute(query,true)
+   if mapper.continents then
+      for uid in pairs(purged_rooms) do mapper.continents.remove_room(uid) end
+   end
 
    for k,v in pairs(room_cache) do
       for j,u in pairs(v.exits) do
@@ -3288,13 +3362,13 @@ function map_purgeroom (uid, new_area)
    query = query..string.format ("delete from bookmarks where uid = %s;", fixsql(uid))
    query = query..string.format ("delete from rooms where uid = %s;", fixsql(uid))
    query = query.."COMMIT;"
-   dbCheckExecute(query,not new_area)
-   if mapper.continents and not new_area then mapper.continents.remove_room(uid) end
+   dbCheckExecute(query,true)
+   if mapper.continents then mapper.continents.remove_room(uid,new_area) end
 
    room_cache[uid] = nil
    for k,v in pairs(room_cache) do
       for j,u in pairs(v.exits) do
-         if u == uid then
+         if u == uid and (not new_area or v.area ~= new_area) then
             v.exits[j] = nil
             v.exit_locks[j] = nil
          end
@@ -3568,7 +3642,8 @@ local function load_continent_rooms()
    end
    -- Keep complete cached records if any part of the bulk load fails.
    for uid, room in pairs(result) do
-      room_cache[uid]=room
+      -- The controller edits exits in place. Keep its tables separate from the indexed exits.
+      room_cache[uid] = copy_room_with_exits(room)
       missing_room_ids[uid]=nil
    end
    return result
@@ -3621,9 +3696,7 @@ function get_room (uid, traversal_only)
    end -- not in cache
 
    if traversal_only then
-      local room = copytable.shallow(cached_room)
-      room.exits = copytable.shallow(cached_room.exits)
-      room.exit_locks = copytable.shallow(cached_room.exit_locks)
+      local room = copy_room_with_exits(cached_room, cached_room.exits, cached_room.exit_areas)
       room.area_id = room.area
       room.continent = continent_zones[room.area] == true
       room.area = display_area_name(room.area)
@@ -3776,9 +3849,10 @@ function room_delete_note (uid, prev_notes)
    dbCheckExecute(string.format(
       "DELETE FROM bookmarks WHERE uid = %s;",
       fixsql(uid)
-   ))
+   ),true)
    mapper.mapprint("Note for room", uid, "deleted. Was previously:", prev_notes)
    room_cache[uid].notes = nil
+   if mapper.continents then mapper.continents.update_room_metadata(uid, room_cache[uid]) end
    mapper.draw(current_room_uid)
 end
 
@@ -3858,18 +3932,19 @@ function room_edit_note (room, uid, newnotes)
       "UPDATE bookmarks SET notes = %s WHERE uid = %s;",
       fixsql (newnotes),
       fixsql (uid)
-      ))
+      ),true)
       mapper.mapprint ("Note for room", uid, "changed to:", newnotes)
    else
       dbCheckExecute(string.format (
       "INSERT INTO bookmarks (uid, notes) VALUES (%s, %s);",
       fixsql (uid),
       fixsql (newnotes)
-      ))
+      ),true)
       mapper.mapprint ("Note added to room", uid, ":", newnotes)
    end
 
    room_cache [uid].notes = newnotes
+   if mapper.continents then mapper.continents.update_room_metadata(uid, room_cache[uid]) end
    mapper.draw (current_room_uid)
 
 end
@@ -3901,11 +3976,13 @@ function room_delete_exit (room, uid, exit)
       ]],
       fixsql (chosen_exit),  -- direction (eg. "n")
       fixsql (uid)  -- from current room
-   ))
+   ),true)
    mapper.mapprint ("Deleted exit '"..chosen_exit.."' from room "..uid.." from database.")
 
    -- update in-memory table
    room_cache[uid] = load_room_from_database(uid)
+
+   refresh_continent_room(uid)
 
    mapper.draw (current_room_uid)
 
@@ -3960,12 +4037,13 @@ function room_change_exit (room, uid, exit)
          fixsql (exit_destination),
          fixsql (chosen_exit),  -- direction (eg. "n")
          fixsql (uid)  -- from current room
-      ))
+      ),true)
 
       mapper.mapprint ("Modified exit", chosen_exit, "from room", uid, "to be to room", exit_destination, "in database.")
 
       -- update in-memory table
       room_cache [uid].exits [chosen_exit] = exit_destination
+      refresh_continent_room(uid)
       mapper.draw (current_room_uid)
    else
       mapper.mapprint ("Destination unchanged for exit '"..chosen_exit.."'.")
@@ -3990,7 +4068,7 @@ function room_change_cexit_command (room, uid, exit)
          fixsql (new_cexit),
          fixsql (uid),  -- from current room
          fixsql (chosen_exit)  -- direction (eg. "n")
-      ))
+      ),true)
 
       mapper.mapprint ("New custom exit from room "..uid.." to "..to..": '"..new_cexit.."'")
 
@@ -3999,6 +4077,8 @@ function room_change_cexit_command (room, uid, exit)
       room_cache[uid].exit_locks[new_cexit] = room_cache[uid].exit_locks[chosen_exit]
       room_cache[uid].exits[chosen_exit] = nil
       room_cache[uid].exit_locks[chosen_exit] = nil
+
+      refresh_continent_room(uid)
 
       mapper.draw (current_room_uid)
    end
@@ -4047,15 +4127,15 @@ function room_lock_exit (room, uid, exit)
          fixsql (exit_level),
          fixsql (chosen_exit), -- direction (eg. "n")
          fixsql (uid) -- from current room
-      ))
+      ),true)
 
       mapper.mapprint ("Set level lock on exit", available [chosen_exit], "from room", uid, "to be", exit_level, "in database.")
+      room_cache[uid].exit_locks[chosen_exit] = exit_level
+      if mapper.continents then mapper.continents.update_room_metadata(uid, room_cache[uid], chosen_exit) end
    else
       mapper.mapprint ("Level lock unchanged for exit '"..chosen_exit.."'.")
    end
 
-   -- update in-memory table
-   room_cache[uid].exit_locks[chosen_exit] = exit_level
    mapper.draw (current_room_uid)
 
 end
@@ -4652,6 +4732,7 @@ function OnPluginInstall ()
       activate_target = activate_map_target,
       config = configs,            -- colours, timing etc.
       continent_data = {
+         cache_prefix=(GetInfo(85)~="" and GetInfo(85) or GetInfo(66)).."/mapper-"..utils.hash(GetWorldID()..":"..GetPluginID()),
          load_rooms=load_continent_rooms,
          terrain_colour=continent_terrain_colour,
 
@@ -4984,6 +5065,7 @@ end
 
 -- hide window on removal
 function OnPluginDisable ()
+   travel.stop_waiter = nil
    cancel_mapper_maintenance()
    SaveState()
    mapper.hide(window_hidden)
@@ -5184,8 +5266,8 @@ function got_gmcp_room()
       terrain = gmcp_message.terrain or "",
       info = gmcp_message.details or "",
       notes = "",
-      x = coord.x or "",
-      y = coord.y or "",
+      x = coord.x ~= "" and coord.x or nil,
+      y = coord.y ~= "" and coord.y or nil,
       z = 0,
       exits = {},
       exit_locks = {}
@@ -5283,11 +5365,11 @@ function got_gmcp_room()
          gmcproom.norecall = 0
       end
       dbCheckExecute("BEGIN TRANSACTION;")
-      local success = save_room_to_database(room_number, gmcproom, current_room_is_continent)
+      local success = save_room_to_database(room_number, gmcproom)
       if success then
          room_cache[room_number] = gmcproom
          if not same_exits or not same_area then
-            save_room_exits(room_number, current_room_is_continent)
+            save_room_exits(room_number)
          end
       end
       dbCheckExecute("COMMIT;")
@@ -5295,16 +5377,25 @@ function got_gmcp_room()
       if not success then
          return
       end
+      if not current_room_is_continent and not same_area and mapper.continents then
+         mapper.continents.destination_changed(room_number, gmcproom.area)
+      end
    end
 
    if current_room_is_continent and mapper.continents then
-      local observed=copytable.shallow(room_cache[room_number])
+      local cached = room_cache[room_number]
+      local reported_exits = not cached.ignore_exits_mismatch and gmcp_message.exits
+      local observed = copy_room_with_exits(cached, reported_exits)
+      if reported_exits then
+         -- The server may omit saved custom exits from its room update.
+         for dir, dest in pairs(cached.exits) do
+            if not directions[dir] and reported_exits[dir] == nil then
+               observed.exits[dir] = dest
+            end
+         end
+      end
       observed.uid=room_number
       observed.x,observed.y=coord.x,coord.y
-      if not observed.ignore_exits_mismatch and gmcp_message.exits then
-         observed.exits=copytable.shallow(gmcp_message.exits)
-         observed.exit_areas=nil
-      end
       mapper.continents.observe(room_number,observed,coord)
       mapper.invalidate_room(room_number)
    end
@@ -5346,7 +5437,7 @@ function update_gmcp_area()
    return
 end
 
-function save_room_exits(uid,observed_continent_room)
+function save_room_exits(uid)
    if room_cache[uid] == nil then
       return
    end
@@ -5358,7 +5449,7 @@ function save_room_exits(uid,observed_continent_room)
             ]], fixsql  (dir),  -- direction (eg. "n")
             fixsql  (uid),  -- from current room
             fixsql  (touid) -- destination room
-         ),observed_continent_room)
+         ),true)
 
          if show_database_mods then
             mapper.mapprint ("Added exit: ", dir, "from room: ",uid, "to room: ", touid, " to database.")
@@ -5573,6 +5664,7 @@ end
 
 
 function OnPluginDisconnect ()
+   travel.stop_waiter = nil
    travel.running = false
    set_mapper_running(false)
    mapper.cancel_draw()
