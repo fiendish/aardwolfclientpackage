@@ -1,7 +1,7 @@
 Aardwolf Client Package Major Changes List
 
 r2382 snapshot
-- new feature: The GMCP mapper continents continue to be made fancier. Vidblain has a new overlay. Check the map configuration dropdown in the top left corner for new settings.
+- new feature: The GMCP mapper continents continue to be made fancier. Vidblain has a new overlay that brings Xeno's original vision to life. Check the map configuration dropdown in the top left corner for new settings.
 - misc change: Improved image loading and alpha blending performance in MUSHclient.
 - bug fix: I found and hopefully fixed more situations where the prompt fixer (groan) could fail.
 - bug fix: The color functions module should now preserve random color codes in back/forth conversions from colors to styles and back.
