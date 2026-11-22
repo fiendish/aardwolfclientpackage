@@ -1,5 +1,11 @@
 Aardwolf Client Package Major Changes List
 
+r2382 snapshot
+- new feature: The GMCP mapper continents continue to be made fancier. Vidblain has a new overlay that brings Xeno's original vision to life. Check the map configuration dropdown in the top left corner for new settings.
+- misc change: Improved image loading and alpha blending performance in MUSHclient.
+- bug fix: I found and hopefully fixed more situations where the prompt fixer (groan) could fail.
+- bug fix: The color functions module should now preserve random color codes in back/forth conversions from colors to styles and back.
+
 r2378 snapshot
 - new feature: The floating input bar now masks passwords with asterisks by default. You can disable this in its right-click menu if you want.
 - new feature: The GMCP mapper has a "mapper mismatch warnings [on/off]" command to control showing warning messages for ignored exit mismatches.
