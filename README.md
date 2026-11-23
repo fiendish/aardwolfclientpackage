@@ -1,4 +1,4 @@
-# Aardwolf MUSHclient Package development project<br>[![AppVeyor Build](https://img.shields.io/appveyor/build/fiendish/aardwolfclientpackage)](https://ci.appveyor.com/project/fiendish/aardwolfclientpackage)
+# Aardwolf MUSHclient Package development project<br>[![Automated Build](https://github.com/fiendish/aardwolfclientpackage/actions/workflows/package.yml/badge.svg?branch=MUSHclient)](https://github.com/fiendish/aardwolfclientpackage/actions/workflows/package.yml)
 
 Get the latest Aardwolf MUSHclient Package installer at https://fiendish.github.io/aardwolfclientpackage/
 

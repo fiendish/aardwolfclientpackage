@@ -1,0 +1,207 @@
+name: Build Aardwolf package
+run-name: ${{ github.run_number }}
+
+on:
+  push:
+    branches: [MUSHclient, development]
+  pull_request:
+    branches: [MUSHclient, development]
+    types: [opened, reopened, synchronize, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-branch:
+    if: github.ref_type != 'tag' && (github.event.action != 'edited' || github.event.changes.base)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+      release: ${{ steps.check.outputs.release }}
+    steps:
+      - id: check
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          case "$GITHUB_REPOSITORY/$GITHUB_REF" in
+            fiendish/aardwolfclientpackage/refs/heads/MUSHclient) echo 'release=stable' >> "$GITHUB_OUTPUT" ;;
+            fiendish/aardwolfclientpackage/refs/heads/development) echo 'release=beta' >> "$GITHUB_OUTPUT" ;;
+          esac
+          if [[ $GITHUB_EVENT_NAME == push ]]; then
+            has_pr=$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" -f state=open \
+              -f head="$GITHUB_REPOSITORY_OWNER:$GITHUB_REF_NAME" -F per_page=1 --jq 'length > 0')
+            echo "skip=$has_pr" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check-branch
+    if: needs.check-branch.outputs.skip != 'true'
+    runs-on: windows-2022
+    concurrency:
+      group: ${{ github.workflow }}-build-${{ github.ref }}
+      queue: max
+    outputs:
+      version: ${{ steps.package.outputs.version }}
+    steps:
+      - name: Keep the package files' original line endings
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: fiendish/aardwolfclientpackage-installer
+          ref: master
+          path: installer
+          persist-credentials: false
+      - name: Build the installers and ZIP files
+        id: package
+        env:
+          PACKAGE_BRANCH: ${{ github.base_ref || github.ref_name }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $version = ((Get-Content MUSHclient/AardwolfPackageChanges.txt -TotalCount 3)[2] -split '\s+')[0]
+          if ($env:PACKAGE_BRANCH -eq 'development') { $version = 'next-beta' }
+          $package = "Aardwolf_MUSHclient_$version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "PACKAGE=$package" >> $env:GITHUB_ENV
+
+          function Get-ReleaseFile($repo, $tag, $path) {
+            $file = Split-Path $path -Leaf
+            curl.exe --fail --location --silent --show-error --retry 3 --output $path "https://github.com/fiendish/$repo/releases/download/$tag/$file"
+          }
+          Get-ReleaseFile LuaJIT-build latest MUSHclient/lua51.dll
+          Get-ReleaseFile lua-llthreads2-build latest MUSHclient/llthreads2.dll
+          Get-ReleaseFile lua-openssl-build latest MUSHclient/openssl.dll
+          Get-ReleaseFile mushclient latest_commit MUSHclient/MUSHclient.exe
+          Get-ReleaseFile mushclient_resources latest_commit MUSHclient/locale/en.dll
+          Get-ReleaseFile mushclient_resources latest_commit MUSHclient/locale/en_small.dll
+          Get-ReleaseFile luasocket-build latest luasocket-win32-static.zip
+          Expand-Archive luasocket-win32-static.zip -DestinationPath MUSHclient -Force
+
+          # Older plugins use the global socket after require "socket".
+          $path = (Resolve-Path MUSHclient/lua/socket.lua).Path
+          $source = [IO.File]::ReadAllText($path)
+          $globalSocket = '(?m)^(?:_G|base)\.socket = _M\r?$'
+          if ($source -cnotmatch $globalSocket) {
+            $tail = [regex]::Match($source, '(?m)^return _M(\r?\n)\z')
+            if (!$tail.Success) { throw 'Unexpected LuaSocket module ending' }
+            [IO.File]::WriteAllText($path, $source.Insert($tail.Index, '_G.socket = _M' + $tail.Groups[1].Value))
+          }
+          if ([IO.File]::ReadAllText($path) -cnotmatch $globalSocket) { throw 'LuaSocket global compatibility was not written' }
+
+          New-Item -ItemType Directory -Force MUSHclient/worlds/plugins/state | Out-Null
+          Copy-Item installer/get_version.nsi, installer/hello.rtf .
+          function Build-Zip($name) {
+            $zip = "$($name)_no_install.zip"
+            7z a -tzip -mx=9 -mfb=257 -mtc=on $zip MUSHclient
+            python add_zip_timestamps.py $zip
+          }
+          function Build-Installer($name) {
+            (Get-Content installer/aardmush_installer.nsi) -replace '^OutFile\s+.*', ('OutFile "{0}.exe"' -f $name) |
+              Set-Content aardmush_installer.nsi
+            & "${env:ProgramFiles(x86)}/NSIS/makensis.exe" aardmush_installer.nsi
+          }
+          Build-Zip $package
+          Build-Installer $package
+
+          $path = (Resolve-Path MUSHclient/lua/aard_requirements.lua).Path
+          $lines = @('aard_req_novisuals_mode = true  -- this line added by the no-visuals installer', '') + (Get-Content $path)
+          [IO.File]::WriteAllText($path, ($lines -join "`r`n") + "`r`n", [Text.Encoding]::ASCII)
+          Move-Item MUSHclient/worlds/Aardwolf_no_visuals.mcl MUSHclient/worlds/Aardwolf.mcl -Force
+          $noVisuals = "$($package)_no_visuals"
+          Build-Installer $noVisuals
+          Build-Zip $noVisuals
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.PACKAGE }}.exe
+          path: ${{ env.PACKAGE }}.exe
+          archive: false
+          overwrite: true
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.PACKAGE }}_no_install.zip
+          path: ${{ env.PACKAGE }}_no_install.zip
+          archive: false
+          overwrite: true
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.PACKAGE }}_no_visuals.exe
+          path: ${{ env.PACKAGE }}_no_visuals.exe
+          archive: false
+          overwrite: true
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.PACKAGE }}_no_visuals_no_install.zip
+          path: ${{ env.PACKAGE }}_no_visuals_no_install.zip
+          archive: false
+          overwrite: true
+          if-no-files-found: error
+
+  publish:
+    needs: [check-branch, build]
+    if: needs.check-branch.outputs.release != ''
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-publish-${{ github.ref }}
+      queue: max
+    permissions:
+      contents: write
+      pages: write
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      PACKAGE: Aardwolf_MUSHclient_${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+          skip-decompress: true
+      - uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          token: ${{ secrets.PACKAGE_RELEASE_TOKEN || github.token }}
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          prerelease: ${{ needs.check-branch.outputs.release == 'beta' }}
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/${{ env.PACKAGE }}.exe
+            dist/${{ env.PACKAGE }}_no_install.zip
+            dist/${{ env.PACKAGE }}_no_visuals.exe
+            dist/${{ env.PACKAGE }}_no_visuals_no_install.zip
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.check-branch.outputs.release == 'stable'
+        with:
+          ref: gh-pages
+          path: site
+      - name: Update the stable download links
+        if: needs.check-branch.outputs.release == 'stable'
+        working-directory: site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for page in index unzip_upgrading; do
+            sed "s/%%REV%%/$VERSION/g" "$page.template" > "$page.html"
+          done
+          changes=$(git status --porcelain -- index.html unzip_upgrading.html)
+          if [[ -n $changes ]]; then
+            git add -- index.html unzip_upgrading.html
+            git -c user.name=fiendish -c user.email=patcherton.fixesthings@gmail.com commit -m "automatic rev update $VERSION"
+            git push origin HEAD:gh-pages
+          fi
+          # GitHub does not start a Pages build for a push made with GITHUB_TOKEN.
+          head=$(git rev-parse HEAD)
+          built=$(gh api "repos/$GITHUB_REPOSITORY/pages/builds?per_page=1" \
+            --jq '.[0] | select(.status == "built" or .status == "building" or .status == "queued") | .commit')
+          if [[ $built != "$head" ]]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds" --silent
+          fi
