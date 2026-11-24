@@ -1,4 +1,4 @@
-name: Build Aardwolf package
+name: Automated Build
 run-name: ${{ github.run_number }}
 
 on:
