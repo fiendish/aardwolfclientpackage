@@ -22,6 +22,9 @@
 
 usedNumbers = {}
 
+-- Reserve the highest window order for always-on-top miniwindows.
+local always_on_top_order = 2147483647
+
 function OnPluginListChanged()
    dofile "lua/aard_requirements.lua"
 end
@@ -53,16 +56,27 @@ local function save_z_order(windowID, order)
    assert(status == 0, "Cannot save miniwindow stacking order: " .. status)
 end
 
-function registerMiniwindow(callerID)
+-- non-official plugins should never use always_on_top
+function registerMiniwindow(callerID, always_on_top)
    if callerID == nil then
       callerID = ""
+   end
+   if always_on_top then
+      check(WindowSetZOrder(callerID, always_on_top_order))
+      for order, window_id in pairs(usedNumbers) do
+         if window_id == callerID then
+            usedNumbers[order] = nil
+         end
+      end
+      return
    end
    local savedZNumber = tonumber(GetVariable(z_variable_name(callerID)))
    local requestedZNumber = savedZNumber or tonumber(GetVariable("a"..callerID))
    -- If we were previously using a particular spot and nothing else is
    -- already using it go ahead and assign that one. Otherwise find another
    -- spot for it.
-   if requestedZNumber == nil or (usedNumbers[requestedZNumber] ~= callerID and usedNumbers[requestedZNumber] ~= nil) then
+   if requestedZNumber == nil or requestedZNumber >= always_on_top_order or
+      (usedNumbers[requestedZNumber] ~= callerID and usedNumbers[requestedZNumber] ~= nil) then
       requestedZNumber = (#usedNumbers)+1
    end
    if requestedZNumber ~= savedZNumber then
@@ -77,6 +91,9 @@ end
 -- To use this:
 -- CallPlugin("462b665ecb569efbf261422f", "boostMe", windowID)
 function boostMe(callerID)
+   if WindowInfo(callerID, 22) == always_on_top_order then
+      return
+   end
    local newNumbers = {}
    local i = 1
    for k,v in pairs(usedNumbers) do
@@ -98,6 +115,9 @@ end
 -- To use this:
 -- CallPlugin("462b665ecb569efbf261422f", "dropMe", windowID)
 function dropMe(callerID)
+   if WindowInfo(callerID, 22) == always_on_top_order then
+      return
+   end
    local newNumbers = {}
    newNumbers[1] = callerID
    local i = 2

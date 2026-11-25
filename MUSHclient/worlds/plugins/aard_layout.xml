@@ -77,6 +77,15 @@ require "themed_miniwindows"
 require "gmcphelper"
 local window_snap = require "window_snap"
 local HasRequiredAPIs = require "required_apis"
+local z_order_monitor = "462b665ecb569efbf261422f"
+
+local function call_z_order_monitor(...)
+   local status, reason, detail = CallPlugin(z_order_monitor, ...)
+   -- The monitor can load after the layout plugin.
+   if status ~= error_code.eOK and status ~= error_code.eNoSuchPlugin then
+      error(detail or reason, 2)
+   end
+end
 
 function OnPluginSnapTarget(window_id)
    return window_id ~= textDragger and window_id ~= bgwin
@@ -87,9 +96,13 @@ function OnPluginListChanged()
 end
 
 function OnPluginBroadcast(msg, id, name, text)
-   if id == "462b665ecb569efbf261422f" and msg == 996 and
-      text == "re-register z" and textResizer and WindowInfo(textResizer, 1) then
-      check(CallPlugin(id, "dropMe", textResizer))
+   if id == z_order_monitor and msg == 996 and text == "re-register z" then
+      if inputbar_window and WindowInfo(inputBar, 1) then
+         call_z_order_monitor("registerMiniwindow", inputBar, true)
+      end
+      if textResizer and WindowInfo(textResizer, 1) then
+         call_z_order_monitor("dropMe", textResizer)
+      end
    elseif id == "3e7dedbe37e44942dd46d264" and
       (text == "char.status" or text == "reload") then
       InputBarUpdateNoteMode()
@@ -541,6 +554,7 @@ function InputBarEnsureWindow()
       text_selection_callback=InputBarSelectionChanged,
       column_guide=inputbar_note_mode and inputbar_marker_characters or nil
    })
+   call_z_order_monitor("registerMiniwindow", inputBar, true)
    inputbar_rect = inputbar_window.textrect
    inputbar_rect.utf8 = false
    inputbar_window.dress_window = InputBarDressWindow
@@ -1856,9 +1870,7 @@ function add_main_resizer()
          12, miniwin.create_absolute_location,
          Theme.CLICKABLE
       )
-      if IsPluginInstalled("462b665ecb569efbf261422f") then
-         check(CallPlugin("462b665ecb569efbf261422f", "dropMe", textResizer))
-      end
+      call_z_order_monitor("dropMe", textResizer)
    end
 
    if (prev_l ~= l) or (prev_t ~= t) or (prev_b ~= b) then
@@ -1892,9 +1904,7 @@ function add_title_dragger()
       check(WindowResize(textDragger, width, dragsize, GetNormalColour(1)))
    else
       check(WindowCreate(textDragger, left, top, width, dragsize, 0, 22, GetNormalColour(1)))
-      if IsPluginInstalled("462b665ecb569efbf261422f") then
-         check(CallPlugin("462b665ecb569efbf261422f", "dropMe", textDragger))
-      end
+      call_z_order_monitor("dropMe", textDragger)
    end
 
    if WindowHotspotInfo(textDragger, "dragmain", 13) then
