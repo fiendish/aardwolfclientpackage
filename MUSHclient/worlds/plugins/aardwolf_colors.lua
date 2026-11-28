@@ -254,6 +254,8 @@ local function init_xterm_colors ()
    override_dark_color(16, 7)
    override_dark_color(17, 19)
    override_dark_color(18, 19)
+   override_dark_color(52, 89)
+   override_dark_color(53, 89)
    for i = 232,237 do
       override_dark_color(i, 238)
    end
@@ -698,7 +700,8 @@ function stylesToANSI (styles, dollarC_resets)
       if textcolor then
          local isbold = (v.bold or (v.style and ((v.style % 2) == 1)))
          if v.fromx then
-            code = ANSI(isbold and 1 or 0, 38, 5, v.fromx:sub(3))
+            local index = v.fromx:sub(3)
+            code = ANSI(isbold and 1 or 0, 38, 5, x_not_too_dark[tonumber(index)] or index)
          else
             code = colorNumberToAnsi(textcolor, isbold, false)
          end
